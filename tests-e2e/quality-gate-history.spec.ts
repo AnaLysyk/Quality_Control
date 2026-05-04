@@ -1,14 +1,14 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
-test("histórico de quality gate é registrado", async ({ page, context }) => {
+test("histÃ³rico de quality gate Ã© registrado", async ({ page, context }) => {
   await mockAuth(context, {
     role: "admin",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/griaule/dashboard", {
+  await page.goto("/empresas/demo/dashboard", {
     waitUntil: "networkidle",
   });
 
@@ -17,9 +17,10 @@ test("histórico de quality gate é registrado", async ({ page, context }) => {
   await releaseCard.locator('a').click();
   await page.waitForLoadState("networkidle");
 
-  // Abre o histórico do quality gate
+  // Abre o histÃ³rico do quality gate
   await page.getByTestId("quality-gate-history").click();
 
   const items = page.getByTestId("gate-history-item");
   await expect(items.first()).toBeVisible();
 });
+

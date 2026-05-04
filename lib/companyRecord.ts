@@ -151,6 +151,10 @@ export function mapCompanyRecord(
     jira_account_name: asString(jiraConfig?.accountName),
     integration_mode: asString(company.integration_mode),
     integration_type: asString((company as { integration_type?: unknown }).integration_type),
+    notifications_fanout_enabled:
+      typeof (company as { notifications_fanout_enabled?: unknown }).notifications_fanout_enabled === "boolean"
+        ? ((company as { notifications_fanout_enabled?: boolean }).notifications_fanout_enabled ?? true)
+        : true,
     integrations: Array.isArray((company as { integrations?: unknown }).integrations)
       ? ((company as { integrations?: Array<{ id?: string; type: string; config?: Record<string, unknown>; createdAt?: string }> }).integrations ?? []).map(
           (integration) => ({
@@ -315,6 +319,12 @@ export function buildCompanyUpdatePatch(
       jira_api_token: nextJiraApiToken,
       integration_mode: nextIntegrationMode,
       integration_type: nextIntegrationMode,
+      notifications_fanout_enabled:
+        typeof input.notifications_fanout_enabled === "boolean"
+          ? input.notifications_fanout_enabled
+          : typeof (current as { notifications_fanout_enabled?: unknown }).notifications_fanout_enabled === "boolean"
+            ? ((current as { notifications_fanout_enabled?: boolean }).notifications_fanout_enabled ?? true)
+            : true,
       integrations,
       status: input.status ?? (input.active === false ? "inactive" : input.active === true ? "active" : current.status ?? "active"),
       active: typeof input.active === "boolean" ? input.active : current.active ?? true,

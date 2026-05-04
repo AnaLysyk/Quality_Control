@@ -3,10 +3,10 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 const repoRoot = process.cwd();
-const collectionFile = path.join(repoRoot, "Quality_Control_API_RBAC.postman_collection.json");
+const collectionFile = path.join(repoRoot, "docs", "api", "Quality_Control_API_RBAC.postman_collection.json");
 const envFile =
   process.env.NEWMAN_ENV_FILE ||
-  path.join(repoRoot, "Quality_Control_API_RBAC.postman_environment.json");
+  path.join(repoRoot, "docs", "api", "Quality_Control_API_RBAC.postman_environment.json");
 
 if (!existsSync(collectionFile)) {
   console.error(`[newman] collection not found: ${collectionFile}`);

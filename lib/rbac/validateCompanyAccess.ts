@@ -1,18 +1,19 @@
 import type { AuthUser } from "@/lib/jwtAuth";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export function assertCompanyAccess(user: AuthUser | null, companyId?: string | null) {
   if (!user || !companyId) throw new Error("MISSING_COMPANY_ID");
 
-  const role = (user.role ?? "").toLowerCase();
+  const role = normalizeLegacyRole(user.role);
 
-  // Admins and devs have global access
-  if (["admin", "global_admin", "it_dev", "developer", "dev"].includes(role)) return;
+  // Global profiles can select companies only in modules that separately grant that capability.
+  if (role === SYSTEM_ROLES.LEADER_TC || role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return;
 
-  // Companies only access themselves
-  if (role === "company" && user.companyId === companyId) return;
+  // Company-scoped profiles only access their own tenant.
+  if ((role === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.COMPANY_USER) && user.companyId === companyId) return;
 
-  // Users access companies they are linked to
-  if (role === "user") {
+  // TC users access only linked companies.
+  if (role === SYSTEM_ROLES.TESTING_COMPANY_USER) {
     if (user.companyId === companyId) return;
     if (Array.isArray(user.companySlugs) && user.companySlugs.includes(companyId)) return;
   }

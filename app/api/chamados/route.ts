@@ -5,25 +5,22 @@ import { notifySuporteCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { canCreateSupportTickets, canViewSupportBoard } from "@/lib/supportAccess";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
 }
 
-// GET /api/chamados: each authenticated user can only see their own chamados
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
-  if (
-    !hasPermissionAccess(user.permissions, "tickets", "view") &&
-    !hasPermissionAccess(user.permissions, "support", "view")
-  ) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+  if (!canViewSupportBoard(user)) {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
   const url = new URL(req.url);
   const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit") ?? 200)));
@@ -37,13 +34,10 @@ export async function POST(req: Request) {
   try {
     const user = await authenticateRequest(req);
     if (!user) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
-    if (
-      !hasPermissionAccess(user.permissions, "support", "create") &&
-      !hasPermissionAccess(user.permissions, "tickets", "create")
-    ) {
-      return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    if (!canCreateSupportTickets(user)) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
     }
     const body = await req.json().catch(() => ({}));
     const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
@@ -80,7 +74,7 @@ export async function POST(req: Request) {
     });
 
     if (!suporte) {
-      return NextResponse.json({ error: "Informe titulo ou descricao" }, { status: 400 });
+      return NextResponse.json({ error: "Informe título ou descrição" }, { status: 400 });
     }
 
     appendSuporteEvent({
@@ -97,6 +91,17 @@ export async function POST(req: Request) {
     });
 
     const enriched = await attachAssigneeToSuporte(suporte);
+
+    addAuditLogSafe({
+      actorUserId: user.id,
+      actorEmail: user.email ?? null,
+      action: "ticket.created",
+      entityType: "ticket",
+      entityId: suporte.id,
+      entityLabel: suporte.title ?? null,
+      metadata: { type: suporte.type ?? null, priority: suporte.priority ?? null, companyId: targetCompanyId, role: user.role ?? null, _payload: body },
+    });
+
     return NextResponse.json({ item: enriched }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao criar chamado";

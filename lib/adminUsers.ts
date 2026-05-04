@@ -16,6 +16,7 @@ import {
   resolveUserOriginLabel,
 } from "@/lib/companyUserScope";
 import { syncLegacyCompanyUsersToLocalStore } from "@/lib/legacyCompanyUsersSync";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type AdminUserCompanyItem = {
   id: string;
@@ -24,12 +25,7 @@ export type AdminUserCompanyItem = {
   role: string;
 };
 
-export type AdminUserProfileKind =
-  | "empresa"
-  | "company_user"
-  | "testing_company_user"
-  | "leader_tc"
-  | "technical_support";
+export type AdminUserProfileKind = SystemRole;
 
 export type AdminUserItem = {
   id: string;
@@ -64,8 +60,11 @@ export type AdminUserItem = {
 
 const ROLE_WEIGHT: Record<string, number> = {
   viewer: 0,
+  testing_company_user: 0,
   user: 1,
+  company_user: 1,
   company_admin: 2,
+  empresa: 2,
   it_dev: 3,
   technical_support: 3,
   leader_tc: 4,
@@ -114,12 +113,12 @@ function summarizeCompanyNames(companyNames: string[]) {
 }
 
 export function resolveStrongestCompanyRole(links: Array<Pick<LocalAuthMembership, "role">>) {
-  let strongest = "user";
+  let strongest = "company_user";
   let strongestWeight = ROLE_WEIGHT[strongest] ?? 0;
 
   for (const link of links) {
     const role = normalizeLocalRole(link.role ?? null);
-    const weight = ROLE_WEIGHT[role] ?? ROLE_WEIGHT.user;
+    const weight = ROLE_WEIGHT[role] ?? ROLE_WEIGHT.company_user;
     if (weight > strongestWeight) {
       strongest = role;
       strongestWeight = weight;
@@ -130,21 +129,35 @@ export function resolveStrongestCompanyRole(links: Array<Pick<LocalAuthMembershi
 }
 
 export function resolvePermissionRoleForUser(
-  user: Pick<LocalAuthUser, "globalRole" | "is_global_admin" | "role"> | null | undefined,
+  user:
+    | Pick<
+        LocalAuthUser,
+        "globalRole" | "is_global_admin" | "role" | "user_origin" | "user_scope" | "allow_multi_company_link"
+      >
+    | null
+    | undefined,
   links: Array<Pick<LocalAuthMembership, "role">>,
 ) {
   const strongestFromLinks = resolveStrongestCompanyRole(links);
   const userRole = normalizeLocalRole(user?.role ?? null);
+  const origin = normalizeUserOrigin(user?.user_origin);
+  const scope = normalizeUserScope(user?.user_scope);
+  const allowMultiCompanyLink = resolveAllowMultiCompanyLink(
+    user?.allow_multi_company_link,
+    user?.user_scope,
+  );
   const strongest =
-    (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.user)
+    (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.company_user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.company_user)
       ? userRole
       : strongestFromLinks;
-  if (strongest === "leader_tc") return "leader_tc" as const;
-  if (strongest === "technical_support") return "technical_support" as const;
-  if (strongest === "it_dev") return "dev" as const;
-  if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return "admin" as const;
-  if (strongest === "company_admin") return "company" as const;
-  return "user" as const;
+  if (strongest === "leader_tc") return SYSTEM_ROLES.LEADER_TC;
+  if (strongest === "technical_support") return SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return SYSTEM_ROLES.LEADER_TC;
+  if (strongest === "empresa") return SYSTEM_ROLES.EMPRESA;
+  if (origin === "client_company" || scope === "company_only" || allowMultiCompanyLink === false) {
+    return SYSTEM_ROLES.COMPANY_USER;
+  }
+  return SYSTEM_ROLES.TESTING_COMPANY_USER;
 }
 
 function isInstitutionalCompanyProfile(
@@ -168,7 +181,7 @@ function isInstitutionalCompanyProfile(
     origin === "client_company" ||
     Boolean(companySlug) ||
     Boolean(companyName) ||
-    companyRole === "company_admin";
+    companyRole === "empresa";
 
   if (!hasCompanyScopedSignal) return false;
 
@@ -198,27 +211,25 @@ export function resolveAdminUserProfileKind(
     normalizedUserRole === "leader_tc" ||
     normalizedLinkRoles.includes("leader_tc")
   ) {
-    return "leader_tc";
+    return SYSTEM_ROLES.LEADER_TC;
   }
 
   if (
-    normalizedUserRole === "it_dev" ||
     normalizedUserRole === "technical_support" ||
-    normalizedLinkRoles.includes("it_dev") ||
     normalizedLinkRoles.includes("technical_support")
   ) {
-    return "technical_support";
+    return SYSTEM_ROLES.TECHNICAL_SUPPORT;
   }
 
   if (isInstitutionalCompanyProfile(user, primaryCompany)) {
-    return "empresa";
+    return SYSTEM_ROLES.EMPRESA;
   }
 
   if (origin === "client_company" || scope === "company_only" || allowMultiCompanyLink === false) {
-    return "company_user";
+    return SYSTEM_ROLES.COMPANY_USER;
   }
 
-  return "testing_company_user";
+  return SYSTEM_ROLES.TESTING_COMPANY_USER;
 }
 
 export function buildAdminUserItem(
@@ -266,22 +277,9 @@ export function buildAdminUserItem(
     companies[0] ??
     null;
 
-  const strongestFromLinks = resolveStrongestCompanyRole(Array.from(uniqueLinks.values()));
-  const userRole = normalizeLocalRole(user.role ?? null);
-  const strongestRole =
-    (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.user)
-      ? userRole
-      : strongestFromLinks;
   const permissionRole = resolvePermissionRoleForUser(user, Array.from(uniqueLinks.values()));
   const profileKind = resolveAdminUserProfileKind(user, Array.from(uniqueLinks.values()), primaryCompany);
-  const mappedRole =
-    permissionRole === "admin"
-      ? "global_admin"
-      : strongestRole === "it_dev"
-        ? "it_dev"
-        : strongestRole === "company_admin"
-          ? "client_admin"
-          : "client_user";
+  const mappedRole = normalizeLegacyRole(permissionRole) ?? profileKind;
 
   return {
     id: user.id,

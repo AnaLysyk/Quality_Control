@@ -1,7 +1,7 @@
-[
+﻿[
   {
     "id": "01dc70c1-05bc-4cfa-b366-7bf3f18c6fdf",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -12,7 +12,7 @@
   },
   {
     "id": "c26c4178-3fa6-4c1d-a5ce-96a84ce7a8b3",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -23,7 +23,7 @@
   },
   {
     "id": "4237fb7c-f7e2-4468-9e10-e9bac16c8bb9",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -34,7 +34,7 @@
   },
   {
     "id": "a752e329-fbf6-457f-88e0-d4b65ef43f3c",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -45,7 +45,7 @@
   },
   {
     "id": "b9ead854-1433-4f1a-a4c8-f6d708221315",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -56,7 +56,7 @@
   },
   {
     "id": "55c12dd6-594f-4793-a62b-0f160c148c4d",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -67,7 +67,7 @@
   },
   {
     "id": "c5f4c378-7627-4711-bfad-07e7339c7983",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -78,7 +78,7 @@
   },
   {
     "id": "dd196aa7-22e2-4056-b18f-3f81d6a44eaf",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -89,7 +89,7 @@
   },
   {
     "id": "21ee3733-45f3-4b1d-b8f3-86f5d1a2212e",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -100,7 +100,7 @@
   },
   {
     "id": "36748feb-4a4e-4db6-af95-a415f2389b23",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -111,7 +111,7 @@
   },
   {
     "id": "cb998af2-f4b5-4cf2-a84c-42002e454b55",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -122,7 +122,7 @@
   },
   {
     "id": "f7822b4d-3830-4a69-87fd-44be0d5f4b13",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -133,7 +133,7 @@
   },
   {
     "id": "fb5ed0ab-78b8-41ff-9a1b-3da79c5d5813",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -144,7 +144,7 @@
   },
   {
     "id": "6f0cc22b-c223-46a3-bb3b-6aff9548eca8",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -155,7 +155,7 @@
   },
   {
     "id": "7c81b365-d983-4bb3-a8e0-2e651bd930bb",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -166,7 +166,7 @@
   },
   {
     "id": "c7662146-bc94-469f-9aa5-52a61d197b38",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -177,7 +177,7 @@
   },
   {
     "id": "439c0c86-bd35-4d07-a7c0-cd7eaf75f7fa",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -188,7 +188,7 @@
   },
   {
     "id": "45632f79-ce0d-462c-b83b-7d0d68e3f3ba",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -199,7 +199,7 @@
   },
   {
     "id": "7a74dfe3-7ad2-4bda-bfd5-4d57d3809b1a",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -210,7 +210,7 @@
   },
   {
     "id": "0b666aea-f919-4bbe-b5c4-d5c2018993de",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -221,7 +221,7 @@
   },
   {
     "id": "9e08be80-c7ba-47d5-9abe-4fb2bcf7a6c3",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -232,7 +232,7 @@
   },
   {
     "id": "420f02e2-945e-49e9-bf6d-4d123f3d1d92",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -243,7 +243,7 @@
   },
   {
     "id": "a09f31e3-4ac4-4869-a397-a659dee85e4e",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -254,7 +254,7 @@
   },
   {
     "id": "529cd2bb-7541-4df7-8497-447e332e481f",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -265,7 +265,7 @@
   },
   {
     "id": "5a703336-2995-4d3a-bf73-fbfc86c7b483",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -276,7 +276,7 @@
   },
   {
     "id": "b804a2a3-3d4b-4d65-bbbc-158b91f83dac",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -287,7 +287,7 @@
   },
   {
     "id": "7bc6119c-cbbe-4b40-ac1d-2e1c6b774c99",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -298,7 +298,7 @@
   },
   {
     "id": "3cb7e685-0133-4511-aacc-525f1a2725b6",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -309,7 +309,7 @@
   },
   {
     "id": "a54a50cc-beb9-498a-98fb-7b122dbbad1d",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -320,7 +320,7 @@
   },
   {
     "id": "d4acb7d3-8c54-4e88-8033-42fac21df08e",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -331,7 +331,7 @@
   },
   {
     "id": "dd46c50f-c65e-4299-9cfd-606e4a9772b0",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -342,7 +342,7 @@
   },
   {
     "id": "97791080-4820-48e7-b196-4b1105113461",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -353,7 +353,7 @@
   },
   {
     "id": "67c6b68c-2ef3-48c2-95ff-41e367524cb0",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -364,7 +364,7 @@
   },
   {
     "id": "7aa42a7e-5acd-44e4-9cd7-c30f44f172d8",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -375,7 +375,7 @@
   },
   {
     "id": "16dc3f2a-ab01-49be-b4c8-42ed8c232e25",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -386,7 +386,7 @@
   },
   {
     "id": "932a2ff6-aebb-4062-b141-8e86f00b8926",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -397,7 +397,7 @@
   },
   {
     "id": "80ac81de-efb0-4e17-868a-9c917874690f",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -408,7 +408,7 @@
   },
   {
     "id": "71afc067-964d-47d0-8aa5-44c36e41efe4",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -419,7 +419,7 @@
   },
   {
     "id": "efb61e86-526c-4f08-8af5-bf74d36bd3d0",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -430,7 +430,7 @@
   },
   {
     "id": "b21a8af0-d03e-4926-8937-892bd3831f60",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -441,7 +441,7 @@
   },
   {
     "id": "5f27a007-ee55-43a9-be12-a9d3ad0b994a",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -452,7 +452,7 @@
   },
   {
     "id": "4eea8404-a6a1-4b4d-87f8-8b7c820b1798",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -463,7 +463,7 @@
   },
   {
     "id": "58702ccf-5db7-4643-9eb5-d5ff124147d8",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -474,7 +474,7 @@
   },
   {
     "id": "16cc5669-398c-46d8-8672-74908172c98b",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -485,7 +485,7 @@
   },
   {
     "id": "64e42414-5cba-4779-a4e2-b2fe0549f680",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -496,7 +496,7 @@
   },
   {
     "id": "8550e0a4-41b6-43aa-9851-b90a861eae82",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -507,7 +507,7 @@
   },
   {
     "id": "99b73f21-cf27-4f0f-8e32-f455627ff2d7",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -518,7 +518,7 @@
   },
   {
     "id": "fc7d9650-9eb7-43c6-bbcf-33955e44dc11",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -529,7 +529,7 @@
   },
   {
     "id": "b0563b9e-3b3a-4aa2-b4d2-d8ae523511a7",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -540,7 +540,7 @@
   },
   {
     "id": "9a644fd4-cf55-4051-a095-f02764ce259e",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -551,7 +551,7 @@
   },
   {
     "id": "4cd13a8a-86e4-4e61-aa9e-bd9515a3ea56",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -562,7 +562,7 @@
   },
   {
     "id": "7ed3702d-d03f-44a3-bb74-cc048ee20574",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -573,7 +573,7 @@
   },
   {
     "id": "9fb8e320-d4b7-4850-9407-83636c5672d2",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -584,7 +584,7 @@
   },
   {
     "id": "cc4497bd-a5c9-4e05-af58-925349280f79",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -595,7 +595,7 @@
   },
   {
     "id": "fc52c801-c3fe-483b-86f4-f9d27d32da52",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -606,7 +606,7 @@
   },
   {
     "id": "bd264abf-0655-4c3e-b63d-cb8a8e3ef8cd",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -617,7 +617,7 @@
   },
   {
     "id": "cda58244-3cc8-4a0c-a093-d76f98237c2d",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -628,7 +628,7 @@
   },
   {
     "id": "56cc9260-fa4a-4515-9c8a-f5d30326fd77",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -639,7 +639,7 @@
   },
   {
     "id": "8cd5f338-acc8-40d0-99a7-68e611ab3157",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -650,7 +650,7 @@
   },
   {
     "id": "c90c46bb-ad4a-42c1-94ed-d51cad083f7c",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -661,7 +661,7 @@
   },
   {
     "id": "92a7140a-e191-424c-89a2-e2a210691afa",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -672,7 +672,7 @@
   },
   {
     "id": "046ade59-6a43-4b0a-9a95-93bb3a3be479",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -683,7 +683,7 @@
   },
   {
     "id": "c74a9f00-bf6a-4efd-b60c-4ce2a75657bd",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -694,7 +694,7 @@
   },
   {
     "id": "af047fee-2415-46bd-8f4a-7d39845ed6bc",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -705,7 +705,7 @@
   },
   {
     "id": "89a2e70c-1a1e-46ad-9773-71010664fd83",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -716,7 +716,7 @@
   },
   {
     "id": "f8ce0319-24fc-4dd1-a0b1-66a306eaa8e2",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -727,7 +727,7 @@
   },
   {
     "id": "63900ad8-ce65-4328-b0a2-4e0a56083e14",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -738,7 +738,7 @@
   },
   {
     "id": "a19c88d1-6ccf-4e87-a5b5-cc1fd17c5fe3",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -749,7 +749,7 @@
   },
   {
     "id": "56c97bb7-a861-48ba-a6ce-89c9fdb97b50",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -760,7 +760,7 @@
   },
   {
     "id": "774370ab-b8e6-4e04-9c30-b470fff954cb",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -771,7 +771,7 @@
   },
   {
     "id": "37d39a40-8277-4f24-9c87-02511cd8fe0c",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -782,7 +782,7 @@
   },
   {
     "id": "76730dd2-8598-48cb-b037-0ac863e4fa86",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -793,7 +793,7 @@
   },
   {
     "id": "6ed22070-2a8a-4f02-9234-9ebe4014c438",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -804,7 +804,7 @@
   },
   {
     "id": "0a5e7331-cc70-4609-bae1-192fb3501260",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -815,7 +815,7 @@
   },
   {
     "id": "e4f08262-1158-47a5-a5d9-62846e22485f",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -826,7 +826,7 @@
   },
   {
     "id": "f8b4823d-2051-457c-9c00-f705a0b329c3",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -837,7 +837,7 @@
   },
   {
     "id": "c6b01d02-82f7-473e-803e-5002cd65e424",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -848,7 +848,7 @@
   },
   {
     "id": "2226a270-0f5c-4517-9664-d57a4a0ae91f",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -859,7 +859,7 @@
   },
   {
     "id": "f8a8fa8b-2c2c-4c44-beb4-d75459ac6b7b",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -870,7 +870,7 @@
   },
   {
     "id": "26d3f317-e301-47eb-b7f2-0caebd66e0f3",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -881,7 +881,7 @@
   },
   {
     "id": "d3acd896-1409-4de8-9d1b-c0981f3e6045",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -892,7 +892,7 @@
   },
   {
     "id": "8719efb3-8f5e-4358-aa7e-7dcd1a05fe41",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -903,7 +903,7 @@
   },
   {
     "id": "4d187432-5e30-41da-b9c4-76f946b0e039",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -914,7 +914,7 @@
   },
   {
     "id": "2f8068a8-2e14-4865-b7f5-4d4c4829d3c3",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -925,7 +925,7 @@
   },
   {
     "id": "41b900f2-1ee5-4592-9b7b-f5a2dbd612d4",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -936,7 +936,7 @@
   },
   {
     "id": "3ae7e954-6358-4ca2-9327-c1cef8f12733",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -947,7 +947,7 @@
   },
   {
     "id": "0260bd97-2288-40a4-8b55-238a9e4d2714",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -958,7 +958,7 @@
   },
   {
     "id": "57dc0f36-f432-4b1a-869c-c291e197d371",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -969,7 +969,7 @@
   },
   {
     "id": "570234d0-fe8c-4ab3-9791-40073cfef498",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -980,7 +980,7 @@
   },
   {
     "id": "538b55ff-4763-41e5-8605-892d60e9be3c",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -991,7 +991,7 @@
   },
   {
     "id": "f730ea25-0e34-4597-8da6-1fc5463597c4",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1002,7 +1002,7 @@
   },
   {
     "id": "30344887-a5d3-4d03-9a64-3783a8123a09",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1013,7 +1013,7 @@
   },
   {
     "id": "67875200-dc93-4ee9-9e28-a21f5e7a8900",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1024,7 +1024,7 @@
   },
   {
     "id": "97b8bd78-41e7-4585-b7b8-84ad266d6c22",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1035,7 +1035,7 @@
   },
   {
     "id": "237ef83d-4b4a-4e0d-bf11-7754dc3c3b15",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1046,7 +1046,7 @@
   },
   {
     "id": "a5369835-bbd2-4b04-9163-dda61fb0baf6",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1057,7 +1057,7 @@
   },
   {
     "id": "812f3488-6f90-4d40-91e2-7dbf168c16d5",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1068,7 +1068,7 @@
   },
   {
     "id": "2057d350-c9c9-41cb-99b6-9f76f3b28a58",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1079,7 +1079,7 @@
   },
   {
     "id": "9d3ba608-9a49-4d5b-a76f-f0608b8dbc9a",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1090,7 +1090,7 @@
   },
   {
     "id": "54bf84ca-d40f-44d2-a792-16af85397f19",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1101,7 +1101,7 @@
   },
   {
     "id": "26e674b8-61e3-443b-aa9c-8723f1397d14",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1112,7 +1112,7 @@
   },
   {
     "id": "97b1ccdc-c930-449b-9800-fed4b698e095",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1123,7 +1123,7 @@
   },
   {
     "id": "512bd3dc-333b-4061-9f0e-4f5b82c03cc1",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1134,7 +1134,7 @@
   },
   {
     "id": "1fd273e6-2c32-4e79-a6a9-0711168c7f05",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1145,7 +1145,7 @@
   },
   {
     "id": "c211a408-9e44-4b00-9894-1fc13e9a1c0a",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1156,7 +1156,7 @@
   },
   {
     "id": "9d17107d-710b-4e73-8837-0c62f98d11fa",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1167,7 +1167,7 @@
   },
   {
     "id": "c10260e1-3f75-48f5-b3d3-fb1359315609",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1178,7 +1178,7 @@
   },
   {
     "id": "79aad9d5-7316-4d7b-b060-0019979eb729",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1189,7 +1189,7 @@
   },
   {
     "id": "7ba97ca7-d323-4898-a48b-a2a74b248755",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1200,7 +1200,7 @@
   },
   {
     "id": "27c432e6-1e68-47e7-8fa7-797491e3c7f4",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1211,7 +1211,7 @@
   },
   {
     "id": "cd61e646-c1ea-4799-9e80-cd3344cb06db",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1222,7 +1222,7 @@
   },
   {
     "id": "4f765e8a-e6a8-4a64-9d75-60b644188407",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1233,7 +1233,7 @@
   },
   {
     "id": "b20b8954-7d8d-4a3a-aa8f-fa0ce1a12a34",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1244,7 +1244,7 @@
   },
   {
     "id": "a1d4f819-859b-42be-be46-429ff83006d3",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1255,7 +1255,7 @@
   },
   {
     "id": "490a0cfe-b51a-4ac3-a73e-d8baf8b30241",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1266,7 +1266,7 @@
   },
   {
     "id": "c3d95b16-1f85-40c2-bdb9-4f2668b87b85",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1277,7 +1277,7 @@
   },
   {
     "id": "8bd15e0e-9175-4e4c-a52d-b5b76b248eeb",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1288,7 +1288,7 @@
   },
   {
     "id": "29bb4550-46b9-4e95-b104-7acd5b09148f",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1299,7 +1299,7 @@
   },
   {
     "id": "02aa689b-af7e-495b-998d-bbb5842e92a0",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1310,7 +1310,7 @@
   },
   {
     "id": "ea37fe2b-e49e-477f-8233-b5fb5c59604c",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1321,7 +1321,7 @@
   },
   {
     "id": "01a6ff8f-514f-43a9-be52-9ca89025f3a7",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1332,7 +1332,7 @@
   },
   {
     "id": "2212c288-8b20-4055-bfba-f9871efd391e",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1343,7 +1343,7 @@
   },
   {
     "id": "178964aa-f4cb-4a0d-ba8f-7f42dc26de5b",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1354,7 +1354,7 @@
   },
   {
     "id": "5e17e7f2-3f93-41e0-a648-e71f8c234f90",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1365,7 +1365,7 @@
   },
   {
     "id": "ff6628af-0074-45dd-8a7f-6c5038840f2f",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1376,7 +1376,7 @@
   },
   {
     "id": "41ddd153-deed-4de3-9bb8-fc1e76f93081",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1387,7 +1387,7 @@
   },
   {
     "id": "dbd47ca7-28a9-4f15-9dbb-18e7eee79337",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1398,7 +1398,7 @@
   },
   {
     "id": "303561a5-58b0-4678-b055-ad2feecc6dff",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1409,7 +1409,7 @@
   },
   {
     "id": "80f7fe1d-47ae-43d6-9eb8-ffb9a740b980",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1420,7 +1420,7 @@
   },
   {
     "id": "e8a7fb4c-195e-4a2e-a88a-2d1353f2faeb",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1431,7 +1431,7 @@
   },
   {
     "id": "bba65dab-c6cb-47bc-aedf-cf38012e2682",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1442,7 +1442,7 @@
   },
   {
     "id": "520fecbc-87cb-4a77-a5a8-939645630d89",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1453,7 +1453,7 @@
   },
   {
     "id": "cb3ef04d-f638-4b37-b204-389fa0cf9a16",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1464,7 +1464,7 @@
   },
   {
     "id": "c37dba17-35b6-47da-97e3-0ce656b54f3f",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1475,7 +1475,7 @@
   },
   {
     "id": "de6264fb-32ef-4524-9eb7-2521e1293050",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1486,7 +1486,7 @@
   },
   {
     "id": "fbceebf3-5e2e-4649-a139-463e49d9b1fd",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1497,7 +1497,7 @@
   },
   {
     "id": "eb1efc5e-64c0-4956-bbe4-758a828ce81c",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1508,7 +1508,7 @@
   },
   {
     "id": "f00c47c0-c277-453a-b1c5-4ffa9402dfc1",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1519,7 +1519,7 @@
   },
   {
     "id": "b87a5551-9496-44b1-8d97-6946e9aae244",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1530,7 +1530,7 @@
   },
   {
     "id": "1a17bd00-2551-435c-91a1-b8813057759f",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1541,7 +1541,7 @@
   },
   {
     "id": "2044ded7-e003-42bd-b015-ace1ae6b8de9",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1552,7 +1552,7 @@
   },
   {
     "id": "7d1072a9-c415-43a6-ac2c-f9215a852159",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1563,7 +1563,7 @@
   },
   {
     "id": "be68e2a9-4281-4bed-a6f0-5d381dc939f4",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1574,7 +1574,7 @@
   },
   {
     "id": "b932c768-ed4e-4989-8176-08d5f4e92098",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1585,7 +1585,7 @@
   },
   {
     "id": "3c186165-b122-4f47-9a4e-bec9639b6b66",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1596,7 +1596,7 @@
   },
   {
     "id": "dfcb37b5-535d-4ccf-9436-3a787aebc334",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1607,7 +1607,7 @@
   },
   {
     "id": "ae713cc0-42a4-4e9e-97a5-8a252627ee05",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1618,7 +1618,7 @@
   },
   {
     "id": "e236f0f2-144f-45c6-9131-6526f7d2cf19",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1629,7 +1629,7 @@
   },
   {
     "id": "4114d02d-cce4-4b9b-8d70-99ce024a6507",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1640,7 +1640,7 @@
   },
   {
     "id": "a77e47f4-7f43-429c-aab4-422e1923415c",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1651,7 +1651,7 @@
   },
   {
     "id": "409680ae-b46e-461d-b79c-e40e2c19eac4",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1662,7 +1662,7 @@
   },
   {
     "id": "1720e337-d0b3-438c-ae55-bd1ac510fb67",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1673,7 +1673,7 @@
   },
   {
     "id": "1b886d1a-05c2-4f25-a58f-ace083eecc66",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1684,7 +1684,7 @@
   },
   {
     "id": "af81d67c-7147-457b-a7d5-4bb511b0970a",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1695,7 +1695,7 @@
   },
   {
     "id": "785df467-6dbc-4b05-94c6-bb26fbf1a80d",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s3",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1706,7 +1706,7 @@
   },
   {
     "id": "7a357bf0-9b01-4b9a-bacc-f9cf4446ea1e",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_7_0_ace_s12",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1717,7 +1717,7 @@
   },
   {
     "id": "6b45e881-1deb-4eb6-b38a-588f101fa661",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_reg",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1728,7 +1728,7 @@
   },
   {
     "id": "0e2e3e53-2d32-4d79-892a-5f652023548a",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "v1_6_2_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1739,7 +1739,7 @@
   },
   {
     "id": "30e356aa-d897-460c-b92a-de96191c3fdc",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "print_v1_8_0_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1750,7 +1750,7 @@
   },
   {
     "id": "2565fa7c-1da1-46ef-8af2-c6f19f38be7d",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_teste_painel_qa_ace",
     "gate_status": "approved",
     "mttr_hours": 24,
@@ -1761,7 +1761,7 @@
   },
   {
     "id": "c287c0e1-4672-473c-907e-1faa6288ec04",
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "release_slug": "release_1_9_0_aceitacao",
     "gate_status": "approved",
     "mttr_hours": 24,

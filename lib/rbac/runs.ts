@@ -9,12 +9,12 @@ export async function resolveRunRole(authUser: AuthUser | null, clientSlug?: str
   try {
     return await resolveDefectRole(authUser, clientSlug);
   } catch {
-    return "user";
+    return "testing_company_user";
   }
 }
 
-export const canCreateRun = (role: Role) => role === "admin" || role === "company";
-export const canEditRun = (role: Role) => role === "admin" || role === "company" || role === "user";
-export const canDeleteRun = (role: Role) => role === "admin";
-export const canLinkDefect = (role: Role) => role === "admin" || role === "company";
+export const canCreateRun = (role: Role) => role === "leader_tc" || role === "empresa";
+export const canEditRun = (role: Role) => role === "leader_tc" || role === "empresa" || role === "testing_company_user";
+export const canDeleteRun = (role: Role) => role === "leader_tc";
+export const canLinkDefect = (role: Role) => role === "leader_tc" || role === "empresa";
 export const getRunMockRole = getMockRole;

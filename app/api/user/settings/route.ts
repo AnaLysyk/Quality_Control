@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+  APP_SETTINGS_COOKIE_MAX_AGE,
+  THEME_PREFERENCE_COOKIE,
+  THEME_RESOLVED_COOKIE,
+} from "@/lib/appSettingsCookies";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
@@ -13,16 +18,11 @@ if (typeof process !== "undefined" && process.release?.name === "node") {
 }
 
 const DEFAULT_DATA_DIR = path && path.join(process.cwd(), "data");
-const DATA_DIR =
-  path &&
-  (process.env.USER_SETTINGS_DATA_DIR ||
-    (process.env.VERCEL === "1" ? path.join("/tmp", "qc-data") : DEFAULT_DATA_DIR));
+const DATA_DIR = path && (process.env.USER_SETTINGS_DATA_DIR || DEFAULT_DATA_DIR);
 const STORE_PATH = path && DATA_DIR ? path.join(DATA_DIR, "user-settings.json") : undefined;
 const STORE_KEY_PREFIX = "qc:user_settings:v1";
 const USE_REDIS = process.env.USER_SETTINGS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY =
-  process.env.USER_SETTINGS_IN_MEMORY === "true" ||
-  (!USE_REDIS && process.env.VERCEL === "1");
+const USE_MEMORY = process.env.USER_SETTINGS_IN_MEMORY === "true";
 let memoryStore: Record<string, StoredSettings> = {};
 let warnedFsFailure = false;
 
@@ -46,6 +46,22 @@ const isValidTheme = (value?: string | null): value is Theme =>
 
 const isValidLanguage = (value?: string | null): value is Locale =>
   Boolean(value) && LOCALES.includes(value as Locale);
+
+function applyThemeCookies(response: NextResponse, theme: Theme) {
+  response.cookies.set(THEME_PREFERENCE_COOKIE, theme, {
+    path: "/",
+    sameSite: "lax",
+    maxAge: APP_SETTINGS_COOKIE_MAX_AGE,
+  });
+
+  if (theme === "light" || theme === "dark") {
+    response.cookies.set(THEME_RESOLVED_COOKIE, theme, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: APP_SETTINGS_COOKIE_MAX_AGE,
+    });
+  }
+}
 
 async function readStoreFile(): Promise<Record<string, StoredSettings>> {
   if (!fs || !STORE_PATH) return {};
@@ -163,17 +179,20 @@ async function saveSettingsToStore(userId: string, next: Omit<StoredSettings, "u
 export async function GET(req: Request) {
   const userId = await resolveUserId(req);
   if (!userId) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const stored = await fetchSettingsFromStore(userId);
-  return NextResponse.json({ settings: normalizeSettings(stored) }, { status: 200 });
+  const settings = normalizeSettings(stored);
+  const response = NextResponse.json({ settings }, { status: 200 });
+  applyThemeCookies(response, settings.theme);
+  return response;
 }
 
 export async function PATCH(req: Request) {
   const userId = await resolveUserId(req);
   if (!userId) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -193,5 +212,8 @@ export async function PATCH(req: Request) {
   });
 
   const saved = await saveSettingsToStore(userId, normalized);
-  return NextResponse.json({ settings: normalizeSettings(saved) }, { status: 200 });
+  const settings = normalizeSettings(saved);
+  const response = NextResponse.json({ settings }, { status: 200 });
+  applyThemeCookies(response, settings.theme);
+  return response;
 }

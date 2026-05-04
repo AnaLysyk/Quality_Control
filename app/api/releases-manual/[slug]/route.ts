@@ -8,9 +8,10 @@ import { evaluateQualityGate } from "@/lib/quality";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { listManualReleaseResponsibleOptions, resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
 import { readManualReleases, writeManualReleases } from "@/lib/manualReleaseStore";
-import { notifyManualRunFailure } from "@/lib/notificationService";
+import { notifyDefectAssigned, notifyDefectStatusChanged, notifyManualRunFailure } from "@/lib/notificationService";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
 
 async function resolveActor(authUser: AuthUser | null) {
   if (!authUser) return { actorId: null, actorName: null };
@@ -52,21 +53,27 @@ function normalizeStats(stats?: Partial<Stats> | null): Stats {
   };
 }
 
+function normalizeOptionalLabel(value: unknown) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
 export async function GET(_req: Request, context: { params: Promise<{ slug: string }> }) {
   const authUser = await authenticateRequest(_req);
   const mockRole = await getMockRole();
   const effectiveAuthUser: AuthUser | null =
     authUser ??
-    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
   const targetSlug = slugifyRelease(slug);
   const releases = await readManualReleases();
   const release = releases.find((r) => r.slug === targetSlug) ?? null;
-  if (!release) return NextResponse.json({ message: "Nao encontrado" }, { status: 404 });
+  if (!release) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
 
   if (!effectiveAuthUser.isGlobalAdmin) {
     const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
@@ -87,16 +94,16 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
   const mockRole = await getMockRole();
   const effectiveAuthUser: AuthUser | null =
     authUser ??
-    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
   const targetSlug = slugifyRelease(slug);
   const releases = await readManualReleases();
   const index = releases.findIndex((r) => r.slug === targetSlug);
-  if (index < 0) return NextResponse.json({ message: "Nao encontrado" }, { status: 404 });
+  if (index < 0) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
 
   const current = releases[index];
   if (!effectiveAuthUser.isGlobalAdmin) {
@@ -130,7 +137,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
           ? null
           : "__invalid__";
   if (requestedAssignedToUserId === "__invalid__") {
-    return NextResponse.json({ message: "Responsavel invalido" }, { status: 400 });
+    return NextResponse.json({ message: "Responsável invalido" }, { status: 400 });
   }
   const fallbackAssignedToUserId = current.assignedToUserId ?? creatorUserId ?? null;
   const resolvedAssignedToUserId =
@@ -138,7 +145,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
       ? fallbackAssignedToUserId
       : requestedAssignedToUserId || creatorUserId || null;
   if (resolvedAssignedToUserId && !availableResponsiblesById.has(resolvedAssignedToUserId)) {
-    return NextResponse.json({ message: "Responsavel precisa estar vinculado a empresa." }, { status: 400 });
+    return NextResponse.json({ message: "Responsável precisa estar vinculado a empresa." }, { status: 400 });
   }
   const resolvedAssignedToName = resolvedAssignedToUserId
     ? availableResponsiblesById.get(resolvedAssignedToUserId)?.name ?? current.assignedToName ?? creatorName
@@ -170,10 +177,12 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
   const nextName =
     typeof body.name === "string" ? body.name : typeof body.title === "string" ? body.title : current.name;
   const nextRunSlug = typeof body.runSlug === "string" ? body.runSlug : current.runSlug;
+  const nextApp = typeof body.app === "string" ? body.app.trim() || "Aplicação manual" : current.app;
 
   const updated: Release = {
     ...current,
     name: nextName,
+    app: nextApp,
     qaseProject:
       typeof body.qaseProject === "string"
         ? body.qaseProject.trim().toUpperCase()
@@ -181,8 +190,34 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
           ? body.qase_project_code.trim().toUpperCase()
           : current.qaseProject,
     status: nextStatus ?? current.status,
+    severity: body.severity === undefined ? current.severity ?? null : normalizeOptionalLabel(body.severity),
+    priority: body.priority === undefined ? current.priority ?? null : normalizeOptionalLabel(body.priority),
     runSlug: nextRunSlug,
     runName: typeof body.runName === "string" ? body.runName : current.runName,
+    testPlanId:
+      body.testPlanId === undefined
+        ? current.testPlanId ?? null
+        : typeof body.testPlanId === "string" && body.testPlanId.trim()
+          ? body.testPlanId.trim()
+          : null,
+    testPlanName:
+      body.testPlanName === undefined
+        ? current.testPlanName ?? null
+        : typeof body.testPlanName === "string" && body.testPlanName.trim()
+          ? body.testPlanName.trim()
+          : null,
+    testPlanSource:
+      body.testPlanSource === undefined
+        ? current.testPlanSource ?? null
+        : body.testPlanSource === "manual" || body.testPlanSource === "qase"
+          ? body.testPlanSource
+          : null,
+    testPlanProjectCode:
+      body.testPlanProjectCode === undefined
+        ? current.testPlanProjectCode ?? null
+        : typeof body.testPlanProjectCode === "string" && body.testPlanProjectCode.trim()
+          ? body.testPlanProjectCode.trim().toUpperCase()
+          : null,
     stats: statsPatch,
     kind: nextKind,
     createdByUserId: creatorUserId,
@@ -195,6 +230,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
 
   releases[index] = updated;
   await writeManualReleases(releases);
+  if (nextKind === "defect") {
+    invalidateCompanyDefectsDataset(updated.clientSlug ?? current.clientSlug ?? null);
+  }
   if (nextKind === "run") {
     try {
       await notifyManualRunFailure(updated);
@@ -209,6 +247,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
       const nextStatusFinal = normalizeDefectStatus(updated.status);
       const prevRun = typeof current.runSlug === "string" ? current.runSlug : null;
       const nextRun = typeof updated.runSlug === "string" ? updated.runSlug : null;
+      const prevAssignedToUserId = current.assignedToUserId ?? null;
+      const nextAssignedToUserId = updated.assignedToUserId ?? null;
       if (prevStatus !== nextStatusFinal) {
         await appendDefectHistory(updated.slug, {
           action: "status_changed",
@@ -235,8 +275,38 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
           note: `Nome atualizado: ${current.name} -> ${nextName}`,
         });
       }
+      if (prevStatus !== nextStatusFinal) {
+        void notifyDefectStatusChanged({
+          defect: {
+            slug: updated.slug,
+            title: updated.name,
+            name: updated.name,
+            createdByUserId: updated.createdByUserId ?? null,
+            assignedToUserId: updated.assignedToUserId ?? null,
+          },
+          companySlug: updated.clientSlug ?? null,
+          actorId: actor.actorId ?? "",
+          actorName: actor.actorName,
+          nextStatusLabel: nextStatusFinal === "done" ? "Concluido" : nextStatusFinal === "in_progress" ? "Em andamento" : "Aberto",
+        });
+      }
+      if (prevAssignedToUserId !== nextAssignedToUserId && nextAssignedToUserId) {
+        void notifyDefectAssigned({
+          defect: {
+            slug: updated.slug,
+            title: updated.name,
+            name: updated.name,
+            createdByUserId: updated.createdByUserId ?? null,
+            assignedToUserId: updated.assignedToUserId ?? null,
+          },
+          companySlug: updated.clientSlug ?? null,
+          actorId: actor.actorId ?? "",
+          assigneeId: nextAssignedToUserId,
+          assigneeName: updated.assignedToName ?? null,
+        });
+      }
     } catch (err) {
-      console.warn("Falha ao registrar historico do defeito:", err);
+      console.warn("Falha ao registrar histórico do defeito:", err);
     }
   }
   return NextResponse.json({
@@ -251,24 +321,34 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
   const mockRole = await getMockRole();
   const effectiveAuthUser: AuthUser | null =
     authUser ??
-    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
-  }
-
-  const role = await resolveDefectRole(effectiveAuthUser as AuthUser, null);
-  if (!canDeleteManualDefect(role)) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
   const targetSlug = slugifyRelease(slug);
   const releases = await readManualReleases();
   const target = releases.find((r) => r.slug === targetSlug) ?? null;
-  if (!target) return NextResponse.json({ message: "Nao encontrado" }, { status: 404 });
+  if (!target) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
+
+  if (!effectiveAuthUser.isGlobalAdmin) {
+    const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
+    if (target.clientSlug && !allowed.includes(target.clientSlug)) {
+      return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+    }
+  }
+
+  const role = await resolveDefectRole(effectiveAuthUser as AuthUser, target.clientSlug ?? null);
+  if (!canDeleteManualDefect(role)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
 
   const filtered = releases.filter((r) => r.slug !== targetSlug);
   await writeManualReleases(filtered);
+  if (resolveManualReleaseKind(target) === "defect") {
+    invalidateCompanyDefectsDataset(target.clientSlug ?? null);
+  }
   if (resolveManualReleaseKind(target) === "defect") {
     try {
       const actor = await resolveActor(effectiveAuthUser as AuthUser);
@@ -279,7 +359,7 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
         note: target.name ?? null,
       });
     } catch (err) {
-      console.warn("Falha ao registrar historico do defeito:", err);
+      console.warn("Falha ao registrar histórico do defeito:", err);
     }
   }
   return NextResponse.json({ ok: true });

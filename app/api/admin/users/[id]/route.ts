@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { canDeleteUserByProfile, isGlobalDeveloperAccess } from "@/lib/adminUserDeleteAccess";
+import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "@/lib/adminUserDeleteAccess";
 import { getAdminUserItem } from "@/lib/adminUsers";
 import {
+  editableProfileNeedsCompany,
   isGlobalPrivilegeProfileRole,
+  resolveEditableProfileUserState,
   resolveEditableProfileRole,
   toStoredEditableUserRole,
   type EditableProfileRole,
@@ -46,14 +48,10 @@ function membershipRoleFromPermissionRole(role: PermissionRole) {
   return toStoredEditableUserRole(role);
 }
 
-function permissionRoleNeedsCompany(role: PermissionRole) {
-  return role === "user" || role === "leader_tc" || role === "technical_support";
-}
-
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(_req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const { id } = await params;
@@ -67,13 +65,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
   const access = await getAccessContext(req);
-  const canManagePrivilegedProfiles = isGlobalDeveloperAccess(access);
+  const canManageProfiles = canManageInstitutionalProfiles(access);
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
+
+  // Snapshot before state for audit diff
+  const beforeSnapshot = await getAdminUserItem(id);
+  if (!beforeSnapshot) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
 
   const name = typeof body?.name === "string" ? body.name.trim() : null;
   const fullName =
@@ -107,27 +111,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
 
-  if ((permissionRole === "admin" || permissionRole === "dev" || wantsGlobalAdmin) && !canManagePrivilegedProfiles) {
-    return NextResponse.json({ error: "Somente Global pode atribuir perfis privilegiados" }, { status: 403 });
+  if (wantsGlobalAdmin && !canManageProfiles) {
+    return NextResponse.json({ error: "Somente Lider TC pode atribuir perfis privilegiados" }, { status: 403 });
   }
 
   const selectedCompany = clientId ? await findLocalCompanyById(clientId) : null;
   if (clientId && !selectedCompany) {
-    return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
 
-  const existingLinks = permissionRole ? await listLocalLinksForUser(id) : [];
-  const targetCompanyIds = permissionRole
-    ? permissionRoleNeedsCompany(permissionRole)
+  const existingLinks = effectiveProfileRole ? await listLocalLinksForUser(id) : [];
+  const targetCompanyIds = effectiveProfileRole
+    ? editableProfileNeedsCompany(effectiveProfileRole)
       ? Array.from(
           new Set(
             [...existingLinks.map((link) => link.companyId).filter(Boolean), ...(clientId ? [clientId] : [])].filter(Boolean),
           ),
         )
-      : []
+    : []
     : [];
 
-  if (permissionRole && permissionRoleNeedsCompany(permissionRole) && targetCompanyIds.length === 0) {
+  if (effectiveProfileRole && editableProfileNeedsCompany(effectiveProfileRole) && targetCompanyIds.length === 0) {
     return NextResponse.json(
       { error: "Esse perfil precisa de pelo menos uma empresa vinculada" },
       { status: 400 },
@@ -137,10 +141,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (email || login) {
     const users = await listLocalUsers();
     if (email && users.some((user) => user.id !== id && normalizeLogin(user.email) === email)) {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (login && users.some((user) => user.id !== id && normalizeLogin(user.user ?? user.email) === login)) {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
   }
 
@@ -158,8 +162,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(rawRole || permissionRole
         ? { globalRole: wantsGlobalAdmin ? "global_admin" : null, is_global_admin: wantsGlobalAdmin }
         : {}),
-      ...(rawRole || permissionRole ? { role: wantsGlobalAdmin && role !== "it_dev" ? "user" : role } : {}),
-      ...(permissionRole && !permissionRoleNeedsCompany(permissionRole)
+      ...(rawRole || permissionRole ? { role } : {}),
+      ...(effectiveProfileRole ? resolveEditableProfileUserState(effectiveProfileRole, clientId) : {}),
+      ...(effectiveProfileRole && !editableProfileNeedsCompany(effectiveProfileRole)
         ? { default_company_slug: null }
         : selectedCompany
           ? { default_company_slug: selectedCompany.slug }
@@ -168,10 +173,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     throw err;
   }
@@ -180,11 +185,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  if (permissionRole && !permissionRoleNeedsCompany(permissionRole) && existingLinks.length > 0) {
+  if (effectiveProfileRole && !editableProfileNeedsCompany(effectiveProfileRole) && existingLinks.length > 0) {
     for (const link of existingLinks) {
       await removeLocalLink(id, link.companyId);
     }
-  } else if (permissionRole && permissionRoleNeedsCompany(permissionRole) && targetCompanyIds.length > 0) {
+  } else if (effectiveProfileRole && editableProfileNeedsCompany(effectiveProfileRole) && targetCompanyIds.length > 0) {
     const nextCapabilities = capabilities ?? [];
     try {
       for (const companyId of targetCompanyIds) {
@@ -218,8 +223,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     action: "user.updated",
     entityType: "user",
     entityId: updated.id,
-    entityLabel: updated.email,
-    metadata: { companyId: clientId, role, permissionRole, active },
+    entityLabel: updated.user ?? updated.email,
+    metadata: {
+      companyId: clientId,
+      role,
+      permissionRole,
+      active,
+      _before: {
+        active: beforeSnapshot.active ?? null,
+        role: beforeSnapshot.role ?? null,
+        permissionRole: beforeSnapshot.permission_role ?? null,
+        email: beforeSnapshot.email ?? null,
+        name: beforeSnapshot.name ?? null,
+      },
+      _payload: body,
+    },
   });
 
   const item = await getAdminUserItem(id);
@@ -229,7 +247,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const access = await getAccessContext(req);
@@ -237,11 +255,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const target = await getAdminUserItem(id);
 
   if (!target) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   if (!canDeleteUserByProfile(access, target.permission_role)) {
-    return NextResponse.json({ error: "Sem permissao para excluir este perfil" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para excluir este perfil" }, { status: 403 });
   }
 
   const updated = await updateLocalUser(id, {
@@ -250,7 +268,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   });
 
   if (!updated) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   await addAuditLogSafe({
@@ -259,7 +277,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     action: "user.deleted",
     entityType: "user",
     entityId: updated.id,
-    entityLabel: updated.email,
+    entityLabel: updated.user ?? updated.email,
     metadata: {
       targetPermissionRole: target.permission_role ?? null,
       actorRole: access?.role ?? null,

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 
 import { getRedis } from "@/lib/redis";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 const DEBUG_AUTH_HEADERS = process.env.DEBUG_AUTH_HEADERS === "true";
 const SENSITIVE_HEADER_NAMES = new Set(["authorization", "cookie", "set-cookie", "x-api-key"]);
@@ -16,6 +17,7 @@ type AdminSession = {
   role?: string | null;
   isGlobalAdmin?: boolean;
   globalRole?: string | null;
+  isGlobalReviewer?: boolean;
 };
 
 type SessionUser = {
@@ -52,7 +54,7 @@ function serializeDebugHeaders(req: Request): Array<[string, string]> {
   });
 }
 
-async function readSessionUser(req: Request): Promise<SessionUser | null> {
+export async function readSessionUser(req: Request): Promise<SessionUser | null> {
   if (DEBUG_AUTH_HEADERS) {
     try {
       console.info("[AUTH][readSessionUser] headers:", JSON.stringify(serializeDebugHeaders(req)));
@@ -80,13 +82,15 @@ async function readSessionUser(req: Request): Promise<SessionUser | null> {
     if (DEBUG_AUTH_HEADERS) {
       console.info("[AUTH][readSessionUser] testRole:", testRole);
     }
+    const normalizedTestRole = normalizeLegacyRole(testRole);
+    const isTestGlobalAdmin = normalizedTestRole === SYSTEM_ROLES.LEADER_TC;
     return {
       userId: "test-admin",
       id: "test-admin",
       email: "admin@teste.com",
       role: testRole,
-      isGlobalAdmin: ["admin", "dev", "global_admin", "super-admin"].includes(testRole),
-      globalRole: testRole === "admin" || testRole === "global_admin" ? "global_admin" : undefined,
+      isGlobalAdmin: isTestGlobalAdmin,
+      globalRole: isTestGlobalAdmin ? "global_admin" : undefined,
     };
   }
 
@@ -141,14 +145,8 @@ async function readSessionUser(req: Request): Promise<SessionUser | null> {
   }
 }
 
-function isAdminRole(role?: string | null) {
-  const normalized = (role ?? "").toLowerCase();
-  return normalized === "admin" || normalized === "super-admin" || normalized === "global_admin";
-}
-
-function isGlobalDeveloperRole(role?: string | null) {
-  const normalized = (role ?? "").toLowerCase().trim();
-  return normalized === "it_dev" || normalized === "itdev" || normalized === "developer" || normalized === "dev";
+function isTechnicalSupportRole(role?: string | null) {
+  return normalizeLegacyRole(role) === SYSTEM_ROLES.TECHNICAL_SUPPORT;
 }
 
 export async function requireGlobalAdmin(
@@ -159,9 +157,14 @@ export async function requireGlobalAdmin(
   if (!session) return null;
 
   const role = session.role ?? null;
+  const normalizedRole = normalizeLegacyRole(role);
   const isGlobalAdmin =
     session.isGlobalAdmin === true || (session.globalRole ?? "").toLowerCase() === "global_admin";
-  if (!isGlobalAdmin && !isAdminRole(role)) return null;
+  if (
+    !isGlobalAdmin &&
+    normalizedRole !== SYSTEM_ROLES.LEADER_TC &&
+    normalizedRole !== SYSTEM_ROLES.TECHNICAL_SUPPORT
+  ) return null;
 
   return {
     id: session.userId ?? session.id ?? "",
@@ -185,14 +188,14 @@ export async function requireGlobalAdminWithStatus(
   return { admin: null, status: 403 };
 }
 
-export async function requireGlobalDeveloper(
+export async function requireTechnicalSupport(
   req: Request,
   opts?: { token?: string | null },
 ): Promise<AdminSession | null> {
   const session = await readSessionUser(req);
   if (!session) return null;
 
-  if (!isGlobalDeveloperRole(session.role)) return null;
+  if (!isTechnicalSupportRole(session.role)) return null;
 
   return {
     id: session.userId ?? session.id ?? "",
@@ -204,11 +207,11 @@ export async function requireGlobalDeveloper(
   };
 }
 
-export async function requireGlobalDeveloperWithStatus(
+export async function requireTechnicalSupportWithStatus(
   req: Request,
   opts?: { token?: string | null },
 ): Promise<{ admin: AdminSession | null; status: 200 | 401 | 403 }> {
-  const admin = await requireGlobalDeveloper(req, opts);
+  const admin = await requireTechnicalSupport(req, opts);
   if (admin) return { admin, status: 200 };
 
   const session = await readSessionUser(req);

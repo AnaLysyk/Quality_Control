@@ -3,6 +3,7 @@ import { apiFail, apiOk } from "@/lib/apiResponse";
 import { canCreateRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
+import { listApplications } from "@/lib/applicationsStore";
 
 const QASE_BASE_URL = (process.env.QASE_BASE_URL || "https://api.qase.io").replace(/\/(v1|v2)\/?$/, "");
 const QASE_TOKEN = process.env.QASE_TOKEN || process.env.QASE_API_TOKEN || "";
@@ -38,18 +39,101 @@ function normalizeProjectList(values: unknown[]): string[] {
   );
 }
 
-function normalizeRunEntity(entity: unknown, projectCode: string, companySlug: string | null) {
+type QaseRunResponsible = {
+  id: number;
+  name: string | null;
+  email: string | null;
+};
+
+function normalizeNumericId(value: unknown): number | null {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value.trim())
+        : Number.NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function extractRunResponsibleIds(entities: unknown[]) {
+  return Array.from(
+    new Set(
+      entities
+        .map((entity) => {
+          const record = asRecord(entity);
+          return normalizeNumericId(record?.user_id ?? record?.userId);
+        })
+        .filter((value): value is number => value !== null),
+    ),
+  );
+}
+
+function parseQaseRunResponsible(value: unknown, fallbackId: number): QaseRunResponsible | null {
+  const record = asRecord(value);
+  if (!record) return null;
+
+  return {
+    id: normalizeNumericId(record.id) ?? fallbackId,
+    name: normalizeString(record.name),
+    email: normalizeString(record.email),
+  };
+}
+
+async function fetchQaseRunResponsibles(baseUrl: string, token: string, userIds: number[]) {
+  const uniqueIds = Array.from(new Set(userIds.filter((value) => Number.isFinite(value) && value > 0)));
+  if (!uniqueIds.length) return new Map<number, QaseRunResponsible>();
+
+  const entries = await Promise.all(
+    uniqueIds.map(async (userId) => {
+      try {
+        const response = await fetch(`${baseUrl}/v1/user/${encodeURIComponent(String(userId))}`, {
+          headers: { Token: token, Accept: "application/json" },
+          cache: "no-store",
+        });
+        if (!response.ok) return null;
+
+        const payload = (await response.json().catch(() => null)) as unknown;
+        const responsible = parseQaseRunResponsible(asRecord(payload)?.result, userId);
+        return responsible ? ([userId, responsible] as const) : null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return new Map<number, QaseRunResponsible>(
+    entries.filter((entry): entry is readonly [number, QaseRunResponsible] => entry !== null),
+  );
+}
+
+function normalizeRunEntity(
+  entity: unknown,
+  projectCode: string,
+  companySlug: string | null,
+  responsiblesById: Map<number, QaseRunResponsible> = new Map(),
+) {
   const record = asRecord(entity) ?? {};
   const rawId = record.id;
   const parsedId = typeof rawId === "number" ? rawId : Number(String(rawId ?? "").trim());
   const runId = Number.isFinite(parsedId) && parsedId > 0 ? parsedId : null;
   const rawSlug = normalizeString(record.slug);
+  const responsibleUserId = normalizeNumericId(record.user_id ?? record.userId);
+  const responsible = responsibleUserId ? responsiblesById.get(responsibleUserId) ?? null : null;
+  const responsibleName =
+    responsible?.name ??
+    normalizeString(record.responsibleName) ??
+    normalizeString(record.createdByName);
+  const responsibleEmail =
+    responsible?.email ??
+    normalizeString(record.responsibleEmail) ??
+    normalizeString(record.createdByEmail);
+  const responsibleLabel = responsibleName || responsibleEmail || null;
   const title =
     normalizeString(record.title) ||
     normalizeString(record.name) ||
     (runId ? `Run ${runId}` : rawSlug) ||
     `Run ${projectCode}`;
-  const createdAt = normalizeString(record.created_at) || normalizeString(record.createdAt);
+  const createdAt = normalizeString(record.created_at) || normalizeString(record.createdAt) || normalizeString(record.start_time);
   const slug = runId ? `qase-${projectCode.toLowerCase()}-${runId}` : rawSlug || `${projectCode.toLowerCase()}-${title.toLowerCase()}`;
 
   return {
@@ -67,7 +151,91 @@ function normalizeRunEntity(entity: unknown, projectCode: string, companySlug: s
     qaseProject: projectCode,
     clientId: companySlug,
     clientName: companySlug,
+    responsibleUserId,
+    responsibleName,
+    responsibleEmail,
+    responsibleLabel,
+    createdByName: responsibleName,
+    createdByEmail: responsibleEmail,
   };
+}
+
+async function fetchAllProjectRuns(
+  baseUrl: string,
+  token: string,
+  project: string,
+  pageSize: number,
+  timeRange?: { fromStartTime?: number; toStartTime?: number },
+) {
+  const normalizedPageSize = Math.max(10, Math.min(100, Number.isFinite(pageSize) ? pageSize : 100));
+  const maxPages = 50;
+  const entities: unknown[] = [];
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const offset = page * normalizedPageSize;
+    let url = `${baseUrl}/v1/run/${encodeURIComponent(project)}?limit=${encodeURIComponent(String(normalizedPageSize))}&offset=${encodeURIComponent(String(offset))}`;
+    if (timeRange?.fromStartTime) url += `&from_start_time=${encodeURIComponent(String(timeRange.fromStartTime))}`;
+    if (timeRange?.toStartTime) url += `&to_start_time=${encodeURIComponent(String(timeRange.toStartTime))}`;
+    const response = await fetch(url, {
+      headers: { Token: token, Accept: "application/json" },
+      cache: "no-store",
+    });
+    const payload = (await response.json().catch(() => null)) as unknown;
+
+    if (!response.ok) {
+      return {
+        ok: false as const,
+        status: response.status,
+        details: payload,
+        entities,
+      };
+    }
+
+    const pageEntities = (asRecord(asRecord(payload)?.result)?.entities as unknown[]) || [];
+    entities.push(...pageEntities);
+
+    if (pageEntities.length < normalizedPageSize) {
+      break;
+    }
+  }
+
+  return {
+    ok: true as const,
+    status: 200,
+    details: null,
+    entities,
+  };
+}
+
+async function fetchAllQaseProjectCodes(baseUrl: string, token: string) {
+  const pageSize = 100;
+  const maxPages = 20;
+  const projectCodes: string[] = [];
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const offset = page * pageSize;
+    const url = `${baseUrl}/v1/project?limit=${encodeURIComponent(String(pageSize))}&offset=${encodeURIComponent(String(offset))}`;
+    const response = await fetch(url, {
+      headers: { Token: token, Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    if (!response.ok) break;
+
+    const payload = (await response.json().catch(() => null)) as unknown;
+    const entities = (asRecord(asRecord(payload)?.result)?.entities as unknown[]) || [];
+    projectCodes.push(
+      ...entities
+        .map((project) => normalizeProjectCode(asRecord(project)?.code))
+        .filter((code): code is string => Boolean(code)),
+    );
+
+    if (entities.length < pageSize) {
+      break;
+    }
+  }
+
+  return normalizeProjectList(projectCodes);
 }
 
 export async function GET(request: Request) {
@@ -77,10 +245,10 @@ export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
   const mockRole = await getRunMockRole();
   if (!auth && !mockRole) {
-    return apiFail(request, "Nao autorizado", {
+    return apiFail(request, "Não autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Nao autorizado" } },
+      extra: { error: { message: "Não autorizado" } },
     });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
@@ -90,7 +258,7 @@ export async function GET(request: Request) {
       extra: { error: { message: "Acesso proibido" } },
     });
   }
-  if (!auth && mockRole && mockRole !== "company") {
+  if (!auth && mockRole && mockRole !== "empresa") {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",
@@ -102,6 +270,11 @@ export async function GET(request: Request) {
   const allParam = String(url.searchParams.get("all") ?? "").toLowerCase();
   const all = allParam === "1" || allParam === "true";
   const limitParam = Number(url.searchParams.get("limit") ?? 50) || 50;
+  const fromStartTimeParam = Number(url.searchParams.get("from_start_time") ?? 0) || 0;
+  const toStartTimeParam = Number(url.searchParams.get("to_start_time") ?? 0) || 0;
+  const timeRange = (fromStartTimeParam || toStartTimeParam)
+    ? { fromStartTime: fromStartTimeParam || undefined, toStartTime: toStartTimeParam || undefined }
+    : undefined;
   const diag = String(url.searchParams.get("diag") ?? "").toLowerCase() === "true";
   const companySlug =
     auth?.isGlobalAdmin && requestedCompanySlug
@@ -110,10 +283,25 @@ export async function GET(request: Request) {
   const qaseSettings = companySlug ? await getClientQaseSettings(companySlug) : null;
   const tokenToUse = (qaseSettings && qaseSettings.token) ? qaseSettings.token : QASE_TOKEN;
   const baseUrl = (qaseSettings?.baseUrl || QASE_BASE_URL).replace(/\/+$/, "");
+
+  // Load project codes from linked applications to ensure ALL linked projects are fetched
+  let linkedAppProjectCodes: string[] = [];
+  if (companySlug) {
+    try {
+      const linkedApps = await listApplications({ companySlug });
+      linkedAppProjectCodes = linkedApps
+        .map((app) => normalizeProjectCode(app.qaseProjectCode))
+        .filter((code): code is string => Boolean(code));
+    } catch {
+      // Best-effort: proceed without app project codes
+    }
+  }
+
   const configuredProjects = normalizeProjectList([
     ...(Array.isArray(qaseSettings?.projectCodes) ? qaseSettings.projectCodes : []),
     qaseSettings?.projectCode,
     DEFAULT_PROJECT,
+    ...linkedAppProjectCodes,
   ]);
   const effectiveProject = normalizeProjectCode(project) || configuredProjects[0] || null;
 
@@ -131,31 +319,44 @@ export async function GET(request: Request) {
   }
 
   // If requested, aggregate runs across all configured projects for this company
-  if (all && configuredProjects.length > 0) {
-    const projects = configuredProjects;
+  if (all) {
+    // Only discover Qase projects when no projects are already configured — avoids
+    // fetching the entire project list on every page load when settings are present.
+    let discoveredProjects: string[] = [];
+    if (configuredProjects.length === 0) {
+      try {
+        discoveredProjects = await fetchAllQaseProjectCodes(baseUrl, tokenToUse);
+      } catch {
+        // Ignore — keep configured projects only
+      }
+    }
+
+    const projects = normalizeProjectList([...configuredProjects, ...discoveredProjects]);
+
+    if (projects.length === 0) {
+      const out = { data: [], warning: "Nenhum projeto Qase configurado" };
+      return apiOk(request, out, "OK", { extra: out });
+    }
+
     const fetches = projects.map(async (proj) => {
       try {
-        const r = await fetch(`${baseUrl}/v1/run/${encodeURIComponent(proj)}?limit=${encodeURIComponent(String(limitParam))}`, {
-          headers: { Token: tokenToUse, Accept: "application/json" },
-          cache: "no-store",
-        });
-        const j = (await r.json().catch(() => null)) as unknown;
-        if (!r.ok) {
-          return { project: proj, ok: false, status: r.status, details: j, entities: [] as unknown[] };
-        }
-        const ents = (asRecord(asRecord(j)?.result)?.entities as unknown[]) || [];
-        const normalized = ents.map((entity) => normalizeRunEntity(entity, proj, companySlug));
-        return { project: proj, ok: true, status: 200, details: j, entities: normalized };
+        const result = await fetchAllProjectRuns(baseUrl, tokenToUse, proj, limitParam, timeRange);
+        return { project: proj, ok: result.ok, status: result.status, details: result.details, entities: result.entities };
       } catch (e) {
         return { project: proj, ok: false, status: 500, details: e, entities: [] as unknown[] };
       }
     });
 
     const results = await Promise.all(fetches);
+    const responsiblesById = await fetchQaseRunResponsibles(
+      baseUrl,
+      tokenToUse,
+      results.flatMap((result) => extractRunResponsibleIds(result.entities)),
+    );
     const combined: unknown[] = [];
     const seen = new Set<string>();
     for (const r of results) {
-      for (const e of (r.entities as unknown[])) {
+      for (const e of r.entities.map((entity) => normalizeRunEntity(entity, r.project, companySlug, responsiblesById))) {
         const entityRecord = asRecord(e);
         const id = String(
           entityRecord?.runId ??
@@ -185,7 +386,10 @@ export async function GET(request: Request) {
   }
 
   // Default: single-project fetch
-  const res = await fetch(`${baseUrl}/v1/run/${encodeURIComponent(effectiveProject)}?limit=${encodeURIComponent(String(limitParam))}`, {
+  let singleUrl = `${baseUrl}/v1/run/${encodeURIComponent(effectiveProject)}?limit=${encodeURIComponent(String(limitParam))}`;
+  if (timeRange?.fromStartTime) singleUrl += `&from_start_time=${encodeURIComponent(String(timeRange.fromStartTime))}`;
+  if (timeRange?.toStartTime) singleUrl += `&to_start_time=${encodeURIComponent(String(timeRange.toStartTime))}`;
+  const res = await fetch(singleUrl, {
     headers: { Token: tokenToUse, Accept: "application/json" },
     cache: "no-store",
   });
@@ -203,7 +407,12 @@ export async function GET(request: Request) {
   }
 
   const entities = (asRecord(asRecord(json)?.result)?.entities as unknown[]) || [];
-  const out = { data: entities.map((entity) => normalizeRunEntity(entity, effectiveProject, companySlug)) };
+  const responsiblesById = await fetchQaseRunResponsibles(
+    baseUrl,
+    tokenToUse,
+    extractRunResponsibleIds(entities),
+  );
+  const out = { data: entities.map((entity) => normalizeRunEntity(entity, effectiveProject, companySlug, responsiblesById)) };
   return apiOk(request, out, "OK", { extra: out });
 }
 
@@ -213,13 +422,13 @@ export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
   const mockRole = await getRunMockRole();
   const effectiveAuth =
-    auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "admin" } : null);
+    auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
 
   if (!effectiveAuth) {
-    return apiFail(request, "Nao autorizado", {
+    return apiFail(request, "Não autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Nao autorizado" } },
+      extra: { error: { message: "Não autorizado" } },
     });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
@@ -229,14 +438,14 @@ export async function POST(request: Request) {
       extra: { error: { message: "Acesso proibido" } },
     });
   }
-  if (!auth && mockRole && mockRole !== "company") {
+  if (!auth && mockRole && mockRole !== "empresa") {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",
       extra: { error: { message: "Acesso proibido" } },
     });
   }
-  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "user";
+  const role = auth ? await resolveRunRole(effectiveAuth) : mockRole ?? "testing_company_user";
   if (!canCreateRun(role)) {
     return apiFail(request, "Acesso proibido", {
       status: 403,
@@ -250,6 +459,7 @@ export async function POST(request: Request) {
   const title = normalizeString(rec.title);
   const description = normalizeString(rec.description) || "";
   const customType = normalizeString(rec.custom_type);
+  const planId = normalizeNumericId(rec.plan_id ?? rec.planId);
 
   if (!project && !DEFAULT_PROJECT) {
     return apiFail(request, "Missing project or title", {
@@ -288,6 +498,9 @@ export async function POST(request: Request) {
     title,
     description,
   };
+  if (planId) {
+    payload.plan_id = planId;
+  }
   if (customType) {
     payload.custom_fields = { custom_type: customType };
   }

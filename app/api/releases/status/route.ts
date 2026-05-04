@@ -44,10 +44,10 @@ export async function GET() {
     // TODO: Add logic for "blocked" if needed
 
     // --- Quality Gate snapshot logic ---
-    // Exemplo de metricas: mttr_hours, open_defects, fail_rate
-    // (mock simples: valores ficticios, pois so temos runs)
-    const mttr_hours = 24; // TODO: calcular real se disponivel
-    const open_defects = 0; // TODO: calcular real se disponivel
+    // Exemplo de métricas: mttr_hours, open_defects, fail_rate
+    // (mock simples: valores ficticios, pois só temos runs)
+    const mttr_hours = 24; // TODO: calcular real se disponível
+    const open_defects = 0; // TODO: calcular real se disponível
     const totalRuns = runs.length;
     const fail_rate = totalRuns > 0 ? Math.round((failedRuns.length / totalRuns) * 100) : 0;
     let gate_status: "approved" | "warning" | "failed" = "approved";
@@ -56,13 +56,13 @@ export async function GET() {
       gate_status = "failed";
       reasons.push("Run falhou");
     }
-    // Exemplo: warning se fail_rate > 0 mas nao "risk"
+    // Exemplo: warning se fail_rate > 0 mas não "risk"
     // (ajuste conforme regras reais)
 
     // Salvar snapshot (imutavel)
     const snapshot = {
       id: randomUUID(),
-      company_slug: rel.clientId || "griaule", // fallback
+      company_slug: rel.clientId || "demo", // fallback
       release_slug: rel.slug,
       gate_status,
       mttr_hours,
@@ -74,7 +74,7 @@ export async function GET() {
     await appendQualityGateHistory(snapshot);
 
     // Disparar alertas automaticos
-    const companySlug = rel.clientId || "griaule";
+    const companySlug = rel.clientId || "demo";
     if (gate_status === "failed") {
       await sendQualityAlert({
         companySlug,

@@ -1,7 +1,10 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { randomUUID } from "crypto";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg(process.env.DATABASE_URL),
+});
 const uid = randomUUID().slice(0, 8);
 
 console.log("\n=== Verificação de Persistência no PostgreSQL ===");

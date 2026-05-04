@@ -45,7 +45,7 @@ export type ReleaseId = (typeof staticReleaseOrder)[number];
 const staticReleasesMap: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = {
   v1_8_0_reg: {
     title: "Release 1.8.0 - Regressao",
-    summary: "Execucao completa do ciclo de regressao 1.8.0.",
+    summary: "Execução completa do ciclo de regressao 1.8.0.",
     runId: 17,
     project: "smart",
     app: "smart",
@@ -67,7 +67,7 @@ const staticReleasesMap: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = {
   },
   v1_7_0_reg: {
     title: "Release 1.7.0 - Regressao",
-    summary: "Execucao completa do ciclo de regressao 1.7.0.",
+    summary: "Execução completa do ciclo de regressao 1.7.0.",
     runId: 14,
     project: "smart",
     app: "smart",
@@ -78,7 +78,7 @@ const staticReleasesMap: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = {
   },
   v1_7_0_ace_s3: {
     title: "Release 1.7.0 - Aceitacao (Sprint 3)",
-    summary: "Execucao de aceitacao sprint 3 da 1.7.0.",
+    summary: "Execução de aceitacao sprint 3 da 1.7.0.",
     runId: 12,
     project: "smart",
     app: "smart",
@@ -89,7 +89,7 @@ const staticReleasesMap: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = {
   },
   v1_7_0_ace_s12: {
     title: "Release 1.7.0 - Aceitacao (Sprint 1/2)",
-    summary: "Execucao de aceitacao sprint 1/2 da 1.7.0.",
+    summary: "Execução de aceitacao sprint 1/2 da 1.7.0.",
     runId: 11,
     project: "smart",
     app: "smart",
@@ -100,7 +100,7 @@ const staticReleasesMap: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = {
   },
   v1_6_2_reg: {
     title: "Release 1.6.2 - Regressao",
-    summary: "Execucao de regressao da release base 1.6.2.",
+    summary: "Execução de regressao da release base 1.6.2.",
     runId: 10,
     project: "smart",
     app: "smart",
@@ -122,7 +122,7 @@ const staticReleasesMap: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = {
   },
   print_v1_8_0_ace: {
     title: "Release 1.8.0 - Aceitacao (PRINT)",
-    summary: "Execucao da aceitacao do PRINT na release 1.8.0.",
+    summary: "Execução da aceitacao do PRINT na release 1.8.0.",
     runId: 3,
     project: "print",
     app: "print",
@@ -133,13 +133,13 @@ const staticReleasesMap: Record<ReleaseId, Omit<ReleaseEntry, "slug">> = {
   },
   release_1_teste_painel_qa_ace: {
     title: "Release 1 Quality Control - Aceitacao",
-    summary: "Execucao do Quality Control - Griaule Mobile (run: https://app.qase.io/run/GMT/dashboard/1) - Aceitacao",
+    summary: "Execução do Quality Control - GMT Mobile (run: https://app.qase.io/run/GMT/dashboard/1) - Aceitacao",
     runId: 1,
-    project: "mobile-griaule",
-    app: "mobile-griaule",
+    project: "gmt",
+    app: "gmt",
     qaseProject: "GMT",
     radis: "RADIS_1",
-    order: ["mobile-griaule"],
+    order: ["gmt"],
     createdAt: "2025-12-01T00:00:00.000Z",
   },
 };

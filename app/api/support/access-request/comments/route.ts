@@ -5,6 +5,7 @@ import { getAccessRequestById, listAccessRequests } from "@/data/accessRequestsS
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
+import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
 
 type SupportRequestRow = {
   id: string;
@@ -14,14 +15,6 @@ type SupportRequestRow = {
   created_at: Date | string;
   user_id?: string | null;
 };
-
-function normalizeLookup(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
 
 function sanitizeBody(value: unknown, max = 2000) {
   if (typeof value !== "string") return "";
@@ -70,8 +63,8 @@ async function findRequestById(id: string): Promise<SupportRequestRow | null> {
 }
 
 async function findRequestByLookup(email: string, name: string): Promise<SupportRequestRow | null> {
-  const normalizedEmail = normalizeLookup(email);
-  const normalizedName = normalizeLookup(name);
+  const normalizedEmail = normalizeAccessRequestLookup(email);
+  const normalizedName = normalizeAccessRequestLookup(name);
   if (!normalizedEmail || !normalizedName) return null;
 
   let items: SupportRequestRow[] = [];
@@ -88,7 +81,12 @@ async function findRequestByLookup(email: string, name: string): Promise<Support
   } else {
     try {
       const list = (await prisma.supportRequest.findMany({
-        where: { email: email.trim().toLowerCase() },
+        where: {
+          OR: [
+            { email: email.trim().toLowerCase() },
+            { message: { contains: email.trim().toLowerCase(), mode: "insensitive" } },
+          ],
+        },
         orderBy: { created_at: "desc" },
       })) as SupportRequestRow[];
       items = list.map((item: SupportRequestRow) => ({
@@ -114,9 +112,13 @@ async function findRequestByLookup(email: string, name: string): Promise<Support
   }
 
   const match = items.find((item) => {
-    if (normalizeLookup(item.email ?? "") !== normalizedEmail) return false;
     const parsed = parseAccessRequestMessage(String(item.message ?? ""), String(item.email ?? ""));
-    return normalizeLookup(parsed.fullName || parsed.name || "") === normalizedName;
+    return matchesAccessRequestLookup({
+      lookupEmail: normalizedEmail,
+      lookupName: normalizedName,
+      parsed,
+      storedEmail: item.email,
+    });
   });
   return match ?? null;
 }
@@ -140,23 +142,20 @@ export async function POST(req: Request) {
   const comment = sanitizeBody(body.comment ?? body.body ?? "");
 
   if (!name || !email || !comment) {
-    return NextResponse.json({ error: "Informe nome, e-mail e comentario." }, { status: 400 });
+    return NextResponse.json({ error: "Informe nome, e-mail e comentário." }, { status: 400 });
   }
 
   const request = requestId ? await findRequestById(requestId) : await findRequestByLookup(email, name);
   if (!request) {
-    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
   }
 
   const parsed = parseAccessRequestMessage(String(request.message ?? ""), String(request.email ?? ""));
-  if (
-    normalizeLookup(parsed.fullName || parsed.name || "") !== normalizeLookup(name) ||
-    normalizeLookup(request.email ?? "") !== normalizeLookup(email)
-  ) {
-    return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
+  if (!matchesAccessRequestLookup({ lookupEmail: email, lookupName: name, parsed, storedEmail: request.email })) {
+    return NextResponse.json({ error: "Dados não conferem com a solicitação." }, { status: 403 });
   }
   if (request.status === "rejected" || request.status === "closed") {
-    return NextResponse.json({ error: "Esta solicitacao ja foi finalizada e nao aceita novos comentarios." }, { status: 409 });
+    return NextResponse.json({ error: "Esta solicitação já foi finalizada e não aceita novos comentários." }, { status: 409 });
   }
 
   const authorName = parsed.fullName || parsed.name || name;
@@ -175,6 +174,7 @@ export async function POST(req: Request) {
     authorName,
     body: comment,
     reviewQueue: parsed.reviewQueue,
+    clientId: parsed.clientId,
   });
 
   return NextResponse.json({ item: record }, { status: 200 });

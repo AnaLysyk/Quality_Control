@@ -14,6 +14,8 @@ export type BuiltSessionPayload = {
   name: string;
   companyId: string | null;
   companySlug: string | null;
+  defaultCompanySlug: string | null;
+  userOrigin: string | null;
   role: string;
   globalRole: "global_admin" | null;
   companyRole: string;
@@ -30,6 +32,8 @@ export type BuiltJwtPayload = {
   capabilities: string[];
   companyId: string | null;
   companySlug: string | null;
+  defaultCompanySlug: string | null;
+  userOrigin: string | null;
   isGlobalAdmin: boolean;
 };
 
@@ -52,14 +56,22 @@ export async function buildLocalSessionForUser(
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-  const hasDevRole =
-    normalizeLocalRole(user.role ?? null) === "it_dev" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
-  const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const hasTechnicalSupportRole =
+    normalizeLocalRole(user.role ?? null) === "technical_support" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+  const hasLeaderTcRole =
+    normalizeLocalRole(user.role ?? null) === "leader_tc" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
+  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
   const allowedCompanies = hasFullCompanyAccess
     ? companies
-    : companies.filter((company) => links.some((link) => link.companyId === company.id));
+    : companies.filter((company) => {
+        if (links.some((link) => link.companyId === company.id)) return true;
+        if (!isDirectCompanyUser) return false;
+        return Boolean(user.default_company_slug && company.slug === user.default_company_slug);
+      });
 
   const requestedSlug = typeof opts?.requestedSlug === "string" ? opts.requestedSlug.trim() : "";
   const requestedCompany =
@@ -76,30 +88,15 @@ export async function buildLocalSessionForUser(
       : null;
 
   const activeLink = activeCompany ? links.find((link) => link.companyId === activeCompany.id) ?? null : null;
-  const normalizedRole = normalizeLocalRole(activeLink?.role ?? user.role ?? null);
-  const companyRole = normalizedRole ?? "user";
+  const companyRole = normalizeLocalRole(activeLink?.role ?? user.role ?? null);
 
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
-    companyRole:
-      companyRole === "company_admin"
-        ? "company_admin"
-        : companyRole === "it_dev"
-          ? "it_dev"
-          : companyRole === "viewer"
-            ? "viewer"
-            : "user",
+    companyRole,
     membershipCapabilities: activeLink?.capabilities ?? null,
   });
 
-  const effectiveRole =
-    companyRole === "it_dev"
-      ? "it_dev"
-      : isGlobalAdmin
-        ? "admin"
-        : companyRole === "company_admin"
-          ? "company"
-          : "user";
+  const effectiveRole = isGlobalAdmin ? "leader_tc" : companyRole;
 
   const displayName =
     (typeof user.full_name === "string" ? user.full_name.trim() : "") ||
@@ -112,6 +109,8 @@ export async function buildLocalSessionForUser(
     name: displayName,
     companyId: shouldBindCompanyContext ? activeCompany?.id ?? null : null,
     companySlug: shouldBindCompanyContext ? activeCompany?.slug ?? null : null,
+    defaultCompanySlug: user.default_company_slug ?? null,
+    userOrigin: user.user_origin ?? null,
     role: effectiveRole,
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,
@@ -128,6 +127,8 @@ export async function buildLocalSessionForUser(
     capabilities,
     companyId: shouldBindCompanyContext ? activeCompany?.id ?? null : null,
     companySlug: shouldBindCompanyContext ? activeCompany?.slug ?? null : null,
+    defaultCompanySlug: user.default_company_slug ?? null,
+    userOrigin: user.user_origin ?? null,
     isGlobalAdmin,
   };
 

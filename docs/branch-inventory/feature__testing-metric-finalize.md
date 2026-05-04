@@ -13,7 +13,6 @@
 - scripts: 25 arquivos
 - tests: 25 arquivos
 - app/empresas: 19 arquivos
-- ai_applying: 18 arquivos
 - app/admin: 18 arquivos
 - data/company-documents-files: 13 arquivos
 - backend/src: 12 arquivos

@@ -1,30 +1,30 @@
-import { isCompanyProfileContext, resolveActiveIdentity } from "../lib/activeIdentity";
+﻿import { isCompanyProfileContext, resolveActiveIdentity } from "../lib/activeIdentity";
 import type { AuthUser } from "../packages/contracts/src/auth";
 
 describe("active identity", () => {
   it("prioritizes institutional company context over user permission role", () => {
     const user = {
       id: "company-with-user-permission",
-      name: "Griaule",
-      email: "griaule",
-      username: "griaule",
+      name: "Demo",
+      email: "Demo",
+      username: "Demo",
       role: "user",
       permissionRole: "user",
       companyRole: "company_admin",
-      defaultClientSlug: "griaule",
+      defaultClientSlug: "Demo",
     } satisfies AuthUser;
 
     const identity = resolveActiveIdentity({
       user,
       activeCompany: {
-        name: "Griaule",
+        name: "Demo",
         logoUrl: "/logos/griaule.png",
       },
     });
 
     expect(isCompanyProfileContext(user)).toBe(true);
     expect(identity.kind).toBe("company");
-    expect(identity.displayName).toBe("Griaule");
+    expect(identity.displayName).toBe("Demo");
     expect(identity.showCompanyTag).toBe(false);
     expect(identity.companyTagLabel).toBeNull();
   });
@@ -112,3 +112,4 @@ describe("active identity", () => {
     expect(identity.showCompanyTag).toBe(false);
   });
 });
+

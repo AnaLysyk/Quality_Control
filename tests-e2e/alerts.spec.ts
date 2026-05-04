@@ -1,17 +1,17 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { seedQualityAlert } from "./utils/seed";
 
-test("alerta é exibido para admin", async ({ page, context }) => {
+test("alerta Ã© exibido para admin", async ({ page, context }) => {
   // Primeiro faz mockAuth para garantir contexto/cookies
   await mockAuth(context, {
     role: "admin",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
   // Limpa e faz seed
-  await seedQualityAlert({ companySlug: "griaule", type: "sla", severity: "critical", message: "Defeitos fora do SLA: 1" });
-  // Navega e força reload para garantir leitura do seed
+  await seedQualityAlert({ companySlug: "DEMO", type: "sla", severity: "critical", message: "Defeitos fora do SLA: 1" });
+  // Navega e forÃ§a reload para garantir leitura do seed
   await page.goto("/admin/alerts", { waitUntil: "networkidle" });
   await page.reload({ waitUntil: "networkidle" });
   // Aguarda explicitamente o elemento para evitar falso negativo
@@ -19,3 +19,4 @@ test("alerta é exibido para admin", async ({ page, context }) => {
   const alert = page.getByTestId("quality-alert");
   await expect(alert.first()).toBeVisible();
 });
+

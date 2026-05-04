@@ -1,7 +1,10 @@
 process.env.DATABASE_URL = "postgresql://quality_control_db_gepu_user:IcFolaph4EJDkMRFjBR7ZjCL4yb9WlPj@dpg-d6r33ohj16oc73f058g0-a.oregon-postgres.render.com/quality_control_db_gepu?sslmode=require";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg(process.env.DATABASE_URL),
+});
 
 try {
   const totalUsers = await prisma.user.count();

@@ -1,13 +1,13 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
-const URL = "/empresas/griaule/defeitos";
+const URL = "/empresas/demo/defeitos";
 
 test("vincula defeito manual a uma run", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
   await page.goto(URL, { waitUntil: "networkidle" });
@@ -25,12 +25,13 @@ test("vincula defeito manual a uma run", async ({ page, context }) => {
 
   await page.getByTestId("defect-save").click();
 
-  // garante persistência visual
+  // garante persistÃªncia visual
   await expect(defect).toContainText("run-001");
 
-  // reload prova persistência real
+  // reload prova persistÃªncia real
   await page.reload({ waitUntil: "networkidle" });
 
   const defectAfter = page.locator('[data-testid^="defect-item-"]').first();
   await expect(defectAfter).toContainText("run-001");
 });
+

@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
 import { notifyTicketStatusChanged } from "@/lib/notificationService";
-import { canManageAllTickets, canMoveTicket } from "@/lib/rbac/tickets";
+import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
@@ -20,14 +21,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
   const current = await getTicketById(id);
   if (!current) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
   if (!canMoveTicket(user, current)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
-  if (canManageAllTickets(user) && !current.assignedToUserId) {
+  if (canAccessGlobalTicketWorkspace(user) && !current.assignedToUserId) {
     return NextResponse.json(
-      { error: "Selecione e salve um responsavel antes de mover o chamado" },
+      { error: "Selecione e salve um responsável antes de mover o chamado" },
       { status: 400 },
     );
   }
@@ -47,6 +48,20 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       reason: reason || null,
     },
   }).catch((err) => console.error("Falha ao registrar status:", err));
+
+  addAuditLogSafe({
+    action: updated.status === "closed" || updated.status === "done" ? "ticket.closed" : "ticket.status.changed",
+    entityType: "ticket",
+    entityId: updated.id,
+    entityLabel: updated.title ?? null,
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    metadata: {
+      _before: { status: current.status },
+      status: updated.status,
+      reason: reason || null,
+    },
+  });
 
   notifyTicketStatusChanged({
     ticket: updated,

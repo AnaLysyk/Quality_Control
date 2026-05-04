@@ -27,7 +27,7 @@ export async function seedQualityAlert(alert: {
 }) {
   const payload: QualityAlert[] = [
     {
-      companySlug: alert.companySlug || "griaule",
+      companySlug: alert.companySlug || "demo",
       type: (alert.type as QualityAlertType) || "sla",
       severity: (alert.severity as "critical" | "warning") || "critical",
       message: alert.message || "Defeitos fora do SLA: 1",

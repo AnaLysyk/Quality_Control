@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   }
 
   const message = [
-    "Solicitacao de acesso ao admin",
+    "Solicitação de acesso ao admin",
     `Empresa: ${company}`,
     `Cargo: ${role}`,
     `Nome: ${name}`,
@@ -64,6 +64,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
-    message: "Solicitacao enviada. O administrador sera notificado.",
+    message: "Solicitação enviada. O administrador será notificado.",
   });
 }

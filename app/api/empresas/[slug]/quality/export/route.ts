@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCompanyQualitySummary, getCompanyDefects } from "@/lib/quality";
+import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/lib/companyQuality";
 
 function toCsvLine(values: Array<string | number | null | undefined>) {
   return values.map((value) => {
@@ -15,7 +15,7 @@ function toCsvLine(values: Array<string | number | null | undefined>) {
 export async function GET(_req: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
   const summary = await getCompanyQualitySummary(slug);
-  const defects = await getCompanyDefects(slug);
+  const defects = await getCompanyDefectsExport(slug);
 
   const lines: string[] = [];
   lines.push("company,period,quality_score");

@@ -17,7 +17,7 @@ Resumo prático para agentes:
 
 Pontos de verificação (onde olhar primeiro): `package.json`, `next.config.ts`, `app/`, `lib/`, `data/`, `tests/`, `tests-e2e/`, `backend/`.
 
-Próximo passo proposto: aplicar reorganização de pastas para reduzir duplicação e facilitar manutenção. O plano detalhado está em `REORG_PLAN.md`. Confirme para eu executar os movimentos e atualizar imports automaticamente.
+Próximo passo proposto: aplicar reorganização de pastas para reduzir duplicação e facilitar manutenção. O plano detalhado está em `docs/ops/REORG_PLAN.md`. Confirme para eu executar os movimentos e atualizar imports automaticamente.
 
 Se quiser exemplos imediatos, posso mostrar a maneira correta de usar `getSupabaseServer()` em um API route ou script de servidor.
 # Copilot Instructions for painel-qa

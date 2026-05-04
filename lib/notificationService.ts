@@ -1,9 +1,11 @@
 import "server-only";
 
+import type { WikiDoc } from "@/data/platformDocsStore";
 import type { RequestRecord } from "@/data/requestsStore";
 import type { Release } from "@/types/release";
 import type { SuporteRecord } from "@/lib/ticketsStore";
 import type { TicketCommentRecord } from "@/lib/ticketCommentsStore";
+import type { CompanyDefectRecord } from "@/lib/companyDefects";
 import {
   closeNotificationsByDedupeKey,
   createNotificationsForUsers,
@@ -13,24 +15,65 @@ import {
   listLocalLinksForCompany,
   listLocalUsers,
   listLocalMemberships,
+  getLocalUserById,
 } from "@/lib/auth/localStore";
-import { canAdminReviewQueue, resolveReviewQueue, toRequestProfileTypeLabel, type ReviewQueue } from "@/lib/requestRouting";
+import { toRequestProfileTypeLabel, type RequestProfileType, type ReviewQueue } from "@/lib/requestRouting";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
 function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null }) {
-  return user.is_global_admin === true || user.globalRole === "global_admin";
+  return user.is_global_admin === true || normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.LEADER_TC;
 }
 
-function isItDevUser(user: { role?: string | null }) {
-  const role = (user.role ?? "").toLowerCase();
-  return role === "it_dev" || role === "itdev" || role === "developer" || role === "dev";
+function canReviewAccessRequestsByRole(role?: string | null) {
+  return hasPermissionAccess(resolveRoleDefaults(role), "access_requests", "view");
+}
+
+function canReceiveReviewQueue(role: string | null | undefined, queue: ReviewQueue, isGlobalAdmin = false) {
+  if (isGlobalAdmin) return true;
+  if (queue !== "admin_and_global" && queue !== "global_only") return false;
+  return canReviewAccessRequestsByRole(role);
+}
+
+function isTechnicalSupportUser(user: { role?: string | null }) {
+  return normalizeLegacyRole(user.role) === SYSTEM_ROLES.TECHNICAL_SUPPORT;
 }
 
 function describePermissionRole(role?: string | null) {
-  const normalized = (role ?? "").toLowerCase();
-  if (normalized === "admin" || normalized === "global_admin") return "Admin";
-  if (normalized === "dev" || normalized === "it_dev" || normalized === "itdev" || normalized === "developer") return "Dev";
-  if (normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "Empresa";
+  const normalized = normalizeLegacyRole(role);
+  if (normalized === SYSTEM_ROLES.LEADER_TC) return "Lider TC";
+  if (normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "Suporte tecnico";
+  if (normalized === SYSTEM_ROLES.EMPRESA || normalized === SYSTEM_ROLES.COMPANY_USER) return "Empresa";
   return "Usuario";
+}
+
+function normalizeCompanySlug(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function parseBooleanFlag(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true" || normalized === "1" || normalized === "yes") return true;
+    if (normalized === "false" || normalized === "0" || normalized === "no") return false;
+  }
+  return null;
+}
+
+function isCompanyLinkedNotificationFanoutEnabled(company: Record<string, unknown>) {
+  const candidates = [
+    company.notifications_fanout_enabled,
+    company.notificationsFanoutEnabled,
+    company.notify_linked_users_on_change,
+    company.notifyLinkedUsersOnChange,
+  ];
+  for (const candidate of candidates) {
+    const parsed = parseBooleanFlag(candidate);
+    if (parsed !== null) return parsed;
+  }
+  return true;
 }
 
 async function resolveAdminUserIds() {
@@ -38,56 +81,264 @@ async function resolveAdminUserIds() {
   return users.filter(isAdminUser).map((user) => user.id);
 }
 
-async function resolveItDevUserIds() {
+async function resolveTechnicalSupportUserIds() {
   const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
   const ids = new Set<string>();
-  users.filter(isItDevUser).forEach((user) => ids.add(user.id));
+  users.filter(isTechnicalSupportUser).forEach((user) => ids.add(user.id));
   memberships
-    .filter((membership) => isItDevUser({ role: membership.role }))
+    .filter((membership) => isTechnicalSupportUser({ role: membership.role }))
     .forEach((membership) => ids.add(membership.userId));
   return Array.from(ids);
 }
 
 async function resolveRequestReviewerIds(queue: ReviewQueue) {
-  const globalIds = await resolveItDevUserIds();
-  if (!canAdminReviewQueue(queue)) return globalIds;
-  const adminIds = await resolveAdminUserIds();
-  return Array.from(new Set([...adminIds, ...globalIds]));
+  const [users, memberships] = await Promise.all([listLocalUsers(), listLocalMemberships()]);
+  const all = new Set<string>();
+
+  for (const user of users) {
+    if (canReceiveReviewQueue(user.role, queue, isAdminUser(user))) {
+      all.add(user.id);
+    }
+  }
+
+  for (const membership of memberships) {
+    if (canReceiveReviewQueue(membership.role, queue)) {
+      all.add(membership.userId);
+    }
+  }
+
+  return Array.from(all);
+}
+
+async function resolveSelfServiceRequestReviewerIds() {
+  return resolveTechnicalSupportUserIds();
 }
 
 async function resolveCompanyUserIds(companySlug?: string | null) {
   const adminIds = await resolveAdminUserIds();
   if (!companySlug) return adminIds;
   const companies = await listLocalCompanies();
-  const company = companies.find((item) => item.slug === companySlug);
+  const normalizedSlug = normalizeCompanySlug(companySlug);
+  const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
   if (!company) return adminIds;
   const links = await listLocalLinksForCompany(company.id);
   const memberIds = links.map((link) => link.userId);
   return Array.from(new Set([...adminIds, ...memberIds]));
 }
 
+async function resolveCompanyLinkedUserIds(companySlug?: string | null) {
+  if (!companySlug) return [] as string[];
+  const companies = await listLocalCompanies();
+  const normalizedSlug = normalizeCompanySlug(companySlug);
+  const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
+  if (!company) return [] as string[];
+  if (!isCompanyLinkedNotificationFanoutEnabled(company as Record<string, unknown>)) {
+    return [] as string[];
+  }
+  const links = await listLocalLinksForCompany(company.id);
+  return Array.from(new Set(links.map((link) => link.userId).filter(Boolean)));
+}
+
+function isActiveNotificationUser(user: { active?: boolean; status?: string | null }) {
+  return user.active !== false && user.status !== "blocked";
+}
+
+function isPrivilegedWikiRole(role?: string | null) {
+  const normalized = normalizeLegacyRole(role);
+  return normalized === SYSTEM_ROLES.LEADER_TC || normalized === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+}
+
+function matchesCompanyId(left?: string | null, right?: string | null) {
+  const normalizedLeft = (left ?? "").trim();
+  const normalizedRight = (right ?? "").trim();
+  return normalizedLeft.length > 0 && normalizedLeft === normalizedRight;
+}
+
+function isDirectCompanyWikiUser(
+  user: {
+    user_origin?: string | null;
+    default_company_slug?: string | null;
+    created_by_company_id?: string | null;
+    home_company_id?: string | null;
+  },
+  company: { id: string; slug?: string | null },
+) {
+  const companySlug = normalizeCompanySlug(company.slug);
+  const defaultCompanySlug = normalizeCompanySlug(user.default_company_slug);
+  if (user.user_origin === "client_company" && companySlug && defaultCompanySlug === companySlug) {
+    return true;
+  }
+  return matchesCompanyId(user.created_by_company_id, company.id) || matchesCompanyId(user.home_company_id, company.id);
+}
+
+async function resolvePlatformWikiRecipientIds() {
+  const users = await listLocalUsers();
+  return users
+    .filter((user) => Boolean(user.id) && isActiveNotificationUser(user))
+    .map((user) => user.id);
+}
+
+async function resolveCompanyWikiRecipientIds(companySlug?: string | null) {
+  const normalizedSlug = normalizeCompanySlug(companySlug);
+  if (!normalizedSlug) return [] as string[];
+
+  const [users, companies, memberships] = await Promise.all([
+    listLocalUsers(),
+    listLocalCompanies(),
+    listLocalMemberships(),
+  ]);
+  const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
+  if (!company) return [] as string[];
+
+  const linkedFanoutEnabled = isCompanyLinkedNotificationFanoutEnabled(company as Record<string, unknown>);
+  const membershipsByUserId = new Map<string, (typeof memberships)[number][]>();
+  for (const membership of memberships) {
+    const current = membershipsByUserId.get(membership.userId) ?? [];
+    current.push(membership);
+    membershipsByUserId.set(membership.userId, current);
+  }
+
+  const recipients = new Set<string>();
+  for (const user of users) {
+    if (!user.id || !isActiveNotificationUser(user)) continue;
+    const userMemberships = membershipsByUserId.get(user.id) ?? [];
+    const linkedToCompany = linkedFanoutEnabled && userMemberships.some((membership) => membership.companyId === company.id);
+    const hasPrivilegedAccess =
+      user.is_global_admin === true ||
+      normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.LEADER_TC ||
+      isPrivilegedWikiRole(user.role) ||
+      userMemberships.some((membership) => isPrivilegedWikiRole(membership.role));
+    const directCompanyUser = isDirectCompanyWikiUser(user, company);
+
+    if (linkedToCompany || hasPrivilegedAccess || directCompanyUser) {
+      recipients.add(user.id);
+    }
+  }
+
+  return Array.from(recipients);
+}
+
+function buildCompanyWikiDocsLink(companySlug: string) {
+  return `/empresas/${encodeURIComponent(companySlug)}/docs`;
+}
+
+function buildWikiDocNotificationTitle(event: "created" | "published") {
+  return event === "created" ? "Novo documento publicado" : "Documento publicado";
+}
+
+function buildWikiDocNotificationDescription(input: {
+  title: string;
+  scopeLabel: string;
+  event: "created" | "published";
+}) {
+  if (input.event === "created") {
+    return `${input.title} foi criado e publicado no repositório ${input.scopeLabel}.`;
+  }
+  return `${input.title} foi publicado no repositório ${input.scopeLabel}.`;
+}
+
+export async function notifyPlatformWikiDocPublished(input: {
+  doc: Pick<WikiDoc, "id" | "title" | "updatedAt">;
+  event: "created" | "published";
+}) {
+  const recipients = await resolvePlatformWikiRecipientIds();
+  if (!recipients.length) return;
+
+  await createNotificationsForUsers(recipients, {
+    type: "DOC_PUBLISHED",
+    title: buildWikiDocNotificationTitle(input.event),
+    description: buildWikiDocNotificationDescription({
+      title: input.doc.title || "Documento",
+      scopeLabel: "da Testing Company",
+      event: input.event,
+    }),
+    link: "/docs",
+    dedupeKey: `wiki-doc:platform:${input.doc.id}:${input.doc.updatedAt}`,
+  });
+}
+
+export async function notifyCompanyWikiDocPublished(input: {
+  companySlug: string;
+  doc: Pick<WikiDoc, "id" | "title" | "updatedAt">;
+  event: "created" | "published";
+}) {
+  const normalizedSlug = normalizeCompanySlug(input.companySlug);
+  if (!normalizedSlug) return;
+
+  const recipients = await resolveCompanyWikiRecipientIds(normalizedSlug);
+  if (!recipients.length) return;
+
+  const companies = await listLocalCompanies();
+  const company = companies.find((item) => normalizeCompanySlug(item.slug) === normalizedSlug);
+  const companyLabel = company?.name || company?.company_name || normalizedSlug;
+
+  await createNotificationsForUsers(recipients, {
+    type: "DOC_PUBLISHED",
+    title: buildWikiDocNotificationTitle(input.event),
+    description: buildWikiDocNotificationDescription({
+      title: input.doc.title || "Documento",
+      scopeLabel: `de ${companyLabel}`,
+      event: input.event,
+    }),
+    companySlug: normalizedSlug,
+    link: buildCompanyWikiDocsLink(normalizedSlug),
+    dedupeKey: `wiki-doc:company:${normalizedSlug}:${input.doc.id}:${input.doc.updatedAt}`,
+  });
+}
+
+async function resolveCompanySlugFromClientId(clientId?: string | null) {
+  if (!clientId) return null;
+  const normalizedClientId = clientId.trim();
+  if (!normalizedClientId) return null;
+  const companies = await listLocalCompanies();
+  const byId = companies.find((item) => item.id === normalizedClientId);
+  return byId?.slug ?? null;
+}
+
+async function resolveAccessRequestRecipientIds(input: {
+  reviewQueue: ReviewQueue;
+  companySlug?: string | null;
+  clientId?: string | null;
+}) {
+  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
+  const resolvedCompanySlug =
+    normalizeCompanySlug(input.companySlug) ||
+    normalizeCompanySlug(await resolveCompanySlugFromClientId(input.clientId));
+  const companyLinkedIds = await resolveCompanyLinkedUserIds(resolvedCompanySlug || null);
+  return Array.from(new Set([...reviewerIds, ...companyLinkedIds]));
+}
+
+function buildDefectLink(companySlug?: string | null, defectSlug?: string | null) {
+  if (!companySlug || !defectSlug) return null;
+  return `/empresas/${encodeURIComponent(companySlug)}/defeitos?defect=${encodeURIComponent(defectSlug)}`;
+}
+
+async function resolveDefectRecipientIds(input: {
+  defect: Pick<CompanyDefectRecord, "slug" | "createdByUserId" | "assignedToUserId">;
+  companySlug?: string | null;
+  actorId: string;
+}) {
+  const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyUserIds(input.companySlug ?? null);
+  companyRecipients.forEach((id) => {
+    if (id && id !== input.actorId) recipients.add(id);
+  });
+  if (input.defect.createdByUserId && input.defect.createdByUserId !== input.actorId) {
+    recipients.add(input.defect.createdByUserId);
+  }
+  if (input.defect.assignedToUserId && input.defect.assignedToUserId !== input.actorId) {
+    recipients.add(input.defect.assignedToUserId);
+  }
+  return Array.from(recipients);
+}
+
 export async function notifyPasswordResetRequest(request: RequestRecord) {
-  const requestedProfileType =
-    typeof request.payload?.profileType === "string" ? request.payload.profileType : null;
-  const reviewQueue =
-    typeof request.payload?.reviewQueue === "string" &&
-    (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
-      ? request.payload.reviewQueue
-      : resolveReviewQueue(
-          requestedProfileType === "testing_company_user" ||
-            requestedProfileType === "company_user" ||
-            requestedProfileType === "testing_company_lead" ||
-            requestedProfileType === "technical_support"
-            ? requestedProfileType
-            : "testing_company_user",
-        );
-  const reviewerIds = await resolveRequestReviewerIds(reviewQueue);
+  const reviewerIds = await resolveSelfServiceRequestReviewerIds();
   const userLabel = request.userName || request.userEmail || "Usuario";
-  const reviewerLabel = canAdminReviewQueue(reviewQueue) ? "Admin e Global" : "Global";
   await createNotificationsForUsers(reviewerIds, {
     type: "PASSWORD_RESET_REQUEST",
     title: "Reset de senha solicitado",
-    description: `${userLabel} solicitou reset de senha para ${reviewerLabel}.`,
+    description: `${userLabel} solicitou reset de senha para o Suporte tecnico.`,
     requestId: request.id,
     dedupeKey: `reset:reviewers:${request.id}`,
   });
@@ -95,9 +346,7 @@ export async function notifyPasswordResetRequest(request: RequestRecord) {
   await createNotificationsForUsers([request.userId], {
     type: "PASSWORD_RESET_PENDING",
     title: "Solicitacao de reset enviada",
-    description: canAdminReviewQueue(reviewQueue)
-      ? "Aguardando analise de Admin ou Global."
-      : "Aguardando analise exclusiva do Global.",
+    description: "Aguardando analise do Suporte tecnico.",
     requestId: request.id,
     dedupeKey: `reset:user:${request.id}`,
   });
@@ -110,26 +359,44 @@ export async function notifyPasswordResetStatus(
   const approved = status === "APPROVED";
   const type = approved ? "PASSWORD_RESET_APPROVED" : "PASSWORD_RESET_REJECTED";
   const title = approved ? "Reset de senha aprovado" : "Reset de senha rejeitado";
-  const description = approved
-    ? "Seu reset foi aprovado. Verifique seu email para continuar."
-    : "Seu reset foi rejeitado. Entre em contato com o administrador.";
+
+  let reviewerName = "um revisor";
+  if (request.reviewedBy) {
+    const reviewer = await getLocalUserById(request.reviewedBy);
+    reviewerName = reviewer?.full_name?.trim() || reviewer?.name || reviewer?.email || request.reviewedBy;
+  }
+
+  const userLabel = request.userName || request.userEmail || "Usuario";
+  const userDescription = approved
+    ? `Seu reset foi aprovado por ${reviewerName}. Verifique seu email para continuar.`
+    : `Seu reset foi rejeitado por ${reviewerName}. Entre em contato com o administrador.`;
 
   await closeNotificationsByDedupeKey(request.userId, `reset:user:${request.id}`);
   await createNotificationsForUsers([request.userId], {
     type,
     title,
-    description,
+    description: userDescription,
     requestId: request.id,
   });
+
+  const reviewerDescription = approved
+    ? `Reset de senha de ${userLabel} foi aprovado por ${reviewerName}.`
+    : `Reset de senha de ${userLabel} foi rejeitado por ${reviewerName}.`;
+
+  const reviewerIds = (await resolveSelfServiceRequestReviewerIds()).filter((id) => id !== request.userId);
+  if (reviewerIds.length > 0) {
+    await createNotificationsForUsers(reviewerIds, {
+      type,
+      title: `Reset de senha ${approved ? "aprovado" : "rejeitado"}`,
+      description: reviewerDescription,
+      requestId: request.id,
+      dedupeKey: `reset:status:${request.id}`,
+    });
+  }
 }
 
 export async function notifyProfileDeletionRequest(request: RequestRecord) {
-  const reviewQueue =
-    typeof request.payload?.reviewQueue === "string" &&
-    (request.payload.reviewQueue === "admin_and_global" || request.payload.reviewQueue === "global_only")
-      ? request.payload.reviewQueue
-      : "admin_and_global";
-  const reviewerIds = await resolveRequestReviewerIds(reviewQueue);
+  const reviewerIds = await resolveSelfServiceRequestReviewerIds();
   const userLabel = request.userName || request.userEmail || "Usuario";
   await createNotificationsForUsers(reviewerIds, {
     type: "PROFILE_DELETION_REQUEST",
@@ -217,8 +484,136 @@ export async function notifyManualRunFailure(
   });
 }
 
+export async function notifyDefectStatusChanged(input: {
+  defect: Pick<CompanyDefectRecord, "slug" | "title" | "name" | "createdByUserId" | "assignedToUserId">;
+  companySlug?: string | null;
+  actorId: string;
+  actorName?: string | null;
+  nextStatusLabel: string;
+}) {
+  const recipients = await resolveDefectRecipientIds(input);
+  if (!recipients.length) return;
+  const defectLabel = input.defect.title || input.defect.name || input.defect.slug;
+  const actorLabel = input.actorName || "Fluxo de defeitos";
+  await createNotificationsForUsers(recipients, {
+    type: "DEFECT_STATUS_CHANGED",
+    title: "Status do defeito atualizado",
+    description: `${actorLabel} atualizou ${defectLabel} para ${input.nextStatusLabel}.`,
+    companySlug: input.companySlug ?? null,
+    link: buildDefectLink(input.companySlug ?? null, input.defect.slug),
+    dedupeKey: `defect:${input.defect.slug}:status:${input.nextStatusLabel}:${Date.now()}`,
+  });
+}
+
+export async function notifyDefectCommentAdded(input: {
+  defect: Pick<CompanyDefectRecord, "slug" | "title" | "name" | "createdByUserId" | "assignedToUserId">;
+  companySlug?: string | null;
+  actorId: string;
+  actorName?: string | null;
+  commentId: string;
+  body: string;
+}) {
+  const recipients = await resolveDefectRecipientIds(input);
+  if (!recipients.length) return;
+  const defectLabel = input.defect.title || input.defect.name || input.defect.slug;
+  const preview = input.body.length > 160 ? `${input.body.slice(0, 160)}...` : input.body;
+  await createNotificationsForUsers(recipients, {
+    type: "DEFECT_COMMENT_ADDED",
+    title: "Novo comentario no defeito",
+    description: `${input.actorName || "Novo comentario"} em ${defectLabel}: ${preview}`,
+    companySlug: input.companySlug ?? null,
+    link: buildDefectLink(input.companySlug ?? null, input.defect.slug),
+    dedupeKey: `defect:${input.defect.slug}:comment:${input.commentId}`,
+  });
+}
+
+export async function notifyDefectAssigned(input: {
+  defect: Pick<CompanyDefectRecord, "slug" | "title" | "name" | "createdByUserId" | "assignedToUserId">;
+  companySlug?: string | null;
+  actorId: string;
+  assigneeId: string;
+  assigneeName?: string | null;
+}) {
+  const recipients = await resolveDefectRecipientIds(input);
+  if (!recipients.length) return;
+  const defectLabel = input.defect.title || input.defect.name || input.defect.slug;
+  await createNotificationsForUsers(recipients, {
+    type: "DEFECT_ASSIGNED",
+    title: "Responsavel do defeito atualizado",
+    description: `${defectLabel} foi atribuido para ${input.assigneeName || "um responsavel"}.`,
+    companySlug: input.companySlug ?? null,
+    link: buildDefectLink(input.companySlug ?? null, input.defect.slug),
+    dedupeKey: `defect:${input.defect.slug}:assigned:${input.assigneeId}:${Date.now()}`,
+  });
+}
+
+export async function notifyIntegrationRunCreated(input: {
+  slug: string;
+  title: string;
+  clientId?: string | null;
+  clientName?: string | null;
+  qaseProject?: string | null;
+}) {
+  const runSlug = input.slug ?? "run";
+  const runName = input.title || runSlug;
+
+  const companySlug = await resolveCompanySlugForIntegration(input.clientId, input.clientName, input.qaseProject);
+  const recipients = await resolveCompanyUserIds(companySlug);
+  if (!recipients.length) return;
+
+  const link = companySlug
+    ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(runSlug)}`
+    : null;
+
+  await createNotificationsForUsers(recipients, {
+    type: "RUN_CREATED",
+    title: "Nova run via integração",
+    description: `${runName} foi registrada via integração.`,
+    companySlug,
+    link,
+    dedupeKey: `run:${runSlug}:created`,
+  });
+}
+
+async function resolveCompanySlugForIntegration(
+  clientId?: string | null,
+  clientName?: string | null,
+  qaseProject?: string | null,
+) {
+  const companies = await listLocalCompanies();
+  if (clientId) {
+    const byId = companies.find((c) => c.id === clientId || c.slug === clientId);
+    if (byId) return byId.slug;
+  }
+  if (clientName) {
+    const normalized = clientName.trim().toLowerCase();
+    const byName = companies.find(
+      (c) =>
+        (c.name ?? "").trim().toLowerCase() === normalized ||
+        (c.company_name ?? "").trim().toLowerCase() === normalized ||
+        (c.slug ?? "").trim().toLowerCase() === normalized,
+    );
+    if (byName) return byName.slug;
+  }
+  if (qaseProject) {
+    const code = qaseProject.trim().toUpperCase();
+    const byProject = companies.find((c) => {
+      const codes = Array.isArray(c.qase_project_codes) ? c.qase_project_codes : [];
+      return codes.some((pc: unknown) => typeof pc === "string" && pc.trim().toUpperCase() === code);
+    });
+    if (byProject) return byProject.slug;
+  }
+  return null;
+}
+
 export async function notifySuporteCreated(suporte: SuporteRecord) {
-  const recipients = Array.from(new Set([...(await resolveAdminUserIds()), ...(await resolveItDevUserIds())]));
+  const recipients = Array.from(
+    new Set([
+      ...(await resolveAdminUserIds()),
+      ...(await resolveTechnicalSupportUserIds()),
+      ...(await resolveCompanyUserIds(suporte.companySlug ?? null)),
+    ]),
+  );
   if (!recipients.length) return;
   const requester = suporte.createdByName || suporte.createdByEmail || "Usuario";
   const companyLabel = suporte.companySlug ? ` (${suporte.companySlug})` : "";
@@ -243,6 +638,10 @@ export async function notifySuporteStatusChanged(input: {
   reason?: string | null;
 }) {
   const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyUserIds(input.suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
   if (input.suporte.createdBy && input.suporte.createdBy !== input.actorId) {
     recipients.add(input.suporte.createdBy);
   }
@@ -271,6 +670,10 @@ export async function notifySuporteCommentAdded(input: {
   actorName?: string | null;
 }) {
   const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyUserIds(input.suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
   if (input.suporte.createdBy && input.suporte.createdBy !== input.actorId) {
     recipients.add(input.suporte.createdBy);
   }
@@ -278,8 +681,8 @@ export async function notifySuporteCommentAdded(input: {
     recipients.add(input.suporte.assignedToUserId);
   }
   if (!input.suporte.assignedToUserId && input.suporte.createdBy === input.actorId) {
-    const itDevs = await resolveItDevUserIds();
-    itDevs.filter((id) => id !== input.actorId).forEach((id) => recipients.add(id));
+    const supportUsers = await resolveTechnicalSupportUserIds();
+    supportUsers.filter((id) => id !== input.actorId).forEach((id) => recipients.add(id));
   }
   if (!recipients.size) return;
   const authorLabel = input.actorName || "Novo comentario";
@@ -299,8 +702,16 @@ export async function notifySuporteReactionAdded(input: {
   comment: TicketCommentRecord;
   actorId: string;
 }) {
-  if (input.comment.authorUserId === input.actorId) return;
-  await createNotificationsForUsers([input.comment.authorUserId], {
+  const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyUserIds(input.suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
+  if (input.comment.authorUserId && input.comment.authorUserId !== input.actorId) {
+    recipients.add(input.comment.authorUserId);
+  }
+  if (!recipients.size) return;
+  await createNotificationsForUsers(Array.from(recipients), {
     type: "TICKET_REACTION_ADDED",
     title: "Curtiram seu comentario",
     description: "Uma reacao foi adicionada ao seu comentario.",
@@ -316,8 +727,16 @@ export async function notifySuporteAssigned(input: {
   assigneeId: string;
   actorId: string;
 }) {
-  if (!input.assigneeId || input.assigneeId === input.actorId) return;
-  await createNotificationsForUsers([input.assigneeId], {
+  const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyUserIds(input.suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
+  if (input.assigneeId && input.assigneeId !== input.actorId) {
+    recipients.add(input.assigneeId);
+  }
+  if (!recipients.size) return;
+  await createNotificationsForUsers(Array.from(recipients), {
     type: "TICKET_ASSIGNED",
     title: "Suporte atribuido",
     description: `Voce foi atribuido ao suporte ${input.suporte.title}.`,
@@ -334,16 +753,23 @@ export async function notifyAccessRequestComment(input: {
   authorName: string;
   body: string;
   reviewQueue?: ReviewQueue | null;
+  companySlug?: string | null;
+  clientId?: string | null;
 }) {
-  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue ?? "admin_and_global");
-  if (!reviewerIds.length) return;
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue ?? "admin_and_global",
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
   const preview = input.body.length > 160 ? `${input.body.slice(0, 160)}...` : input.body;
-  await createNotificationsForUsers(reviewerIds, {
+  await createNotificationsForUsers(recipients, {
     type: "ACCESS_REQUEST_COMMENT",
     title: "Novo comentario em solicitacao de acesso",
     description: `${input.authorName}: ${preview}`,
     requestId: input.requestId,
     link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
     dedupeKey: `access-request:${input.requestId}:comment:${input.commentId}`,
   });
 }
@@ -351,18 +777,79 @@ export async function notifyAccessRequestComment(input: {
 export async function notifyAccessRequestCreated(input: {
   requestId: string;
   requesterName: string;
-  profileType: "testing_company_user" | "company_user" | "testing_company_lead" | "technical_support";
+  profileType: RequestProfileType;
   reviewQueue: ReviewQueue;
+  companySlug?: string | null;
+  clientId?: string | null;
 }) {
-  const reviewerIds = await resolveRequestReviewerIds(input.reviewQueue);
-  if (!reviewerIds.length) return;
-  await createNotificationsForUsers(reviewerIds, {
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue,
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
+  await createNotificationsForUsers(recipients, {
     type: "ACCESS_REQUEST_CREATED",
     title: "Nova solicitacao de acesso",
     description: `${input.requesterName} solicitou ${toRequestProfileTypeLabel(input.profileType)}.`,
     requestId: input.requestId,
     link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
     dedupeKey: `access-request:${input.requestId}:created`,
+  });
+}
+
+export async function notifyAccessRequestAccepted(input: {
+  requestId: string;
+  requesterName: string;
+  approverName: string;
+  profileType: RequestProfileType;
+  reviewQueue: ReviewQueue;
+  companySlug?: string | null;
+  clientId?: string | null;
+}) {
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue,
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
+  await createNotificationsForUsers(recipients, {
+    type: "ACCESS_REQUEST_ACCEPTED",
+    title: "Solicitacao de acesso aprovada",
+    description: `${input.approverName} aprovou a solicitacao de ${input.requesterName} (${toRequestProfileTypeLabel(input.profileType)}).`,
+    requestId: input.requestId,
+    link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
+    dedupeKey: `access-request:${input.requestId}:accepted`,
+  });
+}
+
+export async function notifyAccessRequestRejected(input: {
+  requestId: string;
+  requesterName: string;
+  rejectorName: string;
+  profileType: RequestProfileType;
+  reviewQueue: ReviewQueue;
+  reason?: string | null;
+  companySlug?: string | null;
+  clientId?: string | null;
+}) {
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue,
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
+  const reasonSuffix = input.reason ? ` Motivo: ${input.reason}` : "";
+  await createNotificationsForUsers(recipients, {
+    type: "ACCESS_REQUEST_REJECTED",
+    title: "Solicitacao de acesso recusada",
+    description: `${input.rejectorName} recusou a solicitacao de ${input.requesterName} (${toRequestProfileTypeLabel(input.profileType)}).${reasonSuffix}`,
+    requestId: input.requestId,
+    link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
+    dedupeKey: `access-request:${input.requestId}:rejected`,
   });
 }
 
@@ -437,3 +924,37 @@ export async function notifyTicketAssigned(input: { ticket: TicketRecord; assign
   return notifySuporteAssigned({ suporte: input.ticket as SuporteRecord, assigneeId: input.assigneeId, actorId: input.actorId });
 }
 
+export async function notifyTicketUpdated(input: {
+  ticket: TicketRecord;
+  actorId: string;
+  actorName?: string | null;
+  changedFields?: string[];
+}) {
+  if (!input?.ticket) return;
+  const suporte = input.ticket as SuporteRecord;
+  const recipients = new Set<string>();
+  const companyRecipients = await resolveCompanyUserIds(suporte.companySlug ?? null);
+  companyRecipients
+    .filter((id) => id !== input.actorId)
+    .forEach((id) => recipients.add(id));
+  if (suporte.createdBy && suporte.createdBy !== input.actorId) {
+    recipients.add(suporte.createdBy);
+  }
+  if (suporte.assignedToUserId && suporte.assignedToUserId !== input.actorId) {
+    recipients.add(suporte.assignedToUserId);
+  }
+  if (!recipients.size) return;
+  const actorLabel = input.actorName || "Alguem";
+  const fieldsLabel = input.changedFields?.length
+    ? ` (${input.changedFields.join(", ")})`
+    : "";
+  await createNotificationsForUsers(Array.from(recipients), {
+    type: "TICKET_STATUS_CHANGED",
+    title: "Suporte atualizado",
+    description: `${actorLabel} editou o chamado ${suporte.title}${fieldsLabel}.`,
+    companySlug: suporte.companySlug ?? null,
+    link: "/meus-chamados",
+    ticketId: suporte.id,
+    dedupeKey: `suporte:${suporte.id}:updated:${Date.now()}`,
+  });
+}

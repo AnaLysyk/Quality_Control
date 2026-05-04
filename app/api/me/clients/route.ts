@@ -8,7 +8,7 @@ export const revalidate = 0;
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const [links, companies] = await Promise.all([
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
       client_name: company.name ?? company.company_name ?? "Empresa",
       client_slug: company.slug,
       client_active: company.active ?? true,
-      role: isGlobalAdmin || normalized === "company_admin" ? "ADMIN" : "USER",
+      role: isGlobalAdmin || normalized === "empresa" ? "ADMIN" : "USER",
       link_active: true,
       created_at: createdAt,
       companyRole: normalized ?? null,

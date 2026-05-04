@@ -15,7 +15,7 @@ function normalizeRole(role?: string | null) {
 function isAdmin(user: AuthUser) {
   if (user.isGlobalAdmin) return true;
   const role = normalizeRole(user.role);
-  return role === "admin" || role === "global_admin" || role === "company" || role === "company_admin";
+  return role === "leader_tc" || role === "technical_support" || role === "empresa";
 }
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   if (!body) return jsonError("JSON invalido", 400);
 
   const user = await authenticateRequest(request);
-  if (!user) return jsonError("Nao autorizado", 401);
+  if (!user) return jsonError("Não autorizado", 401);
 
   const record = body as Record<string, unknown>;
   const project = asProject(record.project);
@@ -92,12 +92,12 @@ export async function POST(request: NextRequest) {
     effectiveSlug = requestedSlug ?? user.companySlug ?? null;
   } else {
     const allowed = resolveAllowedSlugs(user);
-    if (!allowed.length) return jsonError("slug e obrigatorio", 400);
+    if (!allowed.length) return jsonError("slug e obrigatório", 400);
     if (requestedSlug && !allowed.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
     effectiveSlug = requestedSlug ?? user.companySlug ?? allowed[0] ?? null;
   }
 
-  if (!effectiveSlug) return jsonError("slug e obrigatorio", 400);
+  if (!effectiveSlug) return jsonError("slug e obrigatório", 400);
   if (!project || runId === null || caseId === null) {
     return jsonError("Campos obrigatorios: project, runId, caseId", 400);
   }

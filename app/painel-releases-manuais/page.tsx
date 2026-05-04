@@ -1,3 +1,5 @@
+﻿export const dynamic = "force-dynamic";
+
 import ReleaseManualList from "../components/ReleaseManualList";
 import DefectList from "../components/DefectList";
 

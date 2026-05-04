@@ -4,7 +4,11 @@
  */
 
 const { PrismaClient } = require('@prisma/client');
-const p = new PrismaClient();
+const { PrismaPg } = require('@prisma/adapter-pg');
+
+const p = new PrismaClient({
+  adapter: new PrismaPg(process.env.DATABASE_URL),
+});
 
 async function main() {
   // Busca todos os usuários com suas memberships

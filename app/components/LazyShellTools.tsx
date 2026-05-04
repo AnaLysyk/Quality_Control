@@ -2,15 +2,18 @@
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import { Component, useCallback, useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import type { IconType } from "react-icons";
-import { FiBell, FiEdit3, FiMessageSquare } from "react-icons/fi";
+import { FiBell, FiEdit3, FiMessageSquare, FiMoon, FiSun } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import NotificationsButton from "@/components/NotificationsButton";
 import UserAvatar from "@/components/UserAvatar";
 import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
+import { useI18n } from "@/hooks/useI18n";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
+import { fetchApi } from "@/lib/api";
 
 type ToolComponentProps = {
   defaultOpen?: boolean;
@@ -76,11 +79,6 @@ const LazyNotesButtonInner = dynamic<ToolComponentProps>(() => import("./NotesBu
   loading: () => <ToolbarLoadingBubble icon={FiEdit3} ariaLabel="Carregando bloco de notas" />,
 });
 
-const LazyNotificationsButtonInner = dynamic<NotificationsToolComponentProps>(() => import("./NotificationsButton"), {
-  ssr: false,
-  loading: () => <ToolbarLoadingBubble icon={FiBell} ariaLabel="Carregando notificacoes" />,
-});
-
 const LazyTicketsButtonInner = dynamic<ToolComponentProps>(() => import("./TicketsButton"), {
   ssr: false,
   loading: () => <ToolbarLoadingBubble icon={FiMessageSquare} ariaLabel="Carregando chamados" />,
@@ -117,7 +115,6 @@ function ToolbarGhostButton({
       onFocus={onPrime}
       onTouchStart={onPrime}
       aria-label={mounted ? loadingLabel : ariaLabel}
-      aria-busy={mounted}
       className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001) disabled:cursor-progress disabled:opacity-75"
       disabled={mounted}
     >
@@ -127,6 +124,22 @@ function ToolbarGhostButton({
 
   if (!wrapperClassName) return button;
   return <span className={wrapperClassName}>{button}</span>;
+}
+
+class ChunkErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { failed: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) return null;
+    return this.props.children;
+  }
 }
 
 function useDeferredShellTool() {
@@ -145,25 +158,56 @@ function useDeferredShellTool() {
   return { mounted, defaultOpen, prime, open };
 }
 
+const NOTIFICATIONS_COUNT_TTL_MS = 15_000;
+
+const notificationsCountCache: {
+  userId: string | null;
+  unreadCount: number;
+  fetchedAt: number;
+} = {
+  userId: null,
+  unreadCount: 0,
+  fetchedAt: 0,
+};
+
 export function DeferredNotificationsButton() {
-  const { user } = useAuthUser();
+  const { user, loading } = useAuthUser();
   const { mounted, defaultOpen, prime, open } = useDeferredShellTool();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user || mounted) return;
+    if (!user || loading || mounted) return;
 
     let alive = true;
+    const userId = user.id;
 
-    async function loadUnreadCount() {
+    async function loadUnreadCount(force = false) {
+      const sameUser = notificationsCountCache.userId === userId;
+      const fresh = notificationsCountCache.fetchedAt > Date.now() - NOTIFICATIONS_COUNT_TTL_MS;
+      if (!force && sameUser && fresh) {
+        setUnreadCount(notificationsCountCache.unreadCount);
+        return;
+      }
+
       try {
-        const response = await fetch("/api/notifications?summary=count", {
+        const response = await fetchApi("/api/notifications?summary=count", {
           credentials: "include",
           cache: "no-store",
         });
         const payload = (await response.json().catch(() => ({}))) as { unreadCount?: number };
-        if (!alive || !response.ok) return;
-        setUnreadCount(typeof payload.unreadCount === "number" ? payload.unreadCount : 0);
+        if (!alive) return;
+        if (!response.ok) {
+          notificationsCountCache.userId = userId;
+          notificationsCountCache.unreadCount = 0;
+          notificationsCountCache.fetchedAt = Date.now();
+          setUnreadCount(0);
+          return;
+        }
+        const nextCount = typeof payload.unreadCount === "number" ? payload.unreadCount : 0;
+        notificationsCountCache.userId = userId;
+        notificationsCountCache.unreadCount = nextCount;
+        notificationsCountCache.fetchedAt = Date.now();
+        setUnreadCount(nextCount);
       } catch {
         if (!alive) return;
         setUnreadCount(0);
@@ -181,19 +225,19 @@ export function DeferredNotificationsButton() {
       alive = false;
       window.removeEventListener("focus", handleFocus);
     };
-  }, [mounted, user]);
+  }, [loading, mounted, user]);
 
   if (!user) return null;
   if (mounted) {
-    return <LazyNotificationsButtonInner defaultOpen={defaultOpen} initialUnreadCount={unreadCount} />;
+    return <NotificationsButton defaultOpen={defaultOpen} initialUnreadCount={unreadCount} />;
   }
 
   return (
     <span className="relative shrink-0">
       <ToolbarGhostButton
-        ariaLabel="Abrir notificacoes"
+        ariaLabel="Abrir notificações"
         icon={FiBell}
-        loadingLabel="Carregando notificacoes"
+        loadingLabel="Carregando notificações"
         mounted={mounted}
         onOpen={open}
         onPrime={prime}
@@ -223,6 +267,38 @@ export function DeferredTicketsButton() {
       onOpen={open}
       onPrime={prime}
     />
+  );
+}
+
+export function ThemeToggleButton() {
+  const { resolvedTheme, setTheme } = useAppSettings();
+  const { t } = useI18n();
+  const resolvedDark = resolvedTheme === "dark";
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const nextTheme = resolvedDark ? "light" : "dark";
+  const ariaLabel = mounted
+    ? resolvedDark
+      ? t("themeToggle.switchToLight")
+      : t("themeToggle.switchToDark")
+    : t("themeToggle.toggle");
+  const Icon = mounted ? (resolvedDark ? FiSun : FiMoon) : FiSun;
+
+  const handleToggle = useCallback(() => {
+    setTheme(nextTheme);
+  }, [nextTheme, setTheme]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleToggle}
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001) disabled:cursor-progress disabled:opacity-75"
+    >
+      <Icon size={18} />
+    </button>
   );
 }
 
@@ -260,7 +336,7 @@ export function DeferredChatButton() {
   if (!assistantEnabled || !user) return null;
   if (!can("ai", "view") || !can("ai", "use")) return null;
 
-  if (mounted) return <LazyChatButtonInner defaultOpen={defaultOpen} />;
+  if (mounted) return <ChunkErrorBoundary><LazyChatButtonInner defaultOpen={defaultOpen} /></ChunkErrorBoundary>;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -271,7 +347,6 @@ export function DeferredChatButton() {
         onFocus={prime}
         onTouchStart={prime}
         aria-label="Abrir assistente da plataforma"
-        aria-busy={mounted}
         title="Assistente Testing Company"
         className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105 disabled:cursor-progress"
         disabled={mounted}
@@ -299,7 +374,7 @@ export function DeferredChatButton() {
 
 export function DeferredProfileButton() {
   const { user, loading } = useAuthUser();
-  const { theme } = useAppSettings();
+  const { resolvedTheme } = useAppSettings();
   const { activeClient } = useClientContext();
   const [mounted, setMounted] = useState(false);
   const [defaultOpen, setDefaultOpen] = useState(false);
@@ -342,14 +417,13 @@ export function DeferredProfileButton() {
   const effectiveAvatarName = activeIdentity.displayName;
   const isLoadingComponent = mounted && !ProfileButtonComponent;
   const profileAvatarFrameClass = effectiveAvatarUrl
-    ? "border border-slate-300 bg-[#f7f9fc] ring-1 ring-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.16)] dark:border-slate-500 dark:bg-[#13213a] dark:ring-white/10"
+    ? "border border-border bg-surface2 ring-1 ring-border/40 shadow-[0_18px_40px_rgba(15,23,42,0.16)]"
     : "border-0 bg-linear-to-br from-(--tc-primary) to-[#7a1026] ring-0 shadow-none";
 
   return (
     <button
       type="button"
       aria-label={`Abrir menu de perfil: ${effectiveAvatarName}`}
-      aria-busy={isLoadingComponent}
       onClick={open}
       onMouseEnter={prime}
       onFocus={prime}
@@ -358,7 +432,7 @@ export function DeferredProfileButton() {
         effectiveAvatarUrl
           ? "bg-transparent p-0 hover:shadow-[0_12px_26px_rgba(15,23,42,0.24)]"
           : "border border-white/12 bg-(--tc-surface-dark,#0f1828) hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)]"
-      } ${theme === "dark" ? "dark" : ""} ${isLoadingComponent ? "cursor-progress opacity-80" : ""}`}
+      } ${resolvedTheme === "dark" ? "dark" : ""} ${isLoadingComponent ? "cursor-progress opacity-80" : ""}`}
       disabled={isLoadingComponent}
     >
       <UserAvatar
@@ -368,7 +442,7 @@ export function DeferredProfileButton() {
         size="sm"
         className="h-full w-full"
         frameClassName={profileAvatarFrameClass}
-        fallbackClassName={effectiveAvatarUrl ? "text-slate-700 dark:text-slate-100" : "text-white tracking-[0.16em]"}
+        fallbackClassName={effectiveAvatarUrl ? "text-muted" : "text-white tracking-[0.16em]"}
       />
     </button>
   );

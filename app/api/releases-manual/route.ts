@@ -11,6 +11,7 @@ import { readManualReleases, readManualReleaseCases, writeManualReleases, writeM
 import { notifyManualRunCreated } from "@/lib/notificationService";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { invalidateCompanyDefectsDataset } from "@/lib/companyDefectsDataset";
 
 async function resolveActor(authUser: AuthUser | null) {
   if (!authUser) return { actorId: null, actorName: null };
@@ -34,14 +35,20 @@ function resolveAllowedSlugs(user: AuthUser): string[] {
   return [];
 }
 
+function normalizeOptionalLabel(value: unknown) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
 export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);
   const mockRole = await getMockRole();
   const effectiveAuthUser: AuthUser | null =
     authUser ??
-    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const releases = await readManualReleases();
@@ -89,8 +96,8 @@ export async function POST(req: Request) {
   const mockRole = await getMockRole();
   const effectiveAuthUser: AuthUser | null =
     authUser ??
-    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "admin" } : null);
-  if (!effectiveAuthUser) return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
+  if (!effectiveAuthUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   try {
     const body = await req.json();
     const name = (body.name ?? "").toString().trim();
@@ -98,6 +105,12 @@ export async function POST(req: Request) {
     const qaseProject = (body.qaseProject ?? body.qase_project_code ?? app).toString().trim().toUpperCase();
     const environments = Array.isArray(body.environments) ? body.environments.map((env: unknown) => String(env)) : [];
     const clientSlug = body.clientSlug ? String(body.clientSlug).trim() : null;
+    if (!effectiveAuthUser.isGlobalAdmin) {
+      const allowed = resolveAllowedSlugs(effectiveAuthUser);
+      if (clientSlug && !allowed.includes(clientSlug)) {
+        return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
+      }
+    }
     const role = await resolveDefectRole(effectiveAuthUser, clientSlug);
     if (!canCreateManualDefect(role)) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
@@ -114,7 +127,7 @@ export async function POST(req: Request) {
     const closedAt = resolveClosedAt(status, requestedClosedAt, shouldCloseFromStats(stats) ? now : null);
 
     if (!name) {
-      return NextResponse.json({ message: "Nome obrigatorio" }, { status: 400 });
+      return NextResponse.json({ message: "Nome obrigatório" }, { status: 400 });
     }
 
     const release: Release = {
@@ -129,8 +142,14 @@ export async function POST(req: Request) {
       category: body.category ? String(body.category) : undefined,
       runSlug: body.runSlug ? String(body.runSlug) : undefined,
       runName: body.runName ? String(body.runName) : undefined,
+      testPlanId: body.testPlanId ? String(body.testPlanId) : null,
+      testPlanName: body.testPlanName ? String(body.testPlanName) : null,
+      testPlanSource: body.testPlanSource === "qase" ? "qase" : body.testPlanSource === "manual" ? "manual" : null,
+      testPlanProjectCode: body.testPlanProjectCode ? String(body.testPlanProjectCode).trim().toUpperCase() : null,
       source: "MANUAL",
       status,
+      severity: normalizeOptionalLabel(body.severity),
+      priority: normalizeOptionalLabel(body.priority),
       stats: {
         pass: Math.max(0, Number(stats.pass ?? 0)),
         fail: Math.max(0, Number(stats.fail ?? (kind === "defect" ? 1 : 0))),
@@ -151,6 +170,9 @@ export async function POST(req: Request) {
     const filtered = releases.filter((r) => r.slug !== release.slug);
     filtered.unshift(release);
     await writeManualReleases(filtered);
+    if (kind === "defect") {
+      invalidateCompanyDefectsDataset(release.clientSlug ?? null);
+    }
 
     if (kind === "run") {
       if (release.slug) {
@@ -163,7 +185,7 @@ export async function POST(req: Request) {
       try {
         await notifyManualRunCreated(release);
       } catch (err) {
-        console.error("Falha ao enviar notificacoes de run", err);
+        console.error("Falha ao enviar notificações de run", err);
       }
     }
     if (kind === "defect") {
@@ -178,7 +200,7 @@ export async function POST(req: Request) {
           note: release.name ?? null,
         });
       } catch (err) {
-        console.warn("Falha ao registrar historico do defeito:", err);
+        console.warn("Falha ao registrar histórico do defeito:", err);
       }
     }
 

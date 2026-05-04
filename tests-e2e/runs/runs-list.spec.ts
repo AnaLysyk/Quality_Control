@@ -1,17 +1,18 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
 
 test.describe("runs - lista", () => {
-  test("user vê runs da empresa ativa", async ({ page, context }) => {
+  test("user vÃª runs da empresa ativa", async ({ page, context }) => {
     await mockAuth(context, {
       role: "user",
-      companies: ["griaule"],
-      clientSlug: "griaule",
+      companies: ["DEMO"],
+      clientSlug: "DEMO",
     });
 
-    await page.goto("/empresas/griaule/runs", { waitUntil: "networkidle" });
+    await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("runs-page")).toBeVisible();
     await expect(page.getByTestId("runs-list")).toBeVisible();
   });
 });
+

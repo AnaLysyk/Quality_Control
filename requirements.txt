@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-openai
-python-dotenv
-httpx>=0.24.0
-pytest>=7.0.0
-respx>=0.20.0

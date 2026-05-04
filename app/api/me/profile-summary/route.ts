@@ -39,7 +39,7 @@ async function readCompanyDefects(companyId: string): Promise<DefectRecord[]> {
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const [user, companies, links, notes] = await Promise.all([
@@ -50,13 +50,13 @@ export async function GET(req: Request) {
   ]);
 
   if (!user) {
-    return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const hasFullCompanyAccess =
     access.isGlobalAdmin === true ||
-    (access.role ?? "").toLowerCase() === "it_dev" ||
-    (access.companyRole ?? "").toLowerCase() === "it_dev";
+    (access.role ?? "").toLowerCase() === "technical_support" ||
+    (access.companyRole ?? "").toLowerCase() === "technical_support";
 
   const linkedCompanyIds = new Set(
     links

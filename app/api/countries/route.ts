@@ -20,19 +20,19 @@ function canCreateCountry(user: Awaited<ReturnType<typeof authenticateRequest>>)
   if (user.isGlobalAdmin) return true;
   if (hasCapability((user.capabilities ?? []) as Capability[], "company:write")) return true;
   const role = normalizeRole(user.role);
-  return role === "admin" || role === "company" || role === "company_admin";
+  return role === "leader_tc" || role === "technical_support" || role === "empresa";
 }
 
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ message: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const url = new URL(req.url);
   const companyId = url.searchParams.get("companyId") ?? user.companyId ?? "";
   if (!companyId) {
-    return NextResponse.json({ message: "companyId obrigatorio" }, { status: 400 });
+    return NextResponse.json({ message: "companyId obrigatório" }, { status: 400 });
   }
 
   if (!canCreateCountry(user)) {
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   if (!name) {
-    return NextResponse.json({ message: "Nome obrigatorio" }, { status: 400 });
+    return NextResponse.json({ message: "Nome obrigatório" }, { status: 400 });
   }
 
   const country: Country = {

@@ -1,0 +1,36 @@
+{
+  "name": "fingerprint-wallet-processor",
+  "version": "1.0.0",
+  "description": "Processamento seguro de imagens de digitais para Wallet com controle de tamanho Base64",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest --verbose --coverage",
+    "test:watch": "jest --watch",
+    "helper": "node helper-server.js",
+    "anexar:biometria": "node scripts/anexar_biometria.js",
+    "playground:anexar": "node scripts/playground_anexar_biometria.js",
+    "exportar:casos-pdf": "node scripts/exportar_casos_teste_pdf.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.1",
+    "cors": "^2.8.6",
+    "express": "^4.22.1",
+    "nist-fingerprint": "^1.0.0",
+    "pdfkit": "^0.18.0",
+    "prisma": "^6.16.1",
+    "sharp": "^0.33.2",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ]
+  }
+}

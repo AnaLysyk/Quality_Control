@@ -24,7 +24,7 @@ function normalizeRole(role?: string | null) {
 function isAdmin(user: AuthUser) {
   if (user.isGlobalAdmin) return true;
   const role = normalizeRole(user.role);
-  return role === "admin" || role === "global_admin" || role === "company" || role === "company_admin";
+  return role === "leader_tc" || role === "technical_support" || role === "empresa";
 }
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
   const requestedSlug = asSlug(searchParams.get("slug"));
 
   const user = await authenticateRequest(request);
-  if (!user) return jsonError("Nao autorizado", 401);
+  if (!user) return jsonError("Não autorizado", 401);
 
   let effectiveSlug: string | null = null;
   if (isAdmin(user)) {
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     effectiveSlug = requestedSlug ?? user.companySlug ?? allowed[0] ?? null;
   }
 
-  if (!effectiveSlug) return jsonError("slug e obrigatorio", 400);
+  if (!effectiveSlug) return jsonError("slug e obrigatório", 400);
 
   const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
   let project: string | null = queryProject;
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     return jsonError("project e runId sao obrigatorios", 400);
   }
   if (!items.length) {
-    return jsonError("Nenhum item valido para importar (verifique title/status)", 400);
+    return jsonError("Nenhum item válido para importar (verifique title/status)", 400);
   }
 
   const store = await readKanbanStore();

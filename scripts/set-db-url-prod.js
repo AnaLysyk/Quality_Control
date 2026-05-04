@@ -8,7 +8,7 @@ const path = require('path');
 const envPath = path.resolve(__dirname, '../.env.local');
 const env = fs.readFileSync(envPath, 'utf8').split('\n');
 
-const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+const isProd = process.env.NODE_ENV === 'production';
 if (!isProd) {
   console.log('Não em produção, nada alterado.');
   process.exit(0);

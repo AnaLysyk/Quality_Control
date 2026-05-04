@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { seedQualityGoalStatus } from "./utils/seed-mttr-goal";
 
@@ -6,11 +6,11 @@ test("meta de qualidade aparece como em risco/violada/atendida", async ({ page, 
   await seedQualityGoalStatus();
   await mockAuth(context, {
     role: "company",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/griaule/dashboard", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/dashboard", { waitUntil: "networkidle" });
 
   const items = await page.locator('[data-testid="quality-goal-item"]').all();
   expect(items.length).toBeGreaterThan(0);
@@ -20,3 +20,4 @@ test("meta de qualidade aparece como em risco/violada/atendida", async ({ page, 
     expect(status).toMatch(/Atendida|risco|Violada/i);
   }
 });
+

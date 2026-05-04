@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiBell } from "react-icons/fi";
+import { FiBell, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { fetchApi } from "@/lib/api";
 import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
 
 type NotificationItem = {
@@ -101,18 +102,18 @@ export default function NotificationsButton({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/notifications", { credentials: "include", cache: "no-store" });
+      const res = await fetchApi("/api/notifications", { credentials: "include", cache: "no-store" });
       const json = (await res.json().catch(() => ({}))) as { items?: NotificationItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
-        setError(json?.error || "Erro ao carregar notificacoes");
+        setError(json?.error || "Erro ao carregar notificações");
         return;
       }
       const nextItems = Array.isArray(json.items) ? json.items : [];
       setItems(nextItems);
       setFallbackUnreadCount(nextItems.filter((item) => item.status !== "closed").length);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar notificacoes";
+      const msg = err instanceof Error ? err.message : "Erro ao carregar notificações";
       setItems([]);
       setError(msg);
     } finally {
@@ -161,7 +162,7 @@ export default function NotificationsButton({
       setTicketLoading(true);
       setTicketError(null);
       try {
-        const res = await fetch(`/api/tickets/${ticketId}`, {
+        const res = await fetchApi(`/api/tickets/${ticketId}`, {
           credentials: "include",
           cache: "no-store",
         });
@@ -204,7 +205,7 @@ export default function NotificationsButton({
   async function closeNotification(id: string) {
     setError(null);
     try {
-      const res = await fetch(`/api/notifications/${id}`, {
+      const res = await fetchApi(`/api/notifications/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -212,7 +213,7 @@ export default function NotificationsButton({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json?.error || "Erro ao atualizar notificacao");
+        setError(json?.error || "Erro ao atualizar notificação");
         return;
       }
       setItems((prev) =>
@@ -229,7 +230,7 @@ export default function NotificationsButton({
       );
       listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao atualizar notificacao";
+      const msg = err instanceof Error ? err.message : "Erro ao atualizar notificação";
       setError(msg);
     }
   }
@@ -239,7 +240,7 @@ export default function NotificationsButton({
     setTicketUpdating(true);
     setTicketError(null);
     try {
-      const res = await fetch(`/api/tickets/${selected.ticketId}/status`, {
+      const res = await fetchApi(`/api/tickets/${selected.ticketId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -266,7 +267,7 @@ export default function NotificationsButton({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Abrir notificacoes"
+        aria-label="Abrir notificações"
         className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
       >
         <FiBell size={18} />
@@ -282,10 +283,10 @@ export default function NotificationsButton({
           <div className="flex items-center justify-between gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
-                Notificacoes
+                Notificações
               </p>
               <p className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
-                {unreadCount > 0 ? `${unreadCount} nao lida(s)` : "Tudo em dia"}
+                {unreadCount > 0 ? `${unreadCount} não lida(s)` : "Tudo em dia"}
               </p>
             </div>
             <button
@@ -303,7 +304,7 @@ export default function NotificationsButton({
           >
             {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
             {!loading && items.length === 0 && (
-              <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma notificacao por aqui.</p>
+              <p className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma notificação por aqui.</p>
             )}
 
             {items.map((item) => (
@@ -324,9 +325,19 @@ export default function NotificationsButton({
                       <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{item.description}</p>
                     )}
                   </div>
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                    {item.status === "closed" ? "Fechada" : "Nova"}
-                  </span>
+                  {item.status === "closed" ? (
+                    <span
+                      className="inline-flex h-7 shrink-0 items-center justify-center self-start rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-2.5 text-[10px] leading-none font-medium uppercase tracking-[0.14em] whitespace-nowrap text-(--tc-text-muted,#6b7280)"
+                      aria-label="Lida"
+                      title="Lida"
+                    >
+                      Lida
+                    </span>
+                  ) : (
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                      Nova
+                    </span>
+                  )}
                 </div>
                 <p className="mt-2 text-[11px] text-(--tc-text-muted,#6b7280)">
                   {new Date(item.createdAt).toLocaleString("pt-BR")}
@@ -344,15 +355,16 @@ export default function NotificationsButton({
           <div className="my-auto w-full max-w-2xl rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_60px_rgba(15,23,42,0.35)] max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) px-5 py-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Notificacao</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Notificação</p>
                 <p className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">{selected.title}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setDetailsOpen(false)}
-                className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#e5e7eb) text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                aria-label="Fechar"
               >
-                Fechar
+                <FiX className="h-5 w-5" />
               </button>
             </div>
             <div className="px-5 py-4 space-y-4">
@@ -403,7 +415,7 @@ export default function NotificationsButton({
                     setDetailsOpen(false);
                     setOpen(false);
                   }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-(--tc-surface-dark,#0b1a3c) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white"
+                  className="inline-flex items-center gap-2 rounded-lg border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-sm transition hover:bg-(--tc-accent-hover,#d00001)"
                 >
                   Abrir link
                 </button>
@@ -427,7 +439,7 @@ export default function NotificationsButton({
                         </p>
                       </div>
                       <p className="text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
-                        {ticketInfo.description || "Sem descricao."}
+                        {ticketInfo.description || "Sem descrição."}
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
                         <label
@@ -456,7 +468,7 @@ export default function NotificationsButton({
                     </>
                   )}
                   {!ticketLoading && !ticketInfo && !ticketError && (
-                    <p className="text-sm text-(--tc-text-muted,#6b7280)">Chamado nao encontrado.</p>
+                    <p className="text-sm text-(--tc-text-muted,#6b7280)">Chamado não encontrado.</p>
                   )}
                   {ticketError && <p className="text-sm text-red-600">{ticketError}</p>}
                 </div>
@@ -469,7 +481,7 @@ export default function NotificationsButton({
                   disabled={selected.status === "closed"}
                   className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] disabled:opacity-60"
                 >
-                  {selected.status === "closed" ? "Ja marcada" : "Marcar como lida"}
+                  {selected.status === "closed" ? "Já marcada" : "Marcar como lida"}
                 </button>
                 <button
                   type="button"

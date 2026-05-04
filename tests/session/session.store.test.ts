@@ -18,7 +18,7 @@ jest.mock('jsonwebtoken', () => ({
 }));
 
 // Import the module under test after setting up mocks
-import * as sessionStore from '../../src/core/session/session.store';
+import * as sessionStore from '../../lib/core/session/session.store';
 
 // Import the mocked implementations for assertions
 const { getRedis } = require('../../lib/redis');

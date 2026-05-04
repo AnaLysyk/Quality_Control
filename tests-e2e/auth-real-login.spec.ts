@@ -1,14 +1,14 @@
-import { test, expect, type APIRequestContext } from "@playwright/test";
+﻿import { test, expect, type APIRequestContext } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const adminUser = {
-  email: "admin@griaule.test",
-  password: "Griaule@123",
+  email: "admin@demo.test",
+  password: "Demo@123",
   role: "admin",
 };
 const normalUser = {
-  email: "user@griaule.test",
-  password: "Griaule@123",
+  email: "user@demo.test",
+  password: "Demo@123",
   role: "user",
 };
 
@@ -48,9 +48,9 @@ test("auth: login admin and resolve /api/me from UserCompany", async ({ request 
 
   expect(body.user.email).toBe(adminUser.email);
   expect(body.user.role).toBe(adminUser.role);
-  expect(body.user.clientSlug).toBe("griaule");
+  expect(body.user.clientSlug).toBe("DEMO");
   expect(Array.isArray(body.companies)).toBeTruthy();
-  expect(body.companies.find((company: { slug: string }) => company.slug === "griaule")).toBeTruthy();
+  expect(body.companies.find((company: { slug: string }) => company.slug === "DEMO")).toBeTruthy();
 });
 
 test("auth: login user and resolve /api/me role= user", async ({ request }) => {
@@ -64,7 +64,7 @@ test("auth: login user and resolve /api/me role= user", async ({ request }) => {
 
   expect(body.user.email).toBe(normalUser.email);
   expect(body.user.role).toBe(normalUser.role);
-  expect(body.user.clientSlug).toBe("griaule");
+  expect(body.user.clientSlug).toBe("DEMO");
 });
 
 test("auth: /api/me without session returns 401", async ({ request }) => {
@@ -74,3 +74,4 @@ test("auth: /api/me without session returns 401", async ({ request }) => {
   const body = JSON.parse(bodyText);
   expect(body.error?.code).toBe("NO_SESSION");
 });
+

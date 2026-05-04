@@ -1,15 +1,15 @@
-import fs from "fs";
+﻿import fs from "fs";
 import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test("exporta relatorio CSV com dados do kanban", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/griaule/defeitos/kanban", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/defeitos/kanban", { waitUntil: "networkidle" });
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -24,3 +24,4 @@ test("exporta relatorio CSV com dados do kanban", async ({ page, context }) => {
   expect(csv.length).toBeGreaterThan(10);
   expect(csv).toContain("Erro no login");
 });
+

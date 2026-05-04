@@ -10,10 +10,10 @@ export const revalidate = 0;
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const isGlobalAdmin = access.isGlobalAdmin === true || (access.role ?? "").toLowerCase() === "admin";
+  const isGlobalAdmin = access.isGlobalAdmin === true || (access.role ?? "").toLowerCase() === "leader_tc";
 
   if (isGlobalAdmin) {
     const companies = await listLocalCompanies();
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   const company = await findLocalCompanyById(access.companyId);
   if (!company) {
-    return NextResponse.json({ error: "Empresa nao encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
   return NextResponse.json({ items: [company] }, { status: 200 });
 }
@@ -35,14 +35,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const data = await req.json().catch(() => null);
   const name = typeof data?.name === "string" ? data.name.trim() : "";
   const slug = typeof data?.slug === "string" ? data.slug.trim() : "";
   if (!name) {
-    return NextResponse.json({ error: "name e obrigatorio" }, { status: 400 });
+    return NextResponse.json({ error: "name e obrigatório" }, { status: 400 });
   }
 
   try {

@@ -17,6 +17,8 @@ export type NotificationType =
   | "RUN_CREATED"
   | "TEST_FAILED"
   | "ACCESS_REQUEST_CREATED"
+  | "ACCESS_REQUEST_ACCEPTED"
+  | "ACCESS_REQUEST_REJECTED"
   | "ACCESS_REQUEST_COMMENT"
   | "PASSWORD_RESET_REQUEST"
   | "PASSWORD_RESET_PENDING"
@@ -31,6 +33,10 @@ export type NotificationType =
   | "TICKET_COMMENT_ADDED"
   | "TICKET_REACTION_ADDED"
   | "TICKET_ASSIGNED"
+  | "DEFECT_STATUS_CHANGED"
+  | "DEFECT_COMMENT_ADDED"
+  | "DEFECT_ASSIGNED"
+  | "DOC_PUBLISHED"
   | "USER_ACCESS_UPDATED"
   | "USER_ACCESS_RESTORED";
 
@@ -55,9 +61,7 @@ const STORE_PATH = path.join(process.cwd(), "data", "user-notifications.json");
 const STORE_KEY = "qc:user_notifications:v1";
 const USE_REDIS =
   process.env.NOTIFICATIONS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY =
-  process.env.NOTIFICATIONS_IN_MEMORY === "true" ||
-  (!USE_REDIS && process.env.VERCEL === "1");
+const USE_MEMORY = process.env.NOTIFICATIONS_IN_MEMORY === "true";
 let memoryStore: NotificationsStore = {};
 let warnedFsFailure = false;
 
@@ -189,6 +193,18 @@ export async function listUserNotifications(userId: string) {
   const store = await readStore();
   const items = Array.isArray(store[userId]) ? store[userId] : [];
   return items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+export async function countUnreadUserNotifications(userId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    return prisma.userNotification.count({
+      where: { userId, status: { not: "closed" } },
+    });
+  }
+  const store = await readStore();
+  const items = Array.isArray(store[userId]) ? store[userId] : [];
+  return items.filter((item) => item.status !== "closed").length;
 }
 
 export async function createUserNotification(

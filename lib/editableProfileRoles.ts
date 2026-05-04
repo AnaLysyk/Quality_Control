@@ -1,66 +1,57 @@
-export type EditableProfileRole =
-  | "admin"
-  | "dev"
-  | "company"
-  | "user"
-  | "leader_tc"
-  | "technical_support";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
+export type EditableProfileRole = SystemRole;
 export type StoredEditableUserRole =
   | "company_admin"
   | "user"
   | "leader_tc"
-  | "technical_support"
-  | "it_dev";
+  | "technical_support";
 
 export function resolveEditableProfileRole(value?: string | null): EditableProfileRole | null {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (!normalized) return null;
-
-  if (normalized === "admin" || normalized === "global_admin") return "admin";
-  if (normalized === "dev" || normalized === "it_dev" || normalized === "itdev" || normalized === "developer") {
-    return "dev";
-  }
-  if (
-    normalized === "company" ||
-    normalized === "company_admin" ||
-    normalized === "client_admin" ||
-    normalized === "client_owner" ||
-    normalized === "client_manager"
-  ) {
-    return "company";
-  }
-  if (normalized === "leader_tc" || normalized === "tc_leader" || normalized === "lider_tc") {
-    return "leader_tc";
-  }
-  if (
-    normalized === "technical_support" ||
-    normalized === "technical support" ||
-    normalized === "support" ||
-    normalized === "tech_support" ||
-    normalized === "support_tech"
-  ) {
-    return "technical_support";
-  }
-  if (normalized === "user" || normalized === "viewer" || normalized === "client_user" || normalized === "client_viewer") {
-    return "user";
-  }
-
-  return null;
+  return normalizeLegacyRole(value);
 }
 
 export function normalizeEditableProfileRole(value?: string | null): EditableProfileRole {
-  return resolveEditableProfileRole(value) ?? "user";
+  return resolveEditableProfileRole(value) ?? SYSTEM_ROLES.TESTING_COMPANY_USER;
 }
 
 export function isGlobalPrivilegeProfileRole(role: EditableProfileRole) {
-  return role === "admin" || role === "dev";
+  return role === SYSTEM_ROLES.LEADER_TC;
 }
 
 export function toStoredEditableUserRole(role: EditableProfileRole): StoredEditableUserRole {
-  if (role === "dev") return "it_dev";
-  if (role === "company") return "company_admin";
-  if (role === "leader_tc") return "leader_tc";
-  if (role === "technical_support") return "technical_support";
+  if (role === SYSTEM_ROLES.EMPRESA) return "company_admin";
+  if (role === SYSTEM_ROLES.LEADER_TC) return "leader_tc";
+  if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "technical_support";
   return "user";
+}
+
+export function editableProfileNeedsCompany(role: EditableProfileRole) {
+  return (
+    role === SYSTEM_ROLES.EMPRESA ||
+    role === SYSTEM_ROLES.COMPANY_USER ||
+    role === SYSTEM_ROLES.TESTING_COMPANY_USER
+  );
+}
+
+export function resolveEditableProfileUserState(role: EditableProfileRole, companyId?: string | null) {
+  const normalizedCompanyId = companyId?.trim() || null;
+
+  if (role === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.COMPANY_USER) {
+    return {
+      created_by_company_id: normalizedCompanyId,
+      home_company_id: normalizedCompanyId,
+      user_origin: "client_company" as const,
+      user_scope: "company_only" as const,
+      allow_multi_company_link: false,
+    };
+  }
+
+  return {
+    created_by_company_id: null,
+    home_company_id: null,
+    user_origin: "testing_company" as const,
+    user_scope: "shared" as const,
+    allow_multi_company_link: true,
+  };
 }

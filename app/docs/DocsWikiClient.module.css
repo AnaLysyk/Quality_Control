@@ -1,0 +1,17 @@
+.navScroll {
+  -ms-overflow-style: none;
+}
+
+.navScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.desktopSidebar {
+  --docs-sidebar-width: 256px;
+  width: var(--docs-sidebar-width);
+  transition: width 0.15s ease;
+}
+
+.desktopSidebarDragging {
+  transition: none;
+}

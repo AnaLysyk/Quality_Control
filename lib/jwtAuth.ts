@@ -10,6 +10,7 @@ import type { PermissionMatrix } from "@/lib/permissionMatrix";
 export type AuthUser = {
   id: string;
   email: string;
+  user?: string | null;
   isGlobalAdmin: boolean;
   role?: string | null;
   globalRole?: string | null;
@@ -29,6 +30,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
     return {
       id: access.userId,
       email: access.email,
+      user: access.user ?? null,
       isGlobalAdmin: access.isGlobalAdmin,
       role: access.role,
       globalRole: access.globalRole ?? null,
@@ -60,10 +62,13 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const isGlobalAdmin =
     (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
     (user as { globalRole?: string | null }).globalRole === "global_admin";
-  const hasDevRole =
-    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "it_dev" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "it_dev");
-  const hasFullCompanyAccess = isGlobalAdmin || hasDevRole;
+  const hasTechnicalSupportRole =
+    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "technical_support" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+  const hasLeaderTcRole =
+    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "leader_tc" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies
@@ -80,14 +85,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
-    companyRole:
-      companyRole === "company_admin"
-        ? "company_admin"
-        : companyRole === "it_dev"
-          ? "it_dev"
-          : companyRole === "viewer"
-            ? "viewer"
-            : "user",
+    companyRole,
     membershipCapabilities: primaryLink?.capabilities ?? null,
   });
   const permissionAccess = await resolvePermissionAccessForUser(user.id);

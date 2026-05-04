@@ -3,6 +3,11 @@
     "development"
   ],
   "hints": {
-    "axe/aria": "off"
+    "axe/aria": [
+      "default",
+      {
+        "aria-valid-attr-value": "off"
+      }
+    ]
   }
 }

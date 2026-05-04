@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { buildCompanyPathForAccess, shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
 
 type AuthUserShape = {
   role?: string | null;
@@ -14,6 +15,10 @@ type AuthUserShape = {
   isGlobalAdmin?: boolean;
   clientSlug?: string | null;
   companySlug?: string | null;
+  companyRole?: string | null;
+  permissionRole?: string | null;
+  userOrigin?: string | null;
+  user_origin?: string | null;
 };
 
 export default function LoginClient() {
@@ -121,12 +126,32 @@ export default function LoginClient() {
 
   function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
     const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
-    if (safeNext) return safeNext;
+    const companyRouteInput = {
+      isGlobalAdmin: authUser?.isGlobalAdmin === true,
+      permissionRole: authUser?.permissionRole ?? null,
+      role: authUser?.role ?? null,
+      companyRole: authUser?.companyRole ?? null,
+      userOrigin: authUser?.userOrigin ?? authUser?.user_origin ?? null,
+      clientSlug:
+        typeof authUser?.clientSlug === "string"
+          ? authUser.clientSlug
+          : typeof authUser?.companySlug === "string"
+            ? authUser.companySlug
+            : null,
+    };
+    if (safeNext) {
+      const shortenedNext = shortenCompanyPathname(safeNext);
+      if (shortenedNext && shouldUseShortCompanyRoutes(companyRouteInput)) {
+        return shortenedNext;
+      }
+      return safeNext;
+    }
     const normalizedRole = typeof authUser?.role === "string" ? authUser.role.toLowerCase() : "";
     const isAdmin =
       authUser?.isGlobalAdmin === true ||
       authUser?.globalRole === "global_admin" ||
-      normalizedRole === "admin";
+      normalizedRole === "leader_tc" ||
+      normalizedRole === "technical_support";
     const clientSlug =
       typeof authUser?.clientSlug === "string"
         ? authUser.clientSlug
@@ -134,7 +159,9 @@ export default function LoginClient() {
           ? authUser.companySlug
           : null;
     if (isAdmin) return "/admin/home";
-    if (clientSlug) return `/empresas/${encodeURIComponent(clientSlug)}/home`;
+    if (clientSlug) {
+      return buildCompanyPathForAccess(clientSlug, "home", companyRouteInput);
+    }
     return "/empresas";
   }
 
@@ -178,7 +205,7 @@ export default function LoginClient() {
         styles.loginContainer +
         " " +
         styles.loginFixedTheme +
-        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate z-[2147483647] overflow-x-hidden overflow-y-auto px-4 py-10 pointer-events-auto sm:px-6 md:px-10"
+        " min-h-svh flex items-start sm:items-center justify-start sm:justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate z-2147483647 overflow-x-hidden overflow-y-auto px-4 py-10 pointer-events-auto sm:px-6 md:px-10"
       }
     >
       <div className="absolute inset-0 pointer-events-none">
@@ -213,6 +240,7 @@ export default function LoginClient() {
         <form
           className="mx-auto w-full max-w-sm min-w-0 rounded-2xl border border-[#011848]/10 bg-white/90 p-5 shadow-2xl backdrop-blur-sm sm:max-w-md sm:p-8"
           onSubmit={handleSubmit}
+          autoComplete="off"
         >
           <div className="space-y-4">
             <div>
@@ -226,7 +254,7 @@ export default function LoginClient() {
                 required
                 className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
                 placeholder="usuário"
-                autoComplete="username"
+                autoComplete="off"
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
               />
@@ -241,10 +269,10 @@ export default function LoginClient() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white pr-11 text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
-                  placeholder="********"
+                  placeholder="Senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />

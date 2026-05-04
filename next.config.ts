@@ -2,9 +2,25 @@ const distDir = process.env.NEXT_DIST_DIR?.trim() || ".next";
 
 const nextConfig = {
   distDir,
+  poweredByHeader: false,
+  reactStrictMode: true,
   allowedDevOrigins: ["localhost", "127.0.0.1", "172.16.19.244"],
   devIndicators: {
     buildActivity: false, // esconde o indicador/loader do Next no canto
+  },
+  images: {
+    formats: ["image/avif", "image/webp"],
+    localPatterns: [
+      {
+        pathname: "/images/**",
+      },
+      {
+        pathname: "/api/s3/object",
+      },
+    ],
+  },
+  experimental: {
+    optimizePackageImports: ["react-icons", "recharts", "framer-motion"],
   },
   turbopack: {
     root: __dirname,

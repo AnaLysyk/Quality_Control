@@ -1,0 +1,101 @@
+{
+  "categories": [
+    {
+      "id": "cat-geral",
+      "slug": "documentacao-geral",
+      "title": "Documentação Geral",
+      "description": "Documentos internos do projeto painel-qa.",
+      "icon": "FiBookOpen",
+      "order": 0,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "createdBy": null
+    }
+  ],
+  "docs": [
+    {
+      "id": "doc-arquitetura-front",
+      "categoryId": "cat-geral",
+      "slug": "arquitetura-frontend",
+      "title": "Arquitetura — Frontend (Next.js)",
+      "description": "Como o App Router, componentes e estilos estão organizados.",
+      "status": "published",
+      "order": 0,
+      "blocks": [],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "createdBy": null,
+      "updatedBy": null
+    },
+    {
+      "id": "doc-arquitetura-api",
+      "categoryId": "cat-geral",
+      "slug": "arquitetura-api",
+      "title": "Arquitetura — API (app/api)",
+      "description": "Padrões de rotas, autenticação e integrações (Qase, Postgres).",
+      "status": "published",
+      "order": 1,
+      "blocks": [],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "createdBy": null,
+      "updatedBy": null
+    },
+    {
+      "id": "doc-banco-de-dados",
+      "categoryId": "cat-geral",
+      "slug": "banco-de-dados",
+      "title": "Banco de Dados — Tabelas e fluxos",
+      "description": "Tabelas principais (User/Company/UserCompany) e práticas de migração/segurança.",
+      "status": "published",
+      "order": 2,
+      "blocks": [],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "createdBy": null,
+      "updatedBy": null
+    },
+    {
+      "id": "doc-qase-mapa-mae",
+      "categoryId": "cat-geral",
+      "slug": "qase-mapa-mae",
+      "title": "Qase — Mapa Mãe",
+      "description": "Guia/visão geral do mapeamento e fluxo Qase.",
+      "status": "published",
+      "order": 3,
+      "blocks": [],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "createdBy": null,
+      "updatedBy": null
+    },
+    {
+      "id": "doc-qase-etl",
+      "categoryId": "cat-geral",
+      "slug": "qase-etl",
+      "title": "Qase — ETL (SQL)",
+      "description": "Scripts SQL relacionados ao ETL do Qase.",
+      "status": "published",
+      "order": 4,
+      "blocks": [],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "createdBy": null,
+      "updatedBy": null
+    },
+    {
+      "id": "doc-kanban-import-export",
+      "categoryId": "cat-geral",
+      "slug": "kanban-importacao-exportacao",
+      "title": "Kanban Manual — Importação/Exportação",
+      "description": "Como importar/exportar cartões do Kanban manual.",
+      "status": "published",
+      "order": 5,
+      "blocks": [],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "createdBy": null,
+      "updatedBy": null
+    }
+  ]
+}

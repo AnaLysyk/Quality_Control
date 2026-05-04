@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext } from "@/lib/auth/session";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import {
   canManageInstitutionalCompanyAccess,
   resolveCurrentCompanyFromAccess,
@@ -16,14 +17,14 @@ export async function POST(req: NextRequest) {
     const { company, status } = await resolveCurrentCompanyFromAccess(access);
 
     if (!access) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
     if (!company) {
-      const message = status === 403 ? "Sem empresa vinculada" : "Empresa nao encontrada";
+      const message = status === 403 ? "Sem empresa vinculada" : "Empresa não encontrada";
       return NextResponse.json({ error: message }, { status });
     }
     if (!canManageInstitutionalCompanyAccess(access)) {
-      return NextResponse.json({ error: "Sem permissao para alterar o logo da empresa" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para alterar o logo da empresa" }, { status: 403 });
     }
 
     const form = await req.formData().catch(() => null);
@@ -33,10 +34,21 @@ export async function POST(req: NextRequest) {
 
     const file = form.get("file");
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Arquivo obrigatorio" }, { status: 400 });
+      return NextResponse.json({ error: "Arquivo obrigatório" }, { status: 400 });
     }
 
     const { logoUrl } = await uploadAndPersistCompanyLogo(company.id, file);
+
+    addAuditLogSafe({
+      action: "client.logo.changed",
+      entityType: "client",
+      entityId: company.id,
+      entityLabel: company.name ?? company.slug ?? null,
+      actorUserId: access.userId ?? null,
+      actorEmail: access.email ?? null,
+      metadata: {},
+    });
+
     try {
       // Revalidate common server paths that might render company identity
       revalidatePath("/api/me");
@@ -49,7 +61,7 @@ export async function POST(req: NextRequest) {
     const message =
       error instanceof Error && error.message.trim()
         ? error.message.trim()
-        : "Nao foi possivel enviar o logo";
+        : "Não foi possível enviar o logo";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

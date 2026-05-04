@@ -1,12 +1,15 @@
 import "server-only";
 
 import { readManualReleaseStore } from "@/data/manualData";
-import { findLocalCompanyBySlug } from "@/lib/auth/localStore";
+import { findLocalCompanyBySlug, listLocalLinksForCompany, listLocalUsers } from "@/lib/auth/localStore";
+import { resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
 import { type AppRecord, listApplications } from "@/lib/applicationsStore";
 import { mapCompanyRecord, normalizeProjectCodes } from "@/lib/companyRecord";
 import { normalizeDefectStatus } from "@/lib/defectNormalization";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
 import { readAlertsStore, type QualityAlert } from "@/lib/qualityAlert";
+import { getClientQaseSettings } from "@/lib/qaseConfig";
+import { createQaseClient } from "@/lib/qaseSdk";
 import { formatRunTitle } from "@/lib/runPresentation";
 import { getAllReleases, type ReleaseEntry } from "@/release/data";
 import type { Release } from "@/types/release";
@@ -59,6 +62,11 @@ export type CompanyDashboardApplication = Pick<
   "id" | "name" | "slug" | "description" | "imageUrl" | "qaseProjectCode" | "source" | "active" | "createdAt" | "updatedAt"
 >;
 
+export type CompanyMember = {
+  userId: string;
+  name: string;
+};
+
 export type CompanyDashboardData = {
   companySlug: string;
   companyName: string;
@@ -72,6 +80,7 @@ export type CompanyDashboardData = {
   alerts: CompanyDashboardAlert[];
   applications: CompanyDashboardApplication[];
   projectCodes: string[];
+  companyMembers: CompanyMember[];
 };
 
 function normalizeKey(value: unknown) {
@@ -87,6 +96,22 @@ function normalizeKey(value: unknown) {
 function normalizeProjectCode(value: unknown) {
   const normalized = String(value ?? "").trim().toUpperCase();
   return normalized || null;
+}
+
+function normalizeString(value: unknown) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
+function normalizeNumericId(value: unknown) {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value.trim())
+        : Number.NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 function toTimestamp(value: unknown) {
@@ -158,9 +183,9 @@ function resolveRunStatusMeta(
 function resolveDefectStatusMeta(value?: string | null): { label: string; tone: Tone } {
   const normalized = normalizeDefectStatus(value);
   if (normalized === "done") return { label: "Resolvido", tone: "positive" };
-  if (normalized === "in_progress") return { label: "Em analise", tone: "warning" };
+  if (normalized === "in_progress") return { label: "Em análise", tone: "warning" };
   if (normalized === "open") return { label: "Aberto", tone: "warning" };
-  return { label: "Em analise", tone: "neutral" };
+  return { label: "Em análise", tone: "neutral" };
 }
 
 function resolveCompanyStatus(company: CompanyProfileRecord): HomeStatusBadge {
@@ -184,34 +209,34 @@ function resolveIntegrationStatus(company: CompanyProfileRecord): HomeStatusBadg
   if (company.qase_is_active === true && company.qase_is_valid === true) {
     return {
       title: "Qase ativa",
-      detail: "Runs integradas podem aparecer junto das execucoes manuais neste painel.",
+      detail: "Runs integradas podem aparecer junto das execuções manuais neste painel.",
       tone: "positive",
     };
   }
   if (company.jira_is_active === true && company.jira_is_valid === true) {
     return {
       title: "Jira ativa",
-      detail: "A empresa possui integracao Jira ativa e pronta para sincronizacao.",
+      detail: "A empresa possui integração Jira ativa e pronta para sincronizacao.",
       tone: "positive",
     };
   }
   if ((company.has_qase_token && (company.qase_project_codes?.length ?? 0) > 0) || company.qase_validation_status === "saved") {
     return {
       title: "Qase pendente",
-      detail: "Existe configuracao salva, mas ela ainda nao esta ativa para uso operacional.",
+      detail: "Existe configuração salva, mas ela ainda não esta ativa para uso operacional.",
       tone: "warning",
     };
   }
   if (company.has_jira_api_token || company.jira_validation_status === "saved") {
     return {
       title: "Jira pendente",
-      detail: "Existe configuracao Jira salva, mas ela ainda nao esta ativa.",
+      detail: "Existe configuração Jira salva, mas ela ainda não esta ativa.",
       tone: "warning",
     };
   }
 
   return {
-    title: "Sem integracao",
+    title: "Sem integração",
     detail: "A empresa ainda depende apenas de runs manuais neste contexto.",
     tone: "neutral",
   };
@@ -331,19 +356,183 @@ function integratedRunMatchesCompany(release: ReleaseEntry, signals: CompanySign
   return false;
 }
 
+type QaseDashboardResponsible = {
+  name: string | null;
+  email: string | null;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+function normalizeStringList(value: unknown) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeString(item))
+      .filter((item): item is string => Boolean(item));
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => normalizeString(item))
+      .filter((item): item is string => Boolean(item));
+  }
+
+  return [];
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  return Array.from(
+    new Set(values.map((value) => normalizeString(value)).filter((value): value is string => Boolean(value))),
+  );
+}
+
+function resolveIntegratedReleaseResponsible(release: ReleaseEntry) {
+  const record = asRecord(release);
+  const names = uniqueStrings([
+    ...normalizeStringList(release.assigneeNames),
+    ...normalizeStringList(record?.assigneeNames),
+    normalizeString(record?.responsibleName),
+    normalizeString(record?.assignedToName),
+    normalizeString(record?.createdByName),
+  ]);
+  const emails = uniqueStrings([
+    ...normalizeStringList(release.assignees),
+    ...normalizeStringList(record?.assignees),
+    normalizeString(record?.responsibleEmail),
+    normalizeString(record?.createdByEmail),
+  ]);
+  const label =
+    names.join(", ") ||
+    emails.join(", ") ||
+    normalizeString(record?.responsibleLabel) ||
+    null;
+
+  return { names, emails, label };
+}
+
+function releaseRunLookupKey(release: ReleaseEntry) {
+  const projectCode = normalizeProjectCode(release.qaseProject ?? release.project ?? release.app);
+  const runId = normalizeNumericId(release.runId);
+  if (!projectCode || !runId) return null;
+  return `${projectCode}:${runId}`;
+}
+
+async function enrichIntegratedRunsWithQaseResponsibles(releases: ReleaseEntry[], companySlug: string) {
+  if (!releases.length) return releases;
+
+  const MAX_RESPONSIBLE_ENRICH_RUNS = 24;
+
+  const settings = await getClientQaseSettings(companySlug);
+  if (!settings?.token) return releases;
+
+  const candidates = Array.from(
+    new Map(
+      releases
+        .filter((release) => !resolveIntegratedReleaseResponsible(release).label)
+        .map((release) => {
+          const key = releaseRunLookupKey(release);
+          return key ? [key, release] as const : null;
+        })
+        .filter((entry): entry is readonly [string, ReleaseEntry] => entry !== null),
+    ).values(),
+  )
+    .sort((left, right) => {
+      const leftTime = toTimestamp(left.createdAt ?? left.created_at);
+      const rightTime = toTimestamp(right.createdAt ?? right.created_at);
+      return rightTime - leftTime;
+    })
+    .slice(0, MAX_RESPONSIBLE_ENRICH_RUNS);
+
+  if (!candidates.length) return releases;
+
+  const client = createQaseClient({
+    token: settings.token,
+    baseUrl: settings.baseUrl,
+    defaultFetchOptions: { cache: "no-store" },
+  });
+
+  const runUserIdByKey = new Map<string, number>();
+
+  await Promise.all(
+    candidates.map(async (release) => {
+      const key = releaseRunLookupKey(release);
+      const projectCode = normalizeProjectCode(release.qaseProject ?? release.project ?? release.app);
+      const runId = normalizeNumericId(release.runId);
+      if (!key || !projectCode || !runId) return;
+
+      try {
+        const { data } = await client.getWithStatus<{ result?: unknown }>(`/run/${encodeURIComponent(projectCode)}/${runId}`);
+        const runResult = asRecord(asRecord(data)?.result);
+        const userId = normalizeNumericId(runResult?.user_id);
+        if (userId) {
+          runUserIdByKey.set(key, userId);
+        }
+      } catch {
+        // Best-effort enrichment: dashboard must still load without responsible data.
+      }
+    }),
+  );
+
+  if (!runUserIdByKey.size) return releases;
+
+  const responsiblesByUserId = new Map<number, QaseDashboardResponsible>();
+  const uniqueUserIds = Array.from(new Set(runUserIdByKey.values()));
+
+  await Promise.all(
+    uniqueUserIds.map(async (userId) => {
+      try {
+        const { data } = await client.getWithStatus<{ result?: unknown }>(`/user/${userId}`);
+        const result = asRecord(asRecord(data)?.result);
+        if (!result) return;
+        responsiblesByUserId.set(userId, {
+          name: normalizeString(result.name),
+          email: normalizeString(result.email),
+        });
+      } catch {
+        // Ignore per-user lookup failures to avoid blocking the dashboard.
+      }
+    }),
+  );
+
+  if (!responsiblesByUserId.size) return releases;
+
+  return releases.map((release) => {
+    if (resolveIntegratedReleaseResponsible(release).label) return release;
+
+    const key = releaseRunLookupKey(release);
+    if (!key) return release;
+
+    const userId = runUserIdByKey.get(key);
+    if (!userId) return release;
+
+    const responsible = responsiblesByUserId.get(userId);
+    if (!responsible) return release;
+
+    return {
+      ...release,
+      assigneeNames: responsible.name ? [responsible.name] : release.assigneeNames,
+      assignees: responsible.email ? [responsible.email] : release.assignees,
+    };
+  });
+}
+
 function buildManualRunItem(run: Release, companySlug: string): HomeRunItem {
   const status = resolveRunStatusMeta(run.status, { closedAt: run.closedAt ?? null });
   const stats = computeStats(run.stats);
-  const applicationName = String(run.app ?? run.qaseProject ?? "Aplicacao manual").trim() || "Aplicacao manual";
+  const applicationName = String(run.app ?? run.qaseProject ?? "Aplicação manual").trim() || "Aplicação manual";
   const createdAt = toIso(run.createdAt);
   const updatedAt = toIso(run.updatedAt) ?? createdAt;
 
   return {
     id: run.id || run.slug,
     slug: run.slug,
+    runId: normalizeNumericId(run.runId),
     title: formatRunTitle(run.name || run.slug, "Run manual"),
-    href: `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(run.slug)}`,
-    applicationKey: normalizeKey(run.app ?? run.qaseProject ?? applicationName),
+    href: `../runs/${encodeURIComponent(run.slug)}`,
+    applicationKey: normalizeKey(run.app || run.qaseProject || applicationName),
     applicationName,
     projectCode: normalizeProjectCode(run.qaseProject ?? run.app),
     environments: Array.isArray(run.environments) ? run.environments.filter(Boolean) : [],
@@ -358,7 +547,7 @@ function buildManualRunItem(run: Release, companySlug: string): HomeRunItem {
     summary:
       typeof run.observations === "string" && run.observations.trim()
         ? run.observations.trim()
-        : `${stats.pass} aprovados, ${stats.fail} falhas, ${stats.blocked} bloqueados e ${stats.notRun} nao executados.`,
+        : `${stats.pass} aprovados, ${stats.fail} falhas, ${stats.blocked} bloqueados e ${stats.notRun} não executados.`,
     stats,
     releaseLabel: "Run manual",
     responsibleLabel: run.assignedToName ?? run.createdByName ?? null,
@@ -369,21 +558,18 @@ function buildIntegratedRunItem(release: ReleaseEntry, companySlug: string): Hom
   const status = resolveRunStatusMeta(release.status ?? null);
   const stats = extractReleaseStats(release);
   const applicationName =
-    String(release.app ?? release.project ?? release.qaseProject ?? "Integracao").trim() || "Integracao";
+    String(release.app ?? release.project ?? release.qaseProject ?? "Integração").trim() || "Integração";
   const createdAt = toIso(release.createdAt ?? release.created_at);
   const provider = inferIntegrationProvider(release);
-  const responsibleLabel = Array.isArray(release.assigneeNames)
-    ? release.assigneeNames.filter(Boolean).join(", ") || null
-    : Array.isArray(release.assignees)
-      ? release.assignees.filter(Boolean).join(", ") || null
-      : null;
+  const responsibleLabel = resolveIntegratedReleaseResponsible(release).label;
 
   return {
     id: release.slug,
     slug: release.slug,
+    runId: normalizeNumericId(release.runId),
     title: formatRunTitle(release.title || release.slug, "Run integrada"),
-    href: `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(release.slug)}`,
-    applicationKey: normalizeKey(release.app ?? release.project ?? release.qaseProject ?? applicationName),
+    href: `../runs/${encodeURIComponent(release.slug)}`,
+    applicationKey: normalizeKey(release.app || release.project || release.qaseProject || applicationName),
     applicationName,
     projectCode: normalizeProjectCode(release.qaseProject ?? release.project ?? release.app),
     environments: Array.isArray(release.environments) ? release.environments.filter(Boolean) : [],
@@ -408,18 +594,18 @@ function buildIntegratedRunItem(release: ReleaseEntry, companySlug: string): Hom
 }
 
 function buildDefectItem(defect: Release, companySlug: string): CompanyDefectItem {
-  const applicationName = String(defect.app ?? defect.qaseProject ?? defect.runName ?? "Aplicacao").trim() || "Aplicacao";
+  const applicationName = String(defect.app ?? defect.qaseProject ?? defect.runName ?? "Aplicação").trim() || "Aplicação";
   const status = resolveDefectStatusMeta(defect.status ?? null);
   return {
     id: defect.id || defect.slug,
     slug: defect.slug,
     title: formatRunTitle(defect.name || defect.slug, "Defeito"),
     href: defect.runSlug
-      ? `/empresas/${encodeURIComponent(companySlug)}/defeitos?run=${encodeURIComponent(defect.runSlug)}`
-      : `/empresas/${encodeURIComponent(companySlug)}/defeitos`,
+      ? `../defeitos?run=${encodeURIComponent(defect.runSlug)}`
+      : "../defeitos",
     runSlug: defect.runSlug ?? null,
     runName: defect.runName ?? null,
-    applicationKey: normalizeKey(defect.app ?? defect.qaseProject ?? applicationName),
+    applicationKey: normalizeKey(defect.app || defect.qaseProject || applicationName),
     applicationName,
     projectCode: normalizeProjectCode(defect.qaseProject ?? defect.app),
     environments: Array.isArray(defect.environments) ? defect.environments.filter(Boolean) : [],
@@ -458,11 +644,12 @@ export async function loadCompanyDashboardData(slug: string): Promise<CompanyDas
   if (!companyRecord) return null;
 
   const company = mapCompanyRecord(companyRecord);
-  const [manualReleases, integratedReleases, applicationsRaw, alertsRaw] = await Promise.all([
+  const [manualReleases, integratedReleases, applicationsRaw, alertsRaw, companyMembers] = await Promise.all([
     readManualReleaseStore(),
     getAllReleases(),
     listApplications({ companySlug: company.slug ?? slug }),
     readAlertsStore(),
+    loadCompanyMembers(companyRecord),
   ]);
 
   const applications = applicationsRaw.map((app) => ({
@@ -480,13 +667,28 @@ export async function loadCompanyDashboardData(slug: string): Promise<CompanyDas
 
   const signals = buildSignals(company, applications);
 
+  // DEBUG: trace application matching
+  console.info(`[dashboard-debug] slug=${slug} company.slug=${company.slug} company.id=${company.id}`);
+  console.info(`[dashboard-debug] qase_project_codes=${JSON.stringify(company.qase_project_codes)}`);
+  console.info(`[dashboard-debug] applicationsRaw.length=${applicationsRaw.length}`);
+  console.info(`[dashboard-debug] signals.projectCodes=${JSON.stringify([...signals.projectCodes])}`);
+  console.info(`[dashboard-debug] signals.applicationKeys=${JSON.stringify([...signals.applicationKeys])}`);
+  console.info(`[dashboard-debug] integratedReleases.length=${integratedReleases.length}`);
+  console.info(`[dashboard-debug] manualReleases.length=${manualReleases.length}`);
+
   const runsManual = manualReleases
     .filter((release) => resolveManualReleaseKind(release) === "run")
     .filter((release) => manualReleaseMatchesCompany(release, signals))
     .map((release) => buildManualRunItem(release, company.slug ?? slug));
 
-  const runsIntegrated = integratedReleases
+  const companyIntegratedReleases = integratedReleases
     .filter((release) => integratedRunMatchesCompany(release, signals))
+  const enrichedIntegratedReleases = await enrichIntegratedRunsWithQaseResponsibles(
+    companyIntegratedReleases,
+    company.slug ?? slug,
+  );
+
+  const runsIntegrated = enrichedIntegratedReleases
     .map((release) => buildIntegratedRunItem(release, company.slug ?? slug));
 
   const runs = [...runsManual, ...runsIntegrated].sort((left, right) => {
@@ -494,6 +696,37 @@ export async function loadCompanyDashboardData(slug: string): Promise<CompanyDas
     const rightTime = Math.max(toTimestamp(right.updatedAt), toTimestamp(right.createdAt));
     return rightTime - leftTime;
   });
+
+  console.info(`[dashboard-debug] runsManual.length=${runsManual.length} runsIntegrated.length=${runsIntegrated.length} total=${runs.length}`);
+  console.info(`[dashboard-debug] applications.length=${applications.length}`);
+
+  // Include Qase project codes as virtual applications when not already registered
+  // We must do this after runs are built so we can check which codes already appear
+  const runProjectCodes = new Set(
+    runs.map((run) => run.projectCode?.trim().toUpperCase()).filter(Boolean),
+  );
+  const registeredCodes = new Set(
+    applications
+      .map((app) => app.qaseProjectCode?.trim().toUpperCase())
+      .filter(Boolean),
+  );
+  for (const code of company.qase_project_codes ?? []) {
+    const upper = code.trim().toUpperCase();
+    const lower = code.trim().toLowerCase();
+    if (!upper || registeredCodes.has(upper) || runProjectCodes.has(upper)) continue;
+    applications.push({
+      id: `qase_${lower}`,
+      name: upper,
+      slug: lower,
+      description: null,
+      imageUrl: null,
+      qaseProjectCode: upper,
+      source: "qase",
+      active: true,
+      createdAt: company.qase_validated_at ?? new Date().toISOString(),
+      updatedAt: company.qase_validated_at ?? new Date().toISOString(),
+    });
+  }
 
   const defects = manualReleases
     .filter((release) => resolveManualReleaseKind(release) === "defect")
@@ -535,5 +768,27 @@ export async function loadCompanyDashboardData(slug: string): Promise<CompanyDas
     alerts,
     applications,
     projectCodes: Array.from(signals.projectCodes),
+    companyMembers,
   };
+}
+
+async function loadCompanyMembers(companyRecord: { id: string }): Promise<CompanyMember[]> {
+  try {
+    const [links, users] = await Promise.all([
+      listLocalLinksForCompany(companyRecord.id),
+      listLocalUsers(),
+    ]);
+    const usersById = new Map(users.map((u) => [u.id, u]));
+    return links
+      .map((link) => {
+        const user = usersById.get(link.userId);
+        if (!user) return null;
+        const name = resolveLocalUserDisplayName(user) ?? user.id;
+        return { userId: user.id, name };
+      })
+      .filter((m): m is CompanyMember => m !== null)
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
+  } catch {
+    return [];
+  }
 }

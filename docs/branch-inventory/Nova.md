@@ -12,7 +12,6 @@
 - src: 44 arquivos
 - scripts: 25 arquivos
 - app/admin: 20 arquivos
-- ai_applying: 18 arquivos
 - app/release: 16 arquivos
 - app/empresas: 15 arquivos
 - data/company-documents-files: 13 arquivos

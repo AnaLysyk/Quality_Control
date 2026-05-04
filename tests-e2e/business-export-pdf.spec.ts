@@ -1,4 +1,4 @@
-import fs from "fs";
+﻿import fs from "fs";
 import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
@@ -15,14 +15,14 @@ function slugify(value: string) {
 test("exporta relatorio PDF da run", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
   const runTitle = "Run PDF Export";
   const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/griaule/runs", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
@@ -32,7 +32,7 @@ test("exporta relatorio PDF da run", async ({ page, context }) => {
   await page.getByTestId("run-stat-not-run").fill("0");
   await page.getByTestId("run-submit").click();
 
-  await page.waitForURL(new RegExp(`/empresas/griaule/runs/${runSlug}`));
+  await page.waitForURL(new RegExp(`/empresas/demo/runs/${runSlug}`));
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -46,3 +46,4 @@ test("exporta relatorio PDF da run", async ({ page, context }) => {
   const stat = fs.statSync(filePath as string);
   expect(stat.size).toBeGreaterThan(1000);
 });
+

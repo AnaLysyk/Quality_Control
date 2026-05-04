@@ -1,10 +1,10 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test("documentos - company anexa arquivo e salva link", async ({ page, context }) => {
-  await mockAuth(context, { role: "company", companies: ["griaule"], clientSlug: "griaule" });
+  await mockAuth(context, { role: "company", companies: ["DEMO"], clientSlug: "DEMO" });
 
-  await page.goto("/empresas/griaule/documentos", { waitUntil: "domcontentloaded" });
+  await page.goto("/empresas/demo/documentos", { waitUntil: "domcontentloaded" });
 
   await page.getByTestId("doc-file-title").fill("Manual QA");
   await page.getByTestId("doc-file-description").fill("Documento de teste");
@@ -29,7 +29,7 @@ test("documentos - company anexa arquivo e salva link", async ({ page, context }
 });
 
 test("documentos - admin acessa outras empresas e company nao", async ({ page, context }) => {
-  await mockAuth(context, { role: "admin", companies: ["griaule", "testing-company"], clientSlug: "griaule" });
+  await mockAuth(context, { role: "admin", companies: ["DEMO", "testing-company"], clientSlug: "DEMO" });
 
   await page.goto("/empresas/testing-company/documentos", { waitUntil: "domcontentloaded" });
   await page.getByTestId("doc-tab-link").click();
@@ -40,7 +40,7 @@ test("documentos - admin acessa outras empresas e company nao", async ({ page, c
   await expect(page.getByText("Link salvo com sucesso.")).toBeVisible();
   await expect(page.getByTestId("document-list")).toContainText("Doc Testing Company");
 
-  await mockAuth(context, { role: "company", companies: ["griaule"], clientSlug: "griaule" });
+  await mockAuth(context, { role: "company", companies: ["DEMO"], clientSlug: "DEMO" });
   await page.goto("/empresas/testing-company/documentos", { waitUntil: "domcontentloaded" });
   // The app's client-side company list can vary depending on test ordering; accept either an explicit
   // "Acesso negado" message or that the document list does not contain the admin-created doc.
@@ -54,3 +54,4 @@ test("documentos - admin acessa outras empresas e company nao", async ({ page, c
     await expect(page.getByText("Acesso negado")).toBeVisible();
   }
 });
+

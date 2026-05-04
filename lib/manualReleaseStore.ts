@@ -13,8 +13,144 @@ async function getPrisma() {
   return prisma;
 }
 
-function pgToRelease(r: { id: string; slug: string; title: string; app?: string | null; qaseProject?: string | null; category?: string | null; kind?: string | null; runSlug?: string | null; runName?: string | null; companySlug?: string | null; environments: string[]; source: string; status: string; runId?: number | null; statsPass: number; statsFail: number; statsBlocked: number; statsNotRun: number; observations?: string | null; createdByUserId?: string | null; createdByName?: string | null; assignedToUserId?: string | null; assignedToName?: string | null; closedAt?: Date | null; createdAt: Date; updatedAt: Date }): Release {
-  return { id: r.id, slug: r.slug, name: r.title, app: r.app ?? "", qaseProject: r.qaseProject ?? undefined, category: r.category ?? undefined, kind: (r.kind as "run" | "defect") ?? "run", runSlug: r.runSlug ?? undefined, runName: r.runName ?? undefined, clientSlug: r.companySlug ?? null, environments: r.environments ?? [], source: r.source as "MANUAL" | "API", status: r.status as Release["status"], runId: r.runId ?? undefined, stats: { pass: r.statsPass, fail: r.statsFail, blocked: r.statsBlocked, notRun: r.statsNotRun }, observations: r.observations ?? undefined, createdByUserId: r.createdByUserId ?? null, createdByName: r.createdByName ?? null, assignedToUserId: r.assignedToUserId ?? null, assignedToName: r.assignedToName ?? null, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(), closedAt: r.closedAt?.toISOString() ?? null };
+const DEFECT_META_PREFIX = "__qc_defect_meta__:";
+const RUN_META_PREFIX = "__qc_run_meta__:";
+
+function parseReleaseSummary(summary?: string | null) {
+  const raw = typeof summary === "string" ? summary.trim() : "";
+  if (!raw) return { summary: undefined, severity: null, priority: null };
+  if (!raw.startsWith(DEFECT_META_PREFIX)) {
+    return { summary: raw, severity: null, priority: null };
+  }
+  try {
+    const parsed = JSON.parse(raw.slice(DEFECT_META_PREFIX.length)) as {
+      summary?: unknown;
+      severity?: unknown;
+      priority?: unknown;
+    };
+    return {
+      summary: typeof parsed.summary === "string" && parsed.summary.trim() ? parsed.summary.trim() : undefined,
+      severity: typeof parsed.severity === "string" && parsed.severity.trim() ? parsed.severity.trim() : null,
+      priority: typeof parsed.priority === "string" && parsed.priority.trim() ? parsed.priority.trim() : null,
+    };
+  } catch {
+    return { summary: undefined, severity: null, priority: null };
+  }
+}
+
+function parseReleaseCategory(category?: string | null): {
+  category?: string;
+  testPlanId: string | null;
+  testPlanName: string | null;
+  testPlanSource: "manual" | "qase" | null;
+  testPlanProjectCode: string | null;
+} {
+  const raw = typeof category === "string" ? category.trim() : "";
+  if (!raw) {
+    return {
+      category: undefined,
+      testPlanId: null,
+      testPlanName: null,
+      testPlanSource: null,
+      testPlanProjectCode: null,
+    };
+  }
+  if (!raw.startsWith(RUN_META_PREFIX)) {
+    return {
+      category: raw,
+      testPlanId: null,
+      testPlanName: null,
+      testPlanSource: null,
+      testPlanProjectCode: null,
+    };
+  }
+  try {
+    const parsed = JSON.parse(raw.slice(RUN_META_PREFIX.length)) as {
+      category?: unknown;
+      testPlanId?: unknown;
+      testPlanName?: unknown;
+      testPlanSource?: unknown;
+      testPlanProjectCode?: unknown;
+    };
+    return {
+      category:
+        typeof parsed.category === "string" && parsed.category.trim() ? parsed.category.trim() : undefined,
+      testPlanId:
+        typeof parsed.testPlanId === "string" && parsed.testPlanId.trim() ? parsed.testPlanId.trim() : null,
+      testPlanName:
+        typeof parsed.testPlanName === "string" && parsed.testPlanName.trim()
+          ? parsed.testPlanName.trim()
+          : null,
+      testPlanSource:
+        parsed.testPlanSource === "manual" || parsed.testPlanSource === "qase"
+          ? parsed.testPlanSource
+          : null,
+      testPlanProjectCode:
+        typeof parsed.testPlanProjectCode === "string" && parsed.testPlanProjectCode.trim()
+          ? parsed.testPlanProjectCode.trim()
+          : null,
+    };
+  } catch {
+    return {
+      category: undefined,
+      testPlanId: null,
+      testPlanName: null,
+      testPlanSource: null,
+      testPlanProjectCode: null,
+    };
+  }
+}
+
+function encodeReleaseSummary(release: Release) {
+  if ((release.kind ?? "run") !== "defect") {
+    return typeof release.summary === "string" && release.summary.trim() ? release.summary.trim() : null;
+  }
+  const payload = {
+    summary: typeof release.summary === "string" && release.summary.trim() ? release.summary.trim() : undefined,
+    severity: typeof release.severity === "string" && release.severity.trim() ? release.severity.trim() : undefined,
+    priority: typeof release.priority === "string" && release.priority.trim() ? release.priority.trim() : undefined,
+  };
+  if (!payload.summary && !payload.severity && !payload.priority) return null;
+  return `${DEFECT_META_PREFIX}${JSON.stringify(payload)}`;
+}
+
+function encodeReleaseCategory(release: Release) {
+  if ((release.kind ?? "run") !== "run") {
+    return typeof release.category === "string" && release.category.trim() ? release.category.trim() : null;
+  }
+
+  const payload = {
+    category: typeof release.category === "string" && release.category.trim() ? release.category.trim() : undefined,
+    testPlanId:
+      typeof release.testPlanId === "string" && release.testPlanId.trim() ? release.testPlanId.trim() : undefined,
+    testPlanName:
+      typeof release.testPlanName === "string" && release.testPlanName.trim()
+        ? release.testPlanName.trim()
+        : undefined,
+    testPlanSource: release.testPlanSource === "manual" || release.testPlanSource === "qase" ? release.testPlanSource : undefined,
+    testPlanProjectCode:
+      typeof release.testPlanProjectCode === "string" && release.testPlanProjectCode.trim()
+        ? release.testPlanProjectCode.trim()
+        : undefined,
+  };
+
+  if (
+    !payload.category &&
+    !payload.testPlanId &&
+    !payload.testPlanName &&
+    !payload.testPlanSource &&
+    !payload.testPlanProjectCode
+  ) {
+    return null;
+  }
+
+  return `${RUN_META_PREFIX}${JSON.stringify(payload)}`;
+}
+
+function pgToRelease(r: { id: string; slug: string; title: string; summary?: string | null; app?: string | null; qaseProject?: string | null; category?: string | null; kind?: string | null; runSlug?: string | null; runName?: string | null; companySlug?: string | null; environments: string[]; source: string; status: string; runId?: number | null; statsPass: number; statsFail: number; statsBlocked: number; statsNotRun: number; observations?: string | null; createdByUserId?: string | null; createdByName?: string | null; assignedToUserId?: string | null; assignedToName?: string | null; closedAt?: Date | null; createdAt: Date; updatedAt: Date }): Release {
+  const parsedSummary = parseReleaseSummary(r.summary);
+  const parsedCategory = parseReleaseCategory(r.category);
+  return { id: r.id, slug: r.slug, name: r.title, summary: parsedSummary.summary, app: r.app ?? "", qaseProject: r.qaseProject ?? undefined, category: parsedCategory.category, kind: (r.kind as "run" | "defect") ?? "run", runSlug: r.runSlug ?? undefined, runName: r.runName ?? undefined, testPlanId: parsedCategory.testPlanId, testPlanName: parsedCategory.testPlanName, testPlanSource: parsedCategory.testPlanSource, testPlanProjectCode: parsedCategory.testPlanProjectCode, clientSlug: r.companySlug ?? null, environments: r.environments ?? [], source: r.source as "MANUAL" | "API", status: r.status as Release["status"], runId: r.runId ?? undefined, stats: { pass: r.statsPass, fail: r.statsFail, blocked: r.statsBlocked, notRun: r.statsNotRun }, observations: r.observations ?? undefined, severity: parsedSummary.severity, priority: parsedSummary.priority, createdByUserId: r.createdByUserId ?? null, createdByName: r.createdByName ?? null, assignedToUserId: r.assignedToUserId ?? null, assignedToName: r.assignedToName ?? null, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString(), closedAt: r.closedAt?.toISOString() ?? null };
 }
 
 export type ManualCaseItem = {
@@ -147,7 +283,7 @@ export async function writeManualReleases(releases: Release[]) {
     const toDelete = existingSlugs.filter((s) => !incomingSlugs.includes(s));
     if (toDelete.length) await prisma.release.deleteMany({ where: { slug: { in: toDelete } } });
     for (const r of next) {
-      await prisma.release.upsert({ where: { slug: r.slug }, create: { id: r.id, slug: r.slug, title: r.name, app: r.app ?? null, qaseProject: r.qaseProject ?? null, category: r.category ?? null, kind: r.kind ?? "run", runSlug: r.runSlug ?? null, runName: r.runName ?? null, companySlug: r.clientSlug ?? null, environments: r.environments ?? [], source: r.source, status: r.status, runId: r.runId ?? null, statsPass: r.stats?.pass ?? 0, statsFail: r.stats?.fail ?? 0, statsBlocked: r.stats?.blocked ?? 0, statsNotRun: r.stats?.notRun ?? 0, observations: r.observations ?? null, createdByUserId: r.createdByUserId ?? null, createdByName: r.createdByName ?? null, assignedToUserId: r.assignedToUserId ?? null, assignedToName: r.assignedToName ?? null, closedAt: r.closedAt ? new Date(r.closedAt) : null }, update: { title: r.name, app: r.app ?? null, qaseProject: r.qaseProject ?? null, category: r.category ?? null, kind: r.kind ?? "run", runSlug: r.runSlug ?? null, runName: r.runName ?? null, companySlug: r.clientSlug ?? null, environments: r.environments ?? [], source: r.source, status: r.status, runId: r.runId ?? null, statsPass: r.stats?.pass ?? 0, statsFail: r.stats?.fail ?? 0, statsBlocked: r.stats?.blocked ?? 0, statsNotRun: r.stats?.notRun ?? 0, observations: r.observations ?? null, createdByUserId: r.createdByUserId ?? null, createdByName: r.createdByName ?? null, assignedToUserId: r.assignedToUserId ?? null, assignedToName: r.assignedToName ?? null, closedAt: r.closedAt ? new Date(r.closedAt) : null } });
+      await prisma.release.upsert({ where: { slug: r.slug }, create: { id: r.id, slug: r.slug, title: r.name, summary: encodeReleaseSummary(r), app: r.app ?? null, qaseProject: r.qaseProject ?? null, category: encodeReleaseCategory(r), kind: r.kind ?? "run", runSlug: r.runSlug ?? null, runName: r.runName ?? null, companySlug: r.clientSlug ?? null, environments: r.environments ?? [], source: r.source, status: r.status, runId: r.runId ?? null, statsPass: r.stats?.pass ?? 0, statsFail: r.stats?.fail ?? 0, statsBlocked: r.stats?.blocked ?? 0, statsNotRun: r.stats?.notRun ?? 0, observations: r.observations ?? null, createdByUserId: r.createdByUserId ?? null, createdByName: r.createdByName ?? null, assignedToUserId: r.assignedToUserId ?? null, assignedToName: r.assignedToName ?? null, closedAt: r.closedAt ? new Date(r.closedAt) : null }, update: { title: r.name, summary: encodeReleaseSummary(r), app: r.app ?? null, qaseProject: r.qaseProject ?? null, category: encodeReleaseCategory(r), kind: r.kind ?? "run", runSlug: r.runSlug ?? null, runName: r.runName ?? null, companySlug: r.clientSlug ?? null, environments: r.environments ?? [], source: r.source, status: r.status, runId: r.runId ?? null, statsPass: r.stats?.pass ?? 0, statsFail: r.stats?.fail ?? 0, statsBlocked: r.stats?.blocked ?? 0, statsNotRun: r.stats?.notRun ?? 0, observations: r.observations ?? null, createdByUserId: r.createdByUserId ?? null, createdByName: r.createdByName ?? null, assignedToUserId: r.assignedToUserId ?? null, assignedToName: r.assignedToName ?? null, closedAt: r.closedAt ? new Date(r.closedAt) : null } });
     }
     return;
   }

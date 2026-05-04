@@ -1,29 +1,30 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
 
-test.describe("defeitos - permissões", () => {
-  test("user não vê botão de edição de defeito manual", async ({ page, context }) => {
+test.describe("defeitos - permissÃµes", () => {
+  test("user nÃ£o vÃª botÃ£o de ediÃ§Ã£o de defeito manual", async ({ page, context }) => {
     await mockAuth(context, {
       role: "user",
-      companies: ["griaule"],
-      clientSlug: "griaule",
+      companies: ["DEMO"],
+      clientSlug: "DEMO",
     });
 
-    await page.goto("/empresas/griaule/defeitos", { waitUntil: "networkidle" });
+    await page.goto("/empresas/demo/defeitos", { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("defect-edit")).toBeHidden();
   });
 
-  test("admin acessa página de defeitos", async ({ page, context }) => {
+  test("admin acessa pÃ¡gina de defeitos", async ({ page, context }) => {
     await mockAuth(context, {
       role: "admin",
-      companies: ["griaule", "testing-company"],
-      clientSlug: "griaule",
+      companies: ["DEMO", "testing-company"],
+      clientSlug: "DEMO",
     });
 
-    await page.goto("/empresas/griaule/defeitos", { waitUntil: "networkidle" });
+    await page.goto("/empresas/demo/defeitos", { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("defects-page")).toBeVisible();
     await expect(page.getByTestId("defects-list")).toBeVisible();
   });
 });
+

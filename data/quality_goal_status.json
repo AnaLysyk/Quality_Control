@@ -1,6 +1,6 @@
-[
+﻿[
   {
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "goal": "coverage",
     "status": "violated",
     "value": 60,
@@ -8,7 +8,7 @@
     "evaluated_at": "2026-03-25T00:42:50.957Z"
   },
   {
-    "company_slug": "griaule",
+    "company_slug": "DEMO",
     "goal": "mttr",
     "status": "at_risk",
     "value": 3,

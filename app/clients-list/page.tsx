@@ -1,10 +1,13 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { RequireAuth } from "@/components/RequireAuth";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 type Client = {
   id: string;
@@ -46,6 +49,16 @@ function ClientesPage() {
   const { user } = useAuthUser();
   const legacyIsGlobalAdmin = asRecord(user)?.is_global_admin === true;
   const isGlobalAdmin = !!user?.isGlobalAdmin || legacyIsGlobalAdmin;
+  const routeInput = {
+    isGlobalAdmin,
+    permissionRole: user?.permissionRole ?? null,
+    role: user?.role ?? null,
+    companyRole: user?.companyRole ?? null,
+    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
+    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
+    clientSlug: user?.clientSlug ?? null,
+    defaultClientSlug: user?.defaultClientSlug ?? null,
+  };
 
   const [items, setItems] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
@@ -140,7 +153,7 @@ function ClientesPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Clientes</h1>
-          <p className="text-sm text-gray-600">Crie e gerencie empresas (clientes). Perfil nao e criado aqui.</p>
+          <p className="text-sm text-gray-600">Crie e gerencie empresas (clientes). Perfil não e criado aqui.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isGlobalAdmin && (
@@ -170,7 +183,7 @@ function ClientesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.map((client) => {
-          const profileHref = `/empresas/${client.slug ?? client.id}/home`;
+          const profileHref = buildCompanyPathForAccess(client.slug ?? client.id, "home", routeInput);
           return (
             <div key={client.id} className="w-full rounded-lg border border-[#e5e7eb] p-4 bg-white shadow-sm">
               <div className="flex items-center gap-3">
@@ -204,7 +217,7 @@ function ClientesPage() {
           <div className="text-sm text-gray-600">
             {isGlobalAdmin ? (
               <div className="mt-2 rounded-xl border border-dashed border-gray-300 p-4 text-center">
-                <p className="text-sm text-gray-700">Voce ainda nao criou nenhuma empresa.</p>
+                <p className="text-sm text-gray-700">Você ainda não criou nenhuma empresa.</p>
                 <button
                   onClick={() => setOpenCreate(true)}
                   className="mt-3 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white shadow-sm hover:bg-indigo-500"

@@ -122,4 +122,45 @@ describe("companyRecord persistence helpers", () => {
     expect(mapped.qase_project_codes).toEqual(["LEGACY"]);
     expect(mapped.has_qase_token).toBe(true);
   });
+
+  it("persists notifications_fanout_enabled when explicitly changed", () => {
+    const current = {
+      id: "cmp-4",
+      name: "Empresa Fanout",
+      company_name: "Empresa Fanout",
+      slug: "empresa-fanout",
+      notifications_fanout_enabled: true,
+    };
+
+    const disabledResult = buildCompanyUpdatePatch(
+      {
+        name: "Empresa Fanout",
+        notifications_fanout_enabled: false,
+      },
+      current,
+    );
+
+    expect(disabledResult.patch.notifications_fanout_enabled).toBe(false);
+
+    const enabledResult = buildCompanyUpdatePatch(
+      {
+        name: "Empresa Fanout",
+        notifications_fanout_enabled: true,
+      },
+      { ...current, notifications_fanout_enabled: false },
+    );
+
+    expect(enabledResult.patch.notifications_fanout_enabled).toBe(true);
+  });
+
+  it("defaults notifications_fanout_enabled to true when missing", () => {
+    const mapped = mapCompanyRecord({
+      id: "cmp-5",
+      name: "Empresa Sem Campo",
+      company_name: "Empresa Sem Campo",
+      slug: "empresa-sem-campo",
+    });
+
+    expect(mapped.notifications_fanout_enabled).toBe(true);
+  });
 });

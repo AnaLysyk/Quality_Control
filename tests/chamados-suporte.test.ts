@@ -38,7 +38,7 @@ import {
   pgCreateLocalUser,
   pgCreateLocalCompany,
   pgDeleteLocalCompany,
-} from "../src/core/auth/pgStore";
+} from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
 const PASSWORD = hashPasswordSha256("TC@Teste2026");

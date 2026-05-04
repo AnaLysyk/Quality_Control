@@ -18,6 +18,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchApi } from "@/lib/api";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { UserDetailsModal } from "@/admin/users/components/UserDetailsModal";
+import {
+  getFixedProfileLabel,
+  getFixedProfileTone,
+  resolveFixedProfileKind,
+} from "@/lib/fixedProfilePresentation";
 
 type CompanyOption = {
   id: string;
@@ -74,36 +79,18 @@ function getInitials(name?: string | null) {
 }
 
 function normalizeProfileKind(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
-  const profileKind = (user?.profile_kind ?? "").trim().toLowerCase();
-  if (profileKind === "empresa") return "empresa" as const;
-  if (profileKind === "company_user") return "company_user" as const;
-  if (profileKind === "testing_company_user") return "testing_company_user" as const;
-  if (profileKind === "leader_tc") return "leader_tc" as const;
-  if (profileKind === "technical_support") return "technical_support" as const;
-
-  const permissionRole = (user?.permission_role ?? "").trim().toLowerCase();
-  if (permissionRole === "company") return "empresa" as const;
-  if (permissionRole === "admin") return "leader_tc" as const;
-  if (permissionRole === "dev") return "technical_support" as const;
-  return "testing_company_user" as const;
+  return resolveFixedProfileKind({
+    profileKind: user?.profile_kind,
+    permissionRole: user?.permission_role,
+  });
 }
 
 function profileLabel(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
-  const profileKind = normalizeProfileKind(user);
-  if (profileKind === "empresa") return "Empresa";
-  if (profileKind === "company_user") return "Usuario da empresa";
-  if (profileKind === "leader_tc") return "Lider TC";
-  if (profileKind === "technical_support") return "Suporte Tecnico";
-  return "Usuario Testing Company";
+  return getFixedProfileLabel(normalizeProfileKind(user), { short: true });
 }
 
 function roleTone(user?: Pick<UserItem, "profile_kind" | "permission_role"> | null) {
-  const profileKind = normalizeProfileKind(user);
-  if (profileKind === "leader_tc") return "border-indigo-200 bg-indigo-50 text-indigo-700";
-  if (profileKind === "technical_support") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (profileKind === "empresa") return "border-rose-200 bg-rose-50 text-rose-700";
-  if (profileKind === "company_user") return "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700";
-  return "border-sky-200 bg-sky-50 text-sky-700";
+  return getFixedProfileTone(normalizeProfileKind(user));
 }
 
 function contextBadgeLabel(user: UserItem) {
@@ -179,9 +166,9 @@ function UserCard({
               {user.name}
             </p>
             <div className="mt-3 space-y-1">
-              <UserInlineField label="Usuario" value={getUserHandle(user)} valueClassName="break-all" />
+              <UserInlineField label="Usuário" value={getUserHandle(user)} valueClassName="break-all" />
               <UserInlineField label="E-mail" value={user.email} valueClassName="break-all" />
-              <UserInlineField label="Cargo" value={user.job_title || "Nao informado"} valueClassName="break-words" />
+              <UserInlineField label="Cargo" value={user.job_title || "Não informado"} valueClassName="break-words" />
               {showCompanyField && companyLabel ? <UserInlineField label="Empresa" value={companyLabel} valueClassName="break-words" /> : null}
             </div>
           </div>
@@ -297,7 +284,7 @@ export default function AdminUsersPage() {
       const companiesJson = (await companiesRes.json().catch(() => ([]))) as CompanyOption[] | { error?: string };
 
       if (!usersRes.ok) {
-        setError(usersJson.error || "Nao foi possivel carregar os usuarios.");
+        setError(usersJson.error || "Não foi possível carregar os usuários.");
         setUsers([]);
       } else {
         const items = Array.isArray(usersJson.items) ? usersJson.items : [];
@@ -312,7 +299,7 @@ export default function AdminUsersPage() {
     } catch (err) {
       setUsers([]);
       setCompanies([]);
-      setError(err instanceof Error ? err.message : "Nao foi possivel carregar os usuarios.");
+      setError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
     } finally {
       setLoading(false);
     }
@@ -456,10 +443,10 @@ export default function AdminUsersPage() {
   const createModalConfig = useMemo<CreateModalConfig>(() => {
     if (activeTab === "company") {
       return {
-        title: "Criar usuario da empresa",
-        subtitle: "Selecione a empresa e cadastre o responsavel ja no contexto dela.",
-        submitLabel: "Criar usuario da empresa",
-        initialRole: "client_admin",
+        title: "Criar usuário da empresa",
+        subtitle: "Selecione a empresa e cadastre o responsável já no contexto dela.",
+        submitLabel: "Criar usuário da empresa",
+        initialRole: "company_user",
         lockRole: true,
         showCompanyField: true,
         requireCompanySelection: true,
@@ -472,7 +459,7 @@ export default function AdminUsersPage() {
         title: "Criar Lider TC",
         subtitle: "Cadastre perfis de Lider TC com acesso total ao sistema.",
         submitLabel: "Criar Lider TC",
-        initialRole: "global_admin",
+        initialRole: "leader_tc",
         lockRole: true,
         showCompanyField: false,
         requireCompanySelection: false,
@@ -482,10 +469,10 @@ export default function AdminUsersPage() {
 
     if (activeTab === "support") {
       return {
-        title: "Criar Suporte Tecnico",
+        title: "Criar Suporte Técnico",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte Tecnico",
-        initialRole: "it_dev",
+        submitLabel: "Criar Suporte Técnico",
+        initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
         requireCompanySelection: false,
@@ -494,10 +481,10 @@ export default function AdminUsersPage() {
     }
 
     return {
-      title: "Criar usuario Testing Company",
-      subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa ja existente.",
-      submitLabel: "Criar usuario Testing Company",
-      initialRole: "client_user",
+        title: "Criar usuário TC",
+        subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessário.",
+        submitLabel: "Criar usuário TC",
+      initialRole: "testing_company_user",
       lockRole: true,
       showCompanyField: true,
       requireCompanySelection: true,
@@ -520,19 +507,19 @@ export default function AdminUsersPage() {
       <div className="mx-auto flex w-full max-w-550 flex-col gap-4 px-0 py-0">
         <Breadcrumb
           items={[
-            { label: "Admin", href: "/admin/home" },
+            { label: "Admin", href: "/admin/dashboard" },
             { label: "Empresas", href: "/admin/clients" },
-            { label: "Gestao de usuarios" },
+            { label: "Gestao de usuários" },
           ]}
         />
 
-        <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#031843_0%,#082457_38%,#3a174f_72%,#9f1025_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
+        <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
           <div className="flex flex-col gap-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuarios</p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuarios da plataforma</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuários</p>
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuários da plataforma</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                Gerencie usuarios por contexto: empresa, Testing Company, lideranca e suporte tecnico.
+                Gerencie usuários por contexto: empresa, usuários TC, lideranca e suporte técnico.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
@@ -546,7 +533,7 @@ export default function AdminUsersPage() {
                 <FiUsers className="h-4 w-4" /> {companyUsersCount} Usuario da empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUser className="h-4 w-4" /> {testingUsersCount} Usuarios Testing Company
+                <FiUser className="h-4 w-4" /> {testingUsersCount} Usuario TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiShield className="h-4 w-4" /> {adminUsersCount} Lider TC
@@ -565,16 +552,16 @@ export default function AdminUsersPage() {
               <div className="mt-4">
                 <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                   <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Empresa e usuarios da empresa
+                    Empresa e usuários da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Usuarios Testing Company
+                    Usuários TC
                   </TabsTrigger>
                   <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Lider TC
                   </TabsTrigger>
                   <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Suporte Tecnico
+                    Suporte Técnico
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -584,7 +571,7 @@ export default function AdminUsersPage() {
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar por nome, usuario, e-mail ou empresa"
+                    placeholder="Buscar por nome, usuário, e-mail ou empresa"
                     className="w-full bg-transparent outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
                   />
                 </label>
@@ -628,7 +615,7 @@ export default function AdminUsersPage() {
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
                         <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum perfil da empresa encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou empresa institucional nem usuarios da empresa.</p>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou empresa institucional nem usuários da empresa.</p>
                       </div>
                     </div>
                   ) : (
@@ -678,14 +665,14 @@ export default function AdminUsersPage() {
                             </section>
                             <section className="space-y-4">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-base font-bold text-(--tc-text-primary,#0b1a3c)">Usuarios da empresa</h4>
+                                <h4 className="text-base font-bold text-(--tc-text-primary,#0b1a3c)">Usuários da empresa</h4>
                                 <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-primary,#0b1a3c)">
                                   {group.sections.reduce((total, section) => total + section.users.length, 0)}
                                 </span>
                               </div>
                               {group.sections.length === 0 ? (
                                 <div className="rounded-[18px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-6 text-sm text-(--tc-text-secondary,#4b5563)">
-                                  Nenhum usuario da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
+                                  Nenhum usuário da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
                                 </div>
                               ) : (
                                 group.sections.map((company) => (
@@ -705,8 +692,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuario Testing Company</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Nao ha usuarios da Testing Company com os filtros atuais.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuário TC</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Não há usuários TC com os filtros atuais.</p>
                       </div>
                     </div>
                   ) : (
@@ -716,13 +703,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: testingActiveUsers,
-                          emptyMessage: "Nenhum usuario ativo neste recorte.",
+                          emptyMessage: "Nenhum usuário ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: testingInactiveUsers,
-                          emptyMessage: "Nenhum usuario inativo neste recorte.",
+                          emptyMessage: "Nenhum usuário inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -753,7 +740,7 @@ export default function AdminUsersPage() {
                       <FiShield className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
                         <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum Lider TC encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou Lider TC com esse status.</p>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou Lider TC com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -794,8 +781,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiTool className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum suporte tecnico encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual nao encontrou usuarios tecnicos com esse status.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum suporte técnico encontrado</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou usuários técnicos com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -805,13 +792,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: supportActiveUsers,
-                          emptyMessage: "Nenhum suporte tecnico ativo neste recorte.",
+                          emptyMessage: "Nenhum suporte técnico ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: supportInactiveUsers,
-                          emptyMessage: "Nenhum suporte tecnico inativo neste recorte.",
+                          emptyMessage: "Nenhum suporte técnico inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection

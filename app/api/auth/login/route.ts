@@ -9,6 +9,8 @@ import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
 import { getRedis } from "@/lib/redis";
 import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const DEFAULT_REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -42,21 +44,37 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => null);
     const login = typeof body?.login === "string" ? body.login.trim() : "";
     const userInput = typeof body?.user === "string" ? body.user.trim() : "";
-    const usuarioInput = typeof body?.usuario === "string" ? body.usuario.trim() : "";
+    const usuarioInput = typeof body?.usuário === "string" ? body.usuário.trim() : "";
     const password = typeof body?.password === "string" ? body.password : "";
     const identifier = userInput || usuarioInput || login;
 
     if (!identifier || !password) {
-      return NextResponse.json({ error: "Usuario e senha obrigatorios" }, { status: 400 });
+      return NextResponse.json({ error: "Usuário e senha obrigatorios" }, { status: 400 });
     }
 
     const user = await findLocalUserByEmailOrId(identifier);
     if (!user || user.active === false || user.status === "blocked") {
+      addAuditLogSafe({
+        actorEmail: identifier,
+        action: "auth.login.failure",
+        entityType: "user",
+        entityLabel: identifier,
+        metadata: { reason: !user ? "user_not_found" : "account_inactive", ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null },
+      });
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
     const hashedInput = hashPasswordSha256(password);
     if (!safeEqualHex(hashedInput, user.password_hash)) {
+      addAuditLogSafe({
+        actorEmail: user.email ?? identifier,
+        actorUserId: user.id,
+        action: "auth.login.failure",
+        entityType: "user",
+        entityId: user.id,
+        entityLabel: user.user ?? user.email ?? identifier,
+        metadata: { reason: "invalid_password", ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null },
+      });
       return NextResponse.json({ error: "Credenciais invalidas" }, { status: 401 });
     }
 
@@ -124,7 +142,7 @@ export async function POST(req: Request) {
         secureCookies,
       );
     } else {
-      // Limpa o contexto salvo quando o login nao especifica empresa.
+      // Limpa o contexto salvo quando o login não especifica empresa.
       res.cookies.set("active_company_slug", "", {
         httpOnly: true,
         sameSite: "lax",
@@ -133,6 +151,30 @@ export async function POST(req: Request) {
         maxAge: 0,
       });
     }
+
+    res.cookies.set(COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode({
+      isGlobalAdmin: built.session.isGlobalAdmin,
+      role: built.session.role,
+      companyRole: built.session.companyRole,
+      userOrigin: user.user_origin ?? null,
+      clientSlug: built.session.companySlug ?? null,
+    }), {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: secureCookies,
+      path: "/",
+      maxAge: refreshToken ? refreshTtlSeconds : SESSION_TTL_SECONDS,
+    });
+
+    addAuditLogSafe({
+      actorUserId: user.id,
+      actorEmail: user.email ?? identifier,
+      action: "auth.login.success",
+      entityType: "user",
+      entityId: user.id,
+      entityLabel: user.user ?? user.email ?? identifier,
+      metadata: { role: user.role ?? null, companySlug: built.requestedCompanySlug || null, ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null },
+    });
 
     return res;
   } catch (err: unknown) {

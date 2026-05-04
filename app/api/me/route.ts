@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { AuthCompany } from "@/../packages/contracts/src/auth";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessContext } from "@/lib/auth/session";
 import {
   findLocalUserByEmailOrId,
@@ -16,6 +17,8 @@ import {
 import { isAvatarKey } from "@/lib/avatarCatalog";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode } from "@/lib/companyRoutes";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -32,12 +35,12 @@ function errorResponse(status: number, code: string, message: string) {
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return errorResponse(401, "NO_SESSION", "Nao autorizado");
+    return errorResponse(401, "NO_SESSION", "Não autorizado");
   }
 
   const user = await getLocalUserById(access.userId);
   if (!user) {
-    return errorResponse(401, "USER_NOT_FOUND", "Usuario nao encontrado");
+    return errorResponse(401, "USER_NOT_FOUND", "Usuário não encontrado");
   }
 
   const [links, companies] = await Promise.all([
@@ -46,10 +49,12 @@ export async function GET(req: Request) {
   ]);
   const permissionAccess = await resolvePermissionAccessForUser(user.id);
   const isGlobalAdmin = access.isGlobalAdmin === true;
-  const normalizedRole = (access.role ?? "").toLowerCase();
-  const normalizedCompanyRole = (access.companyRole ?? "").toLowerCase();
-  const hasDeveloperPrivileges = normalizedRole === "it_dev" || normalizedCompanyRole === "it_dev";
-  const hasPrivilegedAccess = isGlobalAdmin || hasDeveloperPrivileges;
+  const normalizedRole = normalizeLegacyRole(access.role);
+  const normalizedCompanyRole = normalizeLegacyRole(access.companyRole);
+  const hasTechnicalSupportPrivileges =
+    normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+    normalizedCompanyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  const hasPrivilegedAccess = isGlobalAdmin || hasTechnicalSupportPrivileges;
   const allowedSlugSet = new Set(
     (access.companySlugs ?? [])
       .map((slug) => (typeof slug === "string" ? slug.trim().toLowerCase() : ""))
@@ -66,7 +71,7 @@ export async function GET(req: Request) {
   const companiesResponse: AuthCompany[] = allowedCompanies.map((company) => {
     const link = links.find((item) => item.companyId === company.id);
     const rawRole = normalizeLocalRole(link?.role ?? null);
-    const role = hasPrivilegedAccess || rawRole === "company_admin" ? "ADMIN" : "USER";
+    const role = hasPrivilegedAccess || rawRole === "empresa" ? "ADMIN" : "USER";
     const createdAt =
       (typeof (company as { createdAt?: string | null }).createdAt === "string"
         ? (company as { createdAt?: string | null }).createdAt
@@ -97,7 +102,7 @@ export async function GET(req: Request) {
     (typeof user.name === "string" ? user.name.trim() : "") ||
     user.email;
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
@@ -123,6 +128,8 @@ export async function GET(req: Request) {
       capabilities: access.capabilities ?? [],
       permissions: permissionAccess.permissions,
       permissionRole: permissionAccess.roleKey,
+      userOrigin: user.user_origin ?? null,
+      user_origin: user.user_origin ?? null,
       clientId: access.companyId ?? null,
       clientSlug: access.companySlug ?? null,
       defaultClientSlug: user.default_company_slug ?? access.companySlug ?? null,
@@ -131,6 +138,24 @@ export async function GET(req: Request) {
     },
     companies: companiesResponse,
   }, { headers: NO_STORE_HEADERS });
+
+  response.cookies.set(COMPANY_ROUTE_MODE_COOKIE, resolveCompanyRouteMode({
+    isGlobalAdmin: access.isGlobalAdmin === true,
+    permissionRole: permissionAccess.roleKey,
+    role: access.role ?? null,
+    companyRole: access.companyRole ?? null,
+    userOrigin: user.user_origin ?? null,
+    companyCount: access.companySlugs?.length ?? companiesResponse.length,
+    clientSlug: access.companySlug ?? null,
+  }), {
+    httpOnly: false,
+    sameSite: "lax",
+    secure: new URL(req.url).protocol === "https:",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+
+  return response;
 }
 
 function sanitizeText(value: unknown, max = 255): string | null {
@@ -183,7 +208,7 @@ export async function PATCH(req: Request) {
   try {
     const access = await getAccessContext(req);
     if (!access) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
@@ -236,7 +261,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Nome invalido" }, { status: 400 });
     }
     if (hasEmail && !email) {
-      return NextResponse.json({ error: "E-mail obrigatorio" }, { status: 400 });
+      return NextResponse.json({ error: "E-mail obrigatório" }, { status: 400 });
     }
     if (hasFullName && !fullName) {
       return NextResponse.json({ error: "Nome completo invalido" }, { status: 400 });
@@ -245,12 +270,12 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Avatar invalido" }, { status: 400 });
     }
     if (!name && !email && !hasUser && !hasPhone && !hasFullName && !hasAvatarKey && !hasAvatarUrl && !hasJobTitle && !hasLinkedinUrl) {
-      return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
+      return NextResponse.json({ error: "Nenhuma alteração informada" }, { status: 400 });
     }
 
     const user = await getLocalUserById(access.userId);
     if (!user) {
-      return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
     const previousAvatarKey = extractObjectKey(user.avatar_url);
@@ -258,13 +283,13 @@ export async function PATCH(req: Request) {
     if (email && email !== user.email) {
       const existing = await findLocalUserByEmailOrId(email);
       if (existing && existing.id !== user.id) {
-        return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+        return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
       }
     }
     if (login && login !== (user.user ?? user.email)) {
       const users = await listLocalUsers();
       if (users.some((item) => item.id !== user.id && (item.user ?? item.email) === login)) {
-        return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+        return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
       }
     }
 
@@ -285,17 +310,38 @@ export async function PATCH(req: Request) {
     } catch (error) {
       const code = error && typeof error === "object" ? (error as { code?: string }).code : null;
       if (code === "DUPLICATE_EMAIL") {
-        return NextResponse.json({ error: "E-mail ja cadastrado" }, { status: 409 });
+        return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
       }
       if (code === "DUPLICATE_USER") {
-        return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+        return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
       }
       throw error;
     }
 
     if (!updated) {
-      return NextResponse.json({ error: "Nao foi possivel atualizar" }, { status: 500 });
+      return NextResponse.json({ error: "Não foi possível atualizar" }, { status: 500 });
     }
+
+    addAuditLogSafe({
+      action: "user.profile.updated",
+      entityType: "user",
+      entityId: user.id,
+      entityLabel: updated.user ?? updated.email ?? null,
+      actorUserId: user.id,
+      actorEmail: updated.email ?? null,
+      metadata: {
+        fieldsUpdated: [
+          ...(hasFullName ? ["full_name"] : []),
+          ...(hasName || hasFullName ? ["name"] : []),
+          ...(email ? ["email"] : []),
+          ...(hasUser ? ["user"] : []),
+          ...(hasPhone ? ["phone"] : []),
+          ...(hasJobTitle ? ["job_title"] : []),
+          ...(hasLinkedinUrl ? ["linkedin_url"] : []),
+          ...(hasAvatarKey || hasAvatarUrl ? ["avatar"] : []),
+        ],
+      },
+    });
 
     const nextAvatarKey = extractObjectKey(updated.avatar_url);
     if (previousAvatarKey && previousAvatarKey !== nextAvatarKey) {
@@ -339,7 +385,7 @@ export async function PATCH(req: Request) {
       { status: 200 },
     );
   } catch (error) {
-    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Nao foi possivel atualizar os dados";
+    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível atualizar os dados";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -348,24 +394,23 @@ export async function DELETE(req: Request) {
   try {
     const access = await getAccessContext(req);
     if (!access) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const normalizedRole = (access.role ?? "").trim().toLowerCase();
-    const normalizedCompanyRole = (access.companyRole ?? "").trim().toLowerCase();
+    const normalizedRole = normalizeLegacyRole(access.role);
+    const normalizedCompanyRole = normalizeLegacyRole(access.companyRole);
     const canDeleteDirectly =
       access.isGlobalAdmin === true ||
-      normalizedRole === "admin" ||
-      normalizedRole === "global_admin" ||
-      normalizedRole === "it_dev" ||
-      normalizedCompanyRole === "it_dev";
+      normalizedRole === SYSTEM_ROLES.LEADER_TC ||
+      normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
+      normalizedCompanyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
     if (!canDeleteDirectly) {
-      return NextResponse.json({ error: "Somente admin ou global podem deletar o perfil diretamente" }, { status: 403 });
+      return NextResponse.json({ error: "Somente lider TC ou suporte técnico podem deletar o perfil diretamente" }, { status: 403 });
     }
 
     const user = await getLocalUserById(access.userId);
     if (!user) {
-      return NextResponse.json({ error: "Usuario nao encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
     const updated = await updateLocalUser(user.id, {
@@ -374,12 +419,12 @@ export async function DELETE(req: Request) {
     });
 
     if (!updated) {
-      return NextResponse.json({ error: "Nao foi possivel deletar o usuario" }, { status: 500 });
+      return NextResponse.json({ error: "Não foi possível deletar o usuário" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
-    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Nao foi possivel deletar o usuario";
+    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível deletar o usuário";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

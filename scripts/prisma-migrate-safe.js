@@ -4,6 +4,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 
 const repoRoot = path.resolve(__dirname, '..');
+const prismaConfigPath = path.join(repoRoot, 'prisma.config.ts');
 const prismaEnv = { ...process.env };
 
 for (const envFile of ['.env.local', '.env']) {
@@ -38,7 +39,8 @@ function runPrisma(cmd, desc) {
 }
 
 // Gera o Prisma Client
-runPrisma('npx prisma generate', 'Gerando Prisma Client');
+const prismaConfigArg = fs.existsSync(prismaConfigPath) ? ` --config "${prismaConfigPath}"` : '';
+runPrisma(`npx prisma generate${prismaConfigArg}`, 'Gerando Prisma Client');
 
 // Aplica migrations (deploy)
-runPrisma('npx prisma migrate deploy', 'Aplicando migrations');
+runPrisma(`npx prisma migrate deploy${prismaConfigArg}`, 'Aplicando migrations');

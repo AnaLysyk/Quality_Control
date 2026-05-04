@@ -1,10 +1,40 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Kanban from "@/components/Kanban";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useI18n } from "@/hooks/useI18n";
 import type { KanbanData } from "@/types/kanban";
+
+const COPY = {
+  "pt-BR": {
+    title: "Kanban de defeitos",
+    subtitle: "Visualize o fluxo de defeitos por run e exporte o CSV.",
+    kicker: "Kanban",
+    runLabel: "Run",
+    selectRunAria: "Selecionar run",
+    selectRunPlaceholder: "Selecione uma run",
+    loadingRuns: "Carregando runs...",
+    errorLoadingRuns: "Erro ao carregar runs.",
+    selectRunPrompt: "Selecione uma run para visualizar o Kanban.",
+    defaultRunName: "Run manual",
+  },
+  "en-US": {
+    title: "Defect Kanban",
+    subtitle: "View the defect flow per run and export to CSV.",
+    kicker: "Kanban",
+    runLabel: "Run",
+    selectRunAria: "Select run",
+    selectRunPlaceholder: "Select a run",
+    loadingRuns: "Loading runs...",
+    errorLoadingRuns: "Failed to load runs.",
+    selectRunPrompt: "Select a run to view the Kanban board.",
+    defaultRunName: "Manual run",
+  },
+} as const;
 
 type ManualRun = {
   slug: string;
@@ -35,13 +65,13 @@ const DEFAULT_SAMPLE_KANBAN: KanbanData = {
   notRun: [],
 };
 
-function normalizeRuns(data: unknown[]): ManualRun[] {
+function normalizeRuns(data: unknown[], fallbackName: string): ManualRun[] {
   return data
     .map((item) => {
       const rec = (item ?? {}) as Record<string, unknown>;
       return {
         slug: String(rec.slug ?? rec.id ?? ""),
-        name: String(rec.name ?? rec.title ?? rec.slug ?? "Run manual"),
+        name: String(rec.name ?? rec.title ?? rec.slug ?? fallbackName),
       } satisfies ManualRun;
     })
     .filter((run) => run.slug.length > 0);
@@ -54,6 +84,8 @@ export default function CompanyKanbanPage() {
   const slugParam = params?.slug;
   const companySlug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
   const { user } = useAuthUser();
+  const { language } = useI18n();
+  const copy = COPY[language] ?? COPY["pt-BR"];
 
   const [runs, setRuns] = useState<ManualRun[]>([]);
   const [selectedRun, setSelectedRun] = useState<string | null>(null);
@@ -61,7 +93,7 @@ export default function CompanyKanbanPage() {
   const [error, setError] = useState<string | null>(null);
 
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-  const canEdit = Boolean(user?.isGlobalAdmin || role === "admin" || role === "company");
+  const canEdit = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support" || role === "empresa");
 
   const runParam = searchParams?.get("run") ?? "";
 
@@ -75,7 +107,7 @@ export default function CompanyKanbanPage() {
       .then((res) => res.json())
       .then((data) => {
         if (!active) return;
-        const normalized = normalizeRuns(Array.isArray(data) ? data : []);
+        const normalized = normalizeRuns(Array.isArray(data) ? data : [], copy.defaultRunName);
         setRuns(normalized);
         if (runParam && normalized.some((run) => run.slug === runParam)) {
           setSelectedRun(runParam);
@@ -87,7 +119,7 @@ export default function CompanyKanbanPage() {
         if (!active) return;
         setRuns([]);
         setSelectedRun(null);
-        setError("Erro ao carregar runs.");
+        setError(copy.errorLoadingRuns);
       })
       .finally(() => {
         if (!active) return;
@@ -96,7 +128,7 @@ export default function CompanyKanbanPage() {
     return () => {
       active = false;
     };
-  }, [companySlug, runParam]);
+  }, [companySlug, runParam, copy]);
 
   const runId = useMemo(() => {
     if (!selectedRun) return 0;
@@ -111,7 +143,7 @@ export default function CompanyKanbanPage() {
     setSelectedRun(nextSlug || null);
     if (companySlug) {
       const query = nextSlug ? `?run=${encodeURIComponent(nextSlug)}` : "";
-      router.replace(`/empresas/${encodeURIComponent(companySlug)}/defeitos/kanban${query}`);
+      router.replace(`./kanban${query}`);
     }
   };
 
@@ -119,36 +151,36 @@ export default function CompanyKanbanPage() {
     <div className="min-h-screen bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c) px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="rounded-3xl bg-white p-6 shadow-sm space-y-2">
-          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Kanban</p>
-          <h1 className="text-3xl font-extrabold">Kanban de defeitos</h1>
+          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">{copy.kicker}</p>
+          <h1 className="text-3xl font-extrabold">{copy.title}</h1>
           <p className="text-sm text-(--tc-text-secondary,#4b5563)">
-            Visualize o fluxo de defeitos por run e exporte o CSV.
+            {copy.subtitle}
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <label className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">
-              Run
+              {copy.runLabel}
             </label>
             <select
               value={selectedRun ?? ""}
               onChange={(e) => handleRunChange(e.target.value)}
               className="rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-sm"
-              aria-label="Selecionar run"
+              aria-label={copy.selectRunAria}
             >
-              <option value="">Selecione uma run</option>
+              <option value="">{copy.selectRunPlaceholder}</option>
               {runs.map((run) => (
                 <option key={run.slug} value={run.slug}>
                   {run.name}
                 </option>
               ))}
             </select>
-            {loadingRuns && <span className="text-xs text-(--tc-text-muted)">Carregando runs...</span>}
+            {loadingRuns && <span className="text-xs text-(--tc-text-muted)">{copy.loadingRuns}</span>}
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
         </header>
 
         <div className="rounded-3xl bg-white p-6 shadow-sm">
           {!selectedRun && !loadingRuns && (
-            <p className="text-sm text-(--tc-text-muted)">Selecione uma run para visualizar o Kanban.</p>
+            <p className="text-sm text-(--tc-text-muted)">{copy.selectRunPrompt}</p>
           )}
           {selectedRun && (
             <Kanban

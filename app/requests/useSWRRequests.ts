@@ -3,7 +3,7 @@ import useSWR from "swr";
 type RequestItem = {
   id: string;
   type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_REVISION";
   payload: Record<string, unknown>;
   createdAt: string;
   reviewNote?: string;
@@ -11,6 +11,8 @@ type RequestItem = {
 
 type RequestsResponse = {
   items?: RequestItem[];
+  canReview?: boolean;
+  scope?: "all" | "own";
 };
 
 const EMPTY_REQUESTS: RequestItem[] = [];
@@ -25,6 +27,8 @@ export function useSWRRequests() {
 
   return {
     requests: data?.items ?? EMPTY_REQUESTS,
+    canReview: data?.canReview === true,
+    scope: data?.scope === "all" ? "all" : "own",
     loading: isLoading,
     error,
     refetch: mutate,

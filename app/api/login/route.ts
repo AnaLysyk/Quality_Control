@@ -3,8 +3,7 @@ import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 
 export async function POST(request: Request) {
   const secureCookies = shouldUseSecureCookies(request);
-  const isProd =
-    process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || typeof process.env.VERCEL_ENV === "string";
+  const isProd = process.env.NODE_ENV === "production";
   if (isProd) {
     const response = NextResponse.json(
       { error: "Rota desativada. Use /api/auth/login." },

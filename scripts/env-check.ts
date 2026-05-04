@@ -54,7 +54,7 @@ const hasUpstashRedis =
 
 if (!hasKvRedis && !hasUpstashRedis) {
   console.warn(
-    "ENV_WARN_OPTIONAL: Redis nao configurado. Em producao/Render isso pode quebrar refresh de sessao e tornar o fallback em memoria instavel entre requisicoes.",
+    "ENV_WARN_OPTIONAL: Redis nao configurado. A aplicacao vai usar fallback persistente em PostgreSQL quando DATABASE_URL estiver definido; configure Upstash/KV se quiser menor latencia para sessoes e menos carga no banco.",
   );
 }
 

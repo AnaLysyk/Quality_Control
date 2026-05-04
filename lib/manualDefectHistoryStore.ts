@@ -15,6 +15,8 @@ export type DefectHistoryAction =
   | "status_changed"
   | "run_linked"
   | "run_unlinked"
+  | "assignee_changed"
+  | "comment_added"
   | "deleted"
   | "updated";
 
@@ -169,6 +171,37 @@ export async function listDefectHistory(defectSlug: string): Promise<DefectHisto
   const store = await readStore();
   const items = Array.isArray(store[defectSlug]) ? store[defectSlug] : [];
   return items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+export async function listDefectHistories(defectSlugs: string[]): Promise<Record<string, DefectHistoryEvent[]>> {
+  const normalizedSlugs = Array.from(new Set(defectSlugs.filter(Boolean)));
+  if (!normalizedSlugs.length) return {};
+
+  if (USE_POSTGRES) {
+    const rows = await prisma.defectHistoryEvent.findMany({
+      where: { defectSlug: { in: normalizedSlugs } },
+      orderBy: [{ defectSlug: "asc" }, { createdAt: "desc" }],
+    });
+    const grouped = new Map<string, DefectHistoryEvent[]>();
+    for (const row of rows) {
+      const list = grouped.get(row.defectSlug) ?? [];
+      list.push({
+        ...row,
+        action: row.action as DefectHistoryAction,
+        createdAt: row.createdAt.toISOString(),
+      });
+      grouped.set(row.defectSlug, list);
+    }
+    return Object.fromEntries(normalizedSlugs.map((slug) => [slug, grouped.get(slug) ?? []]));
+  }
+
+  const store = await readStore();
+  return Object.fromEntries(
+    normalizedSlugs.map((slug) => {
+      const items = Array.isArray(store[slug]) ? store[slug] : [];
+      return [slug, items.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))];
+    }),
+  );
 }
 
 export async function appendDefectHistory(

@@ -1,12 +1,12 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
 
 test.describe("rbac - runs API", () => {
   test("user nao consegue criar run via API", async ({ page, context }) => {
     await mockAuth(context, {
       role: "user",
-      companies: ["griaule"],
-      clientSlug: "griaule",
+      companies: ["DEMO"],
+      clientSlug: "DEMO",
     });
 
     const response = await page.request.post("/api/releases", {
@@ -19,8 +19,8 @@ test.describe("rbac - runs API", () => {
   test("company nao consegue deletar run via API", async ({ page, context }) => {
     await mockAuth(context, {
       role: "company",
-      companies: ["griaule"],
-      clientSlug: "griaule",
+      companies: ["DEMO"],
+      clientSlug: "DEMO",
     });
 
     const response = await page.request.delete("/api/releases", {
@@ -30,3 +30,4 @@ test.describe("rbac - runs API", () => {
     expect(response.status()).toBe(403);
   });
 });
+

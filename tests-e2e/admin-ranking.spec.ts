@@ -7,7 +7,7 @@ test("admin vê ranking de empresas", async ({ page, context }) => {
     companies: ["griaule", "testing-company"],
   });
 
-  await page.goto("/admin/home", { waitUntil: "networkidle" });
+  await page.goto("/admin/dashboard", { waitUntil: "networkidle" });
 
   const table = page.getByTestId("ranking-table");
   await expect(table).toBeVisible();

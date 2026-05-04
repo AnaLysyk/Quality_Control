@@ -8,14 +8,21 @@ import { normalizeRequestProfileType, toRequestProfileTypeLabel } from "@/lib/re
 
 type RequestRecord = {
   id: string;
+  userId?: string;
   userName: string;
   userEmail: string;
   companyName: string;
   type: "EMAIL_CHANGE" | "COMPANY_CHANGE" | "PASSWORD_RESET" | "PROFILE_DELETION";
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "NEEDS_REVISION";
   payload: Record<string, unknown>;
   createdAt: string;
   reviewNote?: string;
+};
+
+type RequestsResponse = {
+  items?: RequestRecord[];
+  canReview?: boolean;
+  scope?: "all" | "own";
 };
 
 function payloadString(payload: Record<string, unknown>, key: string): string {
@@ -30,9 +37,11 @@ function AdminRequestsPage() {
   const [status, setStatus] = useState<string>("");
   const [type, setType] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
+  const [canReview, setCanReview] = useState(false);
+  const [scope, setScope] = useState<"all" | "own">("own");
 
   const handleUnauthorized = useCallback(() => {
-    const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
+    const msg = "Sessão expirada. Faça login novamente.";
     setMessage(msg);
     toast.error(msg);
     router.push("/login");
@@ -62,15 +71,21 @@ function AdminRequestsPage() {
       }
 
       if (res.status === 403) {
-        setMessage("Sem permissao para esta fila de solicitacoes.");
+        setMessage("Sem permissão para esta fila de solicitações.");
         setItems([]);
+        setCanReview(false);
+        setScope("own");
         return;
       }
-      const json = await res.json();
-      setItems(json.items ?? []);
+      const json = (await res.json().catch(() => null)) as RequestsResponse | null;
+      setItems(json?.items ?? []);
+      setCanReview(json?.canReview === true);
+      setScope(json?.scope === "all" ? "all" : "own");
     } catch {
-      setMessage("Erro ao carregar solicitaÃ§Ãµes");
+      setMessage("Erro ao carregar solicitações");
       setItems([]);
+      setCanReview(false);
+      setScope("own");
     } finally {
       setLoading(false);
     }
@@ -80,7 +95,13 @@ function AdminRequestsPage() {
     load();
   }, [load]);
 
-  async function update(id: string, next: "APPROVED" | "REJECTED") {
+  async function update(id: string, next: "APPROVED" | "REJECTED" | "NEEDS_REVISION") {
+    if (!canReview) {
+      const nextMessage = "Seu perfil pode apenas consultar as próprias solicitações.";
+      setMessage(nextMessage);
+      toast.error(nextMessage);
+      return;
+    }
     setMessage(null);
     const res = await fetch(`/api/admin/requests/${id}`, {
       method: "PATCH",
@@ -112,18 +133,22 @@ function AdminRequestsPage() {
         prev.map((req) => (req.id === id ? { ...req, status: next } : req)),
       );
     }
-    toast.success(next === "APPROVED" ? "SolicitaÃ§Ã£o aprovada" : "SolicitaÃ§Ã£o rejeitada");
+    toast.success(next === "APPROVED" ? "Solicitação aprovada" : next === "NEEDS_REVISION" ? "Solicitação enviada para ajuste" : "Solicitação rejeitada");
   }
 
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-10 space-y-4">
-        <Breadcrumb items={[{ label: "Admin", href: "/admin/home" }, { label: "SolicitaÃ§Ãµes" }]} />
+        <Breadcrumb items={[{ label: "Admin", href: "/admin/dashboard" }, { label: "Solicitações" }]} />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">SolicitaÃ§Ãµes</h1>
-            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">Aprovar ou rejeitar pedidos de alteraÃ§Ã£o</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Solicitações</h1>
+            <p className="text-sm sm:text-base text-(--tc-text-muted,#6b7280)">
+              {scope === "all"
+                ? "Suporte técnico visualiza todas as solicitações e pode revisar os itens pendentes."
+                : "Perfis sem suporte técnico acompanham apenas as próprias solicitações."}
+            </p>
           </div>
           <button
             type="button"
@@ -137,7 +162,7 @@ function AdminRequestsPage() {
 
         <div className="flex gap-3 flex-wrap" role="group" aria-label="Filtros">
           <label className="sr-only" htmlFor="requests-filter-status">
-            Filtrar solicitaÃ§Ãµes por status
+            Filtrar solicitações por status
           </label>
           <select
             id="requests-filter-status"
@@ -149,10 +174,11 @@ function AdminRequestsPage() {
             <option value="PENDING">Pendente</option>
             <option value="APPROVED">Aprovado</option>
             <option value="REJECTED">Rejeitado</option>
+            <option value="NEEDS_REVISION">Aguardando ajuste</option>
           </select>
 
           <label className="sr-only" htmlFor="requests-filter-type">
-            Filtrar solicitaÃ§Ãµes por tipo
+            Filtrar solicitações por tipo
           </label>
           <select
             id="requests-filter-type"
@@ -164,7 +190,7 @@ function AdminRequestsPage() {
             <option value="EMAIL_CHANGE">Email</option>
             <option value="COMPANY_CHANGE">Empresa</option>
             <option value="PASSWORD_RESET">Reset de senha</option>
-            <option value="PROFILE_DELETION">Exclusao de perfil</option>
+            <option value="PROFILE_DELETION">Exclusão de perfil</option>
           </select>
         </div>
 
@@ -173,10 +199,15 @@ function AdminRequestsPage() {
             {message}
           </p>
         )}
+        {!canReview && scope === "own" && !loading && (
+          <p className="text-sm text-(--tc-text-muted,#6b7280)">
+            Aprovação e rejeição ficam disponíveis apenas para o perfil de suporte técnico.
+          </p>
+        )}
         {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
 
-        <ul className="space-y-2" role="list" aria-busy={loading}>
-          {filtered.length === 0 && !loading && <li className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitaÃ§Ã£o.</li>}
+        <ul className="space-y-2" role="list" aria-busy={loading ? "true" : "false"}>
+          {filtered.length === 0 && !loading && <li className="text-sm text-(--tc-text-muted,#6b7280)">Nenhuma solicitação.</li>}
           {filtered.map((req) => (
             <li key={req.id} className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 flex flex-col gap-2">
               <div className="flex flex-wrap justify-between gap-2">
@@ -192,13 +223,14 @@ function AdminRequestsPage() {
                   {req.status === "PENDING" && <span className="text-yellow-600">Pendente</span>}
                   {req.status === "APPROVED" && <span className="text-green-600">Aprovado</span>}
                   {req.status === "REJECTED" && <span className="text-red-600">Rejeitado</span>}
+                  {req.status === "NEEDS_REVISION" && <span className="text-blue-600">Aguardando ajuste</span>}
                 </div>
               </div>
               <div className="text-sm text-(--tc-text-secondary,#4b5563)">
                 {req.type === "EMAIL_CHANGE" && <div>Solicitou email: {payloadString(req.payload, "newEmail")}</div>}
                 {req.type === "COMPANY_CHANGE" && <div>Solicitou empresa: {payloadString(req.payload, "newCompanyName")}</div>}
                 {req.type === "PASSWORD_RESET" && <div>Solicitou reset de senha</div>}
-                {req.type === "PROFILE_DELETION" && <div>Solicitou exclusao de perfil</div>}
+                {req.type === "PROFILE_DELETION" && <div>Solicitou exclusão de perfil</div>}
                 {req.type === "PROFILE_DELETION" && payloadString(req.payload, "reason") && <div>Motivo: {payloadString(req.payload, "reason")}</div>}
                 {typeof req.payload?.profileType === "string" && (
                   <div>
@@ -211,7 +243,7 @@ function AdminRequestsPage() {
                 <div>Criado em {new Date(req.createdAt).toLocaleString()}</div>
                 {req.reviewNote && <div>Nota: {req.reviewNote}</div>}
               </div>
-              {req.status === "PENDING" && (
+              {canReview && (req.status === "PENDING" || req.status === "NEEDS_REVISION") && (
                 <div className="flex gap-2 flex-wrap">
                   <button
                     type="button"
@@ -227,6 +259,15 @@ function AdminRequestsPage() {
                   >
                     Rejeitar
                   </button>
+                  {req.status === "PENDING" && (
+                    <button
+                      type="button"
+                      onClick={() => update(req.id, "NEEDS_REVISION")}
+                      className="rounded-lg bg-blue-600 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      Solicitar ajuste
+                    </button>
+                  )}
                 </div>
               )}
             </li>

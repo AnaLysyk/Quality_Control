@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/contracts/auth";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveEntityImage } from "@/lib/resolveEntityImage";
 
 type ActiveCompanyLike = {
@@ -6,7 +7,7 @@ type ActiveCompanyLike = {
   logoUrl?: string | null;
 } | null;
 
-export type IdentityRoleKind = "global" | "admin" | "empresa" | "usuario";
+export type IdentityRoleKind = "global" | "leader_tc" | "empresa" | "usuario";
 
 export type ActiveIdentity = {
   kind: "user" | "company";
@@ -67,9 +68,9 @@ export function getAuthUserContextRole(user: AuthUser | null | undefined) {
   }
 
   if (
-    normalizeIdentityRole(permissionRole) === "admin" ||
-    normalizeIdentityRole(role) === "admin" ||
-    normalizeIdentityRole(companyRole) === "admin"
+    normalizeIdentityRole(permissionRole) === "leader_tc" ||
+    normalizeIdentityRole(role) === "leader_tc" ||
+    normalizeIdentityRole(companyRole) === "leader_tc"
   ) {
     return permissionRole ?? role ?? companyRole ?? "";
   }
@@ -78,7 +79,7 @@ export function getAuthUserContextRole(user: AuthUser | null | undefined) {
     if (normalizeIdentityRole(companyRole) === "empresa") return companyRole ?? "";
     if (normalizeIdentityRole(permissionRole) === "empresa") return permissionRole ?? "";
     if (normalizeIdentityRole(role) === "empresa") return role ?? "";
-    return "company_admin";
+    return "empresa";
   }
 
   if (
@@ -86,7 +87,7 @@ export function getAuthUserContextRole(user: AuthUser | null | undefined) {
     normalizeIdentityRole(permissionRole) === "empresa" ||
     normalizeIdentityRole(role) === "empresa"
   ) {
-    return "user";
+    return "company_user";
   }
 
   return permissionRole ?? role ?? companyRole ?? "";
@@ -94,9 +95,19 @@ export function getAuthUserContextRole(user: AuthUser | null | undefined) {
 
 export function normalizeIdentityRole(value?: string | null): IdentityRoleKind {
   const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "it_dev" || normalized === "dev" || normalized === "developer") return "global";
-  if (normalized === "admin" || normalized === "global_admin") return "admin";
-  if (normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "empresa";
+  if (
+    normalized === "it_dev" ||
+    normalized === "dev" ||
+    normalized === "developer" ||
+    normalized === "technical_support" ||
+    normalized === "support" ||
+    normalized === "tech_support" ||
+    normalized === "support_tech"
+  ) {
+    return "global";
+  }
+  if (normalized === "leader_tc" || normalized === "admin" || normalized === "global_admin") return "leader_tc";
+  if (normalized === "empresa" || normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "empresa";
   return "usuario";
 }
 
@@ -147,7 +158,32 @@ export function isInstitutionalCompanyAccount(
 }
 
 export function isCompanyProfileContext(user: AuthUser | null | undefined) {
-  return isInstitutionalCompanyAccount(user);
+  if (isInstitutionalCompanyAccount(user)) return true;
+  if (!user || typeof user !== "object") return false;
+
+  const record = user as Record<string, unknown>;
+  const origin = readTrimmedString(
+    typeof record.user_origin === "string" ? record.user_origin : null,
+    typeof record.userOrigin === "string" ? record.userOrigin : null,
+  );
+  const scope = readTrimmedString(
+    typeof record.user_scope === "string" ? record.user_scope : null,
+    typeof record.userScope === "string" ? record.userScope : null,
+  );
+  const permissionRole = normalizeLegacyRole(user.permissionRole);
+  const role = normalizeLegacyRole(user.role);
+  const companyRole = normalizeLegacyRole(user.companyRole);
+
+  return (
+    origin === "client_company" ||
+    scope === "company_only" ||
+    permissionRole === SYSTEM_ROLES.EMPRESA ||
+    role === SYSTEM_ROLES.EMPRESA ||
+    companyRole === SYSTEM_ROLES.EMPRESA ||
+    permissionRole === SYSTEM_ROLES.COMPANY_USER ||
+    role === SYSTEM_ROLES.COMPANY_USER ||
+    companyRole === SYSTEM_ROLES.COMPANY_USER
+  );
 }
 
 export function resolveActiveIdentity({
@@ -193,7 +229,7 @@ export function resolveActiveIdentity({
     kind: "user",
     roleKind,
     displayName: accountName,
-    avatarUrl: resolveEntityImage({ isCompanyContext: showCompanyTag, companyLogoUrl: companyLogo, userAvatarUrl: userAvatar }),
+    avatarUrl: resolveEntityImage({ isCompanyContext: showCompanyTag && !userAvatar, companyLogoUrl: companyLogo, userAvatarUrl: userAvatar }),
     showCompanyTag,
     companyTagLabel: showCompanyTag ? companyName : null,
     accountName,

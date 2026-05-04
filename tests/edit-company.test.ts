@@ -18,7 +18,7 @@ import {
   pgCreateLocalCompany,
   pgUpdateLocalCompany,
   pgDeleteLocalCompany,
-} from "../src/core/auth/pgStore";
+} from "../lib/core/auth/pgStore";
 
 const UID = Math.random().toString(36).slice(2, 10);
 const slug = (suffix: string) => `edit-empresa-${UID}-${suffix}`;

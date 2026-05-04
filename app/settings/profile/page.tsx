@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
@@ -15,10 +17,13 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import UserAvatar from "@/components/UserAvatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { publishAuthUser, useAuthUser } from "@/hooks/useAuthUser";
+import { useI18n } from "@/hooks/useI18n";
 import { useAppSettings, type Language, type Theme } from "@/context/AppSettingsContext";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { fetchApi } from "@/lib/api";
 import { isCompanyProfileContext, isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { hasPermissionAccess, normalizePermissionMatrix } from "@/lib/permissionMatrix";
 import {
   canCreateCompanyUsersByScope,
@@ -83,6 +88,7 @@ type CompanyProfile = {
   jira_validated_at?: string | null;
   jira_account_name?: string | null;
   integration_mode?: string | null;
+  notifications_fanout_enabled?: boolean;
   active?: boolean;
   status?: string | null;
 };
@@ -129,38 +135,35 @@ function normalizeCompanies(payload: unknown): LinkedCompany[] {
 
 function normalizeUiRole(value?: string | null) {
   const normalized = (value ?? "").trim().toLowerCase();
-  if (normalized === "it_dev" || normalized === "dev" || normalized === "developer") return "global";
-  if (normalized === "admin" || normalized === "global_admin") return "admin";
-  if (normalized === "company" || normalized === "company_admin" || normalized === "client_admin") return "empresa";
-  return "usuario";
+  if (normalized === "it_dev" || normalized === "dev" || normalized === "developer" || normalized === "technical_support") return "global";
+  if (normalized === "admin" || normalized === "global_admin" || normalized === "leader_tc") return "admin";
+  if (normalized === "company" || normalized === "company_admin" || normalized === "client_admin" || normalized === "empresa") return "empresa";
+  return "usuário";
 }
 
 function roleLabel(value?: string | null) {
-  const normalized = normalizeUiRole(value);
-  if (normalized === "global") return "Global";
-  if (normalized === "admin") return "Admin";
-  if (normalized === "empresa") return "Empresa";
-  return "Usuario";
+  return getFixedProfileLabel(
+    resolveFixedProfileKind({
+      permissionRole: value,
+      role: value,
+    }),
+  );
 }
 
 function companyUserProfileTypeLabel(user: Pick<CompanyUser, "permission_role" | "user_origin">) {
-  const normalizedRole = (user.permission_role ?? "").trim().toLowerCase();
-  const normalizedOrigin = (user.user_origin ?? "").trim().toLowerCase();
-
-  if (normalizedRole === "company" || normalizedRole === "company_admin" || normalizedRole === "client_admin") {
-    return "Admin da empresa";
-  }
-  if (normalizedRole === "viewer" || normalizedRole === "client_viewer") return "Visualizador";
-  if (normalizedRole === "admin" || normalizedRole === "global_admin") return "Admin TC";
-  if (normalizedRole === "it_dev" || normalizedRole === "dev" || normalizedRole === "developer") return "Dev TC";
-  if (normalizedOrigin === "client_company") return "Usuario da empresa";
-  return "Usuario TC";
+  return getFixedProfileLabel(
+    resolveFixedProfileKind({
+      permissionRole: user.permission_role,
+      role: user.permission_role,
+      userOrigin: user.user_origin,
+    }),
+  );
 }
 
-function statusLabel(active?: boolean, status?: string | null) {
-  if (active === false || status === "inactive" || status === "blocked") return "Inativo";
-  if (status === "invited") return "Convidado";
-  return "Ativo";
+function statusLabel(active?: boolean, status?: string | null, t?: (key: string) => string) {
+  if (active === false || status === "inactive" || status === "blocked") return t?.("settings.statusInactive") ?? "Inativo";
+  if (status === "invited") return t?.("settings.statusInvited") ?? "Convidado";
+  return t?.("settings.statusActive") ?? "Ativo";
 }
 
 function suggestUsername(value?: string | null) {
@@ -172,7 +175,7 @@ function suggestUsername(value?: string | null) {
     .replace(/^\.+|\.+$/g, "")
     .replace(/\.{2,}/g, ".");
 
-  return normalized || "usuario";
+  return normalized || "usuário";
 }
 
 function normalizeSearchTerm(value: string) {
@@ -272,6 +275,8 @@ function normalizeCompanyProfile(payload: unknown): CompanyProfile | null {
     jira_validated_at: typeof record.jira_validated_at === "string" ? record.jira_validated_at : null,
     jira_account_name: typeof record.jira_account_name === "string" ? record.jira_account_name : null,
     integration_mode: typeof record.integration_mode === "string" ? record.integration_mode : null,
+    notifications_fanout_enabled:
+      typeof record.notifications_fanout_enabled === "boolean" ? record.notifications_fanout_enabled : true,
     active: typeof record.active === "boolean" ? record.active : true,
     status: typeof record.status === "string" ? record.status : null,
   };
@@ -302,12 +307,12 @@ function resolveIntegrationStateMeta(
   labels?: Partial<Record<CompanyIntegrationState, string>>,
 ) {
   const defaultLabels: Record<CompanyIntegrationState, string> = {
-    empty: "Sem configuracao",
+    empty: "Sem configuração",
     pending: "Pendente",
     saved: "Salvo",
     active: "Ativo",
     error: "Erro",
-    pending_removal: "Remocao pendente",
+    pending_removal: "Remoção pendente",
   };
   const label = labels?.[state] ?? defaultLabels[state];
 
@@ -319,27 +324,27 @@ function resolveIntegrationStateMeta(
 }
 
 function resolveIntegrationActivationCopy(provider: CompanyIntegrationProvider, state: CompanyIntegrationState) {
-  const providerLabel = provider === "qase" ? "Qase" : provider === "jira" ? "Jira" : "Integracao";
+  const providerLabel = provider === "qase" ? "Qase" : provider === "jira" ? "Jira" : "Integração";
 
   if (state === "active") {
-    return { label: "Ativa", detail: `${providerLabel} validada e pronta para uso.` };
+    return { label: `${providerLabel} ativa`, detail: `${providerLabel} validada e pronta para uso.` };
   }
   if (state === "pending_removal") {
-    return { label: "Remocao pendente", detail: `${providerLabel} sera removida quando voce salvar os dados de integracao.` };
+    return { label: `${providerLabel} com remoção pendente`, detail: `${providerLabel} será removida quando você salvar os dados de integração.` };
   }
   if (state === "error") {
-    return { label: "Nao ativa", detail: `${providerLabel} com erro de validacao.` };
+    return { label: `${providerLabel} com erro`, detail: `${providerLabel} com erro de válidação.` };
   }
   if (state === "saved") {
-    return { label: "Nao ativa", detail: `${providerLabel} configurada, mas ainda nao validada.` };
+    return { label: `${providerLabel} não ativa`, detail: `${providerLabel} configurada, mas ainda não validada.` };
   }
   if (state === "pending") {
-    return { label: "Nao ativa", detail: `${providerLabel} em edicao. Valide para ativar.` };
+    return { label: `${providerLabel} não ativa`, detail: `${providerLabel} em edição. Valide para ativar.` };
   }
   if (provider === "manual") {
-    return { label: "Sem integracao", detail: "Nenhuma integracao externa configurada." };
+    return { label: "Sem integração", detail: "Nenhuma integração externa configurada." };
   }
-  return { label: "Nao ativa", detail: `${providerLabel} ainda nao configurada.` };
+  return { label: `${providerLabel} não ativa`, detail: `${providerLabel} ainda não configurada.` };
 }
 
 function shouldShowIntegrationStatusPill(state: CompanyIntegrationState) {
@@ -354,7 +359,7 @@ function normalizeCompanyUsers(payload: unknown): CompanyUser[] {
     if (!current || typeof current.id !== "string" || !current.id.trim()) return acc;
     acc.push({
       id: current.id,
-      name: typeof current.name === "string" ? current.name : "Usuario",
+      name: typeof current.name === "string" ? current.name : "Usuário",
       email: typeof current.email === "string" ? current.email : "",
       user: typeof current.user === "string" ? current.user : "",
       permission_role: typeof current.permission_role === "string" ? current.permission_role : "user",
@@ -536,9 +541,9 @@ function HeroMetric({
   );
 }
 
-const pageShellClass = "tc-page-shell relative z-10 px-2 py-4 sm:px-4 lg:px-6 xl:px-8 2xl:px-10";
-const heroClass = "tc-hero-panel";
-const surfaceClass = "tc-panel";
+const pageShellClass = "tc-page-shell relative z-10 max-w-none! gap-0! px-0 py-0";
+const heroClass = "tc-hero-panel rounded-none!";
+const surfaceClass = "tc-panel rounded-none!";
 const primaryButtonClass = "tc-button-primary";
 const secondaryButtonClass = "tc-button-secondary";
 const dangerButtonClass = "tc-button-danger";
@@ -596,22 +601,23 @@ function resolveCompanyIntegrationMeta({
   const hasProjects = projectCodes.length > 0;
 
   if (hasError) {
-    return { label: "Erro na integracao", tone: "danger" as const };
+    return { label: "Erro na integração", tone: "danger" as const };
   }
   if (normalizedMode === "manual") {
     return { label: "Manual", tone: "neutral" as const };
   }
   if (!hasToken && !hasProjects) {
-    return { label: "Sem integracao", tone: "neutral" as const };
+    return { label: "Sem integração", tone: "neutral" as const };
   }
   if (hasToken && hasProjects) {
     return { label: "Qase ativa", tone: "positive" as const };
   }
-  return { label: "Configuracao pendente", tone: "warning" as const };
+  return { label: "Configuração pendente", tone: "warning" as const };
 }
 
 export default function SettingsProfilePage() {
   const { user, loading, refreshUser } = useAuthUser();
+  const { t } = useI18n();
   const { theme, language, setTheme, setLanguage, saveSettings, loading: settingsLoading } = useAppSettings();
   const [companies, setCompanies] = useState<LinkedCompany[]>([]);
   const [companiesError, setCompaniesError] = useState<string | null>(null);
@@ -626,6 +632,7 @@ export default function SettingsProfilePage() {
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [companyDocsLink, setCompanyDocsLink] = useState("");
   const [companyLinkedinUrl, setCompanyLinkedinUrl] = useState("");
+  const [companyNotificationsFanoutEnabled, setCompanyNotificationsFanoutEnabled] = useState(true);
   const [companyLogoUrl, setCompanyLogoUrl] = useState("");
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
   const [companyLogoPreviewObjectUrl, setCompanyLogoPreviewObjectUrl] = useState<string | null>(null);
@@ -658,7 +665,7 @@ export default function SettingsProfilePage() {
   const [companyLogoSuccess, setCompanyLogoSuccess] = useState<string | null>(null);
   const [companyUsersError, setCompanyUsersError] = useState<string | null>(null);
   const [companyUserCreateOpen, setCompanyUserCreateOpen] = useState(false);
-  const [activeProfileTab, setActiveProfileTab] = useState<"perfil" | "usuarios">("perfil");
+  const [activeProfileTab, setActiveProfileTab] = useState<"perfil" | "usuários">("perfil");
   const [companyUsersTabActivated, setCompanyUsersTabActivated] = useState(false);
   const [qaseProjects, setQaseProjects] = useState<Array<{ code: string; title: string; status?: "valid" | "invalid" | "unknown" }>>([]);
   const [loadingQaseProjects, setLoadingQaseProjects] = useState(false);
@@ -704,6 +711,7 @@ export default function SettingsProfilePage() {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const companyLogoInputRef = useRef<HTMLInputElement | null>(null);
   const jobTitleFieldRef = useRef<HTMLDivElement | null>(null);
+  const companyFieldsInitRef = useRef(false);
   const [jobTitleMenuOpen, setJobTitleMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -754,6 +762,19 @@ export default function SettingsProfilePage() {
         : typeof userRecord?.default_company_slug === "string"
           ? String(userRecord.default_company_slug)
           : null) ?? null;
+  const companyRouteInput = {
+    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
+    permissionRole: user?.permissionRole ?? null,
+    role: user?.role ?? null,
+    companyRole: user?.companyRole ?? null,
+    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
+    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
+    clientSlug: user?.clientSlug ?? null,
+    defaultClientSlug: user?.defaultClientSlug ?? null,
+  };
+  const currentCompanyHomeHref = currentClientSlug
+    ? buildCompanyPathForAccess(currentClientSlug, "home", companyRouteInput)
+    : null;
   const homeCompanyId =
     typeof userRecord?.home_company_id === "string"
       ? String(userRecord.home_company_id)
@@ -780,9 +801,9 @@ export default function SettingsProfilePage() {
   const hasCompanyContext = institutionalCompanyContext || isCompanyProfileContext(user ?? null);
   const companyScopeKey = !loading && hasCompanyContext ? currentClientSlug ?? currentClientId ?? homeCompanyId : null;
   const uiRoleLabel = roleLabel(roleValue);
-  const userStatusLabel = statusLabel(active, status);
-  const directDeleteModalTitle = isGlobalProfile ? "Deletar perfil de suporte tecnico" : "Deletar perfil administrativo";
-  const directDeleteModalDescription = `Voce vai remover permanentemente este perfil ${uiRoleLabel.toLowerCase()} da plataforma. O acesso sera encerrado imediatamente e a conta deixara de funcionar apos a confirmacao.`;
+  const userStatusLabel = statusLabel(active, status, t);
+  const directDeleteModalTitle = isGlobalProfile ? t("settings.deleteProfile") : t("settings.deleteProfile");
+  const directDeleteModalDescription = t("settings.deleteProfileConfirm");
 
   const uniqueCompanies = useMemo(() => {
     const map = new Map<string, LinkedCompany>();
@@ -792,9 +813,9 @@ export default function SettingsProfilePage() {
     return Array.from(map.values());
   }, [companies]);
 
-  const heroName = profileFullName.trim() || fullName || name || "Usuario";
-  const heroUsername = profileUsername.trim() || username || "usuario";
-  const userProfileBreadcrumbName = heroName.trim() || username || email || "Usuario";
+  const heroName = profileFullName.trim() || fullName || name || "Usuário";
+  const heroUsername = profileUsername.trim() || username || "usuário";
+  const userProfileBreadcrumbName = heroName.trim() || username || email || "Usuário";
   const persistedAvatarUrl = avatarUrl.trim();
   const activeAvatarUrl = (() => {
     if (profileAvatarSource === "upload") return profileUploadedAvatarUrl.trim();
@@ -805,8 +826,8 @@ export default function SettingsProfilePage() {
   const heroAvatarUrl = persistedAvatarUrl;
   const avatarLoadingPlaceholder = loading && !persistedAvatarUrl && !profileAvatarDirty;
   const generatedUsernameHint = useMemo(
-    () => suggestUsername(profileFullName.trim() || profileEmail.trim() || heroName),
-    [heroName, profileEmail, profileFullName],
+    () => suggestUsername(companyName.trim() || profileFullName.trim() || profileEmail.trim() || heroName),
+    [companyName, heroName, profileEmail, profileFullName],
   );
   const filteredJobTitleOptions = useMemo(() => {
     const query = normalizeSearchTerm(profileJobTitle);
@@ -833,7 +854,15 @@ export default function SettingsProfilePage() {
     () => resolveUserScopePolicy(institutionalCompanyContext ? "company_admin" : companyContextRoleValue || roleValue),
     [companyContextRoleValue, institutionalCompanyContext, roleValue],
   );
-  const canManageInstitutionalUsers = hasCompanyContext && institutionalCompanyContext;
+  const canManageInstitutionalUsers =
+    hasCompanyContext &&
+    (
+      institutionalCompanyContext ||
+      userOriginValue === "client_company" ||
+      userScopeValue === "company_only" ||
+      scopePolicy.roleKey === "empresa" ||
+      scopePolicy.roleKey === "company_user"
+    );
   const canViewCompanyUsersTab =
     hasCompanyContext &&
     (
@@ -861,7 +890,7 @@ export default function SettingsProfilePage() {
     Boolean(currentClientSlug) &&
     !institutionalCompanyContext &&
     (
-      scopePolicy.roleKey === "company" ||
+      scopePolicy.roleKey === "empresa" ||
       userOriginValue === "client_company" ||
       userScopeValue === "company_only"
     );
@@ -876,7 +905,7 @@ export default function SettingsProfilePage() {
       ? "--"
       : String(profileSummary?.linkedCompaniesCount ?? uniqueCompanies.length);
   const shouldFetchCompanyUsers =
-    canViewCompanyUsersTab && (companyUsersTabActivated || activeProfileTab === "usuarios");
+    canViewCompanyUsersTab && (companyUsersTabActivated || activeProfileTab === "usuários");
 
   const { companies: swrCompanies, error: swrCompaniesError, refetch: refetchCompanies } = useSWRCompanies(hasCompanyContext);
   const {
@@ -893,7 +922,6 @@ export default function SettingsProfilePage() {
   } = useSWRCompanyUsers(shouldFetchCompanyUsers, companyScopeKey);
   const companyDisplayName = (companyProfile?.company_name || companyProfile?.name || "Empresa").trim();
   const companyProfileBreadcrumbName = companyDisplayName || currentClientSlug || "Empresa";
-  const companySlug = companyProfile?.slug ?? currentClientSlug ?? null;
   const companySavedLogoUrl = companyProfile?.logo_url || null;
   const companyLogoPreviewUrl = companyLogoPreviewObjectUrl || companyLogoUrl.trim() || companySavedLogoUrl;
   const companySavedQaseProjectCodes = Array.isArray(companyProfile?.qase_project_codes) ? companyProfile.qase_project_codes : [];
@@ -975,7 +1003,7 @@ export default function SettingsProfilePage() {
     saved: "Qase salva",
     active: "Qase ativa",
     error: "Erro na Qase",
-    pending_removal: "Remocao pendente",
+    pending_removal: "Remoção pendente",
   });
 
   const jiraSavedIntegrationState: CompanyIntegrationState = (() => {
@@ -1009,25 +1037,25 @@ export default function SettingsProfilePage() {
     saved: "Jira salvo",
     active: "Jira ativa",
     error: "Erro no Jira",
-    pending_removal: "Remocao pendente",
+    pending_removal: "Remoção pendente",
   });
 
   const companyRestIntegrationMeta = (() => {
     if (companyVisibleSavedIntegrationCount > 1) {
       return {
         state: "active" as const,
-        label: `${companyVisibleSavedIntegrationCount} integracoes ativas`,
+        label: `${companyVisibleSavedIntegrationCount} integrações ativas`,
         tone: "positive" as const,
       };
     }
     if (companyHasSavedActiveQaseIntegration) return qaseSavedIntegrationMeta;
     if (companyHasSavedActiveJiraIntegration) return jiraSavedIntegrationMeta;
-    return resolveIntegrationStateMeta("empty", { empty: "Sem integracao" });
+    return resolveIntegrationStateMeta("empty", { empty: "Sem integração" });
   })();
 
   const companyEditingIntegrationMeta = (() => {
     if (companyPendingDisableAll) {
-      return resolveIntegrationStateMeta("pending_removal", { pending_removal: "Remocao pendente" });
+      return resolveIntegrationStateMeta("pending_removal", { pending_removal: "Remoção pendente" });
     }
     if (normalizedCompanyIntegrationMode === "qase") return qaseIntegrationMeta;
     if (normalizedCompanyIntegrationMode === "jira") return jiraIntegrationMeta;
@@ -1058,12 +1086,12 @@ export default function SettingsProfilePage() {
     );
   const companyEditingIntegrationDetail =
     companyEditingSavedIntegrationProtected
-      ? "A integracao salva continua ativa ate ser removida ou trocada."
+      ? "A integração salva continua ativa até ser removida ou trocada."
       : companyEditingIntegrationActivation.detail;
   const companyIntegrationSaveBlockedMessage = `Status atual: ${companyEditingIntegrationActivation.label}. ${companyEditingIntegrationDetail} ${
     companyEditingSavedIntegrationProtected
-      ? "Valide as alteracoes para substituir a integracao atual ou cancele as alteracoes para voltar ao ultimo estado salvo."
-      : "Valide a integracao para ativar ou cancele as alteracoes para voltar ao ultimo estado salvo."
+      ? "Valide as alterações para substituir a integração atual ou cancele as alterações para voltar ao ultimo estado salvo."
+      : "Valide a integração para ativar ou cancele as alterações para voltar ao ultimo estado salvo."
   }`;
   const companyStatusText = companyStatusMeta.label;
   const companyIntegrationText = companyIntegrationEditorOpen ? companyEditingIntegrationActivation.label : companyIntegrationMeta.label;
@@ -1106,11 +1134,15 @@ export default function SettingsProfilePage() {
     normalizeComparableText(companyPhone) !== normalizeComparableText(companyProfile?.phone) ||
     normalizeComparableText(companyWebsite) !== normalizeComparableText(companyProfile?.website) ||
     normalizeComparableText(companyDocsLink) !== normalizeComparableText(companyProfile?.docs_link) ||
-    normalizeComparableText(companyLinkedinUrl) !== normalizeComparableText(companyProfile?.linkedin_url);
+    normalizeComparableText(companyLinkedinUrl) !== normalizeComparableText(companyProfile?.linkedin_url) ||
+    companyNotificationsFanoutEnabled !== (companyProfile?.notifications_fanout_enabled ?? true);
   const companyLogoValueDirty =
     normalizeComparableText(companyLogoUrl) !== normalizeComparableText(companySavedLogoUrl) || Boolean(companyLogoFile);
   const companyLogoHasChanges = companyLogoDirty || companyLogoValueDirty;
   const companyDetailsHasChanges = companyDataFieldsDirty || companyLogoHasChanges;
+  const companyUsernameHasChanges =
+    normalizeComparableText(profileUsername.trim().toLowerCase()) !== normalizeComparableText(persistedUsername);
+  const companyProfileSaveHasChanges = companyDetailsHasChanges || companyUsernameHasChanges;
   const companyIntegrationHasChanges = companyHasUnsavedIntegrationChanges;
   const companyIntegrationSaveBlocked =
     companyPendingDisableAll
@@ -1118,9 +1150,9 @@ export default function SettingsProfilePage() {
       : (normalizedCompanyIntegrationMode === "qase" && companyHasUnsavedQaseChanges && !companyQaseDraftIsActive) ||
         (normalizedCompanyIntegrationMode === "jira" && companyHasUnsavedJiraChanges && !companyJiraDraftIsActive);
   const companyUsersMetricNote = !canViewCompanyUsersTab
-    ? "Liberado por permissao"
+    ? "Liberado por permissão"
     : !companyUsersTabActivated && companyUsers.length === 0
-      ? "Carrega ao abrir Usuarios"
+      ? "Carrega ao abrir Usuários"
     : swrCompanyUsersLoading && companyUsers.length === 0
       ? "Perfis cadastrados"
       : `${companyActiveUsersCount} ativos`;
@@ -1144,7 +1176,7 @@ export default function SettingsProfilePage() {
   }, [swrProfileSummary, swrProfileSummaryError, swrProfileSummaryLoading]);
 
   useEffect(() => {
-    if (activeProfileTab === "usuarios" && !companyUsersTabActivated) {
+    if (activeProfileTab === "usuários" && !companyUsersTabActivated) {
       setCompanyUsersTabActivated(true);
     }
   }, [activeProfileTab, companyUsersTabActivated]);
@@ -1165,6 +1197,7 @@ export default function SettingsProfilePage() {
 
   useEffect(() => {
     if (!companyScopeKey) return;
+    companyFieldsInitRef.current = false;
     setActiveProfileTab("perfil");
     setCompanyUsersTabActivated(false);
     setCompanyUsers([]);
@@ -1203,7 +1236,7 @@ export default function SettingsProfilePage() {
 
   useEffect(() => {
     if (!companyProfile) return;
-    if (!companyDataFieldsDirty) {
+    if (!companyFieldsInitRef.current || !companyDataFieldsDirty) {
       setCompanyName((companyProfile.company_name ?? companyProfile.name ?? "").trim());
       setCompanyTaxId(companyProfile.tax_id ?? "");
       setCompanyCep(companyProfile.cep ?? "");
@@ -1213,6 +1246,8 @@ export default function SettingsProfilePage() {
       setCompanyWebsite(companyProfile.website ?? "");
       setCompanyDocsLink(companyProfile.docs_link ?? "");
       setCompanyLinkedinUrl(companyProfile.linkedin_url ?? "");
+      setCompanyNotificationsFanoutEnabled(companyProfile.notifications_fanout_enabled ?? true);
+      companyFieldsInitRef.current = true;
     }
     if (!companyLogoHasChanges) {
       setCompanyLogoUrl(companyProfile.logo_url ?? "");
@@ -1279,7 +1314,7 @@ export default function SettingsProfilePage() {
   }, [profileUploadedAvatarUrl]);
 
   async function fetchUniqueUsernameCandidate() {
-    const seed = profileFullName.trim() || profileEmail.trim() || heroName;
+    const seed = companyName.trim() || profileFullName.trim() || profileEmail.trim() || heroName;
     const avoid = Array.from(
       new Set(
         [persistedUsername, profileUsername.trim().toLowerCase(), ...generatedUsernameHistory]
@@ -1297,7 +1332,7 @@ export default function SettingsProfilePage() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setProfileError(extractApiError(payload) || "Nao foi possivel gerar um novo login.");
+        setProfileError(extractApiError(payload) || "Não foi possível gerar um novo login.");
         return null;
       }
       const generated =
@@ -1305,13 +1340,13 @@ export default function SettingsProfilePage() {
           ? ((payload as { username?: string }).username ?? "").trim().toLowerCase()
           : "";
       if (!generated) {
-        setProfileError("Nao foi possivel gerar um novo login.");
+        setProfileError("Não foi possível gerar um novo login.");
         return null;
       }
       setGeneratedUsernameHistory((current) => (current.includes(generated) ? current : [...current, generated]));
       return generated;
     } catch (error) {
-      setProfileError(error instanceof Error ? error.message : "Nao foi possivel gerar um novo login.");
+      setProfileError(error instanceof Error ? error.message : "Não foi possível gerar um novo login.");
       return null;
     } finally {
       setGeneratingUsername(false);
@@ -1350,18 +1385,18 @@ export default function SettingsProfilePage() {
     let nextAvatarUrl = activeAvatarUrl.trim();
 
     if (!nextEmail) {
-      setProfileError("Informe o e-mail do usuario.");
-      return;
+      setProfileError("Informe o e-mail do usuário.");
+      return false;
     }
     if (!options?.allowGeneratedReplacement && !nextUsername && persistedUsername) {
       const generatedUsername = await fetchUniqueUsernameCandidate();
-      if (!generatedUsername) return;
+      if (!generatedUsername) return false;
       setUsernameReplacementDialog({
         mode: "submit",
         currentUsername: persistedUsername,
         nextUsername: generatedUsername,
       });
-      return;
+      return false;
     }
 
     setProfileLoading(true);
@@ -1382,8 +1417,8 @@ export default function SettingsProfilePage() {
         const avatarPayload = await avatarResponse.json().catch(() => ({}));
 
         if (!avatarResponse.ok) {
-          setProfileError(extractApiError(avatarPayload) || "Nao foi possivel enviar a foto.");
-          return;
+          setProfileError(extractApiError(avatarPayload) || "Não foi possível enviar a foto.");
+          return false;
         }
 
         nextAvatarUrl =
@@ -1412,8 +1447,8 @@ export default function SettingsProfilePage() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setProfileError(extractApiError(payload) || `Nao foi possivel atualizar os dados (${response.status}).`);
-        return;
+        setProfileError(extractApiError(payload) || `Não foi possível atualizar os dados (${response.status}).`);
+        return false;
       }
 
       if (payload && typeof payload === "object" && "user" in payload) {
@@ -1431,8 +1466,8 @@ export default function SettingsProfilePage() {
 
       const settingsResult = await saveSettings({ theme, language });
       if (!settingsResult.ok) {
-        setProfileError("Nao foi possivel salvar as preferencias.");
-        return;
+        setProfileError(t("settings.savePreferencesError"));
+        return false;
       }
 
       await refreshUser();
@@ -1440,11 +1475,13 @@ export default function SettingsProfilePage() {
       const generatedOnSave = !typedUsername && !!resolvedUsernameAfterSave;
       setProfileSuccess(
         generatedOnSave
-          ? `Dados e preferencias atualizados com sucesso. Usuario gerado: @${resolvedUsernameAfterSave}.`
-          : "Dados e preferencias atualizados com sucesso.",
+          ? t("settings.profileSavedGenerated", { username: resolvedUsernameAfterSave })
+          : t("settings.profileSaved"),
       );
+      return true;
     } catch (error) {
-      setProfileError(error instanceof Error ? error.message : "Nao foi possivel atualizar os dados.");
+      setProfileError(error instanceof Error ? error.message : "Não foi possível atualizar os dados.");
+      return false;
     } finally {
       setAvatarUploading(false);
       setProfileLoading(false);
@@ -1470,7 +1507,7 @@ export default function SettingsProfilePage() {
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError("As novas senhas nao conferem.");
+      setPasswordError("As novas senhas não conferem.");
       return;
     }
     if (newPassword === currentPassword) {
@@ -1487,7 +1524,7 @@ export default function SettingsProfilePage() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setPasswordError(extractApiError(payload) || `Nao foi possivel atualizar a senha (${response.status}).`);
+        setPasswordError(extractApiError(payload) || `Não foi possível atualizar a senha (${response.status}).`);
         return;
       }
 
@@ -1496,7 +1533,7 @@ export default function SettingsProfilePage() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
-      setPasswordError(error instanceof Error ? error.message : "Nao foi possivel atualizar a senha.");
+      setPasswordError(error instanceof Error ? error.message : "Não foi possível atualizar a senha.");
     } finally {
       setPasswordLoading(false);
     }
@@ -1513,11 +1550,11 @@ export default function SettingsProfilePage() {
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        setDeleteUserError(typeof payload?.error === "string" ? payload.error : "Erro ao deletar usuario.");
+        setDeleteUserError(typeof payload?.error === "string" ? payload.error : "Erro ao deletar usuário.");
         return;
       }
 
-      setDeleteUserSuccess("Usuario deletado com sucesso. Redirecionando...");
+      setDeleteUserSuccess("Usuário deletado com sucesso. Redirecionando...");
       publishAuthUser(null);
       await fetch("/api/auth/logout", {
         method: "POST",
@@ -1528,7 +1565,7 @@ export default function SettingsProfilePage() {
         window.location.href = "/login";
       }, 1800);
     } catch (error) {
-      setDeleteUserError(error instanceof Error ? error.message : "Erro ao deletar usuario.");
+      setDeleteUserError(error instanceof Error ? error.message : "Erro ao deletar usuário.");
     } finally {
       setDeleteUserLoading(false);
     }
@@ -1540,7 +1577,7 @@ export default function SettingsProfilePage() {
 
     const reason = deleteRequestReason.trim();
     if (!reason) {
-      setDeleteRequestError("Descreva o motivo da exclusao do perfil.");
+      setDeleteRequestError("Descreva o motivo da exclusão do perfil.");
       return;
     }
 
@@ -1553,15 +1590,15 @@ export default function SettingsProfilePage() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setDeleteRequestError(extractApiError(payload) || "Nao foi possivel enviar a solicitacao.");
+        setDeleteRequestError(extractApiError(payload) || "Não foi possível enviar a solicitação.");
         return;
       }
 
-      setDeleteRequestSuccess("Solicitacao enviada para analise.");
+      setDeleteRequestSuccess("Solicitação enviada para análise.");
       setDeleteRequestOpen(false);
       setDeleteRequestReason("");
     } catch (error) {
-      setDeleteRequestError(error instanceof Error ? error.message : "Nao foi possivel enviar a solicitacao.");
+      setDeleteRequestError(error instanceof Error ? error.message : "Não foi possível enviar a solicitação.");
     } finally {
       setDeleteRequestLoading(false);
     }
@@ -1662,7 +1699,7 @@ export default function SettingsProfilePage() {
   async function handleValidateCompanyJira() {
     const hasEffectiveToken = companyJiraApiToken.trim() || (companyHasSavedJiraToken && !companyRemoveSavedJiraToken);
     if (!normalizeComparableText(companyJiraBaseUrl) || !normalizeComparableText(companyJiraEmail) || !hasEffectiveToken) {
-      setCompanyJiraValidationMessage("Informe URL base, e-mail tecnico e API token do Jira antes de validar.");
+      setCompanyJiraValidationMessage("Informe URL base, e-mail técnico e API token do Jira antes de validar.");
       setCompanyJiraValidationState("error");
       return;
     }
@@ -1681,15 +1718,15 @@ export default function SettingsProfilePage() {
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error((payload && extractApiError(payload)) || "Nao foi possivel validar o Jira.");
+        throw new Error((payload && extractApiError(payload)) || "Não foi possível validar o Jira.");
       }
 
       const accountName = payload && typeof payload.accountName === "string" ? payload.accountName : null;
       setCompanyJiraAccountName(accountName);
-      setCompanyJiraValidationMessage(accountName ? `Conexao valida com a conta ${accountName}.` : "Conexao valida com o Jira Cloud.");
+      setCompanyJiraValidationMessage(accountName ? `Conexão válida com a conta ${accountName}.` : "Conexão válida com o Jira Cloud.");
       setCompanyJiraValidationState("active");
     } catch (error) {
-      setCompanyJiraValidationMessage(error instanceof Error ? error.message : "Nao foi possivel validar o Jira.");
+      setCompanyJiraValidationMessage(error instanceof Error ? error.message : "Não foi possível validar o Jira.");
       setCompanyJiraValidationState("error");
     } finally {
       setCompanyJiraValidationLoading(false);
@@ -1701,7 +1738,7 @@ export default function SettingsProfilePage() {
       await refetchCompanyUsers();
       setCompanyUsersError(null);
     } catch (error) {
-      setCompanyUsersError(error instanceof Error ? error.message : "Nao foi possivel atualizar os usuarios da empresa.");
+      setCompanyUsersError(error instanceof Error ? error.message : "Não foi possível atualizar os usuários da empresa.");
     }
   }
 
@@ -1788,17 +1825,21 @@ export default function SettingsProfilePage() {
 
   function collectCompanyDetailsChangedFieldLabels() {
     const changed = new Set<string>();
+    if (companyUsernameHasChanges) changed.add("Usuário da empresa");
     if (normalizeComparableText(companyName) !== normalizeComparableText(companyProfile?.company_name ?? companyProfile?.name)) {
       changed.add("Nome da empresa");
     }
     if (normalizeComparableText(companyTaxId) !== normalizeComparableText(companyProfile?.tax_id)) changed.add("CNPJ");
     if (normalizeComparableText(companyCep) !== normalizeComparableText(companyProfile?.cep)) changed.add("CEP");
-    if (normalizeComparableText(companyAddress) !== normalizeComparableText(companyProfile?.address)) changed.add("Endereco");
+    if (normalizeComparableText(companyAddress) !== normalizeComparableText(companyProfile?.address)) changed.add("Endereço");
     if (normalizeComparableText(companyAddressDetail) !== normalizeComparableText(companyProfile?.address_detail)) changed.add("Complemento");
     if (normalizeComparableText(companyPhone) !== normalizeComparableText(companyProfile?.phone)) changed.add("Telefone comercial");
     if (normalizeComparableText(companyWebsite) !== normalizeComparableText(companyProfile?.website)) changed.add("Website");
     if (normalizeComparableText(companyDocsLink) !== normalizeComparableText(companyProfile?.docs_link)) changed.add("Link de documentos");
     if (normalizeComparableText(companyLinkedinUrl) !== normalizeComparableText(companyProfile?.linkedin_url)) changed.add("LinkedIn");
+    if (companyNotificationsFanoutEnabled !== (companyProfile?.notifications_fanout_enabled ?? true)) {
+      changed.add("Fan-out de notificações");
+    }
     if (companyLogoDirty || companyLogoValueDirty) changed.add("Logo da empresa");
     return Array.from(changed);
   }
@@ -1821,7 +1862,7 @@ export default function SettingsProfilePage() {
         const nextName = companyName.trim();
         if (!nextName) {
           setCompanyError("Informe o nome da empresa.");
-          return;
+          return false;
         }
 
         requestPayload.name = nextName;
@@ -1834,6 +1875,7 @@ export default function SettingsProfilePage() {
         requestPayload.website = optionalTrimmedString(companyWebsite);
         requestPayload.docs_link = optionalTrimmedString(companyDocsLink);
         requestPayload.linkedin_url = optionalTrimmedString(companyLinkedinUrl);
+        requestPayload.notifications_fanout_enabled = companyNotificationsFanoutEnabled;
         requestPayload.logo_url = companyLogoFile ? undefined : resolvedLogoUrl;
       } else {
         const effectiveIntegrationMode: CompanyIntegrationProvider = companyPendingDisableAll
@@ -1862,8 +1904,8 @@ export default function SettingsProfilePage() {
       });
       const responsePayload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setCompanyError(extractApiError(responsePayload) || `Nao foi possivel atualizar a empresa (${response.status}).`);
-        return;
+        setCompanyError(extractApiError(responsePayload) || `Não foi possível atualizar a empresa (${response.status}).`);
+        return false;
       }
 
       const normalized = normalizeCompanyProfile(responsePayload);
@@ -1883,8 +1925,8 @@ export default function SettingsProfilePage() {
         });
         const logoPayload = await logoResponse.json().catch(() => ({}));
         if (!logoResponse.ok) {
-          setCompanyLogoError(extractApiError(logoPayload) || "Nao foi possivel enviar o logo.");
-          return;
+          setCompanyLogoError(extractApiError(logoPayload) || "Não foi possível enviar o logo.");
+          return false;
         }
 
         resolvedLogoUrl =
@@ -1896,7 +1938,7 @@ export default function SettingsProfilePage() {
       }
 
       await Promise.all([refetchCompanyProfile(), refetchCompanies(), refreshUser()]);
-      // Invalidate related caches so the new logo propagates across the UI.
+      // Invalidate related caches só the new logo propagates across the UI.
       try {
         mutate("/api/me");
         mutate("/api/me/company-profile");
@@ -1932,33 +1974,61 @@ export default function SettingsProfilePage() {
         setCompanyDisableIntegrationsConfirmOpen(false);
         setCompanyIntegrationMode("manual");
         setCompanySuccess(
-          companyPendingDisableAll ? "Integracoes da empresa atualizadas com sucesso." : "Dados de integracao atualizados com sucesso.",
+          companyPendingDisableAll ? "Integrações da empresa atualizadas com sucesso." : "Dados de integração atualizados com sucesso.",
         );
       }
+      return true;
     } catch (error) {
-      setCompanyError(error instanceof Error ? error.message : "Nao foi possivel atualizar a empresa.");
+      setCompanyError(error instanceof Error ? error.message : "Não foi possível atualizar a empresa.");
+      return false;
     } finally {
       setCompanyLogoUploading(false);
       setCompanyLoading(false);
     }
   }
 
+  async function submitCompanyProfileAndUsernameChanges() {
+    setCompanyError(null);
+    setCompanySuccess(null);
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    if (companyDetailsHasChanges) {
+      const companySaved = await submitCompanyProfileChanges("details");
+      if (!companySaved) return false;
+    }
+
+    if (companyUsernameHasChanges) {
+      const usernameSaved = await submitProfileChanges();
+      if (!usernameSaved) return false;
+    }
+
+    if (companyDetailsHasChanges && companyUsernameHasChanges) {
+      setProfileSuccess(null);
+      setCompanySuccess("Dados da empresa e usuário institucional atualizados com sucesso.");
+    }
+
+    return true;
+  }
+
   function handleCompanyDetailsSaveRequest() {
     setCompanyError(null);
     setCompanySuccess(null);
+    setProfileError(null);
+    setProfileSuccess(null);
 
-    if (!companyDetailsHasChanges) {
+    if (!companyProfileSaveHasChanges) {
       return;
     }
 
     const changedFields = collectCompanyDetailsChangedFieldLabels();
     if (changedFields.length === 0) {
-      void submitCompanyProfileChanges("details");
+      void submitCompanyProfileAndUsernameChanges();
       return;
     }
 
     setCompanySaveConfirmDescription(
-      `Alterar ${changedFields.join(", ")} vai refletir em outros modulos, listas e seletores da plataforma. Deseja continuar?`,
+      `Alterar ${changedFields.join(", ")} vai refletir em outros módulos, listas e seletores da plataforma. Deseja continuar?`,
     );
     setCompanySaveConfirmOpen(true);
   }
@@ -1983,15 +2053,13 @@ export default function SettingsProfilePage() {
     return (
       <div className="relative isolate min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
         <div className={pageShellClass}>
-          <Breadcrumb
-            items={[
-              {
-                label: "Home",
-                href: companySlug ? `/empresas/${encodeURIComponent(companySlug)}/home` : undefined,
-              },
-              { label: companyProfileBreadcrumbName },
-            ]}
-          />
+          <div className="px-4 pt-4 sm:px-6">
+            <Breadcrumb
+              items={[
+                { label: companyProfileBreadcrumbName },
+              ]}
+            />
+          </div>
 
           <section className={heroClass}>
             <div className="space-y-5">
@@ -2012,17 +2080,9 @@ export default function SettingsProfilePage() {
                       <h1 className="tc-hero-title">{companyDisplayName}</h1>
                     </div>
                     <div className="flex flex-wrap items-center gap-2.5 text-sm text-white/82">
-                      <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-extrabold uppercase tracking-[0.16em] ${heroStatusPillClass("neutral")}`}>
-                        <span className="h-2.5 w-2.5 rounded-full bg-current" />
-                        Empresa
-                      </span>
-                      <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-extrabold uppercase tracking-[0.16em] ${heroStatusPillClass(companyStatusMeta.tone)}`}>
-                        <span className="h-2.5 w-2.5 rounded-full bg-current" />
-                        Status da empresa: {companyStatusText}
-                      </span>
                       <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-extrabold uppercase tracking-[0.16em] ${heroStatusPillClass(companyIntegrationMeta.tone)}`}>
                         <span className="h-2.5 w-2.5 rounded-full bg-current" />
-                        Status da integracao: {companyIntegrationText}
+                        Status da integração: {companyIntegrationText}
                       </span>
                     </div>
                   </div>
@@ -2031,10 +2091,10 @@ export default function SettingsProfilePage() {
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4">
-                <HeroMetric label="Usuarios vinculados" value={companyUsersMetricValue} note={companyUsersMetricNote} />
+                <HeroMetric label="Usuários vinculados" value={companyUsersMetricValue} note={companyUsersMetricNote} />
                 <HeroMetric label="Projetos Qase" value={companyProjectsMetricValue} note="Projetos selecionados" />
                 <HeroMetric label="Status" value={companyStatusMetricValue} note="Cadastro da empresa" />
-                <HeroMetric label="Integracao" value={companyIntegrationMetricValue} note="Contexto operacional" />
+                <HeroMetric label="Integração" value={companyIntegrationMetricValue} note="Contexto operacional" />
               </div>
 
               {companyContextLoading ? (
@@ -2047,105 +2107,21 @@ export default function SettingsProfilePage() {
 
           <Tabs
             value={activeProfileTab}
-            onValueChange={(value) => setActiveProfileTab(value === "usuarios" && canViewCompanyUsersTab ? "usuarios" : "perfil")}
-            className="space-y-5"
+            onValueChange={(value) => setActiveProfileTab(value === "usuários" && canViewCompanyUsersTab ? "usuários" : "perfil")}
+            className="space-y-0"
           >
             <div className={`${surfaceClass} px-1 py-1`}>
               <TabsList className={`grid w-full ${canViewCompanyUsersTab ? "grid-cols-2" : "grid-cols-1"} rounded-[22px] bg-transparent p-0`}>
                 <TabsTrigger value="perfil">Perfil</TabsTrigger>
-                {canViewCompanyUsersTab ? <TabsTrigger value="usuarios">Usuarios</TabsTrigger> : null}
+                {canViewCompanyUsersTab ? <TabsTrigger value="usuários">Usuários</TabsTrigger> : null}
               </TabsList>
             </div>
 
-            <TabsContent value="perfil" className="space-y-5">
-          <form className="space-y-5" onSubmit={handleProfileSubmit}>
-            <section className={`${surfaceClass} space-y-6`}>
-              <PanelHeader title="Conta de acesso" description="Nome da conta, login unico, e-mail e telefone usados na autenticacao." />
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Nome da conta">
-                  <input
-                    className={`form-control-user ${inputClass}`}
-                    value={profileFullName}
-                    onChange={(event) => setProfileFullName(event.target.value)}
-                    disabled={profileLoading || loading}
-                    title="Nome da conta"
-                    aria-label="Nome da conta"
-                    placeholder="Ex.: Equipe Griaule"
-                    required
-                  />
-                </Field>
-
-                <Field label="Usuario (login)">
-                  <div className="space-y-2">
-                    <input
-                      className={`form-control-user ${inputClass}`}
-                      value={profileUsername}
-                      onChange={(event) => setProfileUsername(event.target.value)}
-                      disabled={profileLoading || loading}
-                      title="Usuario de acesso"
-                      aria-label="Usuario de acesso"
-                      placeholder={`Ex.: ${generatedUsernameHint}`}
-                    />
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#0b1f52] dark:text-[#d7e5ff]">
-                      <FieldHint tone="strong">Unico no sistema. Em branco, gera automaticamente.</FieldHint>
-                      <button
-                        type="button"
-                        className="rounded-full border border-[#0b1f52] bg-[#0b1f52] px-3 py-1 font-semibold text-white transition hover:border-(--tc-accent) hover:bg-(--tc-accent) hover:text-white disabled:opacity-60 dark:border-[#0b1f52] dark:bg-[#0b1f52] dark:text-white dark:hover:border-(--tc-accent) dark:hover:bg-(--tc-accent) dark:hover:text-white"
-                        onClick={() => void requestGeneratedUsername()}
-                        disabled={profileLoading || loading || generatingUsername}
-                      >
-                        {generatingUsername ? "Gerando..." : "Gerar login"}
-                      </button>
-                    </div>
-                  </div>
-                </Field>
-
-                <Field label="E-mail da conta">
-                  <input
-                    type="text"
-                    inputMode="email"
-                    autoComplete="email"
-                    spellCheck={false}
-                    className={`form-control-user ${inputClass}`}
-                    value={profileEmail}
-                    onChange={(event) => setProfileEmail(event.target.value)}
-                    disabled={profileLoading || loading}
-                    title="E-mail da conta"
-                    aria-label="E-mail da conta"
-                    placeholder="conta@empresa.com ou identificador legado"
-                    required
-                  />
-                </Field>
-
-                <Field label="Telefone de contato">
-                  <input
-                    className={`form-control-user ${inputClass}`}
-                    value={profilePhone}
-                    onChange={(event) => setProfilePhone(event.target.value)}
-                    disabled={profileLoading || loading}
-                    title="Telefone de contato"
-                    aria-label="Telefone de contato"
-                    placeholder="+55 11 99999-9999"
-                  />
-                </Field>
-              </div>
-
-              <Feedback message={profileError} tone="error" />
-              <Feedback message={profileSuccess} tone="success" />
-
-              <div className="flex flex-col gap-3 sm:items-end">
-                <button type="submit" className={`${primaryButtonClass} w-full sm:w-auto`} disabled={profileLoading || loading}>
-                  {profileLoading ? "Salvando..." : "Salvar conta de acesso"}
-                </button>
-              </div>
-            </section>
-          </form>
-
-          <div className="space-y-5">
-            <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]">
+            <TabsContent value="perfil" className="space-y-0">
+          <div className="space-y-0">
+            <div className="grid gap-0 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]">
               <section className={`${surfaceClass} space-y-6`}>
-                <PanelHeader title="Dados da empresa" description="Campos do cadastro institucional da empresa. Descricao e notas ficam fora desta aba." />
+                <PanelHeader title="Dados da empresa" description="Campos do cadastro institucional da empresa. Descrição e notas ficam fora desta aba." />
                 <div className="grid gap-4 md:grid-cols-2">
                   <Field label="Nome da empresa"><input className={`form-control-user ${inputClass}`} value={companyName} onChange={(event) => setCompanyName(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Nome da empresa" aria-label="Nome da empresa" required /></Field>
                   <Field label="Status da empresa">
@@ -2156,12 +2132,36 @@ export default function SettingsProfilePage() {
                   </Field>
                   <Field label="CNPJ"><input className={`form-control-user ${inputClass}`} value={companyTaxId} onChange={(event) => setCompanyTaxId(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="CNPJ" aria-label="CNPJ" placeholder="00.000.000/0000-00" /></Field>
                   <Field label="CEP"><input className={`form-control-user ${inputClass}`} value={companyCep} onChange={(event) => setCompanyCep(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="CEP" aria-label="CEP" placeholder="00000-000" /></Field>
-                  <Field label="Endereco"><input className={`form-control-user ${inputClass}`} value={companyAddress} onChange={(event) => setCompanyAddress(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Endereco" aria-label="Endereco" placeholder="Rua, numero, cidade" /></Field>
-                  <Field label="Complemento / detalhe"><input className={`form-control-user ${inputClass}`} value={companyAddressDetail} onChange={(event) => setCompanyAddressDetail(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Complemento ou detalhe" aria-label="Complemento ou detalhe" placeholder="Bloco, sala, referencia" /></Field>
+                  <Field label="Endereço"><input className={`form-control-user ${inputClass}`} value={companyAddress} onChange={(event) => setCompanyAddress(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Endereço" aria-label="Endereço" placeholder="Rua, número, cidade" /></Field>
+                  <Field label="Complemento / detalhe"><input className={`form-control-user ${inputClass}`} value={companyAddressDetail} onChange={(event) => setCompanyAddressDetail(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Complemento ou detalhe" aria-label="Complemento ou detalhe" placeholder="Bloco, sala, referência" /></Field>
                   <Field label="Telefone comercial"><input className={`form-control-user ${inputClass}`} value={companyPhone} onChange={(event) => setCompanyPhone(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Telefone comercial" aria-label="Telefone comercial" placeholder="+55 11 3333-3333" /></Field>
                   <Field label="Website"><input className={`form-control-user ${inputClass}`} value={companyWebsite} onChange={(event) => setCompanyWebsite(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Website" aria-label="Website" placeholder="https://empresa.com.br" /></Field>
-                  <Field label="Link de documentos"><input className={`form-control-user ${inputClass}`} value={companyDocsLink} onChange={(event) => setCompanyDocsLink(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Link de documentos" aria-label="Link de documentos" placeholder="https://empresa.com.br/documentacao" /></Field>
+                  <Field label="Link de documentos"><input className={`form-control-user ${inputClass}`} value={companyDocsLink} onChange={(event) => setCompanyDocsLink(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="Link de documentos" aria-label="Link de documentos" placeholder="https://empresa.com.br/documentação" /></Field>
                   <Field label="LinkedIn da empresa"><input className={`form-control-user ${inputClass}`} value={companyLinkedinUrl} onChange={(event) => setCompanyLinkedinUrl(event.target.value)} disabled={companyLoading || swrCompanyProfileLoading} title="LinkedIn da empresa" aria-label="LinkedIn da empresa" placeholder="https://www.linkedin.com/company/empresa" /></Field>
+                  <div className="md:col-span-2 rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-(--tc-text-primary)">Fan-out de notificações</p>
+                        <p className="text-xs text-(--tc-text-muted)">
+                          Quando ativo, mudanças no contexto da empresa notificam também usuários vinculados (empresa e TC vinculado).
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCompanyNotificationsFanoutEnabled((current) => !current)}
+                        disabled={companyLoading || swrCompanyProfileLoading}
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                          companyNotificationsFanoutEnabled
+                            ? "border border-emerald-300 bg-emerald-100 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300"
+                            : "border border-red-300 bg-red-100 text-red-800 dark:border-red-500 dark:bg-red-900/40 dark:text-red-300"
+                        }`}
+                        aria-label="Alternar fan-out de notificações"
+                        title="Alternar fan-out de notificações"
+                      >
+                        {companyNotificationsFanoutEnabled ? "Ligado" : "Desligado"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -2194,7 +2194,7 @@ export default function SettingsProfilePage() {
                         {companyLogoUploading ? "Aplicando..." : "Escolher logo"}
                       </button>
                     </div>
-                    <p className="text-center text-sm font-bold leading-5 text-[#000f2d]! opacity-100 dark:text-[#d7e5ff]">
+                    <p className="text-center text-sm font-bold leading-5 text-[#000f2d] opacity-100 dark:text-white!">
                       A imagem aparece primeiro no preview desta tela. Use o botao abaixo para salvar a logo no restante do sistema.
                     </p>
                   </div>
@@ -2227,32 +2227,66 @@ export default function SettingsProfilePage() {
               </section>
             </div>
 
-            <section className={`${surfaceClass} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-(--tc-text-primary)">Salvar dados da empresa</p>
-                <p className="text-xs font-medium text-(--tc-text-muted)">
-                  Este botao salva a logo e as informacoes do cadastro da empresa.
-                </p>
+            <section className={`${surfaceClass} space-y-6`}>
+              <PanelHeader title="Usuário da empresa" description="Login único do perfil institucional. A sugestao usa o nome da empresa e já evita duplicidade." />
+
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                <Field label="Usuário da empresa">
+                  <input
+                    className={`form-control-user ${inputClass}`}
+                    value={profileUsername}
+                    onChange={(event) => setProfileUsername(event.target.value)}
+                    disabled={profileLoading || loading}
+                    title="Usuário da empresa"
+                    aria-label="Usuário da empresa"
+                    placeholder={`Ex.: ${generatedUsernameHint}`}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                </Field>
+
+                <button
+                  type="button"
+                  className="rounded-full border border-[#0b1f52] bg-[#0b1f52] px-3 py-2 text-sm font-semibold text-white transition hover:border-(--tc-accent) hover:bg-(--tc-accent) hover:text-white disabled:opacity-60 dark:border-[#0b1f52] dark:bg-[#0b1f52] dark:text-white dark:hover:border-(--tc-accent) dark:hover:bg-(--tc-accent) dark:hover:text-white"
+                  onClick={() => void requestGeneratedUsername()}
+                  disabled={profileLoading || loading || generatingUsername}
+                >
+                  {generatingUsername ? "Gerando..." : "Gerar usuário"}
+                </button>
               </div>
-              <button
-                type="button"
-                className={`${primaryButtonClass} w-full sm:w-auto`}
-                disabled={companyLoading || companyLogoUploading || !companyDetailsHasChanges}
-                onClick={handleCompanyDetailsSaveRequest}
-              >
-                {companyLoading || companyLogoUploading ? "Salvando..." : "Salvar"}
-              </button>
+
+              <FieldHint tone="strong">Baseado no nome da empresa e validado contra logins já existentes.</FieldHint>
+              <Feedback message={profileError} tone="error" />
+              <Feedback message={profileSuccess} tone="success" />
+
+              <div className="flex flex-col gap-3 border-t border-(--tc-border) pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-(--tc-text-primary)">Salvar dados da empresa</p>
+                  <p className="text-xs font-medium text-(--tc-text-muted)">
+                    Este botao salva a logo, os dados da empresa e o usuário institucional.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={`${primaryButtonClass} w-full sm:w-auto`}
+                  disabled={companyLoading || companyLogoUploading || profileLoading || loading || !companyProfileSaveHasChanges}
+                  onClick={handleCompanyDetailsSaveRequest}
+                >
+                  {companyLoading || companyLogoUploading || profileLoading ? "Salvando..." : "Salvar"}
+                </button>
+              </div>
             </section>
 
             <section className={`${surfaceClass} space-y-6`}>
-              <PanelHeader title="Integracoes" description="Qase e Jira ficam persistidos separadamente. O seletor apenas muda o foco da edicao." />
+              <PanelHeader title="Integrações" description="Qase e Jira ficam persistidos separadamente. O seletor apenas muda o foco da edição." />
 
               {!companyIntegrationEditorOpen ? (
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                     <div className="space-y-2">
                       <div className="text-[12px] font-extrabold uppercase tracking-[0.2em] text-(--tc-accent) dark:text-[#ff8a8a]">
-                        Resumo das integracoes
+                        Resumo das integrações
                       </div>
                       <div className={`inline-flex min-h-14 items-center rounded-xl border px-4 text-sm font-semibold ${statusPillClass(companyIntegrationMeta.tone)}`}>
                         {companyIntegrationText}
@@ -2276,14 +2310,14 @@ export default function SettingsProfilePage() {
                       }
                       className={`${integrationSecondaryButtonClass} w-full sm:w-auto`}
                     >
-                      {companyHasSavedIntegrations ? "Editar integracoes" : "Configurar integracao"}
+                      {companyHasSavedIntegrations ? "Editar integrações" : "Configurar integração"}
                     </button>
                   </div>
 
                   {integrationSummaryCards.length > 0 ? (
                     <div className="space-y-3">
                       <PanelSectionTitle
-                        title="Integracoes salvas"
+                        title="Integrações salvas"
                         descriptionClassName="text-sm font-semibold text-(--tc-accent) dark:text-[#ff8a8a]"
                       />
                       <div className="grid gap-3 md:grid-cols-2">
@@ -2320,23 +2354,23 @@ export default function SettingsProfilePage() {
               {companyIntegrationEditorOpen ? (
                 <>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Integracao em foco">
+                <Field label="Integração em foco">
                   <select
                     id="company-integration-mode"
-                    title="Integracao em foco"
-                    aria-label="Integracao em foco"
+                    title="Integração em foco"
+                    aria-label="Integração em foco"
                     className={`form-control-user ${selectInputClass}`}
                     value={companyIntegrationMode}
                     onChange={(event) => handleCompanyIntegrationFocusChange(event.target.value)}
                     disabled={companyLoading}
                   >
-                    <option value="manual">Sem integracao</option>
+                    <option value="manual">Sem integração</option>
                     <option value="qase">Qase</option>
                     <option value="jira">Jira</option>
                   </select>
                 </Field>
 
-                <Field label="Status da integracao em foco">
+                <Field label="Status da integração em foco">
                   <div className="space-y-2">
                     <div className={`inline-flex min-h-14 items-center rounded-xl border px-4 text-sm font-semibold ${statusPillClass(companyIntegrationMeta.tone)}`}>
                       {companyIntegrationText}
@@ -2350,7 +2384,7 @@ export default function SettingsProfilePage() {
 
               {companyPendingDisableAll ? (
                 <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm font-semibold text-amber-900 dark:border-amber-600/40 dark:bg-amber-950/30 dark:text-amber-100">
-                  A empresa ficara sem integracoes externas quando voce salvar os dados de integracao. Clique em <span className="font-extrabold">Salvar dados de integracao</span> para aplicar ou em <span className="font-extrabold">Cancelar</span> para restaurar o ultimo estado salvo.
+                  A empresa ficará sem integrações externas quando você salvar os dados de integração. Clique em <span className="font-extrabold">Salvar dados de integração</span> para aplicar ou em <span className="font-extrabold">Cancelar</span> para restaurar o ultimo estado salvo.
                 </div>
               ) : null}
 
@@ -2358,7 +2392,7 @@ export default function SettingsProfilePage() {
                 <div className="space-y-5">
                   <PanelSectionTitle
                     title="Qase"
-                    description="Token, status e projetos da Qase ficam separados das demais integracoes."
+                    description="Token, status e projetos da Qase ficam separados das demais integrações."
                     descriptionClassName="text-sm font-semibold text-(--tc-accent) dark:text-[#ff8a8a]"
                   />
 
@@ -2382,7 +2416,7 @@ export default function SettingsProfilePage() {
                             disabled={companyLoading}
                             title="Token da Qase"
                             aria-label="Token da Qase"
-                            placeholder={companyHasSavedQaseToken ? "Deixe em branco para manter o token salvo" : "Informe um token para ativar a integracao"}
+                            placeholder={companyHasSavedQaseToken ? "Deixe em branco para manter o token salvo" : "Informe um token para ativar a integração"}
                           />
                           <button
                             type="button"
@@ -2415,7 +2449,7 @@ export default function SettingsProfilePage() {
                           <p className="text-xs font-medium text-(--tc-text-muted)">Nenhum token salvo</p>
                         )}
                         {companyRemoveSavedQaseToken ? (
-                          <FieldHint tone="strong">O token salvo sera removido quando os dados de integracao forem salvos.</FieldHint>
+                          <FieldHint tone="strong">O token salvo será removido quando os dados de integração forem salvos.</FieldHint>
                         ) : null}
                       </div>
                     </Field>
@@ -2464,7 +2498,7 @@ export default function SettingsProfilePage() {
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="block font-semibold text-(--tc-text)">{project.title}</span>
-                                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-700">Valido</span>
+                                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-700">Válido</span>
                                 </div>
                                 <span className="text-xs text-(--tc-text-muted)">{project.code}</span>
                               </div>
@@ -2488,7 +2522,7 @@ export default function SettingsProfilePage() {
                       </div>
                     ) : companyProjectCodes.length > 0 ? (
                       <div className="text-(--tc-text-muted)">
-                        Os projetos selecionados nesta edicao so aparecem aqui depois de validar a integracao e salvar os dados de integracao.
+                        Os projetos selecionados nesta edição só aparecem aqui depois de validar a integração e salvar os dados de integração.
                       </div>
                     ) : (
                       <div>Nenhum projeto vinculado ainda.</div>
@@ -2501,7 +2535,7 @@ export default function SettingsProfilePage() {
                 <div className="space-y-5">
                   <PanelSectionTitle
                     title="Jira"
-                    description="Credenciais do Jira ficam persistidas separadamente da Qase e nao somem ao trocar o seletor."
+                    description="Credenciais do Jira ficam persistidas separadamente da Qase e não somem ao trocar o seletor."
                     descriptionClassName="text-sm font-semibold text-(--tc-accent) dark:text-[#ff8a8a]"
                   />
 
@@ -2524,7 +2558,7 @@ export default function SettingsProfilePage() {
                       />
                     </Field>
 
-                    <Field label="E-mail tecnico do Jira">
+                    <Field label="E-mail técnico do Jira">
                       <input
                         type="text"
                         inputMode="email"
@@ -2539,9 +2573,9 @@ export default function SettingsProfilePage() {
                           setCompanyJiraAccountName(null);
                         }}
                         disabled={companyLoading}
-                        title="E-mail tecnico do Jira"
-                        aria-label="E-mail tecnico do Jira"
-                        placeholder="integracao@empresa.com"
+                        title="E-mail técnico do Jira"
+                        aria-label="E-mail técnico do Jira"
+                        placeholder="integração@empresa.com"
                       />
                     </Field>
                   </div>
@@ -2600,9 +2634,9 @@ export default function SettingsProfilePage() {
                         )}
                       </div>
                       {companyRemoveSavedJiraToken ? (
-                        <FieldHint tone="strong">O token salvo do Jira sera removido quando os dados de integracao forem salvos.</FieldHint>
+                        <FieldHint tone="strong">O token salvo do Jira será removido quando os dados de integração forem salvos.</FieldHint>
                       ) : null}
-                      <FieldHint>O token salvo nao volta em texto aberto. Digite um novo valor para substituir.</FieldHint>
+                      <FieldHint>O token salvo não volta em texto aberto. Digite um novo valor para substituir.</FieldHint>
                     </div>
                   </Field>
 
@@ -2631,14 +2665,14 @@ export default function SettingsProfilePage() {
 
               {normalizedCompanyIntegrationMode === "manual" && !companyPendingDisableAll ? (
                 <div className="rounded-xl border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-sm text-(--tc-text-primary)">
-                  Selecione uma integracao para editar as credenciais. <span className="font-semibold">Sem integracao</span> mantém a operacao sem conexao externa.
+                  Selecione uma integração para editar as credenciais. <span className="font-semibold">Sem integração</span> mantém a operação sem conexão externa.
                 </div>
               ) : null}
 
               {integrationSummaryCards.length > 0 ? (
                 <div className="space-y-3">
                   <PanelSectionTitle
-                    title="Outras integracoes configuradas"
+                    title="Outras integrações configuradas"
                     descriptionClassName="text-sm font-semibold text-(--tc-accent) dark:text-[#ff8a8a]"
                   />
                   <div className="grid gap-3 md:grid-cols-2">
@@ -2698,7 +2732,7 @@ export default function SettingsProfilePage() {
                     disabled={companyLoading || companyLogoUploading || !companyIntegrationHasChanges || companyIntegrationSaveBlocked}
                     onClick={handleCompanyIntegrationSaveRequest}
                   >
-                    {companyLoading ? "Salvando..." : "Salvar dados de integracao"}
+                    {companyLoading ? "Salvando..." : "Salvar dados de integração"}
                   </button>
                 ) : null}
               </div>
@@ -2724,13 +2758,13 @@ export default function SettingsProfilePage() {
             </TabsContent>
 
             {canViewCompanyUsersTab ? (
-            <TabsContent value="usuarios" className="space-y-5">
+            <TabsContent value="usuários" className="space-y-0">
               <section className={`${surfaceClass} space-y-5`}>
                 <div className="flex flex-col gap-4 border-b border-(--tc-border) pb-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-1">
-                    <h2 className="text-[1.2rem] font-semibold tracking-[-0.02em] text-(--tc-text-primary)">Usuarios da empresa</h2>
+                    <h2 className="text-[1.2rem] font-semibold tracking-[-0.02em] text-(--tc-text-primary)">Usuários da empresa</h2>
                     <p className="text-sm font-semibold text-(--tc-accent) dark:text-[#ff8a8a]">
-                      Usuarios criados aqui nascem com origem institucional fechada e nao podem ser vinculados a outras empresas.
+                      Usuários criados aqui nascem com origem institucional fechada e não podem ser vinculados a outras empresas.
                     </p>
                   </div>
                   {canCreateCompanyUsers ? (
@@ -2739,7 +2773,7 @@ export default function SettingsProfilePage() {
                       className={`${primaryButtonClass} w-full sm:w-auto`}
                       onClick={() => setCompanyUserCreateOpen(true)}
                     >
-                      Criar usuario
+                      Criar usuário
                     </button>
                   ) : null}
                 </div>
@@ -2748,11 +2782,11 @@ export default function SettingsProfilePage() {
 
                 {swrCompanyUsersLoading && companyUsers.length === 0 ? (
                   <div className="rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-6 text-sm font-semibold text-(--tc-text-primary)">
-                    Carregando usuarios da empresa...
+                    Carregando usuários da empresa...
                   </div>
                 ) : null}
 
-                {!companyUsersError && !swrCompanyUsersLoading && companyUsers.length === 0 ? <div className="tc-empty-state min-h-45">Nenhum usuario vinculado encontrado para esta empresa.</div> : null}
+                {!companyUsersError && !swrCompanyUsersLoading && companyUsers.length === 0 ? <div className="tc-empty-state min-h-45">Nenhum usuário vinculado encontrado para esta empresa.</div> : null}
                 {companyUsers.length > 0 ? (
                   <div className="divide-y divide-(--tc-border)">
                     {companyUsers.map((companyUser) => {
@@ -2776,7 +2810,7 @@ export default function SettingsProfilePage() {
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                          <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${statusPillClass(companyUser.active === false ? "warning" : "positive")}`}><span className="h-2 w-2 rounded-full bg-current" />{statusLabel(companyUser.active, companyUser.status)}</span>
+                          <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${statusPillClass(companyUser.active === false ? "warning" : "positive")}`}><span className="h-2 w-2 rounded-full bg-current" />{statusLabel(companyUser.active, companyUser.status, t)}</span>
                           <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${statusPillClass("neutral")}`}><span className="h-2 w-2 rounded-full bg-current" />{profileTypeLabel}</span>
                         </div>
                         </article>
@@ -2800,9 +2834,9 @@ export default function SettingsProfilePage() {
 
           <ConfirmDialog
             open={companyDisableIntegrationsConfirmOpen}
-            title="Ficar sem integracoes externas"
-            description="Ao salvar, a empresa ficara sem integracoes externas e as configuracoes atuais de Qase e Jira serao desativadas. Deseja continuar?"
-            confirmLabel="Continuar sem integracoes"
+            title="Ficar sem integrações externas"
+            description="Ao salvar, a empresa ficará sem integrações externas e as configurações atuais de Qase e Jira serao desativadas. Deseja continuar?"
+            confirmLabel="Continuar sem integrações"
             cancelLabel="Cancelar"
             onCancel={() => setCompanyDisableIntegrationsConfirmOpen(false)}
             onConfirm={() => handleConfirmDisableAllIntegrations()}
@@ -2810,14 +2844,14 @@ export default function SettingsProfilePage() {
 
           <ConfirmDialog
             open={companySaveConfirmOpen}
-            title="Confirmar alteracoes da empresa"
+            title="Confirmar alterações da empresa"
             description={companySaveConfirmDescription ?? undefined}
-            confirmLabel="Salvar alteracoes"
+            confirmLabel="Salvar alterações"
             cancelLabel="Cancelar"
             onCancel={() => setCompanySaveConfirmOpen(false)}
             onConfirm={() => {
               setCompanySaveConfirmOpen(false);
-              void submitCompanyProfileChanges("details");
+              void submitCompanyProfileAndUsernameChanges();
             }}
           />
 
@@ -2858,7 +2892,7 @@ export default function SettingsProfilePage() {
   return (
     <div className="relative isolate min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className={pageShellClass}>
-        <Breadcrumb items={[{ label: "Usuario" }, { label: userProfileBreadcrumbName }]} />
+        <Breadcrumb items={[{ label: userProfileBreadcrumbName }]} />
 
         <section className={heroClass}>
           <div className="space-y-5">
@@ -2879,7 +2913,7 @@ export default function SettingsProfilePage() {
 
                 <div className="min-w-0 space-y-3">
                   <div className="space-y-2">
-                    <p className="tc-hero-kicker">Usuario</p>
+                    <p className="tc-hero-kicker">Usuário</p>
                     <h1 className="tc-hero-title">{heroName}</h1>
                   </div>
 
@@ -2903,7 +2937,7 @@ export default function SettingsProfilePage() {
               {canOpenCompanyHomeFromUserProfile && currentClientSlug ? (
                 <div className="tc-hero-actions">
                   <Link
-                    href={`/empresas/${encodeURIComponent(currentClientSlug)}/home`}
+                    href={currentCompanyHomeHref ?? "/empresas"}
                     className="inline-flex h-10 items-center rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12"
                   >
                     Abrir empresa
@@ -2913,9 +2947,9 @@ export default function SettingsProfilePage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <HeroMetric label="Defeitos abertos" value={openDefectsMetricValue} note="Criados por voce" />
+              <HeroMetric label="Defeitos abertos" value={openDefectsMetricValue} note="Criados por você" />
               <HeroMetric label="Notas criadas" value={notesCreatedMetricValue} note="Notas pessoais" />
-              <HeroMetric label="Conta criada" value={createdAtMetricValue} note="Cadastro do usuario" />
+              <HeroMetric label="Conta criada" value={createdAtMetricValue} note="Cadastro do usuário" />
               <HeroMetric label="Vinculos ativos" value={linkedCompaniesMetricValue} note="Empresas no cadastro" />
             </div>
           </div>
@@ -2923,7 +2957,7 @@ export default function SettingsProfilePage() {
 
         <form className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)]" onSubmit={handleProfileSubmit}>
           <section className={`${surfaceClass} space-y-6`}>
-            <PanelHeader title="Cadastro do usuario" />
+            <PanelHeader title="Cadastro do usuário" />
 
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Nome completo">
@@ -2938,7 +2972,7 @@ export default function SettingsProfilePage() {
                 />
               </Field>
 
-              <Field label="Usuario (login)">
+              <Field label="Usuário (login)">
                 <div className="space-y-2">
                   <input
                     className={`form-control-user ${inputClass}`}
@@ -2948,7 +2982,7 @@ export default function SettingsProfilePage() {
                     placeholder={`Ex.: ${generatedUsernameHint}`}
                   />
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#0b1f52] dark:text-[#d7e5ff]">
-                    <FieldHint tone="strong">Unico no sistema. Em branco, gera automaticamente.</FieldHint>
+                    <FieldHint tone="strong">Único no sistema. Em branco, gera automaticamente.</FieldHint>
                     <button
                       type="button"
                       className="rounded-full border border-[#0b1f52] bg-[#0b1f52] px-3 py-1 font-semibold text-white transition hover:border-(--tc-accent) hover:bg-(--tc-accent) hover:text-white disabled:opacity-60 dark:border-[#0b1f52] dark:bg-[#0b1f52] dark:text-white dark:hover:border-(--tc-accent) dark:hover:bg-(--tc-accent) dark:hover:text-white"
@@ -2999,7 +3033,7 @@ export default function SettingsProfilePage() {
                       <input
                         role="combobox"
                         aria-autocomplete="list"
-                        aria-expanded={jobTitleMenuOpen}
+                        aria-expanded={Boolean(jobTitleMenuOpen)}
                         aria-controls="job-title-suggestions"
                         autoComplete="off"
                         className={`form-control-user ${inputClass} pl-11 pr-12`}
@@ -3045,7 +3079,7 @@ export default function SettingsProfilePage() {
                                   key={jobTitleOption}
                                   type="button"
                                   role="option"
-                                  aria-selected={isSelected}
+                                  aria-selected={Boolean(isSelected)}
                                   className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold transition ${
                                     isSelected
                                       ? "bg-rose-50 text-[#0b1f52] dark:bg-rose-50 dark:text-[#0b1f52]"
@@ -3063,7 +3097,7 @@ export default function SettingsProfilePage() {
                             })
                           ) : (
                             <div className="px-4 py-4 text-sm font-semibold text-[#0b1f52] dark:text-[#0b1f52]">
-                              Nenhum cargo conhecido encontrado. Voce pode digitar um cargo personalizado.
+                              Nenhum cargo conhecido encontrado. Você pode digitar um cargo personalizado.
                             </div>
                           )}
                         </div>
@@ -3087,32 +3121,32 @@ export default function SettingsProfilePage() {
             </div>
 
             <div className="space-y-4 border-t border-(--tc-border) pt-6">
-              <PanelSectionTitle title="Preferencias" />
+              <PanelSectionTitle title={t("settings.preferences")} />
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Tema">
+                <Field label={t("settings.theme")}>
                   <select
                     className={`form-control-user ${selectInputClass}`}
                     value={theme}
                     onChange={(event) => setTheme(event.target.value as Theme)}
                     disabled={profileLoading || settingsLoading}
-                    title="Tema"
+                    title={t("settings.theme")}
                   >
-                    <option value="system">Automatico</option>
-                    <option value="light">Claro</option>
-                    <option value="dark">Escuro</option>
+                    <option value="system">{t("settings.themeSystem")}</option>
+                    <option value="light">{t("settings.themeLight")}</option>
+                    <option value="dark">{t("settings.themeDark")}</option>
                   </select>
                 </Field>
 
-                <Field label="Idioma">
+                <Field label={t("settings.language")}>
                   <select
                     className={`form-control-user ${selectInputClass}`}
                     value={language}
                     onChange={(event) => setLanguage(event.target.value as Language)}
                     disabled={profileLoading || settingsLoading}
-                    title="Idioma"
+                    title={t("settings.language")}
                   >
-                    <option value="pt-BR">Portugues Brasil</option>
-                    <option value="en-US">English US</option>
+                    <option value="pt-BR">{t("settings.languagePt")}</option>
+                    <option value="en-US">{t("settings.languageEn")}</option>
                   </select>
                 </Field>
               </div>
@@ -3123,7 +3157,7 @@ export default function SettingsProfilePage() {
               <Feedback message={profileSuccess} tone="success" />
               <div className="flex justify-end">
                 <button type="submit" className={primaryButtonClass} disabled={profileLoading || loading || settingsLoading}>
-                  {profileLoading ? "Salvando..." : "Salvar perfil"}
+                  {profileLoading ? t("settings.savingProfile") : t("settings.saveProfile")}
                 </button>
               </div>
             </div>
@@ -3147,7 +3181,7 @@ export default function SettingsProfilePage() {
                 />
                 <div className="space-y-1">
                   <div className="text-xs font-semibold text-(--tc-accent) dark:text-[#ff8a8a]">
-                    {avatarUploading ? "Enviando foto..." : profileAvatarFile ? "A nova foto aparece aqui antes de salvar." : "Upload e URL usam uma unica origem por vez."}
+                    {avatarUploading ? "Enviando foto..." : profileAvatarFile ? "A nova foto aparece aqui antes de salvar." : "Upload e URL usam uma única origem por vez."}
                   </div>
                 </div>
                 <input
@@ -3282,7 +3316,7 @@ export default function SettingsProfilePage() {
 
               {!companiesError && uniqueCompanies.length === 0 ? (
                 <div className="tc-empty-state min-h-45">
-                  Nenhuma empresa vinculada encontrada para este usuario.
+                  Nenhuma empresa vinculada encontrada para este usuário.
                 </div>
               ) : null}
 
@@ -3303,13 +3337,13 @@ export default function SettingsProfilePage() {
                       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
                           <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${statusPillClass(company.link_active ? "positive" : "warning")}`}>
                             <span className="h-2 w-2 rounded-full bg-current" />
-                            {company.link_active ? "Vinculo ativo" : "Vinculo inativo"}
+                            {company.link_active ? "Vínculo ativo" : "Vínculo inativo"}
                           </span>
                         <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${statusPillClass("neutral")}`}>
                           <span className="h-2 w-2 rounded-full bg-current" />
                           {company.role}
                         </span>
-                        <Link href={`/empresas/${encodeURIComponent(company.client_slug)}/home`} className={secondaryButtonClass}>
+                        <Link href={buildCompanyPathForAccess(company.client_slug, "home", companyRouteInput)} className={secondaryButtonClass}>
                           Abrir empresa
                         </Link>
                       </div>
@@ -3322,7 +3356,7 @@ export default function SettingsProfilePage() {
         ) : null}
 
         <section className={`${surfaceClass} space-y-5`}>
-          <PanelHeader title="Deletar perfil" description={canDeleteDirectly ? "Acao definitiva para perfis administrativos e globais." : "Perfis comuns precisam solicitar a exclusao para analise."} />
+          <PanelHeader title="Deletar perfil" description={canDeleteDirectly ? "Ação definitiva para perfis administrativos e globais." : "Perfis comuns precisam solicitar a exclusão para análise."} />
 
           <div className="space-y-3">
             <Feedback message={deleteUserError} tone="error" />
@@ -3358,7 +3392,7 @@ export default function SettingsProfilePage() {
                   }}
                 >
                   <FiTrash2 size={15} />
-                  Solicitar exclusao de perfil
+                  Solicitar exclusão de perfil
                 </button>
               </div>
             )}
@@ -3399,7 +3433,7 @@ export default function SettingsProfilePage() {
           open={deleteUserConfirmOpen}
           title={directDeleteModalTitle}
           description={directDeleteModalDescription}
-          confirmLabel={deleteUserLoading ? "Deletando..." : "Confirmar exclusao"}
+          confirmLabel={deleteUserLoading ? "Deletando..." : "Confirmar exclusão"}
           cancelLabel="Cancelar"
           onCancel={() => {
             if (deleteUserLoading) return;
@@ -3416,8 +3450,8 @@ export default function SettingsProfilePage() {
           <div className="fixed inset-0 z-60 flex items-center justify-center px-4">
             <div className="absolute inset-0 bg-black/40" onClick={() => !deleteRequestLoading && setDeleteRequestOpen(false)} />
             <div className="relative z-70 w-full max-w-xl rounded-2xl border border-(--tc-border) bg-(--tc-surface) p-5 shadow-[0_30px_80px_rgba(2,6,23,0.6)]">
-              <h3 className="text-base font-semibold text-(--tc-text-primary)">Solicitar exclusao de perfil</h3>
-              <p className="mt-1 text-sm font-medium text-[#0b1f52] dark:text-[#d7e5ff]">Explique o motivo para a equipe administrativa analisar a exclusao.</p>
+              <h3 className="text-base font-semibold text-(--tc-text-primary)">Solicitar exclusão de perfil</h3>
+              <p className="mt-1 text-sm font-medium text-[#0b1f52] dark:text-[#d7e5ff]">Explique o motivo para a equipe administrativa analisar a exclusão.</p>
 
               <div className="mt-4 space-y-2">
                 <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary)">
@@ -3426,7 +3460,7 @@ export default function SettingsProfilePage() {
                     className="min-h-35 w-full rounded-xl border border-slate-400 bg-white px-4 py-3 text-sm font-medium text-[#0b1f52] outline-none transition placeholder:text-[#345388] focus:border-(--tc-accent) focus:bg-rose-50/60 focus:ring-2 focus:ring-(--tc-accent)/18 dark:border-slate-500 dark:bg-[#0f1b2d] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:focus:bg-rose-500/10"
                     value={deleteRequestReason}
                     onChange={(event) => setDeleteRequestReason(event.target.value)}
-                    placeholder="Descreva o motivo da exclusao do perfil."
+                    placeholder="Descreva o motivo da exclusão do perfil."
                     disabled={deleteRequestLoading}
                   />
                 </label>

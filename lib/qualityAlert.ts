@@ -6,8 +6,7 @@ import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } fr
 
 const USE_MEMORY_ALERTS =
   process.env.QUALITY_ALERTS_IN_MEMORY === "true" ||
-  process.env.NODE_ENV === "test" ||
-  (process.env.VERCEL === "1" && !canUsePersistentJsonStore());
+  process.env.NODE_ENV === "test";
 
 const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
 const ALERTS_KEY = "qc:quality_alerts:v1";

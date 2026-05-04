@@ -4,24 +4,28 @@ import { NextResponse } from "next/server";
 import { getRequestById, updateRequestStatus, type RequestStatus } from "@/data/requestsStore";
 import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
 import { emailService } from "@/lib/email";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import { notifyPasswordResetStatus, notifyProfileDeletionStatus } from "@/lib/notificationService";
 import { getRedis } from "@/lib/redis";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
-import { canReviewerAccessQueue, resolveGenericRequestQueue } from "@/lib/requestReviewAccess";
+import { canAccessSelfServiceRequest, canReviewSelfServiceRequests } from "@/lib/selfServiceRequestAccess";
 
-function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING"> {
+function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING" | "NEEDS_REVISION"> {
   return value === "APPROVED" || value === "REJECTED";
 }
 
+function isValidNextStatus(value: string | null): value is Exclude<RequestStatus, "PENDING"> {
+  return value === "APPROVED" || value === "REJECTED" || value === "NEEDS_REVISION";
+}
+
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ message: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+  const authUser = await authenticateRequest(req);
+  if (!authUser) {
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const body = (await req.json().catch(() => null)) as { status?: string; reviewNote?: string } | null;
   const rawStatus = body?.status ?? null;
-  const nextStatus: Exclude<RequestStatus, "PENDING"> | null = isFinalStatus(rawStatus) ? rawStatus : null;
+  const nextStatus: Exclude<RequestStatus, "PENDING"> | null = isValidNextStatus(rawStatus) ? rawStatus : null;
   if (!nextStatus) {
     return NextResponse.json({ message: "Status invalido" }, { status: 400 });
   }
@@ -29,26 +33,29 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const { id } = await context.params;
   const requestRecord = await getRequestById(id);
   if (!requestRecord) {
-    return NextResponse.json({ message: "Solicitacao nao encontrada" }, { status: 404 });
+    return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
   }
-  if (!canReviewerAccessQueue(admin, resolveGenericRequestQueue(requestRecord))) {
-    return NextResponse.json({ message: "Sem permissao para esta solicitacao" }, { status: 403 });
+  if (!canAccessSelfServiceRequest(authUser, requestRecord)) {
+    return NextResponse.json({ message: "Sem permissão para esta solicitação" }, { status: 403 });
   }
-  if (requestRecord.status !== "PENDING") {
+  if (!canReviewSelfServiceRequests(authUser)) {
+    return NextResponse.json({ message: "Sem permissão para revisar solicitações" }, { status: 403 });
+  }
+  if (requestRecord.status !== "PENDING" && requestRecord.status !== "NEEDS_REVISION") {
     return NextResponse.json({ item: requestRecord });
   }
 
   if (nextStatus === "APPROVED" && requestRecord.type === "PASSWORD_RESET") {
     const user = await getLocalUserById(requestRecord.userId);
     if (!user) {
-      return NextResponse.json({ message: "Usuario nao encontrado" }, { status: 404 });
+      return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
     }
     const token = randomUUID();
     const redis = getRedis();
     await redis.set(`reset:${token}`, user.id, { ex: 15 * 60 });
     const targetEmail = user.email || requestRecord.userEmail;
     if (!targetEmail) {
-      return NextResponse.json({ message: "Email do usuario nao encontrado" }, { status: 400 });
+      return NextResponse.json({ message: "Email do usuário não encontrado" }, { status: 400 });
     }
     const emailSent = await emailService.sendPasswordResetEmail(targetEmail, token);
     if (!emailSent) {
@@ -59,30 +66,32 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (nextStatus === "APPROVED" && requestRecord.type === "PROFILE_DELETION") {
     const user = await getLocalUserById(requestRecord.userId);
     if (!user) {
-      return NextResponse.json({ message: "Usuario nao encontrado" }, { status: 404 });
+      return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
     }
     const updatedUser = await updateLocalUser(user.id, {
       active: false,
       status: "blocked",
     });
     if (!updatedUser) {
-      return NextResponse.json({ message: "Nao foi possivel desativar o perfil" }, { status: 500 });
+      return NextResponse.json({ message: "Não foi possível desativar o perfil" }, { status: 500 });
     }
   }
 
-  const updated = await updateRequestStatus(id, nextStatus, { id: admin.id }, body?.reviewNote);
-  if (updated && updated.type === "PASSWORD_RESET") {
-    try {
-      await notifyPasswordResetStatus(updated, nextStatus);
-    } catch (err) {
-      console.error("Falha ao notificar status de reset", err);
+  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
+  if (updated && isFinalStatus(nextStatus)) {
+    if (updated.type === "PASSWORD_RESET") {
+      try {
+        await notifyPasswordResetStatus(updated, nextStatus);
+      } catch (err) {
+        console.error("Falha ao notificar status de reset", err);
+      }
     }
-  }
-  if (updated && updated.type === "PROFILE_DELETION") {
-    try {
-      await notifyProfileDeletionStatus(updated, nextStatus);
-    } catch (err) {
-      console.error("Falha ao notificar status de exclusao de perfil", err);
+    if (updated.type === "PROFILE_DELETION") {
+      try {
+        await notifyProfileDeletionStatus(updated, nextStatus);
+      } catch (err) {
+        console.error("Falha ao notificar status de exclusão de perfil", err);
+      }
     }
   }
 

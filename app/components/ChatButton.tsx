@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
-import type { AssistantAction, AssistantConversationTurn, AssistantReplyPayload, AssistantToolAction } from "@/lib/assistant/types";
+import type { AssistantAction, AssistantConversationTurn, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -102,30 +102,12 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [assistantContext, setAssistantContext] = useState<AssistantScreenContext>(screenContext);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
-  const [hintVisible, setHintVisible] = useState(false);
-  const [hintIndex, setHintIndex] = useState(0);
   const boxRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
-  const HINTS = [
-    "Posso resumir esta tela para voc\u00ea!",
-    "Precisa de ajuda? \u00c9 s\u00f3 me chamar.",
-    "Posso buscar chamados ou criar rascunhos.",
-    "Pergunte algo sobre o que voc\u00ea est\u00e1 vendo.",
-    "Posso explicar suas permiss\u00f5es de acesso.",
-  ];
-
-  useEffect(() => {
-    if (open) return;
-    const id = setInterval(() => {
-      setHintIndex((i) => (i + 1) % HINTS.length);
-      setHintVisible(true);
-      setTimeout(() => setHintVisible(false), 5000);
-    }, 60_000);
-    return () => clearInterval(id);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!open) return undefined;
@@ -195,11 +177,18 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     };
   }, []);
 
+  useEffect(() => {
+    setAssistantContext(screenContext);
+  }, [screenContext]);
+
   if (!assistantEnabled) return null;
   if (!user) return null;
   if (!can("ai", "view") || !can("ai", "use")) return null;
 
   const roleLabel = user.permissionRole ?? user.role ?? user.companyRole ?? "usu\u00e1rio";
+  const activeCompanyScope = assistantContext.companySlug ?? user.clientSlug ?? user.defaultClientSlug ?? "global";
+  const activeModule = assistantContext.module ?? screenContext.module;
+  const activeScreenLabel = assistantContext.screenLabel ?? screenContext.screenLabel;
   const hasConversation = messages.length > 0;
   const compactViewport = viewportHeight > 0 && viewportHeight <= 860;
   const denseViewport = viewportHeight > 0 && viewportHeight <= 740;
@@ -220,11 +209,12 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const summaryText = denseViewport
     ? `Assistente contextual de ${screenContext.screenLabel.toLowerCase()}.`
     : compactViewport && hasConversation
-      ? `Contexto: ${screenContext.screenLabel}.`
+      ? `Contexto: ${activeScreenLabel}.`
       : screenContext.screenSummary;
 
   async function pushAssistantResponse(payload: { message?: string; action?: AssistantToolAction | null }, optimisticText?: string) {
     if (sending) return;
+    if (!user) return;
     const trimmedOptimistic = optimisticText?.trim() ?? "";
     if (!payload.action && !trimmedOptimistic) return;
 
@@ -254,6 +244,16 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         body: JSON.stringify({
           ...payload,
           context: { route: screenContext.route },
+          actor: {
+            userId: user.id,
+            permissionRole: user.permissionRole ?? null,
+            role: user.role ?? null,
+            companyRole: user.companyRole ?? null,
+            companySlug: user.clientSlug ?? null,
+            companySlugs: Array.isArray(user.clientSlugs) ? user.clientSlugs : null,
+            userOrigin: user.userOrigin ?? user.user_origin ?? null,
+            isGlobalAdmin: Boolean(user.isGlobalAdmin ?? user.is_global_admin),
+          },
           history: requestHistory,
         }),
       });
@@ -261,6 +261,10 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
       const data = (await response.json().catch(() => ({}))) as AssistantReplyPayload & { error?: string };
       if (!response.ok) {
         throw new Error(data?.error || response.statusText || `Erro ${response.status}`);
+      }
+
+      if (data.context) {
+        setAssistantContext(data.context);
       }
 
       setMessages((current) => [
@@ -396,15 +400,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     <div className="relative" ref={boxRef}>
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex items-end">
-          {/* periodic hint bubble */}
-          {!open && hintVisible ? (
-            <div className="mr-3 mb-1 max-w-56 animate-[fadeSlideUp_0.3s_ease] rounded-2xl rounded-br-sm bg-white px-3.5 py-2.5 text-sm font-semibold text-[#011848] shadow-[0_8px_24px_rgba(1,24,72,0.16)] ring-1 ring-[rgba(1,24,72,0.08)]">
-              {HINTS[hintIndex]}
-            </div>
-          ) : null}
           {open ? (
             <div
-              className={`mr-3 flex w-[min(36rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] ${
+              className={`mr-3 flex w-[min(36rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 ${
                 denseViewport
                   ? "h-[min(74dvh,calc(100dvh-0.75rem))] max-h-[calc(100dvh-0.75rem)]"
                   : compactViewport
@@ -426,11 +424,12 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                       <p className={`font-semibold uppercase tracking-[0.34em] text-white/72 ${compactConversationChrome ? "text-[0.58rem]" : denseViewport ? "text-[0.62rem]" : "text-[0.68rem]"}`}>Testing Company</p>
                       <div>
                         <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} font-black tracking-[-0.03em] text-white`}>Assistente</h3>
-                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>{screenContext.screenLabel}</p>
+                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>{activeScreenLabel}</p>
                       </div>
                       <div className={`flex flex-wrap gap-2 pt-1 text-[0.68rem] uppercase tracking-[0.26em] text-white/72 ${compactConversationChrome ? "hidden" : ""}`}>
                         <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{roleLabel}</span>
-                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{screenContext.module}</span>
+                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{activeModule}</span>
+                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">escopo {activeCompanyScope}</span>
                       </div>
                     </div>
                   </div>
@@ -449,15 +448,15 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               </div>
 
               {showQuickPrompts ? (
-                <div className={`border-b border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f7faff_0%,#fff9fb_100%)] ${denseViewport ? "px-4 py-2.5" : "px-5 py-4"}`}>
-                  <p className={`${denseViewport ? "text-[0.9rem] leading-5" : "text-base leading-6"} font-semibold text-[#011848]`}>{summaryText}</p>
+                <div className={`border-b border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f7faff_0%,#fff9fb_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#13213a_0%,#17253f_100%)] ${denseViewport ? "px-4 py-2.5" : "px-5 py-4"}`}>
+                  <p className={`${denseViewport ? "text-[0.9rem] leading-5" : "text-base leading-6"} font-semibold text-[#011848] dark:text-[#e7efff]`}>{summaryText}</p>
                   <div className={`${compactViewport ? "mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "mt-3 flex flex-wrap gap-2"}`}>
                   {screenContext.suggestedPrompts.slice(0, visiblePrompts).map((prompt) => (
                     <button
                       key={prompt}
                       type="button"
                       onClick={() => void sendMessage(prompt)}
-                      className={`inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7dff1) bg-white/95 font-semibold text-(--tc-primary,#011848) shadow-[0_8px_18px_rgba(1,24,72,0.06)] transition hover:border-[rgba(239,0,1,0.24)] hover:text-(--tc-accent,#ef0001) ${compactViewport ? "shrink-0 px-3 py-1.5 text-[0.68rem]" : "px-3 py-2 text-xs"}`}
+                      className={`inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7dff1) bg-white/95 font-semibold text-(--tc-primary,#011848) shadow-[0_8px_18px_rgba(1,24,72,0.06)] transition hover:border-[rgba(239,0,1,0.24)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#122038] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4] ${compactViewport ? "shrink-0 px-3 py-1.5 text-[0.68rem]" : "px-3 py-2 text-xs"}`}
                     >
                       <FiZap size={12} />
                       {prompt}
@@ -467,12 +466,12 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                 </div>
               ) : null}
 
-              <div className={`min-h-0 flex-1 ${hasConversation ? "overflow-y-auto" : "overflow-y-hidden"} bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] ${denseViewport ? "space-y-4 px-4 py-4" : hasConversation ? "space-y-4 px-4 py-4" : "space-y-5 px-5 py-5"}`}>
+              <div className={`min-h-0 flex-1 ${hasConversation ? "overflow-y-auto" : "overflow-y-hidden"} bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)] ${denseViewport ? "space-y-4 px-4 py-4" : hasConversation ? "space-y-4 px-4 py-4" : "space-y-5 px-5 py-5"}`}>
                 {messages.length === 0 ? (
-                  <div className={`rounded-[1.6rem] border border-[#dfe6f3] bg-white shadow-[0_18px_40px_rgba(15,23,42,0.06)] ${denseViewport ? "p-4" : "p-5"}`}>
-                    <p className="text-base font-bold text-[#ef0001]">Pronto para atuar dentro do seu perfil.</p>
-                    <p className="mt-2 text-base leading-7 text-[#011848]">
-                      Eu uso a sess?o atual, enxergo apenas o que seu perfil pode ver e executo a??es somente dentro do seu RBAC.
+                  <div className={`rounded-[1.6rem] border border-[#dfe6f3] bg-[#ffffff] shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-[#36507f] dark:bg-[#13213a] dark:shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${denseViewport ? "p-4" : "p-5"}`}>
+                    <p className="text-base font-bold text-[#ef0001] dark:text-[#ff8a8a]">Pronto para atuar dentro do seu perfil.</p>
+                    <p className="mt-2 text-base leading-7 text-[#011848] dark:text-[#d7e5ff]">
+                      Uso a sessão atual, enxergo apenas o que o seu perfil pode ver e executo ações somente dentro do seu RBAC.
                     </p>
                   </div>
                 ) : null}
@@ -482,7 +481,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                   return (
                     <div key={message.id} className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
                       {!isUser ? (
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[rgba(1,24,72,0.08)] bg-[linear-gradient(135deg,#ffffff_0%,#eef3ff_62%,#fff6f8_100%)] shadow-[0_10px_24px_rgba(1,24,72,0.1)]">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[rgba(1,24,72,0.08)] bg-[linear-gradient(135deg,#ffffff_0%,#eef3ff_62%,#fff6f8_100%)] shadow-[0_10px_24px_rgba(1,24,72,0.1)] dark:border-[#31476f] dark:bg-[linear-gradient(135deg,#13213a_0%,#182742_62%,#221729_100%)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
                           <TCLogoSpinner size="sm" />
                         </div>
                       ) : null}
@@ -492,11 +491,11 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                           className={`rounded-[1.35rem] border px-4 py-3 text-sm leading-6 shadow-[0_12px_28px_rgba(15,23,42,0.06)] ${
                             isUser
                               ? "border-[rgba(239,0,1,0.16)] bg-[linear-gradient(135deg,var(--tc-accent,#ef0001)_0%,#c90000_100%)] text-white"
-                              : "border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] text-[#011848] [&_p]:text-base"
+                              : "border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] text-[#011848] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:text-[#e6efff] [&_p]:text-base"
                           }`}
                         >
                           {!isUser && message.tool ? (
-                            <div className="mb-2 inline-flex rounded-full border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#f7faff_0%,#fff7f8_100%)] px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-(--tc-primary,#011848)">
+                            <div className="mb-2 inline-flex rounded-full border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#f7faff_0%,#fff7f8_100%)] px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-(--tc-primary,#011848) dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#241a2d_100%)] dark:text-[#d7e5ff]">
                               {formatToolLabel(message.tool)}
                             </div>
                           ) : null}
@@ -514,7 +513,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                                 className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${
                                   action.kind === "tool"
                                     ? "border border-[rgba(1,24,72,0.12)] bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#173a88_100%)] text-white hover:bg-[linear-gradient(135deg,#132a63_0%,#214ca8_100%)]"
-                                    : "border border-(--tc-border,#d7dff1) bg-white text-(--tc-primary,#011848) hover:border-[rgba(239,0,1,0.2)] hover:text-(--tc-accent,#ef0001)"
+                                    : "border border-(--tc-border,#d7dff1) bg-[#ffffff] text-(--tc-primary,#011848) hover:border-[rgba(239,0,1,0.2)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#13213a] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4]"
                                 } disabled:opacity-60`}
                               >
                                 {action.kind === "tool" ? <FiZap size={12} /> : <FiChevronRight size={12} />}
@@ -524,7 +523,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                           </div>
                         ) : null}
 
-                        <div className={`flex items-center gap-2 text-[0.68rem] text-[#8a96ad] ${isUser ? "justify-end" : "justify-start"}`}>
+                        <div className={`flex items-center gap-2 text-[0.68rem] text-[#8a96ad] dark:text-[#94abd6] ${isUser ? "justify-end" : "justify-start"}`}>
                           <span>{formatTime(message.ts)}</span>
                         </div>
                       </div>
@@ -537,8 +536,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                 <div ref={endRef} />
               </div>
 
-              <div className={`border-t border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] ${denseViewport ? "px-4 py-2.5" : hasConversation ? "px-4 py-3" : "px-5 py-4.5"}`}>
-                <div className={`rounded-3xl border border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f8fbff_0%,#fff7fa_100%)] shadow-[0_14px_28px_rgba(15,23,42,0.05)] ${denseViewport ? "p-2.5" : hasConversation ? "p-2.5" : "p-3.5"}`}>
+              <div className={`border-t border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0f192d_0%,#13213a_100%)] ${denseViewport ? "px-4 py-2.5" : hasConversation ? "px-4 py-3" : "px-5 py-4.5"}`}>
+                <div className={`rounded-3xl border border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f8fbff_0%,#fff7fa_100%)] shadow-[0_14px_28px_rgba(15,23,42,0.05)] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.24)] ${denseViewport ? "p-2.5" : hasConversation ? "p-2.5" : "p-3.5"}`}>
                   <textarea
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
@@ -548,14 +547,14 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                         void sendMessage();
                       }
                     }}
-                    placeholder={`Escreva o que voc? precisa em ${screenContext.screenLabel.toLowerCase()}...`}
-                    className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-white px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
+                    placeholder={`Escreva o que você precisa em ${screenContext.screenLabel.toLowerCase()}...`}
+                    className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
                   />
                   <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : hasConversation ? "mt-2" : "mt-3"}`}>
                     <button
                       type="button"
                       onClick={() => setConfirmState({ open: true, kind: "clearAll" })}
-                      className={`font-semibold uppercase tracking-[0.24em] text-[#8b98b1] transition hover:text-(--tc-accent,#ef0001) ${hasConversation ? "text-[0.65rem]" : "text-xs"}`}
+                      className={`font-semibold uppercase tracking-[0.24em] text-[#8b98b1] transition hover:text-(--tc-accent,#ef0001) dark:text-[#94abd6] dark:hover:text-[#ff8a8a] ${hasConversation ? "text-[0.65rem]" : "text-xs"}`}
                     >
                       Limpar tudo
                     </button>
@@ -580,7 +579,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
             aria-label="Abrir assistente da plataforma"
             title="Assistente Testing Company — clique para abrir"
             className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105"
-            onMouseEnter={() => setHintVisible(false)}
           >
             {/* spinning logo with gradient background */}
             <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,#011848_0%,#6b0000_55%,#ef0001_100%)] shadow-[0_8px_24px_rgba(1,24,72,0.4)]" />

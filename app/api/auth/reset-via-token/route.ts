@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { updateLocalUser } from "@/lib/auth/localStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -26,6 +27,15 @@ export async function POST(req: Request) {
     const hashedPassword = hashPasswordSha256(newPassword);
     await updateLocalUser(userId, { password_hash: hashedPassword });
     await redis.del(`reset:${token}`);
+    addAuditLogSafe({
+      action: "auth.password.reset",
+      entityType: "user",
+      entityId: userId,
+      entityLabel: null,
+      actorUserId: userId,
+      actorEmail: null,
+      metadata: { method: "token" },
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error resetting password:", error);

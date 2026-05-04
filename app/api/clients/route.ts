@@ -82,6 +82,10 @@ function mapCompany(company: LocalAuthCompany) {
     jira_api_token: asString(company.jira_api_token),
     integration_mode: asString(company.integration_mode),
     integration_type: asString((company as { integration_type?: unknown }).integration_type),
+    notifications_fanout_enabled:
+      typeof (company as { notifications_fanout_enabled?: unknown }).notifications_fanout_enabled === "boolean"
+        ? ((company as { notifications_fanout_enabled?: boolean }).notifications_fanout_enabled ?? true)
+        : true,
     integrations: Array.isArray((company as any).integrations)
       ? (company as any).integrations.map((i: any) => ({ id: i.id ?? undefined, type: i.type, config: i.config ?? undefined, createdAt: i.createdAt ?? undefined }))
       : undefined,
@@ -98,7 +102,7 @@ function mapCompany(company: LocalAuthCompany) {
 
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return jsonError(status === 401 ? "Nao autenticado" : "Sem permissao", status);
+  if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const companies = await listLocalCompanies();
   const payload = ClientListResponseSchema.parse({ items: companies.map(mapCompany) });
@@ -107,15 +111,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return jsonError(status === 401 ? "Nao autenticado" : "Sem permissao", status);
+  if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const body = await req.json().catch(() => null);
   // Loga o payload recebido
   console.error('[CLIENTS][POST] Payload recebido:', JSON.stringify(body));
   const parsed = ClientCreateRequestSchema.safeParse(body);
   if (!parsed.success) {
-    // Loga o erro de validação do Zod
-    console.error('[CLIENTS][POST] Erro de validação Zod:', JSON.stringify(parsed.error, null, 2));
+    // Loga o erro de válidação do Zod
+    console.error('[CLIENTS][POST] Erro de válidação Zod:', JSON.stringify(parsed.error, null, 2));
     return jsonError("Payload invalido", 400);
   }
 
@@ -123,7 +127,7 @@ export async function POST(req: NextRequest) {
   try {
   const name = (input.company_name || input.name || "").trim();
   if (!name) {
-    return jsonError("Campo 'name' ou 'company_name' e obrigatorio", 400);
+    return jsonError("Campo 'name' ou 'company_name' e obrigatório", 400);
   }
 
   const desiredSlug = (input.slug || "").trim();
@@ -182,6 +186,8 @@ export async function POST(req: NextRequest) {
     jira_api_token: input.jira_api_token ?? null,
     integration_mode: input.integration_mode ?? "manual",
     integration_type: integrationType ?? input.integration_mode ?? "manual",
+    notifications_fanout_enabled:
+      typeof input.notifications_fanout_enabled === "boolean" ? input.notifications_fanout_enabled : true,
     integrations: integrations.length ? integrations : undefined,
     status: input.status ?? "active",
     active: input.active ?? true,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
-import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { listAccessRequests } from "@/data/accessRequestsStore";
@@ -20,15 +20,18 @@ type SupportRequestRow = {
 };
 
 export async function GET(req: NextRequest) {
-  const { admin, status } = await requireGlobalDeveloperWithStatus(req);
+  const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status, headers: NO_STORE_HEADERS });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status, headers: NO_STORE_HEADERS });
   }
 
   if (shouldUseJsonStore()) {
-    const items = (await listAccessRequests()).filter((item) =>
-      canReviewerAccessQueue(admin, resolveAccessRequestQueue(item.message, item.email)),
-    );
+    const items = (await listAccessRequests()).filter((item) => {
+      const queue = resolveAccessRequestQueue(item.message, item.email);
+      // global reviewers see items according to queue rules, non-global reviewers see only their own
+      if (admin?.isGlobalReviewer) return canReviewerAccessQueue(admin, queue);
+      return String(item.email ?? "").toLowerCase() === String(admin?.email ?? "").toLowerCase();
+    });
     const mapped = items.map((item) => ({
       id: item.id,
       email: item.email,
@@ -42,11 +45,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const items = ((await prisma.supportRequest.findMany({
-      orderBy: { created_at: "desc" },
-    })) as SupportRequestRow[]).filter((item) =>
-      canReviewerAccessQueue(admin, resolveAccessRequestQueue(item.message, item.email)),
-    );
+    const rows = (await prisma.supportRequest.findMany({ orderBy: { created_at: "desc" } })) as SupportRequestRow[];
+    const items = rows.filter((item) => {
+      const queue = resolveAccessRequestQueue(item.message, item.email);
+      if (admin?.isGlobalReviewer) return canReviewerAccessQueue(admin, queue);
+      return String(item.email ?? "").toLowerCase() === String(admin?.email ?? "").toLowerCase();
+    });
 
     const mapped = items.map((item) => ({
       id: item.id,

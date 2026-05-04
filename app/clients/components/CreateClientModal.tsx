@@ -240,7 +240,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       });
       const data = (await res.json().catch(() => null)) as { items?: QaseProjectOption[]; error?: string } | null;
       if (!res.ok) {
-        throw new Error(data?.error || "Nao foi possivel consultar os projetos da Qase.");
+        throw new Error(data?.error || "Não foi possível consultar os projetos da Qase.");
       }
 
       const items = Array.isArray(data?.items)
@@ -301,7 +301,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     }
     // avoid duplicates
     if (qaseProjects.some((p) => p.code === code) || selectedQaseProjectCodes.includes(code)) {
-      setQaseProjectsError("Projeto ja adicionado.");
+      setQaseProjectsError("Projeto já adicionado.");
       return;
     }
     const project: QaseProjectOption = { code, title: name, status: "unknown" };
@@ -384,7 +384,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           return;
         }
         if (!primaryProject || !selectedCodes.includes(primaryProject)) {
-          setError("Selecione o projeto principal da integracao.");
+          setError("Selecione o projeto principal da integração.");
           return;
         }
       }
@@ -405,7 +405,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         return;
       }
       if (!jiraMail) {
-        setError("Informe o e-mail ou usuario do Jira.");
+        setError("Informe o e-mail ou usuário do Jira.");
         return;
       }
       if (!jiraToken) {
@@ -505,7 +505,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           <div>
             <p className="text-xs uppercase tracking-wide text-(--tc-accent)">Empresa</p>
             <h3 className="text-xl font-semibold text-(--tc-text)">Cadastrar empresa</h3>
-            <p className="text-sm text-(--tc-text-muted)">Preencha os dados principais e configure a integracao se necessario.</p>
+            <p className="text-sm text-(--tc-text-muted)">Preencha os dados principais e configure a integração se necessário.</p>
           </div>
           <button
             type="button"
@@ -528,7 +528,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
 
         <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
           <label className="block text-sm">
-            Nome / razao social
+            Nome / razão social
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={name}
@@ -559,12 +559,12 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           </label>
 
           <label className="block text-sm md:col-span-2">
-            Endereco
+            Endereço
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Rua, numero, cidade"
+              placeholder="Rua, número, cidade"
             />
           </label>
 
@@ -618,7 +618,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={docsLink}
               onChange={(e) => setDocsLink(e.target.value)}
-              placeholder="https://empresa.com.br/documentacao"
+              placeholder="https://empresa.com.br/documentação"
             />
           </label>
 
@@ -635,10 +635,10 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           <fieldset className="md:col-span-2 rounded-xl border-2 border-(--tc-accent)/20 bg-[linear-gradient(180deg,var(--tc-surface-2)_0%,rgba(239,0,1,0.03)_100%)] p-4">
             <legend className="flex items-center gap-2 px-2 text-sm font-bold text-(--tc-text)">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-(--tc-accent,#ef0001) text-white"><FiLink2 size={12} /></span>
-              Integracao
+              Integração
             </legend>
             <p className="mt-1 text-xs leading-5 text-(--tc-text-muted)">
-              Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicacoes. Cada projeto selecionado sera tratado como uma aplicacao separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
+              Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicações. Cada projeto selecionado será tratado como uma aplicação separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
             </p>
 
             <div className="mt-3">
@@ -843,7 +843,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
 
             <div className="mt-4 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-3">
               <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><span className="flex h-5 w-5 items-center justify-center rounded bg-(--tc-primary,#011848) text-white"><FiLink2 size={10} /></span>Jira (opcional)</p>
-              <p className="mt-1 text-xs text-(--tc-text-muted)">Se quiser, ja deixe o Jira configurado para esta empresa.</p>
+              <p className="mt-1 text-xs text-(--tc-text-muted)">Se quiser, já deixe o Jira configurado para esta empresa.</p>
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block text-sm sm:col-span-2">
                   URL base do Jira
@@ -858,12 +858,12 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                 </label>
 
                 <label className="block text-sm">
-                  E-mail / usuario
+                  E-mail / usuário
                   <input
                     className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
                     value={jiraEmail}
                     onChange={(e) => setJiraEmail(e.target.value)}
-                    placeholder="usuario@empresa.com"
+                    placeholder="usuário@empresa.com"
                     autoComplete="off"
                     spellCheck={false}
                   />
@@ -886,7 +886,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           </fieldset>
 
           <label className="block text-sm md:col-span-2">
-            Descricao curta
+            Descrição curta
             <textarea
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={description}
@@ -903,7 +903,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="Observacoes adicionais"
+              placeholder="Observações adicionais"
             />
           </label>
 

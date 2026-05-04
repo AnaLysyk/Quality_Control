@@ -6,7 +6,7 @@ import {
   type ReviewQueue,
 } from "@/lib/requestRouting";
 
-export type AccessType = "user" | "admin" | "company" | "global";
+export type AccessType = "testing_company_user" | "leader_tc" | "empresa" | "technical_support";
 export type AccessTypeLabel =
   | "Usuarios Testing Company"
   | "Usuarios da empresa"
@@ -232,9 +232,9 @@ function normalizeAdjustmentHistory(input: unknown): AccessRequestAdjustmentRoun
 }
 
 export function toAccessTypeLabel(accessType: AccessType): AccessTypeLabel {
-  if (accessType === "admin") return "Lider TC";
-  if (accessType === "company") return "Usuarios da empresa";
-  if (accessType === "global") return "Suporte Tecnico";
+  if (accessType === "leader_tc") return "Lider TC";
+  if (accessType === "empresa") return "Usuarios da empresa";
+  if (accessType === "technical_support") return "Suporte Tecnico";
   return "Usuarios Testing Company";
 }
 
@@ -245,18 +245,20 @@ export function normalizeAccessType(value: string | null | undefined): AccessTyp
     v === "usuario da empresa" ||
     v === "usuario" ||
     v === "user" ||
-    v === "common"
+    v === "common" ||
+    v === "testing_company_user" ||
+    v === "testing company user"
   ) {
-    return "user";
+    return "testing_company_user";
   }
-  if (v === "admin do sistema" || v === "administrador do sistema" || v === "administrador" || v === "admin") {
-    return "admin";
+  if (v === "admin do sistema" || v === "administrador do sistema" || v === "administrador" || v === "admin" || v === "leader_tc" || v === "lider tc") {
+    return "leader_tc";
   }
   if (v === "admin da empresa" || v === "administrador da empresa" || v === "empresa" || v === "company") {
-    return "company";
+    return "empresa";
   }
-  if (v === "global" || v === "desenvolvedor global" || v === "perfil global") {
-    return "global";
+  if (v === "global" || v === "desenvolvedor global" || v === "perfil global" || v === "technical_support" || v === "suporte tecnico") {
+    return "technical_support";
   }
   return null;
 }
@@ -350,7 +352,7 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
         jobRole: typeof json.jobRole === "string" ? json.jobRole : "",
         company: typeof json.company === "string" ? json.company : "",
         clientId: typeof json.clientId === "string" ? json.clientId : null,
-        accessType: normalizeAccessType(typeof json.accessType === "string" ? json.accessType : "") ?? "user",
+        accessType: normalizeAccessType(typeof json.accessType === "string" ? json.accessType : "") ?? "testing_company_user",
         profileType:
           normalizeRequestProfileType(typeof json.profileType === "string" ? json.profileType : "") ??
           normalizeRequestProfileType(typeof json.accessType === "string" ? json.accessType : "") ??
@@ -392,7 +394,7 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
                 jobRole: typeof (json.originalRequest as Record<string, unknown>).jobRole === "string" ? ((json.originalRequest as Record<string, unknown>).jobRole as string) : "",
                 company: typeof (json.originalRequest as Record<string, unknown>).company === "string" ? ((json.originalRequest as Record<string, unknown>).company as string) : "",
                 clientId: typeof (json.originalRequest as Record<string, unknown>).clientId === "string" ? ((json.originalRequest as Record<string, unknown>).clientId as string) : null,
-                accessType: normalizeAccessType(typeof (json.originalRequest as Record<string, unknown>).accessType === "string" ? ((json.originalRequest as Record<string, unknown>).accessType as string) : "") ?? "user",
+                accessType: normalizeAccessType(typeof (json.originalRequest as Record<string, unknown>).accessType === "string" ? ((json.originalRequest as Record<string, unknown>).accessType as string) : "") ?? "testing_company_user",
                 profileType:
                   normalizeRequestProfileType(
                     typeof (json.originalRequest as Record<string, unknown>).profileType === "string"
@@ -420,7 +422,7 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
                 jobRole: typeof json.jobRole === "string" ? json.jobRole : "",
                 company: typeof json.company === "string" ? json.company : "",
                 clientId: typeof json.clientId === "string" ? json.clientId : null,
-                accessType: normalizeAccessType(typeof json.accessType === "string" ? json.accessType : "") ?? "user",
+                accessType: normalizeAccessType(typeof json.accessType === "string" ? json.accessType : "") ?? "testing_company_user",
                 profileType:
                   normalizeRequestProfileType(typeof json.profileType === "string" ? json.profileType : "") ??
                   "testing_company_user",
@@ -473,7 +475,7 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
     jobRole: find("Cargo"),
     company: find("Empresa"),
     clientId: null,
-    accessType: normalizeAccessType(find("Tipo de acesso")) ?? "user",
+    accessType: normalizeAccessType(find("Tipo de acesso")) ?? "testing_company_user",
     profileType:
       normalizeRequestProfileType(find("Tipo de perfil")) ??
       normalizeRequestProfileType(find("Tipo de acesso")) ??
@@ -507,7 +509,7 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
       jobRole: find("Cargo"),
       company: find("Empresa"),
       clientId: null,
-      accessType: normalizeAccessType(find("Tipo de acesso")) ?? "user",
+      accessType: normalizeAccessType(find("Tipo de acesso")) ?? "testing_company_user",
       profileType:
         normalizeRequestProfileType(find("Tipo de perfil")) ??
         normalizeRequestProfileType(find("Tipo de acesso")) ??

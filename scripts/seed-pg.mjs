@@ -16,6 +16,7 @@ import fs from "fs/promises";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -29,7 +30,10 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const prisma = new PrismaClient({ log: ["warn", "error"] });
+const prisma = new PrismaClient({
+  adapter: new PrismaPg(process.env.DATABASE_URL),
+  log: ["warn", "error"],
+});
 
 async function readStore() {
   const runtimePath = path.join(ROOT, "data", "local-auth-store.json");

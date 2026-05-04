@@ -14,7 +14,7 @@ import { getRedis } from "@/lib/redis";
 const USE_POSTGRES = shouldUsePostgresPersistence();
 
 type CompanyDocumentKind = "file" | "link";
-type DocumentHistoryAction = "created" | "deleted";
+type DocumentHistoryAction = "created" | "updated" | "deleted";
 
 export type CompanyDocumentItem = {
   id: string;
@@ -28,6 +28,7 @@ export type CompanyDocumentItem = {
   sizeBytes?: number | null;
   storagePath?: string | null;
   createdAt: string;
+  updatedAt?: string | null;
   createdBy?: string | null;
   createdByName?: string | null;
 };
@@ -55,6 +56,14 @@ type AuthContext = {
   permissionRole: string | null;
 };
 
+function hasGlobalCompanyAccess(auth: Pick<AuthContext, "isGlobalAdmin" | "role" | "companyRole" | "permissionRole">) {
+  if (auth.isGlobalAdmin) return true;
+  const roles = [auth.role, auth.companyRole, auth.permissionRole]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim().toLowerCase());
+  return roles.includes("leader_tc") || roles.includes("technical_support");
+}
+
 const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
 const HISTORY_PATH = path.join(getJsonStoreDir(), "company-documents-history.json");
 const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files");
@@ -77,9 +86,27 @@ function pgRowToDocItem(row: {
     sizeBytes: row.sizeBytes ?? null,
     storagePath: row.storagePath ?? null,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.createdAt.toISOString(),
     createdBy: row.createdBy ?? null,
     createdByName: row.createdByName ?? null,
   };
+}
+
+function normalizeDocumentItem(item: CompanyDocumentItem): CompanyDocumentItem {
+  return {
+    ...item,
+    updatedAt: item.updatedAt ?? item.createdAt,
+  };
+}
+
+function buildLatestUpdateMap(history: DocumentHistoryEvent[]) {
+  const latestUpdatedAtByDocId = new Map<string, string>();
+  for (const event of history) {
+    if (event.action !== "updated") continue;
+    if (!event.documentId || latestUpdatedAtByDocId.has(event.documentId)) continue;
+    latestUpdatedAtByDocId.set(event.documentId, event.createdAt);
+  }
+  return latestUpdatedAtByDocId;
 }
 
 function sanitizeSlug(raw: string) {
@@ -103,14 +130,14 @@ async function ensureStore() {
 async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
   if (USE_POSTGRES) {
     const rows = await prisma.companyDocument.findMany({ orderBy: { createdAt: "desc" } });
-    return { items: rows.map(pgRowToDocItem) };
+    return { items: rows.map(pgRowToDocItem).map(normalizeDocumentItem) };
   }
   await ensureStore();
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
     const parsed = JSON.parse(raw) as { items?: unknown };
     const items = Array.isArray(parsed?.items) ? (parsed.items as CompanyDocumentItem[]) : [];
-    return { items };
+    return { items: items.map(normalizeDocumentItem) };
   } catch {
     return { items: [] };
   }
@@ -249,7 +276,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
           listLocalLinksForUser(userId),
           listLocalCompanies(),
         ]);
-        const allowed = isGlobalAdmin
+        const hasFullCompanyAccess =
+          isGlobalAdmin ||
+          role?.trim().toLowerCase() === "leader_tc" ||
+          role?.trim().toLowerCase() === "technical_support" ||
+          companyRole?.trim().toLowerCase() === "leader_tc" ||
+          companyRole?.trim().toLowerCase() === "technical_support" ||
+          permissionRole?.trim().toLowerCase() === "leader_tc" ||
+          permissionRole?.trim().toLowerCase() === "technical_support";
+        const allowed = hasFullCompanyAccess
           ? companies
           : companies.filter((company) => links.some((link) => link.companyId === company.id));
         return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
@@ -269,7 +304,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
         listLocalLinksForUser(userId),
         listLocalCompanies(),
       ]);
-      const allowed = isGlobalAdmin
+      const hasFullCompanyAccess =
+        isGlobalAdmin ||
+        role?.trim().toLowerCase() === "leader_tc" ||
+        role?.trim().toLowerCase() === "technical_support" ||
+        companyRole?.trim().toLowerCase() === "leader_tc" ||
+        companyRole?.trim().toLowerCase() === "technical_support" ||
+        permissionRole?.trim().toLowerCase() === "leader_tc" ||
+        permissionRole?.trim().toLowerCase() === "technical_support";
+      const allowed = hasFullCompanyAccess
         ? companies
         : companies.filter((company) => links.some((link) => link.companyId === company.id));
       return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
@@ -304,7 +347,15 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
       listLocalLinksForUser(userId),
       listLocalCompanies(),
     ]);
-    const allowed = isGlobalAdmin
+    const hasFullCompanyAccess =
+      isGlobalAdmin ||
+      role?.trim().toLowerCase() === "leader_tc" ||
+      role?.trim().toLowerCase() === "technical_support" ||
+      companyRole?.trim().toLowerCase() === "leader_tc" ||
+      companyRole?.trim().toLowerCase() === "technical_support" ||
+      permissionRole?.trim().toLowerCase() === "leader_tc" ||
+      permissionRole?.trim().toLowerCase() === "technical_support";
+    const allowed = hasFullCompanyAccess
       ? companies
       : companies.filter((company) => links.some((link) => link.companyId === company.id));
     return { userId, companySlugs: allowed.map((c) => c.slug), isGlobalAdmin, role, companyRole, permissionRole };
@@ -314,13 +365,32 @@ async function getAuthContext(req: Request): Promise<AuthContext | null> {
 }
 
 function canAccessCompany(auth: AuthContext, companySlug: string) {
+  if (hasGlobalCompanyAccess(auth)) return true;
   return auth.companySlugs.includes(companySlug);
 }
 
 function canManageCompanyDocuments(auth: AuthContext) {
   const role = (auth.role ?? "").toLowerCase();
+  const companyRole = (auth.companyRole ?? "").toLowerCase();
   const permissionRole = (auth.permissionRole ?? "").toLowerCase();
-  return auth.isGlobalAdmin || role === "admin" || permissionRole === "admin";
+  const isCompanyScopedRole = (value: string) =>
+    value === "company_user" ||
+    value === "company_admin" ||
+    value === "client_admin" ||
+    value === "company" ||
+    value === "empresa";
+  const canManageByRole =
+    role === "leader_tc" ||
+    role === "technical_support" ||
+    isCompanyScopedRole(role) ||
+    companyRole === "leader_tc" ||
+    companyRole === "technical_support" ||
+    isCompanyScopedRole(companyRole) ||
+    permissionRole === "leader_tc" ||
+    permissionRole === "technical_support" ||
+    isCompanyScopedRole(permissionRole);
+
+  return auth.isGlobalAdmin || canManageByRole;
 }
 
 async function enrichItems(items: CompanyDocumentItem[]) {
@@ -342,13 +412,13 @@ async function enrichItems(items: CompanyDocumentItem[]) {
 
 export async function GET(req: NextRequest) {
   const auth = await getAuthContext(req);
-  if (!auth) return NextResponse.json({ error: "Nao autorizado", items: [] }, { status: 401 });
+  if (!auth) return NextResponse.json({ error: "Não autorizado", items: [] }, { status: 401 });
   const canManage = canManageCompanyDocuments(auth);
 
   const url = new URL(req.url);
   const slugRaw = url.searchParams.get("slug") ?? "";
   const companySlug = sanitizeSlug(slugRaw);
-  if (!companySlug) return NextResponse.json({ error: "slug obrigatorio", items: [] }, { status: 400 });
+  if (!companySlug) return NextResponse.json({ error: "slug obrigatório", items: [] }, { status: 400 });
   if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado", items: [] }, { status: 403 });
 
   const download = url.searchParams.get("download") === "1";
@@ -362,10 +432,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ history: items, canManage }, { status: 200 });
   }
   if (download) {
-    if (!downloadId) return NextResponse.json({ error: "id obrigatorio" }, { status: 400 });
+    if (!downloadId) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
     const store = await readStore();
     const item = store.items.find((i) => i.companySlug === companySlug && i.id === downloadId) ?? null;
-    if (!item) return NextResponse.json({ error: "Documento nao encontrado" }, { status: 404 });
+    if (!item) return NextResponse.json({ error: "Documento não encontrado" }, { status: 404 });
     if (item.kind !== "file" || !item.storagePath) return NextResponse.json({ error: "Documento invalido" }, { status: 400 });
 
     const relative = item.storagePath.replace(/^local:/, "");
@@ -374,38 +444,44 @@ export async function GET(req: NextRequest) {
       const buf = await fs.readFile(absolute);
       const headers = new Headers();
       headers.set("content-type", item.mimeType || "application/octet-stream");
+      headers.set("cache-control", "no-store, no-cache, must-revalidate");
       if (item.fileName) {
         headers.set("content-disposition", `inline; filename*=UTF-8''${encodeURIComponent(item.fileName)}`);
       }
       return new NextResponse(buf, { status: 200, headers });
     } catch {
-      return NextResponse.json({ error: "Arquivo nao encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Arquivo não encontrado" }, { status: 404 });
     }
   }
 
-  const store = await readStore();
+  const [store, history] = await Promise.all([readStore(), readHistory()]);
+  const latestUpdatedAtByDocId = buildLatestUpdateMap(history.items.filter((event) => event.companySlug === companySlug));
   const items = await enrichItems(
     store.items
     .filter((i) => i.companySlug === companySlug)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
     .map((item) => {
+      const updatedAt = latestUpdatedAtByDocId.get(item.id) ?? item.updatedAt ?? item.createdAt;
       if (item.kind === "file") {
         const downloadUrl = `/api/company-documents?slug=${encodeURIComponent(companySlug)}&id=${encodeURIComponent(
           item.id
         )}&download=1`;
-        return { ...item, url: downloadUrl };
+        return { ...item, updatedAt, url: downloadUrl };
       }
-      return item;
+      return { ...item, updatedAt };
     }),
   );
 
-  return NextResponse.json({ items, canManage }, { status: 200 });
+  // Strip internal fields (storagePath, companySlug) from public response
+  const safeItems = items.map(({ storagePath: _sp, companySlug: _cs, ...rest }) => rest);
+
+  return NextResponse.json({ items: safeItems, canManage }, { status: 200, headers: { "cache-control": "no-store, no-cache, must-revalidate" } });
 }
 
 export async function POST(req: NextRequest) {
   const auth = await getAuthContext(req);
-  if (!auth) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
-  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissao para gerenciar documentos" }, { status: 403 });
+  if (!auth) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissão para gerenciar documentos" }, { status: 403 });
 
   const contentType = req.headers.get("content-type") || "";
   if (contentType.includes("multipart/form-data")) {
@@ -416,9 +492,9 @@ export async function POST(req: NextRequest) {
     const description = String(form.get("description") ?? "").trim().slice(0, 280) || null;
     const file = form.get("file");
 
-    if (!companySlug) return NextResponse.json({ error: "slug obrigatorio" }, { status: 400 });
+    if (!companySlug) return NextResponse.json({ error: "slug obrigatório" }, { status: 400 });
     if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-    if (!(file instanceof File)) return NextResponse.json({ error: "arquivo obrigatorio" }, { status: 400 });
+    if (!(file instanceof File)) return NextResponse.json({ error: "arquivo obrigatório" }, { status: 400 });
 
     const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
@@ -441,12 +517,25 @@ export async function POST(req: NextRequest) {
       sizeBytes: file.size,
       storagePath,
       createdAt,
+      updatedAt: createdAt,
       createdBy: auth.userId,
     };
 
     if (USE_POSTGRES) {
       await prisma.companyDocument.create({
-        data: { ...item, createdAt: new Date(item.createdAt) },
+        data: {
+          id: item.id,
+          companySlug: item.companySlug,
+          kind: item.kind,
+          title: item.title,
+          description: item.description ?? null,
+          fileName: item.fileName ?? null,
+          mimeType: item.mimeType ?? null,
+          sizeBytes: item.sizeBytes ?? null,
+          storagePath: item.storagePath ?? null,
+          createdAt: new Date(item.createdAt),
+          createdBy: item.createdBy ?? null,
+        },
       });
     } else {
       const store = await readStore();
@@ -465,7 +554,7 @@ export async function POST(req: NextRequest) {
   const record = (body ?? null) as Record<string, unknown> | null;
   const slugRaw = typeof record?.slug === "string" ? record.slug : "";
   const companySlug = sanitizeSlug(slugRaw);
-  if (!companySlug) return NextResponse.json({ error: "slug obrigatorio" }, { status: 400 });
+  if (!companySlug) return NextResponse.json({ error: "slug obrigatório" }, { status: 400 });
   if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
 
   const kind = (record?.kind === "file" ? "file" : "link") as CompanyDocumentKind;
@@ -474,7 +563,7 @@ export async function POST(req: NextRequest) {
   const title = (typeof record?.title === "string" ? record.title : "Link").trim().slice(0, 120) || "Link";
   const description = (typeof record?.description === "string" ? record.description : "").trim().slice(0, 280) || null;
   const url = (typeof record?.url === "string" ? record.url : "").trim();
-  if (!url) return NextResponse.json({ error: "url obrigatoria" }, { status: 400 });
+  if (!url) return NextResponse.json({ error: "url obrigatória" }, { status: 400 });
 
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
@@ -486,12 +575,22 @@ export async function POST(req: NextRequest) {
     description,
     url,
     createdAt,
+    updatedAt: createdAt,
     createdBy: auth.userId,
   };
 
   if (USE_POSTGRES) {
     await prisma.companyDocument.create({
-      data: { ...item, createdAt: new Date(item.createdAt) },
+      data: {
+        id: item.id,
+        companySlug: item.companySlug,
+        kind: item.kind,
+        title: item.title,
+        description: item.description ?? null,
+        url: item.url ?? null,
+        createdAt: new Date(item.createdAt),
+        createdBy: item.createdBy ?? null,
+      },
     });
   } else {
     const store = await readStore();
@@ -505,8 +604,8 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const auth = await getAuthContext(req);
-  if (!auth) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
-  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissao para gerenciar documentos" }, { status: 403 });
+  if (!auth) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissão para gerenciar documentos" }, { status: 403 });
 
   const url = new URL(req.url);
   const id = (url.searchParams.get("id") ?? "").trim();
@@ -539,6 +638,48 @@ export async function DELETE(req: NextRequest) {
     } catch {
       /* ignore */
     }
+  }
+
+  return NextResponse.json({ ok: true }, { status: 200 });
+}
+
+export async function PATCH(req: NextRequest) {
+  const auth = await getAuthContext(req);
+  if (!auth) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissão para gerenciar documentos" }, { status: 403 });
+
+  const body = (await req.json().catch(() => null)) as unknown;
+  const record = (body ?? null) as Record<string, unknown> | null;
+  const slugRaw = typeof record?.slug === "string" ? record.slug : "";
+  const companySlug = sanitizeSlug(slugRaw);
+  const id = (typeof record?.id === "string" ? record.id : "").trim();
+  if (!companySlug || !id) return NextResponse.json({ error: "slug e id obrigatórios" }, { status: 400 });
+  if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+
+  const newTitle = typeof record?.title === "string" ? record.title.trim().slice(0, 120) : undefined;
+  const newDescription = typeof record?.description === "string" ? record.description.trim().slice(0, 280) : undefined;
+  const newUrl = typeof record?.url === "string" ? record.url.trim() : undefined;
+  const updatedAt = new Date().toISOString();
+
+  if (USE_POSTGRES) {
+    const row = await prisma.companyDocument.findFirst({ where: { id, companySlug } });
+    if (!row) return NextResponse.json({ error: "Documento não encontrado" }, { status: 404 });
+    const data: Record<string, unknown> = {};
+    if (newTitle !== undefined) data.title = newTitle || row.title;
+    if (newDescription !== undefined) data.description = newDescription || null;
+    if (newUrl !== undefined && row.kind === "link") data.url = newUrl || row.url;
+    const updatedRow = await prisma.companyDocument.update({ where: { id }, data });
+    await appendHistoryEvent("updated", { ...pgRowToDocItem(updatedRow), updatedAt }, auth.userId);
+  } else {
+    const store = await readStore();
+    const item = store.items.find((i) => i.id === id && i.companySlug === companySlug);
+    if (!item) return NextResponse.json({ error: "Documento não encontrado" }, { status: 404 });
+    if (newTitle !== undefined) item.title = newTitle || item.title;
+    if (newDescription !== undefined) item.description = newDescription || null;
+    if (newUrl !== undefined && item.kind === "link") item.url = newUrl || item.url;
+    item.updatedAt = updatedAt;
+    await writeStore(store);
+    await appendHistoryEvent("updated", item, auth.userId);
   }
 
   return NextResponse.json({ ok: true }, { status: 200 });

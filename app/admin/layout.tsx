@@ -26,8 +26,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   const isAdmin =
     access.isGlobalAdmin === true ||
-    access.role === "admin" ||
-    access.role === "global_admin";
+    access.role === "leader_tc" ||
+    access.role === "technical_support";
   if (!isAdmin) {
     const fallbackCompany = access.companySlug ?? access.companySlugs[0] ?? null;
     redirect(fallbackCompany ? `/empresas/${encodeURIComponent(fallbackCompany)}/home` : "/empresas");

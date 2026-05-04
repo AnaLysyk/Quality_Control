@@ -51,7 +51,7 @@ type DashboardClientProps = {
 
 const GATE_LABEL: Record<ManualRun["gateStatus"], string> = {
   approved: "Ok",
-  warning: "Atencao",
+  warning: "Atenção",
   failed: "Risco",
   no_data: "Sem dados",
 };
@@ -125,7 +125,7 @@ export default function DashboardClient({
             <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Dashboard</p>
             <h1 className="mt-2 text-3xl font-extrabold">Qualidade da empresa</h1>
             <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-              Visao geral de risco, SLA e execucoes recentes.
+              Visão geral de risco, SLA e execuções recentes.
             </p>
           </div>
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
@@ -179,12 +179,12 @@ export default function DashboardClient({
               data-testid={healthTestId}
               className="mt-2 inline-flex rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
             >
-              {healthStatus === "healthy" ? "Saudavel" : healthStatus === "attention" ? "Atencao" : "Critico"}
+              {healthStatus === "healthy" ? "Saudável" : healthStatus === "attention" ? "Atenção" : "Crítico"}
             </div>
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm" data-testid="mttr-card">
-            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">MTTR medio</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">MTTR médio</p>
             <div className="mt-2 text-3xl font-extrabold" data-testid="mttr">
               {mttrDisplay}
             </div>
@@ -192,7 +192,7 @@ export default function DashboardClient({
               {mttrDisplay}
             </div>
             <div className="mt-1 text-xs text-(--tc-text-muted)" data-testid="mttr-trend">
-              Tendencia: {trendDirection === "up" ? "melhora" : trendDirection === "down" ? "piora" : "estavel"}
+              Tendência: {trendDirection === "up" ? "melhora" : trendDirection === "down" ? "piora" : "estável"}
             </div>
           </div>
 
@@ -219,7 +219,7 @@ export default function DashboardClient({
                 data-testid={trendDirection === "up" ? "quality-trend-improving" : "quality-trend-stable"}
                 className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)"
               >
-                {trendDirection === "up" ? "Melhorando" : trendDirection === "down" ? "Piorando" : "Estavel"}
+                {trendDirection === "up" ? "Melhorando" : trendDirection === "down" ? "Piorando" : "Estável"}
               </div>
             </div>
             <div className="mt-4 overflow-x-auto">
@@ -237,7 +237,7 @@ export default function DashboardClient({
                       <td className="py-2">
                         <Link
                           data-testid="run-drilldown-link"
-                          href={`/empresas/${encodeURIComponent(companySlug)}/defeitos?run=${encodeURIComponent(run.slug)}`}
+                          href={`../defeitos?run=${encodeURIComponent(run.slug)}`}
                           className="font-semibold text-(--tc-accent,#ef0001)"
                         >
                           {run.name}
@@ -267,7 +267,7 @@ export default function DashboardClient({
                 <strong>{gateCounts.approved}</strong>
               </div>
               <div className="flex items-center justify-between">
-                <span>Em atencao</span>
+                <span>Em atenção</span>
                 <strong>{gateCounts.warning}</strong>
               </div>
               <div className="flex items-center justify-between">
@@ -307,7 +307,7 @@ export default function DashboardClient({
                     data-testid="release-card"
                     className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4"
                   >
-                    <Link href={`/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(run.slug)}`} className="text-sm font-semibold text-(--tc-accent,#ef0001)">
+                    <Link href={`../runs/${encodeURIComponent(run.slug)}`} className="text-sm font-semibold text-(--tc-accent,#ef0001)">
                       {run.name}
                     </Link>
                     <div className="mt-2 text-xs text-(--tc-text-muted)">

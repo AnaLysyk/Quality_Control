@@ -17,6 +17,25 @@ export async function getAccessToken() {
   return getClientAuthToken();
 }
 
+let clientRefreshPromise: Promise<boolean> | null = null;
+
+export async function refreshClientSession() {
+  if (typeof window === "undefined") return false;
+  if (!clientRefreshPromise) {
+    clientRefreshPromise = fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then((response) => response.ok)
+      .catch(() => false)
+      .finally(() => {
+        clientRefreshPromise = null;
+      });
+  }
+  return clientRefreshPromise;
+}
+
 async function getServerAccessToken() {
   try {
     const { cookies }: typeof import("next/headers") = await import("next/headers");
@@ -30,20 +49,23 @@ async function getServerAccessToken() {
 // fetch helper que adiciona Authorization: Bearer <jwt> quando disponível
 export async function fetchApi(path: string, init: RequestInit = {}) {
   const url = apiUrl(path);
-  const headers = new Headers(init.headers as HeadersInit | undefined);
-  const token =
-    typeof window === "undefined" ? await getServerAccessToken() : await getAccessToken();
+  const buildHeaders = async () => {
+    const headers = new Headers(init.headers as HeadersInit | undefined);
+    const token =
+      typeof window === "undefined" ? await getServerAccessToken() : await getAccessToken();
 
-  if (token && !headers.has("authorization")) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+    if (token && !headers.has("authorization")) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    return headers;
+  };
 
-  const doFetch = () =>
+  const doFetch = async () =>
     fetch(url, {
-    ...init,
-    headers,
-    credentials: init.credentials ?? "include",
-    cache: init.cache ?? "no-store",
+      ...init,
+      headers: await buildHeaders(),
+      credentials: init.credentials ?? "include",
+      cache: init.cache ?? "no-store",
     });
 
   let res = await doFetch();
@@ -56,17 +78,9 @@ export async function fetchApi(path: string, init: RequestInit = {}) {
     path.startsWith("/api/") &&
     !path.startsWith("/api/auth/")
   ) {
-    try {
-      const refreshed = await fetch("/api/auth/refresh", {
-        method: "POST",
-        credentials: "include",
-        cache: "no-store",
-      });
-      if (refreshed.ok) {
-        res = await doFetch();
-      }
-    } catch {
-      /* ignore */
+    const refreshed = await refreshClientSession();
+    if (refreshed) {
+      res = await doFetch();
     }
   }
 

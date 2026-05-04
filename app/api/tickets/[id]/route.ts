@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, deleteTicketForUser, updateTicket } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
-import { notifyTicketAssigned } from "@/lib/notificationService";
+import { notifyTicketAssigned, notifyTicketUpdated } from "@/lib/notificationService";
 import { canAssignTicket, canEditTicketContent, canManageAllTickets, canMoveTicket, canViewTicket } from "@/lib/rbac/tickets";
 import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { listAdminUserItems } from "@/lib/adminUsers";
+import { isTechnicalSupportUser } from "@/lib/supportAccess";
 
 export const revalidate = 0;
 
@@ -15,7 +15,10 @@ function buildSupportAssigneeOptions(items: Awaited<ReturnType<typeof listAdminU
     .filter(
       (item) =>
         item.active !== false &&
-        (item.permission_role === "admin" || item.permission_role === "dev"),
+        isTechnicalSupportUser({
+          role: item.role ?? null,
+          permissionRole: item.permission_role ?? null,
+        }),
     )
     .map((item) => ({
       id: item.id,
@@ -28,16 +31,16 @@ function buildSupportAssigneeOptions(items: Awaited<ReturnType<typeof listAdminU
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const item = await getTicketById(id);
   if (!item) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
   if (!canViewTicket(user, item)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const enriched = await attachAssigneeToTicket(item);
@@ -61,17 +64,17 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const body = await req.json().catch(() => ({}));
   const item = await getTicketById(id);
   if (!item) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
   if (!canViewTicket(user, item)) {
-    return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const wantsAssignment = body?.assignedToUserId !== undefined;
@@ -83,14 +86,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     body?.tags !== undefined;
 
   if (!wantsAssignment && !wantsContentUpdate) {
-    return NextResponse.json({ error: "Nenhuma alteracao informada" }, { status: 400 });
+    return NextResponse.json({ error: "Nenhuma alteração informada" }, { status: 400 });
   }
 
   if (wantsAssignment && !canAssignTicket(user, item)) {
-    return NextResponse.json({ error: "Sem permissao para atribuir" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para atribuir" }, { status: 403 });
   }
   if (wantsContentUpdate && !canEditTicketContent(user, item)) {
-    return NextResponse.json({ error: "Sem permissao para editar" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para editar" }, { status: 403 });
   }
 
   const tags =
@@ -107,7 +110,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   });
 
   if (!updated) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
 
   if (wantsAssignment && updated.assignedToUserId !== item.assignedToUserId) {
@@ -138,7 +141,18 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
         priority: updated.priority,
         tags: updated.tags,
       },
-    }).catch((err) => console.error("Falha ao registrar atualizacao:", err));
+    }).catch((err) => console.error("Falha ao registrar atualização:", err));
+    const changedFields: string[] = [];
+    if (body?.title !== undefined && body.title !== item.title) changedFields.push("titulo");
+    if (body?.description !== undefined) changedFields.push("descricao");
+    if (body?.priority !== undefined && body.priority !== item.priority) changedFields.push("prioridade");
+    if (body?.type !== undefined && body.type !== item.type) changedFields.push("tipo");
+    notifyTicketUpdated({
+      ticket: updated,
+      actorId: user.id,
+      actorName: user.user ?? user.email ?? null,
+      changedFields,
+    }).catch((err) => console.error("Falha ao notificar atualizacao:", err));
   }
 
   const enriched = await attachAssigneeToTicket(updated);
@@ -148,37 +162,19 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const item = await getTicketById(id);
   if (!item) {
-    return NextResponse.json({ error: "Chamado nao encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
 
-  const isOwner = item.createdBy === user.id;
-  const isPrivileged = canManageAllTickets(user);
-
-  // Privileged users (admin/it_dev) can delete any ticket at any time.
-  // Owners can only delete their own ticket while it is still in backlog.
-  const canDelete =
-    isPrivileged ||
-    (isOwner &&
-      item.status === "backlog" &&
-      (hasPermissionAccess(user.permissions, "tickets", "delete") ||
-        hasPermissionAccess(user.permissions, "support", "delete") ||
-        hasPermissionAccess(user.permissions, "tickets", "create") ||
-        hasPermissionAccess(user.permissions, "support", "create")));
+  const canDelete = canManageAllTickets(user);
 
   if (!canDelete) {
-    const reason =
-      !isOwner && !isPrivileged
-        ? "Sem permissao"
-        : item.status !== "backlog"
-          ? "Chamado so pode ser excluido enquanto estiver em Backlog"
-          : "Sem permissao";
-    return NextResponse.json({ error: reason }, { status: 403 });
+    return NextResponse.json({ error: "Somente o suporte pode excluir tickets" }, { status: 403 });
   }
 
   const removed = await deleteTicketForUser(item.createdBy, id);

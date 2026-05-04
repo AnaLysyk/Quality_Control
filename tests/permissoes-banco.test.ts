@@ -27,16 +27,13 @@ jest.mock("../lib/redis", () => ({
 }));
 
 import { randomUUID } from "crypto";
-import { PrismaClient } from "@prisma/client";
-
-import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "../src/lib/store/permissionsStore";
+import { prisma } from "../lib/prismaClient";
+import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "../lib/store/permissionsStore";
 import { hasPermissionAccess } from "../lib/permissionMatrix";
-import { createLocalUser } from "../src/core/auth/localStore";
+import { createLocalUser } from "../lib/core/auth/localStore";
 
 // Forçar uso do Postgres para estes testes
 process.env.AUTH_STORE = "postgres";
-
-const prisma = new PrismaClient();
 
 // ── Cleanup ───────────────────────────────────────────────────────────────────
 const createdUserIds: string[] = [];
@@ -161,8 +158,8 @@ describe("Tabela user_permission_overrides — gestão de permissões via DB", (
   test("7. Allow + Deny na mesma linha → effectivePermissions aplica ambos", async () => {
     const user = await makeUser(`mixed-${uid()}`);
 
-    // Para perfil 'admin': releases já tem create/edit/delete
-    // Vamos vetar delete e adicionar releases.export (não existe por padrão em nenhum perfil)
+    // Para perfil 'admin' (→ leader_tc): releases tem apenas view
+    // Vamos adicionar releases.export via allow e vetar delete (que já não existe)
     await setUserOverride(user.id, {
       allow: { releases: ["export"] },
       deny: { releases: ["delete"] },
@@ -175,8 +172,6 @@ describe("Tabela user_permission_overrides — gestão de permissões via DB", (
     const releaseActions = Array.from(effective["releases"] ?? new Set());
 
     expect(releaseActions).toContain("view");
-    expect(releaseActions).toContain("create");
-    expect(releaseActions).toContain("edit");
     expect(releaseActions).toContain("export");     // adicionado via allow
     expect(releaseActions).not.toContain("delete"); // removido via deny
 

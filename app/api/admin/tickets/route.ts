@@ -9,7 +9,7 @@ export const revalidate = 0;
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const allowAll = isItDev(user);
   const items = allowAll ? await listAllTickets() : await listTicketsForUser(user.id);

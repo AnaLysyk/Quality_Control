@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 function slugify(value: string) {
@@ -14,14 +14,14 @@ function slugify(value: string) {
 test("quality gate reprova run com falhas", async ({ page, context }) => {
   await mockAuth(context, {
     role: "admin",
-    companies: ["griaule"],
-    clientSlug: "griaule",
+    companies: ["DEMO"],
+    clientSlug: "DEMO",
   });
 
   const runTitle = "Run Gate E2E";
   const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/griaule/runs", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
@@ -31,7 +31,7 @@ test("quality gate reprova run com falhas", async ({ page, context }) => {
   await page.getByTestId("run-stat-not-run").fill("0");
   await page.getByTestId("run-submit").click();
 
-  await page.waitForURL(new RegExp(`/empresas/griaule/runs/${runSlug}`));
+  await page.waitForURL(new RegExp(`/empresas/demo/runs/${runSlug}`));
 
   const runGate = page.getByTestId("quality-gate-status");
   await expect(runGate).toHaveAttribute("data-status", "failed");
@@ -45,3 +45,4 @@ test("quality gate reprova run com falhas", async ({ page, context }) => {
   const companyGate = page.getByTestId("company-quality-status").first();
   await expect(companyGate).toHaveAttribute("data-status", "failed");
 });
+

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FiCamera } from "react-icons/fi";
+import { hasFailedImageSrc, markFailedImageSrc } from "@/lib/failedImageSrc";
 
 type UserAvatarSize = "sm" | "md" | "lg" | "xl";
 
@@ -58,7 +59,8 @@ export default function UserAvatar({
 
   const initials = useMemo(() => getUserInitials(name), [name]);
   const normalizedSrc = typeof src === "string" ? src.trim() : "";
-  const showImage = Boolean(normalizedSrc) && failedSrc !== normalizedSrc;
+  const looksLikeUrl = /^(https?:\/\/|\/|blob:|data:)/i.test(normalizedSrc);
+  const showImage = looksLikeUrl && failedSrc !== normalizedSrc && !hasFailedImageSrc(normalizedSrc);
 
   return (
     <div className={`relative ${sizeClassMap[size]} ${className}`}>
@@ -69,9 +71,12 @@ export default function UserAvatar({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={normalizedSrc}
-            alt={name ? `Foto de ${name}` : "Foto do usuario"}
+            alt={name ? `Foto de ${name}` : "Foto do usuário"}
             className={`block h-full w-full object-cover ${imageClassName}`}
-            onError={() => setFailedSrc(normalizedSrc)}
+            onError={() => {
+              markFailedImageSrc(normalizedSrc);
+              setFailedSrc(normalizedSrc);
+            }}
           />
         ) : showFallback ? (
           <span

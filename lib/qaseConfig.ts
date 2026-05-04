@@ -58,26 +58,45 @@ function normalizeProjectCodes(value: unknown): string[] {
   return [];
 }
 
+function normalizeBaseUrl(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return "https://api.qase.io";
+  return trimmed.replace(/\/(v1|v2)\/?$/i, "").replace(/\/+$/, "");
+}
+
 export async function getClientQaseSettings(slug: string): Promise<QaseSettings | null> {
   if (!slug) return null;
   const company = await findLocalCompanyBySlug(slug);
+  const companyRecord = (company ?? {}) as Record<string, unknown> & {
+    qase_token?: string | null;
+    qase_project_code?: string | null;
+    qase_project_codes?: string[] | string | null;
+  };
   // Prefer integrations stored on the company (new model). Fall back to legacy fields.
-  const companyIntegration = Array.isArray((company as any)?.integrations)
-    ? (company as any).integrations.find((it: any) => String(it?.type ?? "").toUpperCase() === "QASE")
-    : null;
+  const integrations = Array.isArray(companyRecord.integrations) ? companyRecord.integrations : [];
+  const companyIntegration = integrations.find((integration): integration is { type?: unknown; config?: Record<string, unknown> } => {
+    if (!integration || typeof integration !== "object") return false;
+    return String((integration as Record<string, unknown>).type ?? "").toUpperCase() === "QASE";
+  }) ?? null;
 
   const companyToken =
     (companyIntegration && companyIntegration.config && typeof companyIntegration.config.token === "string" && companyIntegration.config.token.trim())
       ? companyIntegration.config.token.trim()
-      : typeof company?.qase_token === "string" && company.qase_token.trim()
-      ? company.qase_token.trim()
+      : typeof companyRecord.qase_token === "string" && companyRecord.qase_token.trim()
+      ? companyRecord.qase_token.trim()
       : null;
 
-  const companyProjectCode = normalizeProjectCode(companyIntegration?.config?.projects ? (Array.isArray(companyIntegration.config.projects) ? companyIntegration.config.projects[0] : company?.qase_project_code) : company?.qase_project_code);
+  const companyProjectCode = normalizeProjectCode(
+    companyIntegration?.config?.projects
+      ? Array.isArray(companyIntegration.config.projects)
+        ? companyIntegration.config.projects[0]
+        : companyRecord.qase_project_code
+      : companyRecord.qase_project_code,
+  );
   const companyProjectCodes = [
     ...(companyIntegration && Array.isArray(companyIntegration.config?.projects) ? companyIntegration.config.projects.map(String) : []),
-    ...normalizeProjectCodes(company?.qase_project_codes),
-    ...normalizeProjectCodes(company?.qase_project_code),
+    ...normalizeProjectCodes(companyRecord.qase_project_codes),
+    ...normalizeProjectCodes(companyRecord.qase_project_code),
   ];
 
   const envProjectCode =
@@ -104,7 +123,11 @@ export async function getClientQaseSettings(slug: string): Promise<QaseSettings 
   const projectCodes = Array.from(new Set([...companyProjectCodes, ...envProjectCodes]));
   const projectCode = companyProjectCode || envProjectCode || projectCodes[0] || undefined;
 
-  const baseUrl = readEnv("QASE_BASE_URL") || "https://api.qase.io";
+  const companyBaseUrl =
+    companyIntegration && typeof companyIntegration.config?.baseUrl === "string"
+      ? companyIntegration.config.baseUrl
+      : null;
+  const baseUrl = normalizeBaseUrl(companyBaseUrl || readEnv("QASE_BASE_URL"));
 
   return {
     slug,

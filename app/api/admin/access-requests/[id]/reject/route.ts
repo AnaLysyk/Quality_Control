@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
-import { requireGlobalDeveloperWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
+import { notifyAccessRequestRejected } from "@/lib/notificationService";
+import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
@@ -14,9 +18,9 @@ function applyAdminNotes(message: string, notes: string | null) {
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
-  const { admin, status } = await requireGlobalDeveloperWithStatus(req);
+  const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Nao autenticado" : "Sem permissao" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const body = (await req.json().catch(() => null)) as { reason?: string | null; comment?: string | null } | null;
@@ -27,24 +31,46 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
     const updatedMessage = applyAdminNotes(existing.message, reason || null);
     const updated = await updateAccessRequest(id, { status: "rejected", message: updatedMessage });
     await createAccessRequestComment({
       requestId: id,
-      authorRole: "admin",
+      authorRole: "leader_tc",
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
-      body: [reason || comment || "Solicitacao recusada.", "Fale com um responsavel para revisar o acesso solicitado."]
+      body: [reason || comment || "Solicitação recusada.", "Fale com um responsável para revisar o acesso solicitado."]
         .filter(Boolean)
         .join("\n"),
     });
+
+    const parsedNotif = parseAccessRequestMessage(existing.message, existing.email);
+    await notifyAccessRequestRejected({
+      requestId: id,
+      requesterName: parsedNotif.fullName || parsedNotif.name || existing.email,
+      rejectorName: admin.email || "Admin",
+      profileType: parsedNotif.profileType,
+      reviewQueue: resolveReviewQueue(parsedNotif.profileType),
+      reason: reason || comment || null,
+      clientId: parsedNotif.clientId,
+    }).catch(() => null);
+
+    addAuditLogSafe({
+      action: "access_request.rejected",
+      entityType: "access_request",
+      entityId: id,
+      entityLabel: existing.email ?? null,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: { reason: reason || comment || null },
+    });
+
     return NextResponse.json({
       ok: true,
       item: {
@@ -57,10 +83,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   try {
     const existing = await prisma.supportRequest.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
 
@@ -74,13 +100,34 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
     await createAccessRequestComment({
       requestId: id,
-      authorRole: "admin",
+      authorRole: "leader_tc",
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
-      body: [reason || comment || "Solicitacao recusada.", "Fale com um responsavel para revisar o acesso solicitado."]
+      body: [reason || comment || "Solicitação recusada.", "Fale com um responsável para revisar o acesso solicitado."]
         .filter(Boolean)
         .join("\n"),
+    });
+
+    const parsedNotif2 = parseAccessRequestMessage(existing.message, existing.email);
+    await notifyAccessRequestRejected({
+      requestId: id,
+      requesterName: parsedNotif2.fullName || parsedNotif2.name || existing.email,
+      rejectorName: admin.email || "Admin",
+      profileType: parsedNotif2.profileType,
+      reviewQueue: resolveReviewQueue(parsedNotif2.profileType),
+      reason: reason || comment || null,
+      clientId: parsedNotif2.clientId,
+    }).catch(() => null);
+
+    addAuditLogSafe({
+      action: "access_request.rejected",
+      entityType: "access_request",
+      entityId: id,
+      entityLabel: existing.email ?? null,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: { reason: reason || comment || null },
     });
 
     return NextResponse.json({
@@ -94,22 +141,44 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     console.error("[ACCESS-REQUESTS][REJECT][PRISMA_FALLBACK]", error);
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissao para esta solicitacao" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     const updated = await updateAccessRequest(id, { status: "rejected", message: applyAdminNotes(existing.message, reason || null) });
     await createAccessRequestComment({
       requestId: id,
-      authorRole: "admin",
+      authorRole: "leader_tc",
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
-      body: [reason || comment || "Solicitacao recusada.", "Fale com um responsavel para revisar o acesso solicitado."]
+      body: [reason || comment || "Solicitação recusada.", "Fale com um responsável para revisar o acesso solicitado."]
         .filter(Boolean)
         .join("\n"),
     });
+
+    const parsedNotif3 = parseAccessRequestMessage(existing.message, existing.email);
+    await notifyAccessRequestRejected({
+      requestId: id,
+      requesterName: parsedNotif3.fullName || parsedNotif3.name || existing.email,
+      rejectorName: admin.email || "Admin",
+      profileType: parsedNotif3.profileType,
+      reviewQueue: resolveReviewQueue(parsedNotif3.profileType),
+      reason: reason || comment || null,
+      clientId: parsedNotif3.clientId,
+    }).catch(() => null);
+
+    addAuditLogSafe({
+      action: "access_request.rejected",
+      entityType: "access_request",
+      entityId: id,
+      entityLabel: existing.email ?? null,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: { reason: reason || comment || null },
+    });
+
     return NextResponse.json({
       ok: true,
       item: {

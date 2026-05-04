@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { addRequest } from "@/data/requestsStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { notifyProfileDeletionRequest } from "@/lib/notificationService";
@@ -13,14 +14,14 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 export async function POST(request: Request) {
   const authUser = await authenticateRequest(request);
   if (!authUser) {
-    return NextResponse.json({ message: "Nao autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const body = (await request.json().catch(() => null)) as unknown;
   const rec = asRecord(body);
   const reason = typeof rec?.reason === "string" ? rec.reason.trim() : "";
   if (!reason) {
-    return NextResponse.json({ message: "Motivo obrigatorio" }, { status: 400 });
+    return NextResponse.json({ message: "Motivo obrigatório" }, { status: 400 });
   }
 
   const localUser = await getLocalUserById(authUser.id);
@@ -45,13 +46,23 @@ export async function POST(request: Request) {
       },
     );
 
+    addAuditLogSafe({
+      action: "request.profile_deletion",
+      entityType: "request",
+      entityId: record.id,
+      entityLabel: authUser.user ?? authUser.email ?? null,
+      actorUserId: authUser.id,
+      actorEmail: authUser.email ?? null,
+      metadata: { reason },
+    });
+
     await notifyProfileDeletionRequest(record).catch(() => undefined);
     return NextResponse.json(record, { status: 201 });
   } catch (err: unknown) {
     const code = asRecord(err)?.code;
     if (code === "DUPLICATE") {
-      return NextResponse.json({ message: "Ja existe uma solicitacao pendente" }, { status: 409 });
+      return NextResponse.json({ message: "Já existe uma solicitação pendente" }, { status: 409 });
     }
-    return NextResponse.json({ message: "Erro ao criar solicitacao" }, { status: 500 });
+    return NextResponse.json({ message: "Erro ao criar solicitação" }, { status: 500 });
   }
 }

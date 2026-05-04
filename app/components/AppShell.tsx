@@ -427,6 +427,10 @@ function resolveRouteCompanySlug(pathname: string) {
 }
 
 function isSupportRoute(pathname: string) {
+  const parsed = parseCompanyRoutePathname(pathname);
+  if (parsed?.kind === "technical_support" || parsed?.kind === "leader_tc") {
+    return true;
+  }
   if (
     pathname.startsWith("/kanban-it") ||
     pathname.startsWith("/meus-chamados") ||
@@ -457,6 +461,11 @@ function isCompanyRunDetailRoute(pathname: string) {
 function shouldHideShellCover(pathname: string) {
   const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests|brain)(?:\/.*)?$/.test(pathname);
   return (
+    pathname.startsWith("/operacao") ||
+    pathname.startsWith("/operacoes") ||
+    pathname.startsWith("/admin/operacao") ||
+    pathname.startsWith("/runs") ||
+    pathname.startsWith("/chat") ||
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
@@ -669,7 +678,7 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Detector de hover na lateral esquerda para telas pequenas */}
       {!isBrainCanvasRoute ? (
         <div
-          className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
+          className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area lg:hidden${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
           onMouseEnter={() => setMobileOpen(true)}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}

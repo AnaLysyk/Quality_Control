@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap } from "react-icons/fi";
+import { extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj } from "@/lib/brasilApiCnpj";
 
 export type ClientIntegrationMode = "qase" | "manual";
 
@@ -118,11 +119,23 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [cepLoading, setCepLoading] = useState(false);
   const [cepMessage, setCepMessage] = useState<string | null>(null);
   const [addressTouched, setAddressTouched] = useState(false);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjMessage, setCnpjMessage] = useState<string | null>(null);
+  const cnpjLookupIdRef = useRef(0);
+  const cnpjLookupControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
   const selectedProjects = useMemo(
     () => qaseProjects.filter((project) => selectedQaseProjectCodes.includes(project.code)),
     [qaseProjects, selectedQaseProjectCodes],
   );
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      cnpjLookupControllerRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -177,6 +190,47 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       window.clearTimeout(timeoutId);
     };
   }, [address, addressTouched, open, zip]);
+
+  async function handleCnpjBlur() {
+    const rawCnpj = normalizeCnpj(taxId);
+    if (rawCnpj.length !== 14) {
+      setCnpjMessage(null);
+      return;
+    }
+
+    const lookupId = ++cnpjLookupIdRef.current;
+    cnpjLookupControllerRef.current?.abort();
+    const controller = new AbortController();
+    cnpjLookupControllerRef.current = controller;
+
+    setCnpjLoading(true);
+    setCnpjMessage("Consultando BrasilAPI...");
+
+    try {
+      const data = await lookupCnpjCompany(rawCnpj, controller.signal);
+      const companyName = extractCnpjCompanyName(data);
+
+      if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
+
+      if (companyName) {
+        setName((currentName) => (currentName.trim() ? currentName : companyName));
+        setCnpjMessage("Nome preenchido pelo CNPJ.");
+      } else {
+        setCnpjMessage("CNPJ consultado, mas sem nome disponivel.");
+      }
+    } catch (error) {
+      if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setCnpjMessage(error instanceof Error ? error.message : "Nao foi possivel consultar o CNPJ.");
+    } finally {
+      if (isMountedRef.current && lookupId === cnpjLookupIdRef.current) {
+        setCnpjLoading(false);
+        if (cnpjLookupControllerRef.current === controller) {
+          cnpjLookupControllerRef.current = null;
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     if (!clientId) return;
@@ -248,6 +302,9 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   }
 
   function resetForm() {
+    cnpjLookupIdRef.current += 1;
+    cnpjLookupControllerRef.current?.abort();
+    cnpjLookupControllerRef.current = null;
     setName("");
     setTaxId("");
     setZip("");
@@ -267,6 +324,8 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     setJiraEmail("");
     setJiraApiToken("");
     setError(null);
+    setCnpjLoading(false);
+    setCnpjMessage(null);
   }
 
   function toggleSelectedQaseProject(code: string) {
@@ -619,9 +678,14 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={taxId}
-              onChange={(e) => setTaxId(e.target.value)}
+              onChange={(e) => setTaxId(normalizeCnpj(e.target.value))}
               placeholder="00.000.000/0000-00"
+              inputMode="numeric"
+              onBlur={() => void handleCnpjBlur()}
             />
+            <span className="mt-1 block min-h-4 text-xs text-(--tc-text-muted)" aria-live="polite">
+              {cnpjLoading ? "Consultando BrasilAPI..." : cnpjMessage}
+            </span>
           </label>
 
           <label className="block text-sm md:col-span-2">
@@ -1020,4 +1084,3 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     </div>
   );
 }
-

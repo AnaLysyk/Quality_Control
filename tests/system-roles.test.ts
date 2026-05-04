@@ -29,6 +29,11 @@ describe("system role contract", () => {
     expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].users).toEqual(["view"]);
   });
 
+  it("keeps company profiles able to view and create company users", () => {
+    expect(ROLE_DEFAULTS[SYSTEM_ROLES.EMPRESA].users).toEqual(["view", "create"]);
+    expect(ROLE_DEFAULTS[SYSTEM_ROLES.COMPANY_USER].users).toEqual(["view", "create"]);
+  });
+
   it("keeps access-request review queue gated by capability", () => {
     expect(canReviewAccessRequests({ role: "leader_tc" })).toBe(true);
     expect(canReviewAccessRequests({ role: "technical_support" })).toBe(false);

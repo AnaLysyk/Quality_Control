@@ -4,10 +4,10 @@ import { useMemo } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import {
+  resolveEffectivePermissionMatrix,
   getTicketViewScope,
   getUsersViewScope,
   hasPermissionAccess,
-  normalizePermissionMatrix,
   toVisibilityMap,
 } from "@/lib/permissionMatrix";
 
@@ -19,8 +19,8 @@ export function usePermissionAccess() {
   );
 
   const permissions = useMemo(
-    () => normalizePermissionMatrix(user?.permissions),
-    [user?.permissions],
+    () => resolveEffectivePermissionMatrix(user),
+    [user],
   );
 
   const visibility = useMemo(() => toVisibilityMap(permissions), [permissions]);

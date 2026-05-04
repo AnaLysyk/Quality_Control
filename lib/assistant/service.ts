@@ -176,6 +176,34 @@ function buildClarifyReply(context: AssistantScreenContext): AssistantExecutorRe
 
 /* ──────────────────── Tool dispatcher ──────────────────── */
 
+function shouldEnrichToolWithBrainContext(tool: AssistantToolName, message: string) {
+  if (message.trim().length <= 3) return false;
+  return tool === "search_internal_records" || tool === "summarize_entity" || tool === "draft_test_case";
+}
+
+async function enrichMessageWithBrainContext(
+  tool: AssistantToolName,
+  message: string,
+  context: AssistantScreenContext,
+) {
+  if (!shouldEnrichToolWithBrainContext(tool, message)) return message;
+
+  try {
+    const brainContext = await buildBrainContextForAI({
+      companySlug: context.companySlug,
+      entityType: context.entityType,
+      entityId: context.entityId,
+      userQuery: message,
+    });
+
+    return brainContext
+      ? `${message}\n\n---\n[Brain Context]\n${brainContext}`
+      : message;
+  } catch {
+    return message;
+  }
+}
+
 async function executeTool(user: AuthUser, context: AssistantScreenContext, tool: AssistantToolName, message: string): Promise<AssistantExecutorResult> {
   switch (tool) {
     case "get_screen_context":     return toolGetScreenContext(user, context);
@@ -245,22 +273,6 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
 
   let result: AssistantExecutorResult;
 
-  // Enriquecer com contexto do Brain (inclui busca semântica pela query do usuário)
-  let brainContext: string | null = null;
-  try {
-    brainContext = await buildBrainContextForAI({
-      companySlug: context.companySlug,
-      entityType: context.entityType,
-      entityId: context.entityId,
-      userQuery: message, // Permite busca semântica nos nós e memórias
-    });
-  } catch { /* brain context is optional */ }
-
-  // Se há contexto do brain, anexar à mensagem para enriquecer respostas
-  const enrichedMessage = brainContext
-    ? `${message}\n\n---\n[Brain Context]\n${brainContext}`
-    : message;
-
   if (action?.kind === "tool") {
     result = await executeToolAction(user, context, action);
   } else {
@@ -270,7 +282,7 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
       const tool = chooseTool(message, context, history);
       result = shouldShortCircuitRepeatedPrompt(history, tool, message)
         ? buildRecentDuplicateReply(tool, context)
-        : await executeTool(user, context, tool, enrichedMessage);
+        : await executeTool(user, context, tool, await enrichMessageWithBrainContext(tool, message, context));
     }
   }
 

@@ -1,3 +1,6 @@
+import { normalizeLegacyRole } from "@/lib/auth/roles";
+import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
+
 export type PermissionMatrix = Record<string, string[]>;
 export type PermissionOverride = {
   allow?: PermissionMatrix;
@@ -20,6 +23,39 @@ export function normalizePermissionMatrix(input: unknown): PermissionMatrix {
     );
   }
   return output;
+}
+
+type EffectivePermissionMatrixInput = {
+  permissions?: PermissionMatrix | null;
+  permissionRole?: string | null;
+  role?: string | null;
+  companyRole?: string | null;
+  globalRole?: string | null;
+  isGlobalAdmin?: boolean | null;
+};
+
+function hasAnyPermissionActions(matrix: PermissionMatrix) {
+  return Object.values(matrix).some((actions) => actions.length > 0);
+}
+
+function resolvePermissionRole(input: EffectivePermissionMatrixInput | null | undefined) {
+  return (
+    normalizeLegacyRole(input?.permissionRole ?? null) ??
+    normalizeLegacyRole(input?.role ?? null) ??
+    normalizeLegacyRole(input?.companyRole ?? null) ??
+    normalizeLegacyRole(input?.globalRole ?? null) ??
+    (input?.isGlobalAdmin === true ? normalizeLegacyRole("global_admin") : null)
+  );
+}
+
+export function resolveEffectivePermissionMatrix(input: EffectivePermissionMatrixInput | null | undefined) {
+  const normalized = normalizePermissionMatrix(input?.permissions);
+  if (hasAnyPermissionActions(normalized)) return normalized;
+
+  const role = resolvePermissionRole(input);
+  if (!role) return normalized;
+
+  return normalizePermissionMatrix(resolveRoleDefaults(role));
 }
 
 export function hasPermissionAccess(

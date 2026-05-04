@@ -8,8 +8,8 @@ import {
   listLocalLinksForUser,
   normalizeGlobalRole,
   normalizeLocalRole,
-  toLegacyRole,
 } from "@/lib/auth/localStore";
+import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { resolveCapabilities } from "@/lib/permissions";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
 import { resolveVisibleCompanies, resolveCompanyVisibilityMode } from "@/lib/companyVisibility";
@@ -178,12 +178,14 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     user.is_global_admin === true ||
     session.isGlobalAdmin === true ||
     sessionRole === "leader_tc";
+  const permissionRole = isGlobalAdmin ? "leader_tc" : resolvePermissionRoleForUser(user, links);
+  const activeCompanyRole = normalizeLocalRole(session.companyRole ?? user.role ?? null);
 
   const visibilityMode = resolveCompanyVisibilityMode(
     {
-      permissionRole: session.globalRole ?? session.role ?? null,
-      role: session.role ?? null,
-      companyRole: user.role ?? null,
+      permissionRole,
+      role: permissionRole,
+      companyRole: activeCompanyRole,
       userOrigin: user.user_origin ?? null,
       isGlobalAdmin,
       default_company_slug: user.default_company_slug ?? null,
@@ -194,8 +196,9 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   const shouldBindCompanyContext = visibilityMode !== "all";
   const allowedCompanies = resolveVisibleCompanies(companies, {
     user: {
-      role: session.role ?? null,
-      companyRole: user.role ?? null,
+      permissionRole,
+      role: permissionRole,
+      companyRole: activeCompanyRole,
       userOrigin: user.user_origin ?? null,
       isGlobalAdmin,
       default_company_slug: user.default_company_slug ?? null,
@@ -231,7 +234,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     companyRole,
     membershipCapabilities: primaryLink?.capabilities ?? session.capabilities ?? null,
   });
-  const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);
+  const effectiveRole = permissionRole;
 
   // 9) Retorna o contexto final consumido pelo restante do app.
   return {

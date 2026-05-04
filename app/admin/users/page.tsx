@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
   FiHome,
@@ -66,6 +66,15 @@ type CreateModalConfig = {
   requireCompanySelection: boolean;
   companyOptional: boolean;
 };
+
+function resolveUserTabParam(value: string | null): UserTab | null {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "company" || normalized === "empresa") return "company";
+  if (normalized === "testing" || normalized === "tc" || normalized === "usuario-tc") return "testing";
+  if (normalized === "admin" || normalized === "leader" || normalized === "lider") return "admin";
+  if (normalized === "support" || normalized === "suporte") return "support";
+  return null;
+}
 
 function normalize(text?: string | null) {
   return (text ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -259,14 +268,16 @@ function CompanyUsersSection({
 
 export default function AdminUsersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<UserTab>("company");
+  const [activeTab, setActiveTab] = useState<UserTab>(() => resolveUserTabParam(searchParams.get("tab")) ?? "company");
   const [search, setSearch] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
+  const openCreateTokenRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -308,6 +319,21 @@ export default function AdminUsersPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const nextTab = resolveUserTabParam(searchParams.get("tab"));
+    if (nextTab && nextTab !== activeTab) {
+      setActiveTab(nextTab);
+    }
+
+    if (searchParams.get("create") === "1") {
+      const token = searchParams.toString();
+      if (openCreateTokenRef.current !== token) {
+        openCreateTokenRef.current = token;
+        setOpenCreate(true);
+      }
+    }
+  }, [activeTab, searchParams]);
 
   const sortUsers = useCallback(
     (items: UserItem[]) => [...items].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),

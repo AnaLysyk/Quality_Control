@@ -4,6 +4,15 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj } from "@/lib/brasilApiCnpj";
 
+type BrasilApiCnpjResponse = {
+  razao_social?: string;
+  nome_fantasia?: string;
+};
+
+function normalizeCnpj(value: string) {
+  return value.replace(/\D/g, "").slice(0, 14);
+}
+
 export default function CreateCompanyForm({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -16,6 +25,7 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
   const cnpjLookupControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
 
+<<<<<<< HEAD
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
@@ -23,20 +33,26 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
     };
   }, []);
 
+=======
+>>>>>>> 0c8451d1aeed83777a0ab99c7939c93f945ba649
   async function handleCnpjBlur() {
     const rawCnpj = normalizeCnpj(cnpj);
 
     if (rawCnpj.length !== 14) return;
 
+<<<<<<< HEAD
     const lookupId = ++cnpjLookupIdRef.current;
     cnpjLookupControllerRef.current?.abort();
     const controller = new AbortController();
     cnpjLookupControllerRef.current = controller;
 
+=======
+>>>>>>> 0c8451d1aeed83777a0ab99c7939c93f945ba649
     setLoadingCnpj(true);
     setError(null);
 
     try {
+<<<<<<< HEAD
       const data = await lookupCnpjCompany(rawCnpj, controller.signal);
       const companyName = extractCnpjCompanyName(data);
 
@@ -60,6 +76,25 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+=======
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${rawCnpj}`);
+      if (!res.ok) throw new Error("CNPJ não encontrado");
+
+      const data = (await res.json()) as BrasilApiCnpjResponse;
+      const companyName = (data.nome_fantasia || data.razao_social || "").trim();
+
+      if (companyName && !name.trim()) {
+        setName(companyName);
+      }
+    } catch {
+      setError("Não foi possível buscar os dados da empresa pelo CNPJ");
+    } finally {
+      setLoadingCnpj(false);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+>>>>>>> 0c8451d1aeed83777a0ab99c7939c93f945ba649
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -90,9 +125,14 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
         className="form-control-user border rounded px-2 py-1 w-full"
         placeholder="CNPJ (opcional para preenchimento automático)"
         value={cnpj}
+<<<<<<< HEAD
         onChange={(e) => setCnpj(normalizeCnpj(e.target.value))}
         onBlur={handleCnpjBlur}
         inputMode="numeric"
+=======
+        onChange={e => setCnpj(normalizeCnpj(e.target.value))}
+        onBlur={handleCnpjBlur}
+>>>>>>> 0c8451d1aeed83777a0ab99c7939c93f945ba649
       />
       {loadingCnpj && <div className="text-sm text-gray-600">Consultando BrasilAPI...</div>}
       <input

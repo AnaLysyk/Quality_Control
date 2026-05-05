@@ -2,16 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj } from "@/lib/brasilApiCnpj";
-
-type BrasilApiCnpjResponse = {
-  razao_social?: string;
-  nome_fantasia?: string;
-};
-
-function normalizeCnpj(value: string) {
-  return value.replace(/\D/g, "").slice(0, 14);
-}
+import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, type BrasilApiCnpjLookup } from "@/lib/brasilApiCnpj";
 
 export default function CreateCompanyForm({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");
@@ -21,11 +12,11 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [cnpjData, setCnpjData] = useState<BrasilApiCnpjLookup | null>(null);
   const cnpjLookupIdRef = useRef(0);
   const cnpjLookupControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
 
-<<<<<<< HEAD
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
@@ -33,31 +24,27 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
     };
   }, []);
 
-=======
->>>>>>> 0c8451d1aeed83777a0ab99c7939c93f945ba649
   async function handleCnpjBlur() {
     const rawCnpj = normalizeCnpj(cnpj);
 
     if (rawCnpj.length !== 14) return;
 
-<<<<<<< HEAD
     const lookupId = ++cnpjLookupIdRef.current;
     cnpjLookupControllerRef.current?.abort();
     const controller = new AbortController();
     cnpjLookupControllerRef.current = controller;
 
-=======
->>>>>>> 0c8451d1aeed83777a0ab99c7939c93f945ba649
     setLoadingCnpj(true);
     setError(null);
 
     try {
-<<<<<<< HEAD
       const data = await lookupCnpjCompany(rawCnpj, controller.signal);
-      const companyName = extractCnpjCompanyName(data);
 
       if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
 
+      setCnpjData(data);
+
+      const companyName = extractCnpjCompanyName(data);
       if (companyName) {
         setName((currentName) => (currentName.trim() ? currentName : companyName));
       }
@@ -76,39 +63,30 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-=======
-      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${rawCnpj}`);
-      if (!res.ok) throw new Error("CNPJ não encontrado");
-
-      const data = (await res.json()) as BrasilApiCnpjResponse;
-      const companyName = (data.nome_fantasia || data.razao_social || "").trim();
-
-      if (companyName && !name.trim()) {
-        setName(companyName);
-      }
-    } catch {
-      setError("Não foi possível buscar os dados da empresa pelo CNPJ");
-    } finally {
-      setLoadingCnpj(false);
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
->>>>>>> 0c8451d1aeed83777a0ab99c7939c93f945ba649
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(false);
     try {
+      const address = cnpjData ? extractCnpjAddress(cnpjData) : undefined;
       const res = await fetch("/api/company", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, slug }),
+        body: JSON.stringify({
+          name,
+          slug,
+          tax_id: cnpjData?.cnpj ?? (cnpj.replace(/\D/g, "") || undefined),
+          company_name: cnpjData?.razao_social ?? undefined,
+          address: address || undefined,
+          phone: cnpjData?.ddd_telefone_1 ?? undefined,
+          cep: cnpjData?.cep ?? undefined,
+        }),
       });
       if (!res.ok) throw new Error("Erro ao criar empresa");
       setName("");
       setSlug("");
       setCnpj("");
+      setCnpjData(null);
       setSuccess(true);
       if (onCreated) onCreated();
     } catch {
@@ -125,14 +103,9 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
         className="form-control-user border rounded px-2 py-1 w-full"
         placeholder="CNPJ (opcional para preenchimento automático)"
         value={cnpj}
-<<<<<<< HEAD
         onChange={(e) => setCnpj(normalizeCnpj(e.target.value))}
         onBlur={handleCnpjBlur}
         inputMode="numeric"
-=======
-        onChange={e => setCnpj(normalizeCnpj(e.target.value))}
-        onBlur={handleCnpjBlur}
->>>>>>> 0c8451d1aeed83777a0ab99c7939c93f945ba649
       />
       {loadingCnpj && <div className="text-sm text-gray-600">Consultando BrasilAPI...</div>}
       <input

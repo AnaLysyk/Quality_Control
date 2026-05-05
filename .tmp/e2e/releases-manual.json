@@ -1,6 +1,161 @@
 [
   {
-    "id": "8bc90587-6b8a-4aef-89fa-19137d72d611",
+    "id": "13e76272-dd84-480c-bb31-ef1c3a6bdcd0",
+    "slug": "defeito_mttr_manual",
+    "name": "Defeito MTTR manual",
+    "app": "Aplicação manual",
+    "qaseProject": "APLICAÇÃO MANUAL",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "demo",
+    "testPlanId": null,
+    "testPlanName": null,
+    "testPlanSource": null,
+    "testPlanProjectCode": null,
+    "source": "MANUAL",
+    "status": "done",
+    "severity": "medium",
+    "priority": "medium",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "createdByUserId": "usr_company_demo_test",
+    "createdByName": "Company Demo",
+    "assignedToUserId": "usr_company_demo_test",
+    "assignedToName": "Company Demo",
+    "closedAt": "2026-05-05T11:11:07.698Z",
+    "createdAt": "2026-05-05T11:11:03.007Z",
+    "updatedAt": "2026-05-05T11:11:07.698Z"
+  },
+  {
+    "id": "809c0fa6-fee0-45a9-9368-1f5960bc8e9c",
+    "slug": "defeito_manual_admin",
+    "name": "Defeito manual - admin",
+    "app": "Aplicação manual",
+    "qaseProject": "",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "demo",
+    "testPlanId": null,
+    "testPlanName": null,
+    "testPlanSource": null,
+    "testPlanProjectCode": null,
+    "source": "MANUAL",
+    "status": "open",
+    "severity": "medium",
+    "priority": "medium",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "createdByUserId": "usr_admin_demo_test",
+    "createdByName": "Admin Demo",
+    "assignedToUserId": "usr_admin_demo_test",
+    "assignedToName": "Admin Demo",
+    "closedAt": null,
+    "createdAt": "2026-05-05T11:10:17.071Z",
+    "updatedAt": "2026-05-05T11:10:17.071Z"
+  },
+  {
+    "id": "a4250fff-7914-4ca7-bb1f-5f485ec71f57",
+    "slug": "defeito_manual_company",
+    "name": "Defeito manual - company",
+    "app": "Aplicação manual",
+    "qaseProject": "",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "demo",
+    "testPlanId": null,
+    "testPlanName": null,
+    "testPlanSource": null,
+    "testPlanProjectCode": null,
+    "source": "MANUAL",
+    "status": "open",
+    "severity": "medium",
+    "priority": "medium",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "createdByUserId": "usr_company_demo_test",
+    "createdByName": "Company Demo",
+    "assignedToUserId": "usr_company_demo_test",
+    "assignedToName": "Company Demo",
+    "closedAt": null,
+    "createdAt": "2026-05-05T11:10:08.787Z",
+    "updatedAt": "2026-05-05T11:10:08.787Z"
+  },
+  {
+    "id": "00bca041-87f3-4191-af5f-ebce3e56d4ca",
+    "slug": "defeito_proibido",
+    "name": "Defeito proibido",
+    "app": "Aplicação manual",
+    "qaseProject": "",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "demo",
+    "testPlanId": null,
+    "testPlanName": null,
+    "testPlanSource": null,
+    "testPlanProjectCode": null,
+    "source": "MANUAL",
+    "status": "open",
+    "severity": "medium",
+    "priority": "medium",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "createdByUserId": "usr_company_demo_test",
+    "createdByName": "Company Demo",
+    "assignedToUserId": "usr_company_demo_test",
+    "assignedToName": "Company Demo",
+    "closedAt": null,
+    "createdAt": "2026-05-05T11:09:57.770Z",
+    "updatedAt": "2026-05-05T11:09:57.770Z"
+  },
+  {
+    "id": "32f5429f-6f1e-4b16-80bc-ec2edee6fe7e",
+    "slug": "erro_no_login",
+    "name": "Erro no login",
+    "app": "Aplicação manual",
+    "qaseProject": "",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "demo",
+    "testPlanId": null,
+    "testPlanName": null,
+    "testPlanSource": null,
+    "testPlanProjectCode": null,
+    "source": "MANUAL",
+    "status": "open",
+    "severity": "medium",
+    "priority": "medium",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "createdByUserId": "usr_user_demo_test",
+    "createdByName": "Usuario Demo",
+    "assignedToUserId": "usr_user_demo_test",
+    "assignedToName": "Usuario Demo",
+    "closedAt": null,
+    "createdAt": "2026-05-05T11:09:32.257Z",
+    "updatedAt": "2026-05-05T11:09:32.257Z"
+  },
+  {
+    "id": "58163272-60ce-4f85-a1ce-3cc3ff730eb0",
     "slug": "defeito_com_run",
     "name": "Defeito com run",
     "app": "Aplicação manual",
@@ -27,11 +182,44 @@
     "assignedToUserId": "usr_company_demo_test",
     "assignedToName": "Company Demo",
     "closedAt": null,
-    "createdAt": "2026-05-04T03:23:33.452Z",
-    "updatedAt": "2026-05-04T03:23:33.452Z"
+    "createdAt": "2026-05-05T11:09:18.024Z",
+    "updatedAt": "2026-05-05T11:09:18.024Z"
   },
   {
-    "id": "8b38feab-658d-4585-9601-939409e879c5",
+    "id": "669ffea1-58bd-44ec-8ea1-0abbecdf43b0",
+    "slug": "defeito_encontrado_na_run",
+    "name": "Defeito encontrado na run",
+    "app": "Aplicação manual",
+    "qaseProject": "",
+    "kind": "defect",
+    "environments": [],
+    "clientSlug": "demo",
+    "runSlug": "e2e_negocio",
+    "runName": "E2E Negocio",
+    "testPlanId": null,
+    "testPlanName": null,
+    "testPlanSource": null,
+    "testPlanProjectCode": null,
+    "source": "MANUAL",
+    "status": "open",
+    "severity": "medium",
+    "priority": "medium",
+    "stats": {
+      "pass": 0,
+      "fail": 1,
+      "blocked": 0,
+      "notRun": 0
+    },
+    "createdByUserId": "usr_company_demo_test",
+    "createdByName": "Company Demo",
+    "assignedToUserId": "usr_company_demo_test",
+    "assignedToName": "Company Demo",
+    "closedAt": null,
+    "createdAt": "2026-05-05T11:09:00.591Z",
+    "updatedAt": "2026-05-05T11:09:00.591Z"
+  },
+  {
+    "id": "7f823e4a-f421-4536-be88-200842687942",
     "slug": "e2e_negocio",
     "name": "E2E Negocio",
     "app": "SMART",
@@ -57,12 +245,12 @@
     "createdByName": "Company Demo",
     "assignedToUserId": "usr_company_demo_test",
     "assignedToName": "Company Demo",
-    "closedAt": "2026-05-04T03:22:22.797Z",
-    "createdAt": "2026-05-04T03:22:22.797Z",
-    "updatedAt": "2026-05-04T03:22:22.797Z"
+    "closedAt": "2026-05-05T11:08:49.944Z",
+    "createdAt": "2026-05-05T11:08:49.944Z",
+    "updatedAt": "2026-05-05T11:08:49.944Z"
   },
   {
-    "id": "c4d4aea7-2d74-4056-8415-94df8253afed",
+    "id": "fb98ff5f-af65-43b8-89c5-433d0b133ffe",
     "slug": "gate_e2e",
     "name": "Gate E2E",
     "app": "SMART",
@@ -89,15 +277,15 @@
     "assignedToUserId": "usr_admin_demo_test",
     "assignedToName": "Admin Demo",
     "closedAt": null,
-    "createdAt": "2026-05-04T03:21:21.425Z",
-    "updatedAt": "2026-05-04T03:21:21.425Z"
+    "createdAt": "2026-05-05T11:08:36.715Z",
+    "updatedAt": "2026-05-05T11:08:36.715Z"
   },
   {
-    "id": "9d8ad11f-ef75-4cc4-becd-00bd332fae4b",
+    "id": "a32a32ad-4baf-4a15-821f-e370d6215f64",
     "slug": "defeito_mttr",
     "name": "Defeito MTTR",
     "app": "Aplicação manual",
-    "qaseProject": "",
+    "qaseProject": "APLICAÇÃO MANUAL",
     "kind": "defect",
     "environments": [],
     "clientSlug": "demo",
@@ -106,7 +294,7 @@
     "testPlanSource": null,
     "testPlanProjectCode": null,
     "source": "MANUAL",
-    "status": "open",
+    "status": "done",
     "severity": "medium",
     "priority": "medium",
     "stats": {
@@ -119,12 +307,12 @@
     "createdByName": "Company Demo",
     "assignedToUserId": "usr_company_demo_test",
     "assignedToName": "Company Demo",
-    "closedAt": null,
-    "createdAt": "2026-05-04T03:21:11.988Z",
-    "updatedAt": "2026-05-04T03:21:11.988Z"
+    "closedAt": "2026-05-05T11:08:32.093Z",
+    "createdAt": "2026-05-05T11:08:27.755Z",
+    "updatedAt": "2026-05-05T11:08:32.093Z"
   },
   {
-    "id": "985d8ec5-a05b-4614-8076-4d7493685cae",
+    "id": "d8f5a91f-b33f-4ec7-9bc7-a1239d9f3fe7",
     "slug": "bloqueada",
     "name": "Bloqueada",
     "app": "SMART",
@@ -151,11 +339,11 @@
     "assignedToUserId": "usr_company_demo_test",
     "assignedToName": "Company Demo",
     "closedAt": null,
-    "createdAt": "2026-05-04T03:20:03.308Z",
-    "updatedAt": "2026-05-04T03:20:03.308Z"
+    "createdAt": "2026-05-05T11:08:14.948Z",
+    "updatedAt": "2026-05-05T11:08:14.948Z"
   },
   {
-    "id": "f138b858-a5a8-490d-aafe-9d687f307bde",
+    "id": "a401acd6-916c-4286-bd40-e37881e1885b",
     "slug": "pdf_export",
     "name": "PDF Export",
     "app": "SMART",
@@ -182,11 +370,11 @@
     "assignedToUserId": "usr_company_demo_test",
     "assignedToName": "Company Demo",
     "closedAt": null,
-    "createdAt": "2026-05-04T03:19:07.107Z",
-    "updatedAt": "2026-05-04T03:19:07.107Z"
+    "createdAt": "2026-05-05T11:08:01.626Z",
+    "updatedAt": "2026-05-05T11:08:01.626Z"
   },
   {
-    "id": "94c30d0e-86e8-4a40-9104-395d5b0f0474",
+    "id": "4f5d633d-1b07-45d0-a94a-9388632513ce",
     "slug": "run_t_benchmark",
     "name": "Run T Benchmark",
     "app": "SMART",
@@ -212,12 +400,12 @@
     "createdByName": "Admin Demo",
     "assignedToUserId": "usr_admin_demo_test",
     "assignedToName": "Admin Demo",
-    "closedAt": "2026-05-04T02:29:48.000Z",
-    "createdAt": "2026-05-04T02:29:48.000Z",
-    "updatedAt": "2026-05-04T02:29:48.000Z"
+    "closedAt": "2026-05-05T11:07:41.858Z",
+    "createdAt": "2026-05-05T11:07:41.858Z",
+    "updatedAt": "2026-05-05T11:07:41.858Z"
   },
   {
-    "id": "85a8710d-2563-4322-b17b-98ac312e8238",
+    "id": "964a1fff-b83d-4a2a-9750-a82fdcaba8f4",
     "slug": "run_g_benchmark",
     "name": "Run G Benchmark",
     "app": "SMART",
@@ -243,9 +431,9 @@
     "createdByName": "Admin Demo",
     "assignedToUserId": "usr_admin_demo_test",
     "assignedToName": "Admin Demo",
-    "closedAt": "2026-05-04T02:29:47.873Z",
-    "createdAt": "2026-05-04T02:29:47.873Z",
-    "updatedAt": "2026-05-04T02:29:47.873Z"
+    "closedAt": "2026-05-05T11:07:41.723Z",
+    "createdAt": "2026-05-05T11:07:41.723Z",
+    "updatedAt": "2026-05-05T11:07:41.723Z"
   },
   {
     "id": "playwright_testing_company_moqkeh28_sjv0",
@@ -1529,48 +1717,6 @@
     "updatedAt": "2026-03-25T00:43:47.620Z"
   },
   {
-    "id": "947c644b-6ad4-464f-b905-88f6a1a1ef41",
-    "slug": "defeito_manual_company",
-    "name": "Defeito manual - company",
-    "app": "SMART",
-    "qaseProject": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-03-25T00:37:41.361Z",
-    "updatedAt": "2026-03-25T00:37:41.361Z"
-  },
-  {
-    "id": "2fc83bc0-5024-4bbe-afb8-2b93d24ee71a",
-    "slug": "defeito_proibido",
-    "name": "Defeito proibido",
-    "app": "SMART",
-    "qaseProject": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-03-25T00:37:22.308Z",
-    "updatedAt": "2026-03-25T00:37:22.308Z"
-  },
-  {
     "id": "a281cf9d-6054-4975-b89b-e4757689e56e",
     "slug": "run_falha",
     "name": "run-falha",
@@ -1589,26 +1735,6 @@
     "closedAt": null,
     "createdAt": "2026-02-13T11:29:48.722Z",
     "updatedAt": "2026-02-13T11:29:48.722Z"
-  },
-  {
-    "id": "05c6cd90-1d8c-4480-af48-2f8c8a6916e1",
-    "slug": "defeito_manual_admin",
-    "name": "Defeito manual - admin",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-13T11:26:13.607Z",
-    "updatedAt": "2026-02-13T11:26:13.607Z"
   },
   {
     "id": "da72502e-6177-409b-bfc3-b6dcf01c69dd",
@@ -1691,47 +1817,6 @@
     "updatedAt": "2026-02-13T11:20:40.873Z"
   },
   {
-    "id": "d49e1b09-495c-45ac-b5de-322eb2f22bc5",
-    "slug": "defeito_encontrado_na_run",
-    "name": "Defeito encontrado na run",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "runSlug": "run_e2e_negocio",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-13T11:08:59.785Z",
-    "updatedAt": "2026-02-13T11:08:59.785Z"
-  },
-  {
-    "id": "1391c8d3-ccc4-495a-bd68-0cd35baf5e25",
-    "slug": "erro_no_login",
-    "name": "Erro no login",
-    "app": "SMART",
-    "kind": "defect",
-    "environments": [],
-    "clientSlug": "griaule",
-    "source": "MANUAL",
-    "status": "open",
-    "stats": {
-      "pass": 0,
-      "fail": 1,
-      "blocked": 0,
-      "notRun": 0
-    },
-    "closedAt": null,
-    "createdAt": "2026-02-13T10:43:04.770Z",
-    "updatedAt": "2026-02-13T10:43:04.770Z"
-  },
-  {
     "id": "mttr-test-1",
     "slug": "mttr-test-1",
     "name": "Release MTTR Dashboard",
@@ -1746,9 +1831,9 @@
       "blocked": 0,
       "notRun": 0
     },
-    "closedAt": "2026-05-04T02:45:05.176Z",
-    "createdAt": "2026-05-03T02:45:05.177Z",
-    "updatedAt": "2026-05-04T02:45:05.177Z",
+    "closedAt": "2026-05-05T11:10:54.639Z",
+    "createdAt": "2026-05-04T11:10:54.639Z",
+    "updatedAt": "2026-05-05T11:10:54.639Z",
     "runSlug": "mttr-test-1",
     "runName": "Release MTTR Dashboard"
   },
@@ -1767,9 +1852,9 @@
       "blocked": 0,
       "notRun": 0
     },
-    "closedAt": "2026-05-04T02:45:05.177Z",
-    "createdAt": "2026-05-03T14:45:05.177Z",
-    "updatedAt": "2026-05-04T02:45:05.177Z",
+    "closedAt": "2026-05-05T11:10:54.639Z",
+    "createdAt": "2026-05-04T23:10:54.639Z",
+    "updatedAt": "2026-05-05T11:10:54.639Z",
     "runSlug": "mttr-manual-unique",
     "runName": "Release MTTR Manual Unique"
   }

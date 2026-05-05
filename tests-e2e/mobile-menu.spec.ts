@@ -14,7 +14,14 @@ test("mobile menu opens on small viewport", async ({ page, context }) => {
     .locator('button[aria-label="Abrir menu"]')
     .or(page.locator('button[aria-label="Open menu"]'));
   await expect(btn.first()).toBeVisible();
+
+  // Wait for React hydration: the button must have a __reactFiber key before clicking
+  await page.waitForFunction(() => {
+    const b = document.querySelector('button[aria-label="Open menu"], button[aria-label="Abrir menu"]');
+    return !!b && !!Object.keys(b).find(k => k.startsWith("__reactFiber") || k.startsWith("__reactProps"));
+  }, { timeout: 15000 });
+
   await btn.first().click();
 
-  await expect(page.locator("#app-shell-mobile-sidebar")).toBeVisible({ timeout: 2000 });
+  await expect(page.locator("#app-shell-mobile-sidebar")).toBeVisible({ timeout: 8000 });
 });

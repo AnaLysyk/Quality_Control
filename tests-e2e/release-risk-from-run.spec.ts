@@ -14,5 +14,5 @@ test("run falha aparece como risco no dashboard", async ({ page, context }) => {
   await page.goto(DASHBOARD, { waitUntil: "domcontentloaded" });
 
   await expectCurrentDashboardReady(page);
-  await expect(page.getByText(/Risco|Falhas|Defeitos/i).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId("executive-stats").getByText(/Risco|Falhas|Defeitos/i).first()).toBeVisible({ timeout: 10000 });
 });

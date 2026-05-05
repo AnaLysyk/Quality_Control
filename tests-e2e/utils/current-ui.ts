@@ -20,8 +20,15 @@ export async function createManualDefect(page: Page, title: string, options: { r
     const runOption = page.getByRole("option", { name: new RegExp(options.runSlug, "i") }).first();
     if (await runOption.isVisible().catch(() => false)) {
       await runOption.click();
+    } else {
+      // Click on defect title to fire mousedown outside RunSelectorField, closing the dropdown
+      await page.getByTestId("defect-title").click();
+      await page.waitForTimeout(100);
     }
   }
+  // Ensure dropdown is closed by clicking the title field before submitting
+  await page.getByTestId("defect-title").click();
+  await page.waitForTimeout(150);
   await page.getByTestId("defect-create").click();
-  await expect(page.getByText(title)).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText(title).first()).toBeVisible({ timeout: 20000 });
 }

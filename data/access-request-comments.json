@@ -119,6 +119,66 @@
       "authorId": "usr_admin_demo_test",
       "body": "Solicitação rejeitada.\nFale com um responsável para revisar o acesso solicitado.",
       "createdAt": "2026-05-04T02:28:19.375Z"
+    },
+    {
+      "id": "8ffd150b-239c-4d8e-bf5c-bc44d892679f",
+      "requestId": "5889b28c-80a8-4945-92d5-b76ec44818e3",
+      "authorRole": "leader_tc",
+      "authorName": "admin@demo.test",
+      "authorEmail": "admin@demo.test",
+      "authorId": "usr_admin_demo_test",
+      "body": "Solicitação aceita.\nSeu usuário e user.accept.587214.\nUse a senha que você criou ao solicitar acesso para entrar na plataforma.",
+      "createdAt": "2026-05-04T23:33:37.362Z"
+    },
+    {
+      "id": "fba62f98-0b0b-465d-8b40-a745465e9e6a",
+      "requestId": "eab0c507-6d03-4689-b185-e85c4a4f95ad",
+      "authorRole": "leader_tc",
+      "authorName": "admin@demo.test",
+      "authorEmail": "admin@demo.test",
+      "authorId": "usr_admin_demo_test",
+      "body": "Solicitação rejeitada.\nFale com um responsável para revisar o acesso solicitado.",
+      "createdAt": "2026-05-04T23:33:44.349Z"
+    },
+    {
+      "id": "29f4a63e-22de-4668-8eaf-24314dd7f2d7",
+      "requestId": "69a33cf8-b79b-4b8a-9aba-bc57aac297ec",
+      "authorRole": "leader_tc",
+      "authorName": "admin@demo.test",
+      "authorEmail": "admin@demo.test",
+      "authorId": "usr_admin_demo_test",
+      "body": "Solicitação aceita.\nSeu usuário e user.accept.461729.\nUse a senha que você criou ao solicitar acesso para entrar na plataforma.",
+      "createdAt": "2026-05-05T00:04:30.925Z"
+    },
+    {
+      "id": "d29f9237-06f9-4cdf-bc66-9b8fd2835966",
+      "requestId": "4fac620f-a28f-4010-b09f-10ba9a971c82",
+      "authorRole": "leader_tc",
+      "authorName": "admin@demo.test",
+      "authorEmail": "admin@demo.test",
+      "authorId": "usr_admin_demo_test",
+      "body": "Solicitação rejeitada.\nFale com um responsável para revisar o acesso solicitado.",
+      "createdAt": "2026-05-05T00:04:35.497Z"
+    },
+    {
+      "id": "b005275c-98b3-4e43-9053-e67a9c8973e8",
+      "requestId": "6de5b49f-3f75-4cc4-818c-ed13129bea7a",
+      "authorRole": "leader_tc",
+      "authorName": "admin@demo.test",
+      "authorEmail": "admin@demo.test",
+      "authorId": "usr_admin_demo_test",
+      "body": "Solicitação aceita.\nSeu usuário e user.accept.171702.\nUse a senha que você criou ao solicitar acesso para entrar na plataforma.",
+      "createdAt": "2026-05-05T11:06:20.619Z"
+    },
+    {
+      "id": "c9ee0a23-39f4-4943-a559-b13f661d465f",
+      "requestId": "c2eb20f4-edcd-46e0-a992-ac77cb35b9f3",
+      "authorRole": "leader_tc",
+      "authorName": "admin@demo.test",
+      "authorEmail": "admin@demo.test",
+      "authorId": "usr_admin_demo_test",
+      "body": "Solicitação rejeitada.\nFale com um responsável para revisar o acesso solicitado.",
+      "createdAt": "2026-05-05T11:06:24.728Z"
     }
   ]
 }

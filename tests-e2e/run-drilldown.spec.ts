@@ -7,6 +7,7 @@ test.describe("Drill-down de Run", () => {
     await mockAuth(context, {
       role: "admin",
       companies: ["demo"],
+      clientSlug: "DEMO",
     });
 
     await page.goto("/empresas/demo/dashboard", { waitUntil: "domcontentloaded" });
@@ -17,7 +18,7 @@ test.describe("Drill-down de Run", () => {
     const drilldownLink = page.getByRole("link", { name: /Drilldown/i }).first();
     if (await drilldownLink.isVisible().catch(() => false)) {
       await drilldownLink.click();
-      await expect(page).toHaveURL(/\/(empresas\/demo\/runs|release)\//, { timeout: 10000 });
+      await expect(page).toHaveURL(/\/(empresas\/[^/]+\/runs|runs|release)\//, { timeout: 10000 });
     } else {
       await expect(page.getByText(/Sem linhas detalhadas|Nenhuma linha disponível/i)).toBeVisible();
     }

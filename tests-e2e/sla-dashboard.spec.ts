@@ -14,5 +14,5 @@ test("dashboard indica defeitos e sinais de SLA", async ({ page, context }) => {
   });
 
   await expectCurrentDashboardReady(page);
-  await expect(page.getByText("Defeitos", { exact: true }).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId("executive-stats").getByText("Defeitos", { exact: true })).toBeVisible({ timeout: 10000 });
 });

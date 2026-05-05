@@ -708,7 +708,6 @@ export default function AppShell({ children }: AppShellProps) {
         onClick={() => setMobileOpen(true)}
         onMouseEnter={isBrainCanvasRoute ? undefined : () => setMobileOpen(true)}
         onTouchStart={() => setMobileOpen(true)}
-        onMouseLeave={isBrainCanvasRoute ? undefined : () => setMobileOpen(false)}
       >
         <FiMenu size={20} />
       </button>

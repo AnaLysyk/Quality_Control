@@ -42,10 +42,15 @@ export async function POST(req: Request) {
     }
   }
 
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
   const company = await createLocalCompany({
     name: body.name,
     slug,
     company_name: body.company_name || body.name,
+    tax_id: str(body.tax_id),
+    address: str(body.address),
+    phone: str(body.phone),
+    cep: str(body.cep),
     integration_mode: body.integration_mode || "manual",
     qase_project_code: (Array.isArray(body.qase_project_codes) && body.qase_project_codes.length ? body.qase_project_codes[0] : (typeof body.qase_project_code === 'string' ? body.qase_project_code : null)) || null,
     qase_project_codes: Array.isArray(body.qase_project_codes) ? body.qase_project_codes : (typeof body.qase_project_code === 'string' ? [body.qase_project_code] : []),

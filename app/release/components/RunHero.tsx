@@ -116,7 +116,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
         <a
           data-testid="release-export-pdf"
           href={vm.pdfExportUrl}
-          download={`run-${vm.releaseData.slug}.pdf`}
+          download={`release-${vm.releaseData.slug}.pdf`}
           className="inline-flex items-center rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-[12px] font-semibold text-white/80 hover:bg-white/15 transition-colors"
         >
           <svg className="w-3.5 h-3.5 mr-1.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

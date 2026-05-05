@@ -6036,13 +6036,18 @@ video {
     }
   }
 
-  /* Brain canvas stays collapsed even on hover */
-  .app-shell.app-shell--brain-canvas .sidebar-shell,
-  .app-shell.app-shell--brain-canvas .sidebar-shell:hover {
+  /* Brain canvas: sidebar starts collapsed and overlays the canvas on hover (content doesn't shift) */
+  .app-shell.app-shell--brain-canvas .sidebar-shell {
     width: var(--sidebar-collapsed);
+    overflow: hidden;
+  }
+  .app-shell.app-shell--brain-canvas .sidebar-shell:hover,
+  .app-shell.app-shell--brain-canvas .sidebar-shell[data-flyout-open="1"] {
+    box-shadow: var(--shell-sidebar-shadow), 22px 0 48px rgba(1, 24, 72, 0.3);
   }
   .app-shell.app-shell--brain-canvas .app-main,
-  .app-shell.app-shell--brain-canvas .sidebar-shell:hover ~ .app-main {
+  .app-shell.app-shell--brain-canvas .sidebar-shell:hover ~ .app-main,
+  .app-shell.app-shell--brain-canvas .sidebar-shell[data-flyout-open="1"] ~ .app-main {
     margin-left: var(--sidebar-collapsed);
   }
 }

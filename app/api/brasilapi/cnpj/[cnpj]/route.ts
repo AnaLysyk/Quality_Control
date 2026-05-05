@@ -35,12 +35,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cnp
     }
 
     const companyName = extractCnpjCompanyName(data);
+    const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
     return NextResponse.json(
       {
         cnpj,
-        nome_fantasia: typeof data.nome_fantasia === "string" ? data.nome_fantasia : null,
-        razao_social: typeof data.razao_social === "string" ? data.razao_social : null,
+        nome_fantasia: str(data.nome_fantasia),
+        razao_social: str(data.razao_social),
         company_name: companyName || null,
+        cep: str(data.cep),
+        logradouro: str(data.logradouro),
+        numero: str(data.numero),
+        complemento: str(data.complemento),
+        bairro: str(data.bairro),
+        municipio: str(data.municipio),
+        uf: str(data.uf),
+        ddd_telefone_1: str(data.ddd_telefone_1),
+        ddd_telefone_2: str(data.ddd_telefone_2),
+        email: str(data.email),
       },
       { status: 200 },
     );

@@ -17,7 +17,7 @@ test("company consegue exportar CSV de qualidade", async ({ page, context }) => 
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: /Exportar CSV/i }).click(),
+    page.getByTestId("export-quality").click(),
   ]);
 
   expect(download.suggestedFilename()).toContain("quality");

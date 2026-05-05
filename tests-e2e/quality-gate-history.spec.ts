@@ -14,5 +14,5 @@ test("historico de quality gate e registrado", async ({ page, context }) => {
 
   await page.getByTestId("quality-gate-history").click();
 
-  await expect(page.getByTestId("release-timeline").or(page.getByTestId("quality-gate-history-list"))).toBeVisible();
+  await expect(page.getByTestId("release-timeline").or(page.getByTestId("quality-gate-history-list")).first()).toBeVisible();
 });

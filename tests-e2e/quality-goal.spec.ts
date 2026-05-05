@@ -14,5 +14,5 @@ test("meta de qualidade mantém leitura executiva disponível", async ({ page, c
   await page.goto("/empresas/demo/dashboard", { waitUntil: "domcontentloaded" });
 
   await expectCurrentDashboardReady(page);
-  await expect(page.getByText(/Pass rate|Falhas|Defeitos/i).first()).toBeVisible();
+  await expect(page.getByTestId("executive-stats").getByText(/Pass rate|Falhas|Defeitos/i).first()).toBeVisible();
 });

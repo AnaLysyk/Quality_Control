@@ -10,7 +10,6 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { resolveAutomationAccess } from "@/lib/automations/access";
 
 import { AutomationModuleProvider } from "./AutomationModuleContext";
-import AutomationModuleSidebar from "./AutomationModuleSidebar";
 
 function Skeleton() {
   return (
@@ -113,7 +112,6 @@ export default function AutomationModuleLayout({ children }: { children: React.R
               {children}
             </div>
           )}
-          <AutomationModuleSidebar />
         </main>
       </AutomationModuleProvider>
     </RequireAuth>

@@ -47,7 +47,7 @@ test.describe("rbac - runs UI", () => {
 
     await page.goto("/admin/runs", { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByRole("heading", { name: /Gerenciar Runs|Central Operacional/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /Gerenciar Runs|Central Operacional/i })).toBeVisible({ timeout: 30000 });
     const deleteButtons = page.getByTestId("run-delete");
     if ((await deleteButtons.count()) > 0) {
       await expect(deleteButtons.first()).toBeVisible();

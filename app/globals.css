@@ -6046,6 +6046,8 @@ video {
   }
   .app-shell.app-shell--brain-canvas .sidebar-shell:hover,
   .app-shell.app-shell--brain-canvas .sidebar-shell[data-flyout-open="1"] {
+    width: var(--sidebar-expanded);
+    overflow: visible;
     box-shadow: var(--shell-sidebar-shadow), 22px 0 48px rgba(1, 24, 72, 0.3);
   }
   .app-shell.app-shell--brain-canvas .app-main,

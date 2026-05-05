@@ -1,8 +1,5 @@
 ﻿import "server-only";
 
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
@@ -14,7 +11,6 @@ async function getPrisma() {
 
 const USE_MEMORY_ALERTS =
   process.env.QUALITY_ALERTS_IN_MEMORY === "true" || process.env.NODE_ENV === "test";
-const STORE_PATH = path.join(/*turbopackIgnore: true*/ process.cwd(), "data", "quality_gate_history.json");
 const STORE_KEY = "qc:quality_gate_history:v1";
 const USE_PERSISTENT_STORE = !USE_MEMORY_ALERTS && !USE_POSTGRES && canUsePersistentJsonStore();
 
@@ -56,16 +52,6 @@ function pgRowToEntry(r: { id: string; companySlug: string; releaseSlug: string;
   };
 }
 
-async function ensureStore() {
-  if (USE_MEMORY_ALERTS || USE_PERSISTENT_STORE || USE_POSTGRES) return;
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  try {
-    await fs.access(STORE_PATH);
-  } catch {
-    await fs.writeFile(STORE_PATH, "[]", "utf8");
-  }
-}
-
 export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
   if (USE_MEMORY_ALERTS) {
     memoryStore = [...memoryStore, entry];
@@ -99,21 +85,7 @@ export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
     return;
   }
 
-  try {
-    await ensureStore();
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    let arr: QualityGateHistoryEntry[] = [];
-    try {
-      const parsed = JSON.parse(raw);
-      arr = Array.isArray(parsed) ? (parsed as QualityGateHistoryEntry[]) : [];
-    } catch {
-      arr = [];
-    }
-    arr.push(entry);
-    await fs.writeFile(STORE_PATH, JSON.stringify(arr, null, 2), "utf8");
-  } catch (err) {
-    console.warn("qualityGateHistory: unable to write store", err);
-  }
+  memoryStore = [...memoryStore, entry];
 }
 
 export async function readQualityGateHistory(
@@ -146,15 +118,7 @@ export async function readQualityGateHistory(
     const persisted = await readPersistentJson<QualityGateHistoryEntry[]>(STORE_KEY, []);
     arr = Array.isArray(persisted) ? persisted : [];
   } else {
-    try {
-      await ensureStore();
-      const raw = await fs.readFile(STORE_PATH, "utf8");
-      const parsed = JSON.parse(raw);
-      arr = Array.isArray(parsed) ? (parsed as QualityGateHistoryEntry[]) : [];
-    } catch (err) {
-      console.warn("qualityGateHistory: unable to read store", err);
-      return [];
-    }
+    arr = [...memoryStore];
   }
 
   if (companySlug) arr = arr.filter((item) => item.company_slug === companySlug);

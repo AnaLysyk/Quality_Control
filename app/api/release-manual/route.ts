@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { hasCapability, type Capability } from "@/lib/permissions";
-import { getJsonStoreDir } from "@/data/jsonStorePath";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 import { syncReleaseManualToBrain } from "@/lib/brain-sync";
 
@@ -17,9 +14,9 @@ type ManualRelease = {
   createdAt: string;
 };
 
-const STORE_PATH = path.join(getJsonStoreDir(), "release-manual-store.json");
 const STORE_KEY = "qc:release_manual_store:v1";
 const USE_PERSISTENT_STORE = canUsePersistentJsonStore();
+let memoryStore: ManualRelease[] = [];
 
 function normalizeRole(role?: string | null) {
   return (role ?? "").trim().toLowerCase();
@@ -52,29 +49,13 @@ function ensureCompanyAccess(user: AuthUser, companyId: string) {
   return false;
 }
 
-async function ensureStore() {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  try {
-    await fs.access(STORE_PATH);
-  } catch {
-    await fs.writeFile(STORE_PATH, "[]", "utf8");
-  }
-}
-
 async function readStore(): Promise<ManualRelease[]> {
   if (USE_PERSISTENT_STORE) {
     const persisted = await readPersistentJson<ManualRelease[]>(STORE_KEY, []);
     return Array.isArray(persisted) ? persisted : [];
   }
 
-  await ensureStore();
-  try {
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw) as ManualRelease[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return memoryStore;
 }
 
 async function writeStore(items: ManualRelease[]) {
@@ -83,8 +64,7 @@ async function writeStore(items: ManualRelease[]) {
     if (ok) return;
   }
 
-  await ensureStore();
-  await fs.writeFile(STORE_PATH, JSON.stringify(items, null, 2), "utf8");
+  memoryStore = items;
 }
 
 export async function POST(req: NextRequest) {

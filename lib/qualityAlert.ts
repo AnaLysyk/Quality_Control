@@ -1,7 +1,5 @@
 ﻿import "server-only";
 
-import fs from "fs";
-import path from "path";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
@@ -18,12 +16,10 @@ const USE_MEMORY_ALERTS =
     process.env.E2E_USE_JSON !== "true" &&
     process.env.PLAYWRIGHT_MOCK !== "true");
 
-const ALERTS_STORE = path.join(process.cwd(), "data", "quality_alerts.json");
 const ALERTS_KEY = "qc:quality_alerts:v1";
 const USE_PERSISTENT_STORE = !USE_MEMORY_ALERTS && !USE_POSTGRES && canUsePersistentJsonStore();
 
 let memoryAlerts: QualityAlert[] = [];
-let warnedFsFailure = false;
 
 const ALERT_TYPES = [
   "quality_score",
@@ -65,23 +61,7 @@ type ReleaseAlertInput = {
 };
 
 async function ensureAlertsStore(): Promise<boolean> {
-  if (USE_PERSISTENT_STORE) return true;
-  try {
-    await fs.promises.mkdir(path.dirname(ALERTS_STORE), { recursive: true });
-    await fs.promises.access(ALERTS_STORE);
-    return true;
-  } catch {
-    try {
-      await fs.promises.writeFile(ALERTS_STORE, "[]", "utf8");
-      return true;
-    } catch {
-      if (!warnedFsFailure) {
-        warnedFsFailure = true;
-        console.warn("[QUALITY_ALERTS] Falha ao acessar filesystem; usando fallback em memoria.");
-      }
-      return false;
-    }
-  }
+  return false;
 }
 
 function findLatestAlert(alerts: QualityAlert[], companySlug: string, type: QualityAlertType) {
@@ -136,13 +116,7 @@ export async function readAlertsStore(): Promise<QualityAlert[]> {
 
   const ok = await ensureAlertsStore();
   if (!ok) return memoryAlerts;
-  try {
-    const raw = await fs.promises.readFile(ALERTS_STORE, "utf8");
-    const parsed = JSON.parse(raw) as QualityAlert[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return memoryAlerts;
-  }
+  return memoryAlerts;
 }
 
 export async function writeAlertsStore(alerts: QualityAlert[]): Promise<void> {
@@ -177,16 +151,8 @@ export async function writeAlertsStore(alerts: QualityAlert[]): Promise<void> {
     return;
   }
 
-  const ok = await ensureAlertsStore();
-  if (!ok) {
-    memoryAlerts = alerts as QualityAlert[];
-    return;
-  }
-  try {
-    await fs.promises.writeFile(ALERTS_STORE, JSON.stringify(alerts, null, 2), "utf8");
-  } catch {
-    memoryAlerts = alerts as QualityAlert[];
-  }
+  // Memory fallback
+  memoryAlerts = alerts as QualityAlert[];
 }
 
 async function safeFetch(input: RequestInfo, init?: RequestInit) {

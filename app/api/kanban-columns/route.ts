@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import path from "node:path";
-import fs from "node:fs/promises";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { isDevRole } from "@/lib/rbac/devAccess";
-import { getJsonStorePath } from "@/data/jsonStorePath";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
 export const revalidate = 0;
@@ -21,24 +18,16 @@ const DEFAULT_COLUMNS: KanbanColumn[] = [
   { key: "done", label: "Concluido", locked: true },
 ];
 
-const STORE_PATH = getJsonStorePath("kanban-columns.json");
 const STORE_KEY = "qc:kanban_columns:v1";
 const USE_PERSISTENT_STORE = canUsePersistentJsonStore();
+let memoryColumns: KanbanColumn[] = DEFAULT_COLUMNS;
 
 async function readColumns(): Promise<KanbanColumn[]> {
   if (USE_PERSISTENT_STORE) {
     const persisted = await readPersistentJson<{ columns?: KanbanColumn[] }>(STORE_KEY, { columns: DEFAULT_COLUMNS });
     return Array.isArray(persisted?.columns) ? persisted.columns : DEFAULT_COLUMNS;
   }
-
-  try {
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    const data = JSON.parse(raw);
-    if (Array.isArray(data.columns)) return data.columns;
-  } catch {
-    // fall through to defaults
-  }
-  return DEFAULT_COLUMNS;
+  return memoryColumns;
 }
 
 async function writeColumns(columns: KanbanColumn[]): Promise<void> {
@@ -46,8 +35,7 @@ async function writeColumns(columns: KanbanColumn[]): Promise<void> {
     const ok = await writePersistentJson(STORE_KEY, { columns });
     if (ok) return;
   }
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  await fs.writeFile(STORE_PATH, JSON.stringify({ columns }, null, 2), "utf8");
+  memoryColumns = columns;
 }
 
 export async function GET(req: Request) {

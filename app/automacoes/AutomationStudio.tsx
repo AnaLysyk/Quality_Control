@@ -4191,6 +4191,8 @@ export default function AutomationStudio({
                       disabled={!canEditFlow}
                       onChange={() => void convertImageForFlow()}
                       className="hidden"
+                      aria-label="Selecionar imagem para conversão"
+                      title="Selecionar imagem para conversão"
                     />
                     <div className="grid gap-3 sm:grid-cols-2">
                       <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">

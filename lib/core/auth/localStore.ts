@@ -1,7 +1,5 @@
 import "server-only";
 
-import path from "node:path";
-import fs from "node:fs/promises";
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
@@ -77,14 +75,9 @@ export type LocalAuthStore = {
   links?: LocalAuthLink[];
 };
 
-const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
-const DATA_DIR = process.env.LOCAL_AUTH_DATA_DIR || DEFAULT_DATA_DIR;
-const STORE_PATH = path.join(DATA_DIR, "local-auth-store.json");
-const SAMPLE_PATH = path.join(DEFAULT_DATA_DIR, "local-auth-store.sample.json");
 const STORE_KEY = "qc:local_auth_store:v1";
 const USE_REDIS = process.env.LOCAL_AUTH_STORE === "redis" || isRedisConfigured();
 const USE_MEMORY_STORE = process.env.LOCAL_AUTH_IN_MEMORY === "true";
-let warnedFsFailure = false;
 
 function normalizeDatabaseUrl(value?: string | null) {
   return (value ?? "").trim().replace(/^['"]|['"]$/g, "");
@@ -307,48 +300,7 @@ function normalizeMemberships(store: LocalAuthStore) {
   return memberships;
 }
 
-async function readJson(filePath: string): Promise<LocalAuthStore | null> {
-  try {
-    const raw = await fs.readFile(filePath, "utf8");
-    const parsed = JSON.parse(raw) as Partial<LocalAuthStore> | null;
-    if (!parsed || typeof parsed !== "object") return null;
-    const users = Array.isArray(parsed.users) ? (parsed.users as LocalAuthUser[]) : [];
-    const companies = Array.isArray(parsed.companies) ? (parsed.companies as LocalAuthCompany[]) : [];
-    const normalizedUsers = users.map((user) => {
-      const rawUser = typeof user.user === "string" ? user.user.trim() : "";
-      const rawEmail = typeof user.email === "string" ? user.email.trim() : "";
-      const fallback = rawUser || rawEmail || "";
-      return {
-        ...user,
-        user: rawUser || fallback,
-        email: rawEmail || fallback,
-        created_by_company_id:
-          typeof user.created_by_company_id === "string" && user.created_by_company_id.trim()
-            ? user.created_by_company_id.trim()
-            : null,
-        home_company_id:
-          typeof user.home_company_id === "string" && user.home_company_id.trim()
-            ? user.home_company_id.trim()
-            : null,
-        user_origin: normalizeUserOrigin(user.user_origin),
-        user_scope: normalizeUserScope(user.user_scope),
-        allow_multi_company_link: resolveAllowMultiCompanyLink(
-          user.allow_multi_company_link,
-          user.user_scope,
-        ),
-      } as LocalAuthUser;
-    });
-    const store: LocalAuthStore = {
-      users: normalizedUsers,
-      companies,
-      memberships: Array.isArray(parsed.memberships) ? (parsed.memberships as LocalAuthMembership[]) : [],
-      links: Array.isArray(parsed.links) ? (parsed.links as LocalAuthLink[]) : [],
-    };
-    return store;
-  } catch {
-    return null;
-  }
-}
+
 
 function cloneStore(store: LocalAuthStore): LocalAuthStore {
   if (typeof structuredClone === "function") return structuredClone(store);
@@ -370,10 +322,8 @@ function setMemoryStore(store: LocalAuthStore) {
 }
 
 async function readStoreFromDisk(): Promise<LocalAuthStore> {
-  const store = (await readJson(STORE_PATH)) ?? (await readJson(SAMPLE_PATH));
-  const normalized = store ?? { users: [], companies: [], memberships: [], links: [] };
-  normalized.memberships = normalizeMemberships(normalized);
-  return normalized;
+  // No filesystem access — return an empty store as the baseline
+  return { users: [], companies: [], memberships: [], links: [] };
 }
 
 async function readStoreFromRedis(): Promise<LocalAuthStore | null> {
@@ -411,12 +361,7 @@ async function writeStoreToRedis(store: LocalAuthStore): Promise<boolean> {
 }
 
 async function storeExists() {
-  try {
-    await fs.access(STORE_PATH);
-    return true;
-  } catch {
-    return false;
-  }
+  return false;
 }
 
 export async function readLocalAuthStore(): Promise<LocalAuthStore> {
@@ -466,21 +411,8 @@ export async function writeLocalAuthStore(store: LocalAuthStore): Promise<void> 
     const ok = await writeStoreToRedis(payload);
     if (ok) return;
   }
-  if (USE_MEMORY_STORE) {
-    setMemoryStore(cloneStore(payload));
-    return;
-  }
-  try {
-    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-    await fs.writeFile(STORE_PATH, JSON.stringify(payload, null, 2), "utf8");
-  } catch (err) {
-    if (!warnedFsFailure) {
-      warnedFsFailure = true;
-      const msg = err instanceof Error ? err.message : String(err);
-      console.warn("[localAuthStore] Falha ao escrever arquivo, usando memoria:", msg);
-    }
-    setMemoryStore(cloneStore(payload));
-  }
+  // Memory fallback (covers USE_MEMORY_STORE and non-Postgres-non-Redis)
+  setMemoryStore(cloneStore(payload));
 }
 
 async function loadStoreForWrite(): Promise<LocalAuthStore> {

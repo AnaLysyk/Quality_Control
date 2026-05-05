@@ -1,12 +1,9 @@
 ﻿import "server-only";
 
 import { randomUUID } from "crypto";
-import path from "node:path";
-import fs from "node:fs/promises";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { LEGACY_SUPORTE_STATUS_MAP, normalizeKanbanStatus, type SuporteStatus } from "@/lib/suportesStatus";
-import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
@@ -73,70 +70,41 @@ type ImportPayload = {
   items?: unknown;
 };
 
-const DEFAULT_DATA_DIR = getJsonStoreDir();
-const DATA_DIR = process.env.TICKETS_DATA_DIR || DEFAULT_DATA_DIR;
-const STORE_PATH = path.join(DATA_DIR, "support-suportes.json");
-const VERSION_DIR = path.join(DATA_DIR, "versions");
-const BACKUP_DIR = path.join(DATA_DIR, "backups");
-const LOCK_PATH = `${STORE_PATH}.lock`;
 const STORE_KEY = "qc:support_suportes:v1";
 const STORE_COUNTER_KEY = "qc:support_suportes:counter:v1";
-const FORCE_FILE = process.env.TICKETS_STORE === "file";
+const VERSION_DB_KEY_PREFIX = "qc:support_suportes:versions:v1:";
+const BACKUP_DB_KEY_PREFIX = "qc:support_suportes:backups:v1:";
 const FORCE_REDIS = process.env.TICKETS_STORE === "redis";
 const REDIS_AVAILABLE = isRedisConfigured();
-const USE_REDIS = !FORCE_FILE && REDIS_AVAILABLE;
-const SHOULD_FLUSH_ON_WRITE = Boolean(
-  process.env.TICKETS_FLUSH_ON_WRITE === "true" ||
-    process.env.NODE_ENV !== "production",
-);
+const USE_REDIS = FORCE_REDIS || REDIS_AVAILABLE;
 const USE_MEMORY = process.env.TICKETS_IN_MEMORY === "true";
-
-const FLUSH_INTERVAL_MS = Math.max(1000, Number(process.env.TICKETS_FLUSH_INTERVAL_MS ?? 5000));
-const LOCK_TIMEOUT_MS = Math.max(1000, Number(process.env.TICKETS_LOCK_TIMEOUT_MS ?? 10000));
-const LOCK_RETRY_MS = Math.max(50, Number(process.env.TICKETS_LOCK_RETRY_MS ?? 120));
 const MAX_VERSIONS = Math.max(1, Number(process.env.TICKETS_MAX_VERSIONS ?? 20));
-const BACKUP_INTERVAL_MS = Math.max(5000, Number(process.env.TICKETS_BACKUP_INTERVAL_MS ?? 60000));
 const MAX_BACKUPS = Math.max(1, Number(process.env.TICKETS_MAX_BACKUPS ?? 30));
 
+if (FORCE_REDIS && !REDIS_AVAILABLE) {
+  console.warn("[TICKETS] TICKETS_STORE=redis sem credenciais Redis; usando memoria.");
+}
+
 let memoryStore: SuportesStore = { items: [], counter: 0 };
-let warnedFsFailure = false;
 let cacheStore: SuportesStore | null = null;
 let dirty = false;
-let initPromise: Promise<void> | null = null;
-let flushTimer: NodeJS.Timeout | null = null;
-let backupTimer: NodeJS.Timeout | null = null;
-let versionCounter = 0;
-let flushingPromise: Promise<void> | null = null;
-let writeQueue: Promise<void> = Promise.resolve();
 let warnedRedisFailure = false;
 let forceMemory = false;
-
-if (FORCE_REDIS && !REDIS_AVAILABLE) {
-  console.warn("[TICKETS] TICKETS_STORE=redis sem credenciais; usando filesystem.");
-}
 
 function usingMemory() {
   return USE_MEMORY || forceMemory;
 }
 
-async function ensureStore(): Promise<boolean> {
-  try {
-    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-    await fs.access(STORE_PATH);
-    return true;
-  } catch {
-    try {
-      await fs.writeFile(STORE_PATH, JSON.stringify({ items: [], counter: 0 }, null, 2), "utf8");
-      return true;
-    } catch {
-      if (!warnedFsFailure) {
-        warnedFsFailure = true;
-        console.warn("[TICKETS] Falha ao acessar filesystem; usando fallback em memoria.");
-      }
-      forceMemory = true;
-      return false;
-    }
-  }
+async function initStore() {
+  if (USE_POSTGRES || USE_REDIS || usingMemory()) return;
+  if (cacheStore) return;
+  // No filesystem — fall back to in-memory
+  forceMemory = true;
+  cacheStore = memoryStore;
+}
+
+async function withFileLock<T>(fn: () => Promise<T>) {
+  return fn();
 }
 
 function normalizeStore(raw: unknown): SuportesStore {
@@ -252,105 +220,8 @@ async function syncLegacyCodes(store: SuportesStore): Promise<SuportesStore> {
   return { items, counter };
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function tryAcquireLock() {
-  try {
-    return await fs.open(LOCK_PATH, "wx");
-  } catch {
-    return null;
-  }
-}
-
-async function withFileLock<T>(fn: () => Promise<T>) {
-  if (USE_REDIS || usingMemory()) return fn();
-  const start = Date.now();
-  while (true) {
-    const handle = await tryAcquireLock();
-    if (handle) {
-      try {
-        return await fn();
-      } finally {
-        await handle.close().catch(() => null);
-        await fs.unlink(LOCK_PATH).catch(() => null);
-      }
-    }
-    if (Date.now() - start > LOCK_TIMEOUT_MS) {
-      throw new Error("TICKETS_LOCK_TIMEOUT");
-    }
-    await sleep(LOCK_RETRY_MS);
-  }
-}
-
-async function loadStoreFromDisk(): Promise<SuportesStore> {
-  const ok = await ensureStore();
-  if (!ok) return memoryStore;
-  try {
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    return normalizeStore(JSON.parse(raw));
-  } catch {
-    return memoryStore;
-  }
-}
-
-async function loadVersionCounter() {
-  try {
-    const files = await fs.readdir(VERSION_DIR);
-    const nums = files
-      .map((file) => file.match(/support-tickets\.v(\d+)\.json$/i))
-      .filter(Boolean)
-      .map((match) => Number(match?.[1] ?? 0))
-      .filter((value) => Number.isFinite(value));
-    versionCounter = nums.length ? Math.max(...nums) : 0;
-  } catch {
-    versionCounter = 0;
-  }
-}
-
-function startFlushLoop() {
-  if (flushTimer || USE_REDIS || usingMemory()) return;
-  flushTimer = setInterval(() => {
-    flushNow().catch(() => null);
-  }, FLUSH_INTERVAL_MS);
-  flushTimer?.unref?.();
-}
-
-function startBackupLoop() {
-  if (backupTimer || USE_REDIS || usingMemory()) return;
-  backupTimer = setInterval(() => {
-    createBackup().catch(() => null);
-  }, BACKUP_INTERVAL_MS);
-  backupTimer?.unref?.();
-}
-
-async function initStore() {
-  if (USE_REDIS || usingMemory()) return;
-  if (cacheStore) return;
-  if (initPromise) return initPromise;
-  initPromise = (async () => {
-    try {
-      await fs.mkdir(VERSION_DIR, { recursive: true });
-      await fs.mkdir(BACKUP_DIR, { recursive: true });
-      cacheStore = await loadStoreFromDisk();
-      await loadVersionCounter();
-      startFlushLoop();
-      startBackupLoop();
-    } catch (err) {
-      if (!warnedFsFailure) {
-        warnedFsFailure = true;
-        const msg = err instanceof Error ? err.message : String(err);
-        console.warn("[TICKETS] Falha ao preparar storage; usando memoria.", msg);
-      }
-      forceMemory = true;
-      cacheStore = null;
-    }
-  })();
-  return initPromise;
-}
-
 async function readStore(): Promise<SuportesStore> {
+  if (USE_POSTGRES) return memoryStore;
   if (USE_REDIS) {
     try {
       const redis = getRedis();
@@ -374,10 +245,7 @@ async function readStore(): Promise<SuportesStore> {
     return memoryStore;
   }
   await initStore();
-  if (!cacheStore) {
-    cacheStore = await loadStoreFromDisk();
-  }
-  return cacheStore;
+  return cacheStore ?? memoryStore;
 }
 
 async function writeStore(next: SuportesStore) {
@@ -398,120 +266,147 @@ async function writeStore(next: SuportesStore) {
       return;
     }
   }
-  if (usingMemory()) {
+  // Memory fallback (covers USE_MEMORY, forceMemory, and non-Postgres-non-Redis)
+  if (usingMemory() || !USE_REDIS) {
     memoryStore = payload;
+    if (cacheStore !== null) cacheStore = payload;
     return;
   }
-  await initStore();
-  cacheStore = payload;
-  dirty = true;
-  if (SHOULD_FLUSH_ON_WRITE) {
-    // Ensure flushes are serialized to avoid concurrent file-lock attempts
-    await enqueueWrite(async () => {
-      try {
-        await flushNow();
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.warn("[TICKETS] Falha ao persistir imediatamente:", msg);
+}
+
+function buildPersistentSnapshotName(kind: "version" | "backup") {
+  const stamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
+  return kind === "backup"
+    ? `support-suportes.bak-${stamp}.json`
+    : `support-suportes.v${stamp}.json`;
+}
+
+async function readPostgresStoreSnapshot(): Promise<SuportesStore> {
+  const prisma = await getPrisma();
+  const rows = await prisma.ticket.findMany({ orderBy: { createdAt: "desc" }, include: { events: true } });
+  const items = rows.map(pgTicketToRecord);
+  const counter = items.reduce((max, item) => Math.max(max, parseCodeNumber(item.code ?? "")), 0);
+  return { items, counter };
+}
+
+async function writePersistentSnapshot(prefix: string, name: string, store: SuportesStore) {
+  const prisma = await getPrisma();
+  await prisma.persistentKeyValue.upsert({
+    where: { key: `${prefix}${name}` },
+    update: { value: JSON.stringify(store) },
+    create: { key: `${prefix}${name}`, value: JSON.stringify(store) },
+  });
+}
+
+async function prunePersistentSnapshots(prefix: string, maxItems: number) {
+  const prisma = await getPrisma();
+  const rows = await prisma.persistentKeyValue.findMany({
+    where: { key: { startsWith: prefix } },
+    orderBy: { key: "desc" },
+  });
+  if (rows.length <= maxItems) return;
+  await prisma.persistentKeyValue.deleteMany({
+    where: { key: { in: rows.slice(maxItems).map((row) => row.key) } },
+  });
+}
+
+async function writePostgresVersionSnapshot() {
+  const store = await readPostgresStoreSnapshot();
+  const name = buildPersistentSnapshotName("version");
+  await writePersistentSnapshot(VERSION_DB_KEY_PREFIX, name, store);
+  await prunePersistentSnapshots(VERSION_DB_KEY_PREFIX, MAX_VERSIONS);
+}
+
+async function writePostgresBackupSnapshot() {
+  const store = await readPostgresStoreSnapshot();
+  const name = buildPersistentSnapshotName("backup");
+  await writePersistentSnapshot(BACKUP_DB_KEY_PREFIX, name, store);
+  await prunePersistentSnapshots(BACKUP_DB_KEY_PREFIX, MAX_BACKUPS);
+}
+
+async function listPostgresVersionNames() {
+  const prisma = await getPrisma();
+  const rows = await prisma.persistentKeyValue.findMany({
+    where: { key: { startsWith: VERSION_DB_KEY_PREFIX } },
+    orderBy: { key: "desc" },
+  });
+  return rows.map((row) => row.key.slice(VERSION_DB_KEY_PREFIX.length));
+}
+
+async function restorePostgresVersionSnapshot(name: string) {
+  const prisma = await getPrisma();
+  const entry = await prisma.persistentKeyValue.findUnique({ where: { key: `${VERSION_DB_KEY_PREFIX}${name}` } });
+  if (!entry) {
+    throw new Error("TICKETS_VERSION_NOT_FOUND");
+  }
+  const snapshot = normalizeStore(JSON.parse(entry.value));
+  await prisma.$transaction(async (tx) => {
+    await tx.ticket.deleteMany({});
+    for (const item of snapshot.items) {
+      await tx.ticket.create({
+        data: {
+          id: item.id,
+          code: item.code,
+          title: item.title,
+          description: item.description,
+          status: item.status,
+          type: item.type,
+          priority: item.priority,
+          tags: item.tags,
+          companySlug: item.companySlug ?? null,
+          companyId: item.companyId ?? null,
+          createdBy: item.createdBy,
+          createdByName: item.createdByName ?? null,
+          createdByEmail: item.createdByEmail ?? null,
+          assignedToUserId: item.assignedToUserId ?? null,
+          updatedBy: item.updatedBy ?? null,
+          createdAt: new Date(item.createdAt),
+        },
+      });
+      for (const event of item.timeline ?? []) {
+        await tx.ticketEvent.create({
+          data: {
+            ticketId: item.id,
+            type: "STATUS_CHANGED",
+            payload: { from: event.from, to: event.to },
+            actorUserId: event.changedById || null,
+            createdAt: new Date(event.at),
+          },
+        });
       }
-    });
-  }
-}
-
-// Simple in-process queue to serialize write/flush operations
-function enqueueWrite<T>(fn: () => Promise<T>): Promise<T> {
-  const next = writeQueue.then(() => fn());
-  // propagate completion and ensure queue continues
-  writeQueue = next.then(() => undefined, () => undefined);
-  return next;
-}
-
-function buildVersionName(counter: number) {
-  return `support-suportes.v${String(counter).padStart(6, "0")}.json`;
-}
-
-async function writeVersionSnapshot() {
-  if (!cacheStore) return;
-  versionCounter += 1;
-  const filename = buildVersionName(versionCounter);
-  const filePath = path.join(VERSION_DIR, filename);
-  await fs.writeFile(filePath, JSON.stringify(cacheStore, null, 2), "utf8");
-  await rotateVersions();
-}
-
-async function rotateVersions() {
-  const files = (await fs.readdir(VERSION_DIR)).filter((file) => file.endsWith(".json")).sort();
-  if (files.length <= MAX_VERSIONS) return;
-  const remove = files.slice(0, files.length - MAX_VERSIONS);
-  for (const file of remove) {
-    await fs.unlink(path.join(VERSION_DIR, file)).catch(() => null);
-  }
-}
-
-function buildBackupName() {
-  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
-  return `support-suportes.bak-${stamp}.json`;
-}
-
-async function rotateBackups() {
-  const files = (await fs.readdir(BACKUP_DIR)).filter((file) => file.endsWith(".json")).sort();
-  if (files.length <= MAX_BACKUPS) return;
-  const remove = files.slice(0, files.length - MAX_BACKUPS);
-  for (const file of remove) {
-    await fs.unlink(path.join(BACKUP_DIR, file)).catch(() => null);
-  }
+    }
+  });
 }
 
 export async function createBackup() {
-  if (USE_REDIS || usingMemory()) return;
-  await initStore();
-  if (!cacheStore) return;
-  await withFileLock(async () => {
-    const filePath = path.join(BACKUP_DIR, buildBackupName());
-    await fs.writeFile(filePath, JSON.stringify(cacheStore, null, 2), "utf8");
-    await rotateBackups();
-  });
+  if (USE_POSTGRES) {
+    await writePostgresBackupSnapshot();
+    return;
+  }
+  // No filesystem — backup is no-op for memory/Redis mode
 }
 
 export async function flushNow() {
-  if (USE_REDIS || usingMemory()) return;
-  if (!dirty) return;
-  if (flushingPromise) return flushingPromise;
-  flushingPromise = withFileLock(async () => {
-    if (!cacheStore) return;
-    await writeVersionSnapshot();
-    const tmp = `${STORE_PATH}.tmp`;
-    await fs.writeFile(tmp, JSON.stringify(cacheStore, null, 2), "utf8");
-    await fs.rename(tmp, STORE_PATH);
-    dirty = false;
-  }).finally(() => {
-    flushingPromise = null;
-  });
-  return flushingPromise;
+  if (USE_POSTGRES) return;
+  // No filesystem — nothing to flush
+  dirty = false;
 }
 
 export async function listVersions() {
-  if (USE_REDIS || usingMemory()) return [];
-  await initStore();
-  const files = (await fs.readdir(VERSION_DIR)).filter((file) => file.endsWith(".json")).sort();
-  return files;
+  if (USE_POSTGRES) {
+    return listPostgresVersionNames();
+  }
+  return [];
 }
 
 export async function restoreVersion(name: string) {
-  if (USE_REDIS || usingMemory()) {
-    throw new Error("TICKETS_RESTORE_UNSUPPORTED");
+  if (USE_POSTGRES) {
+    await restorePostgresVersionSnapshot(name);
+    await writePostgresVersionSnapshot();
+    return await readPostgresStoreSnapshot();
   }
-  await initStore();
-  await withFileLock(async () => {
-    const filePath = path.join(VERSION_DIR, name);
-    const raw = await fs.readFile(filePath, "utf8");
-    cacheStore = normalizeStore(JSON.parse(raw));
-    dirty = true;
-  });
-  await flushNow();
-  return cacheStore;
+  throw new Error("TICKETS_RESTORE_UNSUPPORTED");
 }
-
 export async function exportSuportes(filter?: (item: SuporteRecord) => boolean): Promise<ExportPayload> {
   const store = await syncLegacyCodes(await readStore());
   const items = filter ? store.items.filter(filter) : store.items;
@@ -551,12 +446,81 @@ export async function importSuportes(payload: ImportPayload, mode: ImportMode) {
   if (!Array.isArray(payload.items)) {
     throw new Error("SUPORTES_IMPORT_INVALID_ITEMS");
   }
+
+  const nextItems = payload.items as SuporteRecord[];
+  nextItems.forEach(validateImportItem);
+
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    await createBackup();
+    await prisma.$transaction(async (tx) => {
+      const existingRows = await tx.ticket.findMany({ include: { events: true } });
+      const existingMap = new Map(existingRows.map((row) => [row.id, pgTicketToRecord(row)]));
+      const incomingMap = new Map(nextItems.map((item) => [item.id, item]));
+
+      let finalItems: SuporteRecord[] = [];
+      if (mode === "replace") {
+        finalItems = nextItems;
+      } else if (mode === "merge") {
+        finalItems = [...existingMap.values()];
+        for (const item of nextItems) {
+          if (!existingMap.has(item.id)) {
+            finalItems.push(item);
+          }
+        }
+      } else {
+        finalItems = [...existingMap.values()];
+        for (const item of nextItems) {
+          incomingMap.set(item.id, item);
+        }
+        finalItems = Array.from(new Map([...existingMap, ...incomingMap]).values());
+      }
+
+      await tx.ticketEvent.deleteMany({});
+      await tx.ticket.deleteMany({});
+
+      for (const item of finalItems) {
+        await tx.ticket.create({
+          data: {
+            id: item.id,
+            code: item.code,
+            title: item.title,
+            description: item.description,
+            status: item.status,
+            type: item.type,
+            priority: item.priority,
+            tags: item.tags,
+            createdAt: new Date(item.createdAt),
+            companySlug: item.companySlug ?? null,
+            companyId: item.companyId ?? null,
+            createdBy: item.createdBy,
+            createdByName: item.createdByName ?? null,
+            createdByEmail: item.createdByEmail ?? null,
+            assignedToUserId: item.assignedToUserId ?? null,
+            updatedBy: item.updatedBy ?? null,
+          },
+        });
+
+        for (const event of item.timeline ?? []) {
+          await tx.ticketEvent.create({
+            data: {
+              ticketId: item.id,
+              type: "STATUS_CHANGED",
+              payload: { from: event.from, to: event.to },
+              actorUserId: event.changedById || null,
+              createdAt: new Date(event.at),
+            },
+          });
+        }
+      }
+    });
+    await writePostgresVersionSnapshot();
+    return readPostgresStoreSnapshot();
+  }
+
   await initStore();
   await createBackup();
   await withFileLock(async () => {
-    const nextItems = payload.items as SuporteRecord[];
-    nextItems.forEach(validateImportItem);
-
     if (!cacheStore) {
       cacheStore = { items: [], counter: 0 };
     }
@@ -657,6 +621,7 @@ export async function createSuporte(input: {
       data: { code, title: title || "Novo suporte", description, status: "backlog", type, priority: normalizePriority(input.priority), tags: normalizeTags(input.tags), createdBy: input.createdBy || "anonymous", createdByName: input.createdByName ?? null, createdByEmail: input.createdByEmail ?? null, companySlug: input.companySlug ?? null, companyId: input.companyId ?? null, assignedToUserId: input.assignedToUserId ?? null },
       include: { events: true },
     });
+    await writePostgresVersionSnapshot();
     return pgTicketToRecord(row);
   }
   const now = new Date().toISOString();
@@ -713,6 +678,7 @@ export async function updateSuporteForUser(
     const title = sanitizeText(patch.title, 120) || current.title;
     const description = typeof patch.description === "string" ? sanitizeText(patch.description, 2000) : current.description;
     const row = await prisma.ticket.update({ where: { id }, data: { title, description, updatedBy: userId }, include: { events: true } });
+    await writePostgresVersionSnapshot();
     return pgTicketToRecord(row);
   }
   const store = await readStore();
@@ -739,6 +705,9 @@ export async function deleteSuporteForUser(userId: string, id: string) {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
     const result = await prisma.ticket.deleteMany({ where: { id, createdBy: userId } });
+    if (result.count > 0) {
+      await writePostgresVersionSnapshot();
+    }
     return result.count > 0;
   }
   const store = await readStore();
@@ -763,6 +732,7 @@ export async function updateSuporteStatus(id: string, status: string, actorId: s
     }
     const row = await prisma.ticket.update({ where: { id }, data: { status: nextStatus, updatedBy: actorId }, include: { events: true } });
     await prisma.ticketEvent.create({ data: { ticketId: id, type: "STATUS_CHANGED", payload: { from: current.status, to: nextStatus }, actorUserId: actorId } });
+    await writePostgresVersionSnapshot();
     return pgTicketToRecord({ ...row, events: [...row.events, { type: "STATUS_CHANGED", payload: { from: current.status, to: nextStatus }, actorUserId: actorId, createdAt: new Date() }] });
   }
   const store = await readStore();
@@ -826,6 +796,7 @@ export async function updateSuporte(
     const tags = patch.tags === undefined ? current.tags : normalizeTags(patch.tags);
     const assignedToUserId = patch.assignedToUserId === undefined ? current.assignedToUserId : typeof patch.assignedToUserId === "string" ? patch.assignedToUserId.trim() || null : null;
     const row = await prisma.ticket.update({ where: { id }, data: { title, description, type, priority, tags, assignedToUserId, updatedBy: patch.updatedBy }, include: { events: true } });
+    await writePostgresVersionSnapshot();
     return pgTicketToRecord(row);
   }
   const store = await readStore();
@@ -869,6 +840,7 @@ export async function touchSuporte(id: string, updatedBy?: string | null) {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
     const row = await prisma.ticket.update({ where: { id }, data: { updatedBy: updatedBy ?? undefined }, include: { events: true } });
+    await writePostgresVersionSnapshot();
     return pgTicketToRecord(row);
   }
   const store = await readStore();

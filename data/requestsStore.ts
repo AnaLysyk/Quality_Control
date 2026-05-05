@@ -1,11 +1,8 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
-import { getJsonStorePath } from "./jsonStorePath";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
@@ -43,7 +40,6 @@ export type RequestRecord = {
 
 type StorePayload = { items: RequestRecord[] };
 
-const STORE_PATH = getJsonStorePath("requests-store.json");
 const STORE_KEY = "qc:requests_store:v1";
 const USE_REDIS = isRedisConfigured();
 let warnedRedisFailure = false;
@@ -61,33 +57,7 @@ const DEFAULT_ITEMS: RequestRecord[] = [
     createdAt: new Date().toISOString(),
   },
 ];
-
-async function ensureFileStore() {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  try {
-    await fs.access(STORE_PATH);
-  } catch {
-    const initial: StorePayload = { items: DEFAULT_ITEMS };
-    await fs.writeFile(STORE_PATH, JSON.stringify(initial, null, 2), "utf8");
-  }
-}
-
-async function readFileStore(): Promise<StorePayload> {
-  await ensureFileStore();
-  try {
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw) as StorePayload;
-    const items = Array.isArray(parsed?.items) ? parsed.items : [];
-    return { items };
-  } catch {
-    return { items: [] };
-  }
-}
-
-async function writeFileStore(next: StorePayload) {
-  await ensureFileStore();
-  await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
-}
+let memoryStore: StorePayload = { items: DEFAULT_ITEMS };
 
 async function readRedisStore(): Promise<StorePayload | null> {
   try {
@@ -101,7 +71,7 @@ async function readRedisStore(): Promise<StorePayload | null> {
     if (!warnedRedisFailure) {
       warnedRedisFailure = true;
       const msg = err instanceof Error ? err.message : String(err);
-      console.warn("[requestsStore] Redis read failed, fallback file:", msg);
+      console.warn("[requestsStore] Redis read failed, fallback memory:", msg);
     }
     return null;
   }
@@ -116,7 +86,7 @@ async function writeRedisStore(next: StorePayload): Promise<boolean> {
     if (!warnedRedisFailure) {
       warnedRedisFailure = true;
       const msg = err instanceof Error ? err.message : String(err);
-      console.warn("[requestsStore] Redis write failed, fallback file:", msg);
+      console.warn("[requestsStore] Redis write failed, fallback memory:", msg);
     }
     return false;
   }
@@ -127,7 +97,7 @@ async function readStore(): Promise<StorePayload> {
     const redisStore = await readRedisStore();
     if (redisStore) return redisStore;
   }
-  return readFileStore();
+  return memoryStore;
 }
 
 async function writeStore(next: StorePayload) {
@@ -135,7 +105,7 @@ async function writeStore(next: StorePayload) {
     const ok = await writeRedisStore(next);
     if (ok) return;
   }
-  await writeFileStore(next);
+  memoryStore = next;
 }
 
 async function loadItems() {

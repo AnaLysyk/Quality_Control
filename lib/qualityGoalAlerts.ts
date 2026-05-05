@@ -1,6 +1,4 @@
-﻿import fs from "fs/promises";
-import path from "path";
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+﻿import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
@@ -12,8 +10,6 @@ async function getPrisma() {
 const USE_MEMORY_ALERTS =
   process.env.QUALITY_ALERTS_IN_MEMORY === "true" || process.env.NODE_ENV === "test";
 
-const STATUS_STORE = path.join(process.cwd(), "data", "quality_goal_status.json");
-const ALERT_STORE = path.join(process.cwd(), "data", "quality_goal_alerts.json");
 const STATUS_KEY = "qc:quality_goal_status:v1";
 const ALERT_KEY = "qc:quality_goal_alerts:v1";
 const USE_PERSISTENT_STORE = !USE_MEMORY_ALERTS && !USE_POSTGRES && canUsePersistentJsonStore();
@@ -36,15 +32,6 @@ export type GoalAlert = {
   goal?: string;
 };
 
-async function ensureFile(filePath: string, initial: string) {
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  try {
-    await fs.access(filePath);
-  } catch {
-    await fs.writeFile(filePath, initial, "utf8");
-  }
-}
-
 export async function readGoalStatusStore(): Promise<GoalStatusRecord[]> {
   if (USE_MEMORY_ALERTS) return memoryStatus;
   if (USE_POSTGRES) {
@@ -56,14 +43,7 @@ export async function readGoalStatusStore(): Promise<GoalStatusRecord[]> {
     const persisted = await readPersistentJson<GoalStatusRecord[]>(STATUS_KEY, []);
     return Array.isArray(persisted) ? persisted : [];
   }
-  await ensureFile(STATUS_STORE, "[]");
-  try {
-    const raw = await fs.readFile(STATUS_STORE, "utf8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as GoalStatusRecord[]) : [];
-  } catch {
-    return [];
-  }
+  return memoryStatus;
 }
 
 export async function writeGoalStatusStore(data: GoalStatusRecord[]) {
@@ -86,8 +66,7 @@ export async function writeGoalStatusStore(data: GoalStatusRecord[]) {
     await writePersistentJson(STATUS_KEY, data);
     return;
   }
-  await ensureFile(STATUS_STORE, "[]");
-  await fs.writeFile(STATUS_STORE, JSON.stringify(data, null, 2), "utf8");
+  memoryStatus = data;
 }
 
 export async function appendGoalAlert(alert: GoalAlert) {
@@ -115,17 +94,7 @@ export async function appendGoalAlert(alert: GoalAlert) {
     await writePersistentJson(ALERT_KEY, next);
     return;
   }
-  await ensureFile(ALERT_STORE, "[]");
-  let arr: GoalAlert[] = [];
-  try {
-    const raw = await fs.readFile(ALERT_STORE, "utf8");
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) arr = parsed as GoalAlert[];
-  } catch {
-    arr = [];
-  }
-  arr.push(alert);
-  await fs.writeFile(ALERT_STORE, JSON.stringify(arr, null, 2), "utf8");
+  memoryAlerts = [...memoryAlerts, alert];
 }
 
 export async function readGoalAlerts(companySlug?: string): Promise<GoalAlert[]> {
@@ -148,14 +117,7 @@ export async function readGoalAlerts(companySlug?: string): Promise<GoalAlert[]>
     if (companySlug) arr = arr.filter((a) => a.company_slug === companySlug);
     return arr.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
   }
-  await ensureFile(ALERT_STORE, "[]");
-  try {
-    const raw = await fs.readFile(ALERT_STORE, "utf8");
-    const parsed = JSON.parse(raw);
-    let arr: GoalAlert[] = Array.isArray(parsed) ? (parsed as GoalAlert[]) : [];
-    if (companySlug) arr = arr.filter((a) => a.company_slug === companySlug);
-    return arr.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
-  } catch {
-    return [];
-  }
+  let arr = [...memoryAlerts];
+  if (companySlug) arr = arr.filter((a) => a.company_slug === companySlug);
+  return arr.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 }

@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
@@ -25,16 +23,9 @@ function normalizeComparableValue(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
 
-async function readCompanyDefects(companyId: string): Promise<DefectRecord[]> {
-  const filePath = path.join(process.cwd(), "data", "companies", companyId, "defects.json");
-
-  try {
-    const raw = await fs.readFile(filePath, "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as DefectRecord[]) : [];
-  } catch {
-    return [];
-  }
+async function readCompanyDefects(_companyId: string): Promise<DefectRecord[]> {
+  // Legacy per-company defect files are not used in Postgres mode
+  return [];
 }
 
 export async function GET(req: Request) {

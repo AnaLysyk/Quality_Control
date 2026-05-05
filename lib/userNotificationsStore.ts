@@ -1,8 +1,6 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import path from "node:path";
-import fs from "node:fs/promises";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
@@ -57,32 +55,11 @@ export type UserNotification = {
 
 type NotificationsStore = Record<string, UserNotification[]>;
 
-const STORE_PATH = path.join(process.cwd(), "data", "user-notifications.json");
 const STORE_KEY = "qc:user_notifications:v1";
 const USE_REDIS =
   process.env.NOTIFICATIONS_STORE === "redis" || isRedisConfigured();
 const USE_MEMORY = process.env.NOTIFICATIONS_IN_MEMORY === "true";
 let memoryStore: NotificationsStore = {};
-let warnedFsFailure = false;
-
-async function ensureStore(): Promise<boolean> {
-  try {
-    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-    await fs.access(STORE_PATH);
-    return true;
-  } catch {
-    try {
-      await fs.writeFile(STORE_PATH, JSON.stringify({}), "utf8");
-      return true;
-    } catch {
-      if (!warnedFsFailure) {
-        warnedFsFailure = true;
-        console.warn("[NOTIFICATIONS] Falha ao acessar filesystem; usando fallback em memoria.");
-      }
-      return false;
-    }
-  }
-}
 
 async function readStore(): Promise<NotificationsStore> {
   if (USE_REDIS) {
@@ -99,15 +76,7 @@ async function readStore(): Promise<NotificationsStore> {
   if (USE_MEMORY) {
     return memoryStore;
   }
-  const ok = await ensureStore();
-  if (!ok) return memoryStore;
-  try {
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? (parsed as NotificationsStore) : {};
-  } catch {
-    return memoryStore;
-  }
+  return memoryStore;
 }
 
 async function writeStore(next: NotificationsStore) {
@@ -120,16 +89,7 @@ async function writeStore(next: NotificationsStore) {
     memoryStore = next;
     return;
   }
-  const ok = await ensureStore();
-  if (!ok) {
-    memoryStore = next;
-    return;
-  }
-  try {
-    await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
-  } catch {
-    memoryStore = next;
-  }
+  memoryStore = next;
 }
 
 function sanitizeText(value: unknown, max: number, fallback = "") {

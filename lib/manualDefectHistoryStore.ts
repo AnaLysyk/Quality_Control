@@ -1,9 +1,6 @@
 import "server-only";
 
 import crypto from "node:crypto";
-import path from "node:path";
-import fs from "node:fs/promises";
-import { getJsonStoreDir } from "@/data/jsonStorePath";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { prisma } from "@/lib/prismaClient";
@@ -43,18 +40,8 @@ type GlobalStores = {
   __qcManualStores?: Record<string, StoreState<unknown>>;
 };
 
-const USE_E2E_STORAGE =
-  process.env.PLAYWRIGHT_MOCK === "true" ||
-  process.env.E2E_USE_JSON === "1" ||
-  process.env.E2E_USE_JSON === "true" ||
-  process.env.NODE_ENV === "test";
-const STORE_DIR = USE_E2E_STORAGE
-  ? path.join(process.cwd(), ".tmp", "e2e")
-  : getJsonStoreDir();
-const HISTORY_PATH = path.join(STORE_DIR, "defects-history.json");
-
 const USE_MEMORY_STORE = process.env.MANUAL_DEFECT_HISTORY_IN_MEMORY === "true";
-const USE_REDIS = !USE_E2E_STORAGE && isRedisConfigured();
+const USE_REDIS = isRedisConfigured();
 const REDIS_HISTORY_KEY = "qc:defectsHistory";
 
 function getGlobalStore<T>(key: string, fallback: T): StoreState<T> {
@@ -73,31 +60,6 @@ function getGlobalStore<T>(key: string, fallback: T): StoreState<T> {
 function clone<T>(value: T): T {
   if (typeof structuredClone === "function") return structuredClone(value);
   return JSON.parse(JSON.stringify(value)) as T;
-}
-
-async function ensureFile(filePath: string, initial: string) {
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  try {
-    await fs.access(filePath);
-  } catch {
-    await fs.writeFile(filePath, initial, "utf8");
-  }
-}
-
-async function readJsonFile<T>(filePath: string, fallback: T, initial: string): Promise<T> {
-  try {
-    await ensureFile(filePath, initial);
-    const raw = await fs.readFile(filePath, "utf8");
-    const parsed = JSON.parse(raw) as T;
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-async function writeJsonFile<T>(filePath: string, value: T, initial: string) {
-  await ensureFile(filePath, initial);
-  await fs.writeFile(filePath, JSON.stringify(value, null, 2), "utf8");
 }
 
 async function readRedisJson<T>(key: string): Promise<T | null> {
@@ -121,19 +83,21 @@ async function readStore(): Promise<Record<string, DefectHistoryEvent[]>> {
     if (USE_REDIS) {
       const cached = await readRedisJson<Record<string, DefectHistoryEvent[]>>(REDIS_HISTORY_KEY);
       if (cached) return cached && typeof cached === "object" ? cached : {};
-      const seeded = await readJsonFile<Record<string, DefectHistoryEvent[]>>(HISTORY_PATH, {}, "{}");
-      const normalized = seeded && typeof seeded === "object" ? seeded : {};
+      const normalized: Record<string, DefectHistoryEvent[]> = {};
       await writeRedisJson(REDIS_HISTORY_KEY, normalized);
       return normalized;
     }
-    const data = await readJsonFile<Record<string, DefectHistoryEvent[]>>(HISTORY_PATH, {}, "{}");
-    return data && typeof data === "object" ? data : {};
+    const store = getGlobalStore<Record<string, DefectHistoryEvent[]>>("manualDefectHistory", {});
+    if (!store.initialized) {
+      store.data = {};
+      store.initialized = true;
+    }
+    return clone(store.data);
   }
 
   const store = getGlobalStore<Record<string, DefectHistoryEvent[]>>("manualDefectHistory", {});
   if (!store.initialized) {
-    const seeded = await readJsonFile<Record<string, DefectHistoryEvent[]>>(HISTORY_PATH, {}, "{}");
-    store.data = seeded && typeof seeded === "object" ? seeded : {};
+    store.data = {};
     store.initialized = true;
   }
   return clone(store.data);
@@ -141,12 +105,8 @@ async function readStore(): Promise<Record<string, DefectHistoryEvent[]>> {
 
 async function writeStore(next: Record<string, DefectHistoryEvent[]>) {
   const payload = next && typeof next === "object" ? next : {};
-  if (!USE_MEMORY_STORE) {
-    if (USE_REDIS) {
-      await writeRedisJson(REDIS_HISTORY_KEY, payload);
-      return;
-    }
-    await writeJsonFile(HISTORY_PATH, payload, "{}");
+  if (!USE_MEMORY_STORE && USE_REDIS) {
+    await writeRedisJson(REDIS_HISTORY_KEY, payload);
     return;
   }
 

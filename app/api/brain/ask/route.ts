@@ -80,7 +80,7 @@ const brainTools = {
       query: z.string().describe("Search query"),
       limit: z.number().optional().describe("Max results (default 8)"),
     }),
-    execute: async ({ query, limit = 8 }) => {
+    execute: async ({ query, limit = 8 }: { query: string; limit?: number }) => {
       const nodes = await searchNodes({ query, limit });
       const results = await Promise.all(
         nodes.slice(0, 5).map(async (node) => {
@@ -119,7 +119,7 @@ const brainTools = {
         .optional()
         .describe("Company slug to scope the analysis"),
     }),
-    execute: async ({ companySlug }) => {
+    execute: async ({ companySlug }: { companySlug?: string }) => {
       if (companySlug) {
         const company = await prisma.company.findFirst({
           where: { OR: [{ slug: companySlug }, { id: companySlug }] },
@@ -176,7 +176,7 @@ const brainTools = {
       context: z.string().optional().describe("Additional context"),
       pageUrl: z.string().optional().describe("Target page URL path"),
     }),
-    execute: async ({ feature, context, pageUrl = "/" }) => {
+    execute: async ({ feature, context, pageUrl = "/" }: { feature: string; context?: string; pageUrl?: string }) => {
       const slug = feature
         .toLowerCase()
         .replace(/\s+/g, "-")
@@ -220,8 +220,8 @@ const brainTools = {
       }));
       return {
         hubNodes: hubNodes.slice(0, 5).map((n) => ({
-          label: n.label,
-          type: n.type,
+          label: n.node.label,
+          type: n.node.type,
         })),
         patterns,
         focus,

@@ -1,9 +1,6 @@
 import "server-only";
 
-import fs from "node:fs/promises";
-import path from "node:path";
 import crypto from "node:crypto";
-import { getJsonStoreDir } from "@/data/jsonStorePath";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
@@ -118,74 +115,31 @@ async function pgWriteDocs(companySlug: string | null, store: PlatformDocsStore)
   }
 }
 
-// ─── JSON fallback (E2E / no-DB environments) ─────────────────────────────────
+// ─── Memory fallback (no local file persistence) ─────────────────────────────
 
-const SEED_PATH = path.join(process.cwd(), "data", "platform-docs.json");
-
-function getStorePath() {
-  return path.join(getJsonStoreDir(), "platform-docs.json");
-}
-
-async function ensureStore(): Promise<void> {
-  const storePath = getStorePath();
-  await fs.mkdir(path.dirname(storePath), { recursive: true });
-  try {
-    await fs.access(storePath);
-  } catch {
-    try {
-      await fs.access(SEED_PATH);
-      const seed = await fs.readFile(SEED_PATH, "utf8");
-      await fs.writeFile(storePath, seed, "utf8");
-    } catch {
-      await fs.writeFile(storePath, JSON.stringify({ categories: [], docs: [] }, null, 2), "utf8");
-    }
-  }
-}
-
-async function readJsonStore(storePath: string): Promise<PlatformDocsStore> {
-  try {
-    const raw = await fs.readFile(storePath, "utf8");
-    const parsed = JSON.parse(raw) as Partial<PlatformDocsStore>;
-    return {
-      categories: Array.isArray(parsed.categories) ? (parsed.categories as WikiCategory[]) : [],
-      docs: Array.isArray(parsed.docs) ? (parsed.docs as WikiDoc[]) : [],
-    };
-  } catch {
-    return { categories: [], docs: [] };
-  }
-}
-
-function getCompanyStorePath(companySlug: string) {
-  return path.join(getJsonStoreDir(), `company-docs-${companySlug}.json`);
-}
+let memoryPlatformDocs: PlatformDocsStore = { categories: [], docs: [] };
+const memoryCompanyDocs = new Map<string, PlatformDocsStore>();
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function readPlatformDocs(): Promise<PlatformDocsStore> {
   if (USE_POSTGRES) return pgReadDocs(null);
-  await ensureStore();
-  return readJsonStore(getStorePath());
+  return memoryPlatformDocs;
 }
 
 export async function writePlatformDocs(store: PlatformDocsStore): Promise<void> {
   if (USE_POSTGRES) { await pgWriteDocs(null, store); return; }
-  await ensureStore();
-  await fs.writeFile(getStorePath(), JSON.stringify(store, null, 2), "utf8");
+  memoryPlatformDocs = store;
 }
 
 export async function readCompanyDocs(companySlug: string): Promise<PlatformDocsStore> {
   if (USE_POSTGRES) return pgReadDocs(companySlug);
-  const storePath = getCompanyStorePath(companySlug);
-  await fs.mkdir(path.dirname(storePath), { recursive: true });
-  try { await fs.access(storePath); } catch { await fs.writeFile(storePath, JSON.stringify({ categories: [], docs: [] }, null, 2), "utf8"); }
-  return readJsonStore(storePath);
+  return memoryCompanyDocs.get(companySlug) ?? { categories: [], docs: [] };
 }
 
 export async function writeCompanyDocs(companySlug: string, store: PlatformDocsStore): Promise<void> {
   if (USE_POSTGRES) { await pgWriteDocs(companySlug, store); return; }
-  const storePath = getCompanyStorePath(companySlug);
-  await fs.mkdir(path.dirname(storePath), { recursive: true });
-  await fs.writeFile(storePath, JSON.stringify(store, null, 2), "utf8");
+  memoryCompanyDocs.set(companySlug, store);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

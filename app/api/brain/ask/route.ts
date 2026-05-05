@@ -292,6 +292,35 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = mode.system(metricsText, nodeContext);
+    const hasAiGatewayKey = Boolean(process.env.AI_GATEWAY_API_KEY?.trim());
+
+    // Fast-fail with a structured stream event when AI Gateway is not configured.
+    if (!hasAiGatewayKey) {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          const errLine =
+            JSON.stringify({
+              type: "error",
+              error:
+                "AI Gateway nao configurado. Defina AI_GATEWAY_API_KEY para habilitar o agente Brain.",
+            }) + "\n";
+          controller.enqueue(encoder.encode(errLine));
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "X-Agent-Mode": agentMode,
+          "X-Agent-Name": mode.name,
+          "X-Agent-Fallback": "missing-ai-gateway-key",
+          "Cache-Control": "no-cache",
+          "Transfer-Encoding": "chunked",
+        },
+      });
+    }
 
     const result = streamText({
       model: gateway("anthropic/claude-haiku-4-5-20251001"),

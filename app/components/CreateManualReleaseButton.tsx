@@ -385,7 +385,7 @@ export function CreateManualReleaseButton({
       }
 
       const target = resolvedCompanySlug
-        ? `/${encodeURIComponent(resolvedCompanySlug)}/runs/${encodeURIComponent(created.slug)}`
+        ? `/empresas/${encodeURIComponent(resolvedCompanySlug)}/runs/${encodeURIComponent(created.slug)}`
         : `/release/${encodeURIComponent(created.slug)}`;
 
       if (typeof window !== "undefined") {

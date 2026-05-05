@@ -9,6 +9,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   useBrainGraph,
   useBrainNodeContext,
@@ -24,6 +25,7 @@ import type {
   BrainTimelineEntry,
 } from "@/hooks/useBrain";
 import { useTranslation } from "@/context/LanguageContext";
+import AgentView from "./AgentView";
 import styles from "./Brain.module.css";
 
 type SimNode = BrainNode & {
@@ -628,6 +630,7 @@ function buildNeuralMeshEdges(
 }
 
 export default function BrainGraphView() {
+  const searchParams = useSearchParams();
   const { t, locale } = useTranslation();
   const { isDark } = useTheme();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -639,7 +642,7 @@ export default function BrainGraphView() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [viewScale, setViewScale] = useState(1);
   const [showLabels, setShowLabels] = useState(false);
-  const [activeTab, setActiveTab] = useState<"info" | "ask" | "create" | "timeline">("info");
+  const [activeTab, setActiveTab] = useState<"info" | "ask" | "create" | "timeline" | "agents">("info");
   const [showEdgeLabels, setShowEdgeLabels] = useState(true);
   const [workspaceMode, setWorkspaceMode] = useState<keyof typeof WORKSPACE_MODES>("all");
   const [showExplorer, setShowExplorer] = useState(false);
@@ -647,6 +650,12 @@ export default function BrainGraphView() {
   const [showPalette, setShowPalette] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
   const paletteInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const handledMenuActionRef = useRef("");
+  const menuShortcutActionsRef = useRef<{ clear: () => void; sync: () => Promise<void> }>({
+    clear: () => undefined,
+    sync: async () => undefined,
+  });
 
   // Create node form state
   const [createNodeLabel, setCreateNodeLabel] = useState("");
@@ -1353,20 +1362,10 @@ export default function BrainGraphView() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n")) {
-          // Vercel AI SDK data stream: '0:"text"' = text chunk
-          if (line.startsWith("0:")) {
-            try {
-              accumulated += JSON.parse(line.slice(2));
-              setChatMessages((prev) =>
-                prev.map((m) => (m.id === assistantId ? { ...m, content: accumulated } : m)),
-              );
-            } catch {
-              // skip malformed chunk
-            }
-          }
-        }
+        accumulated += decoder.decode(value, { stream: true });
+        setChatMessages((prev) =>
+          prev.map((m) => (m.id === assistantId ? { ...m, content: accumulated } : m)),
+        );
       }
     } catch {
       setChatMessages((prev) =>
@@ -1517,6 +1516,42 @@ export default function BrainGraphView() {
       setSyncLoading(false);
     }
   }
+
+  menuShortcutActionsRef.current.clear = clearBrainFilters;
+  menuShortcutActionsRef.current.sync = handleSync;
+
+  useEffect(() => {
+    const signature = searchParams.toString();
+    const focus = searchParams.get("focus");
+    const tab = searchParams.get("tab");
+    const action = searchParams.get("action");
+    const view = searchParams.get("view");
+
+    if (tab === "create-node") {
+      setPanelOpen(true);
+      setActiveTab("create");
+    }
+
+    if ((action === "sync" || view === "graph") && handledMenuActionRef.current !== signature) {
+      handledMenuActionRef.current = signature;
+
+      if (view === "graph") {
+        menuShortcutActionsRef.current.clear();
+      }
+
+      if (action === "sync") {
+        void menuShortcutActionsRef.current.sync();
+      }
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (focus === "search") {
+        searchInputRef.current?.focus();
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [searchParams]);
 
   function findNodeAtPoint(clientX: number, clientY: number) {
     const canvas = canvasRef.current;
@@ -1712,6 +1747,7 @@ export default function BrainGraphView() {
           <div className={styles.controlCluster}>
             <div className={styles.searchShell}>
               <input
+                ref={searchInputRef}
                 className={styles.searchInput}
                 placeholder={t.brain.searchPlaceholder}
                 value={searchText}
@@ -2146,6 +2182,14 @@ export default function BrainGraphView() {
             >
               + {locale === "pt" ? "N\u00f3" : "Node"}
             </button>
+            <button
+              type="button"
+              data-testid="brain-agents-tab"
+              className={activeTab === "agents" ? styles.panelTabActive : styles.panelTab}
+              onClick={() => setActiveTab("agents")}
+            >
+              {locale === "pt" ? "Agentes" : "Agents"}
+            </button>
           </div>
 
           {/* Ask AI tab */}
@@ -2417,6 +2461,11 @@ export default function BrainGraphView() {
                   </button>
                 </div>
               </div>
+            </div>
+          ) : activeTab === "agents" ? (
+            /* Agents tab */
+            <div data-testid="brain-agents-panel" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <AgentView nodeId={selectedNodeId} darkMode />
             </div>
           ) : (
             /* Info tab */

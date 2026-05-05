@@ -700,3 +700,167 @@ model PersistentKeyValue {
 
   @@map("persistent_kv")
 }
+
+// ─── Wiki / Platform Docs ────────────────────────────────────────────────────
+
+model WikiCategory {
+  id          String    @id @default(cuid())
+  companySlug String?   // null = platform-level wiki
+  slug        String
+  title       String
+  description String?
+  icon        String?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?
+
+  docs        WikiDoc[]
+
+  @@unique([companySlug, slug])
+  @@index([companySlug])
+  @@map("wiki_categories")
+}
+
+model WikiDoc {
+  id          String       @id @default(cuid())
+  categoryId  String
+  companySlug String?
+  slug        String
+  title       String
+  description String?
+  status      String       @default("draft")
+  order       Int          @default(0)
+  blocks      Json         @default("[]")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  category    WikiCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([companySlug, slug])
+  @@index([categoryId])
+  @@index([companySlug])
+  @@map("wiki_docs")
+}
+
+// ─── Manual Test Plans ────────────────────────────────────────────────────────
+
+model ManualTestPlan {
+  id              String   @id @default(cuid())
+  companySlug     String
+  applicationId   String
+  applicationName String
+  applicationSlug String
+  projectCode     String?
+  title           String
+  description     String?
+  cases           Json     @default("[]")
+  automation      Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([companySlug])
+  @@index([applicationId])
+  @@map("manual_test_plans")
+}
+
+// ─── Quality Alerts ───────────────────────────────────────────────────────────
+
+model QualityAlert {
+  id          String   @id @default(cuid())
+  companySlug String
+  type        String
+  severity    String
+  message     String
+  metadata    Json?
+  timestamp   DateTime @default(now())
+
+  @@index([companySlug])
+  @@index([type])
+  @@map("quality_alerts")
+}
+
+// ─── Quality Gate History ─────────────────────────────────────────────────────
+
+model QualityGateHistory {
+  id           String   @id @default(cuid())
+  companySlug  String
+  releaseSlug  String
+  gateStatus   String
+  mttrHours    Float
+  openDefects  Int
+  failRate     Float
+  reasons      Json     @default("[]")
+  evaluatedAt  DateTime @default(now())
+  decision     String?
+  overrideData Json?
+
+  @@index([companySlug])
+  @@index([releaseSlug])
+  @@map("quality_gate_history")
+}
+
+// ─── Quality Goal Status ──────────────────────────────────────────────────────
+
+model QualityGoalStatus {
+  id          String   @id @default(cuid())
+  companySlug String
+  goalId      String
+  status      String
+  updatedAt   DateTime @updatedAt
+
+  @@unique([companySlug, goalId])
+  @@index([companySlug])
+  @@map("quality_goal_statuses")
+}
+
+model QualityGoalAlert {
+  id          String   @id @default(cuid())
+  companySlug String
+  goalId      String
+  goal        String?
+  fromStatus  String?
+  toStatus    String
+  createdAt   DateTime @default(now())
+
+  @@index([companySlug])
+  @@map("quality_goal_alerts")
+}
+
+// ─── Support Projects ─────────────────────────────────────────────────────────
+
+model SupportProject {
+  id          String   @id @default(cuid())
+  code        String?
+  title       String
+  description String?
+  companyId   String?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("support_projects")
+}
+
+// ─── Assistant Audit Log ──────────────────────────────────────────────────────
+
+model AssistantAuditLog {
+  id           String   @id @default(cuid())
+  actorUserId  String
+  actorEmail   String?
+  route        String
+  module       String
+  actionType   String
+  prompt       String?
+  toolName     String?
+  success      Boolean
+  summary      String?
+  createdAt    DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([module])
+  @@map("assistant_audit_logs")
+}

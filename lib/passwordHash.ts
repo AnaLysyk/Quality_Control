@@ -5,7 +5,18 @@ try {
   // no-op
 }
 
-import { createHash, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, timingSafeEqual } from "crypto";
+
+// Charset without visually ambiguous characters (0/O, 1/l/I)
+const TEMP_PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+const TEMP_PASSWORD_LENGTH = 12;
+
+export function generateTempPassword(): string {
+  const bytes = randomBytes(TEMP_PASSWORD_LENGTH);
+  return Array.from(bytes)
+    .map((b) => TEMP_PASSWORD_CHARS[b % TEMP_PASSWORD_CHARS.length])
+    .join("");
+}
 
 export function hashPasswordSha256(password: string): string {
   return createHash("sha256").update(password).digest("hex");

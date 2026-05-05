@@ -6,12 +6,12 @@ const userPassword = process.env.E2E_USER_PASSWORD || "Griaule@123";
 const adminUser = {
   email: "admin@demo.test",
   password: adminPassword,
-  role: "admin",
+  role: "leader_tc",
 };
 const normalUser = {
   email: "user@demo.test",
   password: userPassword,
-  role: "user",
+  role: "testing_company_user",
 };
 
 function parseCookie(setCookie: string | string[] | undefined, name: string): string | null {
@@ -50,9 +50,9 @@ test("auth: login admin and resolve /api/me from UserCompany", async ({ request 
 
   expect(body.user.email).toBe(adminUser.email);
   expect(body.user.role).toBe(adminUser.role);
-  expect(body.user.clientSlug).toBe("DEMO");
+  expect(body.user.clientSlug).toBeNull();
   expect(Array.isArray(body.companies)).toBeTruthy();
-  expect(body.companies.find((company: { slug: string }) => company.slug === "DEMO")).toBeTruthy();
+  expect(body.companies.find((company: { slug: string }) => company.slug?.toLowerCase() === "demo")).toBeTruthy();
 });
 
 test("auth: login user and resolve /api/me role= user", async ({ request }) => {
@@ -66,7 +66,7 @@ test("auth: login user and resolve /api/me role= user", async ({ request }) => {
 
   expect(body.user.email).toBe(normalUser.email);
   expect(body.user.role).toBe(normalUser.role);
-  expect(body.user.clientSlug).toBe("DEMO");
+  expect(body.user.clientSlug).toBe("demo");
 });
 
 test("auth: /api/me without session returns 401", async ({ request }) => {
@@ -76,4 +76,3 @@ test("auth: /api/me without session returns 401", async ({ request }) => {
   const body = JSON.parse(bodyText);
   expect(body.error?.code).toBe("NO_SESSION");
 });
-

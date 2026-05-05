@@ -7,7 +7,7 @@ test.describe("Prod smoke", () => {
   test("login and dashboard loads", async ({ page }) => {
     test.skip(!email || !password, "PLAYWRIGHT_EMAIL/PASSWORD not set");
 
-    await page.goto("/login", { waitUntil: "networkidle" });
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Senha").fill(password);
     await page.getByRole("button", { name: /entrar/i }).click();

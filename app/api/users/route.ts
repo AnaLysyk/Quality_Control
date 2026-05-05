@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 import { canDeleteUserByProfile } from "@/lib/adminUserDeleteAccess";
@@ -12,7 +11,7 @@ import {
 } from "@/lib/auth/localStore";
 import { getAccessContext } from "@/lib/auth/session";
 import { isUserScopeLockedError } from "@/lib/companyUserScope";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { generateTempPassword, hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const revalidate = 0;
@@ -41,10 +40,6 @@ function normalizeMembershipRole(input?: string | null) {
   return "company_user";
 }
 
-function buildTempPasswordHash() {
-  return hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
-}
-
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const companyId = searchParams.get("companyId");
@@ -69,10 +64,14 @@ export async function POST(req: Request) {
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
+  let tempPassword: string | undefined;
   const passwordHash =
     typeof body?.password === "string" && body.password
       ? hashPasswordSha256(body.password)
-      : buildTempPasswordHash();
+      : (() => {
+          tempPassword = generateTempPassword();
+          return hashPasswordSha256(tempPassword);
+        })();
 
   if (!companyId || !name || !email || !login) {
     return NextResponse.json({ error: "Campos obrigatorios" }, { status: 400 });
@@ -123,7 +122,11 @@ export async function POST(req: Request) {
   }
 
   const item = await getAdminUserItem(created.id);
-  return NextResponse.json(item ?? created, { status: 201 });
+  const responseBody = item ?? created;
+  return NextResponse.json(
+    tempPassword !== undefined ? { ...responseBody, tempPassword } : responseBody,
+    { status: 201 },
+  );
 }
 
 export async function PATCH(req: Request) {

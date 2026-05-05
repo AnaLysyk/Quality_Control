@@ -3,7 +3,14 @@ import "server-only";
 import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
+
+const USE_POSTGRES = shouldUsePostgresPersistence();
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
 
 type AssistantAuditEntry = {
   id: string;
@@ -26,7 +33,101 @@ type AssistantAuditStore = {
 const STORE_PATH = path.join(process.cwd(), "data", "assistant-audit-log.json");
 const STORE_KEY = "qc:assistant_audit_log:v1";
 const USE_MEMORY = process.env.ASSISTANT_AUDIT_IN_MEMORY === "true";
-const USE_PERSISTENT_STORE = !USE_MEMORY && canUsePersistentJsonStore();
+const USE_PERSISTENT_STORE = !USE_MEMORY && !USE_POSTGRES && canUsePersistentJsonStore();
+
+let memoryStore: AssistantAuditStore = { items: [] };
+
+async function ensureStore() {
+  try {
+    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
+    await fs.access(STORE_PATH);
+    return true;
+  } catch {
+    try {
+      await fs.writeFile(STORE_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+async function readStore(): Promise<AssistantAuditStore> {
+  if (USE_MEMORY) return memoryStore;
+
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.assistantAuditLog.findMany({ orderBy: { createdAt: "desc" }, take: 500 });
+    return { items: rows.map((r) => ({ id: r.id, createdAt: r.createdAt.toISOString(), actorUserId: r.actorUserId, actorEmail: r.actorEmail, route: r.route, module: r.module, actionType: r.actionType as AssistantAuditEntry["actionType"], prompt: r.prompt, toolName: r.toolName, success: r.success, summary: r.summary })) };
+  }
+
+  if (USE_PERSISTENT_STORE) {
+    const persisted = await readPersistentJson<AssistantAuditStore>(STORE_KEY, { items: [] });
+    return Array.isArray(persisted?.items) ? persisted : { items: [] };
+  }
+
+  const ok = await ensureStore();
+  if (!ok) return memoryStore;
+  try {
+    const raw = await fs.readFile(STORE_PATH, "utf8");
+    const parsed = JSON.parse(raw) as AssistantAuditStore;
+    return Array.isArray(parsed?.items) ? parsed : { items: [] };
+  } catch {
+    return memoryStore;
+  }
+}
+
+async function writeStore(next: AssistantAuditStore) {
+  if (USE_MEMORY) {
+    memoryStore = next;
+    return;
+  }
+
+  if (USE_PERSISTENT_STORE) {
+    const ok = await writePersistentJson(STORE_KEY, next);
+    if (!ok) memoryStore = next;
+    return;
+  }
+
+  const ok = await ensureStore();
+  if (!ok) {
+    memoryStore = next;
+    return;
+  }
+  try {
+    await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  } catch {
+    memoryStore = next;
+  }
+}
+
+export async function appendAssistantAuditEntry(input: Omit<AssistantAuditEntry, "id" | "createdAt">) {
+  if (USE_POSTGRES && !USE_MEMORY) {
+    const prisma = await getPrisma();
+    await prisma.assistantAuditLog.create({
+      data: {
+        actorUserId: input.actorUserId,
+        actorEmail: input.actorEmail,
+        route: input.route,
+        module: input.module,
+        actionType: input.actionType,
+        prompt: input.prompt,
+        toolName: input.toolName,
+        success: input.success,
+        summary: input.summary,
+      },
+    });
+    return;
+  }
+  const store = await readStore();
+  store.items.unshift({
+    id: randomUUID(),
+    createdAt: new Date().toISOString(),
+    ...input,
+  });
+  store.items = store.items.slice(0, 500);
+  await writeStore(store);
+}
 
 let memoryStore: AssistantAuditStore = { items: [] };
 

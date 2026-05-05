@@ -5824,6 +5824,18 @@ video {
     margin-left: var(--sidebar-expanded);
   }
 
+  @media (max-width: 1200px) {
+    .app-shell .sidebar-shell:hover ~ .app-main,
+    .app-shell .sidebar-shell[data-flyout-open="1"] ~ .app-main {
+      margin-left: var(--sidebar-collapsed);
+    }
+
+    .app-shell .sidebar-shell:hover,
+    .app-shell .sidebar-shell[data-flyout-open="1"] {
+      box-shadow: var(--shell-sidebar-shadow), 22px 0 48px rgba(1, 24, 72, 0.24);
+    }
+  }
+
   .app-shell .sidebar-shell .sidebar-link {
     width: 100%;
     min-height: clamp(2rem, 4.55vh, 2.5rem);
@@ -5906,7 +5918,7 @@ video {
   .app-shell .sidebar-shell[data-flyout-open="1"] .sidebar-label {
     max-width: 15rem;
     width: auto;
-    white-space: normal;
+    white-space: nowrap;
   }
   .app-shell .sidebar-shell:hover .sidebar-label,
   .app-shell .sidebar-shell:hover .sidebar-reveal,
@@ -5974,6 +5986,10 @@ video {
       display: none;
     }
     .app-shell .sidebar-shell .sidebar-desktop-nav-list {
+      height: min(
+        calc(100vh - 7.4rem),
+        calc(var(--sidebar-item-count, 1) * clamp(1.68rem, 4.1vh, 2.2rem))
+      );
       margin-top: 0.25rem !important;
       gap: 0.125rem;
     }
@@ -6008,19 +6024,30 @@ video {
       min-height: 1.65rem;
       border-radius: 0.65rem;
     }
+    .app-shell .sidebar-shell .sidebar-desktop-nav-list {
+      height: min(
+        calc(100vh - 6.2rem),
+        calc(var(--sidebar-item-count, 1) * clamp(1.35rem, 3.4vh, 1.75rem))
+      );
+    }
     .app-shell .sidebar-shell .sidebar-link svg:not(.sidebar-logo-icon) {
       width: 0.85rem !important;
       height: 0.85rem !important;
     }
   }
 
-  /* Brain canvas stays collapsed even on hover */
-  .app-shell.app-shell--brain-canvas .sidebar-shell,
-  .app-shell.app-shell--brain-canvas .sidebar-shell:hover {
+  /* Brain canvas: sidebar starts collapsed and overlays the canvas on hover (content doesn't shift) */
+  .app-shell.app-shell--brain-canvas .sidebar-shell {
     width: var(--sidebar-collapsed);
+    overflow: hidden;
+  }
+  .app-shell.app-shell--brain-canvas .sidebar-shell:hover,
+  .app-shell.app-shell--brain-canvas .sidebar-shell[data-flyout-open="1"] {
+    box-shadow: var(--shell-sidebar-shadow), 22px 0 48px rgba(1, 24, 72, 0.3);
   }
   .app-shell.app-shell--brain-canvas .app-main,
-  .app-shell.app-shell--brain-canvas .sidebar-shell:hover ~ .app-main {
+  .app-shell.app-shell--brain-canvas .sidebar-shell:hover ~ .app-main,
+  .app-shell.app-shell--brain-canvas .sidebar-shell[data-flyout-open="1"] ~ .app-main {
     margin-left: var(--sidebar-collapsed);
   }
 }

@@ -306,7 +306,7 @@ function collectTemplateKeys(template: string) {
   return matches.map((item) => item.slice(2, -2).trim()).filter(Boolean);
 }
 
-// â”€â”€ Variable source types & badge config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Variable source types & badge config â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 type VarSource = "env" | "local" | "system";
 
 function buildVarSourceMap(
@@ -379,7 +379,7 @@ function VarDropdown({
   );
 }
 
-// â”€â”€ VarAutocomplete (wraps regular inputs) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ VarAutocomplete (wraps regular inputs) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 type VarAutocompleteProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> & {
   value: string;
   onChange: (v: string) => void;
@@ -427,7 +427,7 @@ function VarAutocomplete({ value, onChange, resolvedVariables, varSourceMap = {}
   );
 }
 
-// â”€â”€ URL bar with inline variable highlighting (Postman-style) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ URL bar with inline variable highlighting (Postman-style) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 type UrlVarInputProps = {
   value: string;
   onChange: (v: string) => void;
@@ -486,7 +486,7 @@ function UrlVarInput({ value, onChange, resolvedVariables, varSourceMap = {}, pl
 
   return (
     <div className="relative flex-1 min-w-0">
-      {/* Highlight overlay â€” pointer-events-none, renders ALL text so dark mode works */}
+      {/* Highlight overlay â€" pointer-events-none, renders ALL text so dark mode works */}
       <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center overflow-hidden px-4">
         <span className="whitespace-pre text-sm text-(--tc-text,#0b1a3c)">
           {segments.map((seg, idx) =>
@@ -506,7 +506,7 @@ function UrlVarInput({ value, onChange, resolvedVariables, varSourceMap = {}, pl
         </span>
       </div>
 
-      {/* Actual input â€” transparent text + caret, overlay renders the visual */}
+      {/* Actual input â€" transparent text + caret, overlay renders the visual */}
       <input
         ref={inputRef}
         value={value}
@@ -601,7 +601,7 @@ function colorizeJson(json: string): React.ReactNode[] {
       nodes.push(<span key={k++} className="text-slate-400 dark:text-slate-500">{json[i]}</span>);
       i++;
     }
-    // Whitespace â€” keep as plain text for correct indentation
+    // Whitespace â€" keep as plain text for correct indentation
     else {
       const start = i;
       while (i < json.length && /\s/.test(json[i])) i++;
@@ -1573,7 +1573,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
     setIsDirty(true);
   }, [requestName, method, path, body, auth, headerRows, queryRows, localVariableRows, assertionRules, preRequestScript]);
 
-  // Ctrl+S â†’ save
+  // Ctrl+S â†' save
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -1586,7 +1586,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDirty, requestName, method, path, body, auth, headerRows, queryRows, localVariableRows, assertionRules, preRequestScript]);
 
-  // Navigation guard â€” warn before browser tab close / refresh when there are unsaved changes
+  // Navigation guard â€" warn before browser tab close / refresh when there are unsaved changes
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (!isDirty) return;
@@ -2634,7 +2634,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             })}
           </div>
 
-          {/* â”€â”€ Runner toolbar (sticky, outside scroll) â”€â”€ */}
+          {/* â"€â"€ Runner toolbar (sticky, outside scroll) â"€â"€ */}
           {sidebarView === "runner" && (
             <div className="shrink-0 px-3 py-2 border-b border-(--tc-border,#d7deea) flex items-center justify-between gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
@@ -2653,7 +2653,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             </div>
           )}
 
-          {/* â”€â”€ History toolbar (sticky, outside scroll) â”€â”€ */}
+          {/* â"€â"€ History toolbar (sticky, outside scroll) â"€â"€ */}
           {sidebarView === "history" && (
             <div className="shrink-0 px-3 py-2 border-b border-(--tc-border,#d7deea) flex items-center justify-between gap-2">
               <div>
@@ -2677,7 +2677,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             </div>
           )}
 
-          {/* â”€â”€ Scrollable list â”€â”€ */}
+          {/* â"€â"€ Scrollable list â"€â"€ */}
           <div className="flex-1 min-h-0 overflow-y-auto py-2">
             {sidebarView === "collection" ? (
               <div className="flex h-full min-h-0 flex-col gap-2 px-2">
@@ -2760,7 +2760,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                     const allPassed = result.assertionResults.length > 0 && result.assertionResults.every((r) => r.passed);
                     const anyFailed = result.assertionResults.some((r) => !r.passed);
                     const isOk = !result.error && result.status !== null && result.status < 400;
-                    const statusColor = result.error ? "border-rose-300 bg-rose-50" : anyFailed ? "border-amber-300 bg-amber-50" : allPassed || isOk ? "border-emerald-300 bg-emerald-50" : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)";
+                    const statusColor = result.error ? "border-rose-300 bg-rose-50 dark:border-rose-700/60 dark:bg-rose-950/40" : anyFailed ? "border-amber-300 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-950/40" : allPassed || isOk ? "border-emerald-300 bg-emerald-50 dark:border-emerald-700/60 dark:bg-emerald-950/40" : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)";
                     return (
                       <div key={result.requestId} className={`rounded-xl border px-3 py-3 ${statusColor}`}>
                         <div className="flex items-start justify-between gap-2">
@@ -2779,7 +2779,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                           )}
                         </div>
                         {result.error ? (
-                          <p className="mt-1 text-xs text-rose-600">{result.error}</p>
+                          <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{result.error}</p>
                         ) : (
                           <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold text-(--tc-text-muted,#6b7280)">
                             <span>{result.status} {result.statusText}</span>
@@ -2817,7 +2817,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                     return (
                       <div
                         key={entry.id}
-                        className={`rounded-xl border px-3 py-2 ${entry.error ? "border-rose-200 bg-rose-50" : anyFailed ? "border-amber-200 bg-amber-50" : isOk ? "border-emerald-200 bg-emerald-50" : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"}`}
+                        className={`rounded-xl border px-3 py-2 ${entry.error ? "border-rose-200 bg-rose-50 dark:border-rose-700/60 dark:bg-rose-950/40" : anyFailed ? "border-amber-200 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-950/40" : isOk ? "border-emerald-200 bg-emerald-50 dark:border-emerald-700/60 dark:bg-emerald-950/40" : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"}`}
                       >
                         <p className="truncate text-sm font-semibold text-(--tc-text,#0b1a3c)">{entry.requestTitle}</p>
                         <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-semibold text-(--tc-text-muted,#6b7280)">
@@ -2846,7 +2846,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
         <div className="flex flex-1 min-h-0 flex-col overflow-y-auto">
           <div className="shrink-0 p-4 sm:p-5">
-          {/* â”€â”€ Breadcrumb / request name â”€â”€ */}
+          {/* â"€â"€ Breadcrumb / request name â"€â"€ */}
           <div className="mb-3 flex items-center gap-1.5 text-xs text-(--tc-text-muted,#6b7280)">
             <span className="font-medium">{currentEnvironment?.title}</span>
             <span>/</span>
@@ -2879,7 +2879,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             )}
           </div>
 
-          {/* â”€â”€ Postman-style URL bar â”€â”€ */}
+          {/* â"€â"€ Postman-style URL bar â"€â"€ */}
           <div className="flex items-stretch overflow-hidden rounded-lg border border-(--tc-border,#d7deea)">
             <select
               id="api-lab-http-method"
@@ -2917,7 +2917,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             </button>
           </div>
 
-          {/* â”€â”€ Secondary settings: Ambiente + Base URL â”€â”€ */}
+          {/* â"€â"€ Secondary settings: Ambiente + Base URL â"€â"€ */}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <select
               aria-label="Ambiente"
@@ -2939,12 +2939,12 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           </div>
 
           {missingVariableKeys.length > 0 ? (
-            <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+            <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-400">
               Vari\u00e1veis pendentes: {missingVariableKeys.join(", ")}
             </div>
           ) : null}
 
-          {/* â”€â”€ Postman-style underline tab bar â”€â”€ */}
+          {/* â"€â"€ Postman-style underline tab bar â"€â"€ */}
           <div className="mt-4 flex overflow-x-auto border-b border-(--tc-border,#d7deea)">
             {[
               { id: "params" as const, label: "Params", dot: queryRows.some(r => r.key) },
@@ -3347,7 +3347,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 {scriptOutput.length === 0 ? (
                   <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">A saÃ­da aparece aqui depois da execuÃ§Ã£o.</p>
                 ) : (
-                  <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-xl border border-(--tc-border,#d7deea) bg-[#f6f8fa] px-4 py-3 font-mono text-xs leading-6 text-slate-800">
+                  <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-xl border border-(--tc-border,#d7deea) bg-[#f6f8fa] dark:bg-[#0d1829] px-4 py-3 font-mono text-xs leading-6 text-slate-800 dark:text-slate-200">
                     {scriptOutput.join("\n")}
                   </pre>
                 )}
@@ -3400,7 +3400,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                         />
                       ) : (
                         <div className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 flex items-center text-xs text-(--tc-text-muted,#6b7280)">
-                          â€”
+                          â€"
                         </div>
                       )}
                       <input
@@ -3597,8 +3597,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 />
               </label>
 {mockEnabled ? (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">
-                  Mock ativo â€” prÃ³xima execuÃ§Ã£o usarÃ¡ essa resposta simulada.
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-400">
+                  Mock ativo â€" prÃ³xima execuÃ§Ã£o usarÃ¡ essa resposta simulada.
                 </div>
               ) : null}
             </section>
@@ -3611,12 +3611,21 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             <div className="flex items-center gap-0">
               <span className="pr-4 text-sm font-semibold text-(--tc-text,#0b1a3c) border-b-2 border-(--tc-accent,#ef0001) pb-2 -mb-2">Response</span>
               {response && (
-                <div className="ml-4 flex items-center gap-3 text-xs text-(--tc-text-muted,#6b7280)">
-                  <span className={`font-semibold ${response.status < 300 ? "text-emerald-600" : response.status < 400 ? "text-amber-600" : "text-rose-600"}`}>
+                <div className="ml-4 flex flex-wrap items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    response.status < 300
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                      : response.status < 400
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
+                        : "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
+                  }`}>
                     {response.status} {response.statusText}
                   </span>
-                  <span>{response.durationMs} ms</span>
-                  <span className="truncate max-w-48 font-mono">{response.url}</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <FiClock className="h-3 w-3" />
+                    {response.durationMs} ms
+                  </span>
+                  <span className="hidden truncate max-w-48 font-mono text-[11px] sm:inline">{response.url}</span>
                 </div>
               )}
             </div>
@@ -3632,65 +3641,87 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           </div>
 
           {errorMessage ? (
-            <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{errorMessage}</div>
+            <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 dark:border-rose-700/60 dark:bg-rose-950/40 dark:text-rose-400">{errorMessage}</div>
           ) : null}
           {copyFeedback ? (
-            <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">{copyFeedback}</div>
+            <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-400">{copyFeedback}</div>
           ) : null}
 
           <div className="mt-3 flex overflow-x-auto border-b border-(--tc-border,#d7deea)">
             {[
-              { id: "json", label: "JSON" },
-              { id: "raw", label: "Raw" },
-              { id: "headers", label: "Headers" },
+              { id: "json", label: "JSON", badge: null },
+              { id: "raw", label: "Raw", badge: null },
+              { id: "headers", label: "Headers", badge: null },
               {
                 id: "tests",
-                label: assertionResults.length > 0
-                  ? `Tests ${assertionResults.filter((r) => r.passed).length}/${assertionResults.length}`
-                  : "Tests",
+                label: "Tests",
+                badge: assertionResults.length > 0
+                  ? { text: `${assertionResults.filter((r) => r.passed).length}/${assertionResults.length}`, ok: assertionResults.every((r) => r.passed) }
+                  : null,
               },
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setResponseTab(tab.id as typeof responseTab)}
-                className={`relative shrink-0 px-3 pb-2.5 pt-1 text-sm font-medium transition after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 ${responseTab === tab.id ? "text-(--tc-accent,#ef0001) after:bg-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280) after:bg-transparent hover:text-(--tc-text,#0b1a3c)"}`}
+                className={`relative shrink-0 flex items-center gap-1.5 px-3 pb-2.5 pt-1 text-sm font-medium transition after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 ${responseTab === tab.id ? "text-(--tc-accent,#ef0001) after:bg-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280) after:bg-transparent hover:text-(--tc-text,#0b1a3c)"}`}
               >
                 {tab.label}
+                {tab.badge ? (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${tab.badge.ok ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400" : "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"}`}>
+                    {tab.badge.text}
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>
 
-          <div className="mt-3 min-h-60 rounded-xl border border-(--tc-border,#d7deea) bg-[#f6f8fa] dark:bg-[#081227] p-4">
-            {responseTab === "tests" ? (
-              assertionResults.length === 0 ? (
-                <p className="text-sm text-slate-400 dark:text-white/60">
-                  {assertionRules.length === 0
-                    ? "Adicione assertions na aba Tests e execute o request."
-                    : "Execute o request para ver os resultados."}
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {assertionResults.map((result) => (
-                    <div
-                      key={result.ruleId}
-                      className={`flex items-start gap-3 rounded-xl border px-3 py-3 ${result.passed ? "border-emerald-200 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/60" : "border-rose-200 bg-rose-50 dark:border-rose-700 dark:bg-rose-950/60"}`}
-                    >
-                      {result.passed ? (
-                        <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500 dark:text-emerald-400" />
-                      ) : (
-                        <FiXCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500 dark:text-rose-400" />
-                      )}
-                      <div className="min-w-0">
-                        <p className={`text-sm font-semibold ${result.passed ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>{result.label}</p>
-                        <p className="mt-0.5 text-xs text-slate-400 dark:text-white/50">obtido: {result.actual || "â€”"}</p>
-                      </div>
-                    </div>
-                  ))}
+          <div className="mt-3 min-h-60 overflow-hidden rounded-xl border border-(--tc-border,#d7deea) bg-[#f6f8fa] dark:bg-[#081227]">
+            {loading ? (
+              <div className="flex h-60 flex-col items-center justify-center gap-3">
+                <div className="flex gap-1.5">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#ef0001]/70 [animation-delay:-0.3s]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#ef0001]/70 [animation-delay:-0.15s]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#ef0001]/70" />
                 </div>
-              )
+                <p className="text-xs text-slate-400 dark:text-slate-500">Executando request...</p>
+              </div>
+            ) : responseTab === "tests" ? (
+              <div className="p-4">
+                {assertionResults.length === 0 ? (
+                  <p className="text-sm text-slate-400 dark:text-slate-500 italic">
+                    {assertionRules.length === 0
+                      ? "Adicione assertions na aba Tests e execute o request."
+                      : "Execute o request para ver os resultados."}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {assertionResults.map((result) => (
+                      <div
+                        key={result.ruleId}
+                        className={`flex items-start gap-3 rounded-xl border px-3 py-3 ${result.passed ? "border-emerald-200 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/60" : "border-rose-200 bg-rose-50 dark:border-rose-700 dark:bg-rose-950/60"}`}
+                      >
+                        {result.passed ? (
+                          <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500 dark:text-emerald-400" />
+                        ) : (
+                          <FiXCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500 dark:text-rose-400" />
+                        )}
+                        <div className="min-w-0">
+                          <p className={`text-sm font-semibold ${result.passed ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>{result.label}</p>
+                          <p className="mt-0.5 text-xs text-slate-400 dark:text-white/50">obtido: {result.actual || "-"}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : !response && responseTab !== "raw" ? (
+              <div className="flex h-60 flex-col items-center justify-center gap-2 text-center">
+                <FiPlay className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                <p className="text-sm font-medium text-slate-400 dark:text-slate-500">Execute o request para ver a resposta</p>
+              </div>
             ) : (
-              <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs leading-6 text-slate-700 dark:text-slate-300">
+              <pre className="overflow-auto p-4 whitespace-pre-wrap font-mono text-xs leading-6 text-slate-700 dark:text-slate-300">
                 {responseTab === "raw"
                   ? (response?.text || <span className="text-slate-400 dark:text-slate-500 italic">vazio</span>)
                   : colorizeJson(
@@ -3706,7 +3737,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
           <div className="mt-3 flex items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
             <FiClock className="h-4 w-4" />
-            BFF interno para request com auth, params e variÃ¡veis sem abrir Postman.
+            BFF interno para request com auth, params e vari\u00e1veis sem abrir Postman.
           </div>
           </div>
         </div>

@@ -135,7 +135,7 @@ test.describe("Tela de Automacao", () => {
     await environmentSelect.selectOption({ label: "Produção segura" });
 
     await expect(page.getByLabel(/URL base/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByLabel(/Token/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByPlaceholder("Cole o token", { exact: true })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/Request gerada/i)).toBeVisible({ timeout: 15000 });
   });
 });

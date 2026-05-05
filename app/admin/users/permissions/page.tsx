@@ -2,7 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   FiAlertTriangle,
   FiCopy,
@@ -480,6 +481,7 @@ function SurfaceModal(props: {
 export default function PermissionsPage() {
   const { language } = useI18n();
   const isPt = language === "pt-BR";
+  const searchParams = useSearchParams();
   const { user: authUser, refreshUser } = useAuthUser();
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
@@ -509,8 +511,41 @@ export default function PermissionsPage() {
   const [createGlobalError, setCreateGlobalError] = useState<string | null>(null);
   const [profileModalRole, setProfileModalRole] = useState<EditableProfileRole>("testing_company_user");
   const [profileModalCompany, setProfileModalCompany] = useState("");
+  const userSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const modulesPanelRef = useRef<HTMLDivElement | null>(null);
 
   const canManageProfiles = useMemo(() => canManageInstitutionalProfiles(authUser), [authUser]);
+
+  useEffect(() => {
+    const focus = searchParams.get("focus");
+    const panel = searchParams.get("panel");
+    const section = searchParams.get("section");
+    const action = searchParams.get("action");
+
+    if (panel === "active") {
+      setPermissionsViewerOpen(true);
+    }
+
+    if (section === "modules") {
+      setOpenModule((current) => current || PERMISSION_MODULES[0]?.id || "");
+    }
+
+    if (action === "create-user" && canManageProfiles) {
+      setCreateGlobalOpen(true);
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (focus === "users") {
+        userSearchInputRef.current?.focus();
+      }
+
+      if (section === "modules") {
+        modulesPanelRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [canManageProfiles, searchParams]);
 
   async function loadUsers() {
     setUsersLoading(true);
@@ -1217,6 +1252,7 @@ export default function PermissionsPage() {
                 <div className="flex items-center gap-3 rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 focus-within:border-(--tc-accent) focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.14)]">
                   <FiSearch className="text-(--tc-accent)" />
                   <input
+                    ref={userSearchInputRef}
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={isPt ? "Buscar por nome, usuário, e-mail ou empresa" : "Search by name, username, email, or company"}
@@ -1462,7 +1498,7 @@ export default function PermissionsPage() {
                     </div>
                   </div>
 
-                  <div className="grid min-h-0 flex-1 gap-4 p-4 sm:p-5 xl:grid-cols-[248px_minmax(0,1fr)]">
+                  <div ref={modulesPanelRef} className="grid min-h-0 flex-1 gap-4 p-4 sm:p-5 xl:grid-cols-[248px_minmax(0,1fr)]">
                     <section className="flex min-h-0 flex-col rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) p-2">
                       <ScrollArea className="min-h-0 flex-1" viewportClassName="pr-5">
                         <div className="space-y-1.5">

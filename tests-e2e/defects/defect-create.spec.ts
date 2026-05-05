@@ -1,7 +1,8 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
+import { createManualDefect } from "../utils/current-ui";
 
-test.describe("defeitos - criaÃ§Ã£o manual", () => {
+test.describe("defeitos - criacao manual", () => {
   test("user cria defeito na empresa ativa", async ({ page, context }) => {
     await mockAuth(context, {
       role: "user",
@@ -9,13 +10,9 @@ test.describe("defeitos - criaÃ§Ã£o manual", () => {
       clientSlug: "DEMO",
     });
 
-    await page.goto("/empresas/demo/defeitos", { waitUntil: "networkidle" });
+    await page.goto("/empresas/demo/defeitos", { waitUntil: "domcontentloaded" });
 
-    await page.getByTestId("defect-title").fill("Erro no login");
-    await page.getByTestId("defect-create").click();
-
-    // Espera a inclusÃ£o refletir na lista (item com o tÃ­tulo).
+    await createManualDefect(page, "Erro no login");
     await expect(page.getByText("Erro no login")).toBeVisible();
   });
 });
-

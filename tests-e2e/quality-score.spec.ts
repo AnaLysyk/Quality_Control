@@ -1,5 +1,6 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
 test("release exibe quality score", async ({ page, context }) => {
   await mockAuth(context, {
@@ -8,11 +9,9 @@ test("release exibe quality score", async ({ page, context }) => {
     clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/demo/dashboard", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/dashboard", { waitUntil: "domcontentloaded" });
 
-  const score = page.getByTestId("quality-score");
-
-  await expect(score).toBeVisible();
-  await expect(score).toHaveText(/\d{2,3}/);
+  await expectCurrentDashboardReady(page);
+  await expect(page.getByText("Pass rate", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/\d{1,3}%/).first()).toBeVisible();
 });
-

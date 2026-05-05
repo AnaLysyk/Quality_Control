@@ -1,9 +1,10 @@
-﻿import fs from "fs";
+import fs from "fs";
 import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 function slugify(value: string) {
   return value
+    .replace(/^run\s+/i, "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -22,7 +23,7 @@ test("exporta relatorio PDF da run", async ({ page, context }) => {
   const runTitle = "Run PDF Export";
   const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/runs", { waitUntil: "domcontentloaded" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
@@ -46,4 +47,3 @@ test("exporta relatorio PDF da run", async ({ page, context }) => {
   const stat = fs.statSync(filePath as string);
   expect(stat.size).toBeGreaterThan(1000);
 });
-

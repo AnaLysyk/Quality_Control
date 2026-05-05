@@ -692,7 +692,7 @@ function downloadCsv(rows: EnrichedRun[]) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "desktopboard-empresa.csv";
+  anchor.download = "quality-empresa.csv";
   anchor.click();
   URL.revokeObjectURL(url);
 }
@@ -2125,6 +2125,15 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               <FiLayers className="h-4 w-4" />
               Métricas
             </Link>
+            <a
+              data-testid="export-quality"
+              href={`/api/empresas/${encodeURIComponent(props.companySlug)}/quality/export`}
+              download={`quality-${props.companySlug}.csv`}
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
+            >
+              <FiDownload className="h-4 w-4" />
+              Exportar qualidade
+            </a>
             <button
               type="button"
               onClick={handleExportPdf}
@@ -2382,7 +2391,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             </div>
 
             {activeView === "overview" ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
+              <div data-testid="executive-stats" className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
                 <StatCard label="Runs" value={formatCompactNumber(executiveSummary.totalRuns)} note="Total no recorte aplicado." tone="neutral" delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.totalRuns, previousSummary.totalRuns, "neutral") : null} icon={<FiActivity className="h-5 w-5" />} />
                 <StatCard label="Pass rate" value={formatPercent(executiveSummary.passRate)} note="Leitura consolidada." tone={trendSummary.tone} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.") : null} icon={<FiTrendingUp className="h-5 w-5" />} />
                 <StatCard label="Falhas" value={formatPercent(executiveSummary.failRate)} note="Falhas sobre o total executado." tone={executiveSummary.failRate >= 15 ? "critical" : executiveSummary.failRate > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.failRate, previousSummary.failRate, "lower_better", " p.p.") : null} icon={<FiTrendingDown className="h-5 w-5" />} />

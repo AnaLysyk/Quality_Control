@@ -45,8 +45,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "name e obrigatório" }, { status: 400 });
   }
 
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+
   try {
-    const company = await createLocalCompany({ name, slug: slug || undefined });
+    const company = await createLocalCompany({
+      name,
+      slug: slug || undefined,
+      tax_id: str(data?.tax_id),
+      company_name: str(data?.company_name),
+      address: str(data?.address),
+      phone: str(data?.phone),
+      cep: str(data?.cep),
+    });
     return NextResponse.json(company, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Erro ao criar empresa" }, { status: 500 });

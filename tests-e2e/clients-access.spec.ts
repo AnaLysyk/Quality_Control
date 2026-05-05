@@ -7,7 +7,7 @@ test("admin global sees clients list", async ({ page }) => {
 
   await page.goto("/admin/clients");
   await expect(page).toHaveURL(/\/admin\/clients/);
-  await expect(page.getByRole("heading", { name: /Empresas/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Empresas da plataforma" })).toBeVisible();
 });
 
 test("user cannot access /admin/clients", async ({ page }) => {
@@ -15,6 +15,6 @@ test("user cannot access /admin/clients", async ({ page }) => {
   await login(page, "user@example.com", "senha");
 
   await page.goto("/admin/clients");
-  await expect(page.getByText(/Acesso restrito a admin global/i)).toBeVisible();
+  await expect(page).not.toHaveURL(/\/admin\/clients/);
+  await expect(page.getByRole("heading", { name: /Demo|Dashboard|Home/i }).first()).toBeVisible();
 });
-

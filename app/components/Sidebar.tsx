@@ -3,25 +3,30 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, forwardRef, type CSSProperties, type RefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  FiActivity,
   FiAlertTriangle,
   FiBarChart2,
   FiBell,
   FiBriefcase,
   FiClipboard,
+  FiCode,
   FiCompass,
   FiColumns,
   FiChevronRight,
   FiBookmark,
+  FiFolder,
   FiGrid,
+  FiHash,
   FiHome,
   FiList,
   FiShield,
   FiCpu,
   FiMessageSquare,
   FiPlus,
+  FiServer,
   FiTool,
   FiUser,
   FiUserPlus,
@@ -453,6 +458,43 @@ function computeSubFlyoutPlacement(anchor: FlyoutAnchor, viewport: FlyoutViewpor
     side,
   };
 }
+
+const FlyoutPanel = forwardRef<
+  HTMLDivElement,
+  {
+    placement: FlyoutPlacement;
+    children: React.ReactNode;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
+    onFocusCapture?: () => void;
+    onBlurCapture?: (e: React.FocusEvent<HTMLDivElement>) => void;
+  }
+>(function FlyoutPanel({ placement, children, ...handlers }, forwardedRef) {
+  const ownRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = (forwardedRef && typeof forwardedRef !== "function" ? forwardedRef.current : null) ?? ownRef.current;
+    if (!el) return;
+    el.style.top = `${placement.top}px`;
+    el.style.left = `${placement.left}px`;
+    el.style.width = `${placement.width}px`;
+    el.style.maxHeight = `${placement.maxHeight}px`;
+  });
+
+  return (
+    <div
+      ref={(node) => {
+        (ownRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (typeof forwardedRef === "function") forwardedRef(node);
+        else if (forwardedRef) (forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }}
+      className="sidebar-shell-theme fixed z-120 flex flex-col overflow-hidden rounded-[28px] border border-white/12 shadow-[0_26px_80px_rgba(1,24,72,0.34)] backdrop-blur-2xl"
+      {...handlers}
+    >
+      {children}
+    </div>
+  );
+});
 
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const router = useRouter();
@@ -1256,13 +1298,14 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
       if (path === "/automacoes") {
         return [
-          { id: "automations-open", label: t("nav.automations"), icon: FiZap, href: "/automacoes", description: "Abrir automações" },
-          { id: "automations-flows", label: "Fluxos", icon: FiZap, href: "/automacoes/fluxos", description: "Fluxos e automações" },
-          { id: "automations-executions", label: "Execuções", icon: FiZap, href: "/automacoes/execucoes", description: "Runs técnicas" },
-          { id: "automations-scripts", label: "Scripts", icon: FiClipboard, href: "/automacoes/scripts", description: "Scripts e artefatos" },
-          { id: "automations-cases", label: "Casos", icon: FiList, href: "/automacoes/casos", description: "Casos automatizados" },
-          { id: "automations-files", label: "Arquivos", icon: FiBriefcase, href: "/automacoes/arquivos", description: "Arquivos e evidências" },
-          { id: "automations-logs", label: "Logs", icon: FiBell, href: "/automacoes/logs", description: "Logs técnicos" },
+          { id: "automations-tools",      label: "Tools",      icon: FiTool,      href: "/automacoes/tools",      description: "Hub"     },
+          { id: "automations-playwright", label: "Playwright", icon: FiCode,      href: "/automacoes/playwright", description: "IDE"     },
+          { id: "automations-api-lab",    label: "API Lab",    icon: FiServer,    href: "/automacoes/api-lab",    description: "Postman" },
+          { id: "automations-cases",      label: "Casos",      icon: FiClipboard, href: "/automacoes/casos",      description: "Testes"  },
+          { id: "automations-files",      label: "Documentos", icon: FiFolder,    href: "/automacoes/arquivos",   description: "Assets"  },
+          { id: "automations-base64",     label: "Base64",     icon: FiHash,      href: "/automacoes/base64",     description: "Encode"  },
+          { id: "automations-executions", label: "Execuções",  icon: FiActivity,  href: "/automacoes/execucoes",  description: "Runs"    },
+          { id: "automations-logs",       label: "Logs",       icon: FiList,      href: "/automacoes/logs",       description: "Console" },
         ];
       }
 
@@ -1301,17 +1344,19 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
       if (path === "/admin/users/permissions") {
         return [
-          { id: "permissions-open", label: "Gestão de permissões", icon: FiShield, href: item.href, description: "Perfis e permissões" },
-          { id: "permissions-users", label: "Usuários", icon: FiUsers, href: "/admin/users?tab=company", description: "Abrir gestão de usuários" },
-          { id: "permissions-admin", label: "Líder TC", icon: FiShield, href: "/admin/users?tab=admin", description: "Perfis administrativos" },
+          { id: "permissions-search-user", label: "Selecionar usuário", icon: FiCompass, href: "/admin/users/permissions?focus=users", description: "Buscar usuário para revisar permissões" },
+          { id: "permissions-active", label: "Permissões ativas", icon: FiShield, href: "/admin/users/permissions?panel=active", description: "Ver permissões efetivas do perfil" },
+          { id: "permissions-modules", label: "Módulos e ações", icon: FiGrid, href: "/admin/users/permissions?section=modules", description: "Editar acessos por módulo" },
+          ...(canUseAdminClientTools ? [{ id: "permissions-create-user", label: "Criar usuário global", icon: FiUserPlus, href: "/admin/users/permissions?action=create-user", description: "Cadastrar usuário administrativo" }] : []),
         ];
       }
 
       if (path === "/admin/brain") {
         return [
-          { id: "brain-panel", label: "Brain", icon: FiCpu, href: "/admin/brain", description: "Painel do Brain" },
-          { id: "brain-chat", label: "Conversas", icon: FiMessageSquare, href: "/chat", description: "Abrir Chatcode" },
-          { id: "brain-search", label: "Buscar conversas", icon: FiCompass, href: "/chat?search=1", description: "Pesquisar histórico" },
+          { id: "brain-search-nodes", label: "Buscar nós", icon: FiCompass, href: "/admin/brain?focus=search", description: "Encontrar conhecimento no grafo" },
+          { id: "brain-create-node", label: "Criar nó", icon: FiPlus, href: "/admin/brain?tab=create-node", description: "Adicionar conhecimento manualmente" },
+          { id: "brain-sync", label: "Sincronizar grafo", icon: FiZap, href: "/admin/brain?action=sync", description: "Atualizar nós e relações" },
+          { id: "brain-overview", label: "Visão global", icon: FiGrid, href: "/admin/brain?view=graph", description: "Voltar ao mapa principal" },
         ];
       }
 
@@ -1579,19 +1624,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     const placement = options?.placement ?? null;
     if (!placement) return null;
 
-    const style: CSSProperties = {
-      top: placement.top,
-      left: placement.left,
-      width: placement.width,
-      maxHeight: placement.maxHeight,
-      zIndex: 120,
-    };
-
     return (
-      <div
+      <FlyoutPanel
         ref={options?.panelRef ?? undefined}
-        style={style}
-        className="sidebar-shell-theme fixed flex flex-col overflow-hidden rounded-[28px] border border-white/12 shadow-[0_26px_80px_rgba(1,24,72,0.34)] backdrop-blur-2xl"
+        placement={placement}
         onMouseEnter={clearFlyoutCloseTimer}
         onMouseLeave={scheduleSmartFlyoutClose}
         onFocusCapture={clearFlyoutCloseTimer}
@@ -1614,7 +1650,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
           )}
         </div>
-      </div>
+      </FlyoutPanel>
     );
   }
 
@@ -1881,7 +1917,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     >
       <div className="flex h-full w-full flex-col px-3 py-3">
         <div className="pb-3">
-          <Link href={logoHref} className="sidebar-logo flex items-center gap-3 rounded-[24px] px-2 py-2">
+          <Link href={logoHref} className="sidebar-logo flex items-center gap-3 rounded-3xl px-2 py-2">
             <div className="sidebar-logo-mark sidebar-logo-mark-theme relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border backdrop-blur">
               <span
                 className="absolute inset-0 bg-[radial-gradient(circle_at_28%_26%,rgba(255,255,255,0.18),transparent_56%)]"
@@ -1952,7 +1988,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
               Navegação
             </div>
             <div
-              className="sidebar-desktop-nav-list mt-1.5 flex flex-col gap-1"
+              className="sidebar-desktop-nav-list mt-1.5 flex flex-col gap-2"
               style={{ "--sidebar-item-count": desktopNavigationItems.length } as CSSProperties}
             >
               {desktopNavigationItems.map((item) => renderDesktopNavigationItem(item))}

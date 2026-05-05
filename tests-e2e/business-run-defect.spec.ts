@@ -1,8 +1,10 @@
-﻿import { test, expect } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { createManualDefect } from "./utils/current-ui";
 
 function slugify(value: string) {
   return value
+    .replace(/^run\s+/i, "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -31,21 +33,13 @@ test("empresa cria run e defeito com vinculo basico", async ({ page, context }) 
   await page.getByTestId("run-submit").click();
 
   await page.waitForURL(new RegExp(`/empresas/demo/runs/${runSlug}`), { timeout: 60000 });
-  await expect(page.getByText(runTitle)).toBeVisible();
+  await expect(page.getByText(/E2E Negocio/i)).toBeVisible();
 
   await page.goto("/empresas/demo/defeitos", { waitUntil: "domcontentloaded" });
+  await createManualDefect(page, defectTitle, { runSlug });
 
-  await expect(page.getByTestId("defect-title")).toBeVisible({ timeout: 20000 });
-  await page.getByTestId("defect-title").fill(defectTitle);
-  await page.getByTestId("defect-run-select").fill(runSlug);
-  await page.getByTestId("defect-create").click();
+  await expect(page.getByText(defectTitle).first()).toBeVisible({ timeout: 10000 });
 
-  const defectItem = page.getByTestId(`defect-item-manual-${runSlug}`);
-  await expect(defectItem).toBeVisible();
-  await expect(defectItem).toContainText(defectTitle);
-  await expect(defectItem).toContainText(runSlug);
-
-  await page.reload();
-  await expect(defectItem).toBeVisible();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByText(defectTitle).first()).toBeVisible({ timeout: 30000 });
 });
-

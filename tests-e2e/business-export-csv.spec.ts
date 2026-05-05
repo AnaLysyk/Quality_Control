@@ -1,4 +1,4 @@
-﻿import fs from "fs";
+import fs from "fs";
 import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
@@ -9,7 +9,7 @@ test("exporta relatorio CSV com dados do kanban", async ({ page, context }) => {
     clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/demo/defeitos/kanban", { waitUntil: "networkidle" });
+  await page.goto("/empresas/demo/defeitos/kanban", { waitUntil: "domcontentloaded" });
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),

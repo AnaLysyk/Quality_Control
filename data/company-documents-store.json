@@ -1,0 +1,148 @@
+{
+  "items": [
+    {
+      "id": "d538b83f-7783-4311-a423-585fd2ad4ec5",
+      "companySlug": "testing-company",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "createdAt": "2026-05-05T11:10:30.122Z",
+      "updatedAt": "2026-05-05T11:10:30.122Z",
+      "createdBy": "usr_admin_demo_test"
+    },
+    {
+      "id": "d42b6945-6fc4-41c2-8ad7-8017bd1f5ec8",
+      "companySlug": "demo",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": null,
+      "url": "https://example.com/docs",
+      "createdAt": "2026-05-05T11:10:26.392Z",
+      "updatedAt": "2026-05-05T11:10:26.392Z",
+      "createdBy": "usr_company_demo_test"
+    },
+    {
+      "id": "93475dc2-bb3c-4a93-aa9a-e4a6aea1251e",
+      "companySlug": "demo",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "fileName": "manual.txt",
+      "mimeType": "text/plain",
+      "sizeBytes": 21,
+      "storagePath": "local:demo/93475dc2-bb3c-4a93-aa9a-e4a6aea1251e-manual.txt",
+      "createdAt": "2026-05-05T11:10:25.354Z",
+      "updatedAt": "2026-05-05T11:10:25.354Z",
+      "createdBy": "usr_company_demo_test"
+    },
+    {
+      "id": "8c50b9b3-9dea-4b48-ae3b-e77bece942bb",
+      "companySlug": "testing-company",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "createdAt": "2026-05-05T00:11:33.090Z",
+      "updatedAt": "2026-05-05T00:11:33.090Z",
+      "createdBy": "usr_admin_demo_test"
+    },
+    {
+      "id": "58be8f95-0352-4247-93f7-62d9aef55d9a",
+      "companySlug": "demo",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": null,
+      "url": "https://example.com/docs",
+      "createdAt": "2026-05-05T00:11:29.774Z",
+      "updatedAt": "2026-05-05T00:11:29.774Z",
+      "createdBy": "usr_company_demo_test"
+    },
+    {
+      "id": "56942418-b0d4-46db-8523-59fae840f5a7",
+      "companySlug": "demo",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "fileName": "manual.txt",
+      "mimeType": "text/plain",
+      "sizeBytes": 21,
+      "storagePath": "local:demo/56942418-b0d4-46db-8523-59fae840f5a7-manual.txt",
+      "createdAt": "2026-05-05T00:11:28.751Z",
+      "updatedAt": "2026-05-05T00:11:28.751Z",
+      "createdBy": "usr_company_demo_test"
+    },
+    {
+      "id": "5698464c-4cb3-404f-aca2-82cf92500901",
+      "companySlug": "testing-company",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "createdAt": "2026-05-04T23:40:15.281Z",
+      "updatedAt": "2026-05-04T23:40:15.281Z",
+      "createdBy": "usr_admin_demo_test"
+    },
+    {
+      "id": "2cab4671-8dfe-4b5e-8d1b-7e2dd96875ad",
+      "companySlug": "demo",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": null,
+      "url": "https://example.com/docs",
+      "createdAt": "2026-05-04T23:40:10.577Z",
+      "updatedAt": "2026-05-04T23:40:10.577Z",
+      "createdBy": "usr_company_demo_test"
+    },
+    {
+      "id": "bd986933-4280-403d-bee0-d0071cdea194",
+      "companySlug": "demo",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "fileName": "manual.txt",
+      "mimeType": "text/plain",
+      "sizeBytes": 21,
+      "storagePath": "local:demo/bd986933-4280-403d-bee0-d0071cdea194-manual.txt",
+      "createdAt": "2026-05-04T23:40:09.016Z",
+      "updatedAt": "2026-05-04T23:40:09.016Z",
+      "createdBy": "usr_company_demo_test"
+    },
+    {
+      "id": "b938bbe2-1841-48f2-a848-9e9100a73f8b",
+      "companySlug": "testing-company",
+      "kind": "link",
+      "title": "Doc Testing Company",
+      "description": null,
+      "url": "https://example.com/testing",
+      "createdAt": "2026-05-04T03:23:48.015Z",
+      "updatedAt": "2026-05-04T03:23:48.015Z",
+      "createdBy": "usr_admin_demo_test"
+    },
+    {
+      "id": "a47e61d2-e3e0-4503-a859-770d68941a9a",
+      "companySlug": "demo",
+      "kind": "link",
+      "title": "Checklist Deploy",
+      "description": null,
+      "url": "https://example.com/docs",
+      "createdAt": "2026-05-04T03:23:44.161Z",
+      "updatedAt": "2026-05-04T03:23:44.161Z",
+      "createdBy": "usr_company_demo_test"
+    },
+    {
+      "id": "cd893171-dcbf-415c-aca7-f8dbebf03f78",
+      "companySlug": "demo",
+      "kind": "file",
+      "title": "Manual QA",
+      "description": "Documento de teste",
+      "fileName": "manual.txt",
+      "mimeType": "text/plain",
+      "sizeBytes": 21,
+      "storagePath": "local:demo/cd893171-dcbf-415c-aca7-f8dbebf03f78-manual.txt",
+      "createdAt": "2026-05-04T03:23:42.600Z",
+      "updatedAt": "2026-05-04T03:23:42.600Z",
+      "createdBy": "usr_company_demo_test"
+    }
+  ]
+}

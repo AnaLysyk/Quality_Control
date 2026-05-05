@@ -66,7 +66,7 @@ O repositório agora inclui [render.yaml](/C:/Users/Testing%20Company/painel-qa/
 
 ## Credenciais de teste (E2E)
 
-Quando `E2E_USE_JSON=1`, o login usa o arquivo `data/local-auth-store.json` (ou `data/local-auth-store.sample.json` como fallback).
+Quando `E2E_USE_JSON=1`, o login usa o arquivo `data/local-auth-store.json`.
 
 - Admin: `admin@griaule.test` / senha `Griaule@123`
 - Usuario: `user@griaule.test` / senha `Griaule@123`

@@ -4,7 +4,7 @@ import {
   getDefaultAutomationEnvironmentId,
 } from "@/data/automationCatalog";
 import { AUTOMATION_API_PRESETS, AUTOMATION_COMPANY_TOOLS, getDefaultAutomationApiPreset } from "@/data/automationIde";
-import griauleDocs from "@/data/company-docs-griaule.json";
+import { COMPANY_DOCS_GRIAULE } from "@/data/companyDocsGriaule";
 
 describe("Griaule automation catalog", () => {
   it("defaults Griaule users to the homologation API host", () => {
@@ -49,8 +49,8 @@ describe("Griaule automation catalog", () => {
   });
 
   it("documents the operational handoff without embedding shared passwords", () => {
-    const doc = griauleDocs.docs.find((item) => item.id === "doc-griaule-smart-operador-homologacao");
-    const category = griauleDocs.categories.find((item) => item.id === "cat-griaule-smart-operador");
+    const doc = COMPANY_DOCS_GRIAULE.docs.find((item) => item.id === "doc-griaule-smart-operador-homologacao");
+    const category = COMPANY_DOCS_GRIAULE.categories.find((item) => item.id === "cat-griaule-smart-operador");
 
     expect(category?.slug).toBe("smart-operador");
     expect(doc?.status).toBe("published");

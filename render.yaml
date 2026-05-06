@@ -27,3 +27,5 @@ services:
         sync: false
       - key: QASE_PROJECT_MAP
         sync: false
+      - key: OPENAI_API_KEY
+        sync: false

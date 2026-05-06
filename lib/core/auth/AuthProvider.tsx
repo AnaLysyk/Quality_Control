@@ -197,10 +197,9 @@ function clearAuthCache() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const cached = typeof window !== "undefined" ? readAuthCache() : null;
-  const [user, setUser] = useState<AuthUser | null>(cached?.user ?? null);
-  const [companies, setCompanies] = useState<AuthCompany[]>(cached?.companies ?? []);
-  const [loading, setLoading] = useState(cached === null); // skip spinner if cache hit
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [companies, setCompanies] = useState<AuthCompany[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const normalizedUser = useMemo(() => normalizeAuthenticatedUser(user, companies), [user, companies]);
 
@@ -263,11 +262,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // If we had a cache hit on mount, revalidate silently in background
-    const hadCache = cached !== null;
-    void refreshUser(!hadCache);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const cached = readAuthCache();
+    if (cached) {
+      setUser(cached.user);
+      setCompanies(cached.companies);
+      setLoading(false);
+      publishAuthUser(cached.user);
+      void refreshUser(false);
+      return;
+    }
+
+    void refreshUser(true);
+  }, [refreshUser]);
 
   useEffect(() => {
     return subscribeAuthUserSync((nextUser) => {

@@ -62,6 +62,7 @@ export async function POST(req: Request) {
       "PASSWORD_RESET",
       {
         reason: "forgot_password",
+        login,
         profileType,
         reviewQueue,
       },

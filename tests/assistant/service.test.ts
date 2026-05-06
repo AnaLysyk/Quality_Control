@@ -170,6 +170,7 @@ describe("low-signal detection", () => {
     // Should NOT be a clarify reply when awaiting payload
     expect(result.reply).not.toContain("Nao consegui interpretar");
   });
+
 });
 
 /* ──────────────────────────────────────────────── */

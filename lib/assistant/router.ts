@@ -73,14 +73,12 @@ type ScoringRule = {
 };
 
 const SCORING_RULES: ScoringRule[] = [
-  /* ── greeting → screen context ── */
+  /* ── explicit context/location request only — never for greetings ── */
   {
     tool: "get_screen_context",
-    score: (n, _ctx, _h, raw, intent) => {
-      if (!n) return 80;
-      if (intent.primary === "greeting") return 85;
-      if (isGreetingPrompt(raw)) return 80;
-      if (/(mostrar|mostra|ver|ver meu).*(contexto|contexto atual)|contexto atual/.test(n)) return 70;
+    score: (n, _ctx, _h, _raw, _intent) => {
+      if (/(onde estou|o que e esta tela|o que é esta tela|contexto atual|contexto da tela|mostrar contexto|ver contexto)/.test(n)) return 70;
+      if (/(mostrar|mostra|ver|ver meu).*(contexto|tela atual)/.test(n)) return 65;
       return 0;
     },
   },
@@ -88,11 +86,15 @@ const SCORING_RULES: ScoringRule[] = [
   /* ── summarize entity (profile, ticket, company) ── */
   {
     tool: "summarize_entity",
-    score: (n, _ctx, _h, _raw, intent) => {
+    score: (n, _ctx, _h, raw, intent) => {
       if (/(perfil|meus dados|meu usuario|meu usuário)/.test(n)) return 75;
       if (/(resum|sumario|sumário)/.test(n)) return 60;
+      // Strong signal: ticket reference (SP-123, #456, etc.)
+      if (Boolean(extractTicketReference(raw))) return 65;
       // Boost se o intent é analysis e menciona entidade
       if (intent.primary === "analysis" && intent.entities.length > 0) return 55;
+      // Numeric ID detection: could be ticket, user, company
+      if (/^\d+$/.test(normalizeSearch(n)) && !/^\d{1,2}$/.test(normalizeSearch(n))) return 40; // not single/double digit
       return 0;
     },
   },
@@ -100,12 +102,14 @@ const SCORING_RULES: ScoringRule[] = [
   /* ── explain permission ── */
   {
     tool: "explain_permission",
-    score: (n, _ctx, _h, _raw, intent) => {
+    score: (n, ctx, _h, _raw, intent) => {
       if (/(escopo de acesso|meu acesso|explicar meu acesso|explicar meu escopo)/.test(n)) return 75;
       if (/(por que|porque).*(nao ve|nao acessa|não vê|não acessa)/.test(n)) return 70;
       if (/permiss/.test(n)) return 55;
       // Boost para troubleshooting sobre acesso
       if (intent.primary === "troubleshooting" && intent.topics.includes("users")) return 50;
+      // Context-aware: if on permissions module, lower threshold
+      if (ctx.module === "permissions" && intent.primary === "troubleshooting") return 45;
       return 0;
     },
   },
@@ -164,12 +168,17 @@ const SCORING_RULES: ScoringRule[] = [
     tool: "search_internal_records",
     score: (n, ctx, _h, raw, intent) => {
       if (/(buscar|busca|procura|procurar|localiza|localizar|encontra|encontrar|listar|lista)/.test(n)) return 50;
-      if (Boolean(extractTicketReference(raw))) return 50;
+      if (Boolean(extractTicketReference(raw))) return 65; // Strong signal: ticket ref
+      // Análise de métricas, dados, relatórios
+      if (/(metricas|métricas|dados|relatorio|relatório|analise|análise|indicadores|dashboard|status)/.test(n)) return 55;
       // Boost para information_seeking com entidades
-      if (intent.primary === "information_seeking" && intent.entities.length > 0) return 45;
+      if (intent.primary === "information_seeking" && intent.entities.length > 0) return 50;
       // Boost se menciona número que pode ser ticket
-      if (intent.entities.some(e => e.type === "number" || e.type === "ticket")) return 40;
-      if (ctx.module === "support") return 30; // fallback for support module
+      if (intent.entities.some(e => e.type === "number" || e.type === "ticket")) return 45;
+      // Context-aware: support/dashboard modules benefit from search
+      if (ctx.module === "support" || ctx.module === "dashboard") return 40;
+      // Trend/historical analysis
+      if (/(tendencia|tendência|historico|histórico|comparar|comparacao|comparison)/.test(n)) return 45;
       return 0;
     },
   },
@@ -177,13 +186,15 @@ const SCORING_RULES: ScoringRule[] = [
   /* ── suggest next step (fallback) ── */
   {
     tool: "suggest_next_step",
-    score: (n, _ctx, _h, _raw, intent) => {
-      if (/(proximo passo|próximo passo|o que faco agora|o que faço agora|sugere)/.test(n)) return 60;
+    score: (n, ctx, _h, _raw, intent) => {
+      if (/(proximo passo|próximo passo|o que faco agora|o que faço agora|sugere|ajuda|dica)/.test(n)) return 60;
       // Boost para confirmação (continuar fluxo)
       if (intent.primary === "confirmation") return 40;
       // Boost para clarificação
       if (intent.primary === "clarification") return 35;
-      return 10; // always a fallback candidate
+      // Don't give full fallback score immediately — be selective
+      // Only return low score if nothing else matched well
+      return 0;
     },
   },
 ];
@@ -228,10 +239,13 @@ export function chooseTool(
     }
   }
 
-  // Threshold real: só aceita tool se score >= 10
+  // Smart fallback: se nada marcou bem, retorna "use_brain" para conversação natural
   if (bestScore < 10) {
-    return "suggest_next_step";
+    // Fallback: deixa Brain lidar com isso conversacionalmente
+    // Em vez de ficar com sugestões fixas, roteia para agente IA conversacional
+    return "use_brain" as AssistantToolName;
   }
+
   return bestTool;
 }
 

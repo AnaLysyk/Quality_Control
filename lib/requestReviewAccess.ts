@@ -27,6 +27,19 @@ export function canReviewAccessRequests(session: ReviewerSession | null | undefi
   return role === SYSTEM_ROLES.LEADER_TC || hasPermissionAccess(resolveRoleDefaults(role), "access_requests", "view");
 }
 
+export function canViewAccessRequests(session: ReviewerSession | null | undefined) {
+  if (!session) return false;
+  if (session.isGlobalAdmin === true) return true;
+  const role = normalizeLegacyRole(session.role);
+  return hasPermissionAccess(resolveRoleDefaults(role), "access_requests", "view");
+}
+
+export function canViewAccessRequestQueue(session: ReviewerSession | null | undefined, queue: ReviewQueue) {
+  if (!canViewAccessRequests(session)) return false;
+  if (session?.isGlobalAdmin === true) return true;
+  return canAdminReviewQueue(queue);
+}
+
 export function canReviewerAccessQueue(session: ReviewerSession | null | undefined, queue: ReviewQueue) {
   if (!canReviewAccessRequests(session)) return false;
   return queue === "global_only" || canAdminReviewQueue(queue);

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
-import type { AssistantAction, AssistantConversationTurn, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
+import type { AssistantAction, AssistantConversationTurn, AssistantOpenEventDetail, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
 import ConfirmDialog from "./ConfirmDialog";
@@ -45,6 +45,26 @@ function makeId(prefix: string) {
     return `${prefix}-${crypto.randomUUID()}`;
   }
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function firstName(value?: string | null) {
+  const cleaned = String(value ?? "").trim();
+  if (!cleaned) return "usuário";
+  return cleaned.split(/\s+/)[0] ?? "usuário";
+}
+
+function dayGreeting() {
+  const hour = Number(
+    new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: "America/Sao_Paulo",
+    }).format(new Date()),
+  );
+
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
 }
 
 function TCLogoSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
@@ -87,6 +107,8 @@ function formatToolLabel(tool?: string | null) {
       return "Coment\u00e1rio";
     case "suggest_next_step":
       return "Pr\u00f3ximo passo";
+    case "use_brain":
+      return "Brain";
     case "system":
       return "Assistente";
     default:
@@ -106,6 +128,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const [assistantContext, setAssistantContext] = useState<AssistantScreenContext>(screenContext);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
+  // Contexto enriquecido vindo de telas externas (Brain, Autologs, etc.)
+  const [brainContext, setBrainContext] = useState<AssistantOpenEventDetail | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -182,37 +206,75 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     setAssistantContext(screenContext);
   }, [screenContext]);
 
+  // Escuta evento global assistant:open — qualquer tela pode abrir o assistente com contexto
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleAssistantOpen(e: Event) {
+      const detail = (e as CustomEvent<AssistantOpenEventDetail>).detail;
+      if (!detail) return;
+      setBrainContext(detail);
+      setOpen(true);
+      if (detail.initialMessage) {
+        setInput(detail.initialMessage);
+      }
+      // Audit log fire-and-forget (falha silenciosamente)
+      if (detail.source || detail.nodeId || detail.agentMode) {
+        void fetch("/api/assistant/audit-open", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            source: detail.source,
+            route: detail.route,
+            nodeId: detail.nodeId,
+            entityId: detail.entityId,
+            agentMode: detail.agentMode,
+          }),
+        }).catch(() => undefined);
+      }
+    }
+
+    window.addEventListener("assistant:open", handleAssistantOpen);
+    // Compatibilidade retroativa com o evento antigo
+    window.addEventListener("brain:ask-assistant", handleAssistantOpen);
+    return () => {
+      window.removeEventListener("assistant:open", handleAssistantOpen);
+      window.removeEventListener("brain:ask-assistant", handleAssistantOpen);
+    };
+  }, []);
+
   if (!assistantEnabled) return null;
   if (!user) return null;
   if (!can("ai", "view") || !can("ai", "use")) return null;
 
-  const roleLabel = user.permissionRole ?? user.role ?? user.companyRole ?? "usu\u00e1rio";
-  const activeCompanyScope =
-    assistantContext.companySlug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? "global";
-  const activeModule = assistantContext.module ?? screenContext.module;
   const activeScreenLabel = assistantContext.screenLabel ?? screenContext.screenLabel;
   const hasConversation = messages.length > 0;
   const compactViewport = viewportHeight > 0 && viewportHeight <= 860;
   const denseViewport = viewportHeight > 0 && viewportHeight <= 740;
-  const ultraDenseViewport = viewportHeight > 0 && viewportHeight <= 680;
-  const showQuickPrompts = !hasConversation;
-  const visiblePrompts = hasConversation
-    ? ultraDenseViewport
-      ? 1
-      : compactViewport
-        ? 1
-        : 2
-    : ultraDenseViewport
-      ? 2
-      : compactViewport
-        ? 3
-        : 4;
-  const compactConversationChrome = hasConversation || compactViewport;
-  const summaryText = denseViewport
-    ? `Assistente contextual de ${screenContext.screenLabel.toLowerCase()}.`
-    : compactViewport && hasConversation
-      ? `Contexto: ${activeScreenLabel}.`
-      : screenContext.screenSummary;
+
+  useEffect(() => {
+    if (!open || messages.length > 0 || !user) return;
+
+    const contextLine = brainContext?.nodeLabel
+      ? `Podemos começar por ${brainContext.nodeLabel}.`
+      : "Como posso te ajudar hoje?";
+
+    const greetingMessage = `${dayGreeting()}, ${firstName(user.name)}. ${contextLine}`;
+
+    setMessages((current) => {
+      if (current.length > 0) return current;
+      return [
+        {
+          id: makeId("assistant"),
+          from: "assistant",
+          text: greetingMessage,
+          ts: Date.now(),
+          tool: "use_brain",
+        },
+      ];
+    });
+  }, [open, messages.length, user, brainContext?.nodeLabel]);
 
   async function pushAssistantResponse(payload: { message?: string; action?: AssistantToolAction | null }, optimisticText?: string) {
     if (sending) return;
@@ -239,13 +301,21 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
     if (payload.message) setInput("");
 
+    // Escolhe a rota: usa /api/assistant/ask quando há contexto Brain/agente
+    const hasBrainContext = !!(
+      brainContext &&
+      (brainContext.nodeId || brainContext.agentMode || brainContext.source === "brain")
+    );
+    const apiRoute = hasBrainContext ? "/api/assistant/ask" : "/api/ai/chat";
+
     try {
-      const response = await fetchApi("/api/ai/chat", {
+      const response = await fetchApi(apiRoute, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...payload,
           context: { route: screenContext.route },
+          brainContext: brainContext ?? undefined,
           actor: {
             userId: user.id,
             permissionRole: user.permissionRole ?? null,
@@ -413,25 +483,20 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               }`}
             >
               <div
-                className={`relative overflow-hidden border-b border-[rgba(15,23,42,0.1)] [background-image:var(--tc-brand-gradient-strong)] text-white ${denseViewport ? "px-4 py-3" : hasConversation ? "px-5 py-4" : "px-5 py-6"}`}
+                className={`relative overflow-hidden border-b border-[rgba(15,23,42,0.1)] [background-image:var(--tc-brand-gradient-strong)] text-white ${denseViewport ? "px-4 py-3" : "px-5 py-4"}`}
               >
                 <div className="absolute inset-0 [background-image:var(--tc-brand-overlay)]" aria-hidden />
                 <div className="absolute inset-x-0 bottom-0 h-px [background-image:var(--tc-brand-divider)]" aria-hidden />
                 <div className="relative flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <div className={`flex items-center justify-center ${denseViewport ? "h-10 w-10" : hasConversation ? "h-12 w-12" : "h-14 w-14"}`}>
-                      <TCLogoSpinner size={denseViewport ? "md" : hasConversation ? "md" : "lg"} />
+                    <div className={`flex items-center justify-center ${denseViewport ? "h-10 w-10" : "h-12 w-12"}`}>
+                      <TCLogoSpinner size="md" />
                     </div>
-                    <div className="space-y-1">
-                      <p className={`font-semibold uppercase tracking-[0.34em] text-white/72 ${compactConversationChrome ? "text-[0.58rem]" : denseViewport ? "text-[0.62rem]" : "text-[0.68rem]"}`}>Testing Company</p>
+                    <div className="space-y-0.5">
+                      <p className="text-[0.58rem] font-semibold uppercase tracking-[0.34em] text-white/72">Testing Company</p>
                       <div>
-                        <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} font-black tracking-[-0.03em] text-white`}>Assistente</h3>
-                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>{activeScreenLabel}</p>
-                      </div>
-                      <div className={`flex flex-wrap gap-2 pt-1 text-[0.68rem] uppercase tracking-[0.26em] text-white/72 ${compactConversationChrome ? "hidden" : ""}`}>
-                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{roleLabel}</span>
-                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{activeModule}</span>
-                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">escopo {activeCompanyScope}</span>
+                        <h3 className={`${denseViewport ? "text-[1rem]" : "text-[1.05rem]"} font-black tracking-[-0.03em] text-white`}>Assistente</h3>
+                        <p className="max-w-[20rem] text-[0.74rem] leading-4.5 text-white/82">{activeScreenLabel}</p>
                       </div>
                     </div>
                   </div>
@@ -449,35 +514,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                 </div>
               </div>
 
-              {showQuickPrompts ? (
-                <div className={`border-b border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f7faff_0%,#fff9fb_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#13213a_0%,#17253f_100%)] ${denseViewport ? "px-4 py-2.5" : "px-5 py-4"}`}>
-                  <p className={`${denseViewport ? "text-[0.9rem] leading-5" : "text-base leading-6"} font-semibold text-[#011848] dark:text-[#e7efff]`}>{summaryText}</p>
-                  <div className={`${compactViewport ? "mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "mt-3 flex flex-wrap gap-2"}`}>
-                  {screenContext.suggestedPrompts.slice(0, visiblePrompts).map((prompt) => (
-                    <button
-                      key={prompt}
-                      type="button"
-                      onClick={() => void sendMessage(prompt)}
-                      className={`inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7dff1) bg-white/95 font-semibold text-(--tc-primary,#011848) shadow-[0_8px_18px_rgba(1,24,72,0.06)] transition hover:border-[rgba(239,0,1,0.24)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#122038] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4] ${compactViewport ? "shrink-0 px-3 py-1.5 text-[0.68rem]" : "px-3 py-2 text-xs"}`}
-                    >
-                      <FiZap size={12} />
-                      {prompt}
-                    </button>
-                  ))}
-                  </div>
-                </div>
-              ) : null}
 
-              <div className={`min-h-0 flex-1 ${hasConversation ? "overflow-y-auto" : "overflow-y-hidden"} bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)] ${denseViewport ? "space-y-4 px-4 py-4" : hasConversation ? "space-y-4 px-4 py-4" : "space-y-5 px-5 py-5"}`}>
-                {messages.length === 0 ? (
-                  <div className={`rounded-[1.6rem] border border-[#dfe6f3] bg-[#ffffff] shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-[#36507f] dark:bg-[#13213a] dark:shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${denseViewport ? "p-4" : "p-5"}`}>
-                    <p className="text-base font-bold text-[#ef0001] dark:text-[#ff8a8a]">Pronto para atuar dentro do seu perfil.</p>
-                    <p className="mt-2 text-base leading-7 text-[#011848] dark:text-[#d7e5ff]">
-                      Uso a sessão atual, enxergo apenas o que o seu perfil pode ver e executo ações somente dentro do seu RBAC.
-                    </p>
-                  </div>
-                ) : null}
 
+              <div className="min-h-0 flex-1 overflow-y-auto space-y-4 px-4 py-4 bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)]">
                 {messages.map((message) => {
                   const isUser = message.from === "user";
                   return (
@@ -538,8 +577,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                 <div ref={endRef} />
               </div>
 
-              <div className={`border-t border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0f192d_0%,#13213a_100%)] ${denseViewport ? "px-4 py-2.5" : hasConversation ? "px-4 py-3" : "px-5 py-4.5"}`}>
-                <div className={`rounded-3xl border border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f8fbff_0%,#fff7fa_100%)] shadow-[0_14px_28px_rgba(15,23,42,0.05)] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.24)] ${denseViewport ? "p-2.5" : hasConversation ? "p-2.5" : "p-3.5"}`}>
+              <div className={`border-t border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0f192d_0%,#13213a_100%)] ${denseViewport ? "px-4 py-2.5" : "px-4 py-3"}`}>
+                <div className="rounded-3xl border border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f8fbff_0%,#fff7fa_100%)] p-2.5 shadow-[0_14px_28px_rgba(15,23,42,0.05)] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.24)]">
                   <textarea
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
@@ -550,9 +589,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                       }
                     }}
                     placeholder={`Escreva o que você precisa em ${screenContext.screenLabel.toLowerCase()}...`}
-                    className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
+                    className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : "min-h-[2.85rem] py-1.5"}`}
                   />
-                  <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : hasConversation ? "mt-2" : "mt-3"}`}>
+                  <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : "mt-2"}`}>
                     <button
                       type="button"
                       onClick={() => setConfirmState({ open: true, kind: "clearAll" })}

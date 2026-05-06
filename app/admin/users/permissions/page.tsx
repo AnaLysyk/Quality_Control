@@ -24,6 +24,7 @@ import { editableProfileNeedsCompany, normalizeEditableProfileRole, type Editabl
 import {
   getFixedProfileHint,
   getFixedProfileLabel,
+  getFixedProfileOptions,
   getFixedProfileTone,
   resolveFixedProfileKind,
   type FixedProfileKind,
@@ -94,21 +95,11 @@ type ModuleSummaryItem = {
 function getRoleFilters(isPt: boolean): Array<{ value: RoleFilter; label: string; hint: string }> {
   return [
     { value: "all", label: isPt ? "Todos" : "All", hint: isPt ? "Todos os tipos de perfil" : "All profile types" },
-    { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
-    { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
-    { value: "empresa", label: getFixedProfileLabel("empresa", { short: true }), hint: getFixedProfileHint("empresa") },
-    { value: "company_user", label: getFixedProfileLabel("company_user"), hint: getFixedProfileHint("company_user") },
-    { value: "testing_company_user", label: getFixedProfileLabel("testing_company_user"), hint: getFixedProfileHint("testing_company_user") },
+    ...getFixedProfileOptions({ short: true }),
   ];
 }
 
-const PROFILE_OPTIONS: Array<{ value: EditableProfileRole; label: string; hint: string }> = [
-  { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
-  { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
-  { value: "empresa", label: getFixedProfileLabel("empresa"), hint: getFixedProfileHint("empresa") },
-  { value: "company_user", label: getFixedProfileLabel("company_user"), hint: getFixedProfileHint("company_user") },
-  { value: "testing_company_user", label: getFixedProfileLabel("testing_company_user"), hint: getFixedProfileHint("testing_company_user") },
-];
+const PROFILE_OPTIONS: Array<{ value: EditableProfileRole; label: string; hint: string }> = getFixedProfileOptions();
 
 function emptyOverride(): PermissionOverride {
   return { allow: {}, deny: {} };

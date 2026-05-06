@@ -2262,6 +2262,7 @@ function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersP
         clientId={clientId}
         clients={[{ id: clientId, name: companyName }]}
         initialRole="company_user"
+        allowedRoles={["empresa", "company_user"]}
         onClose={() => setOpenCreateUserModal(false)}
         onCreated={async () => {
           await loadLinkedUsers();

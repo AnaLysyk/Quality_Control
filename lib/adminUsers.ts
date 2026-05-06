@@ -46,6 +46,7 @@ export type AdminUserItem = {
   companies?: AdminUserCompanyItem[];
   active?: boolean;
   status?: string;
+  phone?: string | null;
   job_title?: string | null;
   linkedin_url?: string | null;
   avatar_url?: string | null;
@@ -300,6 +301,7 @@ export function buildAdminUserItem(
     companies,
     active: user.active !== false,
     status: user.active === false ? "inactive" : user.status ?? "active",
+    phone: user.phone ?? null,
     job_title: user.job_title ?? null,
     linkedin_url: user.linkedin_url ?? null,
     avatar_url: user.avatar_url ?? null,

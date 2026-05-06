@@ -9,38 +9,40 @@ import type { AssistantToolName } from "./types";
 
 export const REPEATED_REPLY_MESSAGES: Record<AssistantToolName, string> = {
   get_screen_context:
-    "📍 Acabei de mostrar esse contexto. Quer que eu aprofunde em **permissões**, **chamados** ou **empresa**?",
+    "📍 Já te mostrei esse contexto. Se quiser, continuo a conversa focando no que importa agora: **permissões**, **chamados** ou **empresa**.",
   list_available_actions:
-    "✅ Já listei as ações disponíveis. Qual delas você quer executar?",
+    "✅ As ações já estão mapeadas. Me diga qual caminho você quer seguir que eu conduzo o próximo passo.",
   search_internal_records:
-    "🔍 Acabei de fazer essa busca. Quer refinar por **ID**, **status**, **prioridade** ou **responsável**?",
+    "🔍 Essa busca já foi feita. Posso continuar daqui refinando por **ID**, **status**, **prioridade** ou **responsável**.",
   summarize_entity:
-    "📋 Já fiz esse resumo. Posso detalhar algum ponto específico ou resumir outra entidade.",
+    "📋 Esse resumo já está pronto. Posso aprofundar um ponto específico ou conectar com outra entidade para manter o fluxo.",
   draft_test_case:
-    "🧪 Já gerei um caso de teste com esse contexto. Quer ajustar para **bug**, **melhoria** ou outro cenário?",
+    "🧪 O caso de teste já foi gerado nesse contexto. Se quiser, eu continuo e ajusto para **bug**, **melhoria** ou outro cenário.",
   explain_permission:
-    "🔐 Já expliquei esse escopo. Quer comparar com outra tela, perfil ou módulo?",
+    "🔐 Esse escopo já foi explicado. Posso continuar comparando com outra tela, perfil ou módulo.",
   create_ticket:
-    "🎫 Já analisei esse pedido. Me envie **dados novos** ou o **modelo preenchido** para continuar.",
+    "🎫 Esse pedido já foi analisado. Para eu continuar no mesmo fluxo, me envie **dados novos** ou o **modelo preenchido**.",
   create_comment:
-    "💬 Já tratei esse comentário. Quer fazer uma atualização diferente?",
+    "💬 Esse comentário já foi tratado. Se quiser, continuo com uma atualização diferente.",
   suggest_next_step:
-    "💡 Já sugeri os próximos passos. Escolha uma das opções ou descreva o que precisa fazer.",
+    "💡 Os próximos passos já estão sugeridos. Escolha uma opção ou me descreva o objetivo que eu sigo com você.",
+  use_brain:
+    "Podemos continuar por aqui no mesmo assunto. Me diga o que você quer que eu analise ou execute agora.",
 };
 
 /* ──────────────────── Clarify / low-signal ──────────────────── */
 
 export const CLARIFY_REPLY = [
-  "🤔 Não consegui entender completamente sua solicitação.",
+  "🤔 Quero te ajudar do jeito certo, mas ainda faltou um pouco de contexto.",
   "",
-  "**Posso ajudar com:**",
+  "**Posso seguir com você em:**",
   "• 📍 Resumir o contexto desta tela",
   "• 🔐 Explicar seu escopo de acesso",
   "• 🎫 Criar um chamado a partir de uma descrição",
   "• 🔍 Buscar tickets, usuários ou empresas",
   "• 🧪 Gerar casos de teste",
   "",
-  "💡 **Dica:** Seja específico! Por exemplo:",
+  "💡 **Exemplos rápidos para continuarmos o fluxo:**",
   "  - \"buscar tickets de alta prioridade\"",
   "  - \"criar chamado sobre erro no login\"",
   "  - \"explicar por que não vejo o módulo X\"",

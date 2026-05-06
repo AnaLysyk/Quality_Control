@@ -343,7 +343,14 @@ async function fetchAllQaseResults(ctx: QaseRuntimeContext, runId: number): Prom
       if (entities.length < pageSize) break;
       offset += pageSize;
     } catch (err) {
-      if (err instanceof QaseError && err.status === 404) {
+      if (err instanceof QaseError && (err.status === 404 || err.status === 400)) {
+        if (err.status === 400) {
+          console.warn(`${logBase}[FALLBACK][UNSUPPORTED]`, {
+            slug: ctx.slugKey,
+            status: err.status,
+            triedExplicit,
+          });
+        }
         break;
       }
       const status = err instanceof QaseError ? err.status : 0;

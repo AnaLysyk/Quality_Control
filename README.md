@@ -14,7 +14,7 @@ npm install
 
 2. Configure variaveis de ambiente:
 
-- Copie `.env.local.example` para `.env.local`.
+- Copie `.env.example` para `.env.local`.
 - Preencha:
   - `DATABASE_URL` (PostgreSQL local ou remoto)
   - `JWT_SECRET`
@@ -59,6 +59,17 @@ Para o deploy na Render, o minimo recomendado e:
 - `UPSTASH_REDIS_REST_TOKEN`
 - `NEXT_PUBLIC_SITE_URL=https://quality-control-qwqs.onrender.com`
 - `AUTH_COOKIE_SECURE=true`
+- `EMAIL_SMTP_HOST`
+- `EMAIL_SMTP_PORT`
+- `EMAIL_SMTP_USER`
+- `EMAIL_SMTP_PASS`
+- `EMAIL_FROM`
+
+Opcional para SMTP:
+- `EMAIL_SMTP_SECURE=true` (normalmente para porta 465)
+
+Diagnostico opcional:
+- `DASHBOARD_DEBUG=true` habilita logs verbosos do dashboard; deixe desativado em producao.
 
 Sem Redis configurado, o app cai no fallback em memoria de [lib/redis.ts](/C:/Users/Testing%20Company/painel-qa/lib/redis.ts) e a sessao pode ficar inconsistente entre rotas server-side e APIs. O sintoma tipico no Render e login funcionar em `/api/me`, mas `/admin` redirecionar de volta para `/login`.
 

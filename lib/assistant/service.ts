@@ -52,7 +52,10 @@ import {
 } from "./tools";
 
 function firstNameFromUser(user: AuthUser) {
-  const raw = typeof user.name === "string" ? user.name.trim() : "";
+  const fallbackFromEmail = typeof user.email === "string" ? user.email.split("@")[0] : "";
+  const raw = typeof user.user === "string" && user.user.trim()
+    ? user.user.trim()
+    : fallbackFromEmail.trim();
   if (!raw) return null;
   const first = raw.split(/\s+/)[0] ?? "";
   return first.trim() ? first : null;

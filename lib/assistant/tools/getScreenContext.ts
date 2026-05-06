@@ -92,14 +92,6 @@ function buildScopeLabel(user: AuthUser, context: AssistantScreenContext) {
   return context.companySlug ?? resolvePrimaryCompanySlug(user as AuthenticatedUserLike) ?? "global";
 }
 
-function buildPermissionLine(user: AuthUser) {
-  const summary = summarizePermissionMatrix(user.permissions);
-  if (summary === "sem módulos liberados") {
-    return "⚠️ **Permissões:** Nenhum módulo liberado para o perfil atual";
-  }
-  return `🔐 **Permissões:** ${summary}`;
-}
-
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
   const actions = buildImmediateActions(context, user);
   const moduleEmoji = getModuleEmoji(context.module);

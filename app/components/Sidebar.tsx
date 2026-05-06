@@ -1447,18 +1447,18 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              toggleFavorite(item.href!);
+              toggleFavorite(href);
             }}
             className={`absolute right-9 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border transition ${
-              favoriteHrefs.includes(item.href)
+              favoriteHrefs.includes(href)
                 ? "border-[rgba(239,0,1,0.72)] bg-(--tc-accent,#ef0001) text-white shadow-[0_8px_18px_rgba(239,0,1,0.2)]"
                 : "border-transparent text-current opacity-50 hover:border-white/10 hover:bg-white/8 hover:opacity-100"
             }`}
-            aria-pressed={favoriteHrefs.includes(item.href)}
-            aria-label={favoriteHrefs.includes(item.href) ? `Desfixar ${item.label}` : `Fixar ${item.label}`}
-            title={favoriteHrefs.includes(item.href) ? "Desfixar atalho" : "Fixar atalho"}
+            aria-pressed={favoriteHrefs.includes(href)}
+            aria-label={favoriteHrefs.includes(href) ? `Desfixar ${item.label}` : `Fixar ${item.label}`}
+            title={favoriteHrefs.includes(href) ? "Desfixar atalho" : "Fixar atalho"}
           >
-            <FiBookmark className={favoriteHrefs.includes(item.href) ? "fill-current" : ""} size={14} />
+            <FiBookmark className={favoriteHrefs.includes(href) ? "fill-current" : ""} size={14} />
           </button>
         ) : null}
 

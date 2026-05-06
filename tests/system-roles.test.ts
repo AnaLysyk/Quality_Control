@@ -1,6 +1,6 @@
 import { normalizeLegacyRole, SYSTEM_ROLES } from "../lib/auth/roles";
 import { ROLE_DEFAULTS } from "../lib/permissions/roleDefaults";
-import { canReviewAccessRequests, canReviewerAccessQueue } from "../lib/requestReviewAccess";
+import { canReviewAccessRequests, canReviewerAccessQueue, canViewAccessRequestQueue } from "../lib/requestReviewAccess";
 
 describe("system role contract", () => {
   it("exposes only the canonical profile roles", () => {
@@ -37,6 +37,7 @@ describe("system role contract", () => {
   it("keeps access-request review queue gated by capability", () => {
     expect(canReviewAccessRequests({ role: "leader_tc" })).toBe(true);
     expect(canReviewAccessRequests({ role: "technical_support" })).toBe(false);
+    expect(canViewAccessRequestQueue({ role: "technical_support" }, "admin_and_global")).toBe(true);
     expect(canReviewerAccessQueue({ role: "technical_support" }, "global_only")).toBe(false);
     expect(canReviewerAccessQueue({ role: "technical_support" }, "admin_and_global")).toBe(false);
     expect(canReviewerAccessQueue({ role: "it_dev" }, "global_only")).toBe(false);

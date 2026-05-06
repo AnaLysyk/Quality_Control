@@ -25,6 +25,10 @@ import {
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import {
+  readSyncedUserProfileFields,
+  sanitizeUserProfileText,
+} from "@/lib/userProfileData";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -117,21 +121,17 @@ export async function POST(req: NextRequest) {
   const canManageProfiles = canManageInstitutionalProfiles(access);
 
   const body = await req.json().catch(() => null);
-  const fullName =
-    typeof body?.full_name === "string"
-      ? body.full_name.trim() || null
-      : typeof body?.fullName === "string"
-        ? body.fullName.trim() || null
-        : null;
-  const name = typeof body?.name === "string" ? body.name.trim() : "";
-  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-  const rawLogin = typeof body?.user === "string" ? body.user : "";
+  const profileFields = readSyncedUserProfileFields(body);
+  const fullName = profileFields.fullName;
+  const name = profileFields.name;
+  const email = profileFields.email;
+  const rawLogin = profileFields.login ?? "";
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
-  const phone = typeof body?.phone === "string" ? body.phone.trim() || null : null;
+  const phone = profileFields.phone;
   const password = typeof body?.password === "string" ? body.password : null;
-  const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
-  const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
-  const avatarUrl = typeof body?.avatar_url === "string" ? body.avatar_url.trim() || null : null;
+  const jobTitle = profileFields.jobTitle;
+  const linkedinUrl = profileFields.linkedinUrl;
+  const avatarUrl = profileFields.avatarUrl;
   const rawRole = typeof body?.role === "string" ? body.role : "";
   const profileRole = resolveEditableProfileRole(rawRole) ?? "testing_company_user";
   const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
   let user = null;
   try {
     user = await createLocalUser({
-      full_name: fullName,
+      full_name: fullName ?? name,
       name,
       email,
       user: login,
@@ -265,8 +265,10 @@ export async function PATCH(req: NextRequest) {
   const login = hasLogin ? normalizeLogin(body?.user) : null;
   const active = typeof body?.active === "boolean" ? body.active : null;
   const clientId = typeof body?.client_id === "string" ? body.client_id : null;
-  const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
-  const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
+  const hasJobTitle = hasOwn(body as Record<string, unknown> | null, "job_title") || hasOwn(body as Record<string, unknown> | null, "jobTitle");
+  const jobTitle = hasJobTitle ? sanitizeUserProfileText(body?.job_title ?? body?.jobTitle, 120) : undefined;
+  const hasLinkedinUrl = hasOwn(body as Record<string, unknown> | null, "linkedin_url") || hasOwn(body as Record<string, unknown> | null, "linkedinUrl");
+  const linkedinUrl = hasLinkedinUrl ? sanitizeUserProfileText(body?.linkedin_url ?? body?.linkedinUrl, 255) : undefined;
   const hasAvatarUrl = hasOwn(body as Record<string, unknown> | null, "avatar_url");
   const avatarUrl = hasAvatarUrl
     ? typeof body?.avatar_url === "string"
@@ -282,8 +284,9 @@ export async function PATCH(req: NextRequest) {
       ? body.full_name.trim() || null
       : typeof body?.fullName === "string"
         ? body.fullName.trim() || null
-        : undefined;
-  const phone = typeof body?.phone === "string" ? body.phone.trim() || null : undefined;
+        : name ?? undefined;
+  const hasPhone = hasOwn(body as Record<string, unknown> | null, "phone");
+  const phone = hasPhone ? sanitizeUserProfileText(body?.phone, 80) : undefined;
   const capabilities = Array.isArray(body?.capabilities)
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
@@ -318,10 +321,10 @@ export async function PATCH(req: NextRequest) {
       ...(email ? { email } : {}),
       ...(hasLogin ? { user: login ?? "" } : {}),
       ...(active !== null ? { active } : {}),
-      ...(jobTitle !== null ? { job_title: jobTitle } : {}),
-      ...(linkedinUrl !== null ? { linkedin_url: linkedinUrl } : {}),
+      ...(hasJobTitle ? { job_title: jobTitle ?? null } : {}),
+      ...(hasLinkedinUrl ? { linkedin_url: linkedinUrl ?? null } : {}),
       ...(hasAvatarUrl ? { avatar_url: avatarUrl ?? null } : {}),
-      ...(phone !== undefined ? { phone } : {}),
+      ...(hasPhone ? { phone: phone ?? null } : {}),
       ...(rawRole
         ? {
             role,

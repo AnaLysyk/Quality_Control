@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
 import { isUserScopeLockedError } from "@/lib/companyUserScope";
+import { readSyncedUserProfileFields } from "@/lib/userProfileData";
 
 // POST: Cria um novo usuário e vincula a uma empresa
 export async function POST(req: NextRequest) {
   const data = await req.json().catch(() => null);
-  const email = typeof data?.email === "string" ? data.email.trim().toLowerCase() : "";
-  const login = typeof data?.user === "string" ? data.user.trim().toLowerCase() : "";
-  const name = typeof data?.name === "string" ? data.name.trim() : "";
+  const profileFields = readSyncedUserProfileFields(data);
+  const email = profileFields.email;
+  const login = profileFields.login ?? "";
+  const name = profileFields.name;
   const password = typeof data?.password === "string" ? data.password : "";
   const companyId = typeof data?.companyId === "string" ? data.companyId : "";
 
@@ -28,11 +30,15 @@ export async function POST(req: NextRequest) {
   let user = null;
   try {
     user = await createLocalUser({
-      full_name: name,
+      full_name: profileFields.fullName ?? name,
       email,
       user: login,
       name,
       password_hash: hash,
+      phone: profileFields.phone,
+      job_title: profileFields.jobTitle,
+      linkedin_url: profileFields.linkedinUrl,
+      avatar_url: profileFields.avatarUrl,
       active: true,
       role: "company_user",
     });

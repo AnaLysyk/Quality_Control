@@ -21,6 +21,8 @@ import { resolveEditableProfileUserState, type EditableProfileRole } from "@/lib
 import { notifyAccessRequestAccepted } from "@/lib/notificationService";
 import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
+import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
+import { reviewPasswordResetRequest } from "@/lib/passwordResetReview";
 
 type AcceptBody = {
   comment?: string;
@@ -359,6 +361,35 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     const body = (await req.json().catch(() => null)) as AcceptBody | null;
     const comment = typeof body?.comment === "string" ? body.comment.trim() : "";
     const { id } = await context.params;
+    const passwordResetRequestId = extractPasswordResetRequestId(id);
+
+    if (passwordResetRequestId) {
+      const result = await reviewPasswordResetRequest(
+        passwordResetRequestId,
+        "APPROVED",
+        { id: admin.id || admin.email || "access-requests" },
+        comment || "Aprovado pela central de solicitacoes",
+      );
+      if (!result.ok) {
+        return NextResponse.json({ error: result.message }, { status: result.status });
+      }
+
+      return NextResponse.json({
+        ok: true,
+        item: {
+          id,
+          status:
+            result.item?.status === "APPROVED"
+              ? "closed"
+              : result.item?.status === "REJECTED"
+                ? "rejected"
+                : result.item?.status === "NEEDS_REVISION"
+                  ? "in_progress"
+                  : "open",
+          requestId: passwordResetRequestId,
+        },
+      });
+    }
 
     if (shouldUseJsonStore()) {
       const existing = await getAccessRequestById(id);

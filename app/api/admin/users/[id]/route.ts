@@ -22,6 +22,7 @@ import {
 } from "@/lib/auth/localStore";
 import { getAccessContext } from "@/lib/auth/session";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { sanitizeUserProfileText } from "@/lib/userProfileData";
 
 export const revalidate = 0;
 
@@ -94,8 +95,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const permissionRole =
     normalizePermissionRole(typeof body?.permission_role === "string" ? body.permission_role : null) ??
     normalizePermissionRole(typeof body?.profile_role === "string" ? body.profile_role : null);
-  const jobTitle = typeof body?.job_title === "string" ? body.job_title.trim() || null : null;
-  const linkedinUrl = typeof body?.linkedin_url === "string" ? body.linkedin_url.trim() || null : null;
+  const hasPhone = hasOwn(body as Record<string, unknown> | null, "phone");
+  const phone = hasPhone ? sanitizeUserProfileText(body?.phone, 80) : undefined;
+  const hasJobTitle = hasOwn(body as Record<string, unknown> | null, "job_title") || hasOwn(body as Record<string, unknown> | null, "jobTitle");
+  const jobTitle = hasJobTitle ? sanitizeUserProfileText(body?.job_title ?? body?.jobTitle, 120) : undefined;
+  const hasLinkedinUrl = hasOwn(body as Record<string, unknown> | null, "linkedin_url") || hasOwn(body as Record<string, unknown> | null, "linkedinUrl");
+  const linkedinUrl = hasLinkedinUrl ? sanitizeUserProfileText(body?.linkedin_url ?? body?.linkedinUrl, 255) : undefined;
   const hasAvatarUrl = hasOwn(body as Record<string, unknown> | null, "avatar_url");
   const avatarUrl = hasAvatarUrl
     ? typeof body?.avatar_url === "string"
@@ -156,8 +161,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(email ? { email } : {}),
       ...(hasLogin ? { user: login ?? "" } : {}),
       ...(active !== null ? { active } : {}),
-      ...(jobTitle !== null ? { job_title: jobTitle } : {}),
-      ...(linkedinUrl !== null ? { linkedin_url: linkedinUrl } : {}),
+      ...(hasPhone ? { phone: phone ?? null } : {}),
+      ...(hasJobTitle ? { job_title: jobTitle ?? null } : {}),
+      ...(hasLinkedinUrl ? { linkedin_url: linkedinUrl ?? null } : {}),
       ...(hasAvatarUrl ? { avatar_url: avatarUrl ?? null } : {}),
       ...(rawRole || permissionRole
         ? { globalRole: wantsGlobalAdmin ? "global_admin" : null, is_global_admin: wantsGlobalAdmin }

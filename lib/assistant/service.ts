@@ -26,6 +26,8 @@ import type {
   AssistantToolName,
 } from "@/lib/assistant/types";
 import type { AuthUser } from "@/lib/jwtAuth";
+import { InternalBrainEngine } from "@/lib/brain/internalEngine";
+import { detectAgentMode } from "@/lib/brain/agents";
 
 import { normalizePromptText, normalizeSearch, normalizeText, compactMultiline, sanitizeRoute } from "./helpers";
 import { REPEATED_REPLY_MESSAGES, CLARIFY_REPLY } from "./messages";
@@ -81,6 +83,20 @@ function getLastUserTurn(history: AssistantConversationTurn[]) {
   return null;
 }
 
+function getLatestUserTopic(history: AssistantConversationTurn[], currentMessage?: string) {
+  const current = normalizeSearch(currentMessage ?? "");
+  for (let i = history.length - 1; i >= 0; i -= 1) {
+    const turn = history[i];
+    if (turn?.from !== "user") continue;
+    const text = normalizeText(turn.text, 180);
+    const normalized = normalizeSearch(text);
+    if (!text || !normalized) continue;
+    if (current && normalized === current) continue;
+    return text;
+  }
+  return null;
+}
+
 /* ──────────────────── Low-signal detection ──────────────────── */
 
 function isLowSignalMessage(message: string, context: AssistantScreenContext) {
@@ -122,6 +138,8 @@ function shouldShortCircuitRepeatedPrompt(
   tool: AssistantToolName,
   message: string,
 ) {
+  if (tool === "use_brain") return false;
+
   const lastUserTurn = getLastUserTurn(history);
   const lastAssistantTurn = getLastAssistantTurn(history);
   if (!lastUserTurn || !lastAssistantTurn) return false;
@@ -154,23 +172,42 @@ function maybeCollapseRepeatedActions(actions: AssistantAction[] | undefined, hi
 
 /* ──────────────────── Shortcut replies ──────────────────── */
 
-function buildRecentDuplicateReply(tool: AssistantToolName, context: AssistantScreenContext): AssistantExecutorResult {
+function buildRecentDuplicateReply(
+  tool: AssistantToolName,
+  context: AssistantScreenContext,
+  history: AssistantConversationTurn[] = [],
+  message?: string,
+): AssistantExecutorResult {
+  const topic = getLatestUserTopic(history, message);
+  const continuation = topic
+    ? ` Continuando o que voce trouxe sobre "${topic}", `
+    : " ";
+
   return {
     tool,
     success: true,
     summary: "resposta repetida evitada",
     actions: buildPromptActions(context),
-    reply: REPEATED_REPLY_MESSAGES[tool],
+    reply: `${REPEATED_REPLY_MESSAGES[tool]}${continuation}me fala o ponto especifico que quer aprofundar agora.`,
   };
 }
 
-function buildClarifyReply(context: AssistantScreenContext): AssistantExecutorResult {
+function buildClarifyReply(
+  context: AssistantScreenContext,
+  history: AssistantConversationTurn[] = [],
+  message?: string,
+): AssistantExecutorResult {
+  const topic = getLatestUserTopic(history, message);
+  const prefix = topic
+    ? `Entendi que estamos falando sobre "${topic}". `
+    : "";
+
   return {
     tool: "suggest_next_step",
     success: true,
     summary: "pedido pouco claro",
     actions: buildPromptActions(context),
-    reply: compactMultiline(CLARIFY_REPLY),
+    reply: compactMultiline(`${prefix}${CLARIFY_REPLY}`),
   };
 }
 
@@ -204,7 +241,7 @@ async function enrichMessageWithBrainContext(
   }
 }
 
-async function executeTool(user: AuthUser, context: AssistantScreenContext, tool: AssistantToolName, message: string): Promise<AssistantExecutorResult> {
+async function executeTool(user: AuthUser, context: AssistantScreenContext, tool: AssistantToolName, message: string, history: AssistantConversationTurn[] = []): Promise<AssistantExecutorResult> {
   switch (tool) {
     case "get_screen_context":     return toolGetScreenContext(user, context);
     case "list_available_actions": return toolListAvailableActions(user, context);
@@ -214,8 +251,9 @@ async function executeTool(user: AuthUser, context: AssistantScreenContext, tool
     case "explain_permission":     return toolExplainPermission(user, context, message);
     case "create_ticket":          return buildTicketCreationAction(user, context, message);
     case "create_comment":         return buildCommentCreationAction(user, context, message);
-    case "suggest_next_step":      return toolSuggestNextStep(user, context);
-    default:                       return toolSuggestNextStep(user, context);
+    case "use_brain":              return executeUseBrain(user, context, message, history);
+    case "suggest_next_step":      return toolSuggestNextStep(user, context, history);
+    default:                       return toolSuggestNextStep(user, context, history);
   }
 }
 
@@ -225,6 +263,67 @@ async function executeToolAction(user: AuthUser, context: AssistantScreenContext
     case "create_comment": return executeCreateComment(user, action);
     default:
       return { tool: "suggest_next_step", success: false, summary: "ação não suportada", reply: "Essa ação não está disponível neste MVP do agente." };
+  }
+}
+
+/** 
+ * Roteia para Brain Engine para conversa natural (não ferramenta estruturada)
+ * Detecta agente automaticamente e executa com histórico de conversa
+ */
+async function executeUseBrain(
+  user: AuthUser,
+  context: AssistantScreenContext,
+  message: string,
+  history: AssistantConversationTurn[] = []
+): Promise<AssistantExecutorResult> {
+  try {
+    // Converte histórico do formato Assistant para formato Brain
+    const brainMessages = history.map(t => ({
+      role: (t.from === "assistant" ? "assistant" : "user") as "user" | "assistant",
+      content: t.text,
+    }));
+
+    // Adiciona mensagem do usuário
+    brainMessages.push({ role: "user" as const, content: message });
+
+    // Detecta agente apropriado
+    const agentMode = detectAgentMode(message);
+
+    // Executa Brain Engine
+    const engine = new InternalBrainEngine();
+    const events = engine.run({
+      messages: brainMessages,
+      agentMode,
+      companySlug: context.companySlug,
+      route: context.route,
+      screenLabel: context.screenLabel,
+    });
+
+    let replyText = "";
+    for await (const event of events) {
+      if (event.type === "text-delta") {
+        replyText += event.text;
+      } else if (event.type === "error") {
+        replyText = replyText || `Erro ao processar: ${event.error}`;
+      }
+    }
+
+    return {
+      tool: "use_brain",
+      success: true,
+      summary: `conversação natural via agente ${agentMode}`,
+      actions: undefined,
+      reply: replyText || "Processamento concluído.",
+    };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Erro interno";
+    return {
+      tool: "use_brain",
+      success: false,
+      summary: "falha ao executar brain",
+      actions: undefined,
+      reply: `Desculpe, não consegui processar sua pergunta: ${msg}`,
+    };
   }
 }
 
@@ -276,13 +375,20 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
   if (action?.kind === "tool") {
     result = await executeToolAction(user, context, action);
   } else {
-    if (!isAwaitingTicketPayload(history) && !isAwaitingTestCasePayload(history) && isLowSignalMessage(message, context)) {
-      result = buildClarifyReply(context);
+    const hasMessage = Boolean(message.trim());
+    if (!hasMessage) {
+      result = buildClarifyReply(context, history, message);
     } else {
       const tool = chooseTool(message, context, history);
       result = shouldShortCircuitRepeatedPrompt(history, tool, message)
-        ? buildRecentDuplicateReply(tool, context)
-        : await executeTool(user, context, tool, await enrichMessageWithBrainContext(tool, message, context));
+        ? buildRecentDuplicateReply(tool, context, history, message)
+        : await executeTool(
+            user,
+            context,
+            tool,
+            tool === "use_brain" ? message : await enrichMessageWithBrainContext(tool, message, context),
+            history,
+          );
     }
   }
 

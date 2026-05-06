@@ -16,36 +16,44 @@ type FixedProfileMeta = {
 
 const FIXED_PROFILE_META: Record<FixedProfileKind, FixedProfileMeta> = {
   empresa: {
-    label: "Admin da empresa",
+    label: "Empresa",
     shortLabel: "Empresa",
     hint: "Conta institucional e administrativa da empresa.",
     toneClass: "border-rose-200 bg-rose-50 text-rose-700",
   },
   company_user: {
-    label: "Usuario da empresa",
-    shortLabel: "Usuario da empresa",
-    hint: "Usuario vinculado ao contexto da empresa.",
+    label: "Usuário da empresa",
+    shortLabel: "Usuário da empresa",
+    hint: "Usuário vinculado ao contexto da empresa.",
     toneClass: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700",
   },
   testing_company_user: {
-    label: "Usuario TC",
-    shortLabel: "Usuario TC",
-    hint: "Usuario interno da Testing Company.",
+    label: "Usuário TC",
+    shortLabel: "Usuário TC",
+    hint: "Usuário interno da Testing Company.",
     toneClass: "border-sky-200 bg-sky-50 text-sky-700",
   },
   leader_tc: {
-    label: "Lider TC",
-    shortLabel: "Lider TC",
+    label: "Líder TC",
+    shortLabel: "Líder TC",
     hint: "Perfil institucional da Testing Company.",
     toneClass: "border-indigo-200 bg-indigo-50 text-indigo-700",
   },
   technical_support: {
-    label: "Suporte Tecnico",
-    shortLabel: "Suporte Tecnico",
-    hint: "Atuacao tecnica e operacional da Testing Company.",
+    label: "Suporte Técnico",
+    shortLabel: "Suporte Técnico",
+    hint: "Atuação técnica e operacional da Testing Company.",
     toneClass: "border-cyan-200 bg-cyan-50 text-cyan-700",
   },
 };
+
+export const FIXED_PROFILE_ORDER: FixedProfileKind[] = [
+  "leader_tc",
+  "technical_support",
+  "testing_company_user",
+  "empresa",
+  "company_user",
+];
 
 export function normalizeFixedProfileKind(value?: string | null): FixedProfileKind | null {
   return normalizeLegacyRole(value) as FixedProfileKind | null;
@@ -108,6 +116,14 @@ export function getFixedProfileLabel(kind: FixedProfileKind, options?: { short?:
 
 export function getFixedProfileHint(kind: FixedProfileKind) {
   return FIXED_PROFILE_META[kind].hint;
+}
+
+export function getFixedProfileOptions(options?: { short?: boolean }) {
+  return FIXED_PROFILE_ORDER.map((kind) => ({
+    value: kind,
+    label: getFixedProfileLabel(kind, options),
+    hint: getFixedProfileHint(kind),
+  }));
 }
 
 export function getFixedProfileTone(kind: FixedProfileKind, options?: { selected?: boolean }) {

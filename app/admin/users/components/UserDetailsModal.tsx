@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
+import { getFixedProfileOptions, type FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -20,6 +21,7 @@ type UserItem = {
   job_title?: string | null;
   client_id?: string | null;
   active?: boolean;
+  phone?: string | null;
   linkedin_url?: string;
   avatar_url?: string | null;
 };
@@ -34,16 +36,10 @@ type Props = {
   onDirtyChange?: (dirty: boolean) => void;
 };
 
-const ROLE_OPTIONS = [
-  { value: "empresa", label: "Admin da empresa" },
-  { value: "company_user", label: "Usuário da empresa" },
-  { value: "testing_company_user", label: "Usuário TC" },
-  { value: "leader_tc", label: "Lider TC" },
-  { value: "technical_support", label: "Suporte Técnico" },
-] as const;
+const ROLE_OPTIONS = getFixedProfileOptions();
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 
-type RoleValue = (typeof ROLE_OPTIONS)[number]["value"];
+type RoleValue = FixedProfileKind;
 
 const normalizeRole = (value?: string | null): RoleValue => {
   const normalized = normalizeEditableProfileRole(value);
@@ -64,6 +60,7 @@ function isDirty(a: {
   name: string;
   login: string;
   email: string;
+  phone: string;
   role: RoleValue;
   clientId: string | null;
   jobTitle: string;
@@ -74,6 +71,7 @@ function isDirty(a: {
   name: string;
   login: string;
   email: string;
+  phone: string;
   role: RoleValue;
   clientId: string | null;
   jobTitle: string;
@@ -85,6 +83,7 @@ function isDirty(a: {
     a.name !== b.name ||
     a.login !== b.login ||
     a.email !== b.email ||
+    a.phone !== b.phone ||
     a.role !== b.role ||
     a.clientId !== b.clientId ||
     a.jobTitle !== b.jobTitle ||
@@ -100,6 +99,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<RoleValue>("testing_company_user");
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
@@ -118,6 +118,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         name: "",
         login: "",
         email: "",
+        phone: "",
         role: "testing_company_user" as RoleValue,
         clientId: null as string | null,
         jobTitle: "",
@@ -131,6 +132,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
       name: u.name ?? "",
       login: (u.user ?? u.email ?? "").toString(),
       email: (u.email ?? "").toString(),
+      phone: u.phone ?? "",
       role: normalizeRole(u.role ?? null),
       clientId: u.client_id ?? null,
       jobTitle: u.job_title ?? "",
@@ -141,8 +143,8 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
   }, [user]);
 
   const draft = useMemo(
-    () => ({ name, login, email, role, clientId, jobTitle, linkedin, avatarUrl, active }),
-    [name, login, email, role, clientId, jobTitle, linkedin, avatarUrl, active],
+    () => ({ name, login, email, phone, role, clientId, jobTitle, linkedin, avatarUrl, active }),
+    [name, login, email, phone, role, clientId, jobTitle, linkedin, avatarUrl, active],
   );
 
   const dirty = useMemo(() => isDirty(initial, draft), [initial, draft]);
@@ -170,6 +172,8 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     !!email.trim();
   const roleLabel =
     ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
+  const roleHint =
+    ROLE_OPTIONS.find((option) => option.value === role)?.hint ?? "";
   const linkedCompanyName =
     clients?.find((client) => client.id === clientId)?.name ?? (clientId ? "Empresa vinculada" : "Sem empresa");
   const displayName = name.trim() || user?.name || "Usuário";
@@ -194,6 +198,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     setName(initial.name);
     setLogin(initial.login);
     setEmail(initial.email);
+    setPhone(initial.phone);
     setRole(initial.role);
     setClientId(initial.clientId);
     setJobTitle(initial.jobTitle);
@@ -269,6 +274,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         full_name: name.trim(),
         user: login.trim(),
         email: email.trim(),
+        phone: phone.trim() || null,
         role,
         client_id: clientId,
         job_title: jobTitle.trim() || undefined,
@@ -410,6 +416,16 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 </label>
 
                 <label className="block text-sm">
+                  <span className={labelClass}>Telefone</span>
+                  <input
+                    className={fieldClass}
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder="+55 11 99999-9999"
+                  />
+                </label>
+
+                <label className="block text-sm">
                   <span className={labelClass}>LinkedIn</span>
                   <input
                     className={fieldClass}
@@ -466,7 +482,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     <select
                       className={fieldClass}
                       value={role}
-                      onChange={(event) => setRole(event.target.value as RoleValue)}
+                      onChange={(event) => setRole(normalizeEditableProfileRole(event.target.value))}
                       aria-label="Perfil do usuário"
                       title="Perfil"
                     >
@@ -481,6 +497,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       {roleLabel}
                     </div>
                   )}
+                  {roleHint ? <span className="mt-2 block text-xs font-semibold text-[#5f77a2]">{roleHint}</span> : null}
                 </label>
 
                 <label className="block text-sm">

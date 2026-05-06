@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useDeferredValue,
@@ -25,7 +25,6 @@ import type {
   BrainTimelineEntry,
 } from "@/hooks/useBrain";
 import { useTranslation } from "@/context/LanguageContext";
-import AgentView from "./AgentView";
 import styles from "./Brain.module.css";
 
 type SimNode = BrainNode & {
@@ -202,7 +201,6 @@ const CREATE_EDGE_TYPES = [
 ];
 
 const WORKSPACE_MODES: Record<string, { label: string; labelEn: string; types: string[] | null }> = {
-  all: { label: "Completo", labelEn: "All", types: null },
   qa: { label: "QA", labelEn: "QA", types: ["Ticket", "Defect", "TestRun", "Screen", "Module"] },
   automation: { label: "Automa\u00e7\u00e3o", labelEn: "Automation", types: ["Integration", "TestRun", "Screen", "Module", "Application"] },
   docs: { label: "Docs", labelEn: "Docs", types: ["Note", "Module", "Application", "Company", "Release"] },
@@ -642,9 +640,9 @@ export default function BrainGraphView() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [viewScale, setViewScale] = useState(1);
   const [showLabels, setShowLabels] = useState(false);
-  const [activeTab, setActiveTab] = useState<"info" | "ask" | "create" | "timeline" | "agents">("info");
+  const [activeTab, setActiveTab] = useState<"info" | "create" | "timeline">("info");
   const [showEdgeLabels, setShowEdgeLabels] = useState(true);
-  const [workspaceMode, setWorkspaceMode] = useState<keyof typeof WORKSPACE_MODES>("all");
+  const [workspaceMode, setWorkspaceMode] = useState<keyof typeof WORKSPACE_MODES>("qa");
   const [showExplorer, setShowExplorer] = useState(false);
   const [explorerCollapsed, setExplorerCollapsed] = useState<Set<string>>(new Set());
   const [showPalette, setShowPalette] = useState(false);
@@ -678,14 +676,6 @@ export default function BrainGraphView() {
   const animationFrameRef = useRef<number | undefined>(undefined);
   const dragRef = useRef<DragState | null>(null);
   const panRef = useRef({ x: 0, y: 0, scale: 1, dragging: false, lastX: 0, lastY: 0 });
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  // Custom streaming chat state
-  type ChatMessage = { id: string; role: "user" | "assistant"; content: string };
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
-
   const { data: graphData, isLoading: graphLoading, mutate: mutateGraph } = useBrainGraph(rootNodeId, depth, true);
   const { data: stats, mutate: mutateStats } = useBrainStats();
   const { data: nodeContext, mutate: mutateNodeContext } = useBrainNodeContext(selectedNodeId, depth);
@@ -722,13 +712,6 @@ export default function BrainGraphView() {
       return () => clearTimeout(t);
     }
   }, [showPalette]);
-
-  // Auto-scroll chat to bottom on new messages
-  useEffect(() => {
-    if (chatContainerRef.current && chatMessages.length > 0) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [chatMessages]);
 
   const filteredNodes = useMemo(
     () =>
@@ -1328,56 +1311,6 @@ export default function BrainGraphView() {
     setSelectedNodeId(null);
     setHoveredNodeId(null);
     resetViewport();
-  }
-
-  async function sendChatMessage(question: string) {
-    if (!question.trim() || chatLoading) return;
-
-    const newMsg: ChatMessage = { id: `u-${Date.now()}`, role: "user", content: question };
-    const assistantId = `a-${Date.now() + 1}`;
-    const assistantMsg: ChatMessage = { id: assistantId, role: "assistant", content: "" };
-
-    setChatMessages((prev) => [...prev, newMsg, assistantMsg]);
-    setChatInput("");
-    setChatLoading(true);
-
-    try {
-      const res = await fetch("/api/brain/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          messages: [...chatMessages, newMsg].map((m) => ({ role: m.role, content: m.content })),
-          nodeId: selectedNodeId ?? undefined,
-        }),
-      });
-
-      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        accumulated += decoder.decode(value, { stream: true });
-        setChatMessages((prev) =>
-          prev.map((m) => (m.id === assistantId ? { ...m, content: accumulated } : m)),
-        );
-      }
-    } catch {
-      setChatMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistantId
-            ? { ...m, content: locale === "pt" ? "Erro ao obter resposta." : "Error getting response." }
-            : m,
-        ),
-      );
-    } finally {
-      setChatLoading(false);
-    }
   }
 
   async function handleCreateNode() {
@@ -2156,13 +2089,6 @@ export default function BrainGraphView() {
             >
               {locale === "pt" ? "Contexto" : "Context"}
             </button>
-            <button
-              type="button"
-              className={activeTab === "ask" ? styles.panelTabActive : styles.panelTab}
-              onClick={() => setActiveTab("ask")}
-            >
-              {locale === "pt" ? "Perguntar \u00e0 IA" : "Ask AI"}
-            </button>
             {selectedNodeId ? (
               <button
                 type="button"
@@ -2182,131 +2108,9 @@ export default function BrainGraphView() {
             >
               + {locale === "pt" ? "N\u00f3" : "Node"}
             </button>
-            <button
-              type="button"
-              data-testid="brain-agents-tab"
-              className={activeTab === "agents" ? styles.panelTabActive : styles.panelTab}
-              onClick={() => setActiveTab("agents")}
-            >
-              {locale === "pt" ? "Agentes" : "Agents"}
-            </button>
           </div>
 
-          {/* Ask AI tab */}
-          {activeTab === "ask" ? (
-            <div className={styles.chatPanel}>
-              <div className={styles.chatContext}>
-                {selectedNode ? (
-                  <span className={styles.chatContextBadge}>
-                    {locale === "pt" ? "Contexto" : "Context"}: {selectedNode.label} ({selectedNode.type})
-                  </span>
-                ) : (
-                  <span className={styles.chatContextBadge}>
-                    {locale === "pt" ? "Contexto: c\u00e9rebro completo" : "Context: global graph"} | {graphMetrics?.nodeCount ?? 0} {locale === "pt" ? "n\u00f3s" : "nodes"}
-                  </span>
-                )}
-                {chatMessages.length > 0 ? (
-                  <button
-                    type="button"
-                    className={styles.chatClearBtn}
-                    onClick={() => setChatMessages([])}
-                  >
-                    {locale === "pt" ? "Limpar" : "Clear"}
-                  </button>
-                ) : null}
-              </div>
-
-              <div className={styles.chatMessages} ref={chatContainerRef}>
-                {chatMessages.length === 0 ? (
-                  <div className={styles.chatEmpty}>
-                    <p className={styles.chatEmptyTitle}>
-                      {locale === "pt" ? "Pergunte ao Brain" : "Ask the Brain"}
-                    </p>
-                    <p className={styles.chatEmptyMeta}>
-                      {locale === "pt"
-                        ? "A IA usa o grafo de conhecimento como contexto para responder."
-                        : "AI uses the knowledge graph as context to answer."}
-                    </p>
-                    <div className={styles.chatSuggestions}>
-                      {(locale === "pt"
-                        ? [
-                            "Quais n\u00f3s t\u00eam mais conex\u00f5es?",
-                            "Quais defeitos afetam este m\u00f3dulo?",
-                            "Sugira conex\u00f5es que est\u00e3o faltando",
-                            "Qual \u00e9 a sa\u00fade geral do grafo?",
-                          ]
-                        : [
-                            "Which nodes have the most connections?",
-                            "What defects affect this module?",
-                            "Suggest missing connections",
-                            "What is the overall graph health?",
-                          ]
-                      ).map((suggestion) => (
-                        <button
-                          key={suggestion}
-                          type="button"
-                          className={styles.chatSuggestionBtn}
-                          onClick={() => sendChatMessage(suggestion)}
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={msg.role === "user" ? styles.chatMsgUser : styles.chatMsgAssistant}
-                    >
-                      <span className={styles.chatMsgRole}>
-                        {msg.role === "user"
-                          ? locale === "pt" ? "Voc\u00ea" : "You"
-                          : "Brain AI"}
-                      </span>
-                      <p className={styles.chatMsgContent}>
-                        {typeof msg.content === "string" ? msg.content : ""}
-                      </p>
-                    </div>
-                  ))
-                )}
-                {chatLoading ? (
-                  <div className={styles.chatLoading}>
-                    <span className={styles.chatLoadingDot} />
-                    <span className={styles.chatLoadingDot} />
-                    <span className={styles.chatLoadingDot} />
-                  </div>
-                ) : null}
-              </div>
-
-              <form
-                className={styles.chatForm}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  sendChatMessage(chatInput);
-                }}
-              >
-                <input
-                  className={styles.chatInput}
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder={
-                    locale === "pt"
-                      ? "Pergunte sobre o grafo..."
-                      : "Ask about the graph..."
-                  }
-                  disabled={chatLoading}
-                />
-                <button
-                  type="submit"
-                  className={styles.chatSendBtn}
-                  disabled={chatLoading || !chatInput.trim()}
-                >
-                  {locale === "pt" ? "Enviar" : "Send"}
-                </button>
-              </form>
-            </div>
-          ) : activeTab === "timeline" ? (
+          {activeTab === "timeline" ? (
             /* Timeline tab */
             <div className={styles.timelinePanel}>
               <div className={styles.panelSection}>
@@ -2461,11 +2265,6 @@ export default function BrainGraphView() {
                   </button>
                 </div>
               </div>
-            </div>
-          ) : activeTab === "agents" ? (
-            /* Agents tab */
-            <div data-testid="brain-agents-panel" className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <AgentView nodeId={selectedNodeId} darkMode />
             </div>
           ) : (
             /* Info tab */
@@ -2699,6 +2498,101 @@ export default function BrainGraphView() {
                       <p className={styles.memorySummary}>{selectedNode.description}</p>
                     </div>
                   ) : null}
+
+                  {/* Assistente IA — abre o assistente flutuante com contexto do nó */}
+                  <div className={styles.panelSection}>
+                    <p className={styles.panelSectionTitle}>
+                      {locale === "pt" ? "Assistente IA" : "AI Assistant"}
+                    </p>
+
+                    {/* Botão principal — Tirar dúvidas com IA */}
+                    <button
+                      type="button"
+                      className="w-full mt-1 mb-3 flex items-center justify-center gap-2 rounded-xl border border-[rgba(239,0,1,0.25)] bg-[rgba(239,0,1,0.06)] px-4 py-2.5 text-sm font-semibold text-[#ef0001] hover:bg-[rgba(239,0,1,0.12)] transition-colors"
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent("assistant:open", {
+                          detail: {
+                            source: "brain",
+                            nodeId: selectedNode.id,
+                            nodeLabel: selectedNode.label,
+                            nodeType: selectedNode.type,
+                            initialMessage: locale === "pt"
+                              ? `Tenho d\u00favidas sobre o n\u00f3 "${selectedNode.label}" (${selectedNode.type}). Pode me ajudar?`
+                              : `I have questions about the node "${selectedNode.label}" (${selectedNode.type}). Can you help?`,
+                          },
+                        }));
+                      }}
+                    >
+                      💬 {locale === "pt" ? "Tirar d\u00favidas com IA" : "Ask AI about this node"}
+                    </button>
+
+                    {/* Ações de análise específicas */}
+                    <p className="text-[0.68rem] uppercase tracking-[0.18em] text-[rgba(1,24,72,0.42)] dark:text-[rgba(200,215,255,0.42)] mb-1.5">
+                      {locale === "pt" ? "An\u00e1lises r\u00e1pidas" : "Quick analyses"}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="rounded-lg border border-[rgba(91,146,255,0.3)] bg-[rgba(91,146,255,0.08)] px-3 py-1.5 text-xs text-[#5b92ff] hover:bg-[rgba(91,146,255,0.18)] transition-colors"
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent("assistant:open", {
+                            detail: {
+                              source: "brain",
+                              agentMode: "qa",
+                              nodeId: selectedNode.id,
+                              nodeLabel: selectedNode.label,
+                              nodeType: selectedNode.type,
+                              initialMessage: locale === "pt"
+                                ? `Analise o n\u00f3 "${selectedNode.label}" (${selectedNode.type}) e me d\u00ea um resumo dos riscos e contexto.`
+                                : `Analyze the node "${selectedNode.label}" (${selectedNode.type}) and give me a risk summary.`,
+                            },
+                          }));
+                        }}
+                      >
+                        🔍 {locale === "pt" ? "Analisar riscos" : "Analyze risks"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-[rgba(167,139,250,0.3)] bg-[rgba(167,139,250,0.08)] px-3 py-1.5 text-xs text-[#a78bfa] hover:bg-[rgba(167,139,250,0.18)] transition-colors"
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent("assistant:open", {
+                            detail: {
+                              source: "brain",
+                              agentMode: "memory",
+                              nodeId: selectedNode.id,
+                              nodeLabel: selectedNode.label,
+                              nodeType: selectedNode.type,
+                              initialMessage: locale === "pt"
+                                ? `Busque mem\u00f3rias e decis\u00f5es registradas sobre "${selectedNode.label}".`
+                                : `Find memories and decisions about "${selectedNode.label}".`,
+                            },
+                          }));
+                        }}
+                      >
+                        🧠 {locale === "pt" ? "Ver mem\u00f3rias" : "View memories"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.08)] px-3 py-1.5 text-xs text-[#10b981] hover:bg-[rgba(16,185,129,0.18)] transition-colors"
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent("assistant:open", {
+                            detail: {
+                              source: "brain",
+                              agentMode: "playwright",
+                              nodeId: selectedNode.id,
+                              nodeLabel: selectedNode.label,
+                              nodeType: selectedNode.type,
+                              initialMessage: locale === "pt"
+                                ? `Gere um spec Playwright para testar funcionalidades relacionadas a "${selectedNode.label}".`
+                                : `Generate a Playwright spec for features related to "${selectedNode.label}".`,
+                            },
+                          }));
+                        }}
+                      >
+                        🎭 {locale === "pt" ? "Gerar teste" : "Generate test"}
+                      </button>
+                    </div>
+                  </div>
 
                   <div className={styles.panelSection}>
                     <p className={styles.panelSectionTitle}>

@@ -82,11 +82,10 @@ function buildImmediateActions(context: AssistantScreenContext, user: AuthUser):
 }
 
 function stripScreenLead(context: AssistantScreenContext) {
-  const lead = `Você está em: ${context.screenLabel}.`;
-  if (context.screenSummary.startsWith(lead)) {
-    return context.screenSummary.slice(lead.length).trim();
-  }
-  return context.screenSummary.trim();
+  // Strip both accented and ASCII-only "Voce esta em:" / "Você está em:" prefixes
+  return context.screenSummary
+    .replace(/^(voc[eê] est[aá] em|você está em):\s*/i, "")
+    .trim();
 }
 
 function buildScopeLabel(user: AuthUser, context: AssistantScreenContext) {
@@ -107,12 +106,14 @@ export async function toolGetScreenContext(user: AuthUser, context: AssistantScr
   const scopeLabel = buildScopeLabel(user, context);
 
   const replyParts = [
-    `${moduleEmoji} **${context.screenLabel}** (${context.module} / ${scopeLabel})`,
+    `${moduleEmoji} Fechou. Estamos em **${context.screenLabel}** no módulo **${context.module}** (escopo **${scopeLabel}**).`,
     "",
     stripScreenLead(context),
     "",
-    "**O que você pode fazer aqui:**",
+    "**No mundo TC daqui, eu consigo te ajudar com:**",
     ...actions.slice(0, 3).map((a) => `- ${a.emoji} ${a.text}`),
+    "",
+    "Se quiser, já me pede a próxima ação em linguagem natural que eu toco o fluxo por você.",
   ];
 
   return {

@@ -23,7 +23,6 @@ type ChatMessage = {
 
 type ConfirmState =
   | { open: false }
-  | { open: true; kind: "clear" | "clearAll" }
   | { open: true; kind: "tool"; action: AssistantToolAction; label: string };
 
 type ChatButtonProps = {
@@ -162,7 +161,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   useEffect(() => {
     try {
       const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-      const raw = sessionStorage.getItem(key);
+      const raw = localStorage.getItem(key);
       if (!raw) {
         setMessages([]);
         return;
@@ -179,7 +178,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   useEffect(() => {
     try {
       const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-      sessionStorage.setItem(key, JSON.stringify(messages.slice(-120)));
+      localStorage.setItem(key, JSON.stringify(messages.slice(-120)));
     } catch {
       // ignore storage errors
     }
@@ -301,12 +300,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
     if (payload.message) setInput("");
 
-    // Escolhe a rota: usa /api/assistant/ask quando há contexto Brain/agente
-    const hasBrainContext = !!(
-      brainContext &&
-      (brainContext.nodeId || brainContext.agentMode || brainContext.source === "brain")
-    );
-    const apiRoute = hasBrainContext ? "/api/assistant/ask" : "/api/ai/chat";
+    // Usa endpoint unificado para garantir memória persistente de todas as conversas.
+    const apiRoute = "/api/assistant/ask";
 
     try {
       const response = await fetchApi(apiRoute, {
@@ -400,35 +395,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     queueAction(action, action.label);
   }
 
-  function clearLocalHistory(kind: "clear" | "clearAll") {
-    try {
-      if (kind === "clear") {
-        const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-        sessionStorage.removeItem(key);
-        setMessages([]);
-        return;
-      }
-      const prefix = `${HISTORY_KEY_PREFIX}:`;
-      for (let i = 0; i < sessionStorage.length; i += 1) {
-        const key = sessionStorage.key(i);
-        if (key && key.startsWith(prefix)) {
-          sessionStorage.removeItem(key);
-          i = -1;
-        }
-      }
-      setMessages([]);
-    } catch {
-      // ignore cleanup errors
-    }
-  }
-
   function confirmTitle() {
     if (!confirmState.open) return "";
     switch (confirmState.kind) {
-      case "clear":
-        return "Limpar hist\u00f3rico deste usu\u00e1rio";
-      case "clearAll":
-        return "Limpar todos os hist\u00f3ricos locais";
       case "tool":
         return confirmState.label;
       default:
@@ -439,10 +408,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   function confirmDescription() {
     if (!confirmState.open) return "";
     switch (confirmState.kind) {
-      case "clear":
-        return "Essa limpeza afeta apenas o hist\u00f3rico salvo neste navegador para o usu\u00e1rio atual.";
-      case "clearAll":
-        return "Essa limpeza remove todos os hist\u00f3ricos do assistente salvos neste navegador.";
       case "tool":
         return "A a\u00e7\u00e3o ser\u00e1 executada dentro do seu perfil atual e respeitando o RBAC da sess\u00e3o.";
       default:
@@ -452,12 +417,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
   async function executeConfirm() {
     if (!confirmState.open) return;
-    if (confirmState.kind === "clear" || confirmState.kind === "clearAll") {
-      clearLocalHistory(confirmState.kind);
-      setConfirmState({ open: false });
-      return;
-    }
-
     if (confirmState.kind !== "tool") {
       setConfirmState({ open: false });
       return;
@@ -592,13 +551,11 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                     className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : "min-h-[2.85rem] py-1.5"}`}
                   />
                   <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : "mt-2"}`}>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmState({ open: true, kind: "clearAll" })}
-                      className={`font-semibold uppercase tracking-[0.24em] text-[#8b98b1] transition hover:text-(--tc-accent,#ef0001) dark:text-[#94abd6] dark:hover:text-[#ff8a8a] ${hasConversation ? "text-[0.65rem]" : "text-xs"}`}
+                    <span
+                      className={`font-semibold uppercase tracking-[0.24em] text-[#8b98b1] dark:text-[#94abd6] ${hasConversation ? "text-[0.65rem]" : "text-xs"}`}
                     >
-                      Limpar tudo
-                    </button>
+                      Hist\u00f3rico permanente
+                    </span>
                     <button
                       type="button"
                       onClick={() => void sendMessage()}

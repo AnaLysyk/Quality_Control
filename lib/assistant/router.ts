@@ -61,7 +61,7 @@ function looksLikeFreeformContent(message: string) {
   return true;
 }
 
-function isGreetingPrompt(message: string) {
+export function isGreetingPrompt(message: string) {
   return /^(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí)\b/.test(normalizeSearch(message));
 }
 
@@ -167,8 +167,8 @@ const SCORING_RULES: ScoringRule[] = [
   {
     tool: "search_internal_records",
     score: (n, ctx, _h, raw, intent) => {
+      if (Boolean(extractTicketReference(raw))) return 75; // Strong signal: ticket ref — check BEFORE generic keywords
       if (/(buscar|busca|procura|procurar|localiza|localizar|encontra|encontrar|listar|lista)/.test(n)) return 50;
-      if (Boolean(extractTicketReference(raw))) return 65; // Strong signal: ticket ref
       // Análise de métricas, dados, relatórios
       if (/(metricas|métricas|dados|relatorio|relatório|analise|análise|indicadores|dashboard|status)/.test(n)) return 55;
       // Boost para information_seeking com entidades
@@ -208,6 +208,10 @@ export function chooseTool(
 ): AssistantToolName {
   const n = normalizeSearch(message);
 
+  // Fast-path: empty message or greeting → show screen context
+  if (!n) return "get_screen_context";
+  if (isGreetingPrompt(message)) return "get_screen_context";
+
   // Analisar intenção do usuário para scoring mais inteligente
   const intent = analyzeIntent(message, context, history);
   const momentum = getConversationMomentum(history);
@@ -239,11 +243,9 @@ export function chooseTool(
     }
   }
 
-  // Smart fallback: se nada marcou bem, retorna "use_brain" para conversação natural
+  // Smart fallback: se nada marcou bem, sugere próximo passo
   if (bestScore < 10) {
-    // Fallback: deixa Brain lidar com isso conversacionalmente
-    // Em vez de ficar com sugestões fixas, roteia para agente IA conversacional
-    return "use_brain" as AssistantToolName;
+    return "suggest_next_step";
   }
 
   return bestTool;

@@ -9,7 +9,7 @@ import type { AssistantToolName } from "./types";
 
 export const REPEATED_REPLY_MESSAGES: Record<AssistantToolName, string> = {
   get_screen_context:
-    "📍 Já te mostrei esse contexto. Se quiser, continuo a conversa focando no que importa agora: **permissões**, **chamados** ou **empresa**.",
+    "📍 Já te mostrei esse contexto. Se você quiser, sigo contigo focando no que interessa agora: **permissões**, **chamados** ou **empresa**.",
   list_available_actions:
     "✅ As ações já estão mapeadas. Me diga qual caminho você quer seguir que eu conduzo o próximo passo.",
   search_internal_records:
@@ -27,13 +27,14 @@ export const REPEATED_REPLY_MESSAGES: Record<AssistantToolName, string> = {
   suggest_next_step:
     "💡 Os próximos passos já estão sugeridos. Escolha uma opção ou me descreva o objetivo que eu sigo com você.",
   use_brain:
-    "Podemos continuar por aqui no mesmo assunto. Me diga o que você quer que eu analise ou execute agora.",
+    "Sou seu ChatGPT da TC e continuo com você no mesmo assunto. Me diz o que quer analisar ou executar agora.",
 };
 
 /* ──────────────────── Clarify / low-signal ──────────────────── */
 
 export const CLARIFY_REPLY = [
   "🤔 Quero te ajudar do jeito certo, mas ainda faltou um pouco de contexto.",
+  "Sou seu ChatGPT da TC e consigo puxar isso com você no fluxo do sistema.",
   "",
   "**Posso seguir com você em:**",
   "• 📍 Resumir o contexto desta tela",

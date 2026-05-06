@@ -16,7 +16,91 @@ type AssistantRequestBody = {
   message?: string;
   history?: Array<{ from: string; text: string }>;
   brainContext?: AssistantOpenEventDetail | null;
+  context?: { route?: string };
 };
+
+function compactText(input: string, max = 500) {
+  const normalized = String(input ?? "").replace(/\s+/g, " ").trim();
+  if (normalized.length <= max) return normalized;
+  return `${normalized.slice(0, max - 1)}...`;
+}
+
+function getLatestUserMessage(body: AssistantRequestBody) {
+  const explicit = typeof body.message === "string" ? body.message.trim() : "";
+  if (explicit) return explicit;
+
+  const direct = Array.isArray(body.messages)
+    ? [...body.messages]
+        .reverse()
+        .find((item) => item?.role === "user" && String(item?.content ?? "").trim())
+    : null;
+  if (direct?.content) return String(direct.content).trim();
+
+  const fromHistory = Array.isArray(body.history)
+    ? [...body.history]
+        .reverse()
+        .find((item) => item?.from !== "assistant" && String(item?.text ?? "").trim())
+    : null;
+  return fromHistory?.text ? String(fromHistory.text).trim() : "";
+}
+
+async function persistConversationMemory(args: {
+  body: AssistantRequestBody;
+  authUser: { id?: string | null; companySlug?: string | null };
+  reply: string;
+  tool?: string | null;
+  brainContext?: AssistantOpenEventDetail | null;
+}) {
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const userInput = compactText(getLatestUserMessage(args.body), 1500);
+    const assistantReply = compactText(args.reply, 1500);
+    if (!userInput && !assistantReply) return;
+
+    const route = args.body.context?.route ?? args.brainContext?.route ?? null;
+    const commonMetadata = {
+      userId: args.authUser.id ?? null,
+      companySlug: args.authUser.companySlug ?? args.brainContext?.companySlug ?? null,
+      route,
+      source: "assistant.ask.route",
+      tool: args.tool ?? null,
+      agentMode: args.brainContext?.agentMode ?? null,
+      nodeId: args.brainContext?.nodeId ?? null,
+    };
+
+    if (userInput) {
+      await prisma.brainMemory.create({
+        data: {
+          title: compactText(`Pergunta do usuário: ${userInput}`, 120),
+          summary: userInput,
+          memoryType: "CONTEXT",
+          importance: 1,
+          sourceType: "CONVERSATION",
+          sourceId: args.authUser.id ?? "anonymous",
+          status: "ACTIVE",
+          metadata: { ...commonMetadata, role: "user" },
+        },
+      });
+    }
+
+    if (assistantReply) {
+      await prisma.brainMemory.create({
+        data: {
+          title: compactText(`Resposta do assistente: ${assistantReply}`, 120),
+          summary: assistantReply,
+          memoryType: "CONTEXT",
+          importance: 1,
+          sourceType: "CONVERSATION",
+          sourceId: args.authUser.id ?? "anonymous",
+          status: "ACTIVE",
+          metadata: { ...commonMetadata, role: "assistant" },
+        },
+      });
+    }
+  } catch {
+    // Learning persistence must not break chat responses.
+  }
+}
 
 function buildMessagesFromHistory(body: AssistantRequestBody) {
   const historyMessages = Array.isArray(body.history)
@@ -117,6 +201,14 @@ export async function POST(req: Request) {
         success,
       });
 
+      await persistConversationMemory({
+        body,
+        authUser,
+        reply: replyText || (success ? "Análise concluída." : "Não foi possível obter resposta."),
+        tool: lastToolName,
+        brainContext,
+      });
+
       return NextResponse.json({
         reply: replyText || (success ? "Análise concluída." : "Não foi possível obter resposta."),
         tool: lastToolName,
@@ -137,6 +229,14 @@ export async function POST(req: Request) {
       messages: body.messages,
       history: body.history,
     } as Parameters<typeof runAssistantRequest>[1]);
+
+    await persistConversationMemory({
+      body,
+      authUser,
+      reply: String(response.reply ?? ""),
+      tool: response.tool,
+      brainContext,
+    });
 
     return NextResponse.json(response);
   } catch (error) {

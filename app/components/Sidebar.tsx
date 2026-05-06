@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, forwardRef, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, forwardRef, type RefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FiActivity,
@@ -63,19 +63,9 @@ type SidebarMenuItem = {
   children?: SidebarMenuItem[];
 };
 
-type SidebarMenuSection = {
-  id: string;
-  label: string;
-  icon: typeof FiHome;
-  href?: string;
-  description: string;
-  items: SidebarMenuItem[];
-};
-
 type MobileMenuPanel =
   | { kind: "root" }
-  | { kind: "section"; sectionId: string }
-  | { kind: "submenu"; sectionId: string; itemId: string }
+  | { kind: "submenu"; itemId: string }
   | { kind: "favorites" };
 
 type SidebarProps = {
@@ -759,6 +749,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     { label: t("nav.dashboard"), icon: FiCompass, href: "/admin/dashboard" },
     { label: t("nav.metrics"), icon: FiBarChart2, href: "/admin/test-metric" },
     { label: adminRunsMenuLabel, icon: FiList, href: adminRunsMenuHref },
+    { label: t("nav.testPlans"), icon: FiClipboard, href: `${adminRunsMenuHref}?module=test-plans` },
     { label: t("nav.companies"), icon: FiUsers, href: "/admin/clients" },
     { label: t("nav.users"), icon: FiUsers, href: "/admin/users?tab=company" },
     { label: t("nav.automations"), icon: FiZap, href: "/automacoes" },
@@ -859,35 +850,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     );
   }
 
-  const visibleNavByPath = useMemo(() => {
-    const byPath = new Map<string, NavItem>();
-    for (const item of visibleNavigation) {
-      const { path } = normalizeHref(item.href);
-      if (!byPath.has(path)) byPath.set(path, item);
-    }
-    return byPath;
-  }, [visibleNavigation]);
-
-  const moduleNavigation = useMemo(() => {
-    const buckets = new Map<string, NavItem[]>();
-    for (const item of visibleNavigation) {
-      const moduleId = resolveSidebarModuleFromHref(item.href);
-      if (!moduleId) continue;
-      const current = buckets.get(moduleId) ?? [];
-      current.push(item);
-      buckets.set(moduleId, current);
-    }
-    return buckets;
-  }, [visibleNavigation]);
-
-  const findVisibleNavItem = useCallback(
-    (href: string) => {
-      const { path } = normalizeHref(href);
-      return visibleNavByPath.get(path) ?? null;
-    },
-    [visibleNavByPath],
-  );
-
   function toMenuItem(
     item: NavItem,
     overrides: Partial<Pick<SidebarMenuItem, "id" | "label" | "icon" | "href" | "description" | "children">> = {},
@@ -906,234 +868,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     if (item.href && isHrefActive(item.href, pathname, searchQuery)) return true;
     return Boolean(item.children?.some((child) => isMenuItemActive(child)));
   }
-
-  const desktopSections = useMemo<SidebarMenuSection[]>(() => {
-    const uniqueByHref = (items: SidebarMenuItem[]) => {
-      const seen = new Set<string>();
-      return items.filter((item) => {
-        const key = item.href ?? item.id;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-    };
-
-    const companiesItems: SidebarMenuItem[] = [];
-    const companiesBase = findVisibleNavItem("/admin/clients") ?? findVisibleNavItem("/empresas");
-    if (companiesBase) {
-      companiesItems.push(
-        toMenuItem(companiesBase, {
-          id: "companies-list",
-          description: companiesBase.href === "/admin/clients" ? "Visão da base de empresas" : "Catálogo público de empresas",
-        }),
-      );
-    }
-    if (canUseAdminClientTools) {
-      companiesItems.push({
-        id: "companies-create",
-        label: "Criar empresa",
-        icon: FiPlus,
-        href: "/admin/clients?create=1",
-        description: "Abrir o cadastro da nova empresa",
-      });
-    }
-
-    for (const item of moduleNavigation.get("applications") ?? []) {
-      companiesItems.push(
-        toMenuItem(item, {
-          description: "Aplicações da empresa",
-        }),
-      );
-    }
-
-    const usersBase = findVisibleNavItem("/admin/users") ?? findVisibleNavItem("/admin/users?tab=company");
-    if (usersBase && canUseAdminClientTools) {
-      companiesItems.push({
-        id: "companies-users",
-        label: t("nav.users"),
-        icon: FiUsers,
-        href: "/admin/users?tab=company",
-        description: "Gestão de usuários e perfis",
-        children: [
-          {
-            id: "users-company",
-            label: "Empresa e usuários",
-            icon: FiHome,
-            href: "/admin/users?tab=company",
-            description: "Usuários vinculados à empresa",
-          },
-          {
-            id: "users-testing",
-            label: "Usuários TC",
-            icon: FiUser,
-            href: "/admin/users?tab=testing",
-            description: "Contas do time TC",
-          },
-          {
-            id: "users-admin",
-            label: "Líder TC",
-            icon: FiShield,
-            href: "/admin/users?tab=admin",
-            description: "Perfis administrativos",
-          },
-          {
-            id: "users-support",
-            label: "Suporte Técnico",
-            icon: FiTool,
-            href: "/admin/users?tab=support",
-            description: "Perfis de suporte técnico",
-          },
-          {
-            id: "users-create",
-            label: "Criar usuário",
-            icon: FiUserPlus,
-            href: "/admin/users?tab=company&create=1",
-            description: "Abrir o modal de criação",
-          },
-        ],
-      });
-    } else if (usersBase) {
-      companiesItems.push(
-        toMenuItem(usersBase, {
-          id: "companies-users",
-          label: t("nav.users"),
-          description: "Gestão de usuários",
-        }),
-      );
-    }
-
-    const permissionsItem = findVisibleNavItem("/admin/users/permissions");
-    if (permissionsItem) {
-      companiesItems.push(
-        toMenuItem(permissionsItem, {
-          id: "companies-permissions",
-          description: "Perfis, regras e permissões",
-        }),
-      );
-    }
-
-    const operationsItems = uniqueByHref([
-      ...(moduleNavigation.get("dashboard") ?? []).map((item) =>
-        toMenuItem(item, { description: item.href.startsWith("/admin/") ? "Painel executivo" : "Visão da empresa" }),
-      ),
-      ...(moduleNavigation.get("metrics") ?? []).map((item) =>
-        toMenuItem(item, { description: "Indicadores e leitura analítica" }),
-      ),
-      ...(moduleNavigation.get("applications") ?? []).map((item) =>
-        toMenuItem(item, { description: "Aplicações da empresa" }),
-      ),
-      ...(moduleNavigation.get("runs") ?? []).map((item) =>
-        toMenuItem(item, { description: "Execuções e acompanhamento" }),
-      ),
-      ...(moduleNavigation.get("testPlans") ?? []).map((item) =>
-        toMenuItem(item, { description: "Planos e campanhas de teste" }),
-      ),
-      ...(moduleNavigation.get("defects") ?? []).map((item) =>
-        toMenuItem(item, { description: "Triagem de defeitos" }),
-      ),
-      ...(findVisibleNavItem("/runs")
-        ? [toMenuItem(findVisibleNavItem("/runs")!, { id: "operations-hub", description: "Central operacional" })]
-        : []),
-      ...(findVisibleNavItem("/operacao")
-        ? [toMenuItem(findVisibleNavItem("/operacao")!, { id: "operations-legacy-hub", description: "Atalho legado" })]
-        : []),
-      ...(findVisibleNavItem("/automacoes")
-        ? [toMenuItem(findVisibleNavItem("/automacoes")!, { id: "operations-automations", description: "Fluxos e automações" })]
-        : []),
-    ]);
-
-    const supportItems = uniqueByHref([
-      ...(moduleNavigation.get("support") ?? []).map((item) =>
-        toMenuItem(item, { description: "Central de suporte e chamados" }),
-      ),
-      ...(moduleNavigation.get("access_requests") ?? []).map((item) =>
-        toMenuItem(item, { description: "Solicitações de acesso" }),
-      ),
-      ...(moduleNavigation.get("audit") ?? []).map((item) =>
-        toMenuItem(item, { description: "Registros e auditoria" }),
-      ),
-    ]);
-
-    const assistantItems = uniqueByHref([
-      ...(moduleNavigation.get("ai") ?? []).map((item) =>
-        toMenuItem(item, { description: item.href === "/chat" ? "Conversas e atalhos" : "Painel de Brain" }),
-      ),
-    ]);
-
-    const brandItem = findVisibleNavItem("/brand-identity");
-    const brandItems = brandItem
-      ? [
-          toMenuItem(brandItem, {
-            id: "brand-identity",
-            description: "Identidade visual da plataforma",
-          }),
-        ]
-      : [];
-
-    const sections: SidebarMenuSection[] = [];
-
-    if (companiesItems.length > 0) {
-      sections.push({
-        id: "companies",
-        label: t("nav.companies"),
-        icon: FiUsers,
-        href: companiesBase?.href ?? usersBase?.href ?? "/admin/clients",
-        description: "Empresas, usuários e permissões",
-        items: companiesItems,
-      });
-    }
-
-    if (operationsItems.length > 0) {
-      sections.push({
-        id: "operations",
-        label: t("nav.operations"),
-        icon: FiGrid,
-        href: operationsItems[0]?.href,
-        description: "Leitura executiva e execução operacional",
-        items: operationsItems,
-      });
-    }
-
-    if (supportItems.length > 0) {
-      sections.push({
-        id: "support",
-        label: t("nav.support"),
-        icon: FiColumns,
-        href: supportItems[0]?.href,
-        description: "Chamados, solicitações e auditoria",
-        items: supportItems,
-      });
-    }
-
-    if (assistantItems.length > 0) {
-      sections.push({
-        id: "assistant",
-        label: t("nav.brain"),
-        icon: FiCpu,
-        href: assistantItems[0]?.href,
-        description: "Brain e conversas",
-        items: assistantItems,
-      });
-    }
-
-    if (brandItems.length > 0) {
-      sections.push({
-        id: "brand",
-        label: t("nav.brandIdentity"),
-        icon: FiCompass,
-        href: brandItems[0]?.href,
-        description: "Identidade visual da plataforma",
-        items: brandItems,
-      });
-    }
-
-    return sections;
-  }, [
-    canUseAdminClientTools,
-    findVisibleNavItem,
-    moduleNavigation,
-    t,
-  ]);
 
   const desktopNavigationItems = useMemo<SidebarMenuItem[]>(() => {
     const uniqueByHref = (items: SidebarMenuItem[]) => {
@@ -1438,43 +1172,20 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     [activeFlyoutItems, activeSubmenuId],
   );
   const activeSubmenuItems = activeSubmenuItem?.children ?? [];
-  const mobileCurrentSection =
-    mobileMenuPanel.kind === "section" || mobileMenuPanel.kind === "submenu"
-      ? desktopSections.find((section) => section.id === mobileMenuPanel.sectionId) ?? null
-      : null;
-  const mobileCurrentSectionItems = mobileCurrentSection?.items ?? [];
-  const mobileCurrentSubmenuItem =
-    mobileMenuPanel.kind === "submenu"
-      ? mobileCurrentSectionItems.find((item) => item.id === mobileMenuPanel.itemId) ?? null
-      : null;
+  const mobileCurrentSubmenuItem = useMemo(
+    () =>
+      mobileMenuPanel.kind === "submenu"
+        ? desktopNavigationItems.find((item) => item.id === mobileMenuPanel.itemId) ?? null
+        : null,
+    [desktopNavigationItems, mobileMenuPanel],
+  );
   const mobileCurrentItems =
     mobileMenuPanel.kind === "root"
-      ? desktopSections
+      ? desktopNavigationItems
       : mobileMenuPanel.kind === "favorites"
         ? favoriteNavigation
-        : mobileMenuPanel.kind === "submenu"
-          ? mobileCurrentSubmenuItem?.children ?? []
-          : mobileCurrentSectionItems;
-  const mobilePanelTitle =
-    mobileMenuPanel.kind === "root"
-      ? "Menu inteligente"
-      : mobileMenuPanel.kind === "favorites"
-        ? t("nav.favorites")
-        : mobileMenuPanel.kind === "submenu"
-          ? mobileCurrentSubmenuItem?.label ?? mobileCurrentSection?.label ?? "Menu"
-          : mobileCurrentSection?.label ?? "Menu";
-  const mobilePanelDescription =
-    mobileMenuPanel.kind === "root"
-      ? "Escolha uma área para abrir as funções da plataforma."
-      : mobileMenuPanel.kind === "favorites"
-        ? "Atalhos salvos para abrir em poucos cliques."
-        : mobileMenuPanel.kind === "submenu"
-          ? mobileCurrentSubmenuItem?.description ?? "Opções disponíveis nesta área."
-          : mobileCurrentSection?.description ?? "Opções disponíveis nesta área.";
-  const mobileBackLabel =
-    mobileMenuPanel.kind === "submenu" && mobileCurrentSection
-      ? `Voltar para ${mobileCurrentSection.label}`
-      : "Voltar";
+        : mobileCurrentSubmenuItem?.children ?? [];
+  const mobileBackLabel = mobileMenuPanel.kind === "submenu" ? "Voltar para o menu" : "Voltar";
 
   useLayoutEffect(() => {
     if (!activeFlyoutId || viewport.width <= 0 || viewport.height <= 0) {
@@ -1659,95 +1370,16 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     );
   }
 
-  function renderSmartFavoriteToggle(item: SidebarMenuItem, tone: "desktop" | "mobile" = "desktop") {
-    if (!item.href) return null;
-    const isFavorite = favoriteHrefs.includes(item.href);
-
-    return (
-      <button
-        type="button"
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          toggleFavorite(item.href!);
-        }}
-        className={`inline-flex ${tone === "mobile" ? "h-8 w-8" : "h-7 w-7"} items-center justify-center rounded-full border transition ${
-          tone === "mobile"
-            ? isFavorite
-              ? "border-[rgba(239,0,1,0.72)] bg-(--tc-accent,#ef0001) text-white shadow-[0_8px_18px_rgba(239,0,1,0.2)]"
-              : "border-transparent text-current opacity-50 hover:border-white/10 hover:bg-white/8 hover:opacity-100"
-            : isFavorite
-              ? "border-[rgba(239,0,1,0.72)] bg-(--tc-accent,#ef0001) text-white shadow-[0_8px_18px_rgba(239,0,1,0.2)]"
-              : "border-transparent text-current opacity-40 hover:border-white/10 hover:bg-white/8 hover:opacity-100"
-        }`}
-        aria-pressed={isFavorite}
-        aria-label={isFavorite ? `Desfixar ${item.label}` : `Fixar ${item.label}`}
-        title={isFavorite ? "Desfixar atalho" : "Fixar atalho"}
-      >
-        <FiBookmark className={isFavorite ? "fill-current" : ""} size={14} />
-      </button>
-    );
-  }
-
-  function renderMobileSectionRow(section: SidebarMenuSection) {
-    const isActive = Boolean(section.href && isHrefActive(section.href, pathname, searchQuery)) || section.items.some((item) => isMenuItemActive(item));
-
-    return (
-      <div key={section.id} className="group/mobile-item relative flex items-center">
-        <button
-          type="button"
-          className={`group/link relative flex h-12 w-full min-w-0 items-center overflow-hidden rounded-2xl pr-20 text-sm font-semibold transition-all duration-200 ${
-            isActive
-              ? "sidebar-link-state-active bg-white/12 ring-1 ring-white/16 text-white shadow-[0_14px_30px_rgba(1,24,72,0.3)]"
-              : "sidebar-link-state-idle text-white/76 hover:bg-white/8 hover:text-white"
-          }`}
-          onClick={() => setMobileMenuPanel({ kind: "section", sectionId: section.id })}
-        >
-          <span
-            aria-hidden
-            className={`absolute left-1 top-2 bottom-2 w-0.75 rounded-full bg-(--tc-accent,#ef0001) transition-all ${
-              isActive ? "opacity-100" : "opacity-0 group-hover/link:opacity-60"
-            }`}
-          />
-          <div
-            className={`ml-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border transition-all duration-200 backdrop-blur-sm ${
-              isActive
-                ? "sidebar-icon-state-active border-white/16 bg-white/14 text-white shadow-[0_12px_26px_rgba(1,24,72,0.28)]"
-                : "sidebar-icon-state-idle border-white/10 bg-white/6 text-white/84 group-hover/link:border-white/18 group-hover/link:bg-white/10 group-hover/link:text-white"
-            }`}
-          >
-            <section.icon size={17} />
-          </div>
-          <span className="sidebar-label flex-1 overflow-hidden px-3 text-left leading-snug truncate">{section.label}</span>
-          <span className="pointer-events-none pr-3 text-white/52">
-            <FiChevronRight size={14} />
-          </span>
-        </button>
-        <div className="absolute right-9 top-1/2 -translate-y-1/2">
-          {renderSmartFavoriteToggle(
-            {
-              id: section.id,
-              label: section.label,
-              icon: section.icon,
-              href: section.href,
-              description: section.description,
-              children: section.items,
-            },
-            "mobile",
-          )}
-        </div>
-      </div>
-    );
-  }
-
   function renderMobileItemRow(
     item: SidebarMenuItem,
-    options: { sectionId: string; allowDrilldown?: boolean },
+    options: { allowDrilldown?: boolean; showFavoriteToggle?: boolean },
   ) {
     const href = item.href ?? null;
     const isActive = item.href ? isHrefActive(item.href, pathname, searchQuery) : false;
     const rowActive = isActive || Boolean(item.children?.some((child) => isMenuItemActive(child)));
     const canDrill = Boolean(options.allowDrilldown && item.children?.length);
+    const showFavoriteToggle = Boolean(options.showFavoriteToggle);
+    const reservedPadding = showFavoriteToggle ? (canDrill && href ? "pr-20" : "pr-16") : canDrill && href ? "pr-12" : "pr-4";
 
     return (
       <div key={item.id} className="group/mobile-item relative flex items-center">
@@ -1755,10 +1387,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           <Link
             href={href}
             prefetch={false}
-            className={`group/link relative flex h-12 w-full min-w-0 items-center overflow-hidden rounded-2xl pr-20 text-sm font-semibold transition-all duration-200 ${
+            className={`group/link relative flex h-12 w-full min-w-0 items-center overflow-hidden rounded-2xl ${reservedPadding} text-sm font-semibold transition-all duration-200 ${
               rowActive
                 ? "sidebar-link-state-active bg-white/12 ring-1 ring-white/16 text-white shadow-[0_14px_30px_rgba(1,24,72,0.3)]"
-                : "sidebar-link-state-idle text-white/76 hover:bg-white/8 hover:text-white"
+                : "sidebar-link-state-idle text-white/86 hover:bg-white/8 hover:text-white"
             }`}
             onMouseEnter={() => prefetchHref(href)}
             onFocus={() => prefetchHref(href)}
@@ -1784,13 +1416,13 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         ) : (
           <button
             type="button"
-            className={`group/link relative flex h-12 w-full min-w-0 items-center overflow-hidden rounded-2xl pr-20 text-sm font-semibold transition-all duration-200 ${
+            className={`group/link relative flex h-12 w-full min-w-0 items-center overflow-hidden rounded-2xl pr-4 text-sm font-semibold transition-all duration-200 ${
               rowActive
                 ? "sidebar-link-state-active bg-white/12 ring-1 ring-white/16 text-white shadow-[0_14px_30px_rgba(1,24,72,0.3)]"
-                : "sidebar-link-state-idle text-white/76 hover:bg-white/8 hover:text-white"
+                : "sidebar-link-state-idle text-white/86 hover:bg-white/8 hover:text-white"
             }`}
             onClick={() => {
-              setMobileMenuPanel({ kind: "submenu", sectionId: options.sectionId, itemId: item.id });
+              setMobileMenuPanel({ kind: "submenu", itemId: item.id });
             }}
           >
             <div
@@ -1809,10 +1441,25 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           </button>
         )}
 
-        {href ? (
-          <div className="absolute right-9 top-1/2 -translate-y-1/2">
-            {renderSmartFavoriteToggle(item, "mobile")}
-          </div>
+        {href && showFavoriteToggle ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleFavorite(item.href!);
+            }}
+            className={`absolute right-9 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border transition ${
+              favoriteHrefs.includes(item.href)
+                ? "border-[rgba(239,0,1,0.72)] bg-(--tc-accent,#ef0001) text-white shadow-[0_8px_18px_rgba(239,0,1,0.2)]"
+                : "border-transparent text-current opacity-50 hover:border-white/10 hover:bg-white/8 hover:opacity-100"
+            }`}
+            aria-pressed={favoriteHrefs.includes(item.href)}
+            aria-label={favoriteHrefs.includes(item.href) ? `Desfixar ${item.label}` : `Fixar ${item.label}`}
+            title={favoriteHrefs.includes(item.href) ? "Desfixar atalho" : "Fixar atalho"}
+          >
+            <FiBookmark className={favoriteHrefs.includes(item.href) ? "fill-current" : ""} size={14} />
+          </button>
         ) : null}
 
         {canDrill && href ? (
@@ -1821,9 +1468,9 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              setMobileMenuPanel({ kind: "submenu", sectionId: options.sectionId, itemId: item.id });
+              setMobileMenuPanel({ kind: "submenu", itemId: item.id });
             }}
-            className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-white/6 text-white/72 transition hover:border-white/18 hover:bg-white/10 hover:text-white"
+            className="absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-current opacity-55 transition hover:bg-white/6 hover:opacity-90 focus-visible:opacity-90"
             aria-label={`Abrir opções de ${item.label}`}
             title="Abrir submenu"
           >
@@ -2094,80 +1741,73 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
           <nav className="flex-1 min-h-0 overflow-y-auto">
             <div className="space-y-4 p-3">
-              <div className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-[0_18px_40px_rgba(1,24,72,0.18)]">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/52">Menu inteligente</p>
-                    <h2 className="mt-1 text-lg font-bold leading-tight text-white">{mobilePanelTitle}</h2>
-                    <p className="mt-1 text-sm leading-6 text-white/68">{mobilePanelDescription}</p>
-                  </div>
-                  {mobileMenuPanel.kind !== "root" ? (
-                    <button
-                      type="button"
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-white/82 transition hover:border-white/20 hover:bg-white/12 hover:text-white"
-                      onClick={() => {
-                        if (mobileMenuPanel.kind === "submenu") {
-                          setMobileMenuPanel({ kind: "section", sectionId: mobileMenuPanel.sectionId });
-                          return;
-                        }
-                        setMobileMenuPanel({ kind: "root" });
-                      }}
-                      aria-label={mobileBackLabel}
-                      title={mobileBackLabel}
-                    >
-                      <FiChevronRight size={16} className="rotate-180" />
-                    </button>
-                  ) : null}
+              {mobileMenuPanel.kind !== "root" ? (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-white/82 transition hover:border-white/20 hover:bg-white/12 hover:text-white"
+                    onClick={() => {
+                      setMobileMenuPanel({ kind: "root" });
+                    }}
+                    aria-label={mobileBackLabel}
+                    title={mobileBackLabel}
+                  >
+                    <FiChevronRight size={16} className="rotate-180" />
+                  </button>
                 </div>
-              </div>
+              ) : null}
 
               {mobileMenuPanel.kind === "root" ? (
                 <div className="space-y-2">
-                  {favoriteNavigation.length > 0 ? (
-                    <button
-                      type="button"
-                      className="group/mobile-item flex h-12 w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/6 px-3 text-left text-sm font-semibold text-white/82 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
-                      onClick={() => setMobileMenuPanel({ kind: "favorites" })}
-                    >
-                      <span className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-white/10 bg-white/8 text-white/84">
-                        <FiBookmark size={17} />
-                      </span>
-                      <span className="flex-1">Favoritos</span>
-                      <span className="rounded-full border border-white/12 bg-white/6 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/62">
-                        {favoriteNavigation.length}
-                      </span>
-                      <FiChevronRight size={14} className="text-white/52" />
-                    </button>
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
-                      Nenhum favorito salvo ainda.
+                  <button
+                    type="button"
+                    className="sidebar-link sidebar-link-state-idle group/link relative flex w-full min-w-0 items-center overflow-hidden rounded-[18px] text-left text-white/86 transition-all duration-200 hover:bg-white/8 hover:text-white"
+                    title={t("nav.favorites")}
+                    aria-label={t("nav.favorites")}
+                    onClick={() => setMobileMenuPanel({ kind: "favorites" })}
+                  >
+                    <div className="sidebar-menu-icon ml-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] border border-white/12 bg-(--tc-accent,#ef0001) text-white shadow-[0_10px_24px_rgba(239,0,1,0.18)]">
+                      <FiBookmark className="fill-current" size={16} />
                     </div>
-                  )}
+                    <div className="sidebar-label min-w-0 flex-1 px-3 py-1.5">
+                      <div className="text-sm font-semibold leading-5">Favoritos</div>
+                    </div>
+                    <span className="sidebar-label mr-3 inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-white/10 bg-white/8 px-2 text-[11px] font-semibold">
+                      {favoriteNavigation.length}
+                    </span>
+                  </button>
 
-                  {desktopSections.map((section) => renderMobileSectionRow(section))}
+                  <div className="sidebar-divider-line h-px w-full bg-white/10" aria-hidden />
+
+                  <div className="sidebar-label px-2 text-xs uppercase tracking-[0.18em] opacity-55">Navegação</div>
+
+                  <div className="space-y-2">
+                    {desktopNavigationItems.length > 0 ? (
+                      desktopNavigationItems.map((item) =>
+                        renderMobileItemRow(item, {
+                          allowDrilldown: true,
+                          showFavoriteToggle: false,
+                        }),
+                      )
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
+                        Nenhuma opção disponível.
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : mobileMenuPanel.kind === "favorites" ? (
                 <div className="space-y-2 rounded-2xl border border-white/8 bg-white/5 p-2">
                   {favoriteNavigation.length > 0 ? (
-                    favoriteNavigation.map((item) => renderMobileItemRow(item, { sectionId: "favorites", allowDrilldown: false }))
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
-                      Nenhum favorito salvo ainda.
-                    </div>
-                  )}
-                </div>
-              ) : mobileMenuPanel.kind === "section" ? (
-                <div className="space-y-2">
-                  {mobileCurrentItems.length > 0 ? (
-                    mobileCurrentItems.map((item) =>
+                    favoriteNavigation.map((item) =>
                       renderMobileItemRow(item, {
-                        sectionId: mobileCurrentSection?.id ?? "",
-                        allowDrilldown: true,
+                        allowDrilldown: false,
+                        showFavoriteToggle: true,
                       }),
                     )
                   ) : (
                     <div className="rounded-2xl border border-dashed border-white/14 bg-white/6 px-3 py-4 text-sm text-white/64">
-                      Nenhuma opção disponível.
+                      Nenhum favorito salvo ainda.
                     </div>
                   )}
                 </div>
@@ -2176,8 +1816,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                   {mobileCurrentItems.length > 0 ? (
                     mobileCurrentItems.map((item) =>
                       renderMobileItemRow(item, {
-                        sectionId: mobileCurrentSection?.id ?? "",
                         allowDrilldown: false,
+                        showFavoriteToggle: true,
                       }),
                     )
                   ) : (

@@ -378,6 +378,12 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
     const hasMessage = Boolean(message.trim());
     if (!hasMessage) {
       result = buildClarifyReply(context, history, message);
+    } else if (
+      isLowSignalMessage(message, context) &&
+      !isAwaitingTicketPayload(history) &&
+      !isAwaitingTestCasePayload(history)
+    ) {
+      result = buildClarifyReply(context, history, message);
     } else {
       const tool = chooseTool(message, context, history);
       result = shouldShortCircuitRepeatedPrompt(history, tool, message)

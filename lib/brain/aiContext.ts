@@ -29,6 +29,17 @@ function scoreBrainMatch(query: string, values: Array<string | null | undefined>
   return score;
 }
 
+function formatMemoryLine(input: {
+  memoryType: string;
+  title: string;
+  summary: string | null;
+  nodeLabel?: string | null;
+}) {
+  const nodePart = input.nodeLabel ? ` | Origem: ${input.nodeLabel}` : "";
+  const summary = (input.summary ?? "").trim();
+  return `- [${input.memoryType}] ${input.title}${nodePart}${summary ? `\n  ${summary}` : ""}`;
+}
+
 /**
  * Gera contexto do Brain para alimentar o assistente de IA.
  * Busca informacoes relevantes do grafo para enriquecer as respostas.
@@ -41,6 +52,16 @@ export async function buildBrainContextForAI(options: {
 }): Promise<string | null> {
   try {
     const parts: string[] = [];
+
+    if (options.userQuery?.trim()) {
+      parts.push("## Leitura do seu pedido");
+      parts.push(`- Pergunta atual: \"${options.userQuery.trim()}\"`);
+      if (options.companySlug) parts.push(`- Escopo de empresa ativo: ${options.companySlug}`);
+      if (options.entityType && options.entityId) {
+        parts.push(`- Entidade em foco: ${options.entityType} (${options.entityId})`);
+      }
+      parts.push("");
+    }
 
     // 0. Se tem query do usuario, trazer o que mais pontua por relevancia
     if (options.userQuery && options.userQuery.length > 3) {
@@ -62,9 +83,10 @@ export async function buildBrainContextForAI(options: {
           .slice(0, 6);
 
         if (relevantNodes.length > 0) {
-          parts.push("## Conhecimento Relevante do Brain:");
+          parts.push("## Conhecimento que conversa com esse pedido");
           for (const { node } of relevantNodes) {
-            parts.push(`- **${node.label}** (${node.type}): ${node.description || "sem descricao"}`);
+            parts.push(`- **${node.label}** (${node.type})`);
+            parts.push(`  ${node.description || "Sem descrição registrada ainda."}`);
 
             const nodeMemories = (await getNodeMemories(node.id))
               .map((memory) => ({
@@ -111,11 +133,16 @@ export async function buildBrainContextForAI(options: {
           .slice(0, 6);
 
         if (relevantMemories.length > 0) {
-          parts.push("### Aprendizados e Decisoes:");
+          parts.push("### Aprendizados importantes do histórico");
           for (const { memory: m } of relevantMemories) {
-            const nodeInfo = m.node ? ` (de ${m.node.label})` : "";
-            parts.push(`- **[${m.memoryType}]** ${m.title}${nodeInfo}`);
-            parts.push(`  ${m.summary}`);
+            parts.push(
+              formatMemoryLine({
+                memoryType: m.memoryType,
+                title: m.title,
+                summary: m.summary,
+                nodeLabel: m.node?.label,
+              }),
+            );
           }
           parts.push("");
         }
@@ -147,16 +174,22 @@ export async function buildBrainContextForAI(options: {
           const defects = subgraph.nodes.filter((n) => n.type === "Defect");
           const tickets = subgraph.nodes.filter((n) => n.type === "Ticket");
 
-          parts.push(`## Contexto da Empresa: ${company.name}`);
+          parts.push(`## Contexto operacional da empresa: ${company.name}`);
           if (apps.length) parts.push(`- **Aplicacoes:** ${apps.map((a) => a.label).join(", ")}`);
           if (modules.length) parts.push(`- **Modulos:** ${modules.map((m) => m.label).join(", ")}`);
           if (defects.length) parts.push(`- **Defeitos ativos:** ${defects.length}`);
           if (tickets.length) parts.push(`- **Tickets:** ${tickets.length}`);
 
           if (memories.length) {
-            parts.push("\n### Memorias/Decisoes da Empresa:");
+            parts.push("\n### Decisões e memórias úteis desse escopo");
             for (const m of memories.slice(0, 5)) {
-              parts.push(`- **[${m.memoryType}]** ${m.title}: ${m.summary}`);
+              parts.push(
+                formatMemoryLine({
+                  memoryType: m.memoryType,
+                  title: m.title,
+                  summary: m.summary,
+                }),
+              );
             }
           }
           parts.push("");
@@ -174,18 +207,18 @@ export async function buildBrainContextForAI(options: {
         const subgraph = await getSubgraph(entityNode.id, 1);
         const memories = await getNodeMemories(entityNode.id);
 
-        parts.push(`## Contexto de ${options.entityType}: ${entityNode.label}`);
-        if (entityNode.description) parts.push(`**Descricao:** ${entityNode.description}`);
+        parts.push(`## Contexto da entidade em foco: ${entityNode.label} (${options.entityType})`);
+        if (entityNode.description) parts.push(`- **Descrição:** ${entityNode.description}`);
 
         const related = subgraph.nodes.filter((n) => n.id !== entityNode.id);
         if (related.length) {
-          parts.push(`**Relacionados:** ${related.map((n) => `${n.label} (${n.type})`).join(", ")}`);
+          parts.push(`- **Relacionados:** ${related.map((n) => `${n.label} (${n.type})`).join(", ")}`);
         }
 
         if (memories.length) {
-          parts.push("**Memorias:**");
+          parts.push("- **Memórias ligadas a essa entidade:**");
           for (const m of memories.slice(0, 3)) {
-            parts.push(`- [${m.memoryType}] ${m.title}: ${m.summary}`);
+            parts.push(`  - [${m.memoryType}] ${m.title}${m.summary ? `: ${m.summary}` : ""}`);
           }
         }
         parts.push("");
@@ -201,7 +234,7 @@ export async function buildBrainContextForAI(options: {
       ]);
 
       if (nodeCount > 0) {
-        parts.push(`## Brain Graph: ${nodeCount} nos, ${edgeCount} conexoes, ${memoryCount} memorias`);
+        parts.push(`## Panorama do Brain: ${nodeCount} nós, ${edgeCount} conexões, ${memoryCount} memórias`);
 
         // Buscar memorias mais importantes
         const topMemories = await prisma.brainMemory.findMany({
@@ -214,14 +247,22 @@ export async function buildBrainContextForAI(options: {
         });
 
         if (topMemories.length) {
-          parts.push("### Conhecimento Prioritario:");
+          parts.push("### Conhecimento prioritário para orientar resposta");
           for (const m of topMemories) {
             const nodeInfo = m.node ? ` (${m.node.type}: ${m.node.label})` : "";
-            parts.push(`- **[${m.memoryType}]** ${m.title}${nodeInfo}`);
-            parts.push(`  ${m.summary}`);
+            parts.push(`- [${m.memoryType}] ${m.title}${nodeInfo}`);
+            if (m.summary?.trim()) parts.push(`  ${m.summary}`);
           }
         }
       }
+    }
+
+    if (parts.length > 0) {
+      parts.push("## Como responder de forma mais humana neste caso");
+      parts.push("- Comece validando a dor/objetivo da pessoa em linguagem natural.");
+      parts.push("- Traga primeiro o que impacta o fluxo atual, depois detalhe histórico do Brain.");
+      parts.push("- Se houver incerteza, faça uma pergunta objetiva antes de executar a próxima ação.");
+      parts.push("");
     }
 
     const contextText = parts.join("\n");

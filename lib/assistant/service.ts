@@ -222,7 +222,13 @@ function buildClarifyReply(
 
 function shouldEnrichToolWithBrainContext(tool: AssistantToolName, message: string) {
   if (message.trim().length <= 3) return false;
-  return tool === "search_internal_records" || tool === "summarize_entity" || tool === "draft_test_case";
+  return (
+    tool === "search_internal_records" ||
+    tool === "summarize_entity" ||
+    tool === "draft_test_case" ||
+    tool === "suggest_next_step" ||
+    tool === "explain_permission"
+  );
 }
 
 async function enrichMessageWithBrainContext(
@@ -241,7 +247,14 @@ async function enrichMessageWithBrainContext(
     });
 
     return brainContext
-      ? `${message}\n\n---\n[Brain Context]\n${brainContext}`
+      ? [
+          message,
+          "",
+          "---",
+          "[Contexto Brain | uso interno do assistente]",
+          "Use este contexto para responder em tom conversacional, com foco no problema atual e nos próximos passos.",
+          brainContext,
+        ].join("\n")
       : message;
   } catch {
     return message;

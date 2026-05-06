@@ -23,6 +23,7 @@
     "test:api": "node scripts/run-newman.mjs",
     "biometrics:attach": "tsx scripts/biometrics/run-local-attach.ts",
     "env:check": "tsx scripts/env-check.ts",
+    "dev:watch": "powershell -ExecutionPolicy Bypass -File scripts/dev-watch.ps1",
     "dev:daemon": "node scripts/dev-daemon.js",
     "dev:stop": "node scripts/dev-stop.js",
     "create-admin": "npx tsx scripts/create-admin.ts",

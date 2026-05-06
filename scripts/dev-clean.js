@@ -3,9 +3,11 @@ const cleanNext = require("./clean-next");
 
 cleanNext();
 
-const child = spawn(process.platform === "win32" ? "npm.cmd" : "npm", ["run", "dev"], {
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+
+const child = spawn(npmCommand, ["run", "dev"], {
   stdio: "inherit",
-  shell: false,
+  shell: process.platform === "win32",
 });
 
 child.on("close", (code) => {

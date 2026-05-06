@@ -37,6 +37,7 @@ type ChatButtonProps = {
 };
 
 const HISTORY_KEY_PREFIX = "assistant_history_v2";
+const PANEL_MODE_KEY = "assistant_panel_mode_v1";
 
 function formatTime(ts: number) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -362,6 +363,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const { user, can, normalizedUser } = usePermissionAccess();
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(defaultOpen);
+  const [panelMode, setPanelMode] = useState<"bubble" | "expanded" | "docked">("bubble");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -373,6 +375,25 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const boxRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PANEL_MODE_KEY);
+      if (stored === "bubble" || stored === "expanded" || stored === "docked") {
+        setPanelMode(stored);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PANEL_MODE_KEY, panelMode);
+    } catch {
+      // ignore storage errors
+    }
+  }, [panelMode]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -512,6 +533,21 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const hasConversation = messages.length > 0;
   const compactViewport = viewportHeight > 0 && viewportHeight <= 860;
   const denseViewport = viewportHeight > 0 && viewportHeight <= 740;
+  const isBubbleMode = panelMode === "bubble";
+  const isExpandedMode = panelMode === "expanded";
+  const isDockedMode = panelMode === "docked";
+
+  const panelLayoutClass = isDockedMode
+    ? "fixed right-0 top-0 z-[70] h-dvh w-[min(32rem,100vw)] rounded-none rounded-l-4xl"
+    : isExpandedMode
+      ? "fixed inset-2 z-[70] w-auto rounded-3xl sm:inset-4 lg:inset-6"
+      : `mr-3 w-[min(36rem,calc(100vw-1rem))] ${
+          denseViewport
+            ? "h-[min(74dvh,calc(100dvh-0.75rem))] max-h-[calc(100dvh-0.75rem)]"
+            : compactViewport
+              ? "h-[min(76dvh,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)]"
+              : "h-[min(78dvh,calc(100dvh-1.25rem))] max-h-[calc(100dvh-1.25rem)]"
+        }`;
 
   useEffect(() => {
     if (!open || messages.length > 0 || !user) return;
@@ -707,13 +743,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         <div className="flex items-end">
           {open ? (
             <div
-              className={`${styles.panelEnter} mr-3 flex w-[min(36rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 ${
-                denseViewport
-                  ? "h-[min(74dvh,calc(100dvh-0.75rem))] max-h-[calc(100dvh-0.75rem)]"
-                  : compactViewport
-                    ? "h-[min(76dvh,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)]"
-                    : "h-[min(78dvh,calc(100dvh-1.25rem))] max-h-[calc(100dvh-1.25rem)]"
-              }`}
+              className={`${styles.panelEnter} ${panelLayoutClass} flex flex-col overflow-hidden border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 ${isBubbleMode ? "rounded-4xl" : ""} ${isDockedMode ? "h-dvh max-h-dvh" : isExpandedMode ? "h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] sm:h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-2rem)] lg:h-[calc(100dvh-3rem)] lg:max-h-[calc(100dvh-3rem)]" : ""}`}
             >
               <div
                 className={`relative overflow-hidden border-b border-[rgba(15,23,42,0.1)] [background-image:var(--tc-brand-gradient-strong)] text-white ${denseViewport ? "px-4 py-3" : "px-5 py-4"}`}
@@ -734,6 +764,24 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPanelMode((mode) => (mode === "expanded" ? "bubble" : "expanded"))}
+                      className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                      aria-label={isExpandedMode ? "Voltar para modo balão" : "Expandir chat"}
+                      title={isExpandedMode ? "Voltar para modo balão" : "Expandir chat"}
+                    >
+                      {isExpandedMode ? "Balão" : "Expandir"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPanelMode((mode) => (mode === "docked" ? "bubble" : "docked"))}
+                      className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                      aria-label={isDockedMode ? "Voltar para modo balão" : "Acoplar lateralmente"}
+                      title={isDockedMode ? "Voltar para modo balão" : "Acoplar lateralmente"}
+                    >
+                      {isDockedMode ? "Balão" : "Lateral"}
+                    </button>
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
@@ -854,32 +902,34 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
             </div>
           ) : null}
 
-          <button
-            type="button"
-            onClick={() => setOpen((value) => !value)}
-            aria-label="Abrir assistente da plataforma"
-            title="Assistente Testing Company — clique para abrir"
-            className={`${styles.triggerBtn} group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)]`}
-          >
-            {/* spinning logo with gradient background */}
-            <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,#011848_0%,#6b0000_55%,#ef0001_100%)] shadow-[0_8px_24px_rgba(1,24,72,0.4)]" />
-            <div className="absolute inset-0.75 rounded-full overflow-hidden flex items-center justify-center">
-              <div className="relative w-full h-full">
-                <Image
-                  src="/images/tc.png"
-                  alt="Assistente Testing Company"
-                  fill
-                  sizes="56px"
-                  className="select-none pointer-events-none object-contain animate-spin-slower"
-                />
+          {!open || isBubbleMode ? (
+            <button
+              type="button"
+              onClick={() => setOpen((value) => !value)}
+              aria-label="Abrir assistente da plataforma"
+              title="Assistente Testing Company — clique para abrir"
+              className={`${styles.triggerBtn} group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)]`}
+            >
+              {/* spinning logo with gradient background */}
+              <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,#011848_0%,#6b0000_55%,#ef0001_100%)] shadow-[0_8px_24px_rgba(1,24,72,0.4)]" />
+              <div className="absolute inset-0.75 rounded-full overflow-hidden flex items-center justify-center">
+                <div className="relative w-full h-full">
+                  <Image
+                    src="/images/tc.png"
+                    alt="Assistente Testing Company"
+                    fill
+                    sizes="56px"
+                    className="select-none pointer-events-none object-contain animate-spin-slower"
+                  />
+                </div>
               </div>
-            </div>
-            {/* tooltip */}
-            <span className="pointer-events-none absolute bottom-[calc(100%+0.5rem)] right-0 whitespace-nowrap rounded-xl bg-[#011848] px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-              Assistente Testing Company
-              <span className="absolute -bottom-1.25 right-5 h-2.5 w-2.5 rotate-45 bg-[#011848]" />
-            </span>
-          </button>
+              {/* tooltip */}
+              <span className="pointer-events-none absolute bottom-[calc(100%+0.5rem)] right-0 whitespace-nowrap rounded-xl bg-[#011848] px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                Assistente Testing Company
+                <span className="absolute -bottom-1.25 right-5 h-2.5 w-2.5 rotate-45 bg-[#011848]" />
+              </span>
+            </button>
+          ) : null}
         </div>
       </div>
 

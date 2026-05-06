@@ -129,6 +129,24 @@ describe("standard assistant flow", () => {
     );
   });
 
+  it("passes context, actor, and action to runAssistantRequest", async () => {
+    const context = { route: "/admin/support" };
+    const actor = { userId: "u2", role: "admin", companySlug: "acme" };
+    const action = {
+      kind: "tool",
+      label: "Criar chamado",
+      tool: "create_ticket",
+      input: { title: "Erro", description: "Falha", type: "bug", priority: "high" },
+    };
+
+    await POST(makeRequest({ context, actor, action }));
+
+    expect(runAssistantRequest).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ context, actor, action }),
+    );
+  });
+
   it("response always includes tool, reply, and context keys", async () => {
     const res = await POST(makeRequest({ message: "oi" }));
     const body = await res.json();

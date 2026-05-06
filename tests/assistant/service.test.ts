@@ -102,9 +102,11 @@ describe("routing", () => {
     expect(result.context.module).toBe("support");
   });
 
-  it("routes short greeting as low-signal (clarify)", async () => {
+  it("routes greeting to use_brain with a conversational reply", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "oi" }));
-    expect(["suggest_next_step", "get_screen_context"]).toContain(result.tool);
+    expect(result.tool).toBe("use_brain");
+    expect(result.reply.toLowerCase()).toMatch(/oi|vamos resolver|como posso/i);
+    expect(Array.isArray(result.actions)).toBe(true);
   });
 
   it("routes 'mostrar contexto atual' to get_screen_context", async () => {

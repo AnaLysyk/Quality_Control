@@ -5,7 +5,7 @@ import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { detectAgentMode } from "@/lib/brain/agents";
 import type { AgentMode } from "@/lib/brain/agents";
-import type { AssistantOpenEventDetail } from "@/lib/assistant/types";
+import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
 
 export const runtime = "nodejs";
 
@@ -13,11 +13,8 @@ const ASSISTANT_ENABLED = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "fals
 
 type AssistantRequestBody = {
   messages?: Array<{ role: "user" | "assistant"; content: string }>;
-  message?: string;
-  history?: Array<{ from: string; text: string }>;
   brainContext?: AssistantOpenEventDetail | null;
-  context?: { route?: string };
-};
+} & AssistantClientRequest;
 
 function compactText(input: string, max = 500) {
   const normalized = String(input ?? "").replace(/\s+/g, " ").trim();
@@ -226,8 +223,10 @@ export async function POST(req: Request) {
     const { runAssistantRequest } = await import("@/lib/assistant/service");
     const response = await runAssistantRequest(authUser, {
       message: body.message,
-      messages: body.messages,
-      history: body.history,
+      context: body.context ?? null,
+      actor: body.actor ?? null,
+      action: body.action ?? null,
+      history: body.history ?? null,
     } as Parameters<typeof runAssistantRequest>[1]);
 
     await persistConversationMemory({

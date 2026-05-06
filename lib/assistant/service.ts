@@ -31,7 +31,7 @@ import { detectAgentMode } from "@/lib/brain/agents";
 
 import { normalizePromptText, normalizeSearch, normalizeText, compactMultiline, sanitizeRoute } from "./helpers";
 import { REPEATED_REPLY_MESSAGES, CLARIFY_REPLY } from "./messages";
-import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload, analyzeIntent, getConversationMomentum } from "./router";
+import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload, analyzeIntent, getConversationMomentum, isGreetingPrompt } from "./router";
 import { buildPromptActions } from "./data";
 import { extractTicketReference } from "./pure/parsing";
 import { extractNarrativePayload, isTicketTemplateRequest, parseStructuredTicketDraft } from "./tools/ticketHelpers";
@@ -50,6 +50,13 @@ import {
   toolSuggestNextStep,
   type AssistantExecutorResult,
 } from "./tools";
+
+function firstNameFromUser(user: AuthUser) {
+  const raw = typeof user.name === "string" ? user.name.trim() : "";
+  if (!raw) return null;
+  const first = raw.split(/\s+/)[0] ?? "";
+  return first.trim() ? first : null;
+}
 
 /* ──────────────────── Conversation helpers ──────────────────── */
 
@@ -378,6 +385,21 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
     const hasMessage = Boolean(message.trim());
     if (!hasMessage) {
       result = buildClarifyReply(context, history, message);
+    } else if (isGreetingPrompt(message)) {
+      const name = firstNameFromUser(user);
+      const greeting = name ? `Oi, ${name}.` : "Oi.";
+      result = {
+        tool: "use_brain",
+        success: true,
+        summary: "saudacao inicial",
+        actions: buildPromptActions(context),
+        reply: compactMultiline([
+          `${greeting} Vamos resolver isso juntos.`,
+          `Estou com voce em: ${context.screenLabel} (${context.module}).`,
+          "",
+          "Me diga seu objetivo (ex.: \"buscar chamado SP-000123\", \"criar chamado\", \"explicar permissao\") ou escolha uma opcao abaixo.",
+        ].join("\n")),
+      };
     } else if (
       isLowSignalMessage(message, context) &&
       !isAwaitingTicketPayload(history) &&

@@ -47,10 +47,10 @@ describe("ChatButton API routing", () => {
       json: async () => ({ ok: true }),
     });
 
-    sessionStorage.clear();
+    localStorage.clear();
   });
 
-  it("uses /api/ai/chat when no brain context is active", async () => {
+  it("uses /api/assistant/ask when no brain context is active", async () => {
     render(<ChatButton defaultOpen />);
 
     const input = screen.getByRole("textbox");
@@ -58,7 +58,7 @@ describe("ChatButton API routing", () => {
     fireEvent.click(screen.getByRole("button", { name: /enviar/i }));
 
     await waitFor(() => expect(fetchApiMock).toHaveBeenCalled());
-    expect(fetchApiMock.mock.calls[0][0]).toBe("/api/ai/chat");
+    expect(fetchApiMock.mock.calls[0][0]).toBe("/api/assistant/ask");
   });
 
   it("uses /api/assistant/ask after assistant:open with brain context", async () => {

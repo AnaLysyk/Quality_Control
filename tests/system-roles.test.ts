@@ -1,6 +1,8 @@
 import { normalizeLegacyRole, SYSTEM_ROLES } from "../lib/auth/roles";
+import { normalizeAccessType } from "../lib/accessRequestMessage";
 import { ROLE_DEFAULTS } from "../lib/permissions/roleDefaults";
 import { canReviewAccessRequests, canReviewerAccessQueue, canViewAccessRequestQueue } from "../lib/requestReviewAccess";
+import { requestProfileTypeNeedsCompany } from "../lib/requestRouting";
 
 describe("system role contract", () => {
   it("exposes only the canonical profile roles", () => {
@@ -32,6 +34,12 @@ describe("system role contract", () => {
   it("keeps company profiles able to view and create company users", () => {
     expect(ROLE_DEFAULTS[SYSTEM_ROLES.EMPRESA].users).toEqual(["view", "create"]);
     expect(ROLE_DEFAULTS[SYSTEM_ROLES.COMPANY_USER].users).toEqual(["view", "create"]);
+  });
+
+  it("routes company-user access requests to an existing company context", () => {
+    expect(normalizeAccessType("Usuarios da empresa")).toBe("empresa");
+    expect(requestProfileTypeNeedsCompany("company_user")).toBe(true);
+    expect(requestProfileTypeNeedsCompany("empresa")).toBe(false);
   });
 
   it("keeps access-request review queue gated by capability", () => {

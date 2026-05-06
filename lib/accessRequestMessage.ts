@@ -242,7 +242,6 @@ export function normalizeAccessType(value: string | null | undefined): AccessTyp
   if (!value) return null;
   const v = normalizeText(value);
   if (
-    v === "usuario da empresa" ||
     v === "usuario" ||
     v === "user" ||
     v === "common" ||
@@ -254,7 +253,14 @@ export function normalizeAccessType(value: string | null | undefined): AccessTyp
   if (v === "admin do sistema" || v === "administrador do sistema" || v === "administrador" || v === "admin" || v === "leader_tc" || v === "lider tc") {
     return "leader_tc";
   }
-  if (v === "admin da empresa" || v === "administrador da empresa" || v === "empresa" || v === "company") {
+  if (
+    v === "admin da empresa" ||
+    v === "administrador da empresa" ||
+    v === "usuario da empresa" ||
+    v === "usuarios da empresa" ||
+    v === "empresa" ||
+    v === "company"
+  ) {
     return "empresa";
   }
   if (v === "global" || v === "desenvolvedor global" || v === "perfil global" || v === "technical_support" || v === "suporte tecnico") {

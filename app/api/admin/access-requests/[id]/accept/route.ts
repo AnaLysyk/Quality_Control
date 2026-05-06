@@ -14,7 +14,6 @@ import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccess
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import {
   normalizeRequestProfileType,
-  requestProfileTypeNeedsCompany,
   toInternalAccessType,
 } from "@/lib/requestRouting";
 import { resolveEditableProfileUserState, type EditableProfileRole } from "@/lib/editableProfileRoles";
@@ -127,11 +126,11 @@ async function prepareAcceptanceMessage(
     parsed.company ||
     "(não informado)";
 
-  if (requestProfileTypeNeedsCompany(profileType) && !clientId) {
+  if (profileType === "testing_company_user" && !clientId) {
     clientId = await resolveTestingCompanyId();
   }
 
-  if (requestProfileTypeNeedsCompany(profileType)) {
+  if (profileType === "testing_company_user" || profileType === "company_user") {
     if (!clientId) {
       const error = new Error("Empresa obrigatória para Usuário") as Error & { code?: string };
       error.code = "MISSING_COMPANY";
@@ -144,9 +143,7 @@ async function prepareAcceptanceMessage(
       throw error;
     }
     company = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || company;
-  } else if (profileType === "company_user") {
-    company = parsed.companyProfile?.companyName?.trim() || company || "(não informado)";
-  } else {
+  } else if (profileType !== "empresa") {
     clientId = null;
     company = "(não informado)";
   }
@@ -197,7 +194,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
   const displayName = fullName || email;
   let companyId = parsed.clientId;
 
-  if (requestProfileTypeNeedsCompany(profileType) && !companyId) {
+  if (profileType === "testing_company_user" && !companyId) {
     companyId = await resolveTestingCompanyId();
   }
 
@@ -207,7 +204,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
     throw error;
   }
 
-  if (accessType === "technical_support") {
+  if (profileType === "technical_support" || accessType === "technical_support") {
     return {
       email,
       login,
@@ -223,7 +220,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
     };
   }
 
-  if (accessType === "leader_tc") {
+  if (profileType === "leader_tc" || accessType === "leader_tc") {
     return {
       email,
       login,
@@ -239,7 +236,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
     };
   }
 
-  if (accessType === "empresa") {
+  if (profileType === "empresa") {
     const companyName = parsed.companyProfile?.companyName?.trim() || parsed.company?.trim() || "";
     if (!companyName) {
       const error = new Error("Nome da empresa obrigatório") as Error & { code?: string };
@@ -262,18 +259,44 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
       status: "active",
       created_at: new Date().toISOString(),
     });
-    const membershipRole = profileType === "company_user" ? "company_user" : "empresa";
     return {
       email,
       login,
       fullName,
       displayName,
-      profileRole: (profileType === "company_user" ? "company_user" : "empresa") as EditableProfileRole,
-      role: membershipRole,
+      profileRole: "empresa" as EditableProfileRole,
+      role: "empresa" as const,
       globalRole: null,
       isGlobalAdmin: false,
       linkCompanyId: createdCompany.id,
-      membershipRole,
+      membershipRole: "empresa" as const,
+      passwordHash: parsed.passwordHash,
+    };
+  }
+
+  if (profileType === "company_user") {
+    if (!companyId) {
+      const error = new Error("Empresa obrigatória para Usuário") as Error & { code?: string };
+      error.code = "MISSING_COMPANY";
+      throw error;
+    }
+    const selectedCompany = await findLocalCompanyById(companyId);
+    if (!selectedCompany) {
+      const error = new Error("Empresa selecionada não encontrada") as Error & { code?: string };
+      error.code = "MISSING_COMPANY";
+      throw error;
+    }
+    return {
+      email,
+      login,
+      fullName,
+      displayName,
+      profileRole: "company_user" as EditableProfileRole,
+      role: "user" as const,
+      globalRole: null,
+      isGlobalAdmin: false,
+      linkCompanyId: companyId,
+      membershipRole: "user" as const,
       passwordHash: parsed.passwordHash,
     };
   }

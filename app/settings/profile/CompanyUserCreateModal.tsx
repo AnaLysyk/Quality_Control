@@ -33,9 +33,10 @@ function suggestUsername(value?: string | null) {
   return normalized || "usuário";
 }
 
-const ROLE_OPTIONS = getFixedProfileOptions().filter((option) =>
-  option.value === "empresa" || option.value === "company_user",
-);
+const ROLE_OPTIONS = [
+  { value: "company_user", label: "Usuário da empresa" },
+  { value: "empresa", label: "Admin da empresa" },
+];
 
 export function CompanyUserCreateModal({
   open,
@@ -47,10 +48,6 @@ export function CompanyUserCreateModal({
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
-  const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [role, setRole] = useState("company_user");
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -67,10 +64,6 @@ export function CompanyUserCreateModal({
     setEmail("");
     setUsername("");
     setPassword("");
-    setPhone("");
-    setJobTitle("");
-    setLinkedinUrl("");
-    setAvatarUrl("");
     setRole("company_user");
     setLoading(false);
     setGenerating(false);

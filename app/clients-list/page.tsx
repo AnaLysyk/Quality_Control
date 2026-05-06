@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { CreateClientModal, type ClientFormValues } from "@/clients/components/CreateClientModal";
 import { RequireAuth } from "@/components/RequireAuth";
-import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 type Client = {
   id: string;
@@ -49,11 +49,16 @@ function ClientesPage() {
   const { user, normalizedUser } = useAuthUser();
   const legacyIsGlobalAdmin = asRecord(user)?.is_global_admin === true;
   const isGlobalAdmin = !!user?.isGlobalAdmin || legacyIsGlobalAdmin;
-  const routeInput = resolveCompanyRouteAccessInput({
-    user,
-    normalizedUser,
-    companyCount: normalizedUser.companyCount,
-  });
+  const routeInput = {
+    isGlobalAdmin,
+    permissionRole: user?.permissionRole ?? null,
+    role: user?.role ?? null,
+    companyRole: user?.companyRole ?? null,
+    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
+    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
+    clientSlug: user?.clientSlug ?? null,
+    defaultClientSlug: user?.defaultClientSlug ?? null,
+  };
 
   const [items, setItems] = useState<Client[]>([]);
   const [search, setSearch] = useState("");

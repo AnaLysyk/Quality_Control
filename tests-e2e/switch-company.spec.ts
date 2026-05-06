@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test("admin seleciona empresa no dashboard global", async ({ page, context }) => {
@@ -16,3 +16,4 @@ test("admin seleciona empresa no dashboard global", async ({ page, context }) =>
 
   await expect(page.getByText(/Empresa selecionada|Painel admin/i).first()).toBeVisible();
 });
+

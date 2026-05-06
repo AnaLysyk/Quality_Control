@@ -26,12 +26,10 @@ import type {
   AssistantToolName,
 } from "@/lib/assistant/types";
 import type { AuthUser } from "@/lib/jwtAuth";
-import { InternalBrainEngine } from "@/lib/brain/internalEngine";
-import { detectAgentMode } from "@/lib/brain/agents";
 
 import { normalizePromptText, normalizeSearch, normalizeText, compactMultiline, sanitizeRoute } from "./helpers";
 import { REPEATED_REPLY_MESSAGES, CLARIFY_REPLY } from "./messages";
-import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload, analyzeIntent, getConversationMomentum, isGreetingPrompt } from "./router";
+import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload, analyzeIntent, getConversationMomentum } from "./router";
 import { buildPromptActions } from "./data";
 import { extractTicketReference } from "./pure/parsing";
 import { extractNarrativePayload, isTicketTemplateRequest, parseStructuredTicketDraft } from "./tools/ticketHelpers";
@@ -50,16 +48,6 @@ import {
   toolSuggestNextStep,
   type AssistantExecutorResult,
 } from "./tools";
-
-function firstNameFromUser(user: AuthUser) {
-  const fallbackFromEmail = typeof user.email === "string" ? user.email.split("@")[0] : "";
-  const raw = typeof user.user === "string" && user.user.trim()
-    ? user.user.trim()
-    : fallbackFromEmail.trim();
-  if (!raw) return null;
-  const first = raw.split(/\s+/)[0] ?? "";
-  return first.trim() ? first : null;
-}
 
 /* ──────────────────── Conversation helpers ──────────────────── */
 
@@ -89,20 +77,6 @@ function getLastAssistantTurn(history: AssistantConversationTurn[]) {
 function getLastUserTurn(history: AssistantConversationTurn[]) {
   for (let i = history.length - 1; i >= 0; i -= 1) {
     if (history[i]?.from === "user") return history[i];
-  }
-  return null;
-}
-
-function getLatestUserTopic(history: AssistantConversationTurn[], currentMessage?: string) {
-  const current = normalizeSearch(currentMessage ?? "");
-  for (let i = history.length - 1; i >= 0; i -= 1) {
-    const turn = history[i];
-    if (turn?.from !== "user") continue;
-    const text = normalizeText(turn.text, 180);
-    const normalized = normalizeSearch(text);
-    if (!text || !normalized) continue;
-    if (current && normalized === current) continue;
-    return text;
   }
   return null;
 }
@@ -182,23 +156,13 @@ function maybeCollapseRepeatedActions(actions: AssistantAction[] | undefined, hi
 
 /* ──────────────────── Shortcut replies ──────────────────── */
 
-function buildRecentDuplicateReply(
-  tool: AssistantToolName,
-  context: AssistantScreenContext,
-  history: AssistantConversationTurn[] = [],
-  message?: string,
-): AssistantExecutorResult {
-  const topic = getLatestUserTopic(history, message);
-  const continuation = topic
-    ? ` Continuando o que voce trouxe sobre "${topic}", `
-    : " ";
-
+function buildRecentDuplicateReply(tool: AssistantToolName, context: AssistantScreenContext): AssistantExecutorResult {
   return {
     tool,
     success: true,
     summary: "resposta repetida evitada",
     actions: buildPromptActions(context),
-    reply: `${REPEATED_REPLY_MESSAGES[tool]}${continuation}me fala o ponto especifico que quer aprofundar agora.`,
+    reply: REPEATED_REPLY_MESSAGES[tool],
   };
 }
 
@@ -217,54 +181,13 @@ function buildClarifyReply(
     success: true,
     summary: "pedido pouco claro",
     actions: buildPromptActions(context),
-    reply: compactMultiline(`${prefix}${CLARIFY_REPLY}`),
+    reply: compactMultiline(CLARIFY_REPLY),
   };
 }
 
 /* ──────────────────── Tool dispatcher ──────────────────── */
 
-function shouldEnrichToolWithBrainContext(tool: AssistantToolName, message: string) {
-  if (message.trim().length <= 3) return false;
-  return (
-    tool === "search_internal_records" ||
-    tool === "summarize_entity" ||
-    tool === "draft_test_case" ||
-    tool === "suggest_next_step" ||
-    tool === "explain_permission"
-  );
-}
-
-async function enrichMessageWithBrainContext(
-  tool: AssistantToolName,
-  message: string,
-  context: AssistantScreenContext,
-) {
-  if (!shouldEnrichToolWithBrainContext(tool, message)) return message;
-
-  try {
-    const brainContext = await buildBrainContextForAI({
-      companySlug: context.companySlug,
-      entityType: context.entityType,
-      entityId: context.entityId,
-      userQuery: message,
-    });
-
-    return brainContext
-      ? [
-          message,
-          "",
-          "---",
-          "[Contexto Brain | uso interno do assistente]",
-          "Use este contexto para responder em tom conversacional, com foco no problema atual e nos próximos passos.",
-          brainContext,
-        ].join("\n")
-      : message;
-  } catch {
-    return message;
-  }
-}
-
-async function executeTool(user: AuthUser, context: AssistantScreenContext, tool: AssistantToolName, message: string, history: AssistantConversationTurn[] = [], brainNodeId?: string | null): Promise<AssistantExecutorResult> {
+async function executeTool(user: AuthUser, context: AssistantScreenContext, tool: AssistantToolName, message: string): Promise<AssistantExecutorResult> {
   switch (tool) {
     case "get_screen_context":     return toolGetScreenContext(user, context);
     case "list_available_actions": return toolListAvailableActions(user, context);
@@ -274,9 +197,8 @@ async function executeTool(user: AuthUser, context: AssistantScreenContext, tool
     case "explain_permission":     return toolExplainPermission(user, context, message);
     case "create_ticket":          return buildTicketCreationAction(user, context, message);
     case "create_comment":         return buildCommentCreationAction(user, context, message);
-    case "use_brain":              return executeUseBrain(user, context, message, history, brainNodeId);
-    case "suggest_next_step":      return toolSuggestNextStep(user, context, history);
-    default:                       return toolSuggestNextStep(user, context, history);
+    case "suggest_next_step":      return toolSuggestNextStep(user, context);
+    default:                       return toolSuggestNextStep(user, context);
   }
 }
 
@@ -286,71 +208,6 @@ async function executeToolAction(user: AuthUser, context: AssistantScreenContext
     case "create_comment": return executeCreateComment(user, action);
     default:
       return { tool: "suggest_next_step", success: false, summary: "ação não suportada", reply: "Essa ação não está disponível neste MVP do agente." };
-  }
-}
-
-/** 
- * Roteia para Brain Engine para conversa natural (não ferramenta estruturada)
- * Detecta agente automaticamente e executa com histórico de conversa
- */
-async function executeUseBrain(
-  user: AuthUser,
-  context: AssistantScreenContext,
-  message: string,
-  history: AssistantConversationTurn[] = [],
-  nodeId?: string | null,
-): Promise<AssistantExecutorResult> {
-  try {
-    // Converte histórico do formato Assistant para formato Brain
-    const brainMessages = history.map(t => ({
-      role: (t.from === "assistant" ? "assistant" : "user") as "user" | "assistant",
-      content: t.text,
-    }));
-
-    // Adiciona mensagem do usuário
-    brainMessages.push({ role: "user" as const, content: message });
-
-    // Detecta agente apropriado
-    const agentMode = detectAgentMode(message);
-
-    // Executa Brain Engine
-    const engine = new InternalBrainEngine();
-    const events = engine.run({
-      messages: brainMessages,
-      agentMode,
-      nodeId: nodeId ?? null,
-      companySlug: context.companySlug,
-      route: context.route,
-      screenLabel: context.screenLabel,
-      userId: user.id,
-      actorName: user.user ?? user.email ?? null,
-    });
-
-    let replyText = "";
-    for await (const event of events) {
-      if (event.type === "text-delta") {
-        replyText += event.text;
-      } else if (event.type === "error") {
-        replyText = replyText || `Erro ao processar: ${event.error}`;
-      }
-    }
-
-    return {
-      tool: "use_brain",
-      success: true,
-      summary: `conversação natural via agente ${agentMode}`,
-      actions: undefined,
-      reply: replyText || "Processamento concluído.",
-    };
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Erro interno";
-    return {
-      tool: "use_brain",
-      success: false,
-      summary: "falha ao executar brain",
-      actions: undefined,
-      reply: `Desculpe, não consegui processar sua pergunta: ${msg}`,
-    };
   }
 }
 
@@ -373,12 +230,12 @@ function normalizeCompanySlug(value?: string | null) {
 function resolveAssistantRequestContext(user: AuthUser, request: AssistantClientRequest) {
   const baseContext = resolveAssistantScreenContext(sanitizeRoute(request.context?.route));
   const actor = request.actor ?? null;
-  const normalizedUser = normalizeAuthenticatedUser(user as Parameters<typeof normalizeAuthenticatedUser>[0]);
-  const normalizedActor = normalizeAuthenticatedUser(actor as Parameters<typeof normalizeAuthenticatedUser>[0]);
 
   const effectiveCompanySlug =
-    normalizeCompanySlug(normalizedUser.primaryCompanySlug) ??
-    normalizeCompanySlug(normalizedActor.primaryCompanySlug) ??
+    normalizeCompanySlug(user.companySlug) ??
+    normalizeCompanySlug(actor?.companySlug) ??
+    normalizeCompanySlug(Array.isArray(user.companySlugs) ? user.companySlugs[0] : null) ??
+    normalizeCompanySlug(Array.isArray(actor?.companySlugs) ? actor?.companySlugs?.[0] ?? null : null) ??
     normalizeCompanySlug(baseContext.companySlug);
 
   // Keep route-derived module/screen info, but enforce active user company scope when available.
@@ -400,45 +257,32 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
 
   let result: AssistantExecutorResult;
 
+  // Enriquecer com contexto do Brain (inclui busca semântica pela query do usuário)
+  let brainContext: string | null = null;
+  try {
+    brainContext = await buildBrainContextForAI({
+      companySlug: context.companySlug,
+      entityType: context.entityType,
+      entityId: context.entityId,
+      userQuery: message, // Permite busca semântica nos nós e memórias
+    });
+  } catch { /* brain context is optional */ }
+
+  // Se há contexto do brain, anexar à mensagem para enriquecer respostas
+  const enrichedMessage = brainContext
+    ? `${message}\n\n---\n[Brain Context]\n${brainContext}`
+    : message;
+
   if (action?.kind === "tool") {
     result = await executeToolAction(user, context, action);
   } else {
-    const hasMessage = Boolean(message.trim());
-    if (!hasMessage) {
-      result = buildClarifyReply(context, history, message);
-    } else if (isGreetingPrompt(message)) {
-      const name = firstNameFromUser(user);
-      const greeting = name ? `Oi, ${name}.` : "Oi.";
-      result = {
-        tool: "use_brain",
-        success: true,
-        summary: "saudacao inicial",
-        actions: buildPromptActions(context),
-        reply: compactMultiline([
-          `${greeting} Vamos resolver isso juntos.`,
-          `Estou com voce em: ${context.screenLabel} (${context.module}).`,
-          "",
-          "Me diga seu objetivo (ex.: \"buscar chamado SP-000123\", \"criar chamado\", \"explicar permissao\") ou escolha uma opcao abaixo.",
-        ].join("\n")),
-      };
-    } else if (
-      isLowSignalMessage(message, context) &&
-      !isAwaitingTicketPayload(history) &&
-      !isAwaitingTestCasePayload(history)
-    ) {
-      result = buildClarifyReply(context, history, message);
+    if (!isAwaitingTicketPayload(history) && !isAwaitingTestCasePayload(history) && isLowSignalMessage(message, context)) {
+      result = buildClarifyReply(context);
     } else {
       const tool = chooseTool(message, context, history);
       result = shouldShortCircuitRepeatedPrompt(history, tool, message)
-        ? buildRecentDuplicateReply(tool, context, history, message)
-        : await executeTool(
-            user,
-            context,
-            tool,
-            tool === "use_brain" ? message : await enrichMessageWithBrainContext(tool, message, context),
-            history,
-            brainNodeId,
-          );
+        ? buildRecentDuplicateReply(tool, context)
+        : await executeTool(user, context, tool, enrichedMessage);
     }
   }
 

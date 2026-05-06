@@ -40,6 +40,10 @@ function normalizeMembershipRole(input?: string | null) {
   return "company_user";
 }
 
+function buildTempPasswordHash() {
+  return hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const companyId = searchParams.get("companyId");

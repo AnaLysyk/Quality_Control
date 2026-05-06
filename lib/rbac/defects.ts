@@ -37,7 +37,7 @@ export async function resolveDefectRole(authUser: AuthUser | null | undefined, c
 export const canCreateManualDefect = (role: Role) => role === "leader_tc" || role === "empresa" || role === "testing_company_user";
 export const canEditManualDefect = (role: Role) => role === "leader_tc" || role === "empresa";
 export const canLinkRun = (role: Role) => role === "leader_tc" || role === "empresa";
-export const canDeleteManualDefect = (role: Role) => role === "leader_tc";
+export const canDeleteManualDefect = (role: Role) => role === "leader_tc" || role === "empresa";
 
 export async function getMockRole(): Promise<Role | null> {
   const store = await cookies();

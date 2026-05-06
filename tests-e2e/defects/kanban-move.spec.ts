@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
 
-test.describe("kanban - movimentação", () => {
+test.describe("kanban - movimentaÃ§Ã£o", () => {
   test("admin move card para outra coluna", async ({ page, context }) => {
     await mockAuth(context, {
       role: "admin",
@@ -10,7 +10,7 @@ test.describe("kanban - movimentação", () => {
     });
 
     await page.addInitScript(() => sessionStorage.clear());
-    await page.goto("/empresas/demo/defeitos/kanban", { waitUntil: "domcontentloaded" });
+    await page.goto("/empresas/demo/defeitos/kanban", { waitUntil: "networkidle" });
 
     const card = page.getByTestId("kanban-card-k2");
     await expect(card).toBeVisible();

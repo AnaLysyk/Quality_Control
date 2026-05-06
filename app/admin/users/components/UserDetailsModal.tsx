@@ -6,7 +6,6 @@ import { toast } from "react-hot-toast";
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
-import { getFixedProfileOptions, type FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -36,7 +35,13 @@ type Props = {
   onDirtyChange?: (dirty: boolean) => void;
 };
 
-const ROLE_OPTIONS = getFixedProfileOptions();
+const ROLE_OPTIONS = [
+  { value: "empresa", label: "Admin da empresa" },
+  { value: "company_user", label: "Usuário da empresa" },
+  { value: "testing_company_user", label: "Usuário TC" },
+  { value: "leader_tc", label: "Lider TC" },
+  { value: "technical_support", label: "Suporte Técnico" },
+] as const;
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 
 type RoleValue = FixedProfileKind;
@@ -99,7 +104,6 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<RoleValue>("testing_company_user");
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
@@ -118,7 +122,6 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         name: "",
         login: "",
         email: "",
-        phone: "",
         role: "testing_company_user" as RoleValue,
         clientId: null as string | null,
         jobTitle: "",
@@ -172,8 +175,6 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     !!email.trim();
   const roleLabel =
     ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
-  const roleHint =
-    ROLE_OPTIONS.find((option) => option.value === role)?.hint ?? "";
   const linkedCompanyName =
     clients?.find((client) => client.id === clientId)?.name ?? (clientId ? "Empresa vinculada" : "Sem empresa");
   const displayName = name.trim() || user?.name || "Usuário";
@@ -482,7 +483,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     <select
                       className={fieldClass}
                       value={role}
-                      onChange={(event) => setRole(normalizeEditableProfileRole(event.target.value))}
+                      onChange={(event) => setRole(event.target.value as RoleValue)}
                       aria-label="Perfil do usuário"
                       title="Perfil"
                     >

@@ -11,10 +11,7 @@ async function getPrisma() {
 
 const USE_MEMORY_ALERTS =
   process.env.QUALITY_ALERTS_IN_MEMORY === "true" ||
-  (process.env.NODE_ENV === "test" &&
-    process.env.E2E_USE_JSON !== "1" &&
-    process.env.E2E_USE_JSON !== "true" &&
-    process.env.PLAYWRIGHT_MOCK !== "true");
+  process.env.NODE_ENV === "test";
 
 const ALERTS_KEY = "qc:quality_alerts:v1";
 const USE_PERSISTENT_STORE = !USE_MEMORY_ALERTS && !USE_POSTGRES && canUsePersistentJsonStore();

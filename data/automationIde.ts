@@ -1,5 +1,5 @@
 import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
-import { normalizeAutomationCompanyScope, type AutomationCompanyScope } from "@/lib/automations/companyScope";
+import type { AutomationCompanyScope } from "@/lib/automations/companyScope";
 
 export type AutomationHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -19,22 +19,6 @@ export type AutomationRequestAuth = {
   value?: string;
 };
 
-export type AutomationAssertionType =
-  | "status-equals"
-  | "status-lt"
-  | "json-path-equals"
-  | "json-path-contains"
-  | "header-exists"
-  | "header-equals"
-  | "response-time-lt";
-
-export type AutomationAssertionRule = {
-  id: string;
-  type: AutomationAssertionType;
-  path: string;
-  expected: string;
-};
-
 export type AutomationRequestPreset = {
   id: string;
   title: string;
@@ -45,8 +29,6 @@ export type AutomationRequestPreset = {
   headers: AutomationRequestKeyValue[];
   queryParams?: AutomationRequestKeyValue[];
   variables?: AutomationRequestKeyValue[];
-  assertions?: AutomationAssertionRule[];
-  preRequestScript?: string;
   companyScope: AutomationCompanyScope;
   tags: string[];
 };
@@ -54,7 +36,7 @@ export type AutomationRequestPreset = {
 export type AutomationToolField = {
   id: string;
   label: string;
-  type: "text" | "textarea" | "number" | "password" | "select" | "switch";
+  type: "text" | "textarea" | "number" | "select" | "switch";
   placeholder?: string;
   required?: boolean;
   defaultValue?: string | number | boolean;
@@ -100,48 +82,12 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     id: "rfb-cpf",
     title: "Consultar CPF / RFB",
     method: "GET",
-    path: "/api/bcadastro/cpf/{{validCPF}}",
+    path: "/api/bcadastro/cpf/{{cpf}}",
     body: "",
-    auth: {
-      type: "bearer",
-      value: "{{token}}",
-    },
     headers: [],
+    variables: [{ key: "cpf", value: "12345678900" }],
     companyScope: "griaule",
     tags: ["rfb", "cpf"],
-  },
-  {
-    id: "griaule-token-credentials",
-    title: "Criar token SMART",
-    method: "POST",
-    path: "/api/tokens",
-    body: `{
-  "data": {
-    "grantType": "CREDENTIALS",
-    "userName": "{{smartUser}}",
-    "userPassword": "{{smartPassword}}",
-    "token": ""
-  }
-}`,
-    headers: [{ key: "Content-Type", value: "application/json" }],
-    assertions: [{ id: "token-status-ok", type: "status-lt", path: "", expected: "300" }],
-    companyScope: "griaule",
-    tags: ["sessao", "token", "smart"],
-  },
-  {
-    id: "griaule-ping",
-    title: "Ping SMART API",
-    method: "GET",
-    path: "/api/ping",
-    body: "",
-    auth: {
-      type: "bearer",
-      value: "{{token}}",
-    },
-    headers: [],
-    assertions: [{ id: "ping-status-ok", type: "status-lt", path: "", expected: "300" }],
-    companyScope: "griaule",
-    tags: ["health", "smart"],
   },
   {
     id: "processo-by-id",
@@ -149,51 +95,20 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     method: "GET",
     path: "/api/processos/{{processId}}",
     body: "",
-    auth: {
-      type: "bearer",
-      value: "{{token}}",
-    },
     headers: [],
-    variables: [{ key: "processId", value: "" }],
+    variables: [{ key: "processId", value: "123456" }],
     companyScope: "griaule",
     tags: ["processo"],
   },
   {
-    id: "griaule-process-filter-valid-cpf",
-    title: "Filtrar processos por CPF",
+    id: "token-web",
+    title: "Emitir token web",
     method: "GET",
-    path: "/api/process/filter",
+    path: "/api/tokens/web",
     body: "",
-    auth: {
-      type: "bearer",
-      value: "{{token}}",
-    },
     headers: [],
-    queryParams: [
-      { key: "cpf", value: "{{validCPF}}" },
-      { key: "pageNumber", value: "0" },
-      { key: "pageSize", value: "10" },
-      { key: "direction", value: "DESC" },
-      { key: "sort", value: "CREATED_AT" },
-    ],
-    assertions: [{ id: "filter-status-ok", type: "status-lt", path: "", expected: "300" }],
     companyScope: "griaule",
-    tags: ["processo", "cpf", "consulta"],
-  },
-  {
-    id: "griaule-config-properties",
-    title: "Config properties",
-    method: "GET",
-    path: "/api/config/properties",
-    body: "",
-    auth: {
-      type: "bearer",
-      value: "{{token}}",
-    },
-    headers: [],
-    assertions: [{ id: "properties-status-ok", type: "status-lt", path: "", expected: "300" }],
-    companyScope: "griaule",
-    tags: ["config", "smart"],
+    tags: ["sessao", "token"],
   },
   {
     id: "qc-health",
@@ -233,18 +148,6 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
   },
 ];
 
-export function getDefaultAutomationApiPreset(companySlug?: string | null) {
-  const normalizedScope = normalizeAutomationCompanyScope(companySlug);
-  const defaultId =
-    normalizedScope === "griaule"
-      ? "griaule-token-credentials"
-      : normalizedScope === "testing-company"
-        ? "qc-health"
-        : "scratch";
-
-  return AUTOMATION_API_PRESETS.find((preset) => preset.id === defaultId) ?? AUTOMATION_API_PRESETS[0];
-}
-
 export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
   {
     id: "griaule-rfb",
@@ -255,10 +158,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     mode: "proxy",
     method: "GET",
     pathTemplate: "/api/bcadastro/cpf/{{cpf}}",
-    pathPreset: "/api/bcadastro/cpf/03659187682",
-    headers: {
-      Authorization: "Bearer {{token}}",
-    },
+    pathPreset: "/api/bcadastro/cpf/12345678900",
     bodyTemplate: null,
     responseFocus: ["status", "json", "tempo"],
     fields: [
@@ -268,14 +168,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
         type: "text",
         placeholder: "Digite apenas números",
         required: true,
-        defaultValue: "03659187682",
-      },
-      {
-        id: "token",
-        label: "Token",
-        type: "text",
-        placeholder: "Cole o token SMART",
-        required: true,
+        defaultValue: "12345678900",
       },
     ],
   },
@@ -288,10 +181,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     mode: "proxy",
     method: "GET",
     pathTemplate: "/api/processos/{{processId}}",
-    pathPreset: "/api/processos/{{processId}}",
-    headers: {
-      Authorization: "Bearer {{token}}",
-    },
+    pathPreset: "/api/processos/123456",
     bodyTemplate: null,
     responseFocus: ["status", "json"],
     fields: [
@@ -301,54 +191,23 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
         type: "text",
         placeholder: "Ex.: 123456",
         required: true,
-      },
-      {
-        id: "token",
-        label: "Token",
-        type: "text",
-        placeholder: "Cole o token SMART",
-        required: true,
+        defaultValue: "123456",
       },
     ],
   },
   {
     id: "griaule-token",
-    title: "Criar token SMART",
+    title: "Emitir token web",
     companySlug: "griaule",
     group: "Sessão",
     summary: "Executa o endpoint de sessão sem precisar abrir Postman ou script local.",
     mode: "proxy",
-    method: "POST",
-    pathTemplate: "/api/tokens",
-    pathPreset: "/api/tokens",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    bodyTemplate: {
-      data: {
-        grantType: "CREDENTIALS",
-        userName: "{{smartUser}}",
-        userPassword: "{{smartPassword}}",
-        token: "",
-      },
-    },
+    method: "GET",
+    pathTemplate: "/api/tokens/web",
+    pathPreset: "/api/tokens/web",
+    bodyTemplate: null,
     responseFocus: ["status", "headers", "json"],
-    fields: [
-      {
-        id: "smartUser",
-        label: "Usuario",
-        type: "text",
-        required: true,
-        defaultValue: "gbds_bind",
-      },
-      {
-        id: "smartPassword",
-        label: "Senha",
-        type: "password",
-        placeholder: "Senha do ambiente",
-        required: true,
-      },
-    ],
+    fields: [],
   },
   {
     id: "griaule-biometrics",

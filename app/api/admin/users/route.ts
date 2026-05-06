@@ -25,10 +25,6 @@ import {
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import {
-  readSyncedUserProfileFields,
-  sanitizeUserProfileText,
-} from "@/lib/userProfileData";
 
 export const runtime = "nodejs";
 export const revalidate = 0;

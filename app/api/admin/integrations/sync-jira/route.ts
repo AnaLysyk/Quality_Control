@@ -14,8 +14,7 @@ export async function POST(request: Request) {
   if (!slug) return NextResponse.json({ success: false, error: { message: "companySlug ausente" } }, { status: 400 });
 
   // basic permission: allow global admins or users belonging to the same company
-  const allowedSlugs = resolveNormalizedCompanySlugs(auth);
-  const allowed = auth.isGlobalAdmin || resolvePrimaryCompanySlug(auth) === slug || allowedSlugs.includes(slug);
+  const allowed = auth.isGlobalAdmin || auth.companySlug === slug || (Array.isArray(auth.companySlugs) && auth.companySlugs.includes(slug));
   if (!allowed) return NextResponse.json({ success: false, error: { message: "Sem permissão" } }, { status: 403 });
 
   info("admin:sync-jira triggered", { by: auth.id, company: slug });

@@ -51,3 +51,5 @@ test("admin cria empresa e usuario", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Criar usu/i })).toHaveCount(0);
   await expect(page.locator("main").getByText(userEmail, { exact: true }).first()).toBeVisible({ timeout: 20000 });
 });
+
+

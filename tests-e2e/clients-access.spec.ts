@@ -18,3 +18,4 @@ test("user cannot access /admin/clients", async ({ page }) => {
   await expect(page).not.toHaveURL(/\/admin\/clients/);
   await expect(page.getByRole("heading", { name: /Demo|Dashboard|Home/i }).first()).toBeVisible();
 });
+

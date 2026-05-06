@@ -708,10 +708,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={address}
-              onChange={(e) => {
-                setAddressTouched(true);
-                setAddress(e.target.value);
-              }}
+              onChange={(e) => setAddress(e.target.value)}
               placeholder="Rua, número, cidade"
             />
           </label>

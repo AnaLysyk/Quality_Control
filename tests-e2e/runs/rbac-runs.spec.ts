@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
 
 test.describe("rbac - runs UI", () => {
@@ -9,7 +9,7 @@ test.describe("rbac - runs UI", () => {
       clientSlug: "DEMO",
     });
 
-    await page.goto("/empresas/demo/runs", { waitUntil: "domcontentloaded" });
+    await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("run-create")).toHaveCount(0);
   });
@@ -21,7 +21,7 @@ test.describe("rbac - runs UI", () => {
       clientSlug: "DEMO",
     });
 
-    await page.goto("/empresas/demo/runs", { waitUntil: "domcontentloaded" });
+    await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("run-create")).toBeVisible();
   });
@@ -56,3 +56,4 @@ test.describe("rbac - runs UI", () => {
     }
   });
 });
+

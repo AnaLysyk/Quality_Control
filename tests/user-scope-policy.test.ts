@@ -53,4 +53,24 @@ describe("user scope policy", () => {
     expect(canCreateCompanyUsersByScope(policy)).toBe(true);
     expect(policy.canLinkAcrossCompanies).toBe(true);
   });
+
+  it("keeps technical support global for maintenance without creation rights", () => {
+    const policy = resolveUserScopePolicy("technical_support");
+
+    expect(policy.roleKey).toBe("technical_support");
+    expect(policy.companyAccessScope).toBe("all_companies");
+    expect(canViewCompanyUsersByScope(policy)).toBe(false);
+    expect(canCreateCompanyUsersByScope(policy)).toBe(false);
+    expect(policy.canLinkAcrossCompanies).toBe(false);
+  });
+
+  it("keeps leader TC global for institutional administration", () => {
+    const policy = resolveUserScopePolicy("leader_tc");
+
+    expect(policy.roleKey).toBe("leader_tc");
+    expect(policy.companyAccessScope).toBe("all_companies");
+    expect(canViewCompanyUsersByScope(policy)).toBe(true);
+    expect(canCreateCompanyUsersByScope(policy)).toBe(true);
+    expect(policy.canLinkAcrossCompanies).toBe(true);
+  });
 });

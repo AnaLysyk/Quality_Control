@@ -52,7 +52,7 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
     name: `User Accept ${suffix}`,
     email: acceptEmail,
     role: "QA Lead",
-    company: `Empresa Acesso ${suffix}`,
+    company: "DEMO",
     accessType: "company",
     notes: "SolicitaÃ§Ã£o para administrar a empresa.",
   });
@@ -73,8 +73,9 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
   const acceptRow = page.getByRole("button").filter({ hasText: acceptEmail }).first();
   await expect(acceptRow).toBeVisible({ timeout: 20000 });
   await acceptRow.click();
-  await expect(page.getByLabel(/^E-mail$/i).first()).toHaveValue(acceptEmail);
-  await expect(page.getByRole("button", { name: /Aprovar solicita/i })).toBeEnabled();
+  await expect(page.getByLabel(/^Email$/i)).toHaveValue(acceptEmail);
+  await page.getByLabel(/^Empresa$/i).selectOption({ label: "DEMO" });
+  await expect(page.getByRole("button", { name: /Aceitar solicita/ })).toBeEnabled();
 
   await page.getByRole("button", { name: /Aprovar solicita/i }).click();
   await expect(acceptRow).toContainText(/Aprovada/i, { timeout: 20000 });
@@ -82,10 +83,12 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
   const rejectRow = page.getByRole("button").filter({ hasText: rejectEmail }).first();
   await expect(rejectRow).toBeVisible({ timeout: 20000 });
   await rejectRow.click();
-  await expect(page.getByLabel(/^E-mail$/i).first()).toHaveValue(rejectEmail);
-  await page.getByPlaceholder(/Descreva o ajuste/i).fill("Solicitação rejeitada.");
+  await expect(page.getByLabel(/^Email$/i)).toHaveValue(rejectEmail);
+  await page.getByLabel(/Notas do admin/i).fill("SolicitaÃ§Ã£o rejeitada.");
 
   await expect(page.getByRole("button", { name: /Recusar solicita/i })).toBeEnabled();
   await page.getByRole("button", { name: /Recusar solicita/i }).click();
   await expect(rejectRow).toContainText(/Rejeitada/i, { timeout: 20000 });
 });
+
+

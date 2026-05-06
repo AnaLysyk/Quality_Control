@@ -1,12 +1,9 @@
 import "server-only";
 
-import {
-  resolvePrimaryCompanySlug,
-  type AuthenticatedUserLike,
-} from "@/lib/auth/normalizeAuthenticatedUser";
+import { getLocalUserById } from "@/lib/auth/localStore";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { compactMultiline } from "../helpers";
-import { buildPromptActions, isEmpresaUser } from "../data";
+import { buildPromptActions, displayName, displayRole, summarizePermissionMatrix, isEmpresaUser } from "../data";
 import type { AssistantScreenContext } from "../types";
 import type { AssistantExecutorResult } from "./types";
 
@@ -82,30 +79,56 @@ function buildImmediateActions(context: AssistantScreenContext, user: AuthUser):
 }
 
 function stripScreenLead(context: AssistantScreenContext) {
-  // Strip both accented and ASCII-only "Voce esta em:" / "Você está em:" prefixes
-  return context.screenSummary
-    .replace(/^(voc[eê] est[aá] em|você está em):\s*/i, "")
-    .trim();
+  const lead = `Você está em: ${context.screenLabel}.`;
+  if (context.screenSummary.startsWith(lead)) {
+    return context.screenSummary.slice(lead.length).trim();
+  }
+  return context.screenSummary.trim();
 }
 
 function buildScopeLabel(user: AuthUser, context: AssistantScreenContext) {
-  return context.companySlug ?? resolvePrimaryCompanySlug(user as AuthenticatedUserLike) ?? "global";
+  return context.companySlug ?? user.companySlug ?? "global";
+}
+
+function buildPermissionLine(user: AuthUser) {
+  const summary = summarizePermissionMatrix(user.permissions);
+  if (summary === "sem módulos liberados") {
+    return "⚠️ **Permissões:** Nenhum módulo liberado para o perfil atual";
+  }
+  return `🔐 **Permissões:** ${summary}`;
 }
 
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
+  const currentUser = await getLocalUserById(user.id);
   const actions = buildImmediateActions(context, user);
   const moduleEmoji = getModuleEmoji(context.module);
-  const scopeLabel = buildScopeLabel(user, context);
+  const prompts = context.suggestedPrompts.slice(0, 4);
 
   const replyParts = [
-    `${moduleEmoji} Fechou. Estamos em **${context.screenLabel}** no módulo **${context.module}** (escopo **${scopeLabel}**).`,
+    `## ${moduleEmoji} ${context.screenLabel}`,
     "",
-    stripScreenLead(context),
+    `> ${stripScreenLead(context)}`,
     "",
-    "**No mundo TC daqui, eu consigo te ajudar com:**",
-    ...actions.slice(0, 3).map((a) => `- ${a.emoji} ${a.text}`),
+    "### 🎯 O que posso fazer aqui:",
     "",
-    "Se quiser, já me pede a próxima ação em linguagem natural que eu toco o fluxo por você.",
+    ...actions.map((a) => `- ${a.emoji} ${a.text}`),
+    "",
+    "### 💡 Sugestões rápidas:",
+    "",
+    ...prompts.map((p, i) => `${i + 1}. ${p}`),
+    "",
+    "---",
+    "",
+    "### 📋 Contexto Atual:",
+    "",
+    `| Campo | Valor |`,
+    `|-------|-------|`,
+    `| **Módulo** | ${context.module} |`,
+    `| **Escopo** | ${buildScopeLabel(user, context)} |`,
+    `| **Perfil** | ${displayRole(user)} |`,
+    `| **Usuário** | ${displayName(currentUser)} |`,
+    "",
+    buildPermissionLine(user),
   ];
 
   return {

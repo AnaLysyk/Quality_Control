@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
-test("user não acessa /admin", async ({ page, context }) => {
+test("user nÃ£o acessa /admin", async ({ page, context }) => {
   await mockAuth(context, {
     role: "user",
     companies: ["DEMO"],

@@ -5,18 +5,15 @@ import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contrac
 import { getAccessToken, refreshClientSession } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import { publishAuthUser, subscribeAuthUserSync } from "@/lib/authUserSync";
-import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 
 type MeResult = {
   user: AuthUser | null;
   companies: AuthCompany[];
-  error: string | null;
 };
 
 type AuthContextValue = {
   user: AuthUser | null;
   companies: AuthCompany[];
-  normalizedUser: NormalizedAuthenticatedUser;
   loading: boolean;
   error: string | null;
   refreshUser: (showSpinner?: boolean) => Promise<void>;
@@ -26,7 +23,6 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const bootstrapAttempts = new Map<string, number>();
-const AUTH_REQUEST_TIMEOUT_MS = 15_000;
 
 function parseMeResponse(payload: unknown): MeResult | null {
   const data = unwrapEnvelopeData(payload);
@@ -35,127 +31,95 @@ function parseMeResponse(payload: unknown): MeResult | null {
   return {
     user: parsed.data.user ?? null,
     companies: parsed.data.companies ?? [],
-    error: null,
   };
 }
 
 async function fetchMe(): Promise<MeResult> {
   const token = await getAccessToken().catch(() => null);
   const attemptKey = token ?? "__COOKIE_OR_NO_TOKEN__";
-  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-  const timeoutId =
-    typeof window !== "undefined" && controller
-      ? window.setTimeout(() => controller.abort(), AUTH_REQUEST_TIMEOUT_MS)
-      : null;
 
   const buildHeaders = async () => {
     const nextToken = await getAccessToken().catch(() => null);
     return nextToken ? { Authorization: `Bearer ${nextToken}` } : undefined;
   };
 
-  const requestMe = async () =>
-    fetch("/api/me", {
-      method: "GET",
-      headers: await buildHeaders(),
-      credentials: "include",
-      cache: "no-store",
-      signal: controller?.signal,
-    });
+  const res = await fetch("/api/me", {
+    method: "GET",
+    headers: await buildHeaders(),
+    credentials: "include",
+    cache: "no-store",
+  });
 
-  const parseErrorMessage = (payload: unknown, status: number) => {
-    if (payload && typeof payload === "object") {
-      const rec = payload as Record<string, unknown>;
-      const error = rec.error;
-      if (typeof error === "string" && error.trim()) return error.trim();
-      if (error && typeof error === "object") {
-        const message = (error as Record<string, unknown>).message;
-        if (typeof message === "string" && message.trim()) return message.trim();
-      }
-      const message = rec.message;
-      if (typeof message === "string" && message.trim()) return message.trim();
-    }
-    return `Falha ao carregar a sessão (${status})`;
-  };
+  if (!res.ok) {
+    const errorPayload = await res.json().catch(() => null);
+    const errorParsed = AuthMeResponseSchema.safeParse(errorPayload);
 
-  try {
-    const res = await requestMe();
-
-    if (!res.ok) {
-      const errorPayload = await res.json().catch(() => null);
-      const errorParsed = AuthMeResponseSchema.safeParse(errorPayload);
-
-      const errorCode = (() => {
-        if (errorParsed.success) return errorParsed.data.error?.code ?? null;
-        if (errorPayload && typeof errorPayload === "object") {
-          const rec = errorPayload as Record<string, unknown>;
-          const error = rec.error;
-          if (error && typeof error === "object") {
-            const code = (error as Record<string, unknown>).code;
-            if (typeof code === "string" && code.trim()) return code.trim();
-          }
+    const errorCode = (() => {
+      if (errorParsed.success) return errorParsed.data.error?.code ?? null;
+      if (errorPayload && typeof errorPayload === "object") {
+        const rec = errorPayload as Record<string, unknown>;
+        const error = rec.error;
+        if (error && typeof error === "object") {
+          const code = (error as Record<string, unknown>).code;
+          if (typeof code === "string" && code.trim()) return code.trim();
         }
-        return null;
-      })();
+      }
+      return null;
+    })();
+    if (res.status === 401 && errorCode === "NEEDS_BOOTSTRAP") {
+      const attempts = bootstrapAttempts.get(attemptKey) ?? 0;
+      if (attempts > 0) return { user: null, companies: [] };
+      bootstrapAttempts.set(attemptKey, attempts + 1);
+      try {
+        await fetch("/api/auth/bootstrap", {
+          method: "POST",
+          headers: await buildHeaders(),
+          credentials: "include",
+          cache: "no-store",
+        });
+        const retry = await fetch("/api/me", {
+          method: "GET",
+          headers: await buildHeaders(),
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!retry.ok) return { user: null, companies: [] };
+        const retryPayload = await retry.json().catch(() => null);
+        const parsedRetry = parseMeResponse(retryPayload);
+        if (!parsedRetry) return { user: null, companies: [] };
+        bootstrapAttempts.delete(attemptKey);
+        return parsedRetry;
+      } catch {
+        return { user: null, companies: [] };
+      }
+    }
 
-      if (res.status === 401 && errorCode === "NEEDS_BOOTSTRAP") {
-        const attempts = bootstrapAttempts.get(attemptKey) ?? 0;
-        if (attempts > 0) return { user: null, companies: [], error: null };
-        bootstrapAttempts.set(attemptKey, attempts + 1);
-        try {
-          await fetch("/api/auth/bootstrap", {
-            method: "POST",
+    if (res.status === 401) {
+      try {
+        const refreshed = await refreshClientSession();
+        if (refreshed) {
+          const retry = await fetch("/api/me", {
+            method: "GET",
             headers: await buildHeaders(),
             credentials: "include",
             cache: "no-store",
-            signal: controller?.signal,
           });
-          const retry = await requestMe();
-          if (!retry.ok) return { user: null, companies: [], error: null };
-          const retryPayload = await retry.json().catch(() => null);
-          const parsedRetry = parseMeResponse(retryPayload);
-          if (!parsedRetry) return { user: null, companies: [], error: null };
-          bootstrapAttempts.delete(attemptKey);
-          return parsedRetry;
-        } catch (err) {
-          if (controller?.signal.aborted || (err instanceof DOMException && err.name === "AbortError")) {
-            return { user: null, companies: [], error: "Tempo esgotado ao validar a sessão" };
+          if (retry.ok) {
+            const retryPayload = await retry.json().catch(() => null);
+            const parsedRetry = parseMeResponse(retryPayload);
+            if (parsedRetry) return parsedRetry;
           }
-          return { user: null, companies: [], error: "Falha ao validar o bootstrap da sessão" };
         }
+      } catch {
+        /* ignore */
       }
-
-      if (res.status === 401) {
-        try {
-          const refreshed = await refreshClientSession();
-          if (refreshed) {
-            const retry = await requestMe();
-            if (retry.ok) {
-              const retryPayload = await retry.json().catch(() => null);
-              const parsedRetry = parseMeResponse(retryPayload);
-              if (parsedRetry) return parsedRetry;
-            }
-          }
-        } catch {
-          /* ignore */
-        }
-        return { user: null, companies: [], error: null };
-      }
-
-      return { user: null, companies: [], error: parseErrorMessage(errorPayload, res.status) };
     }
-
-    const payload = await res.json().catch(() => null);
-    const parsed = parseMeResponse(payload);
-    return parsed ?? { user: null, companies: [], error: "Resposta inválida ao carregar a sessão" };
-  } catch (err) {
-    if (controller?.signal.aborted || (err instanceof DOMException && err.name === "AbortError")) {
-      return { user: null, companies: [], error: "Tempo esgotado ao validar a sessão" };
-    }
-    const message = err instanceof Error && err.message.trim() ? err.message.trim() : "Erro ao carregar usuario";
-    return { user: null, companies: [], error: message };
-  } finally {
-    if (timeoutId !== null) window.clearTimeout(timeoutId);
+    return { user: null, companies: [] };
   }
+
+  const payload = await res.json().catch(() => null);
+  const parsed = parseMeResponse(payload);
+  return parsed ?? { user: null, companies: [] };
 }
 
 const AUTH_CACHE_KEY = "qc:auth_me:v1";
@@ -197,11 +161,11 @@ function clearAuthCache() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [companies, setCompanies] = useState<AuthCompany[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = typeof window !== "undefined" ? readAuthCache() : null;
+  const [user, setUser] = useState<AuthUser | null>(cached?.user ?? null);
+  const [companies, setCompanies] = useState<AuthCompany[]>(cached?.companies ?? []);
+  const [loading, setLoading] = useState(cached === null); // skip spinner if cache hit
   const [error, setError] = useState<string | null>(null);
-  const normalizedUser = useMemo(() => normalizeAuthenticatedUser(user, companies), [user, companies]);
 
   const refreshUser = useCallback(async (showSpinner = true) => {
     if (showSpinner) setLoading(true);
@@ -210,19 +174,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await fetchMe();
       setUser(me.user);
       setCompanies(me.companies);
-      if (me.error) {
-        setError(me.error);
-        setUser(null);
-        setCompanies([]);
-        clearAuthCache();
-        publishAuthUser(null);
-        return;
-      }
-      if (!me.user) {
-        clearAuthCache();
-        publishAuthUser(null);
-        return;
-      }
       writeAuthCache(me.user, me.companies);
       publishAuthUser(me.user);
     } catch (err) {
@@ -262,18 +213,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const cached = readAuthCache();
-    if (cached) {
-      setUser(cached.user);
-      setCompanies(cached.companies);
-      setLoading(false);
-      publishAuthUser(cached.user);
-      void refreshUser(false);
-      return;
-    }
-
-    void refreshUser(true);
-  }, [refreshUser]);
+    // If we had a cache hit on mount, revalidate silently in background
+    const hadCache = cached !== null;
+    void refreshUser(!hadCache);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return subscribeAuthUserSync((nextUser) => {
@@ -284,8 +228,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, companies, normalizedUser, loading, error, refreshUser, logout }),
-    [user, companies, normalizedUser, loading, error, refreshUser, logout],
+    () => ({ user, companies, loading, error, refreshUser, logout }),
+    [user, companies, loading, error, refreshUser, logout],
   );
 
   return (

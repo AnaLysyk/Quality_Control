@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 function slugify(value: string) {
@@ -22,7 +22,7 @@ test("quality gate reprova run com falhas", async ({ page, context }) => {
   const runTitle = "Run Gate E2E";
   const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/demo/runs", { waitUntil: "domcontentloaded" });
+  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
@@ -46,3 +46,4 @@ test("quality gate reprova run com falhas", async ({ page, context }) => {
   const companyGate = page.getByTestId("company-quality-status").first();
   await expect(companyGate).toHaveAttribute("data-status", "failed");
 });
+

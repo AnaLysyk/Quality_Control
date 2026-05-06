@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { readApiError } from "@/lib/apiEnvelope";
 import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
-import { getFixedProfileOptions, type FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -28,7 +27,13 @@ type Props = {
   allowedRoles?: FixedProfileKind[];
 };
 
-const ROLE_OPTIONS = getFixedProfileOptions();
+const ROLE_OPTIONS = [
+  { value: "empresa", label: "Admin da empresa" },
+  { value: "company_user", label: "Usuário da empresa" },
+  { value: "testing_company_user", label: "Usuário TC" },
+  { value: "leader_tc", label: "Lider TC" },
+  { value: "technical_support", label: "Suporte Técnico" },
+];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 type RoleValue = FixedProfileKind;
 
@@ -45,7 +50,6 @@ export function CreateUserModal({
   title = "Criar usuário",
   subtitle = "Um convite será enviado por email.",
   submitLabel = "Criar usuário",
-  allowedRoles,
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -67,15 +71,7 @@ export function CreateUserModal({
   });
 
   const normalizedRole = useMemo(() => normalizeEditableProfileRole(role), [role]);
-  const roleOptions = useMemo(() => {
-    if (!allowedRoles?.length) return ROLE_OPTIONS;
-    const allowed = new Set(allowedRoles);
-    return ROLE_OPTIONS.filter((option) => allowed.has(option.value));
-  }, [allowedRoles]);
-  const roleHint = useMemo(
-    () => roleOptions.find((option) => option.value === role)?.hint ?? ROLE_OPTIONS.find((option) => option.value === role)?.hint ?? "",
-    [role, roleOptions],
-  );
+  const roleOptions = useMemo(() => ROLE_OPTIONS, []);
   const requiresClient = useMemo(
     () =>
       showCompanyField &&
@@ -283,7 +279,7 @@ export function CreateUserModal({
                     placeholder="Mínimo 8 caracteres"
                     required
                   />
-                  <span className="mt-1 block text-xs text-gray-500">Obrigatória para criar Líder TC.</span>
+                  <span className="mt-1 block text-xs text-gray-500">Obrigatória para criar Lider TC.</span>
                 </label>
               ) : null}
               <label className="block text-sm">

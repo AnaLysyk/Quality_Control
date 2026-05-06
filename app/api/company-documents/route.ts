@@ -64,6 +64,8 @@ function hasGlobalCompanyAccess(auth: Pick<AuthContext, "isGlobalAdmin" | "role"
   return roles.includes("leader_tc") || roles.includes("technical_support");
 }
 
+const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
+const HISTORY_PATH = path.join(getJsonStoreDir(), "company-documents-history.json");
 const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files");
 let memoryDocumentsStore: { items: CompanyDocumentItem[] } = { items: [] };
 let memoryHistoryStore: { items: DocumentHistoryEvent[] } = { items: [] };
@@ -122,6 +124,15 @@ async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
   if (USE_POSTGRES) {
     const rows = await prisma.companyDocument.findMany({ orderBy: { createdAt: "desc" } });
     return { items: rows.map(pgRowToDocItem).map(normalizeDocumentItem) };
+  }
+  await ensureStore();
+  try {
+    const raw = await fs.readFile(STORE_PATH, "utf8");
+    const parsed = JSON.parse(raw) as { items?: unknown };
+    const items = Array.isArray(parsed?.items) ? (parsed.items as CompanyDocumentItem[]) : [];
+    return { items: items.map(normalizeDocumentItem) };
+  } catch {
+    return { items: [] };
   }
   return { items: (memoryDocumentsStore.items ?? []).map(normalizeDocumentItem) };
 }

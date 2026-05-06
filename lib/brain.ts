@@ -1,30 +1,12 @@
 import { prisma } from '@/lib/prismaClient'
 import { BrainNode, BrainEdge, BrainMemory, Prisma } from '@prisma/client'
 
-function normalizeRelatedNodeIds(value: Prisma.JsonValue | null | undefined): string[] {
-  if (!Array.isArray(value)) return []
-  return value.map((entry) => String(entry)).filter(Boolean)
-}
-
-function buildMemoryWhereForNode(nodeId: string): Prisma.BrainMemoryWhereInput {
-  return {
-    OR: [
-      { nodeId },
-      {
-        relatedNodeIds: {
-          array_contains: [nodeId],
-        },
-      },
-    ],
-  }
-}
-
 /**
  * Recupera um nó com seus vizinhos até uma profundidade especificada
  */
 export async function getNodeWithContext(
   nodeId: string,
-  _depth: number = 2
+  depth: number = 2
 ): Promise<{
   node: BrainNode | null
   outgoing: BrainEdge[]
@@ -32,7 +14,6 @@ export async function getNodeWithContext(
   neighbors: BrainNode[]
 } | null> {
   try {
-    void _depth
     const node = await prisma.brainNode.findUnique({
       where: { id: nodeId },
     })
@@ -285,8 +266,13 @@ export async function addMemory(data: {
  */
 export async function getNodeMemories(nodeId: string): Promise<BrainMemory[]> {
   try {
+    // Prisma 7.7.0: para JSON[] use array_contains
     const memories = await prisma.brainMemory.findMany({
-      where: buildMemoryWhereForNode(nodeId),
+      where: {
+        relatedNodeIds: {
+          array_contains: [nodeId],
+        },
+      },
       orderBy: { importance: 'desc' },
     })
     return memories
@@ -319,7 +305,7 @@ export async function traceImpact(
     while (queue.length > 0) {
       const current = queue.shift()!
 
-      if (!current || visited.has(current.nodeId) || current.distance > maxDepth) {
+      if (!current || visited.has(current.nodeId) || current.distance >= maxDepth) {
         continue
       }
 
@@ -334,10 +320,6 @@ export async function traceImpact(
       }
 
       // Buscar próximos nós
-      if (current.distance === maxDepth) {
-        continue
-      }
-
       const outgoing = await prisma.brainEdge.findMany({
         where: { fromId: current.nodeId },
       })
@@ -382,51 +364,45 @@ export async function getSubgraph(
   root: BrainNode | null
 }> {
   try {
-    const visited = new Set<string>()
-    const nodeMap = new Map<string, BrainNode>()
-    const edgeMap = new Map<string, BrainEdge>()
-    const queue: Array<{ id: string; distance: number }> = [{ id: nodeId, distance: 0 }]
+    const visited = new Set<string>([nodeId])
+    const nodes: BrainNode[] = []
+    const edges: BrainEdge[] = []
 
-    while (queue.length > 0) {
-      const current = queue.shift()!
+    const queue: string[] = [nodeId]
+    let currentDepth = 0
 
-      if (!current || visited.has(current.id) || current.distance > depth) {
-        continue
+    while (queue.length > 0 && currentDepth < depth) {
+      const nextQueue: string[] = []
+
+      for (const id of queue) {
+        const [outgoing, incoming, node] = await Promise.all([
+          prisma.brainEdge.findMany({ where: { fromId: id } }),
+          prisma.brainEdge.findMany({ where: { toId: id } }),
+          prisma.brainNode.findUnique({ where: { id } }),
+        ])
+
+        if (node) nodes.push(node)
+
+        const allEdges = [...outgoing, ...incoming]
+        allEdges.forEach(edge => {
+          edges.push(edge)
+          const otherId = edge.fromId === id ? edge.toId : edge.fromId
+
+          if (!visited.has(otherId)) {
+            visited.add(otherId)
+            nextQueue.push(otherId)
+          }
+        })
       }
 
-      visited.add(current.id)
-
-      const [outgoing, incoming, node] = await Promise.all([
-        prisma.brainEdge.findMany({ where: { fromId: current.id } }),
-        prisma.brainEdge.findMany({ where: { toId: current.id } }),
-        prisma.brainNode.findUnique({ where: { id: current.id } }),
-      ])
-
-      if (node) {
-        nodeMap.set(node.id, node)
-      }
-
-      if (current.distance === depth) {
-        continue
-      }
-
-      for (const edge of [...outgoing, ...incoming]) {
-        edgeMap.set(edge.id, edge)
-        const otherId = edge.fromId === current.id ? edge.toId : edge.fromId
-
-        if (!visited.has(otherId)) {
-          queue.push({ id: otherId, distance: current.distance + 1 })
-        }
-      }
+      queue.length = 0
+      queue.push(...nextQueue)
+      currentDepth++
     }
 
     const root = await prisma.brainNode.findUnique({ where: { id: nodeId } })
 
-    return {
-      nodes: Array.from(nodeMap.values()),
-      edges: Array.from(edgeMap.values()),
-      root,
-    }
+    return { nodes, edges, root }
   } catch (error) {
     console.error('Error in getSubgraph:', error)
     throw error
@@ -502,18 +478,12 @@ export async function validateBrainIntegrity(): Promise<{
     }
 
     // Verificar memórias sem nó associado
-    const memories = await prisma.brainMemory.findMany({
-      select: {
-        id: true,
-        nodeId: true,
-        relatedNodeIds: true,
+    const orphanMemories = await prisma.brainMemory.findMany({
+      where: {
+        nodeId: null,
       },
-      take: 1000,
-    })
-
-    const orphanMemories = memories.filter((memory) => {
-      const relatedNodeIds = normalizeRelatedNodeIds(memory.relatedNodeIds)
-      return !memory.nodeId && relatedNodeIds.length === 0
+      select: { id: true },
+      take: 10,
     })
 
     if (orphanMemories.length > 0) {
@@ -558,29 +528,11 @@ export async function deleteNode(
     ])
 
     // Deletar memórias relacionadas
-    const relatedMemories = await prisma.brainMemory.findMany({
-      where: buildMemoryWhereForNode(nodeId),
+    await prisma.brainMemory.deleteMany({
+      where: {
+        relatedNodeIds: { array_contains: [nodeId] },
+      },
     })
-
-    for (const memory of relatedMemories) {
-      const relatedNodeIds = normalizeRelatedNodeIds(memory.relatedNodeIds).filter((id) => id !== nodeId)
-      const shouldDelete = (!memory.nodeId || memory.nodeId === nodeId) && relatedNodeIds.length === 0
-
-      if (shouldDelete) {
-        await prisma.brainMemory.delete({
-          where: { id: memory.id },
-        })
-        continue
-      }
-
-      await prisma.brainMemory.update({
-        where: { id: memory.id },
-        data: {
-          nodeId: memory.nodeId === nodeId ? null : memory.nodeId,
-          relatedNodeIds,
-        },
-      })
-    }
 
     // Deletar o nó
     await prisma.brainNode.delete({ where: { id: nodeId } })
@@ -716,23 +668,19 @@ export async function getRelatedMemories(
 ): Promise<BrainMemory[]> {
   try {
     const subgraph = await getSubgraph(nodeId, depth)
-    const allNodeIds = Array.from(new Set([nodeId, ...subgraph.nodes.map((n) => n.id)]))
+    const allNodeIds = [nodeId, ...subgraph.nodes.map(n => n.id)]
 
     const memories = await prisma.brainMemory.findMany({
-      where: {
-        OR: [
-          { nodeId: { in: allNodeIds } },
-          ...allNodeIds.map((id) => ({
-            relatedNodeIds: {
-              array_contains: [id],
-            },
-          })),
-        ],
-      },
       orderBy: { importance: 'desc' },
     })
 
-    return memories.filter((memory, index, list) => list.findIndex((entry) => entry.id === memory.id) === index)
+    return memories.filter(m => {
+      if (!m.relatedNodeIds) return false;
+      const ids = Array.isArray(m.relatedNodeIds) ? m.relatedNodeIds : [];
+      return (ids as unknown[]).some((id) => allNodeIds.includes(String(id)));
+    })
+
+    return memories
   } catch (error) {
     console.error('Error in getRelatedMemories:', error)
     throw error
@@ -794,7 +742,7 @@ export async function getNodeStats(nodeId: string): Promise<{
       prisma.brainEdge.count({ where: { toId: nodeId } }),
       prisma.brainEdge.count({ where: { fromId: nodeId } }),
       prisma.brainMemory.count({
-        where: buildMemoryWhereForNode(nodeId),
+        where: { relatedNodeIds: { array_contains: [nodeId] } },
       }),
     ])
 
@@ -1334,31 +1282,26 @@ export async function getNodeInfluence(nodeId: string): Promise<{
     if (!node) throw new Error(`Node not found: ${nodeId}`)
 
     // Contar incoming edges (quanto mais recebe, mais influente)
-    const groupedInDegrees = await prisma.brainEdge.groupBy({
+    const incomingCount = await prisma.brainEdge.count({
+      where: { toId: nodeId },
+    })
+
+    const allNodesInDegreeSum = await prisma.brainEdge.groupBy({
       by: ['toId'],
       _count: true,
     })
 
-    const totalDegree = groupedInDegrees.reduce((sum, item) => sum + item._count, 0)
-    const incomingCount = groupedInDegrees.find((item) => item.toId === nodeId)?._count ?? 0
+    const totalDegree = allNodesInDegreeSum.reduce((sum, item) => sum + item._count, 0)
 
     // Score: percentual de influência em relação ao total
     const influenceScore = totalDegree > 0 ? (incomingCount / totalDegree) * 100 : 0
 
     // Ranquear entre todos os nós
-    const rankOrder = await prisma.brainNode.findMany({
-      select: {
-        id: true,
-        incoming: {
-          select: { id: true },
-        },
-      },
-    })
-
-    const rankedPosition = rankOrder
-      .map((entry) => ({ id: entry.id, inDegree: entry.incoming.length }))
-      .sort((left, right) => right.inDegree - left.inDegree)
-      .findIndex((entry) => entry.id === nodeId) + 1
+    const rankedPosition = (
+      await prisma.brainNode.findMany({
+        select: { id: true },
+      })
+    ).length
 
     return {
       nodeId,
@@ -1507,66 +1450,26 @@ export async function getGraphMetrics(): Promise<{
   largestComponent: number
 }> {
   try {
-    const [nodes, edges, memoryCount] = await Promise.all([
-      prisma.brainNode.findMany({
-        select: { id: true },
-      }),
-      prisma.brainEdge.findMany({
-        select: {
-          id: true,
-          fromId: true,
-          toId: true,
-        },
-      }),
+    const [nodeCount, edgeCount, memoryCount] = await Promise.all([
+      prisma.brainNode.count(),
+      prisma.brainEdge.count(),
       prisma.brainMemory.count(),
     ])
 
-    const nodeCount = nodes.length
-    const edgeCount = edges.length
     const cycles = await detectCycles()
 
-    const adjacency = new Map<string, Set<string>>()
-    for (const node of nodes) {
-      adjacency.set(node.id, new Set())
-    }
-
-    for (const edge of edges) {
-      adjacency.get(edge.fromId)?.add(edge.toId)
-      adjacency.get(edge.toId)?.add(edge.fromId)
-    }
-
-    const orphanedNodes = Array.from(adjacency.values()).filter((neighbors) => neighbors.size === 0).length
-
-    const visited = new Set<string>()
-    let largestComponent = nodeCount > 0 ? 1 : 0
-
-    for (const node of nodes) {
-      if (visited.has(node.id)) {
-        continue
-      }
-
-      let componentSize = 0
-      const queue = [node.id]
-      visited.add(node.id)
-
-      while (queue.length > 0) {
-        const currentId = queue.shift()!
-        componentSize++
-
-        for (const neighborId of adjacency.get(currentId) ?? []) {
-          if (!visited.has(neighborId)) {
-            visited.add(neighborId)
-            queue.push(neighborId)
-          }
-        }
-      }
-
-      largestComponent = Math.max(largestComponent, componentSize)
-    }
+    const orphanedNodes = await prisma.brainNode.count({
+      where: {
+        AND: [{ outgoing: { none: {} } }, { incoming: { none: {} } }],
+      },
+    })
 
     const averageDegree = nodeCount > 0 ? (2 * edgeCount) / nodeCount : 0
     const maxEdges = nodeCount * (nodeCount - 1)
     const density = maxEdges > 0 ? edgeCount / maxEdges : 0
+
+    // Componente mais conectada (aproximado)
+    const largestComponent = Math.max(1, Math.floor(nodeCount / Math.max(1, orphanedNodes)))
 
     return {
       nodeCount,

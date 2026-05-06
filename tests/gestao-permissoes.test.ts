@@ -66,7 +66,7 @@ afterAll(async () => {
 // A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada", () => {
+describe("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
   const p = perm("testing_company_user");
 
   test("A1. releases: view permitido; escrita bloqueada", () => {
@@ -152,7 +152,7 @@ describe("A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada",
 // B) Perfil 'company' (company_admin) — usuários da empresa liberados
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("B) Perfil 'company' (company_admin) — usuários da empresa liberados", () => {
+describe("B) Perfil 'company' (company_admin) — permissões bloqueadas", () => {
   const p = perm("empresa");
 
   test("B1. users: view/create liberados; edit/delete bloqueados", () => {
@@ -396,7 +396,7 @@ describe("D) Overrides de permissão (deny/allow)", () => {
     console.log(`D5. technical_support: tickets.delete/assign/status negados | restantes=${ticketActions.join(",")}`);
   });
 
-  test("D6. toVisibilityMap deixa módulos operacionais visíveis para user TC", () => {
+  test("D6. toVisibilityMap retorna false para módulos sem view", () => {
     const userPerms = perm("testing_company_user");
     const visibility = toVisibilityMap(userPerms);
     expect(visibility["releases"]).toBe(true);
@@ -516,15 +516,10 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     const access = await resolvePermissionAccessForUser(user.id);
 
     expect(access.roleKey).toBe("testing_company_user");
-    expect(hasPermissionAccess(access.permissions, "releases", "view")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "runs", "view")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "defects", "view")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "testPlans", "view")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "documents", "view")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "users", "create")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "users", "view_company")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "users", "view_all")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "releases", "view")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "runs", "view")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "defects", "view")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "audit", "view")).toBe(false);
     // Dashboard e applications permitidos
     expect(hasPermissionAccess(access.permissions, "dashboard", "view")).toBe(true);
@@ -542,8 +537,7 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     const access = await resolvePermissionAccessForUser(user.id);
 
     expect(access.roleKey).toBe("empresa");
-    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "users", "create")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "permissions", "edit")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "audit", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "access_requests", "view")).toBe(false);

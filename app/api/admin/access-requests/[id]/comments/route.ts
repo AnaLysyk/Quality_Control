@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, canViewAccessRequestQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById } from "@/data/accessRequestsStore";
 import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
-import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +49,7 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   if (!request) {
     return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
   }
-  if (!canViewAccessRequestQueue(admin, resolveAccessRequestQueue(request.message, request.email))) {
+  if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(request.message, request.email))) {
     return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403, headers: NO_STORE_HEADERS });
   }
   try {

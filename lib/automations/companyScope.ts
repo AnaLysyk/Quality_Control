@@ -1,29 +1,28 @@
-export type AutomationCompanyScope = "all" | string;
+export type AutomationCompanyScope = "all" | "griaule" | "testing-company";
 
-const COMPANY_SCOPE_ALIASES: Record<"griaule" | "testing-company", string[]> = {
+const COMPANY_SCOPE_ALIASES: Record<Exclude<AutomationCompanyScope, "all">, string[]> = {
   griaule: ["griaule"],
   "testing-company": ["testing-company", "testing_company", "testingcompany", "testing company", "test-company"],
 };
 
-export function normalizeAutomationCompanyScope(rawValue: string | null | undefined): string | null {
+export function normalizeAutomationCompanyScope(rawValue: string | null | undefined): Exclude<AutomationCompanyScope, "all"> | null {
   const normalized = rawValue?.trim().toLowerCase();
   if (!normalized) return null;
-  if (normalized === "all") return "all";
 
   for (const [scope, aliases] of Object.entries(COMPANY_SCOPE_ALIASES) as Array<
-    [keyof typeof COMPANY_SCOPE_ALIASES, string[]]
+    [Exclude<AutomationCompanyScope, "all">, string[]]
   >) {
     if (aliases.includes(normalized)) {
       return scope;
     }
   }
 
-  return normalized;
+  return null;
 }
 
 export function matchesAutomationCompanyScope(scope: AutomationCompanyScope, activeCompanySlug: string | null | undefined) {
   if (scope === "all") return true;
-  return normalizeAutomationCompanyScope(activeCompanySlug) === normalizeAutomationCompanyScope(scope);
+  return normalizeAutomationCompanyScope(activeCompanySlug) === scope;
 }
 
 export function isTestingCompanyScope(activeCompanySlug: string | null | undefined) {

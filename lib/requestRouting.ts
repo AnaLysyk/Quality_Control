@@ -95,9 +95,8 @@ export function toInternalAccessType(profileType: RequestProfileType): AccessTyp
 }
 
 export function requestProfileTypeNeedsCompany(profileType: RequestProfileType) {
-  // This helper means "requires selecting an existing company".
-  // Company profile requests create or update the company profile instead.
-  return profileType === "testing_company_user" || profileType === "company_user";
+  // This helper means "requires selecting an existing company". Company/company_user requests can carry company profile data.
+  return profileType === "testing_company_user";
 }
 
 export const requiresCompanyForProfileType = requestProfileTypeNeedsCompany;

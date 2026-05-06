@@ -108,6 +108,7 @@ export const AUDIT_LOG_RETENTION_DAYS = 60;
 
 type AuditLogStore = { items: AuditLogRow[] };
 
+const STORE_PATH = path.join(process.cwd(), "data", "audit-logs.json");
 const USE_MEMORY = process.env.AUDIT_LOGS_IN_MEMORY === "true";
 let memoryStore: AuditLogStore = { items: [] };
 
@@ -118,6 +119,47 @@ async function readStore(): Promise<AuditLogStore> {
 
 async function writeStore(next: AuditLogStore) {
   memoryStore = next;
+}
+
+type NormalizedAuditLogSearchParams = {
+  action: string;
+  entityType: string;
+  actor: string;
+  query: string;
+  startDate: number | null;
+  endDate: number | null;
+};
+
+function normalizeAuditLogSearchParams(params?: AuditLogSearchParams): NormalizedAuditLogSearchParams {
+  const startDate = params?.startDate ? new Date(params.startDate) : null;
+  const endDate = params?.endDate ? new Date(params.endDate) : null;
+
+  if (startDate && Number.isFinite(startDate.getTime())) {
+    startDate.setHours(0, 0, 0, 0);
+  }
+
+  if (endDate && Number.isFinite(endDate.getTime())) {
+    endDate.setHours(23, 59, 59, 999);
+  }
+
+  return {
+    action: (params?.action ?? "").trim(),
+    entityType: (params?.entityType ?? "").trim(),
+    actor: (params?.actor ?? "").trim().toLowerCase(),
+    query: (params?.query ?? "").trim().toLowerCase(),
+    startDate: startDate && Number.isFinite(startDate.getTime()) ? startDate.getTime() : null,
+    endDate: endDate && Number.isFinite(endDate.getTime()) ? endDate.getTime() : null,
+  };
+}
+
+function serializeSearchableMetadata(metadata: unknown): string {
+  if (metadata === null || metadata === undefined) return "";
+  if (typeof metadata === "string") return metadata.toLowerCase();
+  try {
+    return JSON.stringify(metadata).toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
 type NormalizedAuditLogSearchParams = {
@@ -284,6 +326,7 @@ export async function searchAuditLogs(params?: AuditLogSearchParams) {
 export async function listAuditLogs(params?: AuditLogListParams) {
   const limit = Math.max(1, Math.min(500, Number(params?.limit ?? 200)));
   const offset = Math.max(0, Number(params?.offset ?? 0));
+  const store = await readStore();
   const action = (params?.action ?? "").trim();
   const entityType = (params?.entityType ?? "").trim();
   const actor = (params?.actor ?? "").trim().toLowerCase();

@@ -66,7 +66,6 @@ const APP_SHELL_COPY = {
       dashboard: "Dashboard",
       metrics: "Métricas",
       apps: "Aplicações",
-      operations: "Operação",
       runs: "Runs",
       defects: "Defeitos",
       support: "Suporte",
@@ -83,7 +82,6 @@ const APP_SHELL_COPY = {
     },
     notes: {
       dashboard: "Leitura operacional da empresa, com sinais de execução, risco e desempenho.",
-      operations: "Central operacional por empresa, com leitura de contexto e navegação de execução.",
       runs: "Acompanhe as execuções manuais e integradas com contexto claro e leitura rápida.",
       apps: "Catálogo visual das aplicações monitoradas, integrações conectadas e projetos vinculados.",
       defects: "Triagem dos defeitos e pontos de atenção que precisam de resposta do time.",
@@ -131,7 +129,6 @@ const APP_SHELL_COPY = {
       dashboard: "Dashboard",
       metrics: "Metrics",
       apps: "Applications",
-      operations: "Operations",
       runs: "Runs",
       defects: "Defects",
       support: "Support",
@@ -148,7 +145,6 @@ const APP_SHELL_COPY = {
     },
     notes: {
       dashboard: "Operational company view with execution signals, risk, and performance.",
-      operations: "Operational company hub with context-aware navigation and execution tracking.",
       runs: "Track manual and integrated executions with clear context and quick reading.",
       apps: "Visual catalog of monitored applications, connected integrations, and linked projects.",
       defects: "Defect triage and attention points that need a team response.",
@@ -310,15 +306,6 @@ function resolveShellIdentity(
     };
   }
 
-  if (pathname.startsWith("/operacao")) {
-    return {
-      kicker: copy.kickers.platform,
-      title: copy.sections.operations,
-      note: copy.notes.operations,
-      badge: copy.sections.operations,
-    };
-  }
-
   if (pathname.startsWith("/meus-chamados") || pathname.startsWith("/chamados")) {
     return {
       kicker: copy.kickers.platform,
@@ -331,9 +318,9 @@ function resolveShellIdentity(
   if (pathname.startsWith("/runs")) {
     return {
       kicker: copy.kickers.platform,
-      title: copy.sections.operations,
-      note: copy.notes.operations,
-      badge: copy.sections.operations,
+      title: copy.sections.runs,
+      note: resolveSectionNote("runs", copy),
+      badge: copy.sections.runs,
     };
   }
 
@@ -427,10 +414,6 @@ function resolveRouteCompanySlug(pathname: string) {
 }
 
 function isSupportRoute(pathname: string) {
-  const parsed = parseCompanyRoutePathname(pathname);
-  if (parsed?.kind === "technical_support" || parsed?.kind === "leader_tc") {
-    return true;
-  }
   if (
     pathname.startsWith("/kanban-it") ||
     pathname.startsWith("/meus-chamados") ||
@@ -459,7 +442,7 @@ function isCompanyRunDetailRoute(pathname: string) {
 }
 
 function shouldHideShellCover(pathname: string) {
-  const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests|brain)(?:\/.*)?$/.test(pathname);
+  const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
   return (
     pathname.startsWith("/operacao") ||
     pathname.startsWith("/operacoes") ||
@@ -469,7 +452,6 @@ function shouldHideShellCover(pathname: string) {
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/automacoes") ||
     isCompanyAppsRoute(pathname) ||
     isCompanyDefectsRoute(pathname) ||
     isCompanyRunDetailRoute(pathname) ||
@@ -488,8 +470,7 @@ export default function AppShell({ children }: AppShellProps) {
   const { language } = useI18n();
   const locale = normalizeLocale(language);
   const shellCopy = APP_SHELL_COPY[locale];
-  const { user, companies, normalizedUser } = useAuth();
-  const { primaryCompanySlug, defaultCompanySlug, companyCount } = normalizedUser;
+  const { user, companies } = useAuth();
   const { activeClient, activeClientSlug } = useClientContext();
   const isLoginRoute = pathname.startsWith("/login");
   const useMinimalShell = pathname.length === 0 || isLoginRoute;
@@ -561,20 +542,14 @@ export default function AppShell({ children }: AppShellProps) {
       companyBrand &&
       (viewerProfile === "empresa" || viewerProfile === "company_user");
     const shortProfileLabel = profileLabel(viewerProfile, shellCopy);
-    const isOperationalProfile =
-      viewerProfile === "technical_support" || viewerProfile === "leader_tc" || viewerProfile === "testing_company_user";
-    const isOperationalModule = isOperationalProfile && (pathname.startsWith("/admin/operacao") || pathname.startsWith("/operacao"));
-    const operationalTitle = shellCopy.sections.operations;
-    const operationalNote = shellCopy.notes.operations;
 
     return {
       ...baseIdentity,
       kicker: shouldCollapseCompanyKicker
         ? `${profileKicker(viewerProfile, companyBrand, shellCopy)}`
         : `${profileKicker(viewerProfile, companyBrand, shellCopy)} | ${baseIdentity.kicker}`,
-      title: isOperationalModule
-        ? operationalTitle
-        : isCompanyHomeRoute && companyBrand
+      title:
+        isCompanyHomeRoute && companyBrand
           ? companyBrand.name
           : isHomeRoute && !isCompanyRoute
             ? shortProfileLabel
@@ -597,9 +572,6 @@ export default function AppShell({ children }: AppShellProps) {
     activeClient,
     activeClientSlug,
     shellCopy,
-    primaryCompanySlug,
-    defaultCompanySlug,
-    companyCount,
   ]);
 
   const shellLogoSrc =
@@ -647,14 +619,14 @@ export default function AppShell({ children }: AppShellProps) {
           : typeof (user as { user_origin?: string | null } | null)?.user_origin === "string"
             ? (user as { user_origin?: string | null }).user_origin
             : null,
-      companyCount,
-      clientSlug: primaryCompanySlug,
-      defaultClientSlug: defaultCompanySlug,
+      companyCount: companies.length,
+      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : null,
+      defaultClientSlug: typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null,
     });
     if (!nextPath) return;
     if (nextPath === pathname) return;
     router.replace(nextPath);
-  }, [pathname, router, user, companies.length, primaryCompanySlug, defaultCompanySlug, companyCount]);
+  }, [pathname, router, user, companies.length]);
 
   useEffect(() => {
     // Close mobile menu only when the route actually changes.
@@ -673,7 +645,7 @@ export default function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className={`min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell${isBrainCanvasRoute ? " app-shell--brain-canvas" : ""}`}>
+    <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
       <NewVersionBanner />
       {/* Detector de hover na lateral esquerda para telas pequenas */}
       {!isBrainCanvasRoute ? (
@@ -685,6 +657,13 @@ export default function AppShell({ children }: AppShellProps) {
           onTouchEnd={handleTouchEnd}
         />
       ) : null}
+
+      <Sidebar
+        pathname={pathname}
+        mobileOpen={mobileOpen}
+        mobilePanelId={mobileSidebarId}
+        onClose={() => setMobileOpen(false)}
+      />
 
       <Sidebar
         pathname={pathname}
@@ -708,6 +687,7 @@ export default function AppShell({ children }: AppShellProps) {
         onClick={() => setMobileOpen(true)}
         onMouseEnter={isBrainCanvasRoute ? undefined : () => setMobileOpen(true)}
         onTouchStart={() => setMobileOpen(true)}
+        onMouseLeave={() => setMobileOpen(false)}
       >
         <FiMenu size={20} />
       </button>

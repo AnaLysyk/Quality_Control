@@ -2,6 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
+export const dynamic = "force-dynamic";
+
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -24,7 +26,6 @@ import { editableProfileNeedsCompany, normalizeEditableProfileRole, type Editabl
 import {
   getFixedProfileHint,
   getFixedProfileLabel,
-  getFixedProfileOptions,
   getFixedProfileTone,
   resolveFixedProfileKind,
   type FixedProfileKind,
@@ -95,11 +96,21 @@ type ModuleSummaryItem = {
 function getRoleFilters(isPt: boolean): Array<{ value: RoleFilter; label: string; hint: string }> {
   return [
     { value: "all", label: isPt ? "Todos" : "All", hint: isPt ? "Todos os tipos de perfil" : "All profile types" },
-    ...getFixedProfileOptions({ short: true }),
+    { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
+    { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
+    { value: "empresa", label: getFixedProfileLabel("empresa", { short: true }), hint: getFixedProfileHint("empresa") },
+    { value: "company_user", label: getFixedProfileLabel("company_user"), hint: getFixedProfileHint("company_user") },
+    { value: "testing_company_user", label: getFixedProfileLabel("testing_company_user"), hint: getFixedProfileHint("testing_company_user") },
   ];
 }
 
-const PROFILE_OPTIONS: Array<{ value: EditableProfileRole; label: string; hint: string }> = getFixedProfileOptions();
+const PROFILE_OPTIONS: Array<{ value: EditableProfileRole; label: string; hint: string }> = [
+  { value: "leader_tc", label: getFixedProfileLabel("leader_tc"), hint: getFixedProfileHint("leader_tc") },
+  { value: "technical_support", label: getFixedProfileLabel("technical_support"), hint: getFixedProfileHint("technical_support") },
+  { value: "empresa", label: getFixedProfileLabel("empresa"), hint: getFixedProfileHint("empresa") },
+  { value: "company_user", label: getFixedProfileLabel("company_user"), hint: getFixedProfileHint("company_user") },
+  { value: "testing_company_user", label: getFixedProfileLabel("testing_company_user"), hint: getFixedProfileHint("testing_company_user") },
+];
 
 function emptyOverride(): PermissionOverride {
   return { allow: {}, deny: {} };
@@ -472,7 +483,6 @@ function SurfaceModal(props: {
 export default function PermissionsPage() {
   const { language } = useI18n();
   const isPt = language === "pt-BR";
-  const searchParams = useSearchParams();
   const { user: authUser, refreshUser } = useAuthUser();
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
@@ -506,37 +516,6 @@ export default function PermissionsPage() {
   const modulesPanelRef = useRef<HTMLDivElement | null>(null);
 
   const canManageProfiles = useMemo(() => canManageInstitutionalProfiles(authUser), [authUser]);
-
-  useEffect(() => {
-    const focus = searchParams.get("focus");
-    const panel = searchParams.get("panel");
-    const section = searchParams.get("section");
-    const action = searchParams.get("action");
-
-    if (panel === "active") {
-      setPermissionsViewerOpen(true);
-    }
-
-    if (section === "modules") {
-      setOpenModule((current) => current || PERMISSION_MODULES[0]?.id || "");
-    }
-
-    if (action === "create-user" && canManageProfiles) {
-      setCreateGlobalOpen(true);
-    }
-
-    const frameId = window.requestAnimationFrame(() => {
-      if (focus === "users") {
-        userSearchInputRef.current?.focus();
-      }
-
-      if (section === "modules") {
-        modulesPanelRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frameId);
-  }, [canManageProfiles, searchParams]);
 
   async function loadUsers() {
     setUsersLoading(true);

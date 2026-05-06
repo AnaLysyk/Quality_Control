@@ -113,7 +113,7 @@ export async function POST(req: Request) {
 
     resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || "Empresa";
     resolvedCompanySlug = selectedCompany.slug ?? null;
-  } else if (profileType === "empresa") {
+  } else if (profileType === "company_user") {
     if (!companyProfile.companyName) {
       return NextResponse.json({ message: "Informe o nome ou razao social da empresa" }, { status: 400 });
     }

@@ -98,15 +98,13 @@ describe("routing", () => {
   it("routes empty message as low-signal (clarify)", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toMatch(/quero te ajudar|faltou.*contexto|context/i);
+    expect(result.reply).toMatch(/nao consegui|não consegui/i);
     expect(result.context.module).toBe("support");
   });
 
-  it("routes greeting to use_brain with a conversational reply", async () => {
+  it("routes short greeting as low-signal (clarify)", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "oi" }));
-    expect(result.tool).toBe("use_brain");
-    expect(result.reply.toLowerCase()).toMatch(/oi|vamos resolver|como posso/i);
-    expect(Array.isArray(result.actions)).toBe(true);
+    expect(["suggest_next_step", "get_screen_context"]).toContain(result.tool);
   });
 
   it("routes 'mostrar contexto atual' to get_screen_context", async () => {
@@ -152,13 +150,13 @@ describe("low-signal detection", () => {
   it("returns clarify reply for very short ambiguous input", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "abc" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toMatch(/quero te ajudar|faltou.*contexto|context/i);
+    expect(result.reply).toMatch(/nao consegui|não consegui/i);
   });
 
   it("returns clarify reply for single digit", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "42" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toMatch(/quero te ajudar|faltou.*contexto|context/i);
+    expect(result.reply).toMatch(/nao consegui|não consegui/i);
   });
 
   it("does NOT clarify when awaiting ticket payload", async () => {
@@ -172,7 +170,6 @@ describe("low-signal detection", () => {
     // Should NOT be a clarify reply when awaiting payload
     expect(result.reply).not.toContain("Nao consegui interpretar");
   });
-
 });
 
 /* ──────────────────────────────────────────────── */

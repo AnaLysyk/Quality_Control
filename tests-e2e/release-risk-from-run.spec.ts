@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { expectCurrentDashboardReady } from "./utils/current-ui";
 
@@ -16,3 +16,4 @@ test("run falha aparece como risco no dashboard", async ({ page, context }) => {
   await expectCurrentDashboardReady(page);
   await expect(page.getByTestId("executive-stats").getByText(/Risco|Falhas|Defeitos/i).first()).toBeVisible({ timeout: 10000 });
 });
+

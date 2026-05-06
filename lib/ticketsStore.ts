@@ -76,7 +76,11 @@ const VERSION_DB_KEY_PREFIX = "qc:support_suportes:versions:v1:";
 const BACKUP_DB_KEY_PREFIX = "qc:support_suportes:backups:v1:";
 const FORCE_REDIS = process.env.TICKETS_STORE === "redis";
 const REDIS_AVAILABLE = isRedisConfigured();
-const USE_REDIS = FORCE_REDIS || REDIS_AVAILABLE;
+const USE_REDIS = !FORCE_FILE && REDIS_AVAILABLE;
+const SHOULD_FLUSH_ON_WRITE = Boolean(
+  process.env.TICKETS_FLUSH_ON_WRITE === "true" ||
+    process.env.NODE_ENV !== "production",
+);
 const USE_MEMORY = process.env.TICKETS_IN_MEMORY === "true";
 const MAX_VERSIONS = Math.max(1, Number(process.env.TICKETS_MAX_VERSIONS ?? 20));
 const MAX_BACKUPS = Math.max(1, Number(process.env.TICKETS_MAX_BACKUPS ?? 30));

@@ -178,36 +178,29 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     user.is_global_admin === true ||
     session.isGlobalAdmin === true ||
     sessionRole === "leader_tc";
-  const permissionRole = isGlobalAdmin ? "leader_tc" : resolvePermissionRoleForUser(user, links);
-  const activeCompanyRole = normalizeLocalRole(session.companyRole ?? user.role ?? null);
 
-  const visibilityMode = resolveCompanyVisibilityMode(
-    {
-      permissionRole,
-      role: permissionRole,
-      companyRole: activeCompanyRole,
-      userOrigin: user.user_origin ?? null,
-      isGlobalAdmin,
-      default_company_slug: user.default_company_slug ?? null,
-      clientSlug: session.companySlug ?? null,
-      defaultClientSlug: user.default_company_slug ?? null,
-    },
-  );
-  const shouldBindCompanyContext = visibilityMode !== "all";
-  const allowedCompanies = resolveVisibleCompanies(companies, {
-    user: {
-      permissionRole,
-      role: permissionRole,
-      companyRole: activeCompanyRole,
-      userOrigin: user.user_origin ?? null,
-      isGlobalAdmin,
-      default_company_slug: user.default_company_slug ?? null,
-      clientSlug: session.companySlug ?? null,
-      defaultClientSlug: user.default_company_slug ?? null,
-    },
-    links,
-    preferredSlug: session.companySlug ?? user.default_company_slug ?? null,
-  });
+  // 6) Lista de empresas permitidas (todas para admin global, ou apenas as vinculadas).
+  const hasTechnicalSupportRole =
+    sessionRole === "technical_support" ||
+    normalizeLocalRole(user.role ?? null) === "technical_support" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+  const hasLeaderTcRole =
+    sessionRole === "leader_tc" ||
+    normalizeLocalRole(user.role ?? null) === "leader_tc" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
+  const shouldBindCompanyContext = !hasFullCompanyAccess;
+  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
+  const allowedCompanies = hasFullCompanyAccess
+    ? companies
+    : companies.filter((company) => {
+        if (links.some((link) => link.companyId === company.id)) return true;
+        if (!isDirectCompanyUser) return false;
+        if (session.companyId && company.id === session.companyId) return true;
+        if (session.companySlug && company.slug === session.companySlug) return true;
+        if (user.default_company_slug && company.slug === user.default_company_slug) return true;
+        return false;
+      });
   // Importante: usuarios sem empresa ainda podem entrar para solicitar acesso.
 
   const companySlugs = allowedCompanies

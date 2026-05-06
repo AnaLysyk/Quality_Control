@@ -1,10 +1,10 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { createManualDefect } from "./utils/current-ui";
 
 const DEFECTS_URL = "/empresas/demo/defeitos";
 
-test("MTTR e calculado ao fechar defeito manual", async ({ page, context }) => {
+test("MTTR Ã© calculado ao fechar defeito manual", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
     companies: ["DEMO"],
@@ -18,8 +18,11 @@ test("MTTR e calculado ao fechar defeito manual", async ({ page, context }) => {
 
   await page.getByTestId("defect-status").selectOption("done");
   await page.getByTestId("defect-save").click();
-
-  await expect(page.getByTestId("metric-mttr")).not.toHaveText("-");
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("metric-mttr")).not.toHaveText("-");
+  // MTTR aparece
+  const mttr = page.getByTestId("defect-mttr");
+  await expect(mttr).not.toHaveText("â€”");
+  // reload nÃ£o perde MTTR
+  await page.reload();
+  await expect(mttr).not.toHaveText("â€”");
 });
+

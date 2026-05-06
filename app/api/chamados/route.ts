@@ -5,12 +5,10 @@ import { notifySuporteCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
-import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { canCreateSupportTickets, canViewSupportBoard } from "@/lib/supportAccess";
-import { syncTicketToBrain } from "@/lib/brain-sync";
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
@@ -104,18 +102,6 @@ export async function POST(req: Request) {
       entityLabel: suporte.title ?? null,
       metadata: { type: suporte.type ?? null, priority: suporte.priority ?? null, companyId: targetCompanyId, role: user.role ?? null, _payload: body },
     });
-
-    syncTicketToBrain({
-      id: suporte.id,
-      title: suporte.title,
-      description: suporte.description,
-      status: suporte.status,
-      priority: suporte.priority,
-      type: suporte.type,
-      companyId: suporte.companyId,
-      createdBy: suporte.createdBy,
-      assignedToUserId: suporte.assignedToUserId,
-    }).catch(() => {});
 
     return NextResponse.json({ item: enriched }, { status: 201 });
   } catch (err) {

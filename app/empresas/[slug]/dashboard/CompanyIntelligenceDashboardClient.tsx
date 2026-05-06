@@ -2391,7 +2391,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             </div>
 
             {activeView === "overview" ? (
-              <div data-testid="executive-stats" className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
                 <StatCard label="Runs" value={formatCompactNumber(executiveSummary.totalRuns)} note="Total no recorte aplicado." tone="neutral" delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.totalRuns, previousSummary.totalRuns, "neutral") : null} icon={<FiActivity className="h-5 w-5" />} />
                 <StatCard label="Pass rate" value={formatPercent(executiveSummary.passRate)} note="Leitura consolidada." tone={trendSummary.tone} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.") : null} icon={<FiTrendingUp className="h-5 w-5" />} />
                 <StatCard label="Falhas" value={formatPercent(executiveSummary.failRate)} note="Falhas sobre o total executado." tone={executiveSummary.failRate >= 15 ? "critical" : executiveSummary.failRate > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.failRate, previousSummary.failRate, "lower_better", " p.p.") : null} icon={<FiTrendingDown className="h-5 w-5" />} />

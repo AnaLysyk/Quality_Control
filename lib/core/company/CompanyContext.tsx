@@ -94,7 +94,6 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const isGlobalAdmin =
     user?.isGlobalAdmin === true || (typeof user?.role === "string" && (user.role.toLowerCase() === "admin" || user.role.toLowerCase() === "leader_tc"));
-  const normalizeSlug = (value?: string | null) => (typeof value === "string" ? value.trim().toLowerCase() : "");
 
   const normalizedClients = useMemo(
     () =>

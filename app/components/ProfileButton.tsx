@@ -18,7 +18,7 @@ import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { useI18n } from "@/hooks/useI18n";
 
 type ToastState =
@@ -95,7 +95,7 @@ type ProfileButtonProps = {
 export default function ProfileButton({ defaultOpen = false }: ProfileButtonProps) {
   const router = useRouter();
   const pathname = usePathname() || "/";
-  const { user, loading, logout, normalizedUser } = useAuthUser();
+  const { user, loading, logout } = useAuthUser();
   const { resolvedTheme } = useAppSettings();
   const { activeClient, clients } = useClientContext();
   const { t } = useI18n();
@@ -177,16 +177,19 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
   const docsRoute = hasCompanies
     ? companyCount > 1 || !companySlug
       ? "/documentos"
-      : buildCompanyPathForAccess(
-          companySlug,
-          "documentos",
-          resolveCompanyRouteAccessInput({
-            user,
-            normalizedUser,
-            companyCount,
-            clientSlug: companySlug,
-          }),
-        )
+      : buildCompanyPathForAccess(companySlug, "documentos", {
+          isGlobalAdmin: user?.isGlobalAdmin === true,
+          permissionRole: user?.permissionRole ?? null,
+          role: user?.role ?? null,
+          companyRole: user?.companyRole ?? null,
+          userOrigin:
+            (user as { userOrigin?: string | null } | null)?.userOrigin ??
+            (user as { user_origin?: string | null } | null)?.user_origin ??
+            null,
+          companyCount,
+          clientSlug: companySlug,
+          defaultClientSlug: user?.defaultClientSlug ?? null,
+        })
     : "/docs";
   const docsLabel = hasCompanies
     ? companyCount > 1

@@ -40,6 +40,10 @@ function normalizeMembershipRole(input?: string | null) {
   return "company_user";
 }
 
+function buildTempPasswordHash() {
+  return hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
+}
+
 async function parseCompanyId(
   context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> },
 ) {

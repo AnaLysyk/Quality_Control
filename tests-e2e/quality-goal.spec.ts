@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { seedQualityGoalStatus } from "./utils/seed-mttr-goal";
 import { expectCurrentDashboardReady } from "./utils/current-ui";
@@ -11,8 +11,9 @@ test("meta de qualidade mantém leitura executiva disponível", async ({ page, c
     clientSlug: "DEMO",
   });
 
-  await page.goto("/empresas/demo/dashboard", { waitUntil: "domcontentloaded" });
+  await page.goto("/empresas/demo/dashboard", { waitUntil: "networkidle" });
 
   await expectCurrentDashboardReady(page);
   await expect(page.getByTestId("executive-stats").getByText(/Pass rate|Falhas|Defeitos/i).first()).toBeVisible();
 });
+

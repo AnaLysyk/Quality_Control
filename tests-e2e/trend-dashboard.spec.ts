@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { expectCurrentDashboardReady } from "./utils/current-ui";
 
-test("dashboard mostra tendencia de qualidade", async ({ page, context }) => {
+test("dashboard mostra tendÃªncia de MTTR", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
     companies: ["DEMO"],
@@ -10,9 +10,10 @@ test("dashboard mostra tendencia de qualidade", async ({ page, context }) => {
   });
 
   await page.goto("/empresas/demo/dashboard", {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
   });
 
   await expectCurrentDashboardReady(page);
   await expect(page.getByText(/Tendência|Risco elevado|qualidade/i).first()).toBeVisible({ timeout: 10000 });
 });
+

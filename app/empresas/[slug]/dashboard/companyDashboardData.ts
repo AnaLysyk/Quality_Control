@@ -674,13 +674,14 @@ export async function loadCompanyDashboardData(slug: string): Promise<CompanyDas
 
   const signals = buildSignals(company, applications);
 
-  logDashboardDebug(`slug=${slug} company.slug=${company.slug} company.id=${company.id}`);
-  logDashboardDebug(`qase_project_codes=${JSON.stringify(company.qase_project_codes)}`);
-  logDashboardDebug(`applicationsRaw.length=${applicationsRaw.length}`);
-  logDashboardDebug(`signals.projectCodes=${JSON.stringify([...signals.projectCodes])}`);
-  logDashboardDebug(`signals.applicationKeys=${JSON.stringify([...signals.applicationKeys])}`);
-  logDashboardDebug(`integratedReleases.length=${integratedReleases.length}`);
-  logDashboardDebug(`manualReleases.length=${manualReleases.length}`);
+  // DEBUG: trace application matching
+  console.info(`[dashboard-debug] slug=${slug} company.slug=${company.slug} company.id=${company.id}`);
+  console.info(`[dashboard-debug] qase_project_codes=${JSON.stringify(company.qase_project_codes)}`);
+  console.info(`[dashboard-debug] applicationsRaw.length=${applicationsRaw.length}`);
+  console.info(`[dashboard-debug] signals.projectCodes=${JSON.stringify([...signals.projectCodes])}`);
+  console.info(`[dashboard-debug] signals.applicationKeys=${JSON.stringify([...signals.applicationKeys])}`);
+  console.info(`[dashboard-debug] integratedReleases.length=${integratedReleases.length}`);
+  console.info(`[dashboard-debug] manualReleases.length=${manualReleases.length}`);
 
   const runsManual = manualReleases
     .filter((release) => resolveManualReleaseKind(release) === "run")
@@ -703,8 +704,8 @@ export async function loadCompanyDashboardData(slug: string): Promise<CompanyDas
     return rightTime - leftTime;
   });
 
-  logDashboardDebug(`runsManual.length=${runsManual.length} runsIntegrated.length=${runsIntegrated.length} total=${runs.length}`);
-  logDashboardDebug(`applications.length=${applications.length}`);
+  console.info(`[dashboard-debug] runsManual.length=${runsManual.length} runsIntegrated.length=${runsIntegrated.length} total=${runs.length}`);
+  console.info(`[dashboard-debug] applications.length=${applications.length}`);
 
   // Include Qase project codes as virtual applications when not already registered
   // We must do this after runs are built so we can check which codes already appear

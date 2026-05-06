@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 function slugify(value: string) {
@@ -22,7 +22,7 @@ test("quality gate falho bloqueia aprovacao de run manual", async ({ page, conte
   const runTitle = "Run Bloqueada";
   const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/demo/runs", { waitUntil: "domcontentloaded" });
+  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
@@ -50,3 +50,4 @@ test("quality gate falho bloqueia aprovacao de run manual", async ({ page, conte
 
   expect(status).toBe(403);
 });
+

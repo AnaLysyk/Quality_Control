@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 import { CompanySelector } from "../components/CompanySelector";
 
@@ -25,18 +25,20 @@ export default function EmpresasIndexPage() {
     const slug = normalizedUser.primaryCompanySlug ?? "";
     if (!slug) return;
     router.replace(
-      buildCompanyPathForAccess(
-        slug,
-        "home",
-        resolveCompanyRouteAccessInput({
-          user,
-          normalizedUser,
-          clientSlug: normalizedUser.primaryCompanySlug,
-          companyCount: normalizedUser.companyCount,
-        }),
-      ),
+      buildCompanyPathForAccess(slug, "home", {
+        isGlobalAdmin: user.isGlobalAdmin === true,
+        permissionRole: user.permissionRole ?? null,
+        role: user.role ?? null,
+        companyRole: user.companyRole ?? null,
+        userOrigin:
+          (user as { userOrigin?: string | null }).userOrigin ??
+          (user as { user_origin?: string | null }).user_origin ??
+          null,
+        clientSlug: slug,
+        defaultClientSlug: user?.defaultClientSlug ?? null,
+      }),
     );
-  }, [loading, user, isAdmin, normalizedUser, router]);
+  }, [loading, user, isAdmin, router]);
 
   if (!loading && user && !isAdmin && normalizedUser.primaryCompanySlug) {
     return null;
@@ -58,15 +60,18 @@ export default function EmpresasIndexPage() {
             title="Empresas disponíveis"
             description="Acesse o hub completo de cada empresa, incluindo releases, runs e defeitos."
             buildHref={(company) =>
-              buildCompanyPathForAccess(
-                company.clientSlug,
-                "home",
-                resolveCompanyRouteAccessInput({
-                  user,
-                  normalizedUser,
-                  clientSlug: company.clientSlug,
-                }),
-              )
+              buildCompanyPathForAccess(company.clientSlug, "home", {
+                isGlobalAdmin: user?.isGlobalAdmin === true,
+                permissionRole: user?.permissionRole ?? null,
+                role: user?.role ?? null,
+                companyRole: user?.companyRole ?? null,
+                userOrigin:
+                  (user as { userOrigin?: string | null } | null)?.userOrigin ??
+                  (user as { user_origin?: string | null } | null)?.user_origin ??
+                  null,
+                clientSlug: company.clientSlug,
+                defaultClientSlug: user?.defaultClientSlug ?? null,
+              })
             }
             ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar" : "Entrar")}
           />

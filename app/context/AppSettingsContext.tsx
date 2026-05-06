@@ -327,17 +327,12 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const mapped = localeToLanguage(locale);
     if (mapped !== settings.language) {
-      syncingRef.current = true;
       setLanguage(mapped);
     }
   }, [locale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync AppSettings → LanguageContext when settings change (e.g. from server)
   useEffect(() => {
-    if (syncingRef.current) {
-      syncingRef.current = false;
-      return;
-    }
     const mapped = languageToLocale(settings.language);
     if (mapped !== locale) {
       setLocale(mapped);

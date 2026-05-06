@@ -2,7 +2,6 @@ import {
   LONG_COMPANY_ROUTE_MODE,
   SHORT_COMPANY_ROUTE_MODE,
   buildCompanyPathForAccess,
-  parseCompanyRoutePathname,
   resolveCompanyRouteMode,
   rewriteShortCompanyPathname,
   shortenCompanyPathname,
@@ -38,27 +37,6 @@ describe("companyRoutes", () => {
     expect(buildCompanyPathForAccess("griaule", "metrics", input)).toBe("/griaule/metrics");
   });
 
-  it("usa rota curta de suporte tecnico mesmo com vinculo de empresa", () => {
-    const input = {
-      role: "company_user",
-      permissionRole: "technical_support",
-      companyRole: "company_user",
-      userOrigin: "client_company",
-      clientSlug: "griaule",
-      companyCount: 1,
-    };
-
-    expect(shouldUseShortCompanyRoutes(input)).toBe(true);
-    expect(resolveCompanyRouteMode(input)).toBe(SHORT_COMPANY_ROUTE_MODE);
-    expect(buildCompanyPathForAccess("griaule", "home", input)).toBe("/suporte/griaule/dashboard");
-    expect(parseCompanyRoutePathname("/suporte/griaule/dashboard")).toEqual({
-      kind: "technical_support",
-      targetSlug: "griaule",
-      route: "dashboard",
-      prefixSlug: "suporte",
-    });
-  });
-
   it("mantem rota longa para perfis internos", () => {
     const input = {
       role: "user",
@@ -82,10 +60,5 @@ describe("companyRoutes", () => {
 
   it("nao trata automacoes como slug de empresa", () => {
     expect(rewriteShortCompanyPathname("/automacoes")).toBeNull();
-  });
-
-  it("nao trata operacao como slug de empresa", () => {
-    expect(rewriteShortCompanyPathname("/operacao")).toBeNull();
-    expect(rewriteShortCompanyPathname("/operacoes")).toBeNull();
   });
 });

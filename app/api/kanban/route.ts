@@ -10,6 +10,22 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ message }, { status });
 }
 
+function normalizeRole(role?: string | null) {
+  return (role ?? "").trim().toLowerCase();
+}
+
+function isAdmin(user: AuthUser) {
+  if (user.isGlobalAdmin) return true;
+  const role = normalizeRole(user.role);
+  return role === "leader_tc" || role === "technical_support" || role === "empresa";
+}
+
+function resolveAllowedSlugs(user: AuthUser): string[] {
+  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
+  if (user.companySlug) return [user.companySlug];
+  return [];
+}
+
 function normalizeStatus(value: unknown): Status | null {
   if (typeof value !== "string") return null;
   const raw = value.trim();

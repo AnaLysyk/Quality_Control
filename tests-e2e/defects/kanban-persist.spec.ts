@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
 
-test.describe("kanban - persistência local", () => {
-  test("status persiste após reload", async ({ page, context }) => {
+test.describe("kanban - persistÃªncia local", () => {
+  test("status persiste apÃ³s reload", async ({ page, context }) => {
     await mockAuth(context, {
       role: "admin",
       companies: ["DEMO"],
@@ -10,7 +10,7 @@ test.describe("kanban - persistência local", () => {
     });
 
     await page.addInitScript(() => sessionStorage.clear());
-    await page.goto("/empresas/demo/defeitos/kanban", { waitUntil: "domcontentloaded" });
+    await page.goto("/empresas/demo/defeitos/kanban", { waitUntil: "networkidle" });
 
     const card = page.getByTestId("kanban-card-k2");
     await card.locator('[data-testid="move-to-pass"]').first().click();

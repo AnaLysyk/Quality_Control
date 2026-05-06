@@ -28,7 +28,7 @@ import DocumentViewer from "@/components/DocumentViewer";
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
-import { buildCompanyPathForAccess, resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { useI18n } from "@/hooks/useI18n";
 
 const COPY = {
@@ -426,16 +426,20 @@ export default function CompanyDocumentsPage() {
   const slugParam = params?.slug;
   const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam || "";
   const { clients, loading: clientsLoading } = useClientContext();
-  const { user, normalizedUser } = useAuthUser();
+  const { user } = useAuthUser();
   const { language } = useI18n();
   const copy = COPY[language] ?? COPY["pt-BR"];
 
-  const routeInput = resolveCompanyRouteAccessInput({
-    user,
-    normalizedUser,
+  const routeInput = {
+    isGlobalAdmin: user?.isGlobalAdmin === true || user?.is_global_admin === true,
+    permissionRole: user?.permissionRole ?? null,
+    role: user?.role ?? null,
+    companyRole: user?.companyRole ?? null,
+    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
     companyCount: clients.length,
-    clientSlug: slug,
-  });
+    clientSlug: user?.clientSlug ?? null,
+    defaultClientSlug: user?.defaultClientSlug ?? null,
+  };
 
   const isCompanyOriginUser = useMemo(() => {
     const roles = [user?.permissionRole, user?.role, user?.companyRole].map((value) => (value ?? "").trim().toLowerCase());

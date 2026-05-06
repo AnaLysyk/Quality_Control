@@ -1,4 +1,4 @@
-﻿export type AutomationDomain = {
+export type AutomationDomain = {
   id: string;
   title: string;
   requestCount: number;
@@ -13,16 +13,6 @@ export type AutomationEnvironment = {
   baseUrl: string;
   status: "ready" | "planned" | "restricted";
   note: string;
-  requiresBaseUrl?: boolean;
-  requiresToken?: boolean;
-  tokenHeaderName?: string;
-  tokenPrefix?: string;
-  variables?: AutomationEnvironmentVariable[];
-};
-
-export type AutomationEnvironmentVariable = {
-  key: string;
-  value: string;
 };
 
 export type AutomationFlow = {
@@ -47,9 +37,9 @@ export const AUTOMATION_REQUEST_TOTAL = 71;
 export const AUTOMATION_DOMAINS: AutomationDomain[] = [
   {
     id: "tokens",
-    title: "Tokens e sessÃ£o",
+    title: "Tokens e sessão",
     requestCount: 5,
-    summary: "Bootstrap de autenticaÃ§Ã£o, renovaÃ§Ã£o e token web para fluxos guiados.",
+    summary: "Bootstrap de autenticação, renovação e token web para fluxos guiados.",
     highlights: ["/api/tokens", "/api/tokens/web", "/api/tokens/renew"],
     maturity: "priority",
   },
@@ -57,7 +47,7 @@ export const AUTOMATION_DOMAINS: AutomationDomain[] = [
     id: "processos",
     title: "Processos",
     requestCount: 34,
-    summary: "NÃºcleo operacional da coleÃ§Ã£o, com consulta, biometria, captura, status e pagamentos.",
+    summary: "Núcleo operacional da coleção, com consulta, biometria, captura, status e pagamentos.",
     highlights: ["/api/processos/:id", "/api/processos/:id/verify", "/api/processos/:id/payment"],
     maturity: "priority",
   },
@@ -65,7 +55,7 @@ export const AUTOMATION_DOMAINS: AutomationDomain[] = [
     id: "pessoas",
     title: "Pessoas",
     requestCount: 5,
-    summary: "Busca de pessoa, laudo e listagens para anÃ¡lise rÃ¡pida de dados civis.",
+    summary: "Busca de pessoa, laudo e listagens para análise rápida de dados civis.",
     highlights: ["/api/pessoas", "/api/pessoas/list", "/api/laudo/generate"],
     maturity: "mapped",
   },
@@ -73,7 +63,7 @@ export const AUTOMATION_DOMAINS: AutomationDomain[] = [
     id: "cardscan",
     title: "Cardscan",
     requestCount: 9,
-    summary: "Perfis, processamento e layouts de leitura documental para cenÃ¡rios visuais.",
+    summary: "Perfis, processamento e layouts de leitura documental para cenários visuais.",
     highlights: ["/api/cardscan/profile/:profileId", "/api/cardscan/process", "/api/cardscan/layout"],
     maturity: "priority",
   },
@@ -81,13 +71,13 @@ export const AUTOMATION_DOMAINS: AutomationDomain[] = [
     id: "rfb",
     title: "RFB / BCadastro",
     requestCount: 4,
-    summary: "ValidaÃ§Ã£o de CPF e consultas externas que tÃªm maior valor para automaÃ§Ã£o guiada.",
+    summary: "Validação de CPF e consultas externas que têm maior valor para automação guiada.",
     highlights: ["/api/bcadastro/cpf/:cpf", "/cpf/:cpf"],
     maturity: "priority",
   },
   {
     id: "config",
-    title: "ConfiguraÃ§Ã£o",
+    title: "Configuração",
     requestCount: 2,
     summary: "Propriedades, unidades e base operacional para montar presets por ambiente.",
     highlights: ["/api/config/properties", "/api/config/unidades"],
@@ -97,7 +87,7 @@ export const AUTOMATION_DOMAINS: AutomationDomain[] = [
     id: "attention",
     title: "Attention",
     requestCount: 3,
-    summary: "GestÃ£o de atenÃ§Ã£o operacional para fila, histÃ³rico e investigaÃ§Ã£o de processo.",
+    summary: "Gestão de atenção operacional para fila, histórico e investigação de processo.",
     highlights: ["/api/processos/attention", "/api/processos/attention/list"],
     maturity: "next",
   },
@@ -105,7 +95,7 @@ export const AUTOMATION_DOMAINS: AutomationDomain[] = [
     id: "sefaz-package",
     title: "Sefaz e Package",
     requestCount: 3,
-    summary: "IntegraÃ§Ãµes auxiliares que entram depois do runner principal estar sÃ³lido.",
+    summary: "Integrações auxiliares que entram depois do runner principal estar sólido.",
     highlights: ["/api/package/:packageId", "/exemption/list"],
     maturity: "next",
   },
@@ -114,168 +104,80 @@ export const AUTOMATION_DOMAINS: AutomationDomain[] = [
 export const AUTOMATION_ENVIRONMENTS: AutomationEnvironment[] = [
   {
     id: "local",
-    title: "Runner local (8080)",
+    title: "Local",
     baseUrl: "http://127.0.0.1:8080",
     status: "ready",
-    note: "Use para rotas do runner local. Ideal para CPF, processo, sessão e demais tools HTTP do backend.",
+    note: "Já compatível com Newman e com o setup atual do repositório.",
   },
   {
     id: "qc-local",
-    title: "Painel QA local (3000)",
+    title: "Painel QA local",
     baseUrl: "http://127.0.0.1:3000",
     status: "ready",
-    note: "Use para o próprio painel, smoke de interface e fluxos que dependem do app em localhost:3000.",
-  },
-  {
-    id: "griaule-hml-api-146",
-    title: "Griaule HML API 146 (8100)",
-    baseUrl: "http://172.16.1.146:8100",
-    status: "ready",
-    note: "Homologacao SMART API REST. Use para tokens, processos, RFB, biometria, pacotes e consultas tecnicas do Swagger.",
-    variables: [
-      { key: "validCPF", value: "03659187682" },
-      { key: "invalidCPF", value: "03651285639" },
-      { key: "smartUser", value: "gbds_bind" },
-      { key: "smartPassword", value: "" },
-      { key: "token", value: "" },
-      { key: "processId", value: "" },
-      { key: "protocol", value: "" },
-      { key: "packageId", value: "" },
-    ],
-  },
-  {
-    id: "griaule-hml-smart-146",
-    title: "Griaule HML SMART 146 (8128)",
-    baseUrl: "http://172.16.1.146:8128",
-    status: "ready",
-    note: "Homologacao da interface SMART. Use quando o fluxo precisar abrir a UI em /smart/ ou validar endpoints expostos no mesmo host.",
-    variables: [
-      { key: "validCPF", value: "03659184829" },
-      { key: "invalidCPF", value: "03651285639" },
-      { key: "smartUser", value: "admin" },
-      { key: "smartPassword", value: "" },
-      { key: "token", value: "" },
-      { key: "processId", value: "" },
-      { key: "protocol", value: "" },
-    ],
-  },
-  {
-    id: "griaule-hml-api-201",
-    title: "Griaule HML API 201 (8100)",
-    baseUrl: "http://172.16.1.201:8100",
-    status: "ready",
-    note: "No secundario de homologacao. Use para comparar comportamento entre hosts ou repetir chamadas com massa diferente.",
-    variables: [
-      { key: "validCPF", value: "05529136850" },
-      { key: "invalidCPF", value: "03651285639" },
-      { key: "smartUser", value: "admin" },
-      { key: "smartPassword", value: "" },
-      { key: "token", value: "" },
-      { key: "processId", value: "" },
-      { key: "protocol", value: "" },
-    ],
+    note: "Usado pela Testing Company para smoke de telas e fluxos do proprio sistema.",
   },
   {
     id: "staging",
     title: "Homologação",
     baseUrl: "Definir por ambiente",
     status: "planned",
-    note: "Preencha a URL homologada do sistema alvo. Use para validar integrações sem tocar produção.",
-    requiresBaseUrl: true,
-    requiresToken: true,
-    tokenHeaderName: "Authorization",
-    tokenPrefix: "Bearer",
+    note: "Separar credenciais, presets e smoke tests por aplicação.",
   },
   {
     id: "machines",
     title: "Máquinas dedicadas",
     baseUrl: "Mapear hosts 146 e demais nós",
     status: "planned",
-    note: "Use para fluxos que exigem hosts/VMs, navegador, driver ou outros recursos instalados localmente.",
-    requiresBaseUrl: true,
+    note: "Ideal para rodar fluxos com dependências locais e drivers instalados.",
   },
   {
     id: "prod-safe",
     title: "Produção segura",
     baseUrl: "Somente leitura / whitelist",
     status: "restricted",
-    note: "Somente leitura e whitelist. Use apenas em cenários auditáveis e sem escrita destrutiva.",
-    requiresBaseUrl: true,
-    requiresToken: true,
-    tokenHeaderName: "Authorization",
-    tokenPrefix: "Bearer",
+    note: "Liberar apenas cenários auditáveis, sem escrita destrutiva.",
   },
 ];
-
-export function getDefaultAutomationEnvironmentId(companySlug?: string | null) {
-  const normalized = companySlug?.trim().toLowerCase();
-  if (
-    normalized === "testing-company" ||
-    normalized === "testing_company" ||
-    normalized === "testingcompany" ||
-    normalized === "testing company" ||
-    normalized === "test-company"
-  ) {
-    return "qc-local";
-  }
-  if (normalized === "griaule") {
-    return "griaule-hml-api-146";
-  }
-  return AUTOMATION_ENVIRONMENTS[0]?.id ?? "local";
-}
-
-export function getAutomationEnvironmentVariables(environmentId: string) {
-  return AUTOMATION_ENVIRONMENTS.find((environment) => environment.id === environmentId)?.variables ?? [];
-}
-
-export function describeAutomationEnvironmentRequirements(environment: AutomationEnvironment) {
-  const requirements: string[] = [];
-  if (environment.requiresBaseUrl) requirements.push("URL base");
-  if (environment.requiresToken) requirements.push("token");
-  if (requirements.length === 0) return "Configuração fixa";
-  if (requirements.length === 1) return `Precisa de ${requirements[0]}`;
-  return `Precisa de ${requirements.slice(0, -1).join(", ")} e ${requirements.at(-1)}`;
-}
 
 export const AUTOMATION_FLOWS: AutomationFlow[] = [
   {
     id: "griaule-biometrics",
-    title: "Anexo biomÃ©trico Griaule",
-    audience: "Suporte tÃ©cnico / LÃ­der TC / UsuÃ¡rio TC",
+    title: "Anexo biométrico Griaule",
+    audience: "Suporte técnico / Líder TC / Usuário TC",
     objective: "Executar a cadeia real de biometria com digital e face, controlando o limite Base64 antes do PUT.",
-    steps: ["Escolher empresa visÃ­vel", "Selecionar fixture", "Resolver processo", "Executar GET/PUT/GET e salvar evidÃªncia"],
+    steps: ["Escolher empresa visível", "Selecionar fixture", "Resolver processo", "Executar GET/PUT/GET e salvar evidência"],
     stack: "HTTP runner + fixtures locais",
   },
   {
     id: "cpf-rfb",
     title: "Consulta CPF na RFB",
-    audience: "Suporte tÃ©cnico / LÃ­der TC",
+    audience: "Suporte técnico / Líder TC",
     objective: "Transformar a consulta de CPF em um fluxo visual, validando payload, resposta e erros frequentes.",
-    steps: ["Selecionar ambiente", "Informar CPF", "Executar endpoint", "Exibir resultado e histÃ³rico"],
+    steps: ["Selecionar ambiente", "Informar CPF", "Executar endpoint", "Exibir resultado e histórico"],
     stack: "HTTP runner",
   },
   {
     id: "token-processo",
     title: "Token + consulta de processo",
-    audience: "QA tÃ©cnico",
-    objective: "Encadear autenticaÃ§Ã£o, renovaÃ§Ã£o e consulta principal sem depender do Postman.",
-    steps: ["Gerar token", "Persistir sessÃ£o segura", "Consultar processo", "Salvar evidÃªncia"],
-    stack: "HTTP runner + histÃ³rico",
+    audience: "QA técnico",
+    objective: "Encadear autenticação, renovação e consulta principal sem depender do Postman.",
+    steps: ["Gerar token", "Persistir sessão segura", "Consultar processo", "Salvar evidência"],
+    stack: "HTTP runner + histórico",
   },
   {
     id: "cardscan-layout",
-    title: "ValidaÃ§Ã£o de cardscan",
+    title: "Validação de cardscan",
     audience: "QA funcional",
-    objective: "Executar perfis e layouts por cenÃ¡rio para reduzir erro manual e acelerar anÃ¡lise visual.",
-    steps: ["Escolher perfil", "Enviar entrada", "Processar layout", "Comparar saÃ­da esperada"],
+    objective: "Executar perfis e layouts por cenário para reduzir erro manual e acelerar análise visual.",
+    steps: ["Escolher perfil", "Enviar entrada", "Processar layout", "Comparar saída esperada"],
     stack: "HTTP runner + comparador visual",
   },
   {
     id: "browser-fallback",
     title: "Fluxos de navegador",
-    audience: "QA automaÃ§Ã£o",
-    objective: "Usar Playwright apenas onde houver interface, autenticaÃ§Ã£o web ou dependÃªncia de navegador.",
-    steps: ["Preparar estado", "Executar fluxo", "Capturar evidÃªncia", "Anexar resultado"],
+    audience: "QA automação",
+    objective: "Usar Playwright apenas onde houver interface, autenticação web ou dependência de navegador.",
+    steps: ["Preparar estado", "Executar fluxo", "Capturar evidência", "Anexar resultado"],
     stack: "Playwright",
   },
   {
@@ -291,27 +193,26 @@ export const AUTOMATION_FLOWS: AutomationFlow[] = [
 export const AUTOMATION_PILLARS: AutomationPillar[] = [
   {
     id: "ux",
-    title: "OperaÃ§Ã£o guiada",
-    summary: "O usuÃ¡rio nÃ£o monta request manualmente; ele escolhe um fluxo e preenche apenas o necessÃ¡rio.",
-    bullets: ["Presets por ambiente", "FormulÃ¡rios orientados", "Mensagens de erro legÃ­veis"],
+    title: "Operação guiada",
+    summary: "O usuário não monta request manualmente; ele escolhe um fluxo e preenche apenas o necessário.",
+    bullets: ["Presets por ambiente", "Formulários orientados", "Mensagens de erro legíveis"],
   },
   {
     id: "runner",
-    title: "OrquestraÃ§Ã£o simples",
-    summary: "Backend centraliza autenticaÃ§Ã£o, variÃ¡veis, execuÃ§Ã£o e normalizaÃ§Ã£o de resposta.",
-    bullets: ["Segredos fora do front", "Logs de execuÃ§Ã£o", "Reuso de adapters por domÃ­nio"],
+    title: "Orquestração simples",
+    summary: "Backend centraliza autenticação, variáveis, execução e normalização de resposta.",
+    bullets: ["Segredos fora do front", "Logs de execução", "Reuso de adapters por domínio"],
   },
   {
     id: "observability",
-    title: "HistÃ³rico profissional",
-    summary: "Cada execuÃ§Ã£o precisa deixar rastro suficiente para auditoria, depuraÃ§Ã£o e onboarding.",
-    bullets: ["Payload mascarado", "DuraÃ§Ã£o", "Status final e evidÃªncias"],
+    title: "Histórico profissional",
+    summary: "Cada execução precisa deixar rastro suficiente para auditoria, depuração e onboarding.",
+    bullets: ["Payload mascarado", "Duração", "Status final e evidências"],
   },
   {
     id: "docs",
-    title: "DocumentaÃ§Ã£o viva",
-    summary: "Cada fluxo novo deve nascer com descriÃ§Ã£o operacional e critÃ©rios claros de uso.",
-    bullets: ["Objetivo", "PrÃ©-condiÃ§Ãµes", "Exemplos", "RestriÃ§Ãµes de ambiente"],
+    title: "Documentação viva",
+    summary: "Cada fluxo novo deve nascer com descrição operacional e critérios claros de uso.",
+    bullets: ["Objetivo", "Pré-condições", "Exemplos", "Restrições de ambiente"],
   },
 ];
-

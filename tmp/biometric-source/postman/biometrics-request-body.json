@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "source": "ORIGINAL",
+      "type": "FINGERPRINT",
+      "format": "{{fingerprintFormat}}",
+      "properties": {
+        "resolution": 500
+      },
+      "index": {{fingerprintIndex}},
+      "content": "{{fingerprintBase64}}"
+    }
+  ]
+}

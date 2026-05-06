@@ -34,7 +34,7 @@ test("client user lands in company and cannot access admin", async ({ page }) =>
   await setMockUser(page, "user", "DEMO");
   await login(page, "user@example.com", "senha");
 
-  await expect(page).toHaveURL(/\/(empresas|user-tc)\/demo\/dashboard/i);
+  await expect(page).toHaveURL(/\/empresas\/demo\/dashboard/);
 
   const sidebar = nav(page);
   await expect(sidebar.getByRole("link", { name: /^Operação$/ })).toHaveCount(1);
@@ -45,3 +45,5 @@ test("client user lands in company and cannot access admin", async ({ page }) =>
   await expect(page).not.toHaveURL(/\/admin\/clients/);
   await expect(page.getByRole("heading", { name: /Demo|Dashboard|Home/i }).first()).toBeVisible();
 });
+
+

@@ -41,8 +41,8 @@ const SCOPE_POLICIES: Record<ScopeRoleKey, Omit<UserScopePolicy, "roleKey">> = {
   },
   [SYSTEM_ROLES.TESTING_COMPANY_USER]: {
     companyAccessScope: "linked_companies",
-    visibleUserKinds: ["company"],
-    creatableUserKinds: ["company"],
+    visibleUserKinds: ["testing_company"],
+    creatableUserKinds: [],
     canLinkAcrossCompanies: false,
     usesPermissionMatrix: true,
   },

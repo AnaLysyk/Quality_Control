@@ -48,18 +48,18 @@ function decideLandingRoute(
   const role = (user.role ?? "").toLowerCase();
   if (role === "admin") return "/admin";
   if (role === "company" || role === "user" || role === "viewer") {
-    const slug = resolveCompanySlug(user, clients, activeClientSlug, normalizedUser);
+    const slug = resolveCompanySlug(user, clients, activeClientSlug);
     return slug
       ? buildCompanyPathForAccess(slug, "home", {
-        isGlobalAdmin: user.isGlobalAdmin === true,
-        permissionRole: user.permissionRole ?? null,
-        role: user.role ?? null,
+          isGlobalAdmin: user.isGlobalAdmin === true,
+          permissionRole: user.permissionRole ?? null,
+          role: user.role ?? null,
           companyRole: user.companyRole ?? null,
           userOrigin:
-          (user as { userOrigin?: string | null }).userOrigin ??
-          (user as { user_origin?: string | null }).user_origin ??
-          null,
-          companyCount: normalizedUser.companyCount,
+            (user as { userOrigin?: string | null }).userOrigin ??
+            (user as { user_origin?: string | null }).user_origin ??
+            null,
+          companyCount: clients.length,
           clientSlug: slug,
         })
       : "/empresas";

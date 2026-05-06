@@ -7,7 +7,7 @@ test("admin ve ranking de empresas", async ({ page, context }) => {
     companies: ["griaule", "testing-company"],
   });
 
-  await page.goto("/admin/dashboard", { waitUntil: "domcontentloaded" });
+  await page.goto("/admin/dashboard", { waitUntil: "networkidle" });
 
   await expect(page.getByText(/Ranking de qualidade por empresa/i)).toBeVisible({ timeout: 20000 });
   await expect(page.getByText(/Comparativo operacional do ambiente/i)).toBeVisible();

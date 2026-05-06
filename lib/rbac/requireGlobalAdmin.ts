@@ -96,19 +96,6 @@ export async function readSessionUser(req: Request): Promise<SessionUser | null>
     };
   }
 
-  const access = await getAccessContext(req);
-  if (access) {
-    return {
-      userId: access.userId,
-      id: access.userId,
-      email: access.email,
-      role: access.role ?? undefined,
-      companyRole: access.companyRole ?? null,
-      isGlobalAdmin: access.isGlobalAdmin,
-      globalRole: access.globalRole ?? null,
-    };
-  }
-
   const token = await extractAccessToken(req);
   if (token) {
     const secret = getJwtSecret();

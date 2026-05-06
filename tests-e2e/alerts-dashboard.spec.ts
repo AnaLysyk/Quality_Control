@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { expectCurrentDashboardReady } from "./utils/current-ui";
 
@@ -10,9 +10,10 @@ test("dashboard mostra leitura executiva e alertas quando existem", async ({ pag
   });
 
   await page.goto("/empresas/demo/dashboard", {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle",
   });
 
   await expectCurrentDashboardReady(page);
   await expect(page.getByText(/Leitura executiva|Insights|Alertas recentes/i).first()).toBeVisible();
 });
+

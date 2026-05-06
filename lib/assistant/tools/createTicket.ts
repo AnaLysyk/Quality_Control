@@ -1,10 +1,6 @@
 import "server-only";
 
 import { findLocalCompanyBySlug, getLocalUserById } from "@/lib/auth/localStore";
-import {
-  resolvePrimaryCompanySlug,
-  type AuthenticatedUserLike,
-} from "@/lib/auth/normalizeAuthenticatedUser";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
@@ -35,7 +31,6 @@ import {
 import type { AssistantExecutorResult } from "./types";
 
 export async function buildTicketCreationAction(user: AuthUser, context: AssistantScreenContext, message: string): Promise<AssistantExecutorResult> {
-  const normalizedCompanySlug = resolvePrimaryCompanySlug(user as AuthenticatedUserLike);
   if (
     !hasPermissionAccess(user.permissions, "tickets", "create") &&
     !hasPermissionAccess(user.permissions, "support", "create")
@@ -143,7 +138,7 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
             description: validation.description,
             type: validation.type,
             priority: validation.priority,
-            companySlug: context.companySlug ?? normalizedCompanySlug ?? null,
+            companySlug: context.companySlug ?? user.companySlug ?? null,
           },
         },
       ],
@@ -247,7 +242,7 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
           description: validation.description,
           type: validation.type,
           priority: validation.priority,
-          companySlug: context.companySlug ?? normalizedCompanySlug ?? null,
+          companySlug: context.companySlug ?? user.companySlug ?? null,
         },
       },
     ],
@@ -294,11 +289,7 @@ export async function executeCreateTicket(user: AuthUser, context: AssistantScre
   }
 
   const localUser = await getLocalUserById(user.id);
-  const companySlug =
-    normalizeText(action.input.companySlug, 120) ||
-    context.companySlug ||
-    resolvePrimaryCompanySlug(user as AuthenticatedUserLike) ||
-    "";
+  const companySlug = normalizeText(action.input.companySlug, 120) || context.companySlug || user.companySlug || "";
   const company = companySlug ? await findLocalCompanyBySlug(companySlug) : null;
 
   const ticket = await createTicket({
@@ -310,7 +301,7 @@ export async function executeCreateTicket(user: AuthUser, context: AssistantScre
     createdByName: displayName(localUser),
     createdByEmail: localUser?.email ?? user.email,
     companyId: company?.id ?? user.companyId ?? null,
-    companySlug: company?.slug ?? resolvePrimaryCompanySlug(user as AuthenticatedUserLike) ?? null,
+    companySlug: company?.slug ?? user.companySlug ?? null,
   });
 
   if (!ticket) {

@@ -226,7 +226,7 @@ function AdminClientsPage() {
   const [projectsOpen, setProjectsOpen] = useState(false);
   const projectsRef = useRef<HTMLDivElement | null>(null);
   const [validatingProjects, setValidatingProjects] = useState(false);
-  const [activeTab, setActiveTab] = useState<"visão" | "pessoas">(() => resolveClientTabQueryParam(searchParams.get("tab")) ?? "visão");
+  const [activeTab, setActiveTab] = useState<"visão" | "pessoas">("visão");
   const [openCreate, setOpenCreate] = useState(false);
   const [companyAction, setCompanyAction] = useState<null | "activate" | "deactivate" | "delete">(null);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -2262,7 +2262,6 @@ function CompanyUsers({ clientId, companyName, disabled = false }: CompanyUsersP
         clientId={clientId}
         clients={[{ id: clientId, name: companyName }]}
         initialRole="company_user"
-        allowedRoles={["empresa", "company_user"]}
         onClose={() => setOpenCreateUserModal(false)}
         onCreated={async () => {
           await loadLinkedUsers();

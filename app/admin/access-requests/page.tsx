@@ -425,7 +425,7 @@ function AccessRequestsPage() {
   const selectedIsPasswordReset = selected?.requestKind === "password_reset";
   const draftProfileType =
     normalizeRequestProfileType((draft?.accessType ?? "Usuário Testing Company") as string) ?? "company_user";
-  const requiresCompany = !draftIsPasswordReset && requestProfileTypeNeedsCompany(draftProfileType);
+  const requiresCompany = requestProfileTypeNeedsCompany(draftProfileType);
   const commentsLocked = selected?.status === "closed" || selected?.status === "rejected";
   const missingRequiredFields =
     !draftIsPasswordReset &&

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { listApplications, createApplication } from "../../../lib/applicationsStore";
 import { getCompanyIntegratedDefects } from "../../../lib/companyDefects";
-import { syncApplicationToBrain } from "@/lib/brain-sync";
-import { getClientQaseSettings } from "@/lib/qaseConfig";
 
 function normalizeProjectCode(value: unknown) {
   if (typeof value !== "string") return null;
@@ -19,42 +17,10 @@ export async function GET(request: Request) {
   }
 
   const integrated = await getCompanyIntegratedDefects(companySlug);
-  const qaseSettings = await getClientQaseSettings(companySlug);
-  const configuredProjectCodes = Array.from(
-    new Set(
-      [
-        ...(Array.isArray(qaseSettings?.projectCodes) ? qaseSettings.projectCodes : []),
-        qaseSettings?.projectCode,
-        ...integrated.projects.map((project) => project.projectCode),
-      ]
-        .map((projectCode) => normalizeProjectCode(projectCode))
-        .filter((projectCode): projectCode is string => Boolean(projectCode)),
-    ),
-  );
   const blockedProjects = integrated.projects.filter((project) => !project.accessible);
   const blockedProjectMap = new Map(blockedProjects.map((project) => [project.projectCode, project]));
-  const existingProjectCodes = new Set(
-    items
-      .map((item) => normalizeProjectCode(item.qaseProjectCode))
-      .filter((projectCode): projectCode is string => Boolean(projectCode)),
-  );
-  const syntheticProjectItems = configuredProjectCodes
-    .filter((projectCode) => !existingProjectCodes.has(projectCode))
-    .map((projectCode) => ({
-      id: `qase_${companySlug}_${projectCode}`,
-      companySlug,
-      name: projectCode,
-      slug: projectCode.toLowerCase(),
-      description: null,
-      imageUrl: null,
-      qaseProjectCode: projectCode,
-      source: "qase",
-      active: true,
-      createdAt: new Date(0).toISOString(),
-      updatedAt: new Date(0).toISOString(),
-    }));
 
-  const visibleItems = [...items, ...syntheticProjectItems].filter((item) => {
+  const visibleItems = items.filter((item) => {
     const projectCode = normalizeProjectCode(item.qaseProjectCode);
     return !projectCode || !blockedProjectMap.has(projectCode);
   });

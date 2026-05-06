@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
 import { normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
-import { saveAutomationExecutionAudit } from "@/lib/automations/executionAuditStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 export const runtime = "nodejs";
@@ -25,61 +24,11 @@ function resolveAccess(user: Awaited<ReturnType<typeof authenticateRequest>>) {
 }
 
 function resolveTargetUrl(targetPath: string, requestUrl: string) {
-  if (!targetPath.startsWith("/") || targetPath.startsWith("//")) {
-    throw new Error("A tela precisa ser interna e comecar com '/'.");
+  if (!targetPath.startsWith("/")) {
+    throw new Error("A tela precisa ser interna e começar com '/'.");
   }
 
-  const baseUrl = new URL(requestUrl);
-  const targetUrl = new URL(targetPath, baseUrl);
-  if (targetUrl.origin !== baseUrl.origin) {
-    throw new Error("A tela precisa estar no mesmo host da aplicacao.");
-  }
-
-  return targetUrl;
-}
-
-function resolveLoopbackTargetUrl(targetUrl: URL) {
-  const port = process.env.PORT?.trim();
-  if (!port || !/^\d+$/.test(port)) return null;
-
-  const loopbackUrl = new URL(targetUrl);
-  loopbackUrl.protocol = "http:";
-  loopbackUrl.hostname = "127.0.0.1";
-  loopbackUrl.port = port;
-  loopbackUrl.username = "";
-  loopbackUrl.password = "";
-  return loopbackUrl;
-}
-
-function buildTargetHeaders(request: Request, targetUrl: URL, fetchUrl: URL) {
-  const headers = new Headers({
-    Accept: "text/html,application/xhtml+xml",
-  });
-  const cookie = request.headers.get("cookie");
-  if (cookie) headers.set("cookie", cookie);
-
-  if (fetchUrl.origin !== targetUrl.origin) {
-    headers.set("host", targetUrl.host);
-    headers.set("x-forwarded-host", targetUrl.host);
-    headers.set("x-forwarded-proto", targetUrl.protocol.replace(":", ""));
-  }
-
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) headers.set("x-forwarded-for", forwardedFor);
-  return headers;
-}
-
-function resolvePublicResponseUrl(responseUrl: string, targetUrl: URL, fetchUrl: URL) {
-  if (!responseUrl) return targetUrl.toString();
-  if (fetchUrl.origin === targetUrl.origin) return responseUrl;
-
-  try {
-    const parsed = new URL(responseUrl);
-    if (parsed.origin !== fetchUrl.origin) return responseUrl;
-    return new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, targetUrl.origin).toString();
-  } catch {
-    return responseUrl;
-  }
+  return new URL(targetPath, requestUrl);
 }
 
 function extractTitle(html: string) {
@@ -89,7 +38,6 @@ function extractTitle(html: string) {
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  const startedAt = Date.now();
 
   if (!user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -119,20 +67,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Empresa fora do escopo da sessão." }, { status: 403 });
   }
 
-  let targetUrl: URL;
   try {
-    targetUrl = resolveTargetUrl(payload.targetPath, request.url);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Payload invalido";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
-
-  try {
+    const targetUrl = resolveTargetUrl(payload.targetPath, request.url);
     const startedAt = Date.now();
-    const fetchUrl = resolveLoopbackTargetUrl(targetUrl) ?? targetUrl;
-    const response = await fetch(fetchUrl, {
+    const response = await fetch(targetUrl, {
       method: "GET",
-      headers: buildTargetHeaders(request, targetUrl, fetchUrl),
+      headers: {
+        Accept: "text/html,application/xhtml+xml",
+        cookie: request.headers.get("cookie") ?? "",
+      },
       cache: "no-store",
       redirect: "follow",
     });
@@ -144,25 +87,9 @@ export async function POST(request: Request) {
     const matchesTitleHint = payload.titleHint
       ? (title ?? "").toLowerCase().includes(payload.titleHint.toLowerCase())
       : true;
-    const finalUrl = resolvePublicResponseUrl(response.url, targetUrl, fetchUrl);
+    const finalUrl = response.url || targetUrl.toString();
     const redirectedToLogin = finalUrl.includes("/login");
     const durationMs = Date.now() - startedAt;
-
-    await saveAutomationExecutionAudit({
-      actorUserId: user.id,
-      companySlug,
-      durationMs,
-      metadata: {
-        fetchUrl: fetchUrl.toString(),
-        finalUrl,
-        redirectedToLogin,
-        targetPath: payload.targetPath,
-        targetUrl: targetUrl.toString(),
-      },
-      ok: response.ok && containsExpectedText && matchesTitleHint && !redirectedToLogin,
-      route: "qc-page-smoke",
-      statusCode: response.status,
-    });
 
     return NextResponse.json({
       ok: response.ok && containsExpectedText && matchesTitleHint && !redirectedToLogin,
@@ -180,24 +107,9 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Falha ao validar a tela.";
-    await saveAutomationExecutionAudit({
-      actorUserId: user.id,
-      companySlug,
-      durationMs: Date.now() - startedAt,
-      error: message,
-      metadata: {
-        targetPath: payload.targetPath,
-        targetUrl: targetUrl.toString(),
-      },
-      ok: false,
-      route: "qc-page-smoke",
-      statusCode: 500,
-    });
-
     return NextResponse.json(
       {
-        error: message,
+        error: error instanceof Error ? error.message : "Falha ao validar a tela.",
       },
       { status: 500 },
     );

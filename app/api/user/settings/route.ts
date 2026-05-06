@@ -10,7 +10,21 @@ import { readPersistentJson, writePersistentJson, canUsePersistentJsonStore } fr
 
 export const revalidate = 0;
 
+let fs: typeof import("fs/promises") | undefined;
+let path: typeof import("path") | undefined;
+if (typeof process !== "undefined" && process.release?.name === "node") {
+  fs = require("fs/promises");
+  path = require("path");
+}
+
+const DEFAULT_DATA_DIR = path && path.join(process.cwd(), "data");
+const DATA_DIR = path && (process.env.USER_SETTINGS_DATA_DIR || DEFAULT_DATA_DIR);
+const STORE_PATH = path && DATA_DIR ? path.join(DATA_DIR, "user-settings.json") : undefined;
 const STORE_KEY_PREFIX = "qc:user_settings:v1";
+const USE_REDIS = process.env.USER_SETTINGS_STORE === "redis" || isRedisConfigured();
+const USE_MEMORY = process.env.USER_SETTINGS_IN_MEMORY === "true";
+let memoryStore: Record<string, StoredSettings> = {};
+let warnedFsFailure = false;
 
 type Theme = "light" | "dark" | "system";
 
@@ -39,6 +53,26 @@ function applyThemeCookies(response: NextResponse, theme: Theme) {
     sameSite: "lax",
     maxAge: APP_SETTINGS_COOKIE_MAX_AGE,
   });
+
+  if (theme === "light" || theme === "dark") {
+    response.cookies.set(THEME_RESOLVED_COOKIE, theme, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: APP_SETTINGS_COOKIE_MAX_AGE,
+    });
+  }
+}
+
+async function readStoreFile(): Promise<Record<string, StoredSettings>> {
+  if (!fs || !STORE_PATH) return {};
+  try {
+    const raw = await fs.readFile(STORE_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, StoredSettings>) : {};
+  } catch {
+    return {};
+  }
+}
 
   if (theme === "light" || theme === "dark") {
     response.cookies.set(THEME_RESOLVED_COOKIE, theme, {
@@ -84,12 +118,12 @@ async function saveSettings(userId: string, next: Omit<StoredSettings, "user_id"
 }
 
 export async function GET(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user?.id) {
+  const userId = await resolveUserId(req);
+  if (!userId) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const stored = await fetchSettings(user.id);
+  const stored = await fetchSettingsFromStore(userId);
   const settings = normalizeSettings(stored);
   const response = NextResponse.json({ settings }, { status: 200 });
   applyThemeCookies(response, settings.theme);
@@ -97,8 +131,8 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const user = await authenticateRequest(req);
-  if (!user?.id) {
+  const userId = await resolveUserId(req);
+  if (!userId) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -118,7 +152,7 @@ export async function PATCH(req: Request) {
     theme: rawTheme as Theme | undefined,
   });
 
-  const saved = await saveSettings(user.id, normalized);
+  const saved = await saveSettingsToStore(userId, normalized);
   const settings = normalizeSettings(saved);
   const response = NextResponse.json({ settings }, { status: 200 });
   applyThemeCookies(response, settings.theme);

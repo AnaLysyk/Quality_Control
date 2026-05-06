@@ -54,16 +54,17 @@ function makeContext(overrides: Partial<AssistantScreenContext> = {}): Assistant
 }
 
 describe("toolGetScreenContext", () => {
-  it("returns a conversational reply without panel labels or login details", async () => {
+  it("returns an action-oriented reply without exposing login details", async () => {
     const result = await toolGetScreenContext(makeUser(), makeContext());
 
     expect(result.tool).toBe("get_screen_context");
-    expect(result.reply).toContain("Aqui voce prioriza e acompanha chamados");
-    expect(result.reply).toContain("Localizar chamados por código, status, prioridade ou responsável");
-    expect(result.reply).not.toContain("Voce esta em:");
-    expect(result.reply).not.toContain("O que posso fazer aqui:");
-    expect(result.reply).not.toContain("Contexto Atual:");
-    expect(result.reply).not.toContain("Permissões:");
+    expect(result.reply).toContain("Voce esta em:");
+    expect(result.reply).toContain("O que posso fazer aqui:");
+    expect(result.reply).toContain("rápidas:");
+    expect(result.reply).toContain("Contexto Atual:");
+    expect(result.reply).toContain("Permissões:");
+    expect(result.reply).toContain("Perfil");
+    expect(result.reply).toContain("admin");
     expect(result.reply).not.toContain("ana@test.com");
     expect(result.reply).not.toContain("Rota:");
     expect(result.actions).toHaveLength(4);
@@ -83,6 +84,6 @@ describe("toolGetScreenContext", () => {
 
     expect(result.reply).toContain("globex");
     expect(result.reply).toContain("Resumir a empresa atual");
-    expect(result.reply).not.toContain("Voce esta em:");
+    expect(result.reply.match(/Voce esta em/g)).toHaveLength(1);
   });
 });

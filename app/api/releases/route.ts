@@ -5,7 +5,6 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { canCreateRun, canDeleteRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { notifyIntegrationRunCreated } from "@/lib/notificationService";
-import { syncReleaseToBrain } from "@/lib/brain-sync";
 
 // Garantir ambiente Node para fs
 export const runtime = "nodejs";

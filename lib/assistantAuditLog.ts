@@ -30,7 +30,7 @@ type AssistantAuditStore = {
 
 const STORE_KEY = "qc:assistant_audit_log:v1";
 const USE_MEMORY = process.env.ASSISTANT_AUDIT_IN_MEMORY === "true";
-const USE_PERSISTENT_STORE = !USE_MEMORY && !USE_POSTGRES && canUsePersistentJsonStore();
+const USE_PERSISTENT_STORE = !USE_MEMORY && canUsePersistentJsonStore();
 
 let memoryStore: AssistantAuditStore = { items: [] };
 

@@ -7,7 +7,7 @@ const adminPassword = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";
 
 test("@smoke login and load clientes", async ({ page }) => {
   await setMockUser(page, "admin");
-  await login(page, "admin@demo.test", adminPassword);
+  await login(page, "admin@demo.test", "Demo@123");
 
   await expect(page).toHaveURL(/\/admin\/clients/);
   await expect(page.getByRole("heading", { name: /Empresas da plataforma/i })).toBeVisible();

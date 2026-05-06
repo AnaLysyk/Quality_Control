@@ -70,13 +70,6 @@ function run() {
   stopStaleRepoDevServers();
   removeStaleLocks();
 
-  const distDir = process.env.NEXT_DIST_DIR?.trim() || ".next/dev-runtime";
-  try {
-    fs.mkdirSync(path.join(root, distDir), { recursive: true });
-  } catch {
-    // ignore mkdir race/errors and let Next handle it
-  }
-
   const bundlerFlag = process.argv.includes("--turbo") ? "--turbo" : "--webpack";
   const command = isWin ? process.execPath : nextBin;
   const args = isWin
@@ -85,7 +78,7 @@ function run() {
 
   const child = spawn(command, args, {
     cwd: root,
-    env: { ...process.env, NEXT_DIST_DIR: distDir },
+    env: process.env,
     stdio: "inherit",
     shell: false,
   });

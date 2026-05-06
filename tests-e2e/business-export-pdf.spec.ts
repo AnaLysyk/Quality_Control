@@ -1,4 +1,4 @@
-import fs from "fs";
+﻿import fs from "fs";
 import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 
@@ -23,7 +23,7 @@ test("exporta relatorio PDF da run", async ({ page, context }) => {
   const runTitle = "Run PDF Export";
   const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/demo/runs", { waitUntil: "domcontentloaded" });
+  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
 
   await page.getByTestId("run-create").click();
   await page.getByTestId("run-title").fill(runTitle);
@@ -47,3 +47,4 @@ test("exporta relatorio PDF da run", async ({ page, context }) => {
   const stat = fs.statSync(filePath as string);
   expect(stat.size).toBeGreaterThan(1000);
 });
+

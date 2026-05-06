@@ -8,7 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { buildCompanyPathForAccess, shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
-import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 
 type AuthUserShape = {
   role?: string | null;
@@ -137,9 +136,12 @@ export default function LoginClient() {
       role: authUser?.role ?? null,
       companyRole: authUser?.companyRole ?? null,
       userOrigin: authUser?.userOrigin ?? authUser?.user_origin ?? null,
-      clientSlug: normalizedAuth.primaryCompanySlug,
-      defaultClientSlug: normalizedAuth.defaultCompanySlug,
-      companyCount: normalizedAuth.companyCount,
+      clientSlug:
+        typeof authUser?.clientSlug === "string"
+          ? authUser.clientSlug
+          : typeof authUser?.companySlug === "string"
+            ? authUser.companySlug
+            : null,
     };
     if (safeNext) {
       const shortenedNext = shortenCompanyPathname(safeNext);
@@ -154,7 +156,12 @@ export default function LoginClient() {
       authUser?.globalRole === "global_admin" ||
       normalizedRole === "leader_tc" ||
       normalizedRole === "technical_support";
-    const clientSlug = normalizedAuth.primaryCompanySlug ?? normalizedAuth.defaultCompanySlug;
+    const clientSlug =
+      typeof authUser?.clientSlug === "string"
+        ? authUser.clientSlug
+        : typeof authUser?.companySlug === "string"
+          ? authUser.companySlug
+          : null;
     if (isAdmin) return "/admin/home";
     if (clientSlug) {
       return buildCompanyPathForAccess(clientSlug, "home", companyRouteInput);

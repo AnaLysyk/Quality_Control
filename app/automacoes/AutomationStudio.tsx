@@ -14,7 +14,6 @@ import {
   FiDatabase,
   FiEye,
   FiFolderPlus,
-  FiImage,
   FiGitBranch,
   FiLayers,
   FiPauseCircle,
@@ -48,8 +47,8 @@ import {
   type AutomationStudioSubflowTemplate,
   type AutomationStudioTriggerMode,
 } from "@/data/automationStudio";
-import { AUTOMATION_ENVIRONMENTS, getDefaultAutomationEnvironmentId } from "@/data/automationCatalog";
-import { matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { AUTOMATION_ENVIRONMENTS } from "@/data/automationCatalog";
+import { isTestingCompanyScope, matchesAutomationCompanyScope, normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 type CompanyOption = {
   name: string;
@@ -96,12 +95,6 @@ type FlowTriggerConfig = {
 type FlowRuntimeConfig = {
   allowProductionWrite: boolean;
   debugMode: boolean;
-  imageInputMode: "saved_base64" | "convert_now";
-  imageQuality: number;
-  imageResizeHeight: number;
-  imageResizeMode: "original" | "fit" | "fill";
-  imageResizeWidth: number;
-  imageTargetFormat: "png" | "jpeg" | "webp";
   maxParallel: number;
   notifyOnFailure: boolean;
   retryAttempts: number;
@@ -130,18 +123,6 @@ type FlowAuditEntry = {
   summary: string;
 };
 
-type StepRunResult = {
-  durationMs: number;
-  error: string | null;
-  json: unknown;
-  status: number;
-  statusText: string;
-  assertPassed: boolean | null;
-  savedVariableKey: string | null;
-  savedVariablePath: string | null;
-  savedVariableUsedFallback: boolean;
-};
-
 type DraftStep = AutomationStudioStepTemplate & {
   approvalRole: string;
   condition: string;
@@ -157,23 +138,6 @@ type DraftStep = AutomationStudioStepTemplate & {
   script: string;
   subflowId: string;
   timeoutMs: number;
-  // API Request fields
-  apiMethod: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  apiUrl: string;
-  apiHeaders: string;
-  apiBody: string;
-  apiAuthType: "none" | "bearer" | "basic" | "api-key";
-  apiAuthValue: string;
-  apiAssertStatus: string;
-  apiAssertJsonPath: string;
-  apiAssertExpected: string;
-  apiSaveResponseTo: string;
-  apiSaveJsonPath: string;
-  // GraphQL fields
-  gqlQuery: string;
-  gqlVariables: string;
-  // Step run result (transient, not persisted)
-  _runResult?: StepRunResult | null;
 };
 
 type DraftUpload = {
@@ -183,21 +147,10 @@ type DraftUpload = {
   type: string;
 };
 
-type SavedBase64Entry = {
-  id: string;
-  name: string;
-  kind: string;
-  size_bytes: number;
-  source: string;
-  source_asset_id: string | null;
-  created_at: string;
-};
-
 type FlowDraft = {
   auditTrail: FlowAuditEntry[];
   base64Sample: string;
   boundAssetIds: string[];
-  linkedRunSlug: string;
   notes: string;
   script: string;
   scriptTemplateId: string;
@@ -216,39 +169,10 @@ type RunPreviewMetric = {
   value: string;
 };
 
-type RunPreviewOutcome = "passed" | "flaky" | "failed";
-
-type RunPreviewAttempt = {
-  detail: string;
-  label: string;
-  status: "passed" | "failed";
-};
-
-type RunPreviewArtifact = {
-  description: string;
-  href?: string;
-  hint: string;
-  title: string;
-};
-
-type LinkedReleaseRun = {
-  app: string | null;
-  qaseProject: string | null;
-  runId: number | null;
-  slug: string;
-  summary: string | null;
-  title: string;
-};
-
 type RunPreview = {
-  artifacts: RunPreviewArtifact[];
-  attempts: RunPreviewAttempt[];
   generatedAt: string;
   lines: string[];
   metrics: RunPreviewMetric[];
-  outcome: RunPreviewOutcome;
-  outcomeDetail: string;
-  outcomeLabel: string;
   technicalLines: string[];
 };
 
@@ -283,12 +207,6 @@ const DEFAULT_TRIGGER: FlowTriggerConfig = {
 const DEFAULT_RUNTIME: FlowRuntimeConfig = {
   allowProductionWrite: false,
   debugMode: true,
-  imageInputMode: "saved_base64",
-  imageQuality: 0.92,
-  imageResizeHeight: 1024,
-  imageResizeMode: "fit",
-  imageResizeWidth: 1024,
-  imageTargetFormat: "png",
   maxParallel: 2,
   notifyOnFailure: true,
   retryAttempts: 2,
@@ -336,77 +254,6 @@ function nowLabel() {
     minute: "2-digit",
     month: "2-digit",
   });
-}
-
-type ImageConversionSettings = {
-  quality: number;
-  resizeHeight: number;
-  resizeMode: "original" | "fit" | "fill";
-  resizeWidth: number;
-  targetFormat: "png" | "jpeg" | "webp";
-};
-
-function loadImageElement(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = src;
-  });
-}
-
-async function convertImageFileToDataURL(file: File, settings: ImageConversionSettings) {
-  const objectUrl = URL.createObjectURL(file);
-  try {
-    const image = await loadImageElement(objectUrl);
-    const sourceWidth = image.naturalWidth || image.width;
-    const sourceHeight = image.naturalHeight || image.height;
-
-    const targetWidth = settings.resizeMode === "original" ? sourceWidth : Math.max(1, settings.resizeWidth || sourceWidth);
-    const targetHeight = settings.resizeMode === "original" ? sourceHeight : Math.max(1, settings.resizeHeight || sourceHeight);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Não foi possível preparar o canvas de conversão.");
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, targetWidth, targetHeight);
-
-    if (settings.resizeMode === "fill") {
-      const sourceRatio = sourceWidth / sourceHeight;
-      const targetRatio = targetWidth / targetHeight;
-      let drawWidth = sourceWidth;
-      let drawHeight = sourceHeight;
-      let sourceX = 0;
-      let sourceY = 0;
-
-      if (sourceRatio > targetRatio) {
-        drawWidth = sourceHeight * targetRatio;
-        sourceX = (sourceWidth - drawWidth) / 2;
-      } else {
-        drawHeight = sourceWidth / targetRatio;
-        sourceY = (sourceHeight - drawHeight) / 2;
-      }
-
-      ctx.drawImage(image, sourceX, sourceY, drawWidth, drawHeight, 0, 0, targetWidth, targetHeight);
-    } else if (settings.resizeMode === "fit") {
-      const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight);
-      const drawWidth = sourceWidth * scale;
-      const drawHeight = sourceHeight * scale;
-      const offsetX = (targetWidth - drawWidth) / 2;
-      const offsetY = (targetHeight - drawHeight) / 2;
-      ctx.drawImage(image, 0, 0, sourceWidth, sourceHeight, offsetX, offsetY, drawWidth, drawHeight);
-    } else {
-      ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
-    }
-
-    const mimeType = `image/${settings.targetFormat}`;
-    return canvas.toDataURL(mimeType, settings.targetFormat === "png" ? undefined : settings.quality);
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
 }
 
 function buildAuditEntry(actor: string, summary: string): FlowAuditEntry {
@@ -475,20 +322,6 @@ function toDraftStep(step: AutomationStudioStepTemplate): DraftStep {
     script: buildStepScript(step),
     subflowId: "",
     timeoutMs: 5000,
-    apiMethod: "GET",
-    apiUrl: step.selector || "",
-    apiHeaders: "",
-    apiBody: "",
-    apiAuthType: "none",
-    apiAuthValue: "",
-    apiAssertStatus: "200",
-    apiAssertJsonPath: "",
-    apiAssertExpected: "",
-    apiSaveResponseTo: "",
-    apiSaveJsonPath: "",
-    gqlQuery: "query {\n  \n}",
-    gqlVariables: "{}",
-    _runResult: null,
   };
 }
 
@@ -510,7 +343,6 @@ function buildDefaultDraft(flow: FlowDefinition, access: AutomationStudioAccess)
     boundAssetIds: AUTOMATION_STUDIO_ASSETS.filter((asset) => asset.flowIds.includes(flow.id))
       .slice(0, 2)
       .map((asset) => asset.id),
-    linkedRunSlug: "",
     notes: flow.defaultNotes,
     script: flow.defaultScript,
     scriptTemplateId: "blank-js",
@@ -549,7 +381,6 @@ function readStoredDraft(companySlug: string, flow: FlowDefinition, access: Auto
       boundAssetIds: Array.isArray(parsed.boundAssetIds)
         ? parsed.boundAssetIds.filter((value): value is string => typeof value === "string")
         : base.boundAssetIds,
-      linkedRunSlug: readString(parsed.linkedRunSlug),
       notes: readString(parsed.notes, base.notes),
       script: readString(parsed.script, base.script),
       scriptTemplateId: readString(parsed.scriptTemplateId, base.scriptTemplateId),
@@ -580,20 +411,6 @@ function readStoredDraft(companySlug: string, flow: FlowDefinition, access: Auto
                 subflowId: readString(step.subflowId),
                 timeoutMs: readNumber(step.timeoutMs, 5000),
                 title: readString(step.title, "Etapa customizada"),
-                apiMethod: (readString(step.apiMethod, "GET") as DraftStep["apiMethod"]) || "GET",
-                apiUrl: readString(step.apiUrl, ""),
-                apiHeaders: readString(step.apiHeaders, ""),
-                apiBody: readString(step.apiBody, ""),
-                apiAuthType: (readString(step.apiAuthType, "none") as DraftStep["apiAuthType"]) || "none",
-                apiAuthValue: readString(step.apiAuthValue, ""),
-                apiAssertStatus: readString(step.apiAssertStatus, "200"),
-                apiAssertJsonPath: readString(step.apiAssertJsonPath, ""),
-                apiAssertExpected: readString(step.apiAssertExpected, ""),
-                apiSaveResponseTo: readString(step.apiSaveResponseTo, ""),
-                apiSaveJsonPath: readString(step.apiSaveJsonPath, ""),
-                gqlQuery: readString(step.gqlQuery, "query {\n  \n}"),
-                gqlVariables: readString(step.gqlVariables, "{}"),
-                _runResult: null,
               }))
           : base.steps,
       trigger: {
@@ -608,18 +425,6 @@ function readStoredDraft(companySlug: string, flow: FlowDefinition, access: Auto
       runtime: {
         allowProductionWrite: readBoolean(parsed.runtime?.allowProductionWrite, DEFAULT_RUNTIME.allowProductionWrite),
         debugMode: readBoolean(parsed.runtime?.debugMode, DEFAULT_RUNTIME.debugMode),
-        imageInputMode:
-          (readString(parsed.runtime?.imageInputMode, DEFAULT_RUNTIME.imageInputMode) as FlowRuntimeConfig["imageInputMode"]) ||
-          DEFAULT_RUNTIME.imageInputMode,
-        imageQuality: readNumber(parsed.runtime?.imageQuality, DEFAULT_RUNTIME.imageQuality),
-        imageResizeHeight: readNumber(parsed.runtime?.imageResizeHeight, DEFAULT_RUNTIME.imageResizeHeight),
-        imageResizeMode:
-          (readString(parsed.runtime?.imageResizeMode, DEFAULT_RUNTIME.imageResizeMode) as FlowRuntimeConfig["imageResizeMode"]) ||
-          DEFAULT_RUNTIME.imageResizeMode,
-        imageResizeWidth: readNumber(parsed.runtime?.imageResizeWidth, DEFAULT_RUNTIME.imageResizeWidth),
-        imageTargetFormat:
-          (readString(parsed.runtime?.imageTargetFormat, DEFAULT_RUNTIME.imageTargetFormat) as FlowRuntimeConfig["imageTargetFormat"]) ||
-          DEFAULT_RUNTIME.imageTargetFormat,
         maxParallel: readNumber(parsed.runtime?.maxParallel, DEFAULT_RUNTIME.maxParallel),
         notifyOnFailure: readBoolean(parsed.runtime?.notifyOnFailure, DEFAULT_RUNTIME.notifyOnFailure),
         retryAttempts: readNumber(parsed.runtime?.retryAttempts, DEFAULT_RUNTIME.retryAttempts),
@@ -788,38 +593,12 @@ function metricTone(active: boolean) {
     : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)";
 }
 
-function outcomeTone(outcome: RunPreviewOutcome) {
-  if (outcome === "passed") {
-    return {
-      badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      card: "border-emerald-200 bg-emerald-50/60",
-      icon: FiCheckCircle,
-    };
-  }
-
-  if (outcome === "flaky") {
-    return {
-      badge: "border-amber-200 bg-amber-50 text-amber-700",
-      card: "border-amber-200 bg-amber-50/60",
-      icon: FiRefreshCw,
-    };
-  }
-
-  return {
-    badge: "border-rose-200 bg-rose-50 text-rose-700",
-    card: "border-rose-200 bg-rose-50/60",
-    icon: FiAlertCircle,
-  };
-}
-
 function buildRunPreview(input: {
   access: AutomationStudioAccess;
-  companySlug: string | null;
   companyName: string;
   draft: FlowDraft;
   environmentTitle: string;
   flow: FlowDefinition;
-  linkedRun: LinkedReleaseRun | null;
 }) {
   const generatedAt = new Date().toLocaleTimeString("pt-BR", {
     hour: "2-digit",
@@ -827,122 +606,9 @@ function buildRunPreview(input: {
     second: "2-digit",
   });
   const enabledSteps = input.draft.steps.filter((step) => step.enabled);
-  const executedSteps = enabledSteps.filter((step) => step._runResult);
-  const failedExecutedSteps = executedSteps.filter((step) => {
-    const result = step._runResult;
-    if (!result) return false;
-    if (result.error) return true;
-    if (result.assertPassed === false) return true;
-    if (result.status === 0) return true;
-    return result.status >= 400;
-  });
   const conditionalCount = enabledSteps.filter((step) => step.kind === "conditional_branch" || step.kind === "loop_until").length;
   const parallelCount = enabledSteps.filter((step) => step.kind === "parallel_group").length;
   const subflowCount = enabledSteps.filter((step) => step.kind === "subflow_call").length;
-  const totalRetryBudget = input.draft.runtime.retryAttempts + enabledSteps.reduce((sum, step) => sum + step.retryAttempts, 0);
-  const firstRetryDelay = Math.max(input.draft.runtime.retryBackoffMs, ...enabledSteps.map((step) => step.retryBackoffMs));
-  const hasFailures = failedExecutedSteps.length > 0;
-  const hasRealExecution = executedSteps.length > 0;
-  const outcome: RunPreviewOutcome = hasFailures ? (totalRetryBudget > 0 ? "flaky" : "failed") : "passed";
-  const outcomeLabel = outcome === "passed" ? "passed" : outcome === "flaky" ? "flaky" : "failed";
-  const outcomeDetail =
-    outcome === "passed"
-      ? hasRealExecution
-        ? "Sem falhas registradas nas execucoes de etapa desta versao."
-        : "Sem execucao real ainda. Preview indica fluxo pronto para validar."
-      : outcome === "flaky"
-        ? `Falhas detectadas com janela de retry de ${totalRetryBudget} tentativa(s) para recuperacao.`
-        : "Falhas detectadas sem retry suficiente para recuperar a execucao.";
-
-  const attempts: RunPreviewAttempt[] =
-    outcome === "passed"
-      ? [
-          {
-            label: "Tentativa #1",
-            status: "passed",
-            detail: hasRealExecution ? "Passou sem retries" : "Pronto para primeira execucao",
-          },
-        ]
-      : outcome === "flaky"
-        ? [
-            {
-              label: "Tentativa #1",
-              status: "failed",
-              detail: `${failedExecutedSteps.length} etapa(s) com erro inicial`,
-            },
-            {
-              label: "Tentativa #2",
-              status: "passed",
-              detail: `Retry com backoff ate ${firstRetryDelay} ms`,
-            },
-          ]
-        : [
-            {
-              label: "Tentativa #1",
-              status: "failed",
-              detail: `${failedExecutedSteps.length} etapa(s) com falha`,
-            },
-            {
-              label: "Ultima tentativa",
-              status: "failed",
-              detail: `Sem recuperacao apos ${Math.max(1, input.draft.runtime.retryAttempts + 1)} execucao(oes)`,
-            },
-          ];
-
-  const companyRunsHref = input.companySlug ? `/empresas/${encodeURIComponent(input.companySlug)}/runs` : "/runs";
-  const runDetailHref =
-    input.companySlug && input.linkedRun?.slug
-      ? `/empresas/${encodeURIComponent(input.companySlug)}/runs/${encodeURIComponent(input.linkedRun.slug)}`
-      : null;
-  const qaseProject = input.linkedRun?.qaseProject?.trim().toUpperCase() || null;
-  const qaseRunId = input.linkedRun?.runId && input.linkedRun.runId > 0 ? input.linkedRun.runId : null;
-  const resultsApiHref = qaseProject && qaseRunId ? `/api/v1/results/${encodeURIComponent(qaseProject)}/${encodeURIComponent(String(qaseRunId))}` : null;
-
-  const artifacts: RunPreviewArtifact[] = [
-    {
-      title: "Dashboard de runs",
-      description: "Abrir a listagem real de runs da empresa no painel.",
-      hint: companyRunsHref,
-      href: companyRunsHref,
-    },
-    {
-      title: "Run vinculada",
-      description: runDetailHref
-        ? `Abrir detalhe da run ${input.linkedRun?.title || "selecionada"} para investigar falhas.`
-        : "Ainda sem run vinculada ao fluxo atual no releases-store desta empresa.",
-      hint: runDetailHref || "Sem slug de run para o contexto atual",
-      href: runDetailHref || undefined,
-    },
-    {
-      title: "HTML Report",
-      description: "Abrir painel completo de execucao e filtros por status/projeto.",
-      hint: "npx playwright show-report",
-    },
-    {
-      title: "Trace Viewer",
-      description: "Inspecao detalhada de acoes, rede, console e timeline.",
-      hint: "npx playwright show-trace test-results/<run-id>/trace.zip",
-    },
-    {
-      title: "Video + screenshot",
-      description: "Evidencias visuais por falha ou retry da execucao.",
-      hint: "test-results/<run-id>/(video|screenshot)",
-    },
-    {
-      title: "Trace remoto",
-      description: "Abertura direta no viewer web quando artefato estiver no storage.",
-      hint: "https://trace.playwright.dev/?trace=<url-artefato>",
-    },
-    {
-      title: "Resultados Qase (API)",
-      description: resultsApiHref
-        ? "Endpoint real da API para resultados da run vinculada."
-        : "Disponivel quando houver qaseProject + runId na run vinculada.",
-      hint: resultsApiHref || "/api/v1/results/<PROJECT>/<RUN_ID>",
-      href: resultsApiHref || undefined,
-    },
-  ];
-
   const lines = [
     `[${generatedAt}] Empresa ${input.companyName} carregada no studio.`,
     `[${generatedAt}] Fluxo "${input.flow.title}" preparado no ambiente ${input.environmentTitle}.`,
@@ -950,7 +616,6 @@ function buildRunPreview(input: {
     `[${generatedAt}] ${enabledSteps.length} etapa(s) habilitada(s), ${input.draft.variables.length} variável(is) e ${input.draft.boundAssetIds.length + input.draft.uploads.length} recurso(s).`,
     `[${generatedAt}] Retry global ${input.draft.runtime.retryAttempts}x com backoff ${input.draft.runtime.retryBackoffMs} ms.`,
     `[${generatedAt}] Perfil ${input.access.profileLabel} pronto para ${input.draft.status === "active" ? "execução" : "revisão"} do fluxo.`,
-    `[${generatedAt}] Classificacao simulada Playwright: ${outcomeLabel}.`,
   ];
   const technicalLines = enabledSteps.map(
     (step, index) =>
@@ -977,14 +642,9 @@ function buildRunPreview(input: {
       label: "Versões",
       value: `${input.draft.versions.length}`,
     },
-    {
-      detail: "Classificacao estilo Playwright para leitura rapida",
-      label: "Status",
-      value: outcomeLabel,
-    },
   ];
 
-  return { artifacts, attempts, generatedAt, lines, metrics, outcome, outcomeDetail, outcomeLabel, technicalLines };
+  return { generatedAt, lines, metrics, technicalLines };
 }
 
 function findTemplate(id: string) {
@@ -997,235 +657,11 @@ function findSubflow(id: string) {
 
 type AutomationStudioPanelId = "overview" | "steps" | "mappings" | "results" | "scripts" | "files";
 
-async function runApiStep(step: DraftStep, environmentBaseUrl: string, companySlug: string | null): Promise<StepRunResult> {
-  const isGql = step.kind === "graphql_request";
-  const url = /^https?:\/\//i.test(step.apiUrl)
-    ? step.apiUrl
-    : `${environmentBaseUrl.replace(/\/+$/, "")}/${step.apiUrl.replace(/^\/+/, "")}`;
-
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (step.apiHeaders.trim()) {
-    for (const line of step.apiHeaders.split("\n")) {
-      const idx = line.indexOf(":");
-      if (idx > 0) headers[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
-    }
-  }
-  if (step.apiAuthType === "bearer" && step.apiAuthValue) headers.Authorization = `Bearer ${step.apiAuthValue}`;
-  if (step.apiAuthType === "api-key" && step.apiAuthValue) headers["x-api-key"] = step.apiAuthValue;
-
-  let gqlVars: Record<string, unknown> = {};
-  try { gqlVars = JSON.parse(step.gqlVariables || "{}"); } catch { /* ignore */ }
-
-  const body = isGql
-    ? JSON.stringify({ query: step.gqlQuery, variables: gqlVars })
-    : step.apiBody.trim() || null;
-
-  const res = await fetch("/api/automations/http", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      body,
-      companySlug,
-      forwardCookies: false,
-      headers,
-      method: isGql ? "POST" : step.apiMethod,
-      timeoutMs: step.timeoutMs || 15000,
-      url,
-    }),
-  });
-  const payload = await res.json();
-  if (!res.ok || !payload?.response) throw new Error(payload?.error ?? "Falha na chamada");
-  const r = payload.response as { status: number; statusText: string; durationMs: number; json: unknown };
-
-  let assertPassed: boolean | null = null;
-  if (step.apiAssertStatus.trim()) assertPassed = String(r.status) === step.apiAssertStatus.trim();
-  if (step.apiAssertJsonPath && step.apiAssertExpected) {
-    const val = resolveStudioJsonPath(r.json, step.apiAssertJsonPath);
-    const matches = String(val ?? "") === step.apiAssertExpected;
-    assertPassed = assertPassed === null ? matches : assertPassed && matches;
-  }
-
-  return {
-    status: r.status,
-    statusText: r.statusText,
-    durationMs: r.durationMs,
-    json: r.json,
-    error: null,
-    assertPassed,
-    savedVariableKey: null,
-    savedVariablePath: null,
-    savedVariableUsedFallback: false,
-  };
-}
-
-function serializeApiVariableValue(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (value == null) return "";
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return "";
-  }
-}
-
-function tokenizeStudioJsonPath(path: string): string[] {
-  const source = path.trim();
-  if (!source) return [];
-
-  const tokens: string[] = [];
-  let current = "";
-  let index = 0;
-
-  const pushCurrent = () => {
-    const value = current.trim();
-    if (value) tokens.push(value);
-    current = "";
-  };
-
-  while (index < source.length) {
-    const char = source[index];
-
-    if (char === ".") {
-      pushCurrent();
-      index += 1;
-      continue;
-    }
-
-    if (char === "[") {
-      pushCurrent();
-      index += 1;
-
-      while (index < source.length && /\s/.test(source[index])) index += 1;
-      if (index >= source.length) break;
-
-      const bracketStart = source[index];
-      if (bracketStart === '"' || bracketStart === "'") {
-        const quote = bracketStart;
-        index += 1;
-        let quotedValue = "";
-
-        while (index < source.length) {
-          const quotedChar = source[index];
-          if (quotedChar === "\\") {
-            if (index + 1 < source.length) {
-              quotedValue += source[index + 1];
-              index += 2;
-              continue;
-            }
-            index += 1;
-            break;
-          }
-          if (quotedChar === quote) {
-            index += 1;
-            break;
-          }
-          quotedValue += quotedChar;
-          index += 1;
-        }
-
-        while (index < source.length && /\s/.test(source[index])) index += 1;
-        if (index < source.length && source[index] === "]") index += 1;
-        if (quotedValue) tokens.push(quotedValue);
-        continue;
-      }
-
-      let rawValue = "";
-      while (index < source.length && source[index] !== "]") {
-        rawValue += source[index];
-        index += 1;
-      }
-      if (index < source.length && source[index] === "]") index += 1;
-      const trimmedValue = rawValue.trim();
-      if (trimmedValue) tokens.push(trimmedValue);
-      continue;
-    }
-
-    current += char;
-    index += 1;
-  }
-
-  pushCurrent();
-  return tokens;
-}
-
-function resolveStudioJsonPath(source: unknown, path: string): unknown {
-  const tokens = tokenizeStudioJsonPath(path);
-  if (tokens.length === 0) return source;
-
-  let current: unknown = source;
-  for (const token of tokens) {
-    if (Array.isArray(current)) {
-      const index = Number(token);
-      if (!Number.isInteger(index) || index < 0 || index >= current.length) return undefined;
-      current = current[index];
-      continue;
-    }
-
-    if (current == null || typeof current !== "object") return undefined;
-    current = (current as Record<string, unknown>)[token];
-  }
-  return current;
-}
-
-function splitStudioJsonPathCandidates(pathInput: string): string[] {
-  return pathInput
-    .split(/\r?\n|\|\|/g)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function resolveStudioJsonPathWithFallback(source: unknown, pathInput: string): { matchedPath: string | null; value: unknown } {
-  const candidates = splitStudioJsonPathCandidates(pathInput);
-  if (candidates.length === 0) {
-    return { matchedPath: null, value: source };
-  }
-
-  for (const candidate of candidates) {
-    const candidateValue = resolveStudioJsonPath(source, candidate);
-    if (candidateValue !== undefined) {
-      return { matchedPath: candidate, value: candidateValue };
-    }
-  }
-
-  return { matchedPath: candidates[0] ?? null, value: undefined };
-}
-
 function resolveDefaultPanel(mode: NonNullable<Props["mode"]>): AutomationStudioPanelId {
   if (mode === "scripts") return "scripts";
   if (mode === "files") return "files";
   if (mode === "results") return "results";
   return "overview";
-}
-
-function normalizeLinkedReleaseRuns(releases: unknown[]): LinkedReleaseRun[] {
-  return releases
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const record = item as Record<string, unknown>;
-      const slug = typeof record.slug === "string" ? record.slug.trim() : "";
-      if (!slug) return null;
-      const runIdRaw = record.runId;
-      const parsedRunId =
-        typeof runIdRaw === "number"
-          ? runIdRaw
-          : typeof runIdRaw === "string"
-            ? Number(runIdRaw)
-            : Number.NaN;
-
-      return {
-        slug,
-        title:
-          (typeof record.title === "string" && record.title.trim()) ||
-          (typeof record.name === "string" && record.name.trim()) ||
-          slug,
-        summary: typeof record.summary === "string" && record.summary.trim() ? record.summary : null,
-        app: typeof record.app === "string" && record.app.trim() ? record.app : null,
-        qaseProject: typeof record.qaseProject === "string" && record.qaseProject.trim() ? record.qaseProject : null,
-        runId: Number.isFinite(parsedRunId) && parsedRunId > 0 ? parsedRunId : null,
-      } satisfies LinkedReleaseRun;
-    })
-    .filter((item): item is LinkedReleaseRun => Boolean(item));
 }
 
 export default function AutomationStudio({
@@ -1244,7 +680,7 @@ export default function AutomationStudio({
   );
   const initialDraft = useMemo(() => buildDefaultDraft(bootstrapFlow, access), [access, bootstrapFlow]);
   const [selectedCompanySlug, setSelectedCompanySlug] = useState(initialCompanySlug);
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(getDefaultAutomationEnvironmentId(initialCompanySlug));
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(isTestingCompanyScope(initialCompanySlug) ? "qc-local" : (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local"));
   const [customFlowsRevision, setCustomFlowsRevision] = useState(0);
   const [selectedFlowId, setSelectedFlowId] = useState(bootstrapFlow?.id ?? BUILT_IN_FLOWS[0]?.id ?? "griaule-biometrics");
   const [draft, setDraft] = useState<FlowDraft>(initialDraft);
@@ -1254,23 +690,13 @@ export default function AutomationStudio({
   const [versionNote, setVersionNote] = useState("Snapshot manual do studio");
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [runPreview, setRunPreview] = useState<RunPreview | null>(null);
-  const [previewSync, setPreviewSync] = useState<{ at: string; mode: "manual" | "auto" } | null>(null);
   const [debugCursor, setDebugCursor] = useState(0);
   const [activePanel, setActivePanel] = useState<AutomationStudioPanelId>(() => resolveDefaultPanel(mode));
   const [scriptTarget, setScriptTarget] = useState<"flow" | "step">("flow");
   const [showScriptStepsPanel, setShowScriptStepsPanel] = useState(true);
   const [showScriptToolkitPanel, setShowScriptToolkitPanel] = useState(true);
-  const [stepRunning, setStepRunning] = useState(false);
   const [isFileLibraryOpen, setIsFileLibraryOpen] = useState(false);
   const [fileLibraryQuery, setFileLibraryQuery] = useState("");
-  const [savedBase64Entries, setSavedBase64Entries] = useState<SavedBase64Entry[]>([]);
-  const [savedBase64Loading, setSavedBase64Loading] = useState(false);
-  const [selectedSavedBase64Id, setSelectedSavedBase64Id] = useState("");
-  const [imageConversionLoading, setImageConversionLoading] = useState(false);
-  const imageConvertInputRef = useRef<HTMLInputElement | null>(null);
-  const [runPreviewLoading, setRunPreviewLoading] = useState(false);
-  const [availableRuns, setAvailableRuns] = useState<LinkedReleaseRun[]>([]);
-  const [runsLoading, setRunsLoading] = useState(false);
   const scriptEditorRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -1278,88 +704,12 @@ export default function AutomationStudio({
   }, [mode]);
   useEffect(() => {
     setSelectedEnvironmentId((current) => {
-      const normalizedScope = normalizeAutomationCompanyScope(selectedCompanySlug);
-      const defaultEnvironmentId = getDefaultAutomationEnvironmentId(selectedCompanySlug);
-      if (normalizedScope === "testing-company") {
+      if (isTestingCompanyScope(selectedCompanySlug)) {
         return current === "qc-local" ? current : "qc-local";
       }
 
-      if (normalizedScope === "griaule") {
-        return current === "local" || current === "qc-local" ? defaultEnvironmentId : current;
-      }
-
-      if (current.startsWith("griaule-hml-")) {
-        return defaultEnvironmentId;
-      }
-
-      return current === "qc-local" ? defaultEnvironmentId : current;
+      return current === "qc-local" ? (AUTOMATION_ENVIRONMENTS[0]?.id ?? "local") : current;
     });
-  }, [selectedCompanySlug]);
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadRuns() {
-      if (!selectedCompanySlug) {
-        if (mounted) setAvailableRuns([]);
-        return;
-      }
-
-      setRunsLoading(true);
-      try {
-        const response = await fetch(`/api/releases?companySlug=${encodeURIComponent(selectedCompanySlug)}`, { cache: "no-store" });
-        const payload = (await response.json().catch(() => null)) as { releases?: unknown[] } | null;
-        const rows = response.ok && Array.isArray(payload?.releases) ? normalizeLinkedReleaseRuns(payload.releases) : [];
-        if (mounted) setAvailableRuns(rows);
-      } catch {
-        if (mounted) setAvailableRuns([]);
-      } finally {
-        if (mounted) setRunsLoading(false);
-      }
-    }
-
-    loadRuns();
-
-    return () => {
-      mounted = false;
-    };
-  }, [selectedCompanySlug]);
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadSavedBase64() {
-      if (!selectedCompanySlug) {
-        if (mounted) {
-          setSavedBase64Entries([]);
-          setSelectedSavedBase64Id("");
-        }
-        return;
-      }
-
-      setSavedBase64Loading(true);
-      try {
-        const response = await fetch(`/api/automations/base64?companySlug=${encodeURIComponent(selectedCompanySlug)}`, {
-          cache: "no-store",
-        });
-        const payload = (await response.json().catch(() => null)) as { entries?: SavedBase64Entry[] } | null;
-        const rows = response.ok && Array.isArray(payload?.entries) ? payload.entries : [];
-        if (!mounted) return;
-        setSavedBase64Entries(rows);
-        setSelectedSavedBase64Id(rows[0]?.id || "");
-      } catch {
-        if (mounted) {
-          setSavedBase64Entries([]);
-          setSelectedSavedBase64Id("");
-        }
-      } finally {
-        if (mounted) setSavedBase64Loading(false);
-      }
-    }
-
-    void loadSavedBase64();
-
-    return () => {
-      mounted = false;
-    };
   }, [selectedCompanySlug]);
   const customFlows = useMemo(() => {
     const revision = customFlowsRevision;
@@ -1386,10 +736,6 @@ export default function AutomationStudio({
   const selectedStep = useMemo(
     () => draft.steps.find((step) => step.id === selectedStepId) || draft.steps[0] || null,
     [draft.steps, selectedStepId],
-  );
-  const selectedSavedBase64Entry = useMemo(
-    () => savedBase64Entries.find((entry) => entry.id === selectedSavedBase64Id) || null,
-    [savedBase64Entries, selectedSavedBase64Id],
   );
   const visibleAssets = useMemo(
     () => AUTOMATION_STUDIO_ASSETS.filter((asset) => asset.flowIds.includes(selectedFlow.id)),
@@ -1517,83 +863,6 @@ export default function AutomationStudio({
       ...current,
       steps: current.steps.map((step) => (step.id === stepId ? updater(step) : step)),
     }));
-  }
-
-  async function runSelectedApiStep(step: DraftStep) {
-    setStepRunning(true);
-    try {
-      const result = await runApiStep(step, selectedEnvironment?.baseUrl ?? "", selectedCompanySlug || null);
-      const variableKey = step.apiSaveResponseTo.trim();
-      const variablePath = step.apiSaveJsonPath.trim();
-
-      updateDraft((current) => {
-        const resolvedPath = variablePath
-          ? resolveStudioJsonPathWithFallback(result.json, variablePath)
-          : { matchedPath: null as string | null, value: result.json };
-        const extractedValue = resolvedPath.value;
-        const pathLabel = resolvedPath.matchedPath ?? variablePath;
-        const firstPathCandidate = variablePath ? splitStudioJsonPathCandidates(variablePath)[0] ?? null : null;
-        const usedFallback = Boolean(firstPathCandidate && pathLabel && pathLabel !== firstPathCandidate);
-        const stepRunResult: StepRunResult = {
-          ...result,
-          savedVariableKey: variableKey || null,
-          savedVariablePath: pathLabel || null,
-          savedVariableUsedFallback: usedFallback,
-        };
-        const nextSteps = current.steps.map((currentStep) =>
-          currentStep.id === step.id ? { ...currentStep, _runResult: stepRunResult } : currentStep,
-        );
-
-        if (!variableKey) {
-          return { ...current, steps: nextSteps };
-        }
-
-        const variableValue = serializeApiVariableValue(extractedValue);
-        const variableIndex = current.variables.findIndex((item) => item.key === variableKey);
-        const nextVariables = [...current.variables];
-
-        if (variableIndex >= 0) {
-          nextVariables[variableIndex] = {
-            ...nextVariables[variableIndex],
-            description: `Atualizada pela etapa ${step.title}${pathLabel ? ` (${pathLabel})` : ""}`,
-            source: "api",
-            value: variableValue,
-          };
-        } else {
-          nextVariables.push({
-            description: `Gerada pela etapa ${step.title}${pathLabel ? ` (${pathLabel})` : ""}`,
-            id: createClientId(),
-            key: variableKey,
-            scope: "local",
-            source: "api",
-            value: variableValue,
-          });
-        }
-
-        return {
-          ...current,
-          steps: nextSteps,
-          variables: nextVariables,
-        };
-      });
-    } catch (err) {
-      updateDraftStep(step.id, (currentStep) => ({
-        ...currentStep,
-        _runResult: {
-          status: 0,
-          statusText: "Erro",
-          durationMs: 0,
-          json: null,
-          error: err instanceof Error ? err.message : "Erro desconhecido",
-          assertPassed: null,
-          savedVariableKey: null,
-          savedVariablePath: null,
-          savedVariableUsedFallback: false,
-        },
-      }));
-    } finally {
-      setStepRunning(false);
-    }
   }
 
   function updateVariable(variableId: string, field: keyof FlowVariable, value: string) {
@@ -1778,87 +1047,12 @@ export default function AutomationStudio({
         [field]:
           field === "debugMode" || field === "notifyOnFailure" || field === "allowProductionWrite"
             ? Boolean(value)
-            : field === "simulationMode" || field === "uploadStrategy" || field === "imageInputMode" || field === "imageResizeMode" || field === "imageTargetFormat"
+            : field === "simulationMode" || field === "uploadStrategy"
               ? String(value)
               : Number(value),
       } as FlowRuntimeConfig,
     }));
   }
-
-  const applySavedBase64ToFlow = useCallback(async () => {
-    if (!selectedCompanySlug || !selectedSavedBase64Id || imageConversionLoading) return;
-
-    setImageConversionLoading(true);
-    try {
-      const response = await fetch(
-        `/api/automations/base64?companySlug=${encodeURIComponent(selectedCompanySlug)}&id=${encodeURIComponent(selectedSavedBase64Id)}`,
-        { cache: "no-store" },
-      );
-      const payload = (await response.json().catch(() => null)) as { entry?: { base64_data?: string; name?: string } } | null;
-      const base64Data = payload?.entry?.base64_data;
-      if (!response.ok || !base64Data) return;
-
-      updateDraft((current) => ({
-        ...current,
-        auditTrail: [
-          buildAuditEntry(access.profileLabel, `Base64 salvo ${payload.entry?.name ?? selectedSavedBase64Id} aplicado ao fluxo.`),
-          ...current.auditTrail,
-        ].slice(0, 20),
-        base64Sample: base64Data,
-        runtime: {
-          ...current.runtime,
-          imageInputMode: "saved_base64",
-        },
-      }));
-    } finally {
-      setImageConversionLoading(false);
-    }
-  }, [access.profileLabel, imageConversionLoading, selectedCompanySlug, selectedSavedBase64Id, updateDraft]);
-
-  const convertImageForFlow = useCallback(async () => {
-    const file = imageConvertInputRef.current?.files?.[0] ?? null;
-    if (!file || !selectedCompanySlug || imageConversionLoading) return;
-    if (!file.type.startsWith("image/")) return;
-
-    setImageConversionLoading(true);
-    try {
-      const converted = await convertImageFileToDataURL(file, {
-        quality: draft.runtime.imageQuality,
-        resizeHeight: draft.runtime.imageResizeHeight,
-        resizeMode: draft.runtime.imageResizeMode,
-        resizeWidth: draft.runtime.imageResizeWidth,
-        targetFormat: draft.runtime.imageTargetFormat,
-      });
-
-      updateDraft((current) => ({
-        ...current,
-        auditTrail: [
-          buildAuditEntry(access.profileLabel, `Imagem ${file.name} convertida para ${draft.runtime.imageTargetFormat.toUpperCase()} no fluxo.`),
-          ...current.auditTrail,
-        ].slice(0, 20),
-        base64Sample: converted,
-        runtime: {
-          ...current.runtime,
-          imageInputMode: "convert_now",
-        },
-      }));
-    } finally {
-      if (imageConvertInputRef.current) {
-        imageConvertInputRef.current.value = "";
-      }
-      setImageConversionLoading(false);
-    }
-  }, [
-    access.profileLabel,
-    draft.runtime.imageQuality,
-    draft.runtime.imageResizeHeight,
-    draft.runtime.imageResizeMode,
-    draft.runtime.imageResizeWidth,
-    draft.runtime.imageTargetFormat,
-    imageConversionLoading,
-    selectedCompanySlug,
-    updateDraft,
-  ]);
 
   function createCustomFlow(mode: "blank" | "clone") {
     if (!canEditFlow || !selectedCompanySlug) return;
@@ -1940,94 +1134,18 @@ export default function AutomationStudio({
     activateFlow(selectedCompanySlug, visibleBuiltInFlows[0]?.id ?? selectedFlow.id);
   }
 
-  async function resolveLinkedRun(companySlug: string, flow: FlowDefinition, preferredRunSlug: string): Promise<LinkedReleaseRun | null> {
-    try {
-      const baseRows = availableRuns.length > 0 ? availableRuns : null;
-      let rows = baseRows;
-
-      if (!rows) {
-        const response = await fetch(`/api/releases?companySlug=${encodeURIComponent(companySlug)}`, { cache: "no-store" });
-        const payload = (await response.json().catch(() => null)) as { releases?: unknown[] } | null;
-        rows = response.ok && Array.isArray(payload?.releases) ? normalizeLinkedReleaseRuns(payload.releases) : [];
-      }
-
-      if (!rows || rows.length === 0) return null;
-
-      if (preferredRunSlug.trim()) {
-        const preferred = rows.find((row) => row.slug === preferredRunSlug.trim());
-        if (preferred) return preferred;
-      }
-
-      const needle = [flow.id, flow.realRunnerId, flow.title]
-        .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
-        .map((part) => part.toLowerCase());
-
-      if (needle.length) {
-        const matched = rows.find((row) => {
-          const haystack = `${row.slug} ${row.title} ${row.summary || ""} ${row.app || ""} ${row.qaseProject || ""}`.toLowerCase();
-          return needle.some((key) => haystack.includes(key));
-        });
-        if (matched) return matched;
-      }
-
-      return rows[0] || null;
-    } catch {
-      return null;
-    }
-  }
-
-  const runPreparation = useCallback(async (options?: { silent?: boolean }) => {
+  function runPreparation() {
     if (!selectedCompany || !selectedEnvironment) return;
-    const silent = options?.silent === true;
-    if (!silent) setRunPreviewLoading(true);
-    try {
-      const linkedRun = selectedCompanySlug ? await resolveLinkedRun(selectedCompanySlug, selectedFlow, draft.linkedRunSlug) : null;
-      if (!draft.linkedRunSlug && linkedRun?.slug) {
-        updateDraft((current) => ({ ...current, linkedRunSlug: linkedRun.slug }));
-      }
-      const nextPreview = buildRunPreview({
+    setRunPreview(
+      buildRunPreview({
         access,
-        companySlug: selectedCompanySlug || null,
         companyName: selectedCompany.name,
         draft,
         environmentTitle: selectedEnvironment.title,
         flow: selectedFlow,
-        linkedRun,
-      });
-      setRunPreview(nextPreview);
-      setPreviewSync({ at: nextPreview.generatedAt, mode: silent ? "auto" : "manual" });
-    } finally {
-      if (!silent) setRunPreviewLoading(false);
-    }
-  }, [
-    access,
-    draft,
-    resolveLinkedRun,
-    selectedCompany,
-    selectedCompanySlug,
-    selectedEnvironment,
-    selectedFlow,
-    updateDraft,
-  ]);
-
-  const runPreparationRef = useRef(runPreparation);
-  useEffect(() => {
-    runPreparationRef.current = runPreparation;
-  }, [runPreparation]);
-
-  useEffect(() => {
-    if (!runPreview) return;
-    if (activePanel !== "results") return;
-    if (!selectedCompanySlug) return;
-
-    const timer = setTimeout(() => {
-      void runPreparationRef.current({ silent: true });
-    }, 320);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [activePanel, draft.linkedRunSlug, effectiveSelectedFlowId, runPreview, selectedCompanySlug, selectedEnvironmentId]);
+      }),
+    );
+  }
 
   const filteredLibraryAssets = useMemo(() => {
     const query = fileLibraryQuery.trim().toLowerCase();
@@ -2098,8 +1216,8 @@ export default function AutomationStudio({
     const breadcrumbCompany = selectedCompany?.name || selectedCompanySlug || "Empresa";
 
     return (
-      <section className="space-y-4 rounded-4xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+      <section className="space-y-4 rounded-[32px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
           <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
               <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -2190,7 +1308,7 @@ export default function AutomationStudio({
             <div className="flex flex-wrap items-end gap-2">
               <button
                 type="button"
-                onClick={() => void runPreparation()}
+                onClick={runPreparation}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
               >
                 <FiPlay className="h-4 w-4" />
@@ -2240,7 +1358,7 @@ export default function AutomationStudio({
                           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                             Etapa {index + 1}
                           </p>
-                          <p className="mt-1 wrap-break-word text-sm font-black tracking-[-0.02em] text-(--tc-text,#0b1a3c)">{step.title}</p>
+                          <p className="mt-1 break-words text-sm font-black tracking-[-0.02em] text-(--tc-text,#0b1a3c)">{step.title}</p>
                         </div>
                         <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${kindTone(step.kind)}`}>
                           {kindLabel(step.kind)}
@@ -2288,7 +1406,6 @@ export default function AutomationStudio({
             <textarea
               ref={scriptEditorRef}
               value={scriptValue}
-              aria-label="Editor de script"
               onChange={(event) => {
                 if (!canEditFlow) return;
                 if (scriptTarget === "step") {
@@ -2301,7 +1418,7 @@ export default function AutomationStudio({
               }}
               readOnly={!canEditFlow}
               rows={26}
-              className="mt-4 w-full rounded-3xl border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
+              className="mt-4 w-full rounded-[24px] border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
             />
           </article>
 
@@ -2313,10 +1430,9 @@ export default function AutomationStudio({
               </div>
 
               <div className="mt-4 space-y-4">
-                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Templates</p>
                   <select
-                    aria-label="Template de script"
                     value={selectedTemplateId}
                     onChange={(event) => setSelectedTemplateId(event.target.value)}
                     className="mt-3 min-h-11 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none"
@@ -2356,7 +1472,7 @@ export default function AutomationStudio({
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Biblioteca de funções</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {AUTOMATION_STUDIO_SCRIPT_API.map((item) => (
@@ -2370,7 +1486,7 @@ export default function AutomationStudio({
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Versionamento</p>
                   <label className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                     Nota da versão
@@ -2408,13 +1524,12 @@ export default function AutomationStudio({
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Biblioteca de arquivos</p>
                   <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Selecionar asset</h2>
-                  <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">
+                  <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
                     Busque e insira referências de `assets.resolve()` diretamente no editor, sem poluir a tela principal.
                   </p>
                 </div>
                 <button
                   type="button"
-                  aria-label="Fechar biblioteca de arquivos"
                   onClick={() => setIsFileLibraryOpen(false)}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
@@ -2506,7 +1621,7 @@ export default function AutomationStudio({
 
   return (
     <section className="space-y-3 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 shadow-sm sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
             <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -2538,12 +1653,12 @@ export default function AutomationStudio({
         </Link>
       </div>
       {showOverviewHero ? (
-        <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_320px]">
-          <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Resumo rápido</p>
-                <h2 className="mt-2 text-lg sm:text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedFlow.title}</h2>
+                <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedFlow.title}</h2>
                 <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{selectedFlow.objective}</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -2563,7 +1678,7 @@ export default function AutomationStudio({
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
+            <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
               {compactOverviewCards.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -2572,7 +1687,7 @@ export default function AutomationStudio({
                       <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">{item.label}</p>
                       <Icon className="h-4 w-4" />
                     </div>
-                    <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em]">{item.value}</p>
+                    <p className="mt-2 text-lg font-black tracking-[-0.03em]">{item.value}</p>
                     <p className="mt-1 text-xs opacity-80">{item.hint}</p>
                   </div>
                 );
@@ -2580,7 +1695,7 @@ export default function AutomationStudio({
             </div>
           </article>
 
-          <aside className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+          <aside className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiShield className="h-4 w-4" />
               Acesso atual
@@ -2604,8 +1719,8 @@ export default function AutomationStudio({
         </div>
       ) : null}
 
-      <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
-        <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(180px,0.78fr)_minmax(160px,0.56fr)_minmax(260px,1fr)_auto]">
+      <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+        <div className="grid gap-3 xl:grid-cols-[minmax(180px,0.78fr)_minmax(160px,0.56fr)_minmax(260px,1fr)_auto]">
           <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             Empresa
             <select
@@ -2651,10 +1766,10 @@ export default function AutomationStudio({
             </select>
           </label>
 
-          <div className="flex flex-wrap items-end gap-2 md:col-span-2 2xl:col-span-1">
+          <div className="flex flex-wrap items-end gap-2">
             <button
               type="button"
-              onClick={() => void runPreparation()}
+              onClick={runPreparation}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
             >
               <FiPlay className="h-4 w-4" />
@@ -2675,7 +1790,7 @@ export default function AutomationStudio({
       </article>
 
       {mode === "flows" ? (
-        <div className="flex flex-wrap gap-2 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
+        <div className="flex flex-wrap gap-2 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
           {[
             { id: "overview" as const, label: "Visão geral", icon: FiLayers },
             { id: "steps" as const, label: "Etapas", icon: FiGitBranch },
@@ -2703,8 +1818,8 @@ export default function AutomationStudio({
         </div>
       ) : null}
 
-      <div className={showAssetSidebar ? "grid gap-3 sm:gap-4 2xl:grid-cols-[minmax(0,1.18fr)_minmax(300px,0.82fr)]" : "grid gap-3 sm:gap-4"}>
-        <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
+      <div className={showAssetSidebar ? "grid gap-4 2xl:grid-cols-[minmax(0,1.22fr)_minmax(360px,0.78fr)]" : "grid gap-4"}>
+        <article className="min-w-0 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -2716,9 +1831,6 @@ export default function AutomationStudio({
               <h3 className="mt-2 text-2xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedFlow.title}</h3>
               <p className="mt-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">{selectedFlow.objective}</p>
               <p className="mt-1 max-w-4xl text-xs text-(--tc-text-secondary,#4b5563)">{selectedFlow.description}</p>
-              <p className="mt-2 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">
-                O que faz: centraliza a visao do fluxo e organiza configuracao, etapas, arquivos e resultado em blocos separados.
-              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
@@ -2736,41 +1848,35 @@ export default function AutomationStudio({
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
-            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+          <div className="mt-4 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Empresa</p>
-              <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedCompany?.name || "Sem empresa"}</p>
+              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedCompany?.name || "Sem empresa"}</p>
             </div>
-            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Etapas</p>
-              <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{draft.steps.length}</p>
+              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{draft.steps.length}</p>
             </div>
-            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Assets</p>
-              <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{boundAssetCount}</p>
+              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{boundAssetCount}</p>
             </div>
-            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Salvo localmente</p>
-              <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{lastSavedAt || "aguardando"}</p>
+              <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{lastSavedAt || "aguardando"}</p>
             </div>
           </div>
 
           <div
             className={
               activePanel === "overview"
-                ? "mt-4 grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]"
-                : "mt-4 grid items-start gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.92fr)]"
+                ? "mt-4 grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_320px]"
+                : "mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.92fr)]"
             }
           >
             <div className="space-y-4">
               {activePanel === "overview" ? (
                 <div className="grid gap-3 lg:grid-cols-2">
-                <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 lg:col-span-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">O que faz</p>
-                  <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                    Define metadados do fluxo (titulo, objetivo, runner e descricao) para padronizar manutencao e handoff do time.
-                  </p>
-                </div>
                 <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                   Título
                   <input
@@ -2817,13 +1923,7 @@ export default function AutomationStudio({
               ) : null}
 
               {activePanel === "steps" ? (
-                <div className="grid gap-3 2xl:grid-cols-2">
-                <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">O que faz</p>
-                  <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                    Organiza cada etapa do fluxo com contexto de binding, controle e subfluxo para facilitar leitura operacional.
-                  </p>
-                </div>
+                <div className="grid gap-3 lg:grid-cols-2">
                 {draft.steps.map((step, index) => {
                   const selected = selectedStep?.id === step.id;
                   const subflow = findSubflow(step.subflowId);
@@ -2831,7 +1931,7 @@ export default function AutomationStudio({
                   return (
                     <article
                       key={step.id}
-                      className={`rounded-3xl border p-4 transition ${
+                      className={`rounded-[24px] border p-4 transition ${
                         selected
                           ? "border-(--tc-accent,#ef0001) bg-[#fff5f5] shadow-[0_12px_30px_rgba(239,0,1,0.08)]"
                           : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"
@@ -2843,7 +1943,7 @@ export default function AutomationStudio({
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                               Etapa {index + 1}
                             </p>
-                            <h4 className="mt-2 wrap-break-word text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{step.title}</h4>
+                            <h4 className="mt-2 break-words text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{step.title}</h4>
                           </div>
                           <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${kindTone(step.kind)}`}>
                             {kindLabel(step.kind)}
@@ -2854,7 +1954,7 @@ export default function AutomationStudio({
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
                           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Binding</p>
-                            <p className="mt-1 wrap-break-word text-sm font-semibold text-(--tc-text,#0b1a3c)">{step.inputBinding || "Não definido"}</p>
+                            <p className="mt-1 break-words text-sm font-semibold text-(--tc-text,#0b1a3c)">{step.inputBinding || "Não definido"}</p>
                           </div>
                           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Controle</p>
@@ -2873,7 +1973,6 @@ export default function AutomationStudio({
                       <div className="mt-4 flex flex-wrap gap-2">
                         <button
                           type="button"
-                          aria-label="Mover etapa para cima"
                           onClick={() => moveStep(step.id, -1)}
                           disabled={!canEditFlow || index === 0}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
@@ -2882,7 +1981,6 @@ export default function AutomationStudio({
                         </button>
                         <button
                           type="button"
-                          aria-label="Mover etapa para baixo"
                           onClick={() => moveStep(step.id, 1)}
                           disabled={!canEditFlow || index === draft.steps.length - 1}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
@@ -2891,7 +1989,6 @@ export default function AutomationStudio({
                         </button>
                         <button
                           type="button"
-                          aria-label="Duplicar etapa"
                           onClick={() => duplicateStep(step.id)}
                           disabled={!canEditFlow}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
@@ -2900,7 +1997,6 @@ export default function AutomationStudio({
                         </button>
                         <button
                           type="button"
-                          aria-label="Remover etapa"
                           onClick={() => removeStep(step.id)}
                           disabled={!canEditFlow || draft.steps.length === 1}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-40"
@@ -2916,14 +2012,13 @@ export default function AutomationStudio({
             </div>
 
             {showFlowSidebar ? (
-              <aside className="space-y-3 sm:space-y-4">
+              <aside className="space-y-4">
               {activePanel === "overview" ? (
-                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Novo fluxo</p>
-                    <h4 className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Criar ou clonar</h4>
-                    <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: cria um fluxo novo ou replica o atual para acelerar customizacoes.</p>
+                    <h4 className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Criar ou clonar</h4>
                   </div>
                   <FiPlus className="h-5 w-5 text-(--tc-accent,#ef0001)" />
                 </div>
@@ -2985,12 +2080,11 @@ export default function AutomationStudio({
               ) : null}
 
               {activePanel === "steps" ? (
-                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
+                <article className="rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Biblioteca de ações</p>
-                    <h4 className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Adicionar etapa</h4>
-                    <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: insere novas etapas prontas para montagem rapida do fluxo.</p>
+                    <h4 className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Adicionar etapa</h4>
                   </div>
                   <FiLayers className="h-5 w-5 text-(--tc-accent,#ef0001)" />
                 </div>
@@ -3021,8 +2115,8 @@ export default function AutomationStudio({
         </article>
 
         {showAssetSidebar ? (
-          <aside className="space-y-3 sm:space-y-4">
-            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
+          <aside className="space-y-4">
+            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiFolderPlus className="h-4 w-4" />
               Biblioteca de assets
@@ -3083,7 +2177,6 @@ export default function AutomationStudio({
                     </div>
                     <button
                       type="button"
-                      aria-label="Remover upload"
                       onClick={() => removeUpload(upload.id)}
                       disabled={!canEditFlow}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-40"
@@ -3100,9 +2193,9 @@ export default function AutomationStudio({
       </div>
 
       {activePanel !== "files" ? (
-        <div className={splitExecutionLayout ? "grid gap-3 sm:gap-4 2xl:grid-cols-[minmax(0,1.14fr)_minmax(320px,0.86fr)]" : "grid gap-3 sm:gap-4"}>
+        <div className={splitExecutionLayout ? "grid gap-4 2xl:grid-cols-[minmax(0,1.14fr)_minmax(380px,0.86fr)]" : "grid gap-4"}>
         {activePanel === "steps" ? (
-          <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
+          <article className="min-w-0 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
             <FiCode className="h-4 w-4" />
             Configuração da etapa e do fluxo
@@ -3311,240 +2404,11 @@ export default function AutomationStudio({
                 </label>
               </div>
 
-              {(selectedStep.kind === "http_request" || selectedStep.kind === "graphql_request") ? (
-                <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4 space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                      <FiZap className="h-4 w-4" />
-                      {selectedStep.kind === "graphql_request" ? "GraphQL" : "HTTP Request"}
-                    </div>
-                    <button
-                      type="button"
-                      disabled={stepRunning}
-                      onClick={() => runSelectedApiStep(selectedStep)}
-                      className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
-                    >
-                      <FiPlay className="h-3.5 w-3.5" />
-                      {stepRunning ? "Executando…" : "Executar etapa"}
-                    </button>
-                  </div>
-
-                  {selectedStep.kind === "http_request" ? (
-                    <div className="grid gap-3 md:grid-cols-[120px_minmax(0,1fr)]">
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        Método
-                        <select
-                          value={selectedStep.apiMethod}
-                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiMethod: e.target.value as DraftStep["apiMethod"] }))}
-                          disabled={!canEditFlow}
-                          className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none disabled:cursor-not-allowed"
-                        >
-                          {(["GET","POST","PUT","PATCH","DELETE"] as const).map((m) => <option key={m}>{m}</option>)}
-                        </select>
-                      </label>
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        URL / Path
-                        <input
-                          value={selectedStep.apiUrl}
-                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiUrl: e.target.value }))}
-                          readOnly={!canEditFlow}
-                          placeholder="/api/health ou https://…"
-                          className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
-                        />
-                      </label>
-                    </div>
-                  ) : (
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      Endpoint GraphQL
-                      <input
-                        value={selectedStep.apiUrl}
-                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiUrl: e.target.value }))}
-                        readOnly={!canEditFlow}
-                        placeholder="/graphql"
-                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
-                      />
-                    </label>
-                  )}
-
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      Auth
-                      <select
-                        value={selectedStep.apiAuthType}
-                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAuthType: e.target.value as DraftStep["apiAuthType"] }))}
-                        disabled={!canEditFlow}
-                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none disabled:cursor-not-allowed"
-                      >
-                        <option value="none">Nenhuma</option>
-                        <option value="bearer">Bearer</option>
-                        <option value="basic">Basic</option>
-                        <option value="api-key">API Key</option>
-                      </select>
-                    </label>
-                    {selectedStep.apiAuthType !== "none" ? (
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        Token / credencial
-                        <input
-                          value={selectedStep.apiAuthValue}
-                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAuthValue: e.target.value }))}
-                          readOnly={!canEditFlow}
-                          placeholder="{{token}}"
-                          className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
-                        />
-                      </label>
-                    ) : null}
-                  </div>
-
-                  <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                    Headers extras (uma linha por header: Key: Value)
-                    <textarea
-                      value={selectedStep.apiHeaders}
-                      onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiHeaders: e.target.value }))}
-                      readOnly={!canEditFlow}
-                      rows={3}
-                      placeholder={"Content-Type: application/json\nX-Tenant-Id: griaule"}
-                      className="rounded-xl border border-(--tc-border,#d7deea) bg-[#081227] px-3 py-2 font-mono text-xs leading-6 text-white outline-none read-only:cursor-default"
-                    />
-                  </label>
-
-                  {selectedStep.kind === "graphql_request" ? (
-                    <>
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        Query / Mutation
-                        <textarea
-                          value={selectedStep.gqlQuery}
-                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, gqlQuery: e.target.value }))}
-                          readOnly={!canEditFlow}
-                          rows={6}
-                          spellCheck={false}
-                          className="rounded-xl border border-(--tc-border,#d7deea) bg-[#081227] px-3 py-2 font-mono text-xs leading-6 text-white outline-none read-only:cursor-default"
-                        />
-                      </label>
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        Variables (JSON)
-                        <textarea
-                          value={selectedStep.gqlVariables}
-                          onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, gqlVariables: e.target.value }))}
-                          readOnly={!canEditFlow}
-                          rows={3}
-                          spellCheck={false}
-                          className="rounded-xl border border-(--tc-border,#d7deea) bg-[#081227] px-3 py-2 font-mono text-xs leading-6 text-white outline-none read-only:cursor-default"
-                        />
-                      </label>
-                    </>
-                  ) : (
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      Body (JSON)
-                      <textarea
-                        value={selectedStep.apiBody}
-                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiBody: e.target.value }))}
-                        readOnly={!canEditFlow}
-                        rows={5}
-                        spellCheck={false}
-                        placeholder={'{"cpf":"{{cpf}}"}'}
-                        className="rounded-xl border border-(--tc-border,#d7deea) bg-[#081227] px-3 py-2 font-mono text-xs leading-6 text-white outline-none read-only:cursor-default"
-                      />
-                    </label>
-                  )}
-
-                  <div className="grid gap-3 md:grid-cols-3">
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      Assert status
-                      <input
-                        value={selectedStep.apiAssertStatus}
-                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAssertStatus: e.target.value }))}
-                        readOnly={!canEditFlow}
-                        placeholder="200"
-                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      JSON path
-                      <input
-                        value={selectedStep.apiAssertJsonPath}
-                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAssertJsonPath: e.target.value }))}
-                        readOnly={!canEditFlow}
-                        placeholder="data.items.0.status"
-                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      Valor esperado
-                      <input
-                        value={selectedStep.apiAssertExpected}
-                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiAssertExpected: e.target.value }))}
-                        readOnly={!canEditFlow}
-                        placeholder="active"
-                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      Salvar resposta em variável
-                      <input
-                        value={selectedStep.apiSaveResponseTo}
-                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiSaveResponseTo: e.target.value }))}
-                        readOnly={!canEditFlow}
-                        placeholder="ex.: loginToken"
-                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
-                      />
-                    </label>
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      JSON path para salvar (opcional)
-                      <input
-                        value={selectedStep.apiSaveJsonPath}
-                        onChange={(e) => updateDraftStep(selectedStep.id, (s) => ({ ...s, apiSaveJsonPath: e.target.value }))}
-                        readOnly={!canEditFlow}
-                        placeholder='ex.: data.token || data.auth.token || token'
-                        className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none read-only:cursor-default"
-                      />
-                    </label>
-                  </div>
-
-                  {selectedStep._runResult ? (
-                    <div className={`rounded-xl border px-4 py-3 space-y-2 ${selectedStep._runResult.error ? "border-rose-300 bg-rose-50" : selectedStep._runResult.assertPassed === false ? "border-amber-300 bg-amber-50" : "border-emerald-300 bg-emerald-50"}`}>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Resultado</p>
-                      {selectedStep._runResult.error ? (
-                        <p className="text-sm font-semibold text-rose-700">{selectedStep._runResult.error}</p>
-                      ) : (
-                        <>
-                          <div className="flex flex-wrap gap-3 text-xs font-semibold text-(--tc-text,#0b1a3c)">
-                            <span>{selectedStep._runResult.status} {selectedStep._runResult.statusText}</span>
-                            <span>{selectedStep._runResult.durationMs}ms</span>
-                            {selectedStep._runResult.assertPassed !== null ? (
-                              <span className={selectedStep._runResult.assertPassed ? "text-emerald-700" : "text-rose-700"}>
-                                Assertion: {selectedStep._runResult.assertPassed ? "passou" : "falhou"}
-                              </span>
-                            ) : null}
-                            {selectedStep._runResult.savedVariableKey ? (
-                              <span className="text-(--tc-text-secondary,#4b5563)">
-                                Variável: {selectedStep._runResult.savedVariableKey}
-                                {selectedStep._runResult.savedVariablePath ? ` (${selectedStep._runResult.savedVariablePath})` : ""}
-                              </span>
-                            ) : null}
-                            {selectedStep._runResult.savedVariableUsedFallback ? (
-                              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-amber-700">
-                                fallback
-                              </span>
-                            ) : null}
-                          </div>
-                          <pre className="overflow-auto rounded-lg bg-[#081227] px-3 py-2 font-mono text-[11px] leading-6 text-white max-h-40">
-                            {JSON.stringify(selectedStep._runResult.json, null, 2)}
-                          </pre>
-                        </>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-
-              <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+              <div className="mt-5 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Edição de script</p>
-                    <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">
+                    <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
                       Para não misturar configuração, mapeamentos e código, o editor completo fica na área Scripts.
                     </p>
                   </div>
@@ -3568,9 +2432,9 @@ export default function AutomationStudio({
         ) : null}
 
         {activePanel === "overview" || activePanel === "mappings" || activePanel === "results" ? (
-          <aside className="space-y-3 sm:space-y-4">
+          <aside className="space-y-4">
           {activePanel === "overview" ? (
-            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
+            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiUploadCloud className="h-4 w-4" />
               Triggers e runtime
@@ -3591,7 +2455,7 @@ export default function AutomationStudio({
                   ))}
                 </select>
               </label>
-              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">
+              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
                 {AUTOMATION_STUDIO_TRIGGER_MODES.find((mode) => mode.id === draft.trigger.mode)?.summary}
               </div>
               <label className="flex items-center justify-between gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
@@ -3747,15 +2611,14 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "mappings" ? (
-            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Variáveis e subfluxos</p>
-                <h3 className="mt-2 text-lg sm:text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Parâmetros dinâmicos</h3>
+                <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Parâmetros dinâmicos</h3>
               </div>
               <button
                 type="button"
-                aria-label="Adicionar variável"
                 onClick={appendVariable}
                 disabled={!canEditFlow}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-primary,#011848) disabled:cursor-not-allowed disabled:opacity-60"
@@ -3769,25 +2632,20 @@ export default function AutomationStudio({
                   <div className="grid gap-3">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <input
-                        aria-label="Nome da variável"
                         value={variable.key}
                         onChange={(event) => updateVariable(variable.id, "key", event.target.value)}
                         readOnly={!canEditFlow}
-                        placeholder="chave"
                         className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                       />
                       <input
-                        aria-label="Valor da variável"
                         value={variable.value}
                         onChange={(event) => updateVariable(variable.id, "value", event.target.value)}
                         readOnly={!canEditFlow}
-                        placeholder="valor"
                         className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                       />
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <select
-                        aria-label="Escopo da variável"
                         value={variable.scope}
                         onChange={(event) => updateVariable(variable.id, "scope", event.target.value)}
                         disabled={!canEditFlow}
@@ -3797,7 +2655,6 @@ export default function AutomationStudio({
                         <option value="local">local</option>
                       </select>
                       <select
-                        aria-label="Origem da variável"
                         value={variable.source}
                         onChange={(event) => updateVariable(variable.id, "source", event.target.value)}
                         disabled={!canEditFlow}
@@ -3812,12 +2669,10 @@ export default function AutomationStudio({
                       </select>
                     </div>
                     <textarea
-                      aria-label="Descrição da variável"
                       value={variable.description}
                       onChange={(event) => updateVariable(variable.id, "description", event.target.value)}
                       readOnly={!canEditFlow}
                       rows={2}
-                      placeholder="Descreva para que serve esta variável"
                       className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-6 outline-none"
                     />
                     <button
@@ -3851,141 +2706,47 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "results" ? (
-            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 sm:p-4">
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.56fr)] xl:grid-cols-[minmax(0,1fr)_minmax(240px,0.56fr)_auto] lg:items-end">
-              <div className="min-w-0">
+            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Depuração e histórico</p>
-                <h3 className="mt-2 text-lg sm:text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Preview operacional</h3>
-                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: consolida status da execucao, artefatos e sinais de estabilidade do fluxo.</p>
-                {previewSync ? (
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <span
-                      className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                        previewSync.mode === "auto"
-                          ? "border-sky-200 bg-sky-50 text-sky-700"
-                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                      }`}
-                    >
-                      {previewSync.mode}
-                    </span>
-                    <p className="text-xs font-medium text-(--tc-text-secondary,#4b5563)">
-                      Preview sincronizado {previewSync.mode === "auto" ? "automaticamente" : "manualmente"} às {previewSync.at}
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-              <div className="grid w-full min-w-0 gap-2 lg:w-auto xl:min-w-60">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Run vinculada</label>
-                <select
-                  value={draft.linkedRunSlug}
-                  onChange={(event) => updateDraft((current) => ({ ...current, linkedRunSlug: event.target.value }))}
-                  disabled={runsLoading || !canEditFlow}
-                  aria-label="Selecionar run vinculada"
-                  title="Selecionar run vinculada"
-                  className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm font-medium outline-none disabled:cursor-not-allowed"
-                >
-                  <option value="">Auto (heurística)</option>
-                  {availableRuns.map((run) => (
-                    <option key={run.slug} value={run.slug}>
-                      {run.title} {run.runId ? `#${run.runId}` : ""}
-                    </option>
-                  ))}
-                </select>
+                <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">Preview operacional</h3>
               </div>
               <button
                 type="button"
-                onClick={() => void runPreparation()}
-                disabled={runPreviewLoading}
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white lg:w-auto"
+                onClick={runPreparation}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white"
               >
                 <FiPlay className="h-4 w-4" />
-                {runPreviewLoading ? "Atualizando..." : "Atualizar"}
+                Atualizar
               </button>
             </div>
 
             {runPreview ? (
-              <div className={`mt-4 rounded-2xl border p-3 sm:p-4 ${outcomeTone(runPreview.outcome).card}`}>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Classificacao de execucao</p>
-                    <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: mostra rapidamente se a execucao esta estavel, intermitente (flaky) ou com falha persistente.</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${outcomeTone(runPreview.outcome).badge}`}>
-                        {runPreview.outcomeLabel}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text,#0b1a3c)">{runPreview.outcomeDetail}</p>
-                  </div>
-                </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {runPreview.attempts.map((attempt) => (
-                    <div key={attempt.label} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-                      <p className="text-xs font-black text-(--tc-text,#0b1a3c)">{attempt.label}</p>
-                      <p className={`mt-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${attempt.status === "passed" ? "text-emerald-700" : "text-rose-700"}`}>
-                        {attempt.status}
-                      </p>
-                      <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">{attempt.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {runPreview ? (
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {runPreview.metrics.map((metric) => (
-                  <div key={metric.label} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+                  <div key={metric.label} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">{metric.label}</p>
-                    <p className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{metric.value}</p>
+                    <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{metric.value}</p>
                     <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{metric.detail}</p>
                   </div>
                 ))}
               </div>
             ) : null}
 
-            {runPreview ? (
-              <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
-                <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
-                  <FiDatabase className="h-4 w-4 text-(--tc-accent,#ef0001)" />
-                  Artefatos e evidencias
-                </div>
-                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: concentra atalhos para investigar a run real, traces, relatorios e API de resultados.</p>
-                <div className="mt-3 grid gap-2 lg:grid-cols-2">
-                  {runPreview.artifacts.map((artifact) => (
-                    <div key={artifact.title} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3">
-                      <p className="text-sm font-black text-(--tc-text,#0b1a3c)">{artifact.title}</p>
-                      <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{artifact.description}</p>
-                      {artifact.href ? (
-                        <Link
-                          href={artifact.href}
-                          className="mt-2 block wrap-break-word rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2 font-mono text-[11px] text-(--tc-primary,#011848) underline-offset-2 hover:underline"
-                        >
-                          {artifact.hint}
-                        </Link>
-                      ) : (
-                        <p className="mt-2 wrap-break-word rounded-xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2 font-mono text-[11px] text-(--tc-text,#0b1a3c)">
-                          {artifact.hint}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="mt-4 space-y-2 rounded-3xl border border-(--tc-border,#e5e7eb) bg-[#071227] p-3 sm:p-4 text-white">
+            <div className="mt-4 space-y-2 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
               {(runPreview?.lines || [
                 "Clique em Preparar execução para gerar um preview do fluxo atual.",
                 "O preview usa empresa, ambiente, etapas habilitadas, variáveis, trigger e runtime configurados.",
               ]).map((line) => (
-                <div key={line} className="flex items-start gap-2 text-sm leading-6 sm:leading-7 text-white/80">
+                <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
                   <FiCheckCircle className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
                   <span>{line}</span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-3 sm:p-4">
+            <div className="mt-4 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
                   <FiEye className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -3995,11 +2756,9 @@ export default function AutomationStudio({
                   {draft.runtime.simulationMode}
                 </span>
               </div>
-              <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: permite navegar etapa por etapa para entender causa raiz de erro e validar bindings/output.</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  aria-label="Passo anterior"
                   onClick={() => setDebugCursor((current) => Math.max(current - 1, 0))}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
@@ -4007,7 +2766,6 @@ export default function AutomationStudio({
                 </button>
                 <button
                   type="button"
-                  aria-label="Próximo passo"
                   onClick={() => setDebugCursor((current) => Math.min(current + 1, Math.max(enabledSteps.length - 1, 0)))}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
@@ -4027,8 +2785,8 @@ export default function AutomationStudio({
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                     Passo {debugCursor + 1} de {enabledSteps.length}
                   </p>
-                  <h4 className="mt-2 text-base sm:text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{debugStep.title}</h4>
-                  <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">{debugStep.description}</p>
+                  <h4 className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{debugStep.title}</h4>
+                  <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">{debugStep.description}</p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                       binding: {debugStep.inputBinding || "n/a"}
@@ -4051,7 +2809,6 @@ export default function AutomationStudio({
                   <FiClock className="h-4 w-4 text-(--tc-accent,#ef0001)" />
                   Versões salvas
                 </div>
-                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: guarda snapshots para comparar configuracoes e voltar rapidamente para um estado anterior.</p>
                 <div className="mt-3 space-y-2">
                   {draft.versions.length > 0 ? (
                     draft.versions.map((version) => (
@@ -4089,7 +2846,6 @@ export default function AutomationStudio({
                   <FiAlertCircle className="h-4 w-4 text-(--tc-accent,#ef0001)" />
                   Auditoria local
                 </div>
-                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: rastreia alteracoes do studio para saber quem mudou o que e quando.</p>
                 <div className="mt-3 space-y-2">
                   {draft.auditTrail.slice(0, 6).map((entry) => (
                     <div key={entry.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3">
@@ -4104,193 +2860,9 @@ export default function AutomationStudio({
 
               <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                 <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
-                  <FiImage className="h-4 w-4 text-(--tc-accent,#ef0001)" />
-                  Imagem para automação
-                </div>
-                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">
-                  Escolha entre reaproveitar um Base64 salvo ou converter uma imagem agora, já com formato e redimensionamento.
-                </p>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => updateRuntime("imageInputMode", "saved_base64")}
-                    disabled={!canEditFlow}
-                    className={`inline-flex min-h-10 items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      draft.runtime.imageInputMode === "saved_base64"
-                        ? "bg-(--tc-primary,#011848) text-white"
-                        : "border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
-                    } disabled:cursor-not-allowed disabled:opacity-60`}
-                  >
-                    Base64 salvo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => updateRuntime("imageInputMode", "convert_now")}
-                    disabled={!canEditFlow}
-                    className={`inline-flex min-h-10 items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      draft.runtime.imageInputMode === "convert_now"
-                        ? "bg-(--tc-primary,#011848) text-white"
-                        : "border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
-                    } disabled:cursor-not-allowed disabled:opacity-60`}
-                  >
-                    Converter agora
-                  </button>
-                </div>
-
-                {draft.runtime.imageInputMode === "saved_base64" ? (
-                  <div className="mt-4 space-y-3">
-                    <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                      Base64 salvo
-                      <select
-                        value={selectedSavedBase64Id}
-                        onChange={(event) => setSelectedSavedBase64Id(event.target.value)}
-                        disabled={!canEditFlow || savedBase64Loading || savedBase64Entries.length === 0}
-                        className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none disabled:cursor-not-allowed"
-                      >
-                        <option value="">Selecione um Base64 salvo</option>
-                        {savedBase64Entries.map((entry) => (
-                          <option key={entry.id} value={entry.id}>
-                            {entry.name} · {formatBytes(entry.size_bytes)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {selectedSavedBase64Entry ? (
-                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">
-                        <p className="font-semibold text-(--tc-text,#0b1a3c)">{selectedSavedBase64Entry.name}</p>
-                        <p className="mt-1">
-                          {selectedSavedBase64Entry.source === "library" ? "Biblioteca" : "Upload"} · {formatBytes(selectedSavedBase64Entry.size_bytes)}
-                        </p>
-                        <p className="mt-1">Selecione e aplique para carregar esse Base64 no fluxo atual.</p>
-                      </div>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => void applySavedBase64ToFlow()}
-                        disabled={!canEditFlow || savedBase64Loading || !selectedSavedBase64Id || imageConversionLoading}
-                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {imageConversionLoading ? "Aplicando..." : "Usar Base64 salvo"}
-                      </button>
-                      <Link
-                        href="/automacoes/base64"
-                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
-                      >
-                        Abrir Base64
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-4 space-y-3">
-                    <input
-                      ref={imageConvertInputRef}
-                      type="file"
-                      accept="image/*"
-                      disabled={!canEditFlow}
-                      onChange={() => void convertImageForFlow()}
-                      className="hidden"
-                      aria-label="Selecionar imagem para conversão"
-                      title="Selecionar imagem para conversão"
-                    />
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        Formato
-                        <select
-                          value={draft.runtime.imageTargetFormat}
-                          onChange={(event) => updateRuntime("imageTargetFormat", event.target.value)}
-                          disabled={!canEditFlow}
-                          className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none disabled:cursor-not-allowed"
-                        >
-                          <option value="png">PNG</option>
-                          <option value="jpeg">JPEG</option>
-                          <option value="webp">WebP</option>
-                        </select>
-                      </label>
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        Modo de resize
-                        <select
-                          value={draft.runtime.imageResizeMode}
-                          onChange={(event) => updateRuntime("imageResizeMode", event.target.value)}
-                          disabled={!canEditFlow}
-                          className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none disabled:cursor-not-allowed"
-                        >
-                          <option value="original">Original</option>
-                          <option value="fit">Ajustar</option>
-                          <option value="fill">Preencher</option>
-                        </select>
-                      </label>
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        Largura
-                        <input
-                          type="number"
-                          min={1}
-                          value={draft.runtime.imageResizeWidth}
-                          onChange={(event) => updateRuntime("imageResizeWidth", Number(event.target.value) || 1)}
-                          readOnly={!canEditFlow}
-                          className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
-                        />
-                      </label>
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                        Altura
-                        <input
-                          type="number"
-                          min={1}
-                          value={draft.runtime.imageResizeHeight}
-                          onChange={(event) => updateRuntime("imageResizeHeight", Number(event.target.value) || 1)}
-                          readOnly={!canEditFlow}
-                          className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
-                        />
-                      </label>
-                      <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c) sm:col-span-2">
-                        Qualidade
-                        <input
-                          type="range"
-                          min={0.5}
-                          max={1}
-                          step={0.01}
-                          value={draft.runtime.imageQuality}
-                          onChange={(event) => updateRuntime("imageQuality", Number(event.target.value) || 0.92)}
-                          disabled={!canEditFlow}
-                          className="w-full accent-[#ef0001]"
-                        />
-                        <span className="text-xs font-medium text-(--tc-text-muted,#6b7280)">
-                          {Math.round(draft.runtime.imageQuality * 100)}%
-                        </span>
-                      </label>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => imageConvertInputRef.current?.click()}
-                        disabled={!canEditFlow || imageConversionLoading}
-                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {imageConversionLoading ? "Convertendo..." : "Selecionar imagem"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void convertImageForFlow()}
-                        disabled={!canEditFlow || imageConversionLoading}
-                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        Converter e usar
-                      </button>
-                    </div>
-                    <p className="text-xs leading-6 text-(--tc-text-secondary,#4b5563)">
-                      A imagem escolhida entra como `base64Sample` e fica pronta para etapas que esperam Base64 sem precisar abrir o módulo separado.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
-                <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
                   <FiPauseCircle className="h-4 w-4 text-(--tc-accent,#ef0001)" />
                   Regras críticas
                 </div>
-                <p className="mt-1 text-xs leading-6 text-(--tc-text-secondary,#4b5563)">O que faz: destaca configuracoes sensiveis que impactam risco operacional e governanca.</p>
                 <div className="mt-3 space-y-2">
                   {[
                     draft.trigger.requireApproval
@@ -4303,7 +2875,7 @@ export default function AutomationStudio({
                       ? "Escrita em produção está habilitada e exige revisão de escopo."
                       : "Produção segue protegida para evitar escrita destrutiva.",
                   ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-6 sm:leading-7 text-(--tc-text,#0b1a3c)">
+                    <div key={item} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-7 text-(--tc-text,#0b1a3c)">
                       {item}
                     </div>
                   ))}
@@ -4312,7 +2884,7 @@ export default function AutomationStudio({
             </div>
 
             {canSeeLogs ? (
-              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
+              <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/58">
                   <FiEye className="h-4 w-4" />
                   Observabilidade avançada
@@ -4322,17 +2894,17 @@ export default function AutomationStudio({
                     "Aguardando preview para gerar log técnico detalhado.",
                     "Suporte técnico e líder TC recebem selectors, bindings, timeout e retries por etapa.",
                   ]).map((line) => (
-                    <div key={line} className="flex items-start gap-2 text-sm leading-6 sm:leading-7 text-white/80">
+                    <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
                       <FiZap className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
-                      <span className="wrap-break-word font-mono text-[12px]">{line}</span>
+                      <span className="break-words font-mono text-[12px]">{line}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <div className="rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <p className="text-sm font-semibold text-(--tc-text,#0b1a3c)">Logs técnicos, selectors internos e brain operacional ficam restritos a suporte técnico e líder TC.</p>
-                <p className="mt-2 text-sm leading-6 sm:leading-7 text-(--tc-text-secondary,#4b5563)">
+                <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
                   A identidade do studio permanece igual, mas a telemetria avançada não é exibida fora do escopo técnico.
                 </p>
               </div>

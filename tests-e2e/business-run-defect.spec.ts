@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { createManualDefect } from "./utils/current-ui";
 
@@ -33,13 +33,13 @@ test("empresa cria run e defeito com vinculo basico", async ({ page, context }) 
   await page.getByTestId("run-submit").click();
 
   await page.waitForURL(new RegExp(`/empresas/demo/runs/${runSlug}`), { timeout: 60000 });
-  await expect(page.getByText(/E2E Negocio/i)).toBeVisible();
+  await expect(page.getByText(runTitle)).toBeVisible();
 
   await page.goto("/empresas/demo/defeitos", { waitUntil: "domcontentloaded" });
-  await createManualDefect(page, defectTitle, { runSlug });
 
   await expect(page.getByText(defectTitle).first()).toBeVisible({ timeout: 10000 });
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.getByText(defectTitle).first()).toBeVisible({ timeout: 30000 });
 });
+

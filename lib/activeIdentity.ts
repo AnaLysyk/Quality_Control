@@ -1,5 +1,4 @@
 import type { AuthUser } from "@/contracts/auth";
-import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveEntityImage } from "@/lib/resolveEntityImage";
 
@@ -172,7 +171,20 @@ export function isCompanyProfileContext(user: AuthUser | null | undefined) {
     typeof record.user_scope === "string" ? record.user_scope : null,
     typeof record.userScope === "string" ? record.userScope : null,
   );
-  return origin === "client_company" || scope === "company_only";
+  const permissionRole = normalizeLegacyRole(user.permissionRole);
+  const role = normalizeLegacyRole(user.role);
+  const companyRole = normalizeLegacyRole(user.companyRole);
+
+  return (
+    origin === "client_company" ||
+    scope === "company_only" ||
+    permissionRole === SYSTEM_ROLES.EMPRESA ||
+    role === SYSTEM_ROLES.EMPRESA ||
+    companyRole === SYSTEM_ROLES.EMPRESA ||
+    permissionRole === SYSTEM_ROLES.COMPANY_USER ||
+    role === SYSTEM_ROLES.COMPANY_USER ||
+    companyRole === SYSTEM_ROLES.COMPANY_USER
+  );
 }
 
 export function resolveActiveIdentity({

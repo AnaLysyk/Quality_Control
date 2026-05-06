@@ -13,7 +13,6 @@
 
 # Next.js build output
 /.next/
-/.next-e2e/
 /out/
 
 # build & dist

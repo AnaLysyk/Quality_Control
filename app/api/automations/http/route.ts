@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
-import { saveAutomationExecutionAudit } from "@/lib/automations/executionAuditStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 export const runtime = "nodejs";
@@ -11,7 +9,6 @@ export const dynamic = "force-dynamic";
 
 const RequestSchema = z.object({
   body: z.string().nullable().optional(),
-  companySlug: z.string().trim().optional().nullable(),
   forwardCookies: z.boolean().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
@@ -39,7 +36,6 @@ function resolveTargetUrl(rawUrl: string, requestUrl: string) {
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  const startedAt = Date.now();
 
   if (!user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -59,7 +55,6 @@ export async function POST(request: Request) {
   }
 
   const payload = validation.data;
-  const companySlug = payload.companySlug?.trim() || resolvePrimaryCompanySlug(user) || null;
 
   try {
     const targetUrl = resolveTargetUrl(payload.url, request.url);
@@ -106,19 +101,6 @@ export async function POST(request: Request) {
       json = null;
     }
 
-    await saveAutomationExecutionAudit({
-      actorUserId: user.id,
-      companySlug,
-      durationMs,
-      metadata: {
-        method: payload.method,
-        targetUrl,
-      },
-      ok: response.ok,
-      route: "http",
-      statusCode: response.status,
-    });
-
     return NextResponse.json({
       ok: response.ok,
       response: {
@@ -138,17 +120,6 @@ export async function POST(request: Request) {
         : error instanceof Error
           ? error.message
           : "Falha ao executar a chamada.";
-
-    await saveAutomationExecutionAudit({
-      actorUserId: user.id,
-      companySlug,
-      durationMs: Date.now() - startedAt,
-      error: message,
-      ok: false,
-      route: "http",
-      statusCode: 500,
-    });
-
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -314,7 +314,6 @@ function ClientsPage() {
         clientId={selectedId}
         clients={clients.map((client) => ({ id: client.id, name: client.name }))}
         initialRole="company_user"
-        allowedRoles={["empresa", "company_user"]}
         onClose={() => setCreateUserOpen(false)}
         onCreated={() => loadTeamForClient(selectedId)}
       />

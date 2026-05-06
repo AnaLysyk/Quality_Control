@@ -3,126 +3,121 @@ import "server-only";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { prisma } from "@/lib/prismaClient";
-import type { AssistantScreenContext, AssistantConversationTurn } from "../types";
+import type { AssistantScreenContext } from "../types";
 import { isEmpresaUser } from "../data";
 import type { AssistantExecutorResult } from "./types";
 
-export async function toolSuggestNextStep(
-  user: AuthUser,
-  context: AssistantScreenContext,
-  history: AssistantConversationTurn[] = [],
-): Promise<AssistantExecutorResult> {
+/**
+ * Gera sugestões inteligentes baseadas em:
+ * 1. Contexto da tela atual
+ * 2. Permissões do usuário
+ * 3. Conhecimento do Brain (memórias e padrões)
+ * 4. Atividade recente
+ */
+export async function toolSuggestNextStep(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
   const suggestions: string[] = [];
+  const smartTips: string[] = [];
 
-  // Detecta continuidade temática para manter conversa natural.
-  const lastFewTurns = history.slice(-3);
-  const recentTopics = lastFewTurns
-    .map((turn) => String(turn?.text ?? "").toLowerCase())
-    .join(" ");
-
-  const memoryHints: string[] = [];
+  // Buscar memórias relevantes do Brain para contexto
   try {
     const relevantMemories = await prisma.brainMemory.findMany({
       where: {
         status: "ACTIVE",
-        OR: [{ memoryType: "RULE" }, { memoryType: "PATTERN" }, { memoryType: "DECISION" }],
+        OR: [
+          { memoryType: "RULE" },
+          { memoryType: "PATTERN" },
+          { memoryType: "DECISION" },
+        ],
       },
       orderBy: { importance: "desc" },
-      take: 2,
-      select: { title: true, memoryType: true },
+      take: 3,
+      select: { title: true, summary: true, memoryType: true },
     });
 
-    for (const memory of relevantMemories) {
-      if (memory.memoryType === "PATTERN") {
-        memoryHints.push(`- ${memory.title}`);
+    for (const mem of relevantMemories) {
+      if (mem.memoryType === "PATTERN") {
+        smartTips.push(`💡 ${mem.title}`);
       }
     }
   } catch {
-    // Brain enrichment é opcional.
+    // Brain optional
   }
 
+  // Sugestões contextuais por módulo
   if (context.module === "support") {
-    suggestions.push("🔍 Buscar chamados por código, status, prioridade ou responsável");
-    suggestions.push("📋 Resumir um ticket para triagem rápida");
-    if (
-      hasPermissionAccess(user.permissions, "tickets", "create") ||
-      hasPermissionAccess(user.permissions, "support", "create")
-    ) {
-      suggestions.push("🎫 Criar chamado estruturado a partir do seu relato");
-    }
-    if (/coment|respond/.test(recentTopics)) {
-      suggestions.unshift("💬 Continuar revisão dos comentários e próximos passos do chamado");
+    suggestions.push("🔍 Buscar tickets de alta prioridade sem responsável");
+    suggestions.push("📋 Resumir um chamado pelo ID para acelerar triagem");
+    if (hasPermissionAccess(user.permissions, "tickets", "create") || hasPermissionAccess(user.permissions, "support", "create")) {
+      suggestions.push("✏️ Transformar um relato em chamado estruturado");
+      suggestions.push("🎫 Criar novo ticket a partir de descrição");
     }
   }
 
   if (context.module === "permissions") {
-    suggestions.push("🔐 Explicar por que um perfil não acessa um módulo");
-    suggestions.push("📊 Comparar escopos entre perfis");
-    suggestions.push("⚙️ Sugerir ajuste de acesso com menor risco");
+    suggestions.push("🔐 Explicar por que um perfil não vê um módulo");
+    suggestions.push("📊 Listar ações disponíveis para o usuário analisado");
+    suggestions.push("🔧 Analisar escopo de acesso atual");
   }
 
   if (context.module === "test_plans") {
-    suggestions.push("🧪 Gerar caso de teste baseado no bug atual");
-    suggestions.push("📝 Estruturar pré-condições, passos e resultado esperado");
-    suggestions.push("✅ Revisar cobertura de teste do fluxo");
+    suggestions.push("🧪 Gerar caso de teste a partir do bug atual");
+    suggestions.push("📝 Criar roteiro de teste estruturado");
+    suggestions.push("✅ Validar cobertura de testes existente");
   }
 
   if (context.module === "dashboard") {
-    suggestions.push("📈 Ler indicadores e apontar onde atacar primeiro");
-    suggestions.push("🎯 Comparar tendência com período anterior");
-    suggestions.push("⚠️ Listar riscos operacionais que merecem ação imediata");
+    suggestions.push("📈 Analisar métricas de qualidade do período");
+    suggestions.push("🎯 Identificar tendências nos indicadores");
+    suggestions.push("⚠️ Listar áreas que precisam de atenção");
   }
 
   if (context.module === "releases") {
-    suggestions.push("🚀 Verificar status de release e bloqueios");
-    suggestions.push("📦 Revisar pendências de teste antes do deploy");
-    suggestions.push("📋 Montar resumo executivo da versão");
+    suggestions.push("🚀 Verificar status do último deploy");
+    suggestions.push("📦 Analisar testes pendentes para release");
+    suggestions.push("📋 Gerar relatório de qualidade da versão");
   }
 
   if (context.module === "company") {
     if (isEmpresaUser(user)) {
-      suggestions.push("🏢 Resumir situação atual da empresa");
-      suggestions.push("🐛 Listar defeitos críticos em aberto");
-      suggestions.push("📊 Mostrar métrica de qualidade mais sensível agora");
+      suggestions.push("🏢 Resumir status atual da minha empresa");
+      suggestions.push("🐛 Listar defeitos e bugs ativos no projeto");
+      suggestions.push("📊 Ver métricas de qualidade dos testes");
+      suggestions.push("🚀 Checar status dos planos de release");
     } else {
-      suggestions.push("🏢 Resumir empresa e vínculos ativos");
-      suggestions.push("👥 Listar usuários e perfis da empresa");
-      suggestions.push("🔗 Mapear integrações ativas e impacto operacional");
+      suggestions.push("🏢 Resumir perfil da empresa");
+      suggestions.push("📊 Analisar métricas de atendimento do cliente");
+      suggestions.push("📋 Listar integrações ativas");
+      suggestions.push("👥 Ver usuários vinculados à empresa");
     }
   }
 
+  // Sugestões genéricas se não há contexto específico
   if (!suggestions.length) {
-    suggestions.push("📍 Ler contexto da tela atual");
-    suggestions.push("🔍 Buscar informação operacional no seu escopo");
-    suggestions.push("🔐 Explicar por que algo está bloqueado para seu perfil");
+    suggestions.push("📍 Mostrar o contexto atual da tela");
+    suggestions.push("🔍 Buscar registros no seu escopo de acesso");
+    suggestions.push("🔐 Explicar permissões da tela atual");
+    suggestions.push("💡 O que posso fazer por você?");
   }
 
-  const mainSuggestions = suggestions.slice(0, 3);
-  const hintsBlock = memoryHints.length
-    ? `\n\nNo histórico da TC, vale considerar:\n${memoryHints.join("\n")}`
-    : "";
+  // Montar resposta
+  const mainSuggestions = suggestions.slice(0, 4);
+  let replyText = "**O que posso ajudar agora:**\n\n";
+  replyText += mainSuggestions.map((item, index) => `${index + 1}. ${item}`).join("\n");
 
-  const reply = [
-    `Fechou. No fluxo de **${context.module}**, eu toco isso com você sem sair do contexto da TC.`,
-    "",
-    "Podemos seguir por aqui:",
-    ...mainSuggestions.map((item) => `- ${item}`),
-    hintsBlock,
-    "",
-    "Me fala qual caminho você quer agora e eu já executo o próximo passo.",
-  ]
-    .join("\n")
-    .trim();
+  if (smartTips.length) {
+    replyText += "\n\n---\n**Dicas do Brain:**\n";
+    replyText += smartTips.slice(0, 2).join("\n");
+  }
 
   return {
     tool: "suggest_next_step",
     success: true,
-    summary: "próximos passos contextuais",
-    actions: mainSuggestions.map((prompt) => ({
-      kind: "prompt" as const,
-      label: prompt.replace(/^[^\s]+\s/, ""),
-      prompt: prompt.replace(/^[^\s]+\s/, ""),
+    summary: "próximos passos sugeridos com contexto inteligente",
+    actions: mainSuggestions.map((prompt) => ({ 
+      kind: "prompt", 
+      label: prompt.replace(/^[^\s]+\s/, ""), // Remove emoji for clean label
+      prompt: prompt.replace(/^[^\s]+\s/, ""), 
     })),
-    reply,
+    reply: replyText,
   };
 }

@@ -75,9 +75,14 @@ export type LocalAuthStore = {
   links?: LocalAuthLink[];
 };
 
+const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = process.env.LOCAL_AUTH_DATA_DIR || DEFAULT_DATA_DIR;
+const STORE_PATH = path.join(DATA_DIR, "local-auth-store.json");
+const SAMPLE_PATH = path.join(DEFAULT_DATA_DIR, "local-auth-store.sample.json");
 const STORE_KEY = "qc:local_auth_store:v1";
 const USE_REDIS = process.env.LOCAL_AUTH_STORE === "redis" || isRedisConfigured();
 const USE_MEMORY_STORE = process.env.LOCAL_AUTH_IN_MEMORY === "true";
+let warnedFsFailure = false;
 
 function normalizeDatabaseUrl(value?: string | null) {
   return (value ?? "").trim().replace(/^['"]|['"]$/g, "");

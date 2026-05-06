@@ -4,7 +4,6 @@ import { z } from "zod";
 import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
 import { getBiometricConfigPreview } from "@/lib/automations/biometrics/config";
 import { resolveExistingLocalBiometricFixtures } from "@/lib/automations/biometrics/localFixtures";
-import { saveAutomationExecutionAudit } from "@/lib/automations/executionAuditStore";
 import {
   resolveAutomationAccess,
   resolveAutomationAllowedCompanySlugs,
@@ -87,7 +86,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  const startedAt = Date.now();
 
   if (!user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -128,21 +126,6 @@ export async function POST(request: Request) {
       target: payload.target,
     });
 
-    await saveAutomationExecutionAudit({
-      actorUserId: user.id,
-      companySlug: result.companySlug,
-      durationMs: result.durationMs,
-      metadata: {
-        fingerprintFixture: payload.fingerprint.fixture,
-        includeFace: payload.includeFace !== false,
-        mode: result.mode,
-        processId: result.processId,
-      },
-      ok: true,
-      route: "griaule-biometrics",
-      statusCode: result.putStatus,
-    });
-
     return NextResponse.json({
       ok: true,
       result: {
@@ -167,16 +150,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao executar o fluxo biométrico.";
-
-    await saveAutomationExecutionAudit({
-      actorUserId: user.id,
-      durationMs: Date.now() - startedAt,
-      error: message,
-      ok: false,
-      route: "griaule-biometrics",
-      statusCode: 500,
-    });
-
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

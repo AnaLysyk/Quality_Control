@@ -63,19 +63,18 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const isGlobalAdmin =
     (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
     (user as { globalRole?: string | null }).globalRole === "global_admin";
-  const allowedCompanies = resolveVisibleCompanies(companies, {
-    user: {
-      role: (user as { role?: string | null }).role ?? null,
-      companyRole: (user as { role?: string | null }).role ?? null,
-      userOrigin: (user as { user_origin?: string | null }).user_origin ?? null,
-      isGlobalAdmin,
-      default_company_slug: (user as { default_company_slug?: string | null }).default_company_slug ?? null,
-      defaultClientSlug: (user as { default_company_slug?: string | null }).default_company_slug ?? null,
-    },
-    links,
-    preferredSlug: (user as { default_company_slug?: string | null }).default_company_slug ?? null,
-  });
-  const shouldBindCompanyContext = !isGlobalAdmin && allowedCompanies.length > 0;
+  const hasTechnicalSupportRole =
+    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "technical_support" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+  const hasLeaderTcRole =
+    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "leader_tc" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
+  const shouldBindCompanyContext = !hasFullCompanyAccess;
+  const allowedCompanies = hasFullCompanyAccess
+    ? companies
+    : companies.filter((company) => links.some((link) => link.companyId === company.id));
+  if (!hasFullCompanyAccess && allowedCompanies.length === 0) return null;
   const primary = shouldBindCompanyContext ? allowedCompanies[0] ?? null : null;
   const companySlugs = allowedCompanies
     .map((company) => company.slug)

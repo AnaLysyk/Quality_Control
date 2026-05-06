@@ -3,13 +3,13 @@
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@demo.test";
-const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Demo@123";
 const COMPANY_EMAIL = process.env.E2E_COMPANY_EMAIL || "company@demo.test";
-const COMPANY_PASSWORD = process.env.E2E_COMPANY_PASSWORD || "Griaule@123";
+const COMPANY_PASSWORD = process.env.E2E_COMPANY_PASSWORD || "Demo@123";
 const USER_EMAIL = process.env.E2E_USER_EMAIL || "user@demo.test";
-const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Griaule@123";
+const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Demo@123";
 const NO_COMPANY_EMAIL = process.env.E2E_NO_COMPANY_EMAIL || "nocompany@demo.test";
-const NO_COMPANY_PASSWORD = process.env.E2E_NO_COMPANY_PASSWORD || "Griaule@123";
+const NO_COMPANY_PASSWORD = process.env.E2E_NO_COMPANY_PASSWORD || "Demo@123";
 
 function buildPasswordCandidates(primary: string) {
   return Array.from(new Set([primary, "Griaule@123", "Demo@123", "senha"]));

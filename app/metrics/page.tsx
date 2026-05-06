@@ -29,11 +29,11 @@ export default function MetricasPage() {
         (user as { userOrigin?: string | null } | null)?.userOrigin ??
         (user as { user_origin?: string | null } | null)?.user_origin ??
         null,
-      companyCount: normalizedUser.companyCount,
-      clientSlug: activeClientSlug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? null,
-      defaultClientSlug: normalizedUser.defaultCompanySlug,
+      companyCount: clients.length,
+      clientSlug: activeClientSlug ?? user?.clientSlug ?? null,
+      defaultClientSlug: user?.defaultClientSlug ?? null,
     }),
-    [activeClientSlug, normalizedUser, user],
+    [activeClientSlug, clients.length, user],
   );
 
   useEffect(() => {

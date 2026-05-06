@@ -1,6 +1,5 @@
 import type { AuthUser } from "@/contracts/auth";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
-import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 type AutomationUserLike = Partial<
@@ -43,7 +42,14 @@ function hasAuthIdentity(user: AutomationUserLike | null | undefined): user is A
 }
 
 export function resolveAutomationAllowedCompanySlugs(user: AutomationUserLike | null | undefined) {
-  return normalizeAuthenticatedUser(user).companySlugs;
+  const merged = [
+    ...(Array.isArray(user?.companySlugs) ? user.companySlugs : []),
+    ...(Array.isArray(user?.clientSlugs) ? user.clientSlugs : []),
+    ...(user?.companySlug ? [user.companySlug] : []),
+    ...(user?.clientSlug ? [user.clientSlug] : []),
+  ];
+
+  return merged.filter((value, index, self): value is string => typeof value === "string" && value.length > 0 && self.indexOf(value) === index);
 }
 
 export function resolveAutomationAccess(
@@ -52,11 +58,7 @@ export function resolveAutomationAccess(
 ): AutomationAccess {
   const roles = [user?.permissionRole, user?.role, user?.companyRole]
     .map((value) => normalizeLegacyRole(value))
-    .filter(
-      (
-        value,
-      ): value is NonNullable<ReturnType<typeof normalizeLegacyRole>> => Boolean(value),
-    );
+    .filter((value): value is NonNullable<ReturnType<typeof normalizeLegacyRole>> => Boolean(value));
   const isLeader =
     user?.isGlobalAdmin === true ||
     user?.is_global_admin === true ||
@@ -75,7 +77,7 @@ export function resolveAutomationAccess(
   const ownCompanyLabel =
     companyCount > 0
       ? `${companyCount} empresa${companyCount === 1 ? "" : "s"} da conta`
-      : "Propria empresa";
+      : "Própria empresa";
 
   if (isLeader) {
     return {
@@ -84,11 +86,10 @@ export function resolveAutomationAccess(
       canManageFlows: true,
       canViewTechnicalLogs: true,
       hasGlobalCompanyVisibility: true,
-      profileLabel: "Lider TC",
+      profileLabel: "Líder TC",
       scopeLabel: "Todas as empresas",
-      visibilityLabel: "Gestao completa",
-      helperText:
-        "Pode configurar ambientes, fluxos, segredos operacionais e historico tecnico.",
+      visibilityLabel: "Gestão completa",
+      helperText: "Pode configurar ambientes, fluxos, segredos operacionais e histórico técnico.",
     };
   }
 
@@ -99,11 +100,10 @@ export function resolveAutomationAccess(
       canManageFlows: true,
       canViewTechnicalLogs: true,
       hasGlobalCompanyVisibility: true,
-      profileLabel: "Suporte tecnico",
+      profileLabel: "Suporte técnico",
       scopeLabel: "Todas as empresas",
-      visibilityLabel: "Operacao completa",
-      helperText:
-        "Pode operar e ajustar fluxos guiados, com leitura global de empresas e ambientes.",
+      visibilityLabel: "Operação completa",
+      helperText: "Pode operar e ajustar fluxos guiados, com leitura global de empresas e ambientes.",
     };
   }
 
@@ -114,11 +114,10 @@ export function resolveAutomationAccess(
       canManageFlows: false,
       canViewTechnicalLogs: false,
       hasGlobalCompanyVisibility: false,
-      profileLabel: "Usuario TC",
+      profileLabel: "Usuário TC",
       scopeLabel: linkedCompaniesLabel,
-      visibilityLabel: "Leitura operacional",
-      helperText:
-        "Mantem a mesma identidade visual do modulo interno, executa automacoes das empresas vinculadas e nao altera fluxos globais.",
+      visibilityLabel: "Somente leitura operacional",
+      helperText: "Mantém a mesma identidade visual do módulo interno, executa automações das empresas vinculadas e não altera fluxos, ambientes nem segredos.",
     };
   }
 
@@ -133,7 +132,7 @@ export function resolveAutomationAccess(
       scopeLabel: ownCompanyLabel,
       visibilityLabel: "Operação da empresa",
       helperText:
-        "Visualiza, edita, inativa e executa apenas as automacoes da propria empresa. Usuario da empresa herda a mesma visao da empresa de origem.",
+        "Visualiza, edita, inativa e executa apenas as automações da própria empresa. Usuário da empresa herda a mesma visão da empresa de origem.",
     };
   }
 
@@ -144,8 +143,8 @@ export function resolveAutomationAccess(
     canViewTechnicalLogs: false,
     hasGlobalCompanyVisibility: false,
     profileLabel: "Conta",
-    scopeLabel: "Sem acesso ao modulo",
+    scopeLabel: "Sem acesso ao módulo",
     visibilityLabel: "Restrito",
-    helperText: "Esse workspace e interno e foi pensado para operacao tecnica da Testing Company.",
+    helperText: "Esse workspace é interno e foi pensado para operação técnica da Testing Company.",
   };
 }

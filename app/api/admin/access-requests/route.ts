@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { canViewAccessRequestQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { listAccessRequests } from "@/data/accessRequestsStore";
 import { listAllRequests } from "@/data/requestsStore";
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     const items = (await listAccessRequests()).filter((item) => {
       const queue = resolveAccessRequestQueue(item.message, item.email);
       // global reviewers see items according to queue rules, non-global reviewers see only their own
-      if (admin?.isGlobalReviewer) return canViewAccessRequestQueue(admin, queue);
+      if (admin?.isGlobalReviewer) return canReviewerAccessQueue(admin, queue);
       return String(item.email ?? "").toLowerCase() === String(admin?.email ?? "").toLowerCase();
     });
     const mapped = items.map((item) => ({
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     const rows = (await prisma.supportRequest.findMany({ orderBy: { created_at: "desc" } })) as SupportRequestRow[];
     const items = rows.filter((item) => {
       const queue = resolveAccessRequestQueue(item.message, item.email);
-      if (admin?.isGlobalReviewer) return canViewAccessRequestQueue(admin, queue);
+      if (admin?.isGlobalReviewer) return canReviewerAccessQueue(admin, queue);
       return String(item.email ?? "").toLowerCase() === String(admin?.email ?? "").toLowerCase();
     });
 

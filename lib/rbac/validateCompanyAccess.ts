@@ -1,5 +1,4 @@
 import type { AuthUser } from "@/lib/jwtAuth";
-import { listLocalLinksForUser } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export async function assertCompanyAccess(user: AuthUser | null, companyId?: string | null) {

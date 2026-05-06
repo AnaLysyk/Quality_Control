@@ -52,10 +52,6 @@ export default function AdminRunsPage() {
   const { user } = useAuthUser();
   const router = useRouter();
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
-  const isOperationalContext =
-    role === "technical_support" ||
-    role === "leader_tc" ||
-    role === "testing_company_user";
   const isAdmin = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support");
   const isCompany = role === "empresa";
   const canCreate = isAdmin || isCompany;
@@ -307,9 +303,8 @@ export default function AdminRunsPage() {
                 {isOperationalContext ? "Central Operacional" : "Gerenciar Runs"}
               </h1>
               <p className="text-(--tc-text-secondary,#4b5563) max-w-3xl">
-                {isOperationalContext
-                  ? "Cadastre operações salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicação para gerar a URL e permitir buscar estatísticas automaticamente."
-                  : "Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicação para gerar a URL e permitir buscar estatísticas automaticamente."}
+                Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicação
+                para gerar a URL e permitir buscar estatísticas automaticamente.
               </p>
             </div>
             <div className="flex items-center">
@@ -346,8 +341,7 @@ export default function AdminRunsPage() {
               </div>
               {selectedCompany && (
                 <span className="text-sm text-(--tc-accent,#ef0001)">
-                  {isOperationalContext ? "Exibindo operação de:" : "Exibindo runs de:"}{" "}
-                  <strong>{companies.find(c => c.slug === selectedCompany)?.name || selectedCompany}</strong>
+                  Exibindo runs de: <strong>{companies.find(c => c.slug === selectedCompany)?.name || selectedCompany}</strong>
                 </span>
               )}
             </div>

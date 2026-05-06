@@ -58,32 +58,22 @@ export async function buildLocalSessionForUser(
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-  const permissionRole = resolvePermissionRoleForUser(user, links);
-  const visibilityMode = resolveCompanyVisibilityMode(
-    {
-      permissionRole,
-      role: permissionRole,
-      companyRole: user.role ?? null,
-      userOrigin: user.user_origin ?? null,
-      isGlobalAdmin,
-      default_company_slug: user.default_company_slug ?? null,
-      defaultClientSlug: user.default_company_slug ?? null,
-    },
-  );
-  const shouldBindCompanyContext = visibilityMode !== "all";
-  const allowedCompanies = resolveVisibleCompanies(companies, {
-    user: {
-      permissionRole,
-      role: permissionRole,
-      companyRole: user.role ?? null,
-      userOrigin: user.user_origin ?? null,
-      isGlobalAdmin,
-      default_company_slug: user.default_company_slug ?? null,
-      defaultClientSlug: user.default_company_slug ?? null,
-    },
-    links,
-    preferredSlug: opts?.requestedSlug ?? user.default_company_slug ?? null,
-  });
+  const hasTechnicalSupportRole =
+    normalizeLocalRole(user.role ?? null) === "technical_support" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
+  const hasLeaderTcRole =
+    normalizeLocalRole(user.role ?? null) === "leader_tc" ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
+  const shouldBindCompanyContext = !hasFullCompanyAccess;
+  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
+  const allowedCompanies = hasFullCompanyAccess
+    ? companies
+    : companies.filter((company) => {
+        if (links.some((link) => link.companyId === company.id)) return true;
+        if (!isDirectCompanyUser) return false;
+        return Boolean(user.default_company_slug && company.slug === user.default_company_slug);
+      });
 
   const requestedSlug = typeof opts?.requestedSlug === "string" ? opts.requestedSlug.trim() : "";
   const requestedCompany =
@@ -108,7 +98,7 @@ export async function buildLocalSessionForUser(
     membershipCapabilities: activeLink?.capabilities ?? null,
   });
 
-  const effectiveRole = isGlobalAdmin ? "leader_tc" : permissionRole;
+  const effectiveRole = isGlobalAdmin ? "leader_tc" : companyRole;
 
   const displayName =
     (typeof user.full_name === "string" ? user.full_name.trim() : "") ||

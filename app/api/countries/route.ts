@@ -39,6 +39,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
+  if (!canAccessCompanyScope(user, companyId)) {
+    return NextResponse.json({ message: "Acesso proibido para esta empresa" }, { status: 403 });
+  }
+
   const body = await req.json().catch(() => ({}));
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   if (!name) {

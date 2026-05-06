@@ -1,5 +1,6 @@
 ﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "../helpers/mockAuth";
+import { createManualDefect } from "../utils/current-ui";
 
 test.describe("rbac - api defeitos manuais", () => {
   test("company nÃ£o consegue deletar defeito manual via API (403)", async ({ page, context }) => {

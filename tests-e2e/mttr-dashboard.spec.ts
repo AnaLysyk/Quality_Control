@@ -1,6 +1,7 @@
 ﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
 import { seedMTTRDashboard } from "./utils/seed-mttr-goal";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
 test("dashboard exibe MTTR mÃ©dio", async ({ page, context }) => {
   await mockAuth(context, {

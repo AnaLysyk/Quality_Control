@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { fetchApi } from "@/lib/api";
+import { getFixedProfileOptions } from "@/lib/fixedProfilePresentation";
+import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 
 type CompanyUserCreateModalProps = {
   open: boolean;
@@ -124,9 +126,14 @@ export function CompanyUserCreateModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          full_name: name.trim(),
           name: name.trim(),
           email: email.trim(),
           ...(username.trim() ? { username: username.trim().toLowerCase() } : {}),
+          phone: phone.trim() || undefined,
+          job_title: jobTitle.trim() || undefined,
+          linkedin_url: linkedinUrl.trim() || undefined,
+          avatar_url: avatarUrl.trim() || undefined,
           password,
           permission_role: role,
         }),
@@ -237,6 +244,52 @@ export function CompanyUserCreateModal({
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Mínimo 8 caracteres"
                 required
+              />
+            </label>
+
+            <label className="flex flex-col gap-2.5 text-sm text-(--tc-text-primary)">
+              <span className="text-[12px] font-extrabold uppercase tracking-[0.2em] text-(--tc-accent)">Telefone</span>
+              <input
+                className="h-14 w-full rounded-xl border border-slate-500 bg-[#f5f7fb] px-4 text-base font-semibold text-[#0b1f52] shadow-[0_3px_10px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.82)] outline-none transition placeholder:text-[#4b6697] hover:border-[#0b1f52] focus:border-(--tc-accent) focus:bg-white focus:ring-2 focus:ring-(--tc-accent)/26 dark:border-slate-400 dark:bg-[#13213a] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:hover:border-[#d7e5ff] dark:focus:border-(--tc-accent) dark:focus:bg-[#182742]"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="+55 11 99999-9999"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2.5 text-sm text-(--tc-text-primary)">
+              <span className="text-[12px] font-extrabold uppercase tracking-[0.2em] text-(--tc-accent)">Cargo</span>
+              <input
+                list="company-user-job-title-options"
+                className="h-14 w-full rounded-xl border border-slate-500 bg-[#f5f7fb] px-4 text-base font-semibold text-[#0b1f52] shadow-[0_3px_10px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.82)] outline-none transition placeholder:text-[#4b6697] hover:border-[#0b1f52] focus:border-(--tc-accent) focus:bg-white focus:ring-2 focus:ring-(--tc-accent)/26 dark:border-slate-400 dark:bg-[#13213a] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:hover:border-[#d7e5ff] dark:focus:border-(--tc-accent) dark:focus:bg-[#182742]"
+                value={jobTitle}
+                onChange={(event) => setJobTitle(event.target.value)}
+                placeholder="Busque ou digite um cargo"
+              />
+              <datalist id="company-user-job-title-options">
+                {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
+                  <option key={jobTitleOption} value={jobTitleOption} />
+                ))}
+              </datalist>
+            </label>
+
+            <label className="flex flex-col gap-2.5 text-sm text-(--tc-text-primary)">
+              <span className="text-[12px] font-extrabold uppercase tracking-[0.2em] text-(--tc-accent)">LinkedIn</span>
+              <input
+                className="h-14 w-full rounded-xl border border-slate-500 bg-[#f5f7fb] px-4 text-base font-semibold text-[#0b1f52] shadow-[0_3px_10px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.82)] outline-none transition placeholder:text-[#4b6697] hover:border-[#0b1f52] focus:border-(--tc-accent) focus:bg-white focus:ring-2 focus:ring-(--tc-accent)/26 dark:border-slate-400 dark:bg-[#13213a] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:hover:border-[#d7e5ff] dark:focus:border-(--tc-accent) dark:focus:bg-[#182742]"
+                value={linkedinUrl}
+                onChange={(event) => setLinkedinUrl(event.target.value)}
+                placeholder="https://www.linkedin.com/in/usuario"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2.5 text-sm text-(--tc-text-primary)">
+              <span className="text-[12px] font-extrabold uppercase tracking-[0.2em] text-(--tc-accent)">Foto (URL)</span>
+              <input
+                className="h-14 w-full rounded-xl border border-slate-500 bg-[#f5f7fb] px-4 text-base font-semibold text-[#0b1f52] shadow-[0_3px_10px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.82)] outline-none transition placeholder:text-[#4b6697] hover:border-[#0b1f52] focus:border-(--tc-accent) focus:bg-white focus:ring-2 focus:ring-(--tc-accent)/26 dark:border-slate-400 dark:bg-[#13213a] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:hover:border-[#d7e5ff] dark:focus:border-(--tc-accent) dark:focus:bg-[#182742]"
+                value={avatarUrl}
+                onChange={(event) => setAvatarUrl(event.target.value)}
+                placeholder="https://example.com/avatar.jpg"
               />
             </label>
           </div>

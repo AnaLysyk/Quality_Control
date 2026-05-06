@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
@@ -9,7 +6,7 @@ async function getPrisma() {
   return prisma;
 }
 
-const DATA_PATH = path.join(process.cwd(), "data", "company-applications.json");
+let memoryDb: ApplicationsDb = { items: [], counter: 0 };
 
 export type AppRecord = {
   id: string;
@@ -50,20 +47,11 @@ function normalizeProjectCode(value: string | null | undefined) {
 }
 
 function readFile(): ApplicationsDb {
-  try {
-    const raw = fs.readFileSync(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as Partial<ApplicationsDb> | null;
-    return {
-      items: Array.isArray(parsed?.items) ? (parsed?.items as AppRecord[]) : [],
-      counter: typeof parsed?.counter === "number" ? parsed.counter : 0,
-    };
-  } catch {
-    return { items: [], counter: 0 };
-  }
+  return memoryDb;
 }
 
 function writeFile(data: ApplicationsDb) {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
+  memoryDb = data;
 }
 
 function pgToRecord(r: { id: string; companyId?: string | null; companySlug?: string | null; name: string; slug: string; description?: string | null; imageUrl?: string | null; qaseProjectCode?: string | null; source?: string | null; active: boolean; createdAt: Date; updatedAt: Date }): AppRecord {

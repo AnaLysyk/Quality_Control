@@ -24,10 +24,17 @@ async function createAccessRequest(
   const res = await page.request.post("/api/support/access-request", {
     data: {
       name,
+      full_name: name,
       email,
       role,
       company,
+      company_name: company,
+      phone: "(11) 99999-9999",
+      password: "Griaule@123",
+      title: `Solicitação ${name}`,
+      description: notes ?? "Solicitação criada pelo E2E.",
       access_type: accessType,
+      profile_type: accessType === "company" ? "empresa" : "company_user",
       notes,
     },
   });
@@ -70,12 +77,8 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
   await page.getByLabel(/^Empresa$/i).selectOption({ label: "DEMO" });
   await expect(page.getByRole("button", { name: /Aceitar solicita/ })).toBeEnabled();
 
-  const acceptResponse = page.waitForResponse(
-    (response) => response.url().includes("/api/admin/access-requests/") && response.url().endsWith("/accept")
-  );
-  await page.getByRole("button", { name: /Aceitar solicita/ }).click();
-  await acceptResponse;
-  await expect(acceptRow).toContainText(/Aprovada/i);
+  await page.getByRole("button", { name: /Aprovar solicita/i }).click();
+  await expect(acceptRow).toContainText(/Aprovada/i, { timeout: 20000 });
 
   const rejectRow = page.getByRole("button").filter({ hasText: rejectEmail }).first();
   await expect(rejectRow).toBeVisible({ timeout: 20000 });
@@ -83,12 +86,9 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
   await expect(page.getByLabel(/^Email$/i)).toHaveValue(rejectEmail);
   await page.getByLabel(/Notas do admin/i).fill("SolicitaÃ§Ã£o rejeitada.");
 
-  const rejectResponse = page.waitForResponse(
-    (response) => response.url().includes("/api/admin/access-requests/") && response.url().endsWith("/reject")
-  );
-  await page.getByRole("button", { name: /Recusar solicita/ }).click();
-  await rejectResponse;
-  await expect(rejectRow).toContainText(/Rejeitada/i);
+  await expect(page.getByRole("button", { name: /Recusar solicita/i })).toBeEnabled();
+  await page.getByRole("button", { name: /Recusar solicita/i }).click();
+  await expect(rejectRow).toContainText(/Rejeitada/i, { timeout: 20000 });
 });
 
 

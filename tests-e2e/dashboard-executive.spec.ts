@@ -1,7 +1,8 @@
 ﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
-test("company loads the new dashboard shell and key summary blocks", async ({ page, context }) => {
+test("company loads the current dashboard shell and key summary blocks", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
     companies: ["DEMO"],

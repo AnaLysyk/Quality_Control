@@ -1,97 +1,56 @@
 # Quality Control
 
-Next.js (App Router) + TypeScript. Front-end em `app/`, utilitarios restritos ao servidor em `lib/`, dados auxiliares em `data/` e testes em `tests-e2e/`.
+Plataforma de operacao de QA para times de software que precisam reduzir risco de producao com visibilidade tecnica e fluxo acionavel.
 
-Sem Docker: use um PostgreSQL local ou remoto e aponte o `DATABASE_URL`.
+## Elevator Pitch
 
-## Fluxo de desenvolvimento (Windows)
+Quality Control transforma QA em um sistema observavel, acionavel e reutilizavel.
+Unifica testes, defeitos, chamados e contexto tecnico em um unico fluxo.
+Combina engenharia, automacao E2E e IA aplicada para acelerar decisao.
 
-1. Instale dependencias:
+## Executive Snapshot
 
-```bash
-npm install
-```
+- Solucao full-stack focada em operacao real de qualidade
+- Integracao com Qase e dados de execucao de testes
+- Automacao E2E e smoke com Playwright
+- Assistente IA contextual para suporte tecnico de QA
+- Modulo Brain para memoria tecnica e evolucao de conhecimento
 
-2. Configure variaveis de ambiente:
+## Screenshots
 
-- Copie `.env.local.example` para `.env.local`.
-- Preencha:
-  - `DATABASE_URL` (PostgreSQL local ou remoto)
-  - `JWT_SECRET`
-  - (opcional) tokens do Qase (`QASE_API_TOKEN`, `QASE_PROJECT_MAP`)
-  - (opcional) Redis Upstash (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`)
+Sugestao de galeria para vitrine:
+- Dashboard de qualidade
+- Kanban/Chamados
+- Integracao Qase
+- Assistente IA
+- Brain
 
-3. Valide o ambiente:
+Exemplos atuais no repositorio:
+- ![Brand sample](public/images/ana-lima.png)
+- ![Logo sample](public/images/tc.png)
 
-```bash
-npm run env:check
-```
+## Module Outcomes
 
-4. Prepare o banco (PostgreSQL):
+- Dashboard: consolida indicadores e acelera triagem de risco
+- Tickets: organiza ciclo de vida e melhora rastreabilidade
+- Qase: conecta execucao de testes ao contexto do produto
+- E2E: aumenta confiabilidade de release com regressao automatizada
+- AI Assistant: acelera investigacao e decisao contextualizada
+- Brain: estrutura conhecimento tecnico reutilizavel
 
-```bash
-npx prisma migrate dev
-```
+## English Snapshot
 
-5. Suba o servidor:
+Quality Control is a QA operations platform designed to reduce production risk with technical visibility and actionable workflows.
 
-```bash
-npm run dev
-```
+It centralizes tests, defects, tickets, and context in one place, combining engineering, E2E automation, and AI-assisted analysis.
 
-Abra http://localhost:3000 no navegador.
+## Technical Documentation
 
-## Verificacoes recomendadas
+For full setup, architecture, testing, and deployment details, see:
 
-```bash
-npm run lint
-npm run build
-npm run test:e2e:smoke
-```
+- [README.tech.md](README.tech.md)
 
-## Render
+## Career and Portfolio Assets
 
-Para o deploy na Render, o minimo recomendado e:
-
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-- `NEXT_PUBLIC_SITE_URL=https://quality-control-qwqs.onrender.com`
-- `AUTH_COOKIE_SECURE=true`
-
-Sem Redis configurado, o app cai no fallback em memoria de [lib/redis.ts](/C:/Users/Testing%20Company/painel-qa/lib/redis.ts) e a sessao pode ficar inconsistente entre rotas server-side e APIs. O sintoma tipico no Render e login funcionar em `/api/me`, mas `/admin` redirecionar de volta para `/login`.
-
-O repositório agora inclui [render.yaml](/C:/Users/Testing%20Company/painel-qa/render.yaml) com a configuracao base do servico e das variaveis. Para servicos Render ja existentes, os segredos continuam precisando ser cadastrados manualmente no painel.
-
-## Credenciais de teste (E2E)
-
-Quando `E2E_USE_JSON=1`, o login usa o arquivo `data/local-auth-store.json` (ou `data/local-auth-store.sample.json` como fallback).
-
-- Admin: `admin@griaule.test` / senha `Griaule@123`
-- Usuario: `user@griaule.test` / senha `Griaule@123`
-
-## Kanban IT / Chamados
-
-- Kanban IT: `/kanban-it` (visivel para `it_dev` e `admin`).
-- Meus Chamados: `/meus-chamados` (visivel para usuarios).
-- Seed de exemplo: `data/support-tickets.json`, `data/ticket-comments.json`, `data/ticket-events.json`.
-- Usuario IT (seed): `itdev` / senha igual a `dev` (hash reaproveitado em `data/local-auth-store.json`).
-
-### Como testar (UI)
-
-1. Faça login com `itdev` ou `admin`.
-2. Abra `/kanban-it`, arraste um ticket entre colunas e abra o detalhe.
-3. Faça login com `user@griaule.test` e acesse `/meus-chamados` para ver comentários e notificações.
-
-### Como testar (Postman)
-
-1. `POST /api/tickets` com `{ "title": "...", "description": "...", "priority": "high", "tags": ["bug"] }`.
-2. `PATCH /api/tickets/{id}/status` com `{ "status": "in_progress" }`.
-3. `POST /api/tickets/{id}/comments` com `{ "body": "..." }`.
-4. `GET /api/notifications?unread=true` para verificar badges.
-
-## Notas sobre Qase
-
-- A integracao envia o header `Token: <API_TOKEN>` (conforme a documentacao da Qase).
-- Sem o token, as telas/rotas dependentes da Qase retornam dados vazios, mas o app continua operacional.
+- [GitHub profile kit](docs/ops/GITHUB_PROFILE_KIT.md)
+- [Career one-pager template](docs/ops/CAREER_ONE_PAGER_TEMPLATE.md)

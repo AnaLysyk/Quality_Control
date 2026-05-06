@@ -46,7 +46,7 @@ function mapClient(row: unknown): Client {
 }
 
 function ClientesPage() {
-  const { user } = useAuthUser();
+  const { user, normalizedUser } = useAuthUser();
   const legacyIsGlobalAdmin = asRecord(user)?.is_global_admin === true;
   const isGlobalAdmin = !!user?.isGlobalAdmin || legacyIsGlobalAdmin;
   const routeInput = {

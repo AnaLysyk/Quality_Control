@@ -134,6 +134,15 @@ export async function POST(request: Request) {
       metrics: null,
     };
 
+    syncReleaseToBrain({
+      id: release.slug,
+      title: release.title,
+      slug: release.slug,
+      summary: release.summary ?? null,
+      status: release.status ?? "ACTIVE",
+      companyId: release.clientId ?? null,
+    }).catch(() => {});
+
     return NextResponse.json({ release: payload });
   } catch (error) {
     console.error("POST /api/releases error:", error);

@@ -138,6 +138,12 @@ export default function Kanban({
     if (lower === "notrun" || lower === "not_run" || lower === "not run" || lower === "untested" || lower === "notrun") return "notRun";
 
     const upper = raw.toUpperCase();
+    // Portuguese statuses used by manual runs
+    if (upper === "APROVADO") return "pass";
+    if (upper === "FALHA") return "fail";
+    if (upper === "BLOQUEADO") return "blocked";
+    if (upper === "NAO_EXECUTADO") return "notRun";
+
     if (upper === "PASS" || upper === "PASSED") return "pass";
     if (upper === "FAIL" || upper === "FAILED") return "fail";
     if (upper === "BLOCKED") return "blocked";
@@ -1155,7 +1161,6 @@ export default function Kanban({
     </div>
   );
 }
-
 
 
 

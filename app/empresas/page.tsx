@@ -11,7 +11,7 @@ import { CompanySelector } from "../components/CompanySelector";
 
 export default function EmpresasIndexPage() {
   const router = useRouter();
-  const { user, loading } = useAuthUser();
+  const { user, loading, normalizedUser } = useAuthUser();
 
   const isAdmin = useMemo(() => {
     const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
@@ -22,7 +22,7 @@ export default function EmpresasIndexPage() {
     if (loading) return;
     if (!user) return;
     if (isAdmin) return;
-    const slug = typeof user.clientSlug === "string" ? user.clientSlug.trim() : "";
+    const slug = normalizedUser.primaryCompanySlug ?? "";
     if (!slug) return;
     router.replace(
       buildCompanyPathForAccess(slug, "home", {
@@ -40,7 +40,7 @@ export default function EmpresasIndexPage() {
     );
   }, [loading, user, isAdmin, router]);
 
-  if (!loading && user && !isAdmin && (user.clientSlug ?? "")) {
+  if (!loading && user && !isAdmin && normalizedUser.primaryCompanySlug) {
     return null;
   }
 

@@ -7,7 +7,7 @@
  * Ou via npx:
  *   npx tsx scripts/seed-pg.mjs
  *
- * Lê data/local-auth-store.json (ou data/local-auth-store.sample.json como fallback)
+ * Lê data/local-auth-store.json
  * e faz UPSERT de todos os registros no PostgreSQL.
  */
 
@@ -37,21 +37,17 @@ const prisma = new PrismaClient({
 
 async function readStore() {
   const runtimePath = path.join(ROOT, "data", "local-auth-store.json");
-  const samplePath = path.join(ROOT, "data", "local-auth-store.sample.json");
-
-  for (const filePath of [runtimePath, samplePath]) {
-    try {
-      const raw = await fs.readFile(filePath, "utf8");
-      const parsed = JSON.parse(raw);
-      if (parsed?.users) {
-        console.log(`Lendo de: ${path.relative(ROOT, filePath)}`);
-        return parsed;
-      }
-    } catch {
-      // try next
+  try {
+    const raw = await fs.readFile(runtimePath, "utf8");
+    const parsed = JSON.parse(raw);
+    if (parsed?.users) {
+      console.log(`Lendo de: ${path.relative(ROOT, runtimePath)}`);
+      return parsed;
     }
+  } catch {
+    // handled below
   }
-  throw new Error("Nenhum arquivo local-auth-store.json encontrado.");
+  throw new Error("Arquivo data/local-auth-store.json nao encontrado.");
 }
 
 function normalizeSlug(v) {

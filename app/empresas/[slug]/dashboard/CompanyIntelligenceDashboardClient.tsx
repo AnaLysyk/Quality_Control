@@ -692,7 +692,7 @@ function downloadCsv(rows: EnrichedRun[]) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "desktopboard-empresa.csv";
+  anchor.download = "quality-empresa.csv";
   anchor.click();
   URL.revokeObjectURL(url);
 }
@@ -2125,6 +2125,15 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               <FiLayers className="h-4 w-4" />
               Métricas
             </Link>
+            <a
+              data-testid="export-quality"
+              href={`/api/empresas/${encodeURIComponent(props.companySlug)}/quality/export`}
+              download={`quality-${props.companySlug}.csv`}
+              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
+            >
+              <FiDownload className="h-4 w-4" />
+              Exportar qualidade
+            </a>
             <button
               type="button"
               onClick={handleExportPdf}

@@ -21,6 +21,13 @@ import type {
   Tone,
 } from "../home/homeTypes";
 
+const DASHBOARD_DEBUG =
+  process.env.DASHBOARD_DEBUG === "true" || process.env.DEBUG_DASHBOARD === "true";
+
+function logDashboardDebug(message: string) {
+  if (DASHBOARD_DEBUG) console.info(`[dashboard-debug] ${message}`);
+}
+
 type CompanyProfileRecord = ReturnType<typeof mapCompanyRecord>;
 
 type CompanySignals = {

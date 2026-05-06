@@ -1,5 +1,6 @@
 ﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { createManualDefect } from "./utils/current-ui";
 
 const DEFECTS_URL = "/empresas/demo/defeitos";
 
@@ -9,17 +10,13 @@ test("MTTR Ã© calculado ao fechar defeito manual", async ({ page, context }) =
     companies: ["DEMO"],
     clientSlug: "DEMO",
   });
-  await page.goto(DEFECTS_URL, { waitUntil: "networkidle" });
-  // cria defeito manual
-  await page.getByTestId("defect-title").fill("Defeito MTTR");
-  await page.getByTestId("defect-create").click();
-  // reload para garantir DOM atualizado
-  await page.reload({ waitUntil: "networkidle" });
-  // abre modal
-  await page.getByText("Defeito MTTR").click();
+  await page.goto(DEFECTS_URL, { waitUntil: "domcontentloaded" });
+
+  await createManualDefect(page, "Defeito MTTR manual");
+  await page.getByText("Defeito MTTR manual").first().click();
   await expect(page.getByTestId("defect-modal")).toBeVisible();
-  // fecha defeito
-  await page.getByTestId("defect-status-select").selectOption("done");
+
+  await page.getByTestId("defect-status").selectOption("done");
   await page.getByTestId("defect-save").click();
   // MTTR aparece
   const mttr = page.getByTestId("defect-mttr");

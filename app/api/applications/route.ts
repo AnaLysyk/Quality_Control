@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     if (!body.name) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
     }
-    const created = createApplication({
+    const created = await createApplication({
       name: String(body.name),
       slug: body.slug ? String(body.slug) : undefined,
       description: body.description ?? null,
@@ -83,6 +83,16 @@ export async function POST(request: Request) {
       companyId: body.companyId ?? body.companySlug ?? undefined,
       active: body.active ?? true,
     });
+    syncApplicationToBrain({
+      id: created.id,
+      name: created.name,
+      slug: created.slug,
+      description: created.description,
+      companyId: created.companyId ?? body.companyId ?? null,
+      active: created.active,
+      qaseProjectCode: created.qaseProjectCode,
+      source: created.source,
+    }).catch(() => {});
     return NextResponse.json({ item: created }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });

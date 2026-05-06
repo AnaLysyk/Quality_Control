@@ -1,8 +1,6 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
 
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 
@@ -113,55 +111,54 @@ type AuditLogStore = { items: AuditLogRow[] };
 const STORE_PATH = path.join(process.cwd(), "data", "audit-logs.json");
 const USE_MEMORY = process.env.AUDIT_LOGS_IN_MEMORY === "true";
 let memoryStore: AuditLogStore = { items: [] };
-let warnedFsFailure = false;
-
-async function ensureStore(): Promise<boolean> {
-  try {
-    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-    await fs.access(STORE_PATH);
-    return true;
-  } catch {
-    try {
-      await fs.writeFile(STORE_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
-      return true;
-    } catch (err) {
-      if (!warnedFsFailure) {
-        warnedFsFailure = true;
-        const msg = err instanceof Error ? err.message : String(err);
-        console.warn("[AUDIT_LOGS] Falha ao acessar filesystem; usando memoria.", msg);
-      }
-      return false;
-    }
-  }
-}
 
 async function readStore(): Promise<AuditLogStore> {
   if (USE_MEMORY) return memoryStore;
-  const ok = await ensureStore();
-  if (!ok) return memoryStore;
-  try {
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw) as AuditLogStore;
-    return Array.isArray(parsed?.items) ? parsed : { items: [] };
-  } catch {
-    return memoryStore;
-  }
+  return memoryStore;
 }
 
 async function writeStore(next: AuditLogStore) {
-  if (USE_MEMORY) {
-    memoryStore = next;
-    return;
+  memoryStore = next;
+}
+
+type NormalizedAuditLogSearchParams = {
+  action: string;
+  entityType: string;
+  actor: string;
+  query: string;
+  startDate: number | null;
+  endDate: number | null;
+};
+
+function normalizeAuditLogSearchParams(params?: AuditLogSearchParams): NormalizedAuditLogSearchParams {
+  const startDate = params?.startDate ? new Date(params.startDate) : null;
+  const endDate = params?.endDate ? new Date(params.endDate) : null;
+
+  if (startDate && Number.isFinite(startDate.getTime())) {
+    startDate.setHours(0, 0, 0, 0);
   }
-  const ok = await ensureStore();
-  if (!ok) {
-    memoryStore = next;
-    return;
+
+  if (endDate && Number.isFinite(endDate.getTime())) {
+    endDate.setHours(23, 59, 59, 999);
   }
+
+  return {
+    action: (params?.action ?? "").trim(),
+    entityType: (params?.entityType ?? "").trim(),
+    actor: (params?.actor ?? "").trim().toLowerCase(),
+    query: (params?.query ?? "").trim().toLowerCase(),
+    startDate: startDate && Number.isFinite(startDate.getTime()) ? startDate.getTime() : null,
+    endDate: endDate && Number.isFinite(endDate.getTime()) ? endDate.getTime() : null,
+  };
+}
+
+function serializeSearchableMetadata(metadata: unknown): string {
+  if (metadata === null || metadata === undefined) return "";
+  if (typeof metadata === "string") return metadata.toLowerCase();
   try {
-    await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+    return JSON.stringify(metadata).toLowerCase();
   } catch {
-    memoryStore = next;
+    return "";
   }
 }
 
@@ -336,6 +333,41 @@ export async function listAuditLogs(params?: AuditLogListParams) {
   const query = (params?.query ?? "").trim().toLowerCase();
   const startDate = params?.startDate ? Date.parse(params.startDate) : null;
   const endDate = params?.endDate ? Date.parse(params.endDate) : null;
+
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const rows = await prisma.auditLog.findMany({
+      where: {
+        ...(action ? { action } : {}),
+        ...(entityType ? { entity_type: entityType } : {}),
+        ...(actor
+          ? {
+              OR: [
+                { actor_email: { contains: actor, mode: "insensitive" } },
+                { actor_user_id: { contains: actor, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        created_at: {
+          ...(startDate ? { gte: new Date(startDate) } : {}),
+          ...(endDate ? { lte: new Date(endDate) } : {}),
+        },
+      },
+      orderBy: { created_at: "desc" },
+      skip: offset,
+      take: limit,
+    });
+    const mapped = rows.map(mapAuditLogRow);
+    if (!query) return mapped;
+    return mapped.filter((log) => {
+      const label = (log.entity_label ?? "").toLowerCase();
+      const id = (log.entity_id ?? "").toLowerCase();
+      const type = (log.entity_type ?? "").toLowerCase();
+      return label.includes(query) || id.includes(query) || type.includes(query);
+    });
+  }
+
+  const store = await readStore();
 
   const items = (store.items ?? []).filter((log) => {
     // Show all entries — no retention filter. Manual purge only.

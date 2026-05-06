@@ -2,6 +2,8 @@
 import { ClientListResponseSchema } from "../packages/contracts/src/client";
 import { login, setMockUser } from "./utils/auth";
 
+const adminPassword = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";
+
 
 test("@smoke login and load clientes", async ({ page }) => {
   await setMockUser(page, "admin");

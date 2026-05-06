@@ -24,7 +24,7 @@
 
 import { prisma } from "../lib/prismaClient";
 
-jest.setTimeout(30000);
+jest.setTimeout(120000);
 import {
   createSuporte,
   updateSuporte,

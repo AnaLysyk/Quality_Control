@@ -1,11 +1,8 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import path from "node:path";
-import fs from "node:fs/promises";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
-import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
@@ -36,31 +33,10 @@ type EventsStore = {
   items: TicketEventRecord[];
 };
 
-const STORE_PATH = path.join(getJsonStoreDir(), "ticket-events.json");
 const STORE_KEY = "qc:ticket_events:v1";
 const USE_REDIS = process.env.TICKET_EVENTS_STORE === "redis" || isRedisConfigured();
 const USE_MEMORY = process.env.TICKET_EVENTS_IN_MEMORY === "true";
 let memoryStore: EventsStore = { items: [] };
-let warnedFsFailure = false;
-
-async function ensureStore(): Promise<boolean> {
-  try {
-    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-    await fs.access(STORE_PATH);
-    return true;
-  } catch {
-    try {
-      await fs.writeFile(STORE_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
-      return true;
-    } catch {
-      if (!warnedFsFailure) {
-        warnedFsFailure = true;
-        console.warn("[TICKET_EVENTS] Falha ao acessar filesystem; usando fallback em memoria.");
-      }
-      return false;
-    }
-  }
-}
 
 async function readStore(): Promise<EventsStore> {
   if (USE_REDIS) {
@@ -77,15 +53,7 @@ async function readStore(): Promise<EventsStore> {
   if (USE_MEMORY) {
     return memoryStore;
   }
-  const ok = await ensureStore();
-  if (!ok) return memoryStore;
-  try {
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw) as EventsStore;
-    return Array.isArray(parsed?.items) ? parsed : { items: [] };
-  } catch {
-    return memoryStore;
-  }
+  return memoryStore;
 }
 
 async function writeStore(next: EventsStore) {
@@ -98,16 +66,7 @@ async function writeStore(next: EventsStore) {
     memoryStore = next;
     return;
   }
-  const ok = await ensureStore();
-  if (!ok) {
-    memoryStore = next;
-    return;
-  }
-  try {
-    await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
-  } catch {
-    memoryStore = next;
-  }
+  memoryStore = next;
 }
 
 function pgToRecord(r: { id: string; ticketId: string; type: string; payload: unknown; actorUserId?: string | null; createdAt: Date }): TicketEventRecord {

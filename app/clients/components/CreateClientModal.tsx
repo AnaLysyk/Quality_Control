@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap } from "react-icons/fi";
+import { extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj } from "@/lib/brasilApiCnpj";
 
 export type ClientIntegrationMode = "qase" | "manual";
 
@@ -57,6 +58,23 @@ function uniqCodes(values: string[]) {
   return Array.from(new Set(values.map((value) => value.trim().toUpperCase()).filter(Boolean)));
 }
 
+function formatCep(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+}
+
+function buildViaCepAddress(data: Record<string, unknown>) {
+  return [
+    typeof data.logradouro === "string" ? data.logradouro : "",
+    typeof data.bairro === "string" ? data.bairro : "",
+    typeof data.localidade === "string" ? data.localidade : "",
+    typeof data.uf === "string" ? data.uf : "",
+  ]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
 export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientId }: Props) {
   const [name, setName] = useState("");
   const [taxId, setTaxId] = useState("");
@@ -98,13 +116,121 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [error, setError] = useState<string | null>(null);
   const [createdClientId, setCreatedClientId] = useState<string | null>(clientId ?? null);
   const [loadingClient, setLoadingClient] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepMessage, setCepMessage] = useState<string | null>(null);
+  const [addressTouched, setAddressTouched] = useState(false);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjMessage, setCnpjMessage] = useState<string | null>(null);
+  const cnpjLookupIdRef = useRef(0);
+  const cnpjLookupControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
 
   const selectedProjects = useMemo(
     () => qaseProjects.filter((project) => selectedQaseProjectCodes.includes(project.code)),
     [qaseProjects, selectedQaseProjectCodes],
   );
 
-  if (!open) return null;
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      cnpjLookupControllerRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const digits = zip.replace(/\D/g, "");
+    if (digits.length === 0) {
+      setCepMessage(null);
+      return;
+    }
+    if (digits.length < 8) {
+      setCepMessage("Digite os 8 digitos do CEP.");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
+
+    async function lookupCep() {
+      setCepLoading(true);
+      setCepMessage(null);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        const data = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+        if (!response.ok || !data || data.erro === true) {
+          setCepMessage("CEP nao encontrado.");
+          return;
+        }
+
+        const nextAddress = buildViaCepAddress(data);
+        if (nextAddress && (!address.trim() || !addressTouched)) {
+          setAddress(nextAddress);
+          setAddressTouched(false);
+        }
+        setCepMessage("Endereco preenchido pelo CEP.");
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          setCepMessage("Consulta de CEP demorou demais. Tente novamente.");
+          return;
+        }
+        setCepMessage("Nao foi possivel consultar o CEP agora.");
+      } finally {
+        window.clearTimeout(timeoutId);
+        setCepLoading(false);
+      }
+    }
+
+    void lookupCep();
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [address, addressTouched, open, zip]);
+
+  async function handleCnpjBlur() {
+    const rawCnpj = normalizeCnpj(taxId);
+    if (rawCnpj.length !== 14) {
+      setCnpjMessage(null);
+      return;
+    }
+
+    const lookupId = ++cnpjLookupIdRef.current;
+    cnpjLookupControllerRef.current?.abort();
+    const controller = new AbortController();
+    cnpjLookupControllerRef.current = controller;
+
+    setCnpjLoading(true);
+    setCnpjMessage("Consultando BrasilAPI...");
+
+    try {
+      const data = await lookupCnpjCompany(rawCnpj, controller.signal);
+      const companyName = extractCnpjCompanyName(data);
+
+      if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
+
+      if (companyName) {
+        setName((currentName) => (currentName.trim() ? currentName : companyName));
+        setCnpjMessage("Nome preenchido pelo CNPJ.");
+      } else {
+        setCnpjMessage("CNPJ consultado, mas sem nome disponivel.");
+      }
+    } catch (error) {
+      if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setCnpjMessage(error instanceof Error ? error.message : "Nao foi possivel consultar o CNPJ.");
+    } finally {
+      if (isMountedRef.current && lookupId === cnpjLookupIdRef.current) {
+        setCnpjLoading(false);
+        if (cnpjLookupControllerRef.current === controller) {
+          cnpjLookupControllerRef.current = null;
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     if (!clientId) return;
@@ -122,6 +248,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         setTaxId((data.tax_id as string) ?? "");
         setZip((data.cep as string) ?? "");
         setAddress((data.address as string) ?? "");
+        setAddressTouched(false);
         setPhone((data.phone as string) ?? "");
         setWebsite((data.website as string) ?? "");
         setLogoUrl((data.logo_url as string) ?? "");
@@ -175,10 +302,14 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   }
 
   function resetForm() {
+    cnpjLookupIdRef.current += 1;
+    cnpjLookupControllerRef.current?.abort();
+    cnpjLookupControllerRef.current = null;
     setName("");
     setTaxId("");
     setZip("");
     setAddress("");
+    setAddressTouched(false);
     setPhone("");
     setWebsite("");
     setLogoUrl("");
@@ -193,6 +324,8 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     setJiraEmail("");
     setJiraApiToken("");
     setError(null);
+    setCnpjLoading(false);
+    setCnpjMessage(null);
   }
 
   function toggleSelectedQaseProject(code: string) {
@@ -342,7 +475,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         if (project.status === "valid" || project.status === "invalid") continue;
         try {
           // validate sequentially to avoid burst
-          // eslint-disable-next-line no-await-in-loop
+           
           const ok = await validateProjectCode(token, project.code);
           setQaseProjects((prev) => prev.map((p) => (p.code === project.code ? { ...p, status: ok ? "valid" : "invalid" } : p)));
         } catch {
@@ -494,6 +627,8 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     }
   }
 
+  if (!open) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-3 py-4">
       <form
@@ -543,9 +678,14 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={taxId}
-              onChange={(e) => setTaxId(e.target.value)}
+              onChange={(e) => setTaxId(normalizeCnpj(e.target.value))}
               placeholder="00.000.000/0000-00"
+              inputMode="numeric"
+              onBlur={() => void handleCnpjBlur()}
             />
+            <span className="mt-1 block min-h-4 text-xs text-(--tc-text-muted)" aria-live="polite">
+              {cnpjLoading ? "Consultando BrasilAPI..." : cnpjMessage}
+            </span>
           </label>
 
           <label className="block text-sm md:col-span-2">
@@ -553,9 +693,14 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={zip}
-              onChange={(e) => setZip(e.target.value)}
+              onChange={(e) => setZip(formatCep(e.target.value))}
               placeholder="00000-000"
+              inputMode="numeric"
+              aria-describedby="company-cep-feedback"
             />
+            <span id="company-cep-feedback" className="mt-1 block min-h-4 text-xs text-(--tc-text-muted)">
+              {cepLoading ? "Consultando CEP..." : cepMessage}
+            </span>
           </label>
 
           <label className="block text-sm md:col-span-2">
@@ -643,7 +788,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
 
             <div className="mt-3">
               <p className="text-sm font-semibold text-(--tc-text)"><FiZap size={13} className="text-(--tc-accent,#ef0001)" /> Integração com Qase</p>
-              <p className="mt-1 text-xs text-(--tc-text-muted)">Informe o token da Qase (novo ou já salvo) e clique em "Buscar projetos" para carregar os projetos disponíveis. Selecione os projetos que deseja vincular — cada projeto selecionado será cadastrado como uma aplicação da empresa.</p>
+              <p className="mt-1 text-xs text-(--tc-text-muted)">Informe o token da Qase (novo ou já salvo) e clique em &quot;Buscar projetos&quot; para carregar os projetos disponíveis. Selecione os projetos que deseja vincular — cada projeto selecionado será cadastrado como uma aplicação da empresa.</p>
             </div>
 
             <div className="mt-4 space-y-4">
@@ -835,7 +980,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                 ) : (
                   <div className="flex items-center gap-3 rounded-lg border border-dashed border-(--tc-accent)/30 bg-(--tc-accent-soft,rgba(239,0,1,0.03)) px-4 py-4 text-sm text-(--tc-text-muted)">
                     <FiSearch size={18} className="shrink-0 text-(--tc-accent,#ef0001) opacity-60" />
-                    <span>Informe o token e clique em "Buscar projetos" para selecionar as aplicações da empresa. Cada projeto da Qase será cadastrado como uma aplicação independente.</span>
+                    <span>Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicações da empresa. Cada projeto da Qase será cadastrado como uma aplicação independente.</span>
                   </div>
                 )}
               </div>

@@ -11,6 +11,22 @@ const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Demo@123";
 const NO_COMPANY_EMAIL = process.env.E2E_NO_COMPANY_EMAIL || "nocompany@demo.test";
 const NO_COMPANY_PASSWORD = process.env.E2E_NO_COMPANY_PASSWORD || "Demo@123";
 
+function buildPasswordCandidates(primary: string) {
+  return Array.from(new Set([primary, "Griaule@123", "Demo@123", "senha"]));
+}
+
+function buildEmailCandidates(primary: string, role: MockAuthOptions["role"], wantsNoCompany: boolean) {
+  const defaultsByRole =
+    role === "admin"
+      ? ["admin@demo.test", "admin", "ana1"]
+      : role === "company" || role === "client"
+        ? ["company@demo.test", "demo"]
+        : wantsNoCompany
+          ? ["nocompany@demo.test"]
+          : ["user@demo.test", "anapaula", "analysyk"];
+  return Array.from(new Set([primary, ...defaultsByRole].filter(Boolean)));
+}
+
 export type MockAuthOptions = {
   role: "admin" | "company" | "client" | "user";
   companies?: string[];
@@ -36,17 +52,25 @@ export async function mockAuth(context: BrowserContext, options: MockAuthOptions
         : wantsNoCompany
           ? NO_COMPANY_PASSWORD
           : USER_PASSWORD;
+  const emailCandidates = buildEmailCandidates(loginEmail, role, wantsNoCompany);
   const loginUrl = new URL("/api/auth/login", baseURL).toString();
-  const response = await context.request.post(loginUrl, {
-    data: {
-      user: loginEmail,
-      password: loginPassword,
-      ...(options.clientSlug ? { clientSlug: options.clientSlug } : {}),
-    },
-  });
+  let response = null as Awaited<ReturnType<typeof context.request.post>> | null;
+  for (const emailCandidate of emailCandidates) {
+    for (const passwordCandidate of buildPasswordCandidates(loginPassword)) {
+      response = await context.request.post(loginUrl, {
+        data: {
+          user: emailCandidate,
+          password: passwordCandidate,
+          ...(options.clientSlug ? { clientSlug: options.clientSlug } : {}),
+        },
+      });
+      if (response.ok()) break;
+    }
+    if (response?.ok()) break;
+  }
 
-  if (!response.ok()) {
-    throw new Error(`mockAuth login failed: ${response.status()} ${response.statusText()}`);
+  if (!response?.ok()) {
+    throw new Error(`mockAuth login failed: ${response?.status()} ${response?.statusText()}`);
   }
 
   const setCookie = response.headers()["set-cookie"];

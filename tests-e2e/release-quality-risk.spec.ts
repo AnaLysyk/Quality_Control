@@ -1,9 +1,10 @@
 ﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
 test.setTimeout(120000);
 
-test("release com MTTR alto aparece como risk", async ({ page, context }) => {
+test("release com risco aparece na leitura executiva", async ({ page, context }) => {
   await mockAuth(context, {
     role: "company",
     companies: ["DEMO"],

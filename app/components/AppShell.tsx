@@ -444,6 +444,11 @@ function isCompanyRunDetailRoute(pathname: string) {
 function shouldHideShellCover(pathname: string) {
   const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
   return (
+    pathname.startsWith("/operacao") ||
+    pathname.startsWith("/operacoes") ||
+    pathname.startsWith("/admin/operacao") ||
+    pathname.startsWith("/runs") ||
+    pathname.startsWith("/chat") ||
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
@@ -473,6 +478,7 @@ export default function AppShell({ children }: AppShellProps) {
   const isCompanyHomeRoute = isCompanyHomePathname(pathname);
   const isHomeRoute = pathname === "/" || pathname === "/home" || /\/home$/.test(pathname);
   const hideShellCover = shouldHideShellCover(pathname);
+  const isBrainCanvasRoute = pathname.startsWith("/admin/brain");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [coverSlotContent, setCoverSlotContent] = useState<ReactNode | null>(null);
   const [, setLogoFailureTick] = useState(0);
@@ -487,8 +493,8 @@ export default function AppShell({ children }: AppShellProps) {
     const preferredCompanySlug =
       routeCompanySlug ??
       activeClientSlug ??
-      (typeof user?.clientSlug === "string" ? user.clientSlug : null) ??
-      (typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null) ??
+      primaryCompanySlug ??
+      defaultCompanySlug ??
       null;
 
     const routeMatchedCompany = preferredCompanySlug
@@ -519,8 +525,8 @@ export default function AppShell({ children }: AppShellProps) {
       permissionRole: typeof user?.permissionRole === "string" ? user.permissionRole : null,
       role: typeof user?.role === "string" ? user.role : null,
       companyRole: typeof user?.companyRole === "string" ? user.companyRole : null,
-      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : null,
-      companyCount: companies.length,
+      clientSlug: primaryCompanySlug,
+      companyCount,
     });
     const isCompanyScopedProfilePage =
       pathname.startsWith("/settings/profile") &&
@@ -548,6 +554,8 @@ export default function AppShell({ children }: AppShellProps) {
           : isHomeRoute && !isCompanyRoute
             ? shortProfileLabel
             : baseIdentity.title,
+      note: isOperationalModule ? operationalNote : baseIdentity.note,
+      badge: isOperationalModule ? operationalTitle : baseIdentity.badge,
       profileLabel: shortProfileLabel,
       coverClassName: profileCoverClassName(viewerProfile),
       logoSrc,
@@ -640,12 +648,21 @@ export default function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
       <NewVersionBanner />
       {/* Detector de hover na lateral esquerda para telas pequenas */}
-      <div
-        className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
-        onMouseEnter={() => setMobileOpen(true)}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+      {!isBrainCanvasRoute ? (
+        <div
+          className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area lg:hidden${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
+          onMouseEnter={() => setMobileOpen(true)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        />
+      ) : null}
+
+      <Sidebar
+        pathname={pathname}
+        mobileOpen={mobileOpen}
+        mobilePanelId={mobileSidebarId}
+        onClose={() => setMobileOpen(false)}
       />
 
       <Sidebar
@@ -668,7 +685,7 @@ export default function AppShell({ children }: AppShellProps) {
           mobileOpen ? "pointer-events-none opacity-0" : ""
         ].join(" ")}
         onClick={() => setMobileOpen(true)}
-        onMouseEnter={() => setMobileOpen(true)}
+        onMouseEnter={isBrainCanvasRoute ? undefined : () => setMobileOpen(true)}
         onTouchStart={() => setMobileOpen(true)}
         onMouseLeave={() => setMobileOpen(false)}
       >

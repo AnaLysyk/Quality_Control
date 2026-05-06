@@ -1,8 +1,5 @@
 import "server-only";
 
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getPrismaClientOptions } from "@/lib/prismaClientOptions";
 import { isRedisConfigured } from "@/lib/redis";
@@ -35,7 +32,7 @@ async function getPrisma() {
 }
 
 const PREFIX = "qc:user_permissions:";
-const FILE_PATH = path.join(process.cwd(), "data", "permissionOverrides.json");
+let memoryItems: UserPermissionsOverride[] = [];
 
 export type UserPermissionsOverride = {
   userId: string;
@@ -117,25 +114,14 @@ async function pgListOverrides(): Promise<UserPermissionsOverride[]> {
   }));
 }
 
-// ── File helpers (fallback) ────────────────────────────────────────────────
+// ── Memory helpers (fallback) ──────────────────────────────────────────────
 
 async function readOverridesFile(): Promise<PermissionsOverrideFile> {
-  try {
-    const raw = await fs.readFile(FILE_PATH, "utf8");
-    const parsed = JSON.parse(raw) as { items?: unknown };
-    const items = Array.isArray(parsed?.items)
-      ? parsed.items.map(normalizeStoredOverride).filter((item): item is UserPermissionsOverride => item !== null)
-      : [];
-
-    return { items };
-  } catch {
-    return { items: [] };
-  }
+  return { items: memoryItems };
 }
 
 async function writeOverridesFile(store: PermissionsOverrideFile) {
-  await fs.mkdir(path.dirname(FILE_PATH), { recursive: true });
-  await fs.writeFile(FILE_PATH, JSON.stringify(store, null, 2), "utf8");
+  memoryItems = store.items;
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────

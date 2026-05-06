@@ -10,7 +10,7 @@ import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 export default function MetricasPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuthUser();
+  const { user, loading: authLoading, normalizedUser } = useAuthUser();
   const {
     clients,
     activeClientSlug,

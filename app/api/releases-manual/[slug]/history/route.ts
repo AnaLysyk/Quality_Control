@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
+import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { getMockRole } from "@/lib/rbac/defects";
 import { readManualReleases } from "@/lib/manualReleaseStore";
@@ -8,9 +9,7 @@ import { listDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
-  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
-  if (user.companySlug) return [user.companySlug];
-  return [];
+  return resolveNormalizedCompanySlugs(user);
 }
 
 export async function GET(req: Request, context: { params: Promise<{ slug: string }> }) {

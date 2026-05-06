@@ -25,6 +25,7 @@ import {
   toRequestProfileTypeLabel,
   type RequestProfileTypeLabel,
 } from "@/lib/requestRouting";
+import { parsePasswordResetAccessRequestMessage } from "@/lib/passwordResetAccessQueue";
 
 type ClientOption = { id: string; name: string };
 
@@ -65,6 +66,8 @@ type AccessRequestItem = {
   lastAdjustmentDiff: AccessRequestAdjustmentEntry[];
   rawMessage: string;
   adminNotes: string | null;
+  requestKind: "access_request" | "password_reset";
+  linkedRequestId: string | null;
 };
 
 type UserLoginCandidate = {
@@ -84,8 +87,60 @@ type AccessRequestComment = {
 };
 
 function parseFromMessage(message: string, fallbackEmail: string): Partial<AccessRequestItem> {
+  const passwordReset = parsePasswordResetAccessRequestMessage(message);
+  if (passwordReset) {
+    const fullName = passwordReset.userName || passwordReset.userEmail || fallbackEmail;
+    const email = passwordReset.userEmail || fallbackEmail;
+    const profileType = passwordReset.profileType;
+    const accessType = toInternalAccessType(profileType);
+    const snapshot: AccessRequestSnapshot = {
+      email,
+      name: fullName,
+      fullName,
+      username: passwordReset.login,
+      phone: "",
+      passwordHash: null,
+      jobRole: "Reset de senha",
+      company: passwordReset.companyName || "(nao informado)",
+      clientId: null,
+      accessType,
+      profileType,
+      title: "Reset de senha",
+      description: "Solicitou redefinicao de senha pelo fluxo Esqueci minha senha.",
+      notes: "",
+      companyProfile: null,
+    };
+
+    return {
+      requestKind: "password_reset",
+      linkedRequestId: passwordReset.requestId,
+      email,
+      name: fullName,
+      fullName,
+      username: passwordReset.login,
+      phone: "",
+      jobRole: "Reset de senha",
+      company: passwordReset.companyName || "(nao informado)",
+      clientId: null,
+      accessType: toRequestProfileTypeLabel(profileType),
+      companyProfile: null,
+      title: "Reset de senha",
+      description: "Solicitou redefinicao de senha pelo fluxo Esqueci minha senha.",
+      notes: "",
+      passwordProvided: false,
+      originalRequest: snapshot,
+      adjustmentRound: 0,
+      adjustmentRequestedFields: [],
+      adjustmentHistory: [],
+      lastAdjustmentAt: null,
+      lastAdjustmentDiff: [],
+    };
+  }
+
   const parsed = parseAccessRequestMessage(message, fallbackEmail);
   return {
+    requestKind: "access_request",
+    linkedRequestId: null,
     email: parsed.email,
     name: parsed.fullName || parsed.name,
     fullName: parsed.fullName || parsed.name,
@@ -346,6 +401,7 @@ function AccessRequestsPage() {
   }, [selected?.companyProfile, selectedOriginal?.companyProfile]);
   const dirty = useMemo(() => {
     if (!selected || !draft) return false;
+    if (selected.requestKind === "password_reset" || draft.requestKind === "password_reset") return false;
 
     const baselineUsername =
       selected.username ??
@@ -365,19 +421,22 @@ function AccessRequestsPage() {
       (draft.adminNotes ?? "") !== (selected.adminNotes ?? "")
     );
   }, [draft, existingLogins, selected]);
+  const draftIsPasswordReset = draft?.requestKind === "password_reset";
+  const selectedIsPasswordReset = selected?.requestKind === "password_reset";
   const draftProfileType =
     normalizeRequestProfileType((draft?.accessType ?? "Usuário Testing Company") as string) ?? "company_user";
   const requiresCompany = requestProfileTypeNeedsCompany(draftProfileType);
   const commentsLocked = selected?.status === "closed" || selected?.status === "rejected";
   const missingRequiredFields =
-    !String(draft?.fullName ?? "").trim() ||
-    !String(draft?.username ?? "").trim() ||
-    !String(draft?.email ?? "").trim() ||
-    !String(draft?.phone ?? "").trim() ||
-    !String(draft?.jobRole ?? "").trim() ||
-    !String(draft?.title ?? "").trim() ||
-    !String(draft?.description ?? "").trim() ||
-    !draft?.passwordProvided;
+    !draftIsPasswordReset &&
+    (!String(draft?.fullName ?? "").trim() ||
+      !String(draft?.username ?? "").trim() ||
+      !String(draft?.email ?? "").trim() ||
+      !String(draft?.phone ?? "").trim() ||
+      !String(draft?.jobRole ?? "").trim() ||
+      !String(draft?.title ?? "").trim() ||
+      !String(draft?.description ?? "").trim() ||
+      !draft?.passwordProvided);
   const acceptDisabled = !selected || !draft || accepting || missingRequiredFields || (requiresCompany && !draft.clientId);
 
   const load = useCallback(async () => {
@@ -450,6 +509,8 @@ function AccessRequestsPage() {
           lastAdjustmentDiff: Array.isArray(parsedMsg.lastAdjustmentDiff) ? parsedMsg.lastAdjustmentDiff : [],
           rawMessage: String(r.message ?? ""),
           adminNotes: (r.admin_notes as string | null) ?? null,
+          requestKind: parsedMsg.requestKind ?? "access_request",
+          linkedRequestId: parsedMsg.linkedRequestId ?? null,
         };
       });
 
@@ -1630,7 +1691,7 @@ function AccessRequestsPage() {
                     <button
                       type="button"
                       onClick={saveChanges}
-                      disabled={saving || !dirty}
+                      disabled={saving || !dirty || selectedIsPasswordReset}
                       className="rounded-full border border-(--tc-primary) bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-primary) transition hover:-translate-y-0.5 hover:bg-(--tc-primary) hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {saving ? "Salvando..." : dirty ? "Salvar análise" : "Sem alterações"}
@@ -1639,7 +1700,7 @@ function AccessRequestsPage() {
                     <button
                       type="button"
                       onClick={requestAdjustment}
-                      disabled={requestingAdjustment || !commentDraft.trim() || commentsLocked || adjustmentFieldsDraft.length === 0}
+                      disabled={requestingAdjustment || selectedIsPasswordReset || !commentDraft.trim() || commentsLocked || adjustmentFieldsDraft.length === 0}
                       className="rounded-full border border-amber-400 bg-amber-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-amber-800 transition hover:-translate-y-0.5 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {requestingAdjustment ? "Enviando..." : "Solicitar ajuste"}
@@ -1662,7 +1723,7 @@ function AccessRequestsPage() {
                       disabled={acceptDisabled}
                       className="rounded-full bg-(--tc-primary) px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-white shadow-[0_14px_30px_rgba(1,24,72,0.2)] transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {accepting ? "Aprovando..." : "Aprovar acesso"}
+                      {accepting ? "Aprovando..." : selectedIsPasswordReset ? "Aprovar reset" : "Aprovar acesso"}
                     </button>
                     </div>
                   </div>

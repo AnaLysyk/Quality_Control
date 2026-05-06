@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
@@ -10,6 +8,7 @@ import {
   listLocalLinksForUser,
 } from "@/lib/auth/localStore";
 import { listUserNotes } from "@/lib/userNotesStore";
+import { resolveVisibleCompanies } from "@/lib/companyVisibility";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -24,16 +23,9 @@ function normalizeComparableValue(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
 
-async function readCompanyDefects(companyId: string): Promise<DefectRecord[]> {
-  const filePath = path.join(process.cwd(), "data", "companies", companyId, "defects.json");
-
-  try {
-    const raw = await fs.readFile(filePath, "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as DefectRecord[]) : [];
-  } catch {
-    return [];
-  }
+async function readCompanyDefects(_companyId: string): Promise<DefectRecord[]> {
+  // Legacy per-company defect files are not used in Postgres mode
+  return [];
 }
 
 export async function GET(req: Request) {
@@ -58,18 +50,7 @@ export async function GET(req: Request) {
     (access.role ?? "").toLowerCase() === "technical_support" ||
     (access.companyRole ?? "").toLowerCase() === "technical_support";
 
-  const linkedCompanyIds = new Set(
-    links
-      .map((link) => link.companyId)
-      .filter((companyId): companyId is string => typeof companyId === "string" && companyId.length > 0),
-  );
-
-  const visibleCompanies = hasFullCompanyAccess
-    ? companies
-    : companies.filter((company) => linkedCompanyIds.has(company.id));
-
-  const activeLinkedCompanies = companies.filter((company) => {
-    if (!linkedCompanyIds.has(company.id)) return false;
+  const activeLinkedCompanies = visibleCompanies.filter((company) => {
     if (company.active === false) return false;
     if ((company.status ?? "active") === "archived") return false;
     return true;

@@ -1,5 +1,6 @@
 ﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { createManualDefect } from "./utils/current-ui";
 
 const URL = "/empresas/demo/defeitos";
 
@@ -10,11 +11,10 @@ test("vincula defeito manual a uma run", async ({ page, context }) => {
     clientSlug: "DEMO",
   });
 
-  await page.goto(URL, { waitUntil: "networkidle" });
+  await page.goto(URL, { waitUntil: "domcontentloaded" });
 
-  // cria defeito manual
-  await page.getByTestId("defect-title").fill("Defeito com run");
-  await page.getByTestId("defect-create").click();
+  await createManualDefect(page, "Defeito com run");
+  await page.getByText("Defeito com run").first().click();
 
   const defect = page.locator('[data-testid^="defect-item-"]').first();
 

@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
   FiHome,
@@ -42,6 +42,7 @@ type UserItem = {
   active?: boolean;
   status?: string;
   avatar_url?: string | null;
+  phone?: string | null;
   job_title?: string | null;
   linkedin_url?: string | null;
   client_id?: string | null;
@@ -62,10 +63,20 @@ type CreateModalConfig = {
   submitLabel: string;
   initialRole: string;
   lockRole: boolean;
+  allowedRoles?: FixedProfileKind[];
   showCompanyField: boolean;
   requireCompanySelection: boolean;
   companyOptional: boolean;
 };
+
+function resolveUserTabParam(value: string | null): UserTab | null {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "company" || normalized === "empresa") return "company";
+  if (normalized === "testing" || normalized === "tc" || normalized === "usuario-tc") return "testing";
+  if (normalized === "admin" || normalized === "leader" || normalized === "lider") return "admin";
+  if (normalized === "support" || normalized === "suporte") return "support";
+  return null;
+}
 
 function normalize(text?: string | null) {
   return (text ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -259,14 +270,16 @@ function CompanyUsersSection({
 
 export default function AdminUsersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<UserTab>("company");
+  const [activeTab, setActiveTab] = useState<UserTab>(() => resolveUserTabParam(searchParams.get("tab")) ?? "company");
   const [search, setSearch] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
+  const openCreateTokenRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -308,6 +321,21 @@ export default function AdminUsersPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const nextTab = resolveUserTabParam(searchParams.get("tab"));
+    if (nextTab && nextTab !== activeTab) {
+      setActiveTab(nextTab);
+    }
+
+    if (searchParams.get("create") === "1") {
+      const token = searchParams.toString();
+      if (openCreateTokenRef.current !== token) {
+        openCreateTokenRef.current = token;
+        setOpenCreate(true);
+      }
+    }
+  }, [activeTab, searchParams]);
 
   const sortUsers = useCallback(
     (items: UserItem[]) => [...items].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
@@ -524,22 +552,22 @@ export default function AdminUsersPage() {
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visiveis
+                <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visíveis
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiHome className="h-4 w-4" /> {companyAccountsCount} Empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUsers className="h-4 w-4" /> {companyUsersCount} Usuario da empresa
+                <FiUsers className="h-4 w-4" /> {companyUsersCount} Usuário da empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiUser className="h-4 w-4" /> {testingUsersCount} Usuario TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiShield className="h-4 w-4" /> {adminUsersCount} Lider TC
+                <FiShield className="h-4 w-4" /> {adminUsersCount} Líder TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiTool className="h-4 w-4" /> {supportUsersCount} suporte tecnico
+                <FiTool className="h-4 w-4" /> {supportUsersCount} Suporte Técnico
               </span>
             </div>
           </div>
@@ -548,7 +576,7 @@ export default function AdminUsersPage() {
         <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as UserTab)}>
             <div className="border-b border-(--tc-border,#d7deea) pb-5">
-              <h2 className="text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Gestao por contexto</h2>
+              <h2 className="text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Gestão por contexto</h2>
               <div className="mt-4">
                 <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                   <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
@@ -558,7 +586,7 @@ export default function AdminUsersPage() {
                     Usuários TC
                   </TabsTrigger>
                   <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Lider TC
+                    Líder TC
                   </TabsTrigger>
                   <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Suporte Técnico
@@ -750,13 +778,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: adminActiveUsers,
-                          emptyMessage: "Nenhum Lider TC ativo neste recorte.",
+                          emptyMessage: "Nenhum Líder TC ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: adminInactiveUsers,
-                          emptyMessage: "Nenhum Lider TC inativo neste recorte.",
+                          emptyMessage: "Nenhum Líder TC inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -832,6 +860,7 @@ export default function AdminUsersPage() {
         requireCompanySelection={createModalConfig.requireCompanySelection}
         initialRole={createModalConfig.initialRole}
         lockRole={createModalConfig.lockRole}
+        allowedRoles={createModalConfig.allowedRoles}
         title={createModalConfig.title}
         subtitle={createModalConfig.subtitle}
         submitLabel={createModalConfig.submitLabel}

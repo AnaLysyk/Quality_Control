@@ -16,7 +16,7 @@ test.describe("kanban - persistÃªncia local", () => {
     await card.locator('[data-testid="move-to-pass"]').first().click();
     await expect(page.getByTestId("kanban-column-pass")).toContainText("Erro no login");
 
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
 
     await expect(page.getByTestId("kanban-column-pass")).toContainText("Erro no login");
   });

@@ -6,7 +6,6 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import {
   composeAccessRequestMessage,
   normalizeAccessType,
-  type AccessType,
 } from "@/lib/accessRequestMessage";
 import { notifyAccessRequestCreated } from "@/lib/notificationService";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
@@ -18,8 +17,6 @@ import {
   resolveReviewQueue,
   resolveRequestQueueMessage,
   toInternalAccessType,
-  toRequestProfileTypeLabel,
-  type RequestProfileType,
 } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { addAuditLogSafe } from "@/data/auditLogRepository";

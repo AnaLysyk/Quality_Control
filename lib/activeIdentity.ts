@@ -119,9 +119,10 @@ export function isInstitutionalCompanyAccount(
 
   const record = user as Record<string, unknown>;
   const legacyCompany = readLegacyCompanyRecord(user);
+  const normalizedUser = normalizeAuthenticatedUser(user);
   const companySlug = readTrimmedString(
-    user.clientSlug,
-    user.defaultClientSlug,
+    normalizedUser.primaryCompanySlug,
+    normalizedUser.defaultCompanySlug,
     typeof record.client_slug === "string" ? record.client_slug : null,
     typeof record.default_company_slug === "string" ? record.default_company_slug : null,
     typeof legacyCompany?.slug === "string" ? legacyCompany.slug : null,

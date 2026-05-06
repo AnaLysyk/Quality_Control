@@ -39,7 +39,8 @@ export type AssistantToolName =
   | "explain_permission"
   | "create_ticket"
   | "create_comment"
-  | "suggest_next_step";
+  | "suggest_next_step"
+  | "use_brain";
 
 export type AssistantPromptAction = {
   kind: "prompt";
@@ -61,6 +62,16 @@ export type AssistantReplyPayload = {
   tool: AssistantToolName;
   actions?: AssistantAction[];
   context: AssistantScreenContext;
+  meta?: {
+    agentMode?: string | null;
+    agentName?: string | null;
+    agentIcon?: string | null;
+    agentLabel?: string | null;
+    agentColor?: string | null;
+    nodeId?: string | null;
+    source?: string | null;
+    durationMs?: number | null;
+  } | null;
 };
 
 export type AssistantConversationTurn = {
@@ -86,4 +97,42 @@ export type AssistantClientRequest = {
   } | null;
   action?: AssistantToolAction | null;
   history?: AssistantConversationTurn[] | null;
+  /** Contexto enriquecido vindo de telas externas (Brain, tickets, releases…) */
+  brainContext?: {
+    nodeId?: string | null;
+    nodeLabel?: string | null;
+    nodeType?: string | null;
+    source?: string | null;
+    entityId?: string | null;
+    entityType?: string | null;
+    agentMode?: string | null;
+  } | null;
+};
+
+// ─── Evento global para abrir o assistente flutuante ────────────────────────
+// Qualquer tela pode despachar window.dispatchEvent(new CustomEvent("assistant:open", { detail }))
+// para abrir o ChatButton já contextualizado.
+export type AssistantOpenEventDetail = {
+  /** Origem: brain, autologs, automacoes, tickets, dashboard, etc. */
+  source?: string;
+  /** Rota atual */
+  route?: string;
+  /** Empresa ativa */
+  companySlug?: string;
+  /** Tipo da entidade selecionada (BrainNode, ticket, defect…) */
+  entityType?: string;
+  /** ID da entidade selecionada */
+  entityId?: string;
+  /** ID do nó no Brain */
+  nodeId?: string;
+  /** Label do nó */
+  nodeLabel?: string;
+  /** Tipo do nó */
+  nodeType?: string;
+  /** Agente sugerido: qa | debug | playwright | memory */
+  agentMode?: string;
+  /** Mensagem já preenchida no input do assistente */
+  initialMessage?: string;
+  /** Dados extras de contexto (livre) */
+  metadata?: Record<string, unknown>;
 };

@@ -41,6 +41,10 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   }
 
   const { id } = await context.params;
+  if (extractPasswordResetRequestId(id)) {
+    return NextResponse.json({ items: [] }, { status: 200, headers: NO_STORE_HEADERS });
+  }
+
   const request = await getRequestForReview(id);
   if (!request) {
     return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
@@ -64,6 +68,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   }
 
   const { id } = await context.params;
+  if (extractPasswordResetRequestId(id)) {
+    return NextResponse.json({ error: "Comentarios nao sao suportados para reset de senha nesta fila." }, { status: 409 });
+  }
+
   const body = (await req.json().catch(() => null)) as { body?: string; comment?: string } | null;
   const comment = sanitizeBody(body?.comment ?? body?.body ?? "");
   if (!comment) {

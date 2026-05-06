@@ -242,7 +242,6 @@ export function normalizeAccessType(value: string | null | undefined): AccessTyp
   if (!value) return null;
   const v = normalizeText(value);
   if (
-    v === "usuario da empresa" ||
     v === "usuario" ||
     v === "user" ||
     v === "common" ||

@@ -93,7 +93,12 @@ let profileButtonModulePromise: Promise<ComponentType<ToolComponentProps>> | nul
 
 function loadProfileButtonModule() {
   if (!profileButtonModulePromise) {
-    profileButtonModulePromise = import("./ProfileButton").then((module) => module.default);
+    profileButtonModulePromise = import("./ProfileButton")
+      .then((module) => module.default)
+      .catch((error) => {
+        profileButtonModulePromise = null;
+        throw error;
+      });
   }
   return profileButtonModulePromise;
 }
@@ -393,6 +398,8 @@ export function DeferredProfileButton() {
       if (!cancelled) {
         setProfileButtonComponent(() => Component);
       }
+    }).catch(() => {
+      // Keep UI responsive when a stale chunk fails during HMR/reload.
     });
 
     return () => {
@@ -401,7 +408,9 @@ export function DeferredProfileButton() {
   }, [mounted, ProfileButtonComponent]);
 
   const prime = useCallback(() => {
-    void loadProfileButtonModule();
+    void loadProfileButtonModule().catch(() => {
+      // Ignore prefetch failures; click flow can retry.
+    });
   }, []);
 
   const open = useCallback(() => {

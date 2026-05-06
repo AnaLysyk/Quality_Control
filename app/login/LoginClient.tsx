@@ -124,7 +124,11 @@ export default function LoginClient() {
     };
   }, []);
 
-  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
+  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null, companies: Array<{ id: string; name: string; slug: string; role?: string; active?: boolean; createdAt?: string | null; logoUrl?: string | null }> = []) {
+    const normalizedAuth = normalizeAuthenticatedUser(
+      authUser as Parameters<typeof normalizeAuthenticatedUser>[0],
+      companies as Parameters<typeof normalizeAuthenticatedUser>[1],
+    );
     const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
     const companyRouteInput = {
       isGlobalAdmin: authUser?.isGlobalAdmin === true,
@@ -182,9 +186,10 @@ export default function LoginClient() {
         const meRes = await fetch("/api/me", { cache: "no-store", credentials: "include" });
         const meJson = await meRes.json().catch(() => null);
         const authUser = meJson?.user ?? null;
+        const meCompanies = Array.isArray(meJson?.companies) ? meJson.companies : [];
         await refreshUser();
         const nextParam = searchParams?.get("next") ?? null;
-        const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
+        const redirectTo = resolvePostLoginRedirect(nextParam, authUser, meCompanies);
         router.push(redirectTo);
         router.refresh();
       } else {
@@ -222,14 +227,16 @@ export default function LoginClient() {
       <div className="relative z-10 w-full max-w-lg space-y-8 sm:max-w-xl md:max-w-2xl">
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg sm:h-24 sm:w-24">
-            <Image
-              src="/images/tc.png"
-              alt="Logo Quality Control"
-              width={64}
-              height={64}
-              priority
-              className="h-12 w-12 animate-spin-slower select-none object-contain object-center pointer-events-none sm:h-16 sm:w-16"
-            />
+            <div className="relative h-12 w-12 sm:h-16 sm:w-16">
+              <Image
+                src="/images/tc.png"
+                alt="Logo Quality Control"
+                fill
+                sizes="(min-width: 640px) 64px, 48px"
+                priority
+                className="animate-spin-slower select-none object-contain object-center pointer-events-none"
+              />
+            </div>
           </div>
           <h2 className="mb-2 text-3xl font-bold leading-tight text-[#011848] drop-shadow-sm sm:text-4xl">
             Quality Control

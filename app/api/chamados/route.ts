@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
     const targetCompanyId = requestedCompanyId ?? user.companyId ?? null;
     if (requestedCompanyId) {
-      assertCompanyAccess(user, requestedCompanyId);
+      await assertCompanyAccess(user, requestedCompanyId);
     }
     const tags =
       Array.isArray(body?.tags) ? body.tags : typeof body?.tags === "string" ? body.tags.split(",") : undefined;
@@ -52,6 +52,7 @@ export async function POST(req: Request) {
     const localUser = await getLocalUserById(user.id);
     const createdByName = resolveDisplayName(localUser) ?? user.email ?? null;
     const createdByEmail = localUser?.email ?? user.email ?? null;
+    const normalizedCompanySlug = resolvePrimaryCompanySlug(user);
 
     const assignedToUserId =
       canAccessGlobalTicketWorkspace(user) &&
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
       createdBy,
       createdByName,
       createdByEmail,
-      companySlug: requestedCompanyId ? body?.companySlug ?? null : user.companySlug ?? null,
+      companySlug: requestedCompanyId ? body?.companySlug ?? null : normalizedCompanySlug,
       companyId: targetCompanyId,
       assignedToUserId,
     });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import "server-only";
+import { resolveNormalizedCompanySlugs, resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { fetchJiraIssuesForCompany, syncJiraIssuesToApplications } from "@/lib/jiraSync";
 import { info } from "@/lib/logger";

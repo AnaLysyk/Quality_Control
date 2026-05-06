@@ -7,7 +7,7 @@ test("user nÃ£o acessa /admin", async ({ page, context }) => {
     companies: ["DEMO"],
   });
 
-  await page.goto("/admin", { waitUntil: "networkidle" });
+  await page.goto("/admin", { waitUntil: "domcontentloaded" });
 
   await expect(page).toHaveURL(/\/user\/home|\/empresas/);
 });

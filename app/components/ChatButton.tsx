@@ -7,7 +7,6 @@ import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
 import type { AssistantAction, AssistantConversationTurn, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
-import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import ConfirmDialog from "./ConfirmDialog";
 import UserAvatar from "./UserAvatar";
 
@@ -18,11 +17,16 @@ type ChatMessage = {
   ts: number;
   tool?: string | null;
   actions?: AssistantAction[];
+  agentMeta?: {
+    agentMode?: string | null;
+    agentName?: string | null;
+    agentIcon?: string | null;
+    agentColor?: string | null;
+  } | null;
 };
 
 type ConfirmState =
   | { open: false }
-  | { open: true; kind: "clear" | "clearAll" }
   | { open: true; kind: "tool"; action: AssistantToolAction; label: string };
 
 type ChatButtonProps = {
@@ -30,6 +34,7 @@ type ChatButtonProps = {
 };
 
 const HISTORY_KEY_PREFIX = "assistant_history_v2";
+const PANEL_MODE_KEY = "assistant_panel_mode_v1";
 
 function formatTime(ts: number) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -44,6 +49,26 @@ function makeId(prefix: string) {
     return `${prefix}-${crypto.randomUUID()}`;
   }
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function firstName(value?: string | null) {
+  const cleaned = String(value ?? "").trim();
+  if (!cleaned) return "usuário";
+  return cleaned.split(/\s+/)[0] ?? "usuário";
+}
+
+function dayGreeting() {
+  const hour = Number(
+    new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: "America/Sao_Paulo",
+    }).format(new Date()),
+  );
+
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
 }
 
 function TCLogoSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
@@ -86,6 +111,8 @@ function formatToolLabel(tool?: string | null) {
       return "Coment\u00e1rio";
     case "suggest_next_step":
       return "Pr\u00f3ximo passo";
+    case "use_brain":
+      return "Brain";
     case "system":
       return "Assistente";
     default:
@@ -93,12 +120,247 @@ function formatToolLabel(tool?: string | null) {
   }
 }
 
+function buildBrainQuickActions(context?: AssistantOpenEventDetail | null): AssistantAction[] | undefined {
+  if (!context?.nodeId && context?.source !== "brain") return undefined;
+
+  const nodeName = context?.nodeLabel?.trim() || "este nó";
+  const nodeType = context?.nodeType?.trim() || "Brain";
+  return [
+    {
+      kind: "prompt",
+      label: "Resumo completo",
+      prompt: `Resuma o contexto completo do nó "${nodeName}" (${nodeType}), incluindo descrição, conexões de entrada e saída, memórias, impacto e próximos passos.`,
+    },
+    {
+      kind: "prompt",
+      label: "Mapa de impacto",
+      prompt: `Mapeie o impacto do nó "${nodeName}" (${nodeType}): dependências, descendentes, riscos de mudança e pontos que precisam de validação.`,
+    },
+    {
+      kind: "prompt",
+      label: "Riscos QA",
+      prompt: `Analise os riscos QA do nó "${nodeName}" (${nodeType}) com base em defeitos, runs, releases, memórias e lacunas de cobertura.`,
+    },
+    {
+      kind: "prompt",
+      label: "Gerar testes",
+      prompt: `Sugira casos de teste e, se houver rota suficiente, um spec Playwright para validar o nó "${nodeName}" (${nodeType}).`,
+    },
+    {
+      kind: "prompt",
+      label: "Memórias",
+      prompt: `Liste as memórias, decisões, regras e notas técnicas ligadas ao nó "${nodeName}" (${nodeType}) e diga o que ainda falta documentar.`,
+    },
+  ];
+}
+
+function parseTableLine(line: string) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function isTableSeparator(line: string) {
+  const compact = line.replace(/\s+/g, "").trim();
+  return /^\|?[-:|]+\|?$/.test(compact);
+}
+
+function ChatRichText({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const blocks: Array<{ type: string; value?: string; items?: string[]; rows?: string[][] }> = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const raw = lines[i] ?? "";
+    const line = raw.trim();
+
+    if (!line) {
+      blocks.push({ type: "space" });
+      continue;
+    }
+
+    if (line.startsWith("```") ) {
+      const codeLines: string[] = [];
+      i += 1;
+      while (i < lines.length && !(lines[i] ?? "").trim().startsWith("```")) {
+        codeLines.push(lines[i] ?? "");
+        i += 1;
+      }
+      blocks.push({ type: "code", value: codeLines.join("\n") });
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      blocks.push({ type: "h2", value: line.slice(3).trim() });
+      continue;
+    }
+
+    if (line.startsWith("### ")) {
+      blocks.push({ type: "h3", value: line.slice(4).trim() });
+      continue;
+    }
+
+    if (line.startsWith("> ")) {
+      blocks.push({ type: "quote", value: line.slice(2).trim() });
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      const items = [line.replace(/^[-*]\s+/, "")];
+      while (i + 1 < lines.length && /^\s*[-*]\s+/.test(lines[i + 1] ?? "")) {
+        i += 1;
+        items.push((lines[i] ?? "").trim().replace(/^[-*]\s+/, ""));
+      }
+      blocks.push({ type: "ul", items });
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(line)) {
+      const items = [line.replace(/^\d+\.\s+/, "")];
+      while (i + 1 < lines.length && /^\s*\d+\.\s+/.test(lines[i + 1] ?? "")) {
+        i += 1;
+        items.push((lines[i] ?? "").trim().replace(/^\d+\.\s+/, ""));
+      }
+      blocks.push({ type: "ol", items });
+      continue;
+    }
+
+    if (line.startsWith("|") && line.endsWith("|")) {
+      const tableLines = [line];
+      while (i + 1 < lines.length) {
+        const next = (lines[i + 1] ?? "").trim();
+        if (!(next.startsWith("|") && next.endsWith("|"))) break;
+        i += 1;
+        tableLines.push(next);
+      }
+
+      const rows = tableLines
+        .filter((tableLine) => !isTableSeparator(tableLine))
+        .map((tableLine) => parseTableLine(tableLine));
+
+      if (rows.length > 0) {
+        blocks.push({ type: "table", rows });
+        continue;
+      }
+    }
+
+    blocks.push({ type: "p", value: line });
+  }
+
+  return (
+    <div className="space-y-2">
+      {blocks.map((block, index) => {
+        if (block.type === "space") {
+          return <div key={`space-${index}`} className="h-1" />;
+        }
+
+        if (block.type === "h2") {
+          return (
+            <div key={`h2-${index}`} className="rounded-2xl border border-[rgba(239,0,1,0.18)] bg-[linear-gradient(135deg,rgba(1,24,72,0.08)_0%,rgba(239,0,1,0.08)_100%)] px-3 py-2.5 dark:border-[#ff8a8a44] dark:bg-[linear-gradient(135deg,rgba(35,85,196,0.22)_0%,rgba(239,0,1,0.2)_100%)]">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001) dark:text-[#ffb4b4]">Insight</p>
+              <p className="mt-1 text-[0.96rem] font-extrabold leading-6 tracking-[-0.015em] text-[#011848] dark:text-[#f2f7ff]">{block.value}</p>
+            </div>
+          );
+        }
+
+        if (block.type === "h3") {
+          return (
+            <p key={`h3-${index}`} className="mt-2 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-(--tc-primary,#011848) dark:text-[#d7e5ff]">
+              {block.value}
+            </p>
+          );
+        }
+
+        if (block.type === "quote") {
+          return (
+            <div key={`quote-${index}`} className="rounded-xl border-l-4 border-(--tc-accent,#ef0001) bg-[rgba(239,0,1,0.06)] px-3 py-2 text-[0.85rem] text-[#20304f] dark:bg-[rgba(239,0,1,0.14)] dark:text-[#f0f5ff]">
+              {block.value}
+            </div>
+          );
+        }
+
+        if (block.type === "ul") {
+          return (
+            <ul key={`ul-${index}`} className="space-y-1 pl-4 text-[0.9rem] text-[#20304f] dark:text-[#e6efff]">
+              {(block.items ?? []).map((item, itemIndex) => (
+                <li key={`ul-item-${itemIndex}`} className="list-disc marker:text-(--tc-accent,#ef0001)">{item}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        if (block.type === "ol") {
+          return (
+            <ol key={`ol-${index}`} className="space-y-1 pl-4 text-[0.9rem] text-[#20304f] dark:text-[#e6efff]">
+              {(block.items ?? []).map((item, itemIndex) => (
+                <li key={`ol-item-${itemIndex}`} className="list-decimal marker:font-semibold marker:text-(--tc-primary,#011848) dark:marker:text-[#c7dcff]">{item}</li>
+              ))}
+            </ol>
+          );
+        }
+
+        if (block.type === "table") {
+          const rows = block.rows ?? [];
+          const [header, ...body] = rows;
+          return (
+            <div key={`table-${index}`} className="overflow-hidden rounded-2xl border border-(--tc-border,#d7dff1) bg-[#ffffff] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-[#36507f] dark:bg-[#0f192d]">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left text-[0.82rem]">
+                  {header ? (
+                    <thead className="bg-[linear-gradient(180deg,#f6f9ff_0%,#edf3ff_100%)] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#122038_100%)]">
+                      <tr>
+                        {header.map((cell, cellIndex) => (
+                          <th key={`thead-${cellIndex}`} className="border-b border-(--tc-border,#d7dff1) px-3 py-2 font-bold text-(--tc-primary,#011848) dark:border-[#36507f] dark:text-[#d7e5ff]">
+                            {cell}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                  ) : null}
+                  <tbody>
+                    {body.map((row, rowIndex) => (
+                      <tr key={`row-${rowIndex}`} className="odd:bg-black/1.5 dark:odd:bg-white/3">
+                        {row.map((cell, cellIndex) => (
+                          <td key={`cell-${rowIndex}-${cellIndex}`} className="border-b border-(--tc-border,#eef2fb) px-3 py-2 text-[#26334f] last:border-b-0 dark:border-[#263e66] dark:text-[#e6efff]">
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        }
+
+        if (block.type === "code") {
+          return (
+            <pre key={`code-${index}`} className="overflow-x-auto rounded-xl border border-[#1f355e] bg-[#081327] px-3 py-2.5 text-[0.78rem] leading-5 text-[#d5e7ff]">
+              <code>{block.value}</code>
+            </pre>
+          );
+        }
+
+        return (
+          <p key={`p-${index}`} className="whitespace-pre-wrap text-[0.9rem] leading-6 text-[#20304f] dark:text-[#e6efff]">
+            {block.value}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const pathname = usePathname() || "/";
   const screenContext = useMemo(() => resolveAssistantScreenContext(pathname), [pathname]);
-  const { user, can } = usePermissionAccess();
+  const { user, can, normalizedUser } = usePermissionAccess();
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(defaultOpen);
+  const [panelMode, setPanelMode] = useState<"bubble" | "expanded" | "docked">("bubble");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -137,7 +399,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   useEffect(() => {
     try {
       const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-      const raw = sessionStorage.getItem(key);
+      const raw = localStorage.getItem(key);
       if (!raw) {
         setMessages([]);
         return;
@@ -154,7 +416,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   useEffect(() => {
     try {
       const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-      sessionStorage.setItem(key, JSON.stringify(messages.slice(-120)));
+      localStorage.setItem(key, JSON.stringify(messages.slice(-120)));
     } catch {
       // ignore storage errors
     }
@@ -237,8 +499,11 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
     if (payload.message) setInput("");
 
+    // Usa endpoint unificado para garantir memória persistente de todas as conversas.
+    const apiRoute = "/api/assistant/ask";
+
     try {
-      const response = await fetchApi("/api/ai/chat", {
+      const response = await fetchApi(apiRoute, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -260,6 +525,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
       const data = (await response.json().catch(() => ({}))) as AssistantReplyPayload & { error?: string };
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Sua sessão expirou. Faça login novamente para o assistente acessar o Brain.");
+        }
         throw new Error(data?.error || response.statusText || `Erro ${response.status}`);
       }
 
@@ -276,6 +544,12 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
           ts: Date.now(),
           tool: data.tool ?? null,
           actions: Array.isArray(data.actions) ? data.actions : undefined,
+          agentMeta: data.meta ? {
+            agentMode: data.meta.agentMode ?? null,
+            agentName: data.meta.agentName ?? null,
+            agentIcon: data.meta.agentIcon ?? null,
+            agentColor: data.meta.agentColor ?? null,
+          } : null,
         },
       ]);
     } catch (error) {
@@ -328,35 +602,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     queueAction(action, action.label);
   }
 
-  function clearLocalHistory(kind: "clear" | "clearAll") {
-    try {
-      if (kind === "clear") {
-        const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-        sessionStorage.removeItem(key);
-        setMessages([]);
-        return;
-      }
-      const prefix = `${HISTORY_KEY_PREFIX}:`;
-      for (let i = 0; i < sessionStorage.length; i += 1) {
-        const key = sessionStorage.key(i);
-        if (key && key.startsWith(prefix)) {
-          sessionStorage.removeItem(key);
-          i = -1;
-        }
-      }
-      setMessages([]);
-    } catch {
-      // ignore cleanup errors
-    }
-  }
-
   function confirmTitle() {
     if (!confirmState.open) return "";
     switch (confirmState.kind) {
-      case "clear":
-        return "Limpar hist\u00f3rico deste usu\u00e1rio";
-      case "clearAll":
-        return "Limpar todos os hist\u00f3ricos locais";
       case "tool":
         return confirmState.label;
       default:
@@ -367,10 +615,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   function confirmDescription() {
     if (!confirmState.open) return "";
     switch (confirmState.kind) {
-      case "clear":
-        return "Essa limpeza afeta apenas o hist\u00f3rico salvo neste navegador para o usu\u00e1rio atual.";
-      case "clearAll":
-        return "Essa limpeza remove todos os hist\u00f3ricos do assistente salvos neste navegador.";
       case "tool":
         return "A a\u00e7\u00e3o ser\u00e1 executada dentro do seu perfil atual e respeitando o RBAC da sess\u00e3o.";
       default:
@@ -380,12 +624,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
   async function executeConfirm() {
     if (!confirmState.open) return;
-    if (confirmState.kind === "clear" || confirmState.kind === "clearAll") {
-      clearLocalHistory(confirmState.kind);
-      setConfirmState({ open: false });
-      return;
-    }
-
     if (confirmState.kind !== "tool") {
       setConfirmState({ open: false });
       return;
@@ -411,17 +649,17 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               }`}
             >
               <div
-                className={`relative overflow-hidden border-b border-[rgba(15,23,42,0.1)] [background-image:var(--tc-brand-gradient-strong)] text-white ${denseViewport ? "px-4 py-3" : hasConversation ? "px-5 py-4" : "px-5 py-6"}`}
+                className={`relative overflow-hidden border-b border-[rgba(15,23,42,0.1)] [background-image:var(--tc-brand-gradient-strong)] text-white ${denseViewport ? "px-4 py-3" : "px-5 py-4"}`}
               >
                 <div className="absolute inset-0 [background-image:var(--tc-brand-overlay)]" aria-hidden />
                 <div className="absolute inset-x-0 bottom-0 h-px [background-image:var(--tc-brand-divider)]" aria-hidden />
                 <div className="relative flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <div className={`flex items-center justify-center ${denseViewport ? "h-10 w-10" : hasConversation ? "h-12 w-12" : "h-14 w-14"}`}>
-                      <TCLogoSpinner size={denseViewport ? "md" : hasConversation ? "md" : "lg"} />
+                    <div className={`flex items-center justify-center ${denseViewport ? "h-10 w-10" : "h-12 w-12"}`}>
+                      <TCLogoSpinner size="md" />
                     </div>
-                    <div className="space-y-1">
-                      <p className={`font-semibold uppercase tracking-[0.34em] text-white/72 ${compactConversationChrome ? "text-[0.58rem]" : denseViewport ? "text-[0.62rem]" : "text-[0.68rem]"}`}>Testing Company</p>
+                    <div className="space-y-0.5">
+                      <p className="text-[0.58rem] font-semibold uppercase tracking-[0.34em] text-white/72">Testing Company</p>
                       <div>
                         <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} font-black tracking-[-0.03em] text-white`}>Assistente</h3>
                         <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>{activeScreenLabel}</p>
@@ -434,6 +672,24 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPanelMode((mode) => (mode === "expanded" ? "bubble" : "expanded"))}
+                      className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                      aria-label={isExpandedMode ? "Voltar para modo balão" : "Expandir chat"}
+                      title={isExpandedMode ? "Voltar para modo balão" : "Expandir chat"}
+                    >
+                      {isExpandedMode ? "Balão" : "Expandir"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPanelMode((mode) => (mode === "docked" ? "bubble" : "docked"))}
+                      className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                      aria-label={isDockedMode ? "Voltar para modo balão" : "Acoplar lateralmente"}
+                      title={isDockedMode ? "Voltar para modo balão" : "Acoplar lateralmente"}
+                    >
+                      {isDockedMode ? "Balão" : "Lateral"}
+                    </button>
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
@@ -476,10 +732,15 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                   </div>
                 ) : null}
 
-                {messages.map((message) => {
+              <div className="min-h-0 flex-1 overflow-y-auto space-y-4 px-4 py-4 bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)]">
+                {messages.map((message, index) => {
                   const isUser = message.from === "user";
                   return (
-                    <div key={message.id} className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
+                    <div
+                      key={message.id}
+                      className={`${styles.msgEnter} flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}
+                      data-delay={Math.min(index, 10)}
+                    >
                       {!isUser ? (
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[rgba(1,24,72,0.08)] bg-[linear-gradient(135deg,#ffffff_0%,#eef3ff_62%,#fff6f8_100%)] shadow-[0_10px_24px_rgba(1,24,72,0.1)] dark:border-[#31476f] dark:bg-[linear-gradient(135deg,#13213a_0%,#182742_62%,#221729_100%)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
                           <TCLogoSpinner size="sm" />
@@ -499,7 +760,11 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                               {formatToolLabel(message.tool)}
                             </div>
                           ) : null}
-                          <p className="whitespace-pre-wrap">{message.text}</p>
+                          {isUser ? (
+                            <p className="whitespace-pre-wrap">{message.text}</p>
+                          ) : (
+                            <ChatRichText text={message.text} />
+                          )}
                         </div>
 
                         {message.actions?.length ? (
@@ -510,7 +775,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                                 type="button"
                                 onClick={() => handleAction(action)}
                                 disabled={sending}
-                                className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                                data-delay={index}
+                                className={`${styles.actionEnter} inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${
                                   action.kind === "tool"
                                     ? "border border-[rgba(1,24,72,0.12)] bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#173a88_100%)] text-white hover:bg-[linear-gradient(135deg,#132a63_0%,#214ca8_100%)]"
                                     : "border border-(--tc-border,#d7dff1) bg-[#ffffff] text-(--tc-primary,#011848) hover:border-[rgba(239,0,1,0.2)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#13213a] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4]"
@@ -592,13 +858,13 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                   className="select-none pointer-events-none object-contain animate-spin-slower"
                 />
               </div>
-            </div>
-            {/* tooltip */}
-            <span className="pointer-events-none absolute bottom-[calc(100%+0.5rem)] right-0 whitespace-nowrap rounded-xl bg-[#011848] px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-              Assistente Testing Company
-              <span className="absolute -bottom-1.25 right-5 h-2.5 w-2.5 rotate-45 bg-[#011848]" />
-            </span>
-          </button>
+              {/* tooltip */}
+              <span className="pointer-events-none absolute bottom-[calc(100%+0.5rem)] right-0 whitespace-nowrap rounded-xl bg-[#011848] px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                Assistente Testing Company
+                <span className="absolute -bottom-1.25 right-5 h-2.5 w-2.5 rotate-45 bg-[#011848]" />
+              </span>
+            </button>
+          ) : null}
         </div>
       </div>
 

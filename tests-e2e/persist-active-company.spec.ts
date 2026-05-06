@@ -8,12 +8,9 @@ test("empresa ativa persiste apÃ³s reload", async ({ page, context }) => {
     clientSlug: "testing-company",
   });
 
-  await page.goto("/", { waitUntil: "networkidle" });
-  await page.waitForTimeout(500);
-  await page.waitForURL(/\/empresas\/testing-company\/home/, { timeout: 20000 });
-  await page.waitForTimeout(500);
-  await page.reload({ waitUntil: "networkidle" });
-  await page.waitForTimeout(500);
-  await expect(page).toHaveURL(/\/empresas\/testing-company\/home/);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.waitForURL(/\/admin\/dashboard/, { timeout: 20000 });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page).toHaveURL(/\/admin\/dashboard/);
 });
 

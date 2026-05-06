@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { importTickets } from "@/lib/ticketsStore";
 import { isItDev } from "@/lib/rbac/tickets";
 
@@ -50,11 +51,11 @@ export async function POST(req: Request) {
   }
 
   const companyId = user.companyId ?? null;
-  const companySlug = user.companySlug ?? null;
+  const companySlugs = resolveNormalizedCompanySlugs(user);
   const foreign = data.items.find((item) => {
     const sameCompany =
       (companyId && item.companyId === companyId) ||
-      (companySlug && item.companySlug === companySlug);
+      (item.companySlug != null && companySlugs.includes(item.companySlug));
     return !sameCompany;
   });
   if (foreign) {

@@ -9,20 +9,58 @@ export interface EmailOptions {
 
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
+  private smtpWarningShown = false;
+
+  private resolveSmtpConfig() {
+    const host = (process.env.EMAIL_SMTP_HOST || '').trim();
+    const user = (process.env.EMAIL_SMTP_USER || '').trim();
+    const pass = (process.env.EMAIL_SMTP_PASS || '').trim();
+    if (!host || !user || !pass) return null;
+
+    const isLocalHost = ["localhost", "127.0.0.1", "::1", "0.0.0.0"].includes(host.toLowerCase());
+    if (process.env.NODE_ENV === 'production' && isLocalHost) {
+      return null;
+    }
+
+    const port = this.resolvePort();
+    const secureEnv = String(process.env.EMAIL_SMTP_SECURE || '').toLowerCase();
+    const secure = secureEnv ? secureEnv === 'true' : port === 465;
+
+    return { host, port, secure, user, pass };
+  }
+
+  private resolvePort() {
+    const parsed = Number.parseInt(process.env.EMAIL_SMTP_PORT || '587', 10);
+    return Number.isFinite(parsed) ? parsed : 587;
+  }
 
   private getTransporter() {
+    const config = this.resolveSmtpConfig();
+    if (!config) {
+      return null;
+    }
+
     if (!this.transporter) {
       this.transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_SMTP_HOST,
-        port: parseInt(process.env.EMAIL_SMTP_PORT || '587'),
-        secure: false, // true para 465, false para outras portas
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
         auth: {
-          user: process.env.EMAIL_SMTP_USER,
-          pass: process.env.EMAIL_SMTP_PASS,
+          user: config.user,
+          pass: config.pass,
         },
       });
     }
     return this.transporter;
+  }
+
+  private resolvePublicBaseUrl() {
+    const raw =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXTAUTH_URL ||
+      process.env.APP_URL ||
+      "http://localhost:3000";
+    return raw.replace(/\/+$/, "");
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
@@ -37,6 +75,13 @@ class EmailService {
       }
 
       const transporter = this.getTransporter();
+      if (!transporter) {
+        if (!this.smtpWarningShown) {
+          console.error('[EMAIL] SMTP nao configurado para producao. Defina EMAIL_SMTP_HOST, EMAIL_SMTP_PORT, EMAIL_SMTP_USER, EMAIL_SMTP_PASS e EMAIL_FROM.');
+          this.smtpWarningShown = true;
+        }
+        return false;
+      }
 
       const mailOptions = {
         from: process.env.EMAIL_FROM || 'noreply@quality-control.com',
@@ -56,7 +101,7 @@ class EmailService {
   }
 
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
-    const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login/reset-password?token=${resetToken}`;
+    const resetUrl = `${this.resolvePublicBaseUrl()}/login/reset-password?token=${resetToken}`;
 
     const html = `
       <!DOCTYPE html>

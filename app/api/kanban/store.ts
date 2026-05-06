@@ -1,7 +1,5 @@
 import "server-only";
 
-import path from "node:path";
-import fs from "node:fs/promises";
 import { prisma } from "@/lib/prismaClient";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { type Card } from "./types";
@@ -13,17 +11,8 @@ type KanbanStore = {
   items: Card[];
 };
 
-const STORE_PATH = path.join(process.cwd(), "data", "kanban.json");
 const EMPTY_STORE: KanbanStore = { lastId: 0, items: [] };
-
-async function ensureFile() {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  try {
-    await fs.access(STORE_PATH);
-  } catch {
-    await fs.writeFile(STORE_PATH, JSON.stringify(EMPTY_STORE, null, 2), "utf8");
-  }
-}
+let memoryStore: KanbanStore = { ...EMPTY_STORE };
 
 function normalizeStore(raw: unknown): KanbanStore {
   if (!raw || typeof raw !== "object") return { ...EMPTY_STORE };
@@ -66,13 +55,7 @@ export async function readKanbanStore(): Promise<KanbanStore> {
     const lastId = items.length > 0 ? Math.max(...items.map((i) => i.id)) : 0;
     return { lastId, items };
   }
-  try {
-    await ensureFile();
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    return normalizeStore(JSON.parse(raw));
-  } catch {
-    return { ...EMPTY_STORE };
-  }
+  return normalizeStore(memoryStore);
 }
 
 export async function writeKanbanStore(store: KanbanStore): Promise<void> {
@@ -111,8 +94,7 @@ export async function writeKanbanStore(store: KanbanStore): Promise<void> {
     lastId: Number.isFinite(Number(store.lastId)) ? Number(store.lastId) : 0,
     items: Array.isArray(store.items) ? store.items : [],
   };
-  await ensureFile();
-  await fs.writeFile(STORE_PATH, JSON.stringify(payload, null, 2), "utf8");
+  memoryStore = payload;
 }
 
 export function getNextId(store: KanbanStore): number {

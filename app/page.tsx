@@ -4,6 +4,7 @@
 import HomeContent from "./home/HomeContent";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
+import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";

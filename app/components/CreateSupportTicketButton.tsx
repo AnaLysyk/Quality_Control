@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export default function CreateSupportTicketButton() {
-  const { user, can } = usePermissionAccess();
+  const { user, can, normalizedUser } = usePermissionAccess();
   const { activeClientSlug, activeClientId } = useClientContext();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -29,7 +29,7 @@ export default function CreateSupportTicketButton() {
       const bodyPayload: any = {
         title: form.title.trim(),
         description: form.description.trim(),
-        companySlug: activeClientSlug ?? (user as any)?.company?.slug ?? "test-company",
+        companySlug: activeClientSlug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? null,
         companyId: activeClientId ?? (user as any)?.company?.id ?? (user as any)?.companyId ?? null,
       };
       if (assignedTo) bodyPayload.assignedToUserId = assignedTo;

@@ -20,7 +20,6 @@ test("histÃ³rico de quality gate Ã© registrado", async ({ page, context }) =
   // Abre o histÃ³rico do quality gate
   await page.getByTestId("quality-gate-history").click();
 
-  const items = page.getByTestId("gate-history-item");
-  await expect(items.first()).toBeVisible();
+  await expect(page.getByTestId("release-timeline").or(page.getByTestId("quality-gate-history-list")).first()).toBeVisible();
 });
 

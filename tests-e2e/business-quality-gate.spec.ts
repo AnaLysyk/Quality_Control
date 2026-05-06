@@ -3,6 +3,7 @@ import { mockAuth } from "./helpers/mockAuth";
 
 function slugify(value: string) {
   return value
+    .replace(/^run\s+/i, "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()

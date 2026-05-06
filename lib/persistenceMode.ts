@@ -1,3 +1,6 @@
+import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
+import type { DatabaseScope } from "@/lib/databaseUrl";
+
 function normalizeEnv(value?: string | null) {
   return (value ?? "").trim().replace(/^['"]|['"]$/g, "").toLowerCase();
 }
@@ -11,12 +14,12 @@ function hasSupportedDatabaseUrl(value?: string | null) {
   );
 }
 
-export function shouldUsePostgresPersistence() {
+export function shouldUsePostgresPersistence(scope: DatabaseScope = "default") {
   const authStore = normalizeEnv(process.env.AUTH_STORE);
   if (authStore === "postgres") return true;
   if (authStore === "json" || authStore === "file" || authStore === "memory" || authStore === "redis") {
     return false;
   }
-  return hasSupportedDatabaseUrl(process.env.DATABASE_URL);
+  return hasSupportedDatabaseUrl(resolveDatabaseUrlFromEnv(scope));
 }
 

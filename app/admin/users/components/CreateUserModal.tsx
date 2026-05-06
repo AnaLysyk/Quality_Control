@@ -24,6 +24,7 @@ type Props = {
   title?: string;
   subtitle?: string;
   submitLabel?: string;
+  allowedRoles?: FixedProfileKind[];
 };
 
 const ROLE_OPTIONS = [
@@ -34,6 +35,7 @@ const ROLE_OPTIONS = [
   { value: "technical_support", label: "Suporte Técnico" },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
+type RoleValue = FixedProfileKind;
 
 export function CreateUserModal({
   open,
@@ -54,7 +56,8 @@ export function CreateUserModal({
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState(initialRole);
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState<RoleValue>(() => normalizeEditableProfileRole(initialRole));
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -135,10 +138,12 @@ export function CreateUserModal({
     setMessage(null);
     try {
       const payload = {
+        full_name: name.trim(),
         name: name.trim(),
         ...(login.trim() ? { user: login.trim() } : {}),
         ...(password.trim() ? { password: password.trim() } : {}),
         email: email.trim(),
+        phone: phone.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
         role,
         client_id: localClientId,
@@ -193,10 +198,11 @@ export function CreateUserModal({
     setLogin("");
     setPassword("");
     setEmail("");
+    setPhone("");
     setJobTitle("");
     setLinkedin("");
     setAvatarUrl("");
-    setRole(initialRole);
+    setRole(normalizeEditableProfileRole(initialRole));
     if (clientId) setLocalClientId(clientId);
     else if (clients && clients.length === 1) setLocalClientId(clients[0].id);
     setMessage(null);
@@ -288,6 +294,15 @@ export function CreateUserModal({
                 />
               </label>
               <label className="block text-sm">
+                Telefone
+                <input
+                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+55 11 99999-9999"
+                />
+              </label>
+              <label className="block text-sm">
                 Cargo
                 <div className="mt-1">
                   <Select
@@ -314,7 +329,7 @@ export function CreateUserModal({
                   <select
                     className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => setRole(normalizeEditableProfileRole(e.target.value))}
                   >
                     {roleOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -322,6 +337,7 @@ export function CreateUserModal({
                       </option>
                     ))}
                   </select>
+                  {roleHint ? <span className="mt-1 block text-xs text-gray-500">{roleHint}</span> : null}
                 </label>
               ) : null}
               <label className="block text-sm">

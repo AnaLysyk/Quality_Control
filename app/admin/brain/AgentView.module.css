@@ -1,0 +1,22 @@
+/* AgentView — CSS variables scoped by data attributes, replacing inline styles */
+
+.root[data-dark="true"] {
+  --border-clr: rgba(91, 146, 255, 0.14);
+  --muted-clr: #6c7fa4;
+  --prompt-clr: #c7d2e8;
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --text-clr: #e2e8f0;
+}
+
+.root[data-dark="false"] {
+  --border-clr: #e5e7eb;
+  --muted-clr: #94a3b8;
+  --prompt-clr: #334155;
+  --input-bg: #fff;
+  --text-clr: #0f172a;
+}
+
+.root[data-mode="qa"]         { --agent-color: #5b92ff; }
+.root[data-mode="debug"]      { --agent-color: #f59e0b; }
+.root[data-mode="playwright"] { --agent-color: #10b981; }
+.root[data-mode="memory"]     { --agent-color: #a78bfa; }

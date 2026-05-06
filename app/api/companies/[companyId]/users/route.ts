@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { canDeleteUserByProfile } from "@/lib/adminUserDeleteAccess";
@@ -12,7 +11,7 @@ import {
 } from "@/lib/auth/localStore";
 import { getAccessContext } from "@/lib/auth/session";
 import { isUserScopeLockedError } from "@/lib/companyUserScope";
-import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { generateTempPassword, hashPasswordSha256 } from "@/lib/passwordHash";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export const revalidate = 0;
@@ -86,10 +85,14 @@ export async function POST(
   );
   const rawRole = typeof body?.role === "string" ? body.role : "user";
   const role = normalizeMembershipRole(rawRole);
+  let tempPassword: string | undefined;
   const passwordHash =
     typeof body?.password === "string" && body.password
       ? hashPasswordSha256(body.password)
-      : buildTempPasswordHash();
+      : (() => {
+          tempPassword = generateTempPassword();
+          return hashPasswordSha256(tempPassword);
+        })();
 
   if (!name || !email || !login) {
     return NextResponse.json({ error: "Campos obrigatorios: name e email" }, { status: 400 });
@@ -135,7 +138,11 @@ export async function POST(
   }
 
   const item = await getAdminUserItem(created.id);
-  return NextResponse.json(item ?? created, { status: 201 });
+  const responseBody = item ?? created;
+  return NextResponse.json(
+    tempPassword !== undefined ? { ...responseBody, tempPassword } : responseBody,
+    { status: 201 },
+  );
 }
 
 export async function PATCH(

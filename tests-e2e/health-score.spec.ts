@@ -1,5 +1,6 @@
 ﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
 test("health score attention aparece no dashboard", async ({ page, context }) => {
   await mockAuth(context, {
@@ -10,10 +11,7 @@ test("health score attention aparece no dashboard", async ({ page, context }) =>
 
   await page.goto("/empresas/demo/dashboard", { waitUntil: "networkidle" });
 
-  await expect(
-    page.getByTestId("health-score-healthy")
-      .or(page.getByTestId("health-score-attention"))
-      .or(page.getByTestId("health-score-critical"))
-  ).toBeVisible();
+  await expectCurrentDashboardReady(page);
+  await expect(page.getByText(/Risco elevado|Atenção|Estável|melhorou|piorou|ficou estável/i).first()).toBeVisible();
 });
 

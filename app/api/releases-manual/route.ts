@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { slugifyRelease } from "@/lib/slugifyRelease";
+import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { canCreateManualDefect, getMockRole, resolveDefectRole } from "@/lib/rbac/defects";
+import { syncReleaseManualToBrain } from "@/lib/brain-sync";
 import type { Release, Stats } from "@/types/release";
 import { normalizeDefectStatus, resolveClosedAt } from "@/lib/defectNormalization";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
@@ -30,9 +32,13 @@ function shouldCloseFromStats(stats: Partial<Stats>) {
 }
 
 function resolveAllowedSlugs(user: AuthUser): string[] {
-  if (Array.isArray(user.companySlugs) && user.companySlugs.length) return user.companySlugs;
-  if (user.companySlug) return [user.companySlug];
-  return [];
+  return resolveNormalizedCompanySlugs(user);
+}
+
+function normalizeOptionalLabel(value: unknown) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized || null;
 }
 
 function normalizeOptionalLabel(value: unknown) {
@@ -218,6 +224,14 @@ export async function POST(req: Request) {
         passRate: total > 0 ? Math.round((release.stats.pass / total) * 100) : 0,
       },
     };
+
+    syncReleaseManualToBrain({
+      id: release.id,
+      title: release.name,
+      description: release.observations ?? null,
+      status: release.status ?? null,
+      companyId: release.clientSlug ?? null,
+    }).catch(() => {});
 
     return NextResponse.json(payload, { status: 201 });
   } catch (error) {

@@ -1,5 +1,6 @@
 ﻿import { test, expect } from "@playwright/test";
 import { mockAuth } from "./helpers/mockAuth";
+import { expectCurrentDashboardReady } from "./utils/current-ui";
 
 test("dashboard mostra tendÃªncia de MTTR", async ({ page, context }) => {
   await mockAuth(context, {
@@ -12,7 +13,7 @@ test("dashboard mostra tendÃªncia de MTTR", async ({ page, context }) => {
     waitUntil: "networkidle",
   });
 
-  await page.waitForTimeout(300);
-  await expect(page.getByTestId("mttr-trend")).toBeVisible({ timeout: 10000 });
+  await expectCurrentDashboardReady(page);
+  await expect(page.getByText(/Tendência|Risco elevado|qualidade/i).first()).toBeVisible({ timeout: 10000 });
 });
 

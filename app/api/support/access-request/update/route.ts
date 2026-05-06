@@ -339,7 +339,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Empresa selecionada não encontrada." }, { status: 404 });
     }
     resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || "Empresa";
-  } else if (profileType === "company_user") {
+  } else if (profileType === "empresa") {
     if (!companyProfile.companyName) {
       return NextResponse.json({ error: "Informe o nome ou razao social da empresa." }, { status: 400 });
     }

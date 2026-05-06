@@ -6,7 +6,9 @@ import {
   listLocalLinksForUser,
   normalizeLocalRole,
 } from "@/lib/auth/localStore";
+import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { resolveCapabilities } from "@/lib/permissions";
+import { resolveVisibleCompanies, resolveCompanyVisibilityMode } from "@/lib/companyVisibility";
 
 export type BuiltSessionPayload = {
   userId: string;

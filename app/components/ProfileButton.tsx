@@ -167,27 +167,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
           ? activeIdentity.companyTagLabel
           : null;
 
-  const companySlug = (() => {
-    if (activeClient?.slug) return activeClient.slug;
-
-    const legacyCompany = legacyUser?.company;
-    if (legacyCompany && typeof legacyCompany === "object" && legacyCompany !== null) {
-      const slug = (legacyCompany as { slug?: unknown }).slug;
-      if (typeof slug === "string" && slug.trim()) return slug;
-    }
-
-    const userCompany =
-      (user ?? null) && typeof (user as Record<string, unknown>) === "object"
-        ? ((user as Record<string, unknown> & { company?: unknown }).company ?? null)
-        : null;
-
-    if (userCompany && typeof userCompany === "object") {
-      const slug = (userCompany as { slug?: unknown }).slug;
-      if (typeof slug === "string" && slug.trim()) return slug;
-    }
-
-    return undefined;
-  })();
+  const companySlug = activeClient?.slug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? undefined;
 
   const companyResources = Array.isArray(legacyUser?.companyResources) ? legacyUser.companyResources : [];
   const companyCount =

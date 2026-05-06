@@ -14,6 +14,7 @@
 import "server-only";
 
 import { appendAssistantAuditEntry } from "@/lib/assistantAuditLog";
+import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import type {
   AssistantAction,
@@ -121,6 +122,8 @@ function shouldShortCircuitRepeatedPrompt(
   tool: AssistantToolName,
   message: string,
 ) {
+  if (tool === "use_brain") return false;
+
   const lastUserTurn = getLastUserTurn(history);
   const lastAssistantTurn = getLastAssistantTurn(history);
   if (!lastUserTurn || !lastAssistantTurn) return false;
@@ -163,7 +166,16 @@ function buildRecentDuplicateReply(tool: AssistantToolName, context: AssistantSc
   };
 }
 
-function buildClarifyReply(context: AssistantScreenContext): AssistantExecutorResult {
+function buildClarifyReply(
+  context: AssistantScreenContext,
+  history: AssistantConversationTurn[] = [],
+  message?: string,
+): AssistantExecutorResult {
+  const topic = getLatestUserTopic(history, message);
+  const prefix = topic
+    ? `Entendi que estamos falando sobre "${topic}". `
+    : "";
+
   return {
     tool: "suggest_next_step",
     success: true,
@@ -241,6 +253,7 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
   const action = request.action;
   const message = normalizePromptText(request.message, 3000);
   const history = normalizeConversationHistory(request.history);
+  const brainNodeId = request.brainContext?.nodeId ?? null;
 
   let result: AssistantExecutorResult;
 

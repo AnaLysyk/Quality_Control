@@ -109,7 +109,9 @@ export default function AdminRunsPage() {
             ? r.observations
             : typeof r.summary === "string"
               ? r.summary
-              : "Run manual";
+              : isOperationalContext
+                ? "Operação manual"
+                : "Run manual";
         const app = typeof r.app === "string" ? r.app : "SMART";
         const runId = typeof r.runId === "number" ? r.runId : undefined;
         const clientId = typeof r.clientSlug === "string" ? r.clientSlug : typeof r.clientId === "string" ? r.clientId : null;
@@ -212,7 +214,7 @@ export default function AdminRunsPage() {
           runId: runNumber,
           app: selectedApplication?.slug || trimmedApp,
           qaseProject: selectedApplication?.qaseProjectCode || trimmedApp.toUpperCase(),
-          summary: summary.trim() || "Run cadastrada pelo painel.",
+          summary: summary.trim() || (isOperationalContext ? "Operação cadastrada pelo painel." : "Run cadastrada pelo painel."),
           radis: trimmedRadis,
           clientSlug: selectedCompany || undefined,
           clientId: selectedCompany || undefined,
@@ -233,7 +235,7 @@ export default function AdminRunsPage() {
       setRunId("");
       setSummary("");
       setRadis("");
-      const okMsg = "Tudo certinho. Run salva.";
+      const okMsg = isOperationalContext ? "Tudo certinho. Operação salva." : "Tudo certinho. Run salva.";
       setFeedback(okMsg);
       setFeedbackType("ok");
       setToast({ message: okMsg, type: "ok" });
@@ -271,7 +273,7 @@ export default function AdminRunsPage() {
       });
     }
     setItems((prev) => prev.filter((item) => item.slug !== slug));
-    setToast({ message: "Run removida.", type: "ok" });
+    setToast({ message: isOperationalContext ? "Operação removida." : "Run removida.", type: "ok" });
   };
 
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.slug.localeCompare(b.slug)), [items]);
@@ -294,8 +296,12 @@ export default function AdminRunsPage() {
         <div className="space-y-2">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.45em] text-(--tc-accent,#ef0001)">Gestão de Runs</p>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Gerenciar Runs</h1>
+              <p className="text-xs uppercase tracking-[0.45em] text-(--tc-accent,#ef0001)">
+                {isOperationalContext ? "Gestão da Operação" : "Gestão de Runs"}
+              </p>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
+                {isOperationalContext ? "Central Operacional" : "Gerenciar Runs"}
+              </h1>
               <p className="text-(--tc-text-secondary,#4b5563) max-w-3xl">
                 Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicação
                 para gerar a URL e permitir buscar estatísticas automaticamente.
@@ -348,7 +354,9 @@ export default function AdminRunsPage() {
           className="grid gap-4 rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm md:grid-cols-[1fr_1fr_0.6fr_auto]"
         >
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-(--tc-text-secondary,#4b5563)">Nome da run</label>
+            <label className="text-sm text-(--tc-text-secondary,#4b5563)">
+              {isOperationalContext ? "Nome da operação" : "Nome da run"}
+            </label>
             <input
               value={title}
               onChange={(e) => {
@@ -448,7 +456,9 @@ export default function AdminRunsPage() {
 
         <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Runs cadastradas</h2>
+            <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">
+              {isOperationalContext ? "Operações cadastradas" : "Runs cadastradas"}
+            </h2>
             <div className="flex items-center gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
               <label className="flex items-center gap-1">
                 <span className="text-xs">por página</span>
@@ -492,7 +502,9 @@ export default function AdminRunsPage() {
         {loading ? (
           <p className="text-(--tc-text-muted,#6b7280)">Carregando...</p>
         ) : sortedItems.length === 0 ? (
-          <p className="text-(--tc-text-muted,#6b7280)">Nenhuma run salva ainda.</p>
+          <p className="text-(--tc-text-muted,#6b7280)">
+            {isOperationalContext ? "Nenhuma operação salva ainda." : "Nenhuma run salva ainda."}
+          </p>
         ) : (
           <div className="grid gap-4">
             {pagedItems.map((item, idx) => {
@@ -522,7 +534,7 @@ export default function AdminRunsPage() {
                       )}
                       {item.runId ? (
                         <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 text-(--page-text,#0b1a3c)">
-                          Run {item.runId}
+                          {isOperationalContext ? `Operação ${item.runId}` : `Run ${item.runId}`}
                         </span>
                       ) : (
                         <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-3 py-1 text-(--page-text,#0b1a3c)">
@@ -536,7 +548,7 @@ export default function AdminRunsPage() {
                     <div className="flex flex-wrap gap-2">
                       <a
                         href={`/release/${item.slug}`}
-                        aria-label={`Abrir run ${titleClean || item.slug}`}
+                        aria-label={`Abrir ${isOperationalContext ? "operação" : "run"} ${titleClean || item.slug}`}
                         className="rounded-lg border border-(--tc-accent,#ef0001)/70 px-4 py-2 text-sm font-semibold text-(--tc-accent,#ef0001) transition hover:bg-(--tc-accent-soft,rgba(239,0,1,0.12)) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
                       >
                         Abrir
@@ -546,7 +558,7 @@ export default function AdminRunsPage() {
                           data-testid="run-delete"
                           type="button"
                           onClick={() => handleDelete(item.slug, item.source)}
-                          aria-label={`Deletar run ${titleClean || item.slug}`}
+                          aria-label={`Deletar ${isOperationalContext ? "operação" : "run"} ${titleClean || item.slug}`}
                           className="rounded-lg border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-300"
                         >
                           Deletar

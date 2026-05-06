@@ -2,6 +2,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { canCreateRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
+import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { listApplications } from "@/lib/applicationsStore";
 
@@ -251,7 +252,7 @@ export async function GET(request: Request) {
       extra: { error: { message: "Não autorizado" } },
     });
   }
-  if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
+  if (auth && !hasGlobalCompanyVisibility(auth) && !isCompanyUser(auth)) {
     return apiFail(request, "Acesso proibido", {
       status: 403,
       code: "FORBIDDEN",
@@ -277,7 +278,7 @@ export async function GET(request: Request) {
     : undefined;
   const diag = String(url.searchParams.get("diag") ?? "").toLowerCase() === "true";
   const companySlug =
-    auth?.isGlobalAdmin && requestedCompanySlug
+    auth && hasGlobalCompanyVisibility(auth) && requestedCompanySlug
       ? requestedCompanySlug
       : auth?.companySlug ?? null;
   const qaseSettings = companySlug ? await getClientQaseSettings(companySlug) : null;

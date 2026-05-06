@@ -25,12 +25,31 @@ async function createAnaAdmin() {
         name: "Ana Testing Company",
         password_hash: hashedPassword,
         active: true,
+        role: "company_admin",
+        default_company_slug: company.slug,
       },
       create: {
         email,
         name: "Ana Testing Company",
         password_hash: hashedPassword,
         active: true,
+        role: "company_admin",
+        default_company_slug: company.slug,
+      },
+    });
+
+    await prisma.membership.upsert({
+      where: {
+        userId_companyId: {
+          userId: user.id,
+          companyId: company.id,
+        },
+      },
+      update: { role: "company_admin" },
+      create: {
+        userId: user.id,
+        companyId: company.id,
+        role: "company_admin",
       },
     });
 

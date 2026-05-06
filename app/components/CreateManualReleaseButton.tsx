@@ -207,8 +207,7 @@ export function CreateManualReleaseButton({
   const [draggingColumnKey, setDraggingColumnKey] = useState<CaseStatus | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<CaseStatus | null>(null);
   const [form, setForm] = useState<NewManualRelease>(initialState);
-  const [cases, setCases] = useState<ManualCaseDraft[]>([]);
-  const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft });
+  const [cases, setCases] = useState<RunCaseDraft[]>([]);
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [plans, setPlans] = useState<TestPlanItem[]>([]);
@@ -347,7 +346,6 @@ export function CreateManualReleaseButton({
     setSubmitError(null);
     setForm(initialState);
     setCases([]);
-    setCaseDraft({ ...initialCaseDraft });
     setApplications([]);
     setSelectedApplicationId(null);
     setPlans([]);
@@ -389,8 +387,22 @@ export function CreateManualReleaseButton({
     setForm((current) => ({ ...current, [field]: coercePositiveInteger(value) }));
   }
 
-  function handleCaseDraftChange<K extends keyof ManualCaseDraft>(field: K, value: ManualCaseDraft[K]) {
-    setCaseDraft((current) => ({ ...current, [field]: value }));
+  async function resolvePlanDetail(plan: TestPlanItem) {
+    if (!resolvedCompanySlug || !selectedApplicationId) {
+      throw new Error("Selecione a aplicação antes de carregar o plano.");
+    }
+
+    const response = await fetchApi(
+      `/api/test-plans?companySlug=${encodeURIComponent(resolvedCompanySlug)}&applicationId=${encodeURIComponent(selectedApplicationId)}&planId=${encodeURIComponent(plan.id)}&source=${encodeURIComponent(plan.source)}`,
+      { cache: "no-store" },
+    );
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.plan) {
+      throw new Error(
+        (typeof payload?.error === "string" && payload.error) || "Não foi possível carregar o plano de teste.",
+      );
+    }
+    return payload.plan as TestPlanItem;
   }
 
   function handleAddCase() {
@@ -533,6 +545,13 @@ export function CreateManualReleaseButton({
     setSubmitError(null);
 
     try {
+      const currentStats = cases.length > 0 ? caseStats : {
+        pass: form.pass,
+        fail: form.fail,
+        blocked: form.blocked,
+        notRun: form.notRun,
+      };
+
       const response = await fetch("/api/releases-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -585,7 +604,8 @@ export function CreateManualReleaseButton({
               id: item.id,
               title: item.title,
               link: item.link || undefined,
-              status: CASE_STATUS_VALUES[item.status],
+              status: RUN_CASE_STATUS_VALUES[item.status],
+              bug: item.bug ?? null,
               fromApi: false,
             })),
           ),
@@ -605,7 +625,7 @@ export function CreateManualReleaseButton({
       }
 
       const target = resolvedCompanySlug
-        ? `/${encodeURIComponent(resolvedCompanySlug)}/runs/${encodeURIComponent(created.slug)}`
+        ? `/empresas/${encodeURIComponent(resolvedCompanySlug)}/runs/${encodeURIComponent(created.slug)}`
         : `/release/${encodeURIComponent(created.slug)}`;
 
       if (typeof window !== "undefined") {
@@ -1005,6 +1025,20 @@ export function CreateManualReleaseButton({
                         Marcar falha
                       </button>
                     </div>
+                    <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Total executado</p>
+                      <div className="mt-1 text-lg font-extrabold text-white">{total} caso(s)</div>
+                    </div>
+                    <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Pass rate</p>
+                      <div className="mt-1 text-lg font-extrabold text-white">{passRate}%</div>
+                    </div>
+                    <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Casos no quadro</p>
+                      <div className="mt-1 text-lg font-extrabold text-white">{cases.length}</div>
+                    </div>
+                  </div>
+                </div>
 
                     <div className="mt-5 grid gap-4 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
                       {([
@@ -1028,7 +1062,110 @@ export function CreateManualReleaseButton({
                             onChange={(event) => handleNumber(item.key, event.target.value)}
                           />
                         </div>
-                      ))}
+                      </div>
+
+                      <div className="mt-5 space-y-4">
+                        <label className="block space-y-2">
+                          <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Aplicação</span>
+                          {applications.length > 0 ? (
+                            <select
+                              aria-label="Selecionar aplicação"
+                              className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                              value={selectedApplicationId ?? ""}
+                              onChange={(event) => {
+                                const nextId = event.target.value;
+                                setSelectedApplicationId(nextId);
+                                const nextApplication = applications.find((application) => application.id === nextId) ?? null;
+                                if (nextApplication) {
+                                  setForm((current) => ({ ...current, app: nextApplication.slug || nextApplication.name }));
+                                }
+                              }}
+                            >
+                              {applications.map((application) => (
+                                <option key={application.id} value={application.id}>
+                                  {application.name}
+                                  {application.qaseProjectCode ? ` (${application.qaseProjectCode})` : ""}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <select
+                              aria-label="Selecionar aplicação"
+                              className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                              value={form.app}
+                              onChange={(event) => setForm((current) => ({ ...current, app: event.target.value }))}
+                            >
+                              {fallbackApps.map((application) => (
+                                <option key={application} value={application}>
+                                  {application}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          <span className="text-xs text-(--tc-text-muted,#6b7280)">
+                            {selectedApplication?.qaseProjectCode
+                              ? `O plano pode puxar casos do projeto Qase ${selectedApplication.qaseProjectCode}.`
+                              : `${appMeta.label} será usado como contexto desta run.`}
+                          </span>
+                        </label>
+
+                        <div className="space-y-3 rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Plano de teste</span>
+                              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                                Aplique um plano para popular o quadro com casos. Sem plano, a run segue manual direta.
+                              </p>
+                            </div>
+                            {selectedPlan ? (
+                              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
+                                {selectedPlan.source === "qase" ? "Qase" : "Manual"} · {selectedPlan.casesCount} caso(s)
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
+                            <select
+                              aria-label="Selecionar plano de teste"
+                              value={selectedPlanKey}
+                              onChange={(event) => setSelectedPlanKey(event.target.value)}
+                              className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                              disabled={!selectedApplicationId || plansLoading}
+                            >
+                              <option value="">
+                                {plansLoading
+                                  ? "Carregando planos..."
+                                  : plans.length > 0
+                                    ? "Sem plano aplicado"
+                                    : "Nenhum plano disponível"}
+                              </option>
+                              {plans.map((plan) => (
+                                <option key={makePlanKey(plan.source, plan.id)} value={makePlanKey(plan.source, plan.id)}>
+                                  {plan.title} · {plan.source === "qase" ? "Qase" : "Manual"}
+                                </option>
+                              ))}
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={() => void handleApplyPlan()}
+                              disabled={!selectedPlan || planActionLoading}
+                              className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) disabled:opacity-60"
+                            >
+                              {planActionLoading ? "Aplicando..." : "Aplicar plano"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPlanKey("")}
+                              disabled={!selectedPlanKey}
+                              className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-transparent px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-slate-400 hover:text-slate-900 disabled:opacity-60"
+                            >
+                              Run direta
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
@@ -1144,7 +1281,16 @@ export function CreateManualReleaseButton({
                         className="rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
                         disabled={!caseDraft.title.trim()}
                       >
-                        Adicionar caso
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={saving || !form.name.trim()}
+                        data-testid="run-submit"
+                        className="rounded-2xl bg-(--tc-accent,#ef0001) px-6 py-3 text-base font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                      >
+                        {saving ? "Salvando..." : <span data-testid="run-save">{redirectToRun ? "Salvar e abrir" : "Salvar run"}</span>}
                       </button>
                     </div>
                   </div>

@@ -8,10 +8,11 @@ import {
   listLocalLinksForUser,
   normalizeGlobalRole,
   normalizeLocalRole,
-  toLegacyRole,
 } from "@/lib/auth/localStore";
+import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { resolveCapabilities } from "@/lib/permissions";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
+import { resolveVisibleCompanies, resolveCompanyVisibilityMode } from "@/lib/companyVisibility";
 
 export type SessionPayload = {
   userId?: string;
@@ -226,7 +227,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     companyRole,
     membershipCapabilities: primaryLink?.capabilities ?? session.capabilities ?? null,
   });
-  const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);
+  const effectiveRole = permissionRole;
 
   // 9) Retorna o contexto final consumido pelo restante do app.
   return {

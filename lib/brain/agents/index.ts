@@ -1,0 +1,61 @@
+import "server-only";
+
+import { qaAgentConfig } from "./qaAgent";
+import { debugAgentConfig } from "./debugAgent";
+import { playwrightAgentConfig } from "./playwrightAgent";
+import { memoryAgentConfig } from "./memoryAgent";
+
+export type AgentMode = "qa" | "debug" | "playwright" | "memory";
+
+export type AgentConfig = {
+  mode: AgentMode;
+  name: string;
+  icon: string;
+  label: string;
+  color: string;
+  tools: string[];
+  buildSystemPrompt: (metrics: string, nodeCtx: string) => string;
+};
+
+export const AGENT_REGISTRY: Record<AgentMode, AgentConfig> = {
+  qa: qaAgentConfig,
+  debug: debugAgentConfig,
+  playwright: playwrightAgentConfig,
+  memory: memoryAgentConfig,
+};
+
+/**
+ * Detecta automaticamente o agente mais adequado para uma pergunta.
+ * Prioridade: playwright > debug > memory > qa (qa é o padrão mais abrangente).
+ */
+export function detectAgentMode(message: string): AgentMode {
+  const lower = message.toLowerCase();
+
+  const playwrightTerms = [
+    "playwright", "teste automatizado", "testes automatizados", "spec", "locator",
+    "selector", "pom", "e2e", "gerar teste", "gerar spec", "automatizar", "automation",
+    "test file", "page object", "end to end", "escrever teste", "criar teste",
+    "cobertura automatizada", "suite de teste",
+  ];
+
+  const debugTerms = [
+    "erro", "bug", "falha", "error", "exception", "crash", "causa raiz",
+    "porque falhou", "por que falhou", "log", "stack trace", "debug",
+    "não funciona", "nao funciona", "quebrou", "quebrando", "regressão", "regressao",
+    "incidente", "postmortem", "rastrear", "rastreamento", "investigar",
+    "o que mudou", "quando parou", "por que está errado",
+  ];
+
+  const memoryTerms = [
+    "decisão", "decisao", "memória", "memoria", "histórico", "historico",
+    "regra", "padrão", "padrao", "por que foi feito", "arquitetura",
+    "contexto", "documentar", "registrar decisão", "o que foi decidido",
+    "por que existe", "origem", "motivação", "motivacao", "knowledge",
+    "base de conhecimento", "o que sabemos", "o que aprendi",
+  ];
+
+  if (playwrightTerms.some((t) => lower.includes(t))) return "playwright";
+  if (debugTerms.some((t) => lower.includes(t))) return "debug";
+  if (memoryTerms.some((t) => lower.includes(t))) return "memory";
+  return "qa";
+}

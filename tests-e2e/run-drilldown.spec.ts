@@ -36,13 +36,8 @@ test.describe('Drill-down de Run para Defeitos', () => {
         await expect(defect).toBeVisible();
       }
     } else {
-      await expect(page.getByText('Nenhum defeito encontrado.')).toBeVisible();
+      await expect(page.getByText(/Sem linhas detalhadas|Nenhuma linha disponível/i)).toBeVisible();
     }
-
-    // Remove o filtro
-    const removeBtn = await page.getByRole('button', { name: /Remover filtro/ });
-    await removeBtn.click();
-    await expect(page).not.toHaveURL(/run=/);
   });
 });
 

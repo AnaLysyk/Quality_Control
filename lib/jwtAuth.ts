@@ -5,6 +5,7 @@ import { findUserByEmailOrId } from "@/lib/simpleAuth";
 import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole, toLegacyRole } from "@/lib/auth/localStore";
 import { resolveCapabilities } from "@/lib/permissions";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
+import { resolveVisibleCompanies } from "@/lib/companyVisibility";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 
 export type AuthUser = {

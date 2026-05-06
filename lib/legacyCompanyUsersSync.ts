@@ -1,10 +1,9 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import fs from "fs/promises";
-import path from "path";
 
 import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import {
   readLocalAuthStore,
   writeLocalAuthStore,
@@ -12,6 +11,8 @@ import {
   type LocalAuthMembership,
   type LocalAuthUser,
 } from "@/lib/auth/localStore";
+
+const USE_POSTGRES = shouldUsePostgresPersistence();
 
 type LegacyCompanyUser = {
   id?: string;
@@ -31,7 +32,6 @@ type LegacySyncResult = {
   membershipsLinked: number;
 };
 
-const LEGACY_COMPANIES_DIR = path.join(process.cwd(), "data", "companies");
 const ROLE_WEIGHT: Record<string, number> = {
   viewer: 0,
   testing_company_user: 0,
@@ -99,26 +99,13 @@ function makePlaceholderCompany(companyId: string, existingSlugs: Set<string>): 
 }
 
 async function listLegacyCompanyIds() {
-  try {
-    const entries = await fs.readdir(LEGACY_COMPANIES_DIR, { withFileTypes: true });
-    return entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name)
-      .sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
-  } catch {
-    return [] as string[];
-  }
+  // No filesystem access in Postgres mode
+  return [] as string[];
 }
 
-async function readLegacyCompanyUsers(companyId: string) {
-  const filePath = path.join(LEGACY_COMPANIES_DIR, companyId, "users.json");
-  try {
-    const raw = await fs.readFile(filePath, "utf8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as LegacyCompanyUser[]) : [];
-  } catch {
-    return [] as LegacyCompanyUser[];
-  }
+async function readLegacyCompanyUsers(_companyId: string) {
+  // No filesystem access in Postgres mode
+  return [] as LegacyCompanyUser[];
 }
 
 function updateRoleIfStronger(
@@ -239,6 +226,10 @@ async function syncLegacyCompanyUsersInternal(): Promise<LegacySyncResult> {
 }
 
 export async function syncLegacyCompanyUsersToLocalStore() {
+  if (USE_POSTGRES) {
+    // Data already managed in Postgres — skip legacy JSON migration
+    return { changed: false, companiesAdded: 0, usersImported: 0, membershipsLinked: 0 };
+  }
   const now = Date.now();
   if (inFlightSync) return inFlightSync;
   if (now - lastSyncAt < 5000) {

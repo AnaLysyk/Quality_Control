@@ -1,10 +1,11 @@
 import { z } from "zod";
 
 const OptionalStringSchema = z.preprocess((value) => {
+  if (value == null) return undefined;
   if (typeof value !== "string") return value;
   const trimmed = value.trim();
   return trimmed === "" ? undefined : trimmed;
-}, z.string().min(1));
+}, z.string().min(1).optional());
 
 const OptionalStringOrStringArraySchema = z
   .union([OptionalStringSchema, z.array(z.string().min(1))])

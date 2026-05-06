@@ -14,13 +14,14 @@ import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccess
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import {
   normalizeRequestProfileType,
-  requestProfileTypeNeedsCompany,
   toInternalAccessType,
 } from "@/lib/requestRouting";
 import { resolveEditableProfileUserState, type EditableProfileRole } from "@/lib/editableProfileRoles";
 import { notifyAccessRequestAccepted } from "@/lib/notificationService";
 import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
+import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
+import { reviewPasswordResetRequest } from "@/lib/passwordResetReview";
 
 type AcceptBody = {
   comment?: string;
@@ -125,11 +126,11 @@ async function prepareAcceptanceMessage(
     parsed.company ||
     "(não informado)";
 
-  if (requestProfileTypeNeedsCompany(profileType) && !clientId) {
+  if (profileType === "testing_company_user" && !clientId) {
     clientId = await resolveTestingCompanyId();
   }
 
-  if (requestProfileTypeNeedsCompany(profileType)) {
+  if (profileType === "testing_company_user" || profileType === "company_user") {
     if (!clientId) {
       const error = new Error("Empresa obrigatória para Usuário") as Error & { code?: string };
       error.code = "MISSING_COMPANY";
@@ -195,7 +196,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
   const displayName = fullName || email;
   let companyId = parsed.clientId;
 
-  if (requestProfileTypeNeedsCompany(profileType) && !companyId) {
+  if (profileType === "testing_company_user" && !companyId) {
     companyId = await resolveTestingCompanyId();
   }
 
@@ -359,6 +360,35 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     const body = (await req.json().catch(() => null)) as AcceptBody | null;
     const comment = typeof body?.comment === "string" ? body.comment.trim() : "";
     const { id } = await context.params;
+    const passwordResetRequestId = extractPasswordResetRequestId(id);
+
+    if (passwordResetRequestId) {
+      const result = await reviewPasswordResetRequest(
+        passwordResetRequestId,
+        "APPROVED",
+        { id: admin.id || admin.email || "access-requests" },
+        comment || "Aprovado pela central de solicitacoes",
+      );
+      if (!result.ok) {
+        return NextResponse.json({ error: result.message }, { status: result.status });
+      }
+
+      return NextResponse.json({
+        ok: true,
+        item: {
+          id,
+          status:
+            result.item?.status === "APPROVED"
+              ? "closed"
+              : result.item?.status === "REJECTED"
+                ? "rejected"
+                : result.item?.status === "NEEDS_REVISION"
+                  ? "in_progress"
+                  : "open",
+          requestId: passwordResetRequestId,
+        },
+      });
+    }
 
     if (shouldUseJsonStore()) {
       const existing = await getAccessRequestById(id);

@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
+import { getAccessContext } from "@/lib/auth/session";
 import { getRedis } from "@/lib/redis";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
@@ -25,6 +26,7 @@ type SessionUser = {
   id?: string;
   email?: string;
   role?: string;
+  companyRole?: string | null;
   isGlobalAdmin?: boolean;
   globalRole?: string | null;
 };

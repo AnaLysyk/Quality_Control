@@ -67,6 +67,8 @@ function hasGlobalCompanyAccess(auth: Pick<AuthContext, "isGlobalAdmin" | "role"
 const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
 const HISTORY_PATH = path.join(getJsonStoreDir(), "company-documents-history.json");
 const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files");
+let memoryDocumentsStore: { items: CompanyDocumentItem[] } = { items: [] };
+let memoryHistoryStore: { items: DocumentHistoryEvent[] } = { items: [] };
 
 function pgRowToDocItem(row: {
   id: string; companySlug: string; kind: string; title: string;
@@ -118,15 +120,6 @@ function sanitizeFilename(raw: string) {
   return trimmed.replace(/[\\/\0]/g, "_");
 }
 
-async function ensureStore() {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  try {
-    await fs.access(STORE_PATH);
-  } catch {
-    await fs.writeFile(STORE_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
-  }
-}
-
 async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
   if (USE_POSTGRES) {
     const rows = await prisma.companyDocument.findMany({ orderBy: { createdAt: "desc" } });
@@ -141,20 +134,11 @@ async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
   } catch {
     return { items: [] };
   }
+  return { items: (memoryDocumentsStore.items ?? []).map(normalizeDocumentItem) };
 }
 
 async function writeStore(next: { items: CompanyDocumentItem[] }) {
-  await ensureStore();
-  await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
-}
-
-async function ensureHistoryStore() {
-  await fs.mkdir(path.dirname(HISTORY_PATH), { recursive: true });
-  try {
-    await fs.access(HISTORY_PATH);
-  } catch {
-    await fs.writeFile(HISTORY_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
-  }
+  memoryDocumentsStore = { items: next.items ?? [] };
 }
 
 async function readHistory(): Promise<{ items: DocumentHistoryEvent[] }> {
@@ -176,20 +160,11 @@ async function readHistory(): Promise<{ items: DocumentHistoryEvent[] }> {
       })),
     };
   }
-  await ensureHistoryStore();
-  try {
-    const raw = await fs.readFile(HISTORY_PATH, "utf8");
-    const parsed = JSON.parse(raw) as { items?: unknown };
-    const items = Array.isArray(parsed?.items) ? (parsed.items as DocumentHistoryEvent[]) : [];
-    return { items };
-  } catch {
-    return { items: [] };
-  }
+  return { items: memoryHistoryStore.items ?? [] };
 }
 
 async function writeHistory(next: { items: DocumentHistoryEvent[] }) {
-  await ensureHistoryStore();
-  await fs.writeFile(HISTORY_PATH, JSON.stringify(next, null, 2), "utf8");
+  memoryHistoryStore = { items: next.items ?? [] };
 }
 
 async function appendHistoryEvent(

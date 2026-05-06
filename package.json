@@ -23,6 +23,7 @@
     "test:api": "node scripts/run-newman.mjs",
     "biometrics:attach": "tsx scripts/biometrics/run-local-attach.ts",
     "env:check": "tsx scripts/env-check.ts",
+    "dev:watch": "powershell -ExecutionPolicy Bypass -File scripts/dev-watch.ps1",
     "dev:daemon": "node scripts/dev-daemon.js",
     "dev:stop": "node scripts/dev-stop.js",
     "create-admin": "npx tsx scripts/create-admin.ts",
@@ -42,6 +43,7 @@
     "brain:test": "jest --config jest.config.ts --runInBand __tests__/brain.test.ts"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.61",
     "@aws-sdk/client-s3": "^3.975.0",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
@@ -53,7 +55,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@upstash/redis": "^1.36.1",
-    "ai": "^6.0.79",
+    "ai": "^6.0.175",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "framer-motion": "^12.23.26",
@@ -96,5 +98,8 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "@hono/node-server": "1.19.13"
   }
 }

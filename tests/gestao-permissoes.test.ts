@@ -4,7 +4,7 @@
  * Verifica que todas as permissões SÃO BLOQUEADAS quando não estão ativas no perfil.
  *
  * Seções:
- *  A) Perfil 'user' (viewer) — permissões ausentes verificadas
+ *  A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada
  *  B) Perfil 'company' (company_admin) — permissões ausentes verificadas
  *  C) Perfil 'support' — módulos completamente ausentes
  *  D) Overrides de permissão (deny / allow)
@@ -63,43 +63,45 @@ afterAll(async () => {
 }, 30000);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// A) Perfil 'user' (viewer) — permissões ausentes
+// A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
+describe("A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada", () => {
   const p = perm("testing_company_user");
 
-  test("A1. releases: view/create/edit/delete todos bloqueados", () => {
-    expect(hasPermissionAccess(p, "releases", "view")).toBe(false);
+  test("A1. releases: view permitido; escrita bloqueada", () => {
+    expect(hasPermissionAccess(p, "releases", "view")).toBe(true);
     expect(hasPermissionAccess(p, "releases", "create")).toBe(false);
     expect(hasPermissionAccess(p, "releases", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "releases", "delete")).toBe(false);
-    console.log("✅ A1. user: releases totalmente bloqueado");
+    console.log("✅ A1. user TC: releases visível no escopo da empresa");
   });
 
-  test("A2. runs: view/create/edit/delete/export todos bloqueados", () => {
-    expect(hasPermissionAccess(p, "runs", "view")).toBe(false);
+  test("A2. runs: view permitido; escrita/export bloqueados", () => {
+    expect(hasPermissionAccess(p, "runs", "view")).toBe(true);
     expect(hasPermissionAccess(p, "runs", "create")).toBe(false);
     expect(hasPermissionAccess(p, "runs", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "runs", "delete")).toBe(false);
     expect(hasPermissionAccess(p, "runs", "export")).toBe(false);
-    console.log("✅ A2. user: runs totalmente bloqueado");
+    console.log("✅ A2. user TC: runs visível no escopo da empresa");
   });
 
-  test("A3. defects: view/create/edit/delete todos bloqueados", () => {
-    expect(hasPermissionAccess(p, "defects", "view")).toBe(false);
+  test("A3. defects: view permitido; escrita bloqueada", () => {
+    expect(hasPermissionAccess(p, "defects", "view")).toBe(true);
     expect(hasPermissionAccess(p, "defects", "create")).toBe(false);
     expect(hasPermissionAccess(p, "defects", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "defects", "delete")).toBe(false);
-    console.log("✅ A3. user: defects totalmente bloqueado");
+    console.log("✅ A3. user TC: defects visível no escopo da empresa");
   });
 
-  test("A4. users: view/create/edit/delete todos bloqueados", () => {
-    expect(hasPermissionAccess(p, "users", "view")).toBe(false);
-    expect(hasPermissionAccess(p, "users", "create")).toBe(false);
+  test("A4. users: view/create por empresa; edit/delete globais bloqueados", () => {
+    expect(hasPermissionAccess(p, "users", "view")).toBe(true);
+    expect(hasPermissionAccess(p, "users", "create")).toBe(true);
+    expect(hasPermissionAccess(p, "users", "view_company")).toBe(true);
     expect(hasPermissionAccess(p, "users", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "users", "delete")).toBe(false);
-    console.log("✅ A4. user: users totalmente bloqueado");
+    expect(hasPermissionAccess(p, "users", "view_all")).toBe(false);
+    console.log("✅ A4. user TC: users limitado à empresa vinculada");
   });
 
   test("A5. permissions: view/edit/reset/clone todos bloqueados", () => {
@@ -394,15 +396,17 @@ describe("D) Overrides de permissão (deny/allow)", () => {
     console.log(`D5. technical_support: tickets.delete/assign/status negados | restantes=${ticketActions.join(",")}`);
   });
 
-  test("D6. toVisibilityMap retorna false para módulos sem view", () => {
+  test("D6. toVisibilityMap deixa módulos operacionais visíveis para user TC", () => {
     const userPerms = perm("testing_company_user");
     const visibility = toVisibilityMap(userPerms);
-    expect(visibility["releases"]).toBe(false);
-    expect(visibility["runs"]).toBe(false);
-    expect(visibility["defects"]).toBe(false);
+    expect(visibility["releases"]).toBe(true);
+    expect(visibility["runs"]).toBe(true);
+    expect(visibility["defects"]).toBe(true);
+    expect(visibility["testPlans"]).toBe(true);
+    expect(visibility["documents"]).toBe(true);
     expect(visibility["dashboard"]).toBe(true);
     expect(visibility["applications"]).toBe(true);
-    console.log(`✅ D6. toVisibilityMap: user sem releases/runs/defects visíveis`);
+    console.log(`✅ D6. toVisibilityMap: user TC com operação visível no escopo da empresa`);
   });
 
   test("D7. getTicketViewScope retorna 'own' para perfil user", () => {
@@ -503,7 +507,7 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     return c;
   }
 
-  test("F1. Usuário viewer → roleKey='user', releases/runs/defects bloqueados", async () => {
+  test("F1. Usuário viewer/TC → roleKey='testing_company_user', operação visível por empresa", async () => {
     const tag = uid();
     const user = await makeUser(`viewer-${tag}`);
     const company = await makeCompany(tag);
@@ -512,10 +516,15 @@ describe("F) Integração DB — resolvePermissionAccessForUser", () => {
     const access = await resolvePermissionAccessForUser(user.id);
 
     expect(access.roleKey).toBe("testing_company_user");
-    expect(hasPermissionAccess(access.permissions, "releases", "view")).toBe(false);
-    expect(hasPermissionAccess(access.permissions, "runs", "view")).toBe(false);
-    expect(hasPermissionAccess(access.permissions, "defects", "view")).toBe(false);
-    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "releases", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "runs", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "defects", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "testPlans", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "documents", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "users", "view")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "users", "create")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "users", "view_company")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "users", "view_all")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "audit", "view")).toBe(false);
     // Dashboard e applications permitidos
     expect(hasPermissionAccess(access.permissions, "dashboard", "view")).toBe(true);

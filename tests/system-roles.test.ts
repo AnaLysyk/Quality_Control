@@ -1,6 +1,7 @@
 import { normalizeLegacyRole, SYSTEM_ROLES } from "../lib/auth/roles";
 import { normalizeAccessType } from "../lib/accessRequestMessage";
 import { ROLE_DEFAULTS } from "../lib/permissions/roleDefaults";
+import { PERMISSION_MODULES } from "../lib/permissionCatalog";
 import { canReviewAccessRequests, canReviewerAccessQueue, canViewAccessRequestQueue } from "../lib/requestReviewAccess";
 import { requestProfileTypeNeedsCompany } from "../lib/requestRouting";
 
@@ -28,12 +29,33 @@ describe("system role contract", () => {
     ]);
     // Suporte tecnico ve os modulos (view) mas nao pode aprovar/rejeitar
     expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].access_requests).toEqual(["view"]);
-    expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].users).toEqual(["view"]);
+    expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].users).toEqual(["view", "view_all"]);
   });
 
   it("keeps company profiles able to view and create company users", () => {
-    expect(ROLE_DEFAULTS[SYSTEM_ROLES.EMPRESA].users).toEqual(["view", "create"]);
-    expect(ROLE_DEFAULTS[SYSTEM_ROLES.COMPANY_USER].users).toEqual(["view", "create"]);
+    expect(ROLE_DEFAULTS[SYSTEM_ROLES.EMPRESA].users).toEqual(["view", "create", "view_company"]);
+    expect(ROLE_DEFAULTS[SYSTEM_ROLES.COMPANY_USER].users).toEqual(["view", "create", "view_company"]);
+  });
+
+  it("keeps user TC operational inside linked company scope", () => {
+    const defaults = ROLE_DEFAULTS[SYSTEM_ROLES.TESTING_COMPANY_USER];
+
+    expect(defaults.releases).toEqual(["view"]);
+    expect(defaults.runs).toEqual(["view"]);
+    expect(defaults.defects).toEqual(["view"]);
+    expect(defaults.testPlans).toEqual(["view"]);
+    expect(defaults.documents).toEqual(["view"]);
+    expect(defaults.users).toEqual(["view", "create", "view_company"]);
+    expect(defaults.permissions).toEqual([]);
+    expect(defaults.access_requests).toEqual([]);
+    expect(defaults.audit).toEqual([]);
+  });
+
+  it("keeps permission catalog covering all default modules", () => {
+    const catalogModuleIds = new Set(PERMISSION_MODULES.map((module) => module.id));
+    const defaultModuleIds = new Set(Object.values(ROLE_DEFAULTS).flatMap((defaults) => Object.keys(defaults)));
+
+    expect([...defaultModuleIds].filter((moduleId) => !catalogModuleIds.has(moduleId)).sort()).toEqual([]);
   });
 
   it("routes company-user access requests to an existing company context", () => {

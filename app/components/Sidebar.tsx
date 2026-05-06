@@ -17,6 +17,7 @@ import {
   FiColumns,
   FiChevronRight,
   FiBookmark,
+  FiFileText,
   FiFolder,
   FiGrid,
   FiHash,
@@ -319,6 +320,9 @@ function resolveModuleFromHref(href: string) {
 
 function resolveSidebarModuleFromHref(href: string) {
   const { path } = normalizeHref(href);
+  const companyRouteModule = resolveCompanyRouteModuleFromPath(path);
+  if (companyRouteModule) return companyRouteModule;
+
   const legacyResolved = resolveModuleFromHref(href);
   if (path === "/admin/users/permissions") return "permissions";
   if (path === "/admin/users") return "users";
@@ -344,6 +348,23 @@ function resolveSidebarModuleFromHref(href: string) {
   if (/^\/empresas\/[^/]+\/releases$/.test(path)) return "releases";
   if (/^\/empresas\/[^/]+\/chamados$/.test(path)) return "support";
   return legacyResolved;
+}
+
+function resolveCompanyRouteModuleFromPath(path: string) {
+  const parsed = parseSidebarCompanyRoutePathname(path);
+  if (!parsed) return null;
+  const section = (parsed.route.split("/")[0] ?? "home").trim().toLowerCase();
+  if (section === "home" || section === "dashboard") return "dashboard";
+  if (section === "metrics") return "metrics";
+  if (section === "aplicacoes" || section === "aplica\u00e7\u00f5es") return "applications";
+  if (section === "planos-de-teste") return "testPlans";
+  if (section === "runs") return "runs";
+  if (section === "releases") return "releases";
+  if (section === "defeitos") return "defects";
+  if (section === "chamados") return "support";
+  if (section === "docs" || section === "documentos") return "documents";
+  if (section === "perfil" || section === "profile" || section === "admin") return "settings";
+  return null;
 }
 
 function clampNumber(value: number, min: number, max: number) {
@@ -776,8 +797,11 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             { label: t("nav.testPlans"), icon: FiClipboard, href: buildCompanyPathForAccess(companySlug, "planos-de-teste", companyRouteInput) },
             { label: t("nav.automations"), icon: FiZap, href: "/automacoes", roles: ["admin", "technical_support", "user", "client"] },
             { label: companyRunsMenuLabel, icon: FiList, href: buildCompanyPathForAccess(companySlug, "runs", companyRouteInput) },
+            { label: t("nav.releases"), icon: FiBookmark, href: buildCompanyPathForAccess(companySlug, "releases", companyRouteInput) },
             { label: t("nav.defects"), icon: FiAlertTriangle, href: buildCompanyPathForAccess(companySlug, "defeitos", companyRouteInput) },
             { label: t("nav.support"), icon: FiColumns, href: buildCompanyPathForAccess(companySlug, "chamados", companyRouteInput) },
+            { label: "Documentos", icon: FiFileText, href: buildCompanyPathForAccess(companySlug, "documentos", companyRouteInput) },
+            { label: t("nav.profile"), icon: FiUser, href: buildCompanyPathForAccess(companySlug, "perfil", companyRouteInput) },
             { label: "Conversas", icon: FiMessageSquare, href: "/chat" },
           ]
         : [],
@@ -804,15 +828,9 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     if (isCompanyScopedRoute && scopedCompanyNav.length) return scopedCompanyNav;
     if (appRole === "admin") return adminNav;
     if (appRole === "technical_support") return supportNav;
-    // testing_company_user not in company context → runs goes to /operacao hub
-    if (appRole === "user" && scopedCompanyNav.length && !isInstitutionalCompany) {
-      return scopedCompanyNav.map((item) =>
-        /\/runs$/.test(item.href) ? { ...item, href: "/operacao" } : item,
-      );
-    }
     if (scopedCompanyNav.length) return scopedCompanyNav;
     return publicNav;
-  }, [loading, user, appRole, adminNav, supportNav, companyNav, publicNav, pathname, isInstitutionalCompany, parsedCompanyRoute]);
+  }, [loading, user, appRole, adminNav, supportNav, companyNav, publicNav, pathname, parsedCompanyRoute]);
 
   const visibleNavigation = useMemo(
     () =>
@@ -824,10 +842,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           }
           const moduleId = resolveSidebarModuleFromHref(item.href);
           if (!moduleId) return true;
-          const isCompanyScopedLink = /^\/empresas\/[^/]+\//.test(item.href);
-          if (isCompanyScopedLink && ["runs", "releases", "defects", "support"].includes(moduleId)) {
-            return true;
-          }
           return Boolean(visibility[moduleId]);
         }),
     [navigation, appRole, visibility],

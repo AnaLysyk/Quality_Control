@@ -24,11 +24,14 @@ describe("user scope policy", () => {
     expect(normalizeScopeRoleKey("support_tech")).toBe("technical_support");
   });
 
-  it("does not grant company-user management to plain users", () => {
+  it("allows user TC to manage users only inside linked companies", () => {
     const policy = resolveUserScopePolicy("user");
 
-    expect(canViewCompanyUsersByScope(policy)).toBe(false);
-    expect(canCreateCompanyUsersByScope(policy)).toBe(false);
+    expect(policy.roleKey).toBe("testing_company_user");
+    expect(policy.companyAccessScope).toBe("linked_companies");
+    expect(canViewCompanyUsersByScope(policy)).toBe(true);
+    expect(canCreateCompanyUsersByScope(policy)).toBe(true);
+    expect(policy.canLinkAcrossCompanies).toBe(false);
   });
 
   it("keeps technical support global for maintenance without creation rights", () => {

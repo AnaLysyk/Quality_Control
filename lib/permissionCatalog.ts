@@ -50,6 +50,20 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     actions: ["view", "create", "edit", "delete", "export"],
   },
   {
+    id: "metrics",
+    label: "Métricas",
+    description: "Indicadores, qualidade e leitura de saúde por empresa.",
+    category: "Módulos e páginas",
+    actions: ["view", "export"],
+  },
+  {
+    id: "testPlans",
+    label: "Planos de teste",
+    description: "Planos, campanhas e cobertura de teste por aplicação.",
+    category: "Operação",
+    actions: ["view", "create", "edit", "delete"],
+  },
+  {
     id: "releases",
     label: "Releases",
     description: "Fluxo de releases, histórico e qualidade.",
@@ -68,6 +82,13 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: "Defeitos",
     description: "Registro e acompanhamento de defeitos.",
     category: "Operação",
+    actions: ["view", "create", "edit", "delete"],
+  },
+  {
+    id: "documents",
+    label: "Documentos",
+    description: "Documentos, evidências e links do contexto da empresa.",
+    category: "Produtividade",
     actions: ["view", "create", "edit", "delete"],
   },
   {

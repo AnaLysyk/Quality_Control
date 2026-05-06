@@ -54,6 +54,10 @@ describe("chooseTool", () => {
     expect(chooseTool("resumir meus dados", makeContext(), EMPTY_HISTORY)).toBe("summarize_entity");
   });
 
+  it("routes 'resumir o chamado SP-000019' to summarize_entity", () => {
+    expect(chooseTool("resumir o chamado SP-000019", makeContext(), EMPTY_HISTORY)).toBe("summarize_entity");
+  });
+
   /* ── explain permission ── */
 
   it("routes 'explicar meu escopo de acesso' to explain_permission", () => {
@@ -130,6 +134,11 @@ describe("chooseTool", () => {
 
   it("routes 'próximo passo' to suggest_next_step", () => {
     expect(chooseTool("próximo passo", makeContext(), EMPTY_HISTORY)).toBe("suggest_next_step");
+  });
+
+  it("routes dashboard trend option to suggest_next_step", () => {
+    const ctx = makeContext({ module: "dashboard" });
+    expect(chooseTool("Comparar tendência com período anterior", ctx, EMPTY_HISTORY)).toBe("suggest_next_step");
   });
 
   it("falls back to suggest_next_step for unrecognized input", () => {

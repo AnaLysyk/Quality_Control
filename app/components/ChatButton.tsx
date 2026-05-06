@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
+import styles from "./ChatButton.module.css";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import type { AssistantAction, AssistantConversationTurn, AssistantOpenEventDetail, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
@@ -19,6 +20,12 @@ type ChatMessage = {
   ts: number;
   tool?: string | null;
   actions?: AssistantAction[];
+  agentMeta?: {
+    agentMode?: string | null;
+    agentName?: string | null;
+    agentIcon?: string | null;
+    agentColor?: string | null;
+  } | null;
 };
 
 type ConfirmState =
@@ -113,6 +120,240 @@ function formatToolLabel(tool?: string | null) {
     default:
       return "Assistente";
   }
+}
+
+function buildBrainQuickActions(context?: AssistantOpenEventDetail | null): AssistantAction[] | undefined {
+  if (!context?.nodeId && context?.source !== "brain") return undefined;
+
+  const nodeName = context?.nodeLabel?.trim() || "este nó";
+  const nodeType = context?.nodeType?.trim() || "Brain";
+  return [
+    {
+      kind: "prompt",
+      label: "Resumo completo",
+      prompt: `Resuma o contexto completo do nó "${nodeName}" (${nodeType}), incluindo descrição, conexões de entrada e saída, memórias, impacto e próximos passos.`,
+    },
+    {
+      kind: "prompt",
+      label: "Mapa de impacto",
+      prompt: `Mapeie o impacto do nó "${nodeName}" (${nodeType}): dependências, descendentes, riscos de mudança e pontos que precisam de validação.`,
+    },
+    {
+      kind: "prompt",
+      label: "Riscos QA",
+      prompt: `Analise os riscos QA do nó "${nodeName}" (${nodeType}) com base em defeitos, runs, releases, memórias e lacunas de cobertura.`,
+    },
+    {
+      kind: "prompt",
+      label: "Gerar testes",
+      prompt: `Sugira casos de teste e, se houver rota suficiente, um spec Playwright para validar o nó "${nodeName}" (${nodeType}).`,
+    },
+    {
+      kind: "prompt",
+      label: "Memórias",
+      prompt: `Liste as memórias, decisões, regras e notas técnicas ligadas ao nó "${nodeName}" (${nodeType}) e diga o que ainda falta documentar.`,
+    },
+  ];
+}
+
+function parseTableLine(line: string) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function isTableSeparator(line: string) {
+  const compact = line.replace(/\s+/g, "").trim();
+  return /^\|?[-:|]+\|?$/.test(compact);
+}
+
+function ChatRichText({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const blocks: Array<{ type: string; value?: string; items?: string[]; rows?: string[][] }> = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const raw = lines[i] ?? "";
+    const line = raw.trim();
+
+    if (!line) {
+      blocks.push({ type: "space" });
+      continue;
+    }
+
+    if (line.startsWith("```") ) {
+      const codeLines: string[] = [];
+      i += 1;
+      while (i < lines.length && !(lines[i] ?? "").trim().startsWith("```")) {
+        codeLines.push(lines[i] ?? "");
+        i += 1;
+      }
+      blocks.push({ type: "code", value: codeLines.join("\n") });
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      blocks.push({ type: "h2", value: line.slice(3).trim() });
+      continue;
+    }
+
+    if (line.startsWith("### ")) {
+      blocks.push({ type: "h3", value: line.slice(4).trim() });
+      continue;
+    }
+
+    if (line.startsWith("> ")) {
+      blocks.push({ type: "quote", value: line.slice(2).trim() });
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      const items = [line.replace(/^[-*]\s+/, "")];
+      while (i + 1 < lines.length && /^\s*[-*]\s+/.test(lines[i + 1] ?? "")) {
+        i += 1;
+        items.push((lines[i] ?? "").trim().replace(/^[-*]\s+/, ""));
+      }
+      blocks.push({ type: "ul", items });
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(line)) {
+      const items = [line.replace(/^\d+\.\s+/, "")];
+      while (i + 1 < lines.length && /^\s*\d+\.\s+/.test(lines[i + 1] ?? "")) {
+        i += 1;
+        items.push((lines[i] ?? "").trim().replace(/^\d+\.\s+/, ""));
+      }
+      blocks.push({ type: "ol", items });
+      continue;
+    }
+
+    if (line.startsWith("|") && line.endsWith("|")) {
+      const tableLines = [line];
+      while (i + 1 < lines.length) {
+        const next = (lines[i + 1] ?? "").trim();
+        if (!(next.startsWith("|") && next.endsWith("|"))) break;
+        i += 1;
+        tableLines.push(next);
+      }
+
+      const rows = tableLines
+        .filter((tableLine) => !isTableSeparator(tableLine))
+        .map((tableLine) => parseTableLine(tableLine));
+
+      if (rows.length > 0) {
+        blocks.push({ type: "table", rows });
+        continue;
+      }
+    }
+
+    blocks.push({ type: "p", value: line });
+  }
+
+  return (
+    <div className="space-y-2">
+      {blocks.map((block, index) => {
+        if (block.type === "space") {
+          return <div key={`space-${index}`} className="h-1" />;
+        }
+
+        if (block.type === "h2") {
+          return (
+            <div key={`h2-${index}`} className="rounded-2xl border border-[rgba(239,0,1,0.18)] bg-[linear-gradient(135deg,rgba(1,24,72,0.08)_0%,rgba(239,0,1,0.08)_100%)] px-3 py-2.5 dark:border-[#ff8a8a44] dark:bg-[linear-gradient(135deg,rgba(35,85,196,0.22)_0%,rgba(239,0,1,0.2)_100%)]">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001) dark:text-[#ffb4b4]">Insight</p>
+              <p className="mt-1 text-[0.96rem] font-extrabold leading-6 tracking-[-0.015em] text-[#011848] dark:text-[#f2f7ff]">{block.value}</p>
+            </div>
+          );
+        }
+
+        if (block.type === "h3") {
+          return (
+            <p key={`h3-${index}`} className="mt-2 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-(--tc-primary,#011848) dark:text-[#d7e5ff]">
+              {block.value}
+            </p>
+          );
+        }
+
+        if (block.type === "quote") {
+          return (
+            <div key={`quote-${index}`} className="rounded-xl border-l-4 border-(--tc-accent,#ef0001) bg-[rgba(239,0,1,0.06)] px-3 py-2 text-[0.85rem] text-[#20304f] dark:bg-[rgba(239,0,1,0.14)] dark:text-[#f0f5ff]">
+              {block.value}
+            </div>
+          );
+        }
+
+        if (block.type === "ul") {
+          return (
+            <ul key={`ul-${index}`} className="space-y-1 pl-4 text-[0.9rem] text-[#20304f] dark:text-[#e6efff]">
+              {(block.items ?? []).map((item, itemIndex) => (
+                <li key={`ul-item-${itemIndex}`} className="list-disc marker:text-(--tc-accent,#ef0001)">{item}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        if (block.type === "ol") {
+          return (
+            <ol key={`ol-${index}`} className="space-y-1 pl-4 text-[0.9rem] text-[#20304f] dark:text-[#e6efff]">
+              {(block.items ?? []).map((item, itemIndex) => (
+                <li key={`ol-item-${itemIndex}`} className="list-decimal marker:font-semibold marker:text-(--tc-primary,#011848) dark:marker:text-[#c7dcff]">{item}</li>
+              ))}
+            </ol>
+          );
+        }
+
+        if (block.type === "table") {
+          const rows = block.rows ?? [];
+          const [header, ...body] = rows;
+          return (
+            <div key={`table-${index}`} className="overflow-hidden rounded-2xl border border-(--tc-border,#d7dff1) bg-[#ffffff] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-[#36507f] dark:bg-[#0f192d]">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left text-[0.82rem]">
+                  {header ? (
+                    <thead className="bg-[linear-gradient(180deg,#f6f9ff_0%,#edf3ff_100%)] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#122038_100%)]">
+                      <tr>
+                        {header.map((cell, cellIndex) => (
+                          <th key={`thead-${cellIndex}`} className="border-b border-(--tc-border,#d7dff1) px-3 py-2 font-bold text-(--tc-primary,#011848) dark:border-[#36507f] dark:text-[#d7e5ff]">
+                            {cell}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                  ) : null}
+                  <tbody>
+                    {body.map((row, rowIndex) => (
+                      <tr key={`row-${rowIndex}`} className="odd:bg-black/1.5 dark:odd:bg-white/3">
+                        {row.map((cell, cellIndex) => (
+                          <td key={`cell-${rowIndex}-${cellIndex}`} className="border-b border-(--tc-border,#eef2fb) px-3 py-2 text-[#26334f] last:border-b-0 dark:border-[#263e66] dark:text-[#e6efff]">
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        }
+
+        if (block.type === "code") {
+          return (
+            <pre key={`code-${index}`} className="overflow-x-auto rounded-xl border border-[#1f355e] bg-[#081327] px-3 py-2.5 text-[0.78rem] leading-5 text-[#d5e7ff]">
+              <code>{block.value}</code>
+            </pre>
+          );
+        }
+
+        return (
+          <p key={`p-${index}`} className="whitespace-pre-wrap text-[0.9rem] leading-6 text-[#20304f] dark:text-[#e6efff]">
+            {block.value}
+          </p>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
@@ -212,10 +453,34 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     function handleAssistantOpen(e: Event) {
       const detail = (e as CustomEvent<AssistantOpenEventDetail>).detail;
       if (!detail) return;
+      const quickActions = buildBrainQuickActions(detail);
       setBrainContext(detail);
       setOpen(true);
       if (detail.initialMessage) {
         setInput(detail.initialMessage);
+      }
+      if (quickActions?.length) {
+        const nodeName = detail.nodeLabel?.trim() || "nó selecionado";
+        setMessages((current) => {
+          const last = current[current.length - 1];
+          const alreadyLoaded =
+            last?.from === "assistant" &&
+            last.tool === "use_brain" &&
+            last.text.includes(nodeName);
+          if (alreadyLoaded) return current;
+
+          return [
+            ...current.slice(-119),
+            {
+              id: makeId("assistant"),
+              from: "assistant",
+              text: `Contexto do Brain carregado: ${nodeName}. Escolha uma análise rápida ou ajuste a pergunta no campo abaixo.`,
+              ts: Date.now(),
+              tool: "use_brain",
+              actions: quickActions,
+            },
+          ];
+        });
       }
       // Audit log fire-and-forget (falha silenciosamente)
       if (detail.source || detail.nodeId || detail.agentMode) {
@@ -242,10 +507,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
       window.removeEventListener("brain:ask-assistant", handleAssistantOpen);
     };
   }, []);
-
-  if (!assistantEnabled) return null;
-  if (!user) return null;
-  if (!can("ai", "view") || !can("ai", "use")) return null;
 
   const activeScreenLabel = assistantContext.screenLabel ?? screenContext.screenLabel;
   const hasConversation = messages.length > 0;
@@ -274,6 +535,10 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
       ];
     });
   }, [open, messages.length, user, brainContext?.nodeLabel]);
+
+  if (!assistantEnabled) return null;
+  if (!user) return null;
+  if (!can("ai", "view") || !can("ai", "use")) return null;
 
   async function pushAssistantResponse(payload: { message?: string; action?: AssistantToolAction | null }, optimisticText?: string) {
     if (sending) return;
@@ -327,6 +592,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
       const data = (await response.json().catch(() => ({}))) as AssistantReplyPayload & { error?: string };
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Sua sessão expirou. Faça login novamente para o assistente acessar o Brain.");
+        }
         throw new Error(data?.error || response.statusText || `Erro ${response.status}`);
       }
 
@@ -343,6 +611,12 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
           ts: Date.now(),
           tool: data.tool ?? null,
           actions: Array.isArray(data.actions) ? data.actions : undefined,
+          agentMeta: data.meta ? {
+            agentMode: data.meta.agentMode ?? null,
+            agentName: data.meta.agentName ?? null,
+            agentIcon: data.meta.agentIcon ?? null,
+            agentColor: data.meta.agentColor ?? null,
+          } : null,
         },
       ]);
     } catch (error) {
@@ -433,7 +707,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         <div className="flex items-end">
           {open ? (
             <div
-              className={`mr-3 flex w-[min(36rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 ${
+              className={`${styles.panelEnter} mr-3 flex w-[min(36rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 ${
                 denseViewport
                   ? "h-[min(74dvh,calc(100dvh-0.75rem))] max-h-[calc(100dvh-0.75rem)]"
                   : compactViewport
@@ -476,10 +750,14 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
 
               <div className="min-h-0 flex-1 overflow-y-auto space-y-4 px-4 py-4 bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)]">
-                {messages.map((message) => {
+                {messages.map((message, index) => {
                   const isUser = message.from === "user";
                   return (
-                    <div key={message.id} className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
+                    <div
+                      key={message.id}
+                      className={`${styles.msgEnter} flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}
+                      data-delay={Math.min(index, 10)}
+                    >
                       {!isUser ? (
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[rgba(1,24,72,0.08)] bg-[linear-gradient(135deg,#ffffff_0%,#eef3ff_62%,#fff6f8_100%)] shadow-[0_10px_24px_rgba(1,24,72,0.1)] dark:border-[#31476f] dark:bg-[linear-gradient(135deg,#13213a_0%,#182742_62%,#221729_100%)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
                           <TCLogoSpinner size="sm" />
@@ -495,11 +773,20 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                           }`}
                         >
                           {!isUser && message.tool ? (
-                            <div className="mb-2 inline-flex rounded-full border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#f7faff_0%,#fff7f8_100%)] px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-(--tc-primary,#011848) dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#241a2d_100%)] dark:text-[#d7e5ff]">
-                              {formatToolLabel(message.tool)}
+                            <div
+                              className={`${styles.badgeEnter} mb-2 inline-flex items-center gap-1 rounded-full border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#f7faff_0%,#fff7f8_100%)] px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-(--tc-primary,#011848) dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#241a2d_100%)] dark:text-[#d7e5ff]`}
+                            >
+                              {message.agentMeta?.agentIcon ? (
+                                <span className={styles.agentIcon}>{message.agentMeta.agentIcon}</span>
+                              ) : null}
+                              {message.agentMeta?.agentName ?? formatToolLabel(message.tool)}
                             </div>
                           ) : null}
-                          <p className="whitespace-pre-wrap">{message.text}</p>
+                          {isUser ? (
+                            <p className="whitespace-pre-wrap">{message.text}</p>
+                          ) : (
+                            <ChatRichText text={message.text} />
+                          )}
                         </div>
 
                         {message.actions?.length ? (
@@ -510,7 +797,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                                 type="button"
                                 onClick={() => handleAction(action)}
                                 disabled={sending}
-                                className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                                data-delay={index}
+                                className={`${styles.actionEnter} inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${
                                   action.kind === "tool"
                                     ? "border border-[rgba(1,24,72,0.12)] bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#173a88_100%)] text-white hover:bg-[linear-gradient(135deg,#132a63_0%,#214ca8_100%)]"
                                     : "border border-(--tc-border,#d7dff1) bg-[#ffffff] text-(--tc-primary,#011848) hover:border-[rgba(239,0,1,0.2)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#13213a] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4]"
@@ -550,12 +838,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                     placeholder={`Escreva o que você precisa em ${screenContext.screenLabel.toLowerCase()}...`}
                     className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : "min-h-[2.85rem] py-1.5"}`}
                   />
-                  <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : "mt-2"}`}>
-                    <span
-                      className={`font-semibold uppercase tracking-[0.24em] text-[#8b98b1] dark:text-[#94abd6] ${hasConversation ? "text-[0.65rem]" : "text-xs"}`}
-                    >
-                      Hist\u00f3rico permanente
-                    </span>
+                  <div className={`flex items-center justify-end gap-3 ${denseViewport ? "mt-1.5" : "mt-2"}`}>
                     <button
                       type="button"
                       onClick={() => void sendMessage()}
@@ -576,7 +859,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
             onClick={() => setOpen((value) => !value)}
             aria-label="Abrir assistente da plataforma"
             title="Assistente Testing Company — clique para abrir"
-            className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105"
+            className={`${styles.triggerBtn} group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)]`}
           >
             {/* spinning logo with gradient background */}
             <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,#011848_0%,#6b0000_55%,#ef0001_100%)] shadow-[0_8px_24px_rgba(1,24,72,0.4)]" />

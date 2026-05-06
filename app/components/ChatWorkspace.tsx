@@ -745,7 +745,7 @@ export default function ChatWorkspace() {
 
         <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="flex min-w-0 flex-col gap-4 rounded-[28px] border border-(--tc-border) bg-(--tc-surface) p-4 shadow-[0_20px_48px_rgba(15,23,42,0.08)]">
-            <section className="rounded-[24px] border border-(--tc-border) bg-(--tc-surface-2) p-4">
+            <section className="rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-4">
               <div className="flex items-center gap-3">
                 <UserAvatar
                   src={activeIdentity.avatarUrl}
@@ -773,7 +773,7 @@ export default function ChatWorkspace() {
               </p>
             </section>
 
-            <section className="rounded-[24px] border border-(--tc-border) bg-(--tc-surface-2) p-4">
+            <section className="rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-4">
               <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary)">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Buscar usuario</span>
                 <div className="relative">
@@ -796,7 +796,7 @@ export default function ChatWorkspace() {
               </div>
             ) : null}
 
-            <section className="rounded-[24px] border border-(--tc-border) bg-(--tc-surface-2) p-4">
+            <section className="rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-4">
               <SectionHeader
                 icon={<FiInbox size={14} />}
                 title="Recentes"
@@ -840,10 +840,10 @@ export default function ChatWorkspace() {
               </div>
             </section>
 
-            <section className="min-h-0 flex-1 rounded-[24px] border border-(--tc-border) bg-(--tc-surface-2) p-4">
+            <section className="min-h-0 flex-1 rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-4">
               <SectionHeader icon={<FiUsers size={14} />} title="Usuarios da plataforma" count={visibleContactsCount} />
 
-              <div className="max-h-[28rem] space-y-2 overflow-y-auto pr-1">
+              <div className="max-h-112 space-y-2 overflow-y-auto pr-1">
                 {contactsLoading ? (
                   <div className="rounded-[20px] border border-dashed border-(--tc-border) bg-(--tc-surface) px-4 py-5 text-sm text-(--tc-text-muted)">
                     Carregando contatos...
@@ -921,7 +921,7 @@ export default function ChatWorkspace() {
               </div>
             </section>
 
-            <section className="flex min-h-[32rem] flex-1 min-h-0 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface)">
+            <section className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface)">
               <div className="flex items-center justify-between gap-3 border-b border-(--tc-border) bg-(--tc-surface-2) px-4 py-4 sm:px-5">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">
                   <FiMessageSquare size={14} />
@@ -971,8 +971,8 @@ export default function ChatWorkspace() {
                         );
                       })
                     ) : (
-                      <div className="flex min-h-[24rem] flex-col items-center justify-center rounded-[26px] border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-6 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-[24px] border border-(--tc-border) bg-(--tc-surface)">
+                      <div className="flex min-h-96 flex-col items-center justify-center rounded-[26px] border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-6 text-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-(--tc-border) bg-(--tc-surface)">
                           <FiInbox size={24} className="text-(--tc-text-muted)" />
                         </div>
                         <h3 className="mt-4 text-xl font-bold text-(--tc-text-primary)">Abra uma conversa</h3>
@@ -984,8 +984,8 @@ export default function ChatWorkspace() {
                     <div ref={messagesEndRef} />
                   </div>
                 ) : (
-                  <div className="flex min-h-[30rem] flex-1 flex-col items-center justify-center rounded-[26px] border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-6 text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-[24px] border border-(--tc-border) bg-(--tc-surface)">
+                  <div className="flex min-h-120 flex-1 flex-col items-center justify-center rounded-[26px] border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-6 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-(--tc-border) bg-(--tc-surface)">
                       <FiUsers size={24} className="text-(--tc-text-muted)" />
                     </div>
                     <h3 className="mt-4 text-2xl font-black tracking-[-0.04em] text-(--tc-text-primary)">
@@ -1043,7 +1043,7 @@ export default function ChatWorkspace() {
                     placeholder={selectedPeerId ? `Escreva para ${selectedPeerName}...` : "Escolha um usuario para começar"}
                     rows={3}
                     disabled={!selectedPeerId || sending}
-                    className="w-full resize-none rounded-[24px] border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-4 py-4 text-sm leading-6 text-(--tc-text-primary) outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-2 focus:ring-[rgba(239,0,1,0.12)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full resize-none rounded-3xl border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-4 py-4 text-sm leading-6 text-(--tc-text-primary) outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-2 focus:ring-[rgba(239,0,1,0.12)] disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
               </div>

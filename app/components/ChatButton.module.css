@@ -1,0 +1,107 @@
+/* ─── Panel ─────────────────────────────────────────────────────────────── */
+@keyframes chatPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.panelEnter {
+  animation: chatPanelIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* ─── Messages ───────────────────────────────────────────────────────────── */
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.msgEnter {
+  animation: msgIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* ─── Tool badge ─────────────────────────────────────────────────────────── */
+@keyframes badgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.badgeEnter {
+  animation: badgeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.08s;
+}
+
+/* ─── Action buttons ─────────────────────────────────────────────────────── */
+@keyframes actionIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.actionEnter {
+  animation: actionIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger delays via data-delay attribute (0-10 for messages, 0-5 for actions) */
+.msgEnter[data-delay="1"]  { animation-delay: 38ms; }
+.msgEnter[data-delay="2"]  { animation-delay: 76ms; }
+.msgEnter[data-delay="3"]  { animation-delay: 114ms; }
+.msgEnter[data-delay="4"]  { animation-delay: 152ms; }
+.msgEnter[data-delay="5"]  { animation-delay: 190ms; }
+.msgEnter[data-delay="6"]  { animation-delay: 228ms; }
+.msgEnter[data-delay="7"]  { animation-delay: 266ms; }
+.msgEnter[data-delay="8"]  { animation-delay: 304ms; }
+.msgEnter[data-delay="9"]  { animation-delay: 342ms; }
+.msgEnter[data-delay="10"] { animation-delay: 380ms; }
+
+.actionEnter[data-delay="1"] { animation-delay: 55ms; }
+.actionEnter[data-delay="2"] { animation-delay: 110ms; }
+.actionEnter[data-delay="3"] { animation-delay: 165ms; }
+.actionEnter[data-delay="4"] { animation-delay: 220ms; }
+.actionEnter[data-delay="5"] { animation-delay: 275ms; }
+
+/* ─── Floating trigger button ────────────────────────────────────────────── */
+.triggerBtn {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.18s ease;
+}
+
+.triggerBtn:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 24px 48px rgba(1, 24, 72, 0.3);
+}
+
+.triggerBtn:active {
+  transform: scale(0.94);
+  transition-duration: 0.08s;
+}
+
+.agentIcon {
+  font-size: 0.8em;
+  line-height: 1;
+}

@@ -4,11 +4,308 @@ import { prisma } from "@/lib/prismaClient";
 import {
   searchNodes,
   getNodeMemories,
+  getNodeWithContext,
   getSubgraph,
   getGraphMetrics,
+  getRelatedMemories,
+  getNodeAncestors,
+  getNodeDescendants,
+  traceImpact,
+  findSimilarNodes,
 } from "@/lib/brain";
 import { detectAgentMode } from "@/lib/brain/agents";
 import type { AgentMode } from "@/lib/brain/agents";
+
+// ─── Snapshot de dados reais do sistema ──────────────────────────────────────
+
+type TicketSnap = {
+  id: string; code: string; title: string; status: string;
+  priority: string; type: string; companySlug: string | null;
+  createdByName: string | null; assignedToUserId: string | null;
+  createdAt: Date; updatedAt: Date;
+};
+type ReleaseSnap = {
+  id: string; slug: string; title: string; status: string;
+  app: string | null; companySlug: string | null;
+  statsPass: number; statsFail: number; statsBlocked: number; statsNotRun: number;
+  createdAt: Date;
+};
+type AccessSnap = {
+  id: string; name: string | null; email: string; jobRole: string | null;
+  status: string; accessType: string; createdAt: Date;
+};
+type SupportSnap = {
+  id: string; email: string; message: string; status: string; created_at: Date;
+};
+type CompanySnap = {
+  id: string; name: string; slug: string; status: string; active: boolean;
+  integration_mode: string | null; qase_project_code: string | null; qase_project_codes: string[];
+};
+type UserSnap = {
+  id: string; name: string; email: string; user: string | null; role: string | null;
+  status: string; active: boolean; globalRole: string | null; default_company_slug: string | null;
+  user_origin: string; lastLoginAt: Date | null;
+};
+type ApplicationSnap = {
+  id: string; name: string; slug: string; companyId: string | null; companySlug: string | null;
+  qaseProjectCode: string | null; source: string | null; active: boolean; updatedAt: Date;
+};
+type IntegrationSnap = {
+  id: string; companyId: string; type: string; config: unknown; createdAt: Date;
+};
+type ManualTestPlanSnap = {
+  id: string; companySlug: string; applicationId: string; applicationName: string;
+  applicationSlug: string; projectCode: string | null; title: string; updatedAt: Date;
+};
+type DefectSnap = {
+  id: string; title: string; description: string | null; companyId: string; releaseManualId: string | null; updatedAt: Date;
+};
+type TestRunSnap = { id: string; status: string; createdAt: Date };
+type QualityAlertSnap = {
+  id: string; companySlug: string; type: string; severity: string; message: string; timestamp: Date;
+};
+
+export type SystemSnapshot = {
+  companies?: CompanySnap[];
+  users?: UserSnap[];
+  applications?: ApplicationSnap[];
+  integrations?: IntegrationSnap[];
+  tickets: TicketSnap[];
+  releases: ReleaseSnap[];
+  manualTestPlans?: ManualTestPlanSnap[];
+  defects?: DefectSnap[];
+  testRuns?: TestRunSnap[];
+  qualityAlerts?: QualityAlertSnap[];
+  accessRequests: AccessSnap[];
+  supportRequests: SupportSnap[];
+  totalCompanies?: number;
+  totalUsers?: number;
+  totalApplications?: number;
+  totalIntegrations?: number;
+  totalTickets: number;
+  openTickets: number;
+  totalReleases: number;
+  totalManualTestPlans?: number;
+  totalDefects?: number;
+  totalTestRuns?: number;
+  totalQualityAlerts?: number;
+  recentDefects: TicketSnap[];
+  companySlug: string | null;
+  loadedAt: number;
+};
+
+/** Carrega snapshot de todos os dados reais do sistema, filtrando por empresa quando disponível */
+async function loadSystemSnapshot(companySlug?: string | null): Promise<SystemSnapshot> {
+  const companyFilter = companySlug ? { companySlug } : {};
+
+  const [tickets, releases, accessRequests, supportRequests] = await Promise.all([
+    prisma.ticket.findMany({
+      where: companyFilter,
+      orderBy: { updatedAt: "desc" },
+      take: 40,
+      select: {
+        id: true, code: true, title: true, status: true, priority: true,
+        type: true, companySlug: true, createdByName: true,
+        assignedToUserId: true, createdAt: true, updatedAt: true,
+      },
+    }).catch(() => [] as TicketSnap[]),
+
+    prisma.release.findMany({
+      where: companyFilter,
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        id: true, slug: true, title: true, status: true, app: true,
+        companySlug: true, statsPass: true, statsFail: true,
+        statsBlocked: true, statsNotRun: true, createdAt: true,
+      },
+    }).catch(() => [] as ReleaseSnap[]),
+
+    prisma.accessRequest.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        id: true, name: true, email: true, jobRole: true,
+        status: true, accessType: true, createdAt: true,
+      },
+    }).catch(() => [] as AccessSnap[]),
+
+    prisma.supportRequest.findMany({
+      orderBy: { created_at: "desc" },
+      take: 20,
+      select: {
+        id: true, email: true, message: true, status: true, created_at: true,
+      },
+    }).catch(() => [] as SupportSnap[]),
+  ]);
+
+  const openTickets = tickets.filter((t) =>
+    t.status === "backlog" || t.status === "open" || t.status === "in_progress" || t.status === "review",
+  );
+  const recentDefects = tickets.filter((t) => t.type === "bug" || t.type === "defect");
+
+  return {
+    tickets,
+    releases,
+    accessRequests,
+    supportRequests,
+    totalTickets: tickets.length,
+    openTickets: openTickets.length,
+    totalReleases: releases.length,
+    recentDefects,
+    companySlug: companySlug ?? null,
+    loadedAt: Date.now(),
+  };
+}
+
+async function loadRichSystemSnapshot(companySlug?: string | null): Promise<SystemSnapshot> {
+  const base = await loadSystemSnapshot(companySlug);
+  const companies = await prisma.company.findMany({
+    where: companySlug ? { slug: companySlug } : undefined,
+    orderBy: { updatedAt: "desc" },
+    take: companySlug ? 1 : 30,
+    select: {
+      id: true, name: true, slug: true, status: true, active: true,
+      integration_mode: true, qase_project_code: true, qase_project_codes: true,
+    },
+  }).catch(() => [] as CompanySnap[]);
+
+  const companyIds = companies.map((company) => company.id);
+  const scopedCompanyIds = companySlug && companyIds.length > 0 ? { in: companyIds } : undefined;
+  const companyIdFilter = scopedCompanyIds ? { companyId: scopedCompanyIds } : {};
+
+  const [
+    users,
+    applications,
+    integrations,
+    manualTestPlans,
+    defects,
+    testRuns,
+    qualityAlerts,
+  ] = await Promise.all([
+    prisma.user.findMany({
+      where: scopedCompanyIds ? { memberships: { some: { companyId: scopedCompanyIds } } } : undefined,
+      orderBy: { updatedAt: "desc" },
+      take: 40,
+      select: {
+        id: true, name: true, email: true, user: true, role: true,
+        status: true, active: true, globalRole: true, default_company_slug: true,
+        user_origin: true, lastLoginAt: true,
+      },
+    }).catch(() => [] as UserSnap[]),
+    prisma.application.findMany({
+      where: companySlug ? { OR: [{ companySlug }, companyIdFilter] } : undefined,
+      orderBy: { updatedAt: "desc" },
+      take: 50,
+      select: {
+        id: true, name: true, slug: true, companyId: true, companySlug: true,
+        qaseProjectCode: true, source: true, active: true, updatedAt: true,
+      },
+    }).catch(() => [] as ApplicationSnap[]),
+    prisma.companyIntegration.findMany({
+      where: scopedCompanyIds ? { companyId: scopedCompanyIds } : undefined,
+      orderBy: { createdAt: "desc" },
+      take: 40,
+      select: { id: true, companyId: true, type: true, config: true, createdAt: true },
+    }).catch(() => [] as IntegrationSnap[]),
+    prisma.manualTestPlan.findMany({
+      where: companySlug ? { companySlug } : undefined,
+      orderBy: { updatedAt: "desc" },
+      take: 30,
+      select: {
+        id: true, companySlug: true, applicationId: true, applicationName: true,
+        applicationSlug: true, projectCode: true, title: true, updatedAt: true,
+      },
+    }).catch(() => [] as ManualTestPlanSnap[]),
+    prisma.defect.findMany({
+      where: scopedCompanyIds ? { companyId: scopedCompanyIds } : undefined,
+      orderBy: { updatedAt: "desc" },
+      take: 30,
+      select: { id: true, title: true, description: true, companyId: true, releaseManualId: true, updatedAt: true },
+    }).catch(() => [] as DefectSnap[]),
+    prisma.testRun.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: { id: true, status: true, createdAt: true },
+    }).catch(() => [] as TestRunSnap[]),
+    prisma.qualityAlert.findMany({
+      where: companySlug ? { companySlug } : undefined,
+      orderBy: { timestamp: "desc" },
+      take: 30,
+      select: { id: true, companySlug: true, type: true, severity: true, message: true, timestamp: true },
+    }).catch(() => [] as QualityAlertSnap[]),
+  ]);
+
+  return {
+    ...base,
+    companies,
+    users,
+    applications,
+    integrations,
+    manualTestPlans,
+    defects,
+    testRuns,
+    qualityAlerts,
+    totalCompanies: companies.length,
+    totalUsers: users.length,
+    totalApplications: applications.length,
+    totalIntegrations: integrations.length,
+    totalManualTestPlans: manualTestPlans.length,
+    totalDefects: defects.length,
+    totalTestRuns: testRuns.length,
+    totalQualityAlerts: qualityAlerts.length,
+  };
+}
+
+function formatTicketStatus(status: string) {
+  switch (status) {
+    case "backlog": return "📬 Backlog";
+    case "open": return "📬 Aberto";
+    case "in_progress": return "⚙️ Em andamento";
+    case "review": return "👁️ Em revisão";
+    case "done": case "closed": return "✅ Concluído";
+    default: return status;
+  }
+}
+
+function formatPriority(p: string) {
+  switch (p) {
+    case "high": case "alta": return "🔴 Alta";
+    case "medium": case "media": return "🟠 Média";
+    case "low": case "baixa": return "🟢 Baixa";
+    default: return p;
+  }
+}
+
+function formatReleaseStatus(s: string) {
+  switch (s) {
+    case "APPROVED": return "✅ Aprovado";
+    case "DRAFT": return "📝 Rascunho";
+    case "REJECTED": return "❌ Rejeitado";
+    case "IN_PROGRESS": return "⚙️ Em progresso";
+    default: return s;
+  }
+}
+
+/** Resumo inline curto do estado do sistema para appender no fim das respostas */
+function snapshotInline(snap: SystemSnapshot): string {
+  const parts: string[] = [];
+  const companyNames = snap.companies?.slice(0, 3).map((company) => company.name).filter(Boolean) ?? [];
+  if (companyNames.length > 0) parts.push(`empresas: ${companyNames.join(", ")}`);
+  if (snap.openTickets > 0) parts.push(`${snap.openTickets} ticket${snap.openTickets > 1 ? "s" : ""} aberto${snap.openTickets > 1 ? "s" : ""}`);
+  if (snap.recentDefects.length > 0) parts.push(`${snap.recentDefects.length} bug${snap.recentDefects.length > 1 ? "s" : ""} ativo${snap.recentDefects.length > 1 ? "s" : ""}`);
+  if (snap.totalReleases > 0) parts.push(`${snap.totalReleases} release${snap.totalReleases > 1 ? "s" : ""} recente${snap.totalReleases > 1 ? "s" : ""}`);
+  if ((snap.totalApplications ?? 0) > 0) parts.push(`${snap.totalApplications} aplicaÃ§Ã£o${snap.totalApplications === 1 ? "" : "Ãµes"}`);
+  if ((snap.totalManualTestPlans ?? 0) > 0) parts.push(`${snap.totalManualTestPlans} plano${snap.totalManualTestPlans === 1 ? "" : "s"} de teste`);
+  const qaseIntegrations = snap.integrations?.filter((integration) => integration.type === "QASE").length ?? 0;
+  if (qaseIntegrations > 0) parts.push(`${qaseIntegrations} integraÃ§Ã£o${qaseIntegrations === 1 ? "" : "Ãµes"} Qase`);
+  else if ((snap.totalIntegrations ?? 0) > 0) parts.push(`${snap.totalIntegrations} integraÃ§Ã£o${snap.totalIntegrations === 1 ? "" : "Ãµes"}`);
+  if ((snap.totalQualityAlerts ?? 0) > 0) parts.push(`${snap.totalQualityAlerts} alerta${snap.totalQualityAlerts === 1 ? "" : "s"} de qualidade`);
+  const accessOpen = snap.accessRequests.filter((a) => a.status === "open").length;
+  if (accessOpen > 0) parts.push(`${accessOpen} solicitação${accessOpen > 1 ? "ões" : ""} de acesso pendente${accessOpen > 1 ? "s" : ""}`);
+  if (!parts.length) return "";
+  return `_No sistema agora: ${parts.join(", ")}._`;
+}
 
 // ─── Tipos de evento de stream (compatíveis com AgentView) ─────────────────
 // text-delta  → { type, text }
@@ -31,6 +328,8 @@ export type EngineInput = {
   agentMode?: AgentMode | null;
   route?: string | null;
   screenLabel?: string | null;
+  userId?: string | null;
+  actorName?: string | null;
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -54,25 +353,20 @@ async function* yieldText(text: string): AsyncGenerator<StreamEvent> {
   }
 }
 
-/**
- * Extrai o título da última resposta do assistente para referência de continuidade.
- * Retorna null se for a primeira mensagem da conversa.
- */
-function extractPriorContext(messages?: Array<{ role: "user" | "assistant"; content: string }>): string | null {
-  if (!messages || messages.length < 2) return null;
-  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
-  if (!lastAssistant) return null;
-  const firstLine = lastAssistant.content.split("\n")[0].replace(/^#+\s*/, "").trim();
-  return firstLine.slice(0, 120) || null;
-}
-
 /** Tenta extrair uma rota de URL da descrição ou label do nó. */
 function extractRouteFromNode(
-  node: { label: string; description?: string | null } | null,
+  node: { label: string; description?: string | null; metadata?: unknown } | null,
   fallback?: string | null,
 ): string | null {
   if (fallback && fallback !== "/" && fallback !== "") return fallback;
   if (!node) return null;
+  if (node.metadata && typeof node.metadata === "object" && !Array.isArray(node.metadata)) {
+    const metadata = node.metadata as Record<string, unknown>;
+    for (const key of ["route", "path", "url", "href"]) {
+      const value = metadata[key];
+      if (typeof value === "string" && value.startsWith("/")) return value;
+    }
+  }
   const haystack = `${node.label} ${node.description ?? ""}`;
   const match = haystack.match(/(?:rota|route|path|url|href)[:\s]+([/][^\s,)'"]+)/i)
     ?? haystack.match(/([/][a-z][a-z0-9/-]+)/i);
@@ -83,7 +377,10 @@ function isCasualConversation(question: string) {
   const n = question.trim().toLowerCase();
   if (!n) return true;
 
-  const technicalTerms = /(ticket|chamado|bug|erro|falha|defect|playwright|teste|testes|spec|release|deploy|api|endpoint|permiss|acesso|m[ée]trica|dashboard|empresa|usu[áa]rio|node|n[oó])/;
+  // Perguntas sobre capacidades do agente → tratar como casual (tem handler próprio)
+  if (/o que (voc[eê]|vc) (pode|faz|consegue|sabe)\b/.test(n)) return true;
+
+  const technicalTerms = /(ticket|chamado|bug|erro|falha|defect|playwright|teste|testes|spec|release|deploy|api|endpoint|permiss|acesso|m[ée]trica|dashboard|empresa|usu[áa]rio|node|n[oó]|brain|mem[oó]ria|decis[aã]o|regra|cobertura|risco|audit)/;
   if (technicalTerms.test(n)) return false;
 
   const casualPatterns = [
@@ -146,8 +443,22 @@ function buildHumanContinuationReply(
   const previousTopic = extractPreviousUserTopic(messages, question);
   const label = screenLabel?.trim() ? ` em ${screenLabel}` : "";
 
+  // Continuação explícita com tópico anterior
   if (/^(sim|isso|ok|blz|beleza|fechou|pode|continua|continuar)\b/.test(n) && previousTopic) {
     return `Perfeito, continuando sobre "${previousTopic}"${label}. Quer que eu siga com resumo rápido ou já com ação prática?`;
+  }
+
+  // Pedido de ajuda com contexto de tela
+  if (/^(me ajuda|pode ajudar|preciso de ajuda|ajuda|o que (eu|vc|você) (pode|conseg))\b/.test(n)) {
+    if (screenLabel?.trim()) {
+      return `Claro. Estou na tela **${screenLabel}** com você. Me diz o que quer resolver — análise QA, debug, gerar teste ou consultar memórias do Brain?`;
+    }
+    return `Claro. Me diz em uma frase o que quer resolver e eu vou direto ao ponto — análise, debug, spec ou memórias.`;
+  }
+
+  // Pergunta sobre o que o agente pode fazer
+  if (/o que (voc[eê]|vc) (pode|faz|consegue|sabe)\b/.test(n)) {
+    return `Sou um assistente interno especializado no sistema. Posso:\n- **QA:** analisar cobertura, risco e defeitos de um nó no Brain\n- **Debug:** rastrear exceções, logs de auditoria e evidências de falha\n- **Playwright:** gerar specs de teste E2E baseados no Brain\n- **Memory:** consultar decisões, regras e padrões documentados\n\nSó me diz o nó ou o que está acontecendo.`;
   }
 
   return buildCasualReply(question, screenLabel);
@@ -183,6 +494,145 @@ function buildLearningQuery(
   if (screenLabel?.trim()) parts.push(`contexto de tela: ${screenLabel.trim()}`);
   if (topics.length) parts.push(`continuidade da conversa: ${topics.reverse().join(" | ")}`);
   return parts.join(" ; ");
+}
+
+type FocusNode = {
+  id: string;
+  label: string;
+  type: string;
+  description?: string | null;
+  metadata?: unknown;
+};
+
+type FocusMemory = {
+  id: string;
+  memoryType: string;
+  title: string;
+  summary: string;
+  importance: number;
+};
+
+type FocusNodeContext = {
+  node: FocusNode;
+  neighbors: FocusNode[];
+  outgoingCount: number;
+  incomingCount: number;
+  subgraphNodes: FocusNode[];
+  defects: FocusNode[];
+  testRuns: FocusNode[];
+  releases: FocusNode[];
+  tickets: FocusNode[];
+  modules: FocusNode[];
+  screens: FocusNode[];
+  applications: FocusNode[];
+  directMemories: FocusMemory[];
+  memories: FocusMemory[];
+  ancestors: FocusNode[];
+  descendants: FocusNode[];
+  impactedNodes: FocusNode[];
+  similarNodes: FocusNode[];
+  edgeTypes: string[];
+};
+
+async function safeLoad<T>(loader: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await loader();
+  } catch {
+    return fallback;
+  }
+}
+
+function dedupeById<T extends { id: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const item of items) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    result.push(item);
+  }
+  return result;
+}
+
+function compactNode(node: FocusNode): FocusNode {
+  return {
+    id: node.id,
+    label: node.label,
+    type: node.type,
+    description: node.description ?? null,
+    metadata: node.metadata ?? null,
+  };
+}
+
+function formatNodeNames(nodes: FocusNode[], limit = 5) {
+  if (nodes.length === 0) return "nenhum";
+  const names = nodes.slice(0, limit).map((node) => `${node.label} (${node.type})`);
+  const suffix = nodes.length > limit ? ` e mais ${nodes.length - limit}` : "";
+  return `${names.join(", ")}${suffix}`;
+}
+
+function summarizeTypes(nodes: FocusNode[]) {
+  if (nodes.length === 0) return "nenhum";
+  const counts = new Map<string, number>();
+  for (const node of nodes) counts.set(node.type, (counts.get(node.type) ?? 0) + 1);
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .slice(0, 8)
+    .map(([type, count]) => `${type}: ${count}`)
+    .join(" | ");
+}
+
+async function loadFocusNodeContext(nodeId: string): Promise<FocusNodeContext | null> {
+  const fallbackGraph = { nodes: [] as FocusNode[], edges: [] as Array<{ type: string }> };
+
+  const context = await safeLoad(() => getNodeWithContext(nodeId, 2), null);
+  const node = context?.node ?? (await safeLoad(() => prisma.brainNode.findUnique({ where: { id: nodeId } }), null));
+  if (!node) return null;
+
+  const [subgraph, directMemories, relatedMemories, ancestors, descendants, impact, similarNodes] = await Promise.all([
+    safeLoad(() => getSubgraph(nodeId, 2), fallbackGraph),
+    safeLoad(() => getNodeMemories(nodeId), [] as FocusMemory[]),
+    safeLoad(() => getRelatedMemories(nodeId, 2), [] as FocusMemory[]),
+    safeLoad(() => getNodeAncestors(nodeId), [] as FocusNode[]),
+    safeLoad(() => getNodeDescendants(nodeId), [] as FocusNode[]),
+    safeLoad(async () => {
+      const value = await traceImpact(nodeId, 2);
+      return {
+        impactedNodes: value.impactedNodes.map((entry) => compactNode(entry as FocusNode)),
+        paths: value.paths,
+      };
+    }, { impactedNodes: [] as FocusNode[], paths: [] as unknown[] }),
+    safeLoad(() => findSimilarNodes(nodeId, 8), [] as FocusNode[]),
+  ]);
+
+  const subgraphNodes = dedupeById(
+    subgraph.nodes
+      .filter((entry) => entry.id !== nodeId)
+      .map((entry) => compactNode(entry as FocusNode)),
+  );
+  const memories = dedupeById([...(directMemories as FocusMemory[]), ...(relatedMemories as FocusMemory[])])
+    .sort((left, right) => right.importance - left.importance);
+
+  return {
+    node: compactNode(node as FocusNode),
+    neighbors: (context?.neighbors ?? []).map((entry) => compactNode(entry as FocusNode)),
+    outgoingCount: context?.outgoing.length ?? 0,
+    incomingCount: context?.incoming.length ?? 0,
+    subgraphNodes,
+    defects: subgraphNodes.filter((entry) => entry.type === "Defect"),
+    testRuns: subgraphNodes.filter((entry) => entry.type === "TestRun"),
+    releases: subgraphNodes.filter((entry) => entry.type === "Release"),
+    tickets: subgraphNodes.filter((entry) => entry.type === "Ticket"),
+    modules: subgraphNodes.filter((entry) => entry.type === "Module"),
+    screens: subgraphNodes.filter((entry) => entry.type === "Screen"),
+    applications: subgraphNodes.filter((entry) => entry.type === "Application"),
+    directMemories: (directMemories as FocusMemory[]).sort((left, right) => right.importance - left.importance),
+    memories,
+    ancestors: (ancestors as FocusNode[]).map(compactNode),
+    descendants: (descendants as FocusNode[]).map(compactNode),
+    impactedNodes: impact.impactedNodes,
+    similarNodes: (similarNodes as FocusNode[]).map(compactNode),
+    edgeTypes: [...new Set(subgraph.edges.map((edge) => edge.type).filter(Boolean))],
+  };
 }
 
 function buildHumanizedFlowIntro(
@@ -283,18 +733,23 @@ export class InternalBrainEngine {
           ? input.agentMode
           : detectAgentMode(question);
 
+      // Carrega snapshot real do sistema (tickets, releases, requests)
+      const systemSnapshot = await loadRichSystemSnapshot(input.companySlug).catch(
+        () => null,
+      );
+
       switch (agentMode) {
         case "qa":
-          yield* this.runQA({ ...input, question });
+          yield* this.runQA({ ...input, question }, systemSnapshot);
           break;
         case "debug":
-          yield* this.runDebug({ ...input, question });
+          yield* this.runDebug({ ...input, question }, systemSnapshot);
           break;
         case "playwright":
-          yield* this.runPlaywright({ ...input, question });
+          yield* this.runPlaywright({ ...input, question }, systemSnapshot);
           break;
         case "memory":
-          yield* this.runMemory({ ...input, question });
+          yield* this.runMemory({ ...input, question }, systemSnapshot);
           break;
       }
     } catch (err) {
@@ -303,10 +758,9 @@ export class InternalBrainEngine {
   }
 
   // ─── QA Agent ─────────────────────────────────────────────────────────────
-  private async *runQA(input: EngineInput & { question: string }): AsyncGenerator<StreamEvent> {
+  private async *runQA(input: EngineInput & { question: string }, snap: SystemSnapshot | null): AsyncGenerator<StreamEvent> {
     const toolId = makeId("search_brain");
     const learningQuery = buildLearningQuery(input.question, input.messages, input.screenLabel);
-    const flowIntro = buildHumanizedFlowIntro(input.question, input.messages, input.screenLabel);
 
     yield { type: "tool-input-start", id: toolId, toolName: "search_brain" };
     yield { type: "tool-call", toolCallId: toolId, toolName: "search_brain", input: { query: learningQuery } };
@@ -316,27 +770,37 @@ export class InternalBrainEngine {
       getGraphMetrics(),
     ]);
 
-    let focusNode: { id: string; label: string; type: string; description?: string | null } | null = null;
+    let focusContext: FocusNodeContext | null = null;
+    let focusNode: FocusNode | null = null;
     let defects: Array<{ label: string; description?: string | null }> = [];
     let testRuns: Array<{ label: string; description?: string | null }> = [];
     let releases: Array<{ label: string }> = [];
     let memories: Array<{ memoryType: string; title: string; summary: string; importance: number }> = [];
 
     if (input.nodeId) {
-      focusNode = await prisma.brainNode.findUnique({ where: { id: input.nodeId } });
-      if (focusNode) {
-        const sub = await getSubgraph(input.nodeId, 2);
-        defects = sub.nodes.filter((n) => n.type === "Defect");
-        testRuns = sub.nodes.filter((n) => n.type === "TestRun");
-        releases = sub.nodes.filter((n) => n.type === "Release");
-        memories = await getNodeMemories(input.nodeId);
+      focusContext = await loadFocusNodeContext(input.nodeId);
+      if (focusContext) {
+        focusNode = focusContext.node;
+        defects = focusContext.defects;
+        testRuns = focusContext.testRuns;
+        releases = focusContext.releases;
+        memories = focusContext.memories;
       }
     }
 
     yield {
       type: "tool-result",
       toolCallId: toolId,
-      output: { found: searchResults.length, defects: defects.length, testRuns: testRuns.length, releases: releases.length, memories: memories.length },
+      output: {
+        found: searchResults.length,
+        defects: defects.length,
+        testRuns: testRuns.length,
+        releases: releases.length,
+        memories: memories.length,
+        neighbors: focusContext?.neighbors.length ?? 0,
+        impactedNodes: focusContext?.impactedNodes.length ?? 0,
+        relatedNodes: focusContext?.subgraphNodes.length ?? 0,
+      },
     };
 
     if (focusNode) {
@@ -353,121 +817,127 @@ export class InternalBrainEngine {
     }
 
     let resp = "";
-    const priorCtx = extractPriorContext(input.messages);
 
     if (focusNode) {
       const criticalMems = memories.filter((m) => m.importance >= 7);
       const otherMems = memories.filter((m) => m.importance < 7);
       const defectRatio = defects.length / Math.max(1, testRuns.length);
+      const coverageScore =
+        testRuns.length > 0 ? Math.min(100, Math.round((testRuns.length / Math.max(1, releases.length || 1)) * 20)) : 0;
+      const riskLabel =
+        defects.length > 5 || defectRatio > 3 ? "🔴 alto"
+        : defects.length > 2 || defectRatio > 1.5 ? "🟡 médio"
+        : testRuns.length === 0 ? "🟠 indefinido (sem cobertura)"
+        : "🟢 baixo";
 
-      const riskLevel =
-        defects.length > 5 || defectRatio > 3
-          ? { label: "🔴 Alto", note: "Volume crítico de defeitos — intervenção imediata recomendada." }
-          : defects.length > 2 || defectRatio > 1.5
-            ? { label: "🟡 Médio", note: "Defeitos presentes — monitorar e planejar correções." }
-            : testRuns.length === 0
-              ? { label: "🟠 Indefinido", note: "Sem execuções de teste — não é possível afirmar estabilidade." }
-              : { label: "🟢 Baixo", note: "Cobertura adequada para o volume de defeitos." };
+      const descNote = focusNode.description ? ` — ${focusNode.description.slice(0, 120)}` : "";
+      resp += `**${focusNode.label}** (${focusNode.type})${descNote}.\n\n`;
 
-      resp += `## Análise QA — ${focusNode.label}\n`;
-      resp += `${flowIntro}\n`;
-      if (priorCtx) resp += `_Continuando a partir de: "${priorCtx}"_\n`;
-      resp += `**Tipo:** ${focusNode.type} | **Risco:** ${riskLevel.label}\n\n`;
-      if (focusNode.description) resp += `> ${focusNode.description}\n\n`;
-
-      // ── Seção 1: O que encontrei ──────────────────────────────────────────
-      resp += `### 📊 O que encontrei\n`;
-      resp += `- **Defeitos:** ${defects.length === 0 ? "nenhum no subgrafo (profundidade 2)" : `${defects.length} registrado(s)`}\n`;
-      resp += `- **Execuções de teste:** ${testRuns.length === 0 ? "nenhuma" : `${testRuns.length} TestRun(s)`}\n`;
-      resp += `- **Releases:** ${releases.length === 0 ? "nenhuma" : `${releases.length} release(s)`}\n`;
-      resp += `- **Memórias:** ${
-        memories.length === 0
-          ? "nenhuma — nó sem histórico documentado"
-          : `${memories.length} (${criticalMems.length} crítica(s) / ${otherMems.length} de contexto)`
-      }\n\n`;
-
-      // ── Seção 2: Diagnóstico ──────────────────────────────────────────────
-      resp += `### 🩺 Diagnóstico\n`;
-      resp += `${riskLevel.note}\n`;
-      if (defects.length > 0 && testRuns.length > 0) {
-        resp += `Ratio defeitos/execuções: **${defectRatio.toFixed(1)}** — ${defectRatio > 2 ? "alto, cobertura insuficiente para o volume de problemas" : "aceitável"}\n`;
+      // Contexto estrutural no grafo
+      if (focusContext) {
+        const structParts: string[] = [];
+        if (focusContext.ancestors.length > 0) structParts.push(`pertence a ${formatNodeNames(focusContext.ancestors, 2)}`);
+        if (focusContext.applications.length > 0) structParts.push(`app: ${focusContext.applications[0].label}`);
+        if (focusContext.modules.length > 0) structParts.push(`módulos: ${focusContext.modules.slice(0, 2).map((m) => m.label).join(", ")}`);
+        if (focusContext.screens.length > 0) structParts.push(`telas: ${focusContext.screens.slice(0, 2).map((s) => s.label).join(", ")}`);
+        if (focusContext.neighbors.length > 0) structParts.push(`${focusContext.neighbors.length} vizinho${focusContext.neighbors.length > 1 ? "s" : ""} no grafo`);
+        if (structParts.length > 0) resp += `_Contexto: ${structParts.join(" | ")}._\n\n`;
       }
-      if (releases.length > 0 && testRuns.length === 0) {
-        resp += `⚠️ Existem ${releases.length} release(s) mas nenhuma execução de teste registrada — alto risco de regressão não detectada.\n`;
+
+      // Cobertura e risco
+      if (testRuns.length === 0 && releases.length > 0) {
+        resp += `Tem ${releases.length} release${releases.length > 1 ? "s" : ""} mas nenhuma execução de teste registrada — risco direto de regressão não detectada. Risco: **${riskLabel}**.\n\n`;
+      } else if (testRuns.length === 0) {
+        resp += `Sem execuções de teste ainda. Risco: **${riskLabel}** — sem cobertura não consigo afirmar estabilidade.\n\n`;
+      } else {
+        resp += `${testRuns.length} run${testRuns.length > 1 ? "s" : ""} de teste, ${defects.length === 0 ? "nenhum defeito" : `${defects.length} defeito${defects.length > 1 ? "s" : ""} ativo${defects.length > 1 ? "s" : ""}`} — risco **${riskLabel}**, score de cobertura estimado: **${coverageScore}/100**.\n\n`;
+        if (testRuns.length > 0) {
+          resp += `Runs: ${testRuns.slice(0, 4).map((t) => t.label).join(", ")}${testRuns.length > 4 ? ` e mais ${testRuns.length - 4}` : ""}.\n\n`;
+        }
       }
-      resp += "\n";
 
-      // ── Seção 3: Evidências ───────────────────────────────────────────────
-      resp += `### 📋 Evidências\n`;
-
+      // Defeitos listados
       if (defects.length > 0) {
-        resp += `**Defeitos (${defects.length}):**\n`;
-        defects.slice(0, 6).forEach((d) => {
-          resp += `- **${d.label}**`;
-          if (d.description) resp += ` — _${d.description.slice(0, 140)}_`;
+        if (defects.length === 1) {
+          resp += `Defeito: **${defects[0].label}**${defects[0].description ? ` — "${defects[0].description.slice(0, 150)}"` : ""}.\n\n`;
+        } else {
+          resp += `${defects.length} defeito${defects.length > 1 ? "s" : ""} no subgrafo:\n`;
+          defects.slice(0, 6).forEach((d) => {
+            resp += `- **${d.label}**${d.description ? ` — ${d.description.slice(0, 120)}` : ""}\n`;
+          });
+          if (defects.length > 6) resp += `_...e mais ${defects.length - 6} não listados._\n`;
           resp += "\n";
-        });
-        if (defects.length > 6) resp += `_...e mais ${defects.length - 6} defeito(s) no grafo._\n`;
-        resp += "\n";
-      } else {
-        resp += `**Defeitos:** nenhum registrado neste nó.\n\n`;
+        }
       }
 
-      if (testRuns.length > 0) {
-        resp += `**Execuções de teste (${testRuns.length}):**\n`;
-        testRuns.slice(0, 5).forEach((r) => { resp += `- ${r.label}\n`; });
-        if (testRuns.length > 5) resp += `_...e mais ${testRuns.length - 5} run(s)._\n`;
-        resp += "\n";
-      } else {
-        resp += `**Execuções de teste:** nenhuma encontrada.\n\n`;
-      }
-
+      // Releases conectadas
       if (releases.length > 0) {
-        resp += `**Releases (${releases.length}):**\n`;
-        releases.slice(0, 5).forEach((r) => { resp += `- ${r.label}\n`; });
-        resp += "\n";
+        resp += `Releases conectadas (${releases.length}): ${releases.slice(0, 4).map((r) => r.label).join(", ")}${releases.length > 4 ? ` e mais ${releases.length - 4}` : ""}.\n\n`;
       }
 
+      // Memórias críticas
       if (criticalMems.length > 0) {
-        resp += `**Memórias críticas (${criticalMems.length}):**\n`;
-        criticalMems.slice(0, 4).forEach((m) => {
-          resp += `- **[${m.memoryType}] ${m.title}** _(${m.importance}/10)_\n  > ${m.summary.slice(0, 180)}\n`;
-        });
-        resp += "\n";
+        if (criticalMems.length === 1) {
+          resp += `Memória crítica: **[${criticalMems[0].memoryType}] ${criticalMems[0].title}** _(${criticalMems[0].importance}/10)_\n> ${criticalMems[0].summary.slice(0, 220)}\n\n`;
+        } else {
+          resp += `${criticalMems.length} memórias críticas:\n`;
+          criticalMems.slice(0, 4).forEach((m) => {
+            resp += `- **[${m.memoryType}] ${m.title}** _(${m.importance}/10)_ — ${m.summary.slice(0, 150)}\n`;
+          });
+          if (criticalMems.length > 4) resp += `_...e mais ${criticalMems.length - 4}._\n`;
+          resp += "\n";
+        }
       }
+
+      // Memórias de contexto
       if (otherMems.length > 0) {
-        resp += `**Memórias de contexto (${otherMems.length}):**\n`;
+        resp += `Contexto documentado (${otherMems.length} memória${otherMems.length > 1 ? "s" : ""}):\n`;
         otherMems.slice(0, 3).forEach((m) => {
-          resp += `- **[${m.memoryType}]** ${m.title} _(${m.importance}/10)_: ${m.summary.slice(0, 100)}\n`;
+          resp += `- **[${m.memoryType}] ${m.title}** _(${m.importance}/10)_ — ${m.summary.slice(0, 130)}\n`;
         });
+        if (otherMems.length > 3) resp += `_...e mais ${otherMems.length - 3}._\n`;
         resp += "\n";
       }
 
-      // ── Seção 4: Recomendações ────────────────────────────────────────────
-      resp += `### 💡 Recomendações\n`;
-      const recs: string[] = [];
-      if (defects.length === 0 && testRuns.length > 0)
-        recs.push("✅ Nenhum defeito encontrado — módulo aparentemente saudável. Manter cadência.");
-      if (defects.length > 3)
-        recs.push(`⚠️ ${defects.length} defeitos ativos — priorize triagem pelos mais recentes.`);
-      if (testRuns.length === 0)
-        recs.push("🚨 Sem cobertura de testes — crie suite mínima para este módulo.");
-      if (releases.length > 0 && testRuns.length === 0)
-        recs.push("🚨 Releases sem validação de testes — risco direto de regressão em produção.");
-      if (defectRatio > 2 && testRuns.length > 0)
-        recs.push(`⚠️ Ratio ${defectRatio.toFixed(1)} defeitos/run — adicione mais casos de teste para cobrir os problemas existentes.`);
-      if (memories.length === 0)
-        recs.push("📝 Sem memórias — documente decisões e regras críticas deste módulo no Brain.");
-      if (recs.length === 0) recs.push("Nenhuma recomendação crítica no momento.");
-      recs.forEach((r) => { resp += `${r}\n`; });
-      resp += "\n";
+      if (memories.length === 0) {
+        resp += `Nenhuma memória documentada neste nó — recomendo ao menos uma \`DECISION\` ou \`RULE\` para dar contexto ao Brain.\n\n`;
+      }
 
-      // ── Seção 5: Próximos passos ──────────────────────────────────────────
-      resp += `### ⏭️ Próximos passos\n`;
-      if (defects.length > 0) resp += `1. Revise os ${defects.length} defeito(s) listados e classifique por severidade\n`;
-      if (testRuns.length === 0) resp += `${defects.length > 0 ? 2 : 1}. Crie uma suite de testes mínima para este módulo\n`;
-      if (memories.length === 0) resp += `- Registre ao menos uma memória \`RULE\` ou \`DECISION\` para documentar o que sabe sobre este nó\n`;
-      resp += `- Use "Gerar teste Playwright" para obter um spec baseado neste contexto\n`;
+      // Nós similares — comparação de padrão de risco
+      if (focusContext && focusContext.similarNodes.length > 0) {
+        resp += `Nós similares para comparação: ${formatNodeNames(focusContext.similarNodes, 3)}.\n\n`;
+      }
+
+      // Impacto
+      if (focusContext && focusContext.impactedNodes.length > 0) {
+        resp += `Impacto mapeado em ${focusContext.impactedNodes.length} nó${focusContext.impactedNodes.length > 1 ? "s" : ""}: ${formatNodeNames(focusContext.impactedNodes, 4)}.\n\n`;
+      }
+
+      // Tickets reais do sistema relacionados a este nó
+      if (snap) {
+        const firstWord = focusNode.label.toLowerCase().split(/\s+/)[0];
+        const allWords = focusNode.label.toLowerCase().split(/\s+/).filter((w) => w.length > 4);
+        const relatedTickets = snap.tickets
+          .filter((t) => {
+            const title = t.title.toLowerCase();
+            return title.includes(firstWord) || allWords.some((w) => title.includes(w));
+          })
+          .slice(0, 4);
+        if (relatedTickets.length > 0) {
+          resp += `Tickets no sistema relacionados: ${relatedTickets.map((t) => `[${t.code}] ${t.title} (${formatTicketStatus(t.status)})`).join("; ")}.\n\n`;
+        }
+      }
+
+      // Recomendação direta
+      if (defects.length > 3) {
+        resp += `**Ação:** triage imediata nos ${defects.length} defeitos — priorize pelos de alta severidade e verifique quais têm release associada.`;
+      } else if (testRuns.length === 0) {
+        resp += `**Ação:** crie uma suite mínima antes do próximo deploy. Use o agente Playwright para gerar um spec baseado neste nó.`;
+      } else if (defects.length === 0 && testRuns.length > 0) {
+        resp += `Módulo aparentemente saudável (score ${coverageScore}/100). Mantenha a cadência e documente decisões como memórias \`DECISION\`.`;
+      } else {
+        resp += `**Ação:** revise os ${defects.length} defeito${defects.length > 1 ? "s" : ""} e atualize o status. Se algum foi corrigido, documente a solução como memória \`DECISION\`.`;
+      }
 
     } else if (searchResults.length > 0) {
       const byType: Record<string, typeof searchResults> = {};
@@ -476,74 +946,79 @@ export class InternalBrainEngine {
         byType[node.type].push(node);
       }
 
-      resp += `## QA — "${input.question}"\n`;
-      resp += `${flowIntro}\n`;
-      if (priorCtx) resp += `_Continuando a partir de: "${priorCtx}"_\n`;
-      resp += `\n`;
-      resp += `**Brain:** ${metrics.nodeCount} nós | ${metrics.edgeCount} conexões | ${metrics.memoryCount} memórias\n\n`;
-
-      resp += `### 📊 O que encontrei\n`;
-      resp += `- ${searchResults.length} nó(s) relacionado(s) à query\n`;
-      resp += `- Tipos: ${Object.keys(byType).join(", ")}\n\n`;
+      resp += `Busquei **"${input.question}"** no Brain e encontrei ${searchResults.length} nó${searchResults.length > 1 ? "s" : ""} relacionado${searchResults.length > 1 ? "s" : ""}.\n\n`;
+      resp += `_Brain: ${metrics.nodeCount} nós, ${metrics.edgeCount} conexões, ${metrics.memoryCount} memórias registradas._\n\n`;
 
       for (const [type, nodes] of Object.entries(byType)) {
         resp += `**${type} (${nodes.length}):**\n`;
-        nodes.slice(0, 4).forEach((node) => {
-          resp += `- **${node.label}**`;
-          if (node.description) resp += ` — ${node.description.slice(0, 120)}`;
-          resp += "\n";
+        nodes.slice(0, 5).forEach((node) => {
+          resp += `- **${node.label}**${node.description ? ` — ${node.description.slice(0, 140)}` : ""}\n`;
         });
+        if (nodes.length > 5) resp += `_...e mais ${nodes.length - 5}._\n`;
         resp += "\n";
       }
 
-      const hasDefects = byType["Defect"]?.length > 0;
-      const hasTestRuns = byType["TestRun"]?.length > 0;
-      resp += `### 🩺 Diagnóstico\n`;
-      if (hasDefects && !hasTestRuns)
-        resp += "🚨 Defeitos encontrados sem execuções de teste visíveis — selecione um nó no grafo para análise detalhada.\n";
-      else if (hasDefects && hasTestRuns)
-        resp += "🟡 Defeitos e execuções presentes — selecione um nó específico para ver risco por módulo.\n";
-      else
-        resp += "Selecione um nó no Brain para análise detalhada de cobertura e risco.\n";
+      const hasDefects = (byType["Defect"]?.length ?? 0) > 0;
+      const hasTestRuns = (byType["TestRun"]?.length ?? 0) > 0;
+      const hasReleases = (byType["Release"]?.length ?? 0) > 0;
+
+      if (hasDefects && !hasTestRuns) {
+        resp += `${byType["Defect"].length} defeito${byType["Defect"].length > 1 ? "s" : ""} sem execuções de teste visíveis — risco de cobertura. Selecione um nó para análise detalhada.`;
+      } else if (hasDefects && hasTestRuns) {
+        const ratio = (byType["Defect"].length / byType["TestRun"].length).toFixed(1);
+        resp += `Ratio defeitos/runs: **${ratio}** — ${parseFloat(ratio) > 2 ? "alto, requer atenção" : parseFloat(ratio) > 1 ? "moderado" : "dentro do esperado"}. Selecione um nó para diagnóstico completo.`;
+      } else if (hasReleases) {
+        resp += `${byType["Release"].length} release${byType["Release"].length > 1 ? "s" : ""} encontrada${byType["Release"].length > 1 ? "s" : ""}. Selecione uma para ver métricas pass/fail detalhadas.`;
+      } else {
+        resp += `Selecione um nó no Brain para ver cobertura, defeitos e risco detalhado.`;
+      }
+
+      if (snap && snap.openTickets > 0) {
+        resp += `\n\n_Sistema agora: ${snap.openTickets} ticket${snap.openTickets > 1 ? "s" : ""} aberto${snap.openTickets > 1 ? "s" : ""}, ${snap.recentDefects.length} bug${snap.recentDefects.length > 1 ? "s" : ""} ativo${snap.recentDefects.length > 1 ? "s" : ""}._`;
+      }
     } else {
-      resp += `## QA — sem dados\n\n`;
-      resp += `${flowIntro}\n\n`;
-      resp += `### 📊 O que encontrei\n`;
-      resp += `- Busca por "${input.question}" retornou **0 nós** no Brain\n`;
-      resp += `- Brain atual: ${metrics.nodeCount} nós, ${metrics.edgeCount} conexões\n\n`;
-      resp += `### 🩺 Diagnóstico\nNão há dados suficientes para análise. O Brain pode não ter sido sincronizado para esta empresa ou query.\n\n`;
-      resp += `### ⏭️ Próximos passos\n`;
-      resp += `- Selecione um nó no grafo e clique em "Analisar riscos"\n`;
-      resp += `- Sincronize via \`/api/brain/sync\`\n`;
-      resp += `- Verifique se a empresa está cadastrada no Brain\n`;
+      resp += `Busquei **"${input.question}"** mas o Brain não retornou nós correspondentes.\n\n`;
+      resp += `Brain atual: ${metrics.nodeCount} nós, ${metrics.edgeCount} conexões, ${metrics.memoryCount} memórias.\n\n`;
+
+      if (snap) {
+        const openDefects = snap.recentDefects.filter((d) => d.status !== "done" && d.status !== "closed");
+        if (openDefects.length > 0) {
+          resp += `Bugs abertos no sistema: ${openDefects.slice(0, 3).map((d) => `[${d.code}] ${d.title}`).join("; ")}.\n\n`;
+        }
+      }
+
+      resp += `Se o sistema está cadastrado, tente sincronizar via \`/api/brain/sync\` ou selecione um nó diretamente no grafo.`;
     }
 
+    if (snap) {
+      const inline = snapshotInline(snap);
+      if (inline) resp += `\n\n${inline}`;
+    }
     yield* yieldText(adaptResponseTone(resp, input.question, "qa"));
   }
 
   // ─── Debug Agent ──────────────────────────────────────────────────────────
-  private async *runDebug(input: EngineInput & { question: string }): AsyncGenerator<StreamEvent> {
+  private async *runDebug(input: EngineInput & { question: string }, snap: SystemSnapshot | null): AsyncGenerator<StreamEvent> {
     const toolId = makeId("search_brain");
     const learningQuery = buildLearningQuery(input.question, input.messages, input.screenLabel);
-    const flowIntro = buildHumanizedFlowIntro(input.question, input.messages, input.screenLabel);
 
     yield { type: "tool-input-start", id: toolId, toolName: "search_brain" };
     yield { type: "tool-call", toolCallId: toolId, toolName: "search_brain", input: { query: learningQuery, scope: "debug" } };
 
     const searchResults = await searchNodes({ query: learningQuery, limit: 10 });
 
-    let focusNode: { id: string; label: string; type: string; description?: string | null } | null = null;
+    let focusContext: FocusNodeContext | null = null;
+    let focusNode: FocusNode | null = null;
     let defects: Array<{ label: string; description?: string | null }> = [];
     let exceptions: Array<{ memoryType: string; title: string; summary: string }> = [];
     let recentAudit: Array<{ action: string; entityType?: string | null; createdAt: Date }> = [];
 
     if (input.nodeId) {
-      focusNode = await prisma.brainNode.findUnique({ where: { id: input.nodeId } });
-      if (focusNode) {
-        const sub = await getSubgraph(input.nodeId, 2);
-        defects = sub.nodes.filter((n) => n.type === "Defect");
-        const allMem = await getNodeMemories(input.nodeId);
-        exceptions = allMem.filter(
+      focusContext = await loadFocusNodeContext(input.nodeId);
+      if (focusContext) {
+        focusNode = focusContext.node;
+        defects = focusContext.defects;
+        exceptions = focusContext.memories.filter(
           (m) => m.memoryType === "EXCEPTION" || m.memoryType === "TECHNICAL_NOTE",
         );
         recentAudit = await prisma.brainAuditLog.findMany({
@@ -558,7 +1033,14 @@ export class InternalBrainEngine {
     yield {
       type: "tool-result",
       toolCallId: toolId,
-      output: { found: searchResults.length, defects: defects.length, exceptions: exceptions.length, auditLogs: recentAudit.length },
+      output: {
+        found: searchResults.length,
+        defects: defects.length,
+        exceptions: exceptions.length,
+        auditLogs: recentAudit.length,
+        neighbors: focusContext?.neighbors.length ?? 0,
+        impactedNodes: focusContext?.impactedNodes.length ?? 0,
+      },
     };
 
     const patternId = makeId("find_patterns");
@@ -574,146 +1056,187 @@ export class InternalBrainEngine {
     yield { type: "tool-result", toolCallId: patternId, output: { globalExceptions: globalExceptions.length } };
 
     let resp = "";
-    const priorCtx = extractPriorContext(input.messages);
 
     if (focusNode) {
-      resp += `## 🐛 Debug — ${focusNode.label}\n`;
-      resp += `${flowIntro}\n`;
-      if (priorCtx) resp += `_Continuando a partir de: "${priorCtx}"_\n`;
-      if (focusNode.description) resp += `> ${focusNode.description}\n`;
-      resp += "\n";
+      const descNote = focusNode.description ? ` — ${focusNode.description.slice(0, 110)}` : "";
+      resp += `**${focusNode.label}** (${focusNode.type})${descNote}.\n\n`;
 
-      // ── Seção 1: O que encontrei ──────────────────────────────────────────
-      resp += `### 📊 O que encontrei\n`;
-      resp += `- **Exceções/notas técnicas:** ${exceptions.length === 0 ? "nenhuma (memoryType EXCEPTION/TECHNICAL_NOTE)" : `${exceptions.length} registrada(s)`}\n`;
-      resp += `- **Defeitos conectados:** ${defects.length === 0 ? "nenhum no subgrafo" : `${defects.length}`}\n`;
-      resp += `- **Logs de auditoria do nó:** ${recentAudit.length === 0 ? "nenhum" : `${recentAudit.length} entradas recentes`}\n`;
-      resp += `- **Exceções globais no Brain:** ${globalExceptions.length}\n\n`;
-
-      // ── Seção 2: Diagnóstico ──────────────────────────────────────────────
-      resp += `### 🩺 Diagnóstico\n`;
-      const hasEvidence = exceptions.length > 0 || defects.length > 0;
-      if (hasEvidence) {
-        if (exceptions.length > 0 && defects.length > 0)
-          resp += `Existem ${exceptions.length} exceção(ões) documentada(s) e ${defects.length} defeito(s) associado(s) — evidências reais de problema.\n`;
-        else if (exceptions.length > 0)
-          resp += `${exceptions.length} exceção(ões) documentada(s) neste nó. Sem defeitos ativos associados.\n`;
-        else
-          resp += `${defects.length} defeito(s) conectado(s), mas nenhuma exceção EXCEPTION documentada. Pode indicar defeitos funcionais sem stack trace registrado.\n`;
-      } else {
-        resp += `Nenhuma exceção (EXCEPTION/TECHNICAL_NOTE) ou defeito encontrado diretamente neste nó.\n`;
-        if (recentAudit.length > 0)
-          resp += `Há ${recentAudit.length} log(s) de auditoria — pode indicar mudanças recentes que merecem revisão.\n`;
-        else
-          resp += `Sem logs de auditoria recentes. O nó parece estável ou não foi monitorado.\n`;
-      }
-      resp += "\n";
-
-      // ── Seção 3: Evidências ───────────────────────────────────────────────
-      resp += `### 📋 Evidências\n`;
-
-      if (exceptions.length > 0) {
-        resp += `**Exceções/notas técnicas (${exceptions.length}) — dado real:**\n`;
-        exceptions.forEach((m) => {
-          resp += `- **[${m.memoryType}] ${m.title}**\n  > ${m.summary.slice(0, 300)}\n`;
-        });
-        resp += "\n";
-      } else {
-        resp += `**Exceções:** nenhuma registrada com memoryType=EXCEPTION ou TECHNICAL_NOTE para este nó.\n\n`;
+      // Contexto estrutural
+      if (focusContext) {
+        const structParts: string[] = [];
+        if (focusContext.ancestors.length > 0) structParts.push(`dentro de ${formatNodeNames(focusContext.ancestors, 2)}`);
+        if (focusContext.neighbors.length > 0) structParts.push(`${focusContext.neighbors.length} vizinho${focusContext.neighbors.length > 1 ? "s" : ""}: ${focusContext.neighbors.slice(0, 2).map((n) => n.label).join(", ")}`);
+        if (focusContext.impactedNodes.length > 0) structParts.push(`impacto em ${focusContext.impactedNodes.length} nó${focusContext.impactedNodes.length > 1 ? "s" : ""}`);
+        if (structParts.length > 0) resp += `_Contexto: ${structParts.join(" | ")}._\n\n`;
       }
 
-      if (defects.length > 0) {
-        resp += `**Defeitos conectados (${defects.length}) — dado real:**\n`;
-        defects.slice(0, 6).forEach((d) => {
-          resp += `- **${d.label}**`;
-          if (d.description) resp += `\n  _${d.description.slice(0, 200)}_`;
-          resp += "\n";
-        });
-        if (defects.length > 6) resp += `_...e mais ${defects.length - 6} defeito(s)._\n`;
-        resp += "\n";
-      }
-
-      if (recentAudit.length > 0) {
-        resp += `**Histórico de auditoria (${recentAudit.length} entradas):**\n`;
-        recentAudit.forEach((log) => {
-          const date = new Date(log.createdAt).toLocaleDateString("pt-BR");
-          resp += `- \`${log.action}\` (${log.entityType ?? "—"}) — ${date}\n`;
-        });
-        resp += "\n";
-      }
-
-      // ── Seção 4: Hipóteses ────────────────────────────────────────────────
-      resp += `### 🔍 Hipóteses\n`;
-      const hypotheses: string[] = [];
-      if (exceptions.length > 0) {
-        hypotheses.push(`🔴 **[baseado em dado real]** Exceção documentada "${exceptions[0].title}" — revise se ainda reproduz no ambiente atual.`);
-      }
-      if (defects.length > 3) {
-        hypotheses.push(`🟡 **[baseado em dado real]** ${defects.length} defeitos ativos — possível regressão ou mudança recente sem cobertura suficiente.`);
-      }
-      if (recentAudit.some((a) => a.action.includes("DELETE") || a.action.includes("UPDATE"))) {
+      // Diagnóstico direto
+      if (exceptions.length > 0 && defects.length > 0) {
+        resp += `Evidência real de problema: ${exceptions.length} exceção${exceptions.length > 1 ? "ões" : ""} documentada${exceptions.length > 1 ? "s" : ""} + ${defects.length} defeito${defects.length > 1 ? "s" : ""} conectado${defects.length > 1 ? "s" : ""}.\n\n`;
+      } else if (exceptions.length > 0) {
+        resp += `${exceptions.length} exceção${exceptions.length > 1 ? "ões" : ""} documentada${exceptions.length > 1 ? "s" : ""} neste nó.${defects.length === 0 ? " Nenhum defeito formal associado, mas o problema está registrado." : ""}\n\n`;
+      } else if (defects.length > 0) {
+        resp += `${defects.length} defeito${defects.length > 1 ? "s" : ""} conectado${defects.length > 1 ? "s" : ""} sem exceção (EXCEPTION) documentada — pode indicar defeitos funcionais sem stack trace registrado.\n\n`;
+      } else if (recentAudit.length > 0) {
         const changeLog = recentAudit.find((a) => a.action.includes("DELETE") || a.action.includes("UPDATE"));
-        const changeDate = changeLog ? new Date(changeLog.createdAt).toLocaleDateString("pt-BR") : "data desconhecida";
-        hypotheses.push(`🟡 **[baseado em dado real]** Ação \`${changeLog?.action}\` em ${changeDate} — verificar se alteração no Brain impactou o fluxo.`);
+        if (changeLog) {
+          const changeDate = new Date(changeLog.createdAt).toLocaleDateString("pt-BR");
+          resp += `Sem exceções ou defeitos diretos, mas há log de \`${changeLog.action}\` em ${changeDate}. Vale verificar se essa alteração afetou algum fluxo.\n\n`;
+        } else {
+          resp += `Sem exceções ou defeitos diretos. ${recentAudit.length} log${recentAudit.length > 1 ? "s" : ""} de auditoria — o nó foi modificado recentemente.\n\n`;
+        }
+      } else {
+        resp += `Sem exceções, defeitos ou logs de auditoria neste nó. Está limpo — ou não foi monitorado ainda.\n\n`;
       }
-      if (hypotheses.length === 0) {
-        hypotheses.push("⚪ **[sem evidência direta]** Nenhum dado de defeito, exceção ou mudança recente encontrado neste nó.");
-        hypotheses.push("⚪ Se o problema existe, registre uma memória `EXCEPTION` com o stack trace para documentá-lo.");
-      }
-      hypotheses.forEach((h) => { resp += `${h}\n`; });
-      resp += "\n";
 
-      // ── Seção 5: Próximos passos ──────────────────────────────────────────
-      resp += `### ⏭️ Próximos passos\n`;
-      if (exceptions.length > 0) resp += `1. Reproduza "${exceptions[0].title}" no ambiente de dev e confirme se ainda ocorre\n`;
-      if (defects.length > 0) resp += `${exceptions.length > 0 ? 2 : 1}. Revise os ${defects.length} defeito(s) conectados e atualize o status\n`;
-      resp += `- Registre memória \`EXCEPTION\` com stack trace completo se houver novo erro\n`;
-      if (globalExceptions.length > 0) resp += `- ${globalExceptions.length} exceção(ões) global(is) no Brain — verifique se alguma é relevante para este nó\n`;
+      // Exceções com detalhe completo
+      if (exceptions.length > 0) {
+        if (exceptions.length === 1) {
+          resp += `A exceção registrada:\n**[${exceptions[0].memoryType}] ${exceptions[0].title}**\n> ${exceptions[0].summary.slice(0, 380)}\n\n`;
+        } else {
+          resp += `Exceções registradas (${exceptions.length}):\n`;
+          exceptions.forEach((m) => {
+            resp += `\n**[${m.memoryType}] ${m.title}**\n> ${m.summary.slice(0, 250)}\n`;
+          });
+          resp += "\n";
+        }
+      }
+
+      // Defeitos listados com descrição
+      if (defects.length > 0) {
+        resp += `Defeitos conectados (${defects.length}):\n`;
+        defects.slice(0, 6).forEach((d) => {
+          resp += `- **${d.label}**${d.description ? ` — ${d.description.slice(0, 140)}` : ""}\n`;
+        });
+        if (defects.length > 6) resp += `_...e mais ${defects.length - 6}._\n`;
+        resp += "\n";
+      }
+
+      // Auditoria com contexto temporal
+      if (recentAudit.length > 0) {
+        const relevantLogs = recentAudit.filter(
+          (a) => a.action.includes("DELETE") || a.action.includes("UPDATE") || a.action.includes("CREATE"),
+        );
+        if (relevantLogs.length > 0) {
+          resp += `Mudanças recentes (auditoria):\n`;
+          relevantLogs.slice(0, 5).forEach((log) => {
+            const date = new Date(log.createdAt).toLocaleDateString("pt-BR");
+            resp += `- \`${log.action}\` (${log.entityType ?? "—"}) — ${date}\n`;
+          });
+          resp += "\n";
+        }
+      }
+
+      // Impacto detalhado
+      if (focusContext && focusContext.impactedNodes.length > 0) {
+        resp += `Impacto mapeado em ${focusContext.impactedNodes.length} nó${focusContext.impactedNodes.length > 1 ? "s" : ""}: ${formatNodeNames(focusContext.impactedNodes, 5)}.\n\n`;
+      }
+
+      // Nós similares — padrão sistêmico
+      if (focusContext && focusContext.similarNodes.length > 0) {
+        resp += `Nós similares (para comparar padrões): ${formatNodeNames(focusContext.similarNodes, 3)}.\n\n`;
+      }
+
+      // Exceções globais — cruzamento
+      if (globalExceptions.length > 0) {
+        if (exceptions.length === 0) {
+          resp += `No Brain há ${globalExceptions.length} exceção${globalExceptions.length > 1 ? "ões" : ""} global${globalExceptions.length > 1 ? "is" : ""} ativa${globalExceptions.length > 1 ? "s" : ""}:\n`;
+          globalExceptions.slice(0, 3).forEach((m) => {
+            resp += `- **${m.title}** _(${m.importance}/10)_ — ${m.summary.slice(0, 200)}\n`;
+          });
+          if (globalExceptions.length > 3) resp += `_...e mais ${globalExceptions.length - 3}._\n`;
+          resp += "\n";
+        } else {
+          resp += `_Outras ${globalExceptions.length} exceção${globalExceptions.length > 1 ? "ões" : ""} no Brain — verifique se alguma é relacionada._\n\n`;
+        }
+      }
+
+      // Bugs reais do sistema (snap)
+      if (snap) {
+        const firstWord = focusNode.label.toLowerCase().split(/\s+/)[0];
+        const allWords = focusNode.label.toLowerCase().split(/\s+/).filter((w) => w.length > 4);
+        const relatedBugs = snap.recentDefects
+          .filter((d) => {
+            const title = d.title.toLowerCase();
+            return (
+              (d.status !== "done" && d.status !== "closed") &&
+              (title.includes(firstWord) || allWords.some((w) => title.includes(w)))
+            );
+          })
+          .slice(0, 4);
+        if (relatedBugs.length > 0) {
+          resp += `Bugs abertos no sistema relacionados: ${relatedBugs.map((d) => `[${d.code}] ${d.title}`).join("; ")}.\n\n`;
+        } else if (snap.recentDefects.length > 0) {
+          const openBugs = snap.recentDefects.filter((d) => d.status !== "done" && d.status !== "closed").slice(0, 3);
+          if (openBugs.length > 0) {
+            resp += `Bugs abertos no sistema (geral): ${openBugs.map((d) => `[${d.code}] ${d.title}`).join("; ")}.\n\n`;
+          }
+        }
+      }
+
+      // Ação direta
+      if (exceptions.length > 0) {
+        resp += `**Ação:** reproduza "${exceptions[0].title}" no ambiente de dev e confirme se ainda ocorre. Se sim, abra ticket com stack trace completo e marque como urgente.`;
+      } else if (defects.length > 0) {
+        resp += `**Ação:** revise os ${defects.length} defeito${defects.length > 1 ? "s" : ""} e adicione uma memória \`EXCEPTION\` com o stack trace para documentar o problema de forma rastreável.`;
+      } else if (recentAudit.length > 0) {
+        resp += `**Ação:** verifique se as alterações recentes de auditoria introduziram regressões. Se encontrou o problema, registre como memória \`EXCEPTION\`.`;
+      } else {
+        resp += `**Ação:** se o problema existe mas não está documentado, registre uma memória \`EXCEPTION\` neste nó com stack trace e passos para reproduzir.`;
+      }
 
     } else if (searchResults.length > 0) {
-      resp += `## 🐛 Debug — "${input.question}"\n`;
-      resp += `${flowIntro}\n`;
-      if (priorCtx) resp += `_Continuando a partir de: "${priorCtx}"_\n`;
-      resp += `\n`;
+      resp += `Busquei **"${input.question}"** para debug e encontrei ${searchResults.length} nó${searchResults.length > 1 ? "s" : ""} relacionado${searchResults.length > 1 ? "s" : ""}.\n\n`;
 
-      resp += `### 📊 O que encontrei\n`;
-      resp += `- ${searchResults.length} nó(s) relacionado(s) à query\n`;
-      resp += `- Nenhum nodeId específico selecionado — análise por busca textual\n\n`;
-
-      resp += `### 📋 Nós relacionados\n`;
-      for (const node of searchResults.slice(0, 5)) {
-        resp += `- **${node.label}** (${node.type})`;
-        if (node.description) resp += ` — ${node.description.slice(0, 140)}`;
-        resp += "\n";
-      }
+      searchResults.slice(0, 6).forEach((node) => {
+        resp += `- **${node.label}** (${node.type})${node.description ? ` — ${node.description.slice(0, 150)}` : ""}\n`;
+      });
+      if (searchResults.length > 6) resp += `_...e mais ${searchResults.length - 6}._\n`;
       resp += "\n";
 
       if (globalExceptions.length > 0) {
-        resp += `### 🔴 Exceções globais no Brain (${globalExceptions.length})\n`;
+        resp += `Exceções globais ativas no Brain (${globalExceptions.length}):\n`;
         globalExceptions.slice(0, 4).forEach((m) => {
-          resp += `**${m.title}** _(importância: ${m.importance}/10)_\n> ${m.summary.slice(0, 200)}\n\n`;
+          resp += `- **${m.title}** _(${m.importance}/10)_ — ${m.summary.slice(0, 200)}\n`;
         });
+        if (globalExceptions.length > 4) resp += `_...e mais ${globalExceptions.length - 4}._\n`;
+        resp += "\n";
       }
-      resp += `_Selecione um nó específico no grafo para análise de exceções e defeitos por nó._\n`;
+
+      resp += `Selecione um nó específico no grafo para análise de exceções detalhada por nó.`;
     } else {
-      resp += `## 🐛 Debug — sem dados\n\n`;
-      resp += `${flowIntro}\n\n`;
-      resp += `### 📊 O que encontrei\n`;
-      resp += `- Busca por "${input.question}" retornou **0 nós**\n`;
-      resp += `- Exceções globais no Brain: ${globalExceptions.length}\n\n`;
-      resp += `### ⏭️ Próximos passos\n`;
-      resp += `- Selecione o nó afetado no grafo e tente novamente\n`;
-      resp += `- Sincronize via \`/api/brain/sync\`\n`;
-      resp += `- Registre uma memória \`EXCEPTION\` com o stack trace para documentar o problema\n`;
+      resp += `Busquei **"${input.question}"** mas não encontrei nós correspondentes no Brain.\n\n`;
+
+      if (globalExceptions.length > 0) {
+        resp += `Há ${globalExceptions.length} exceção${globalExceptions.length > 1 ? "ões" : ""} global${globalExceptions.length > 1 ? "is" : ""} ativa${globalExceptions.length > 1 ? "s" : ""} — pode ser o que você está buscando:\n`;
+        globalExceptions.slice(0, 4).forEach((m) => {
+          resp += `- **${m.title}** _(${m.importance}/10)_ — ${m.summary.slice(0, 220)}\n`;
+        });
+        resp += "\n";
+      }
+
+      resp += `Para documentar o problema, registre uma memória \`EXCEPTION\` com stack trace no nó afetado.`;
     }
 
+    // Snapshot de bugs reais inline
+    if (snap) {
+      const openBugNames = snap.recentDefects
+        .filter((d) => d.status !== "done" && d.status !== "closed")
+        .slice(0, 4)
+        .map((d) => `[${d.code}] ${d.title}`);
+      if (openBugNames.length > 0) {
+        resp += `\n\n_Bugs abertos no sistema: ${openBugNames.join(" | ")}._`;
+      } else {
+        const inline = snapshotInline(snap);
+        if (inline) resp += `\n\n${inline}`;
+      }
+    }
     yield* yieldText(adaptResponseTone(resp, input.question, "debug"));
   }
 
   // ─── Playwright Agent ─────────────────────────────────────────────────────
-  private async *runPlaywright(input: EngineInput & { question: string }): AsyncGenerator<StreamEvent> {
+  private async *runPlaywright(input: EngineInput & { question: string }, snap: SystemSnapshot | null): AsyncGenerator<StreamEvent> {
     const toolId = makeId("generate_test_spec");
-    const flowIntro = buildHumanizedFlowIntro(input.question, input.messages, input.screenLabel);
 
     yield { type: "tool-input-start", id: toolId, toolName: "generate_test_spec" };
     yield {
@@ -723,14 +1246,15 @@ export class InternalBrainEngine {
       input: { feature: input.question, route: input.route, nodeId: input.nodeId },
     };
 
-    let focusNode: { id: string; label: string; type: string; description?: string | null } | null = null;
+    let focusContext: FocusNodeContext | null = null;
+    let focusNode: FocusNode | null = null;
     let nodeMemories: Array<{ memoryType: string; title: string; summary: string }> = [];
 
     if (input.nodeId) {
-      focusNode = await prisma.brainNode.findUnique({ where: { id: input.nodeId } });
-      if (focusNode) {
-        const all = await getNodeMemories(input.nodeId);
-        nodeMemories = all.filter((m) =>
+      focusContext = await loadFocusNodeContext(input.nodeId);
+      if (focusContext) {
+        focusNode = focusContext.node;
+        nodeMemories = focusContext.memories.filter((m) =>
           m.memoryType === "PATTERN" || m.memoryType === "TECHNICAL_NOTE" || m.memoryType === "RULE",
         );
       }
@@ -807,68 +1331,96 @@ export class InternalBrainEngine {
         lines: specLines.length,
         nodeType,
         memoryCount: nodeMemories.length,
+        relatedNodes: focusContext?.subgraphNodes.length ?? 0,
+        impactedNodes: focusContext?.impactedNodes.length ?? 0,
         routeDetected: hasRealRoute,
         route: pageUrl,
       },
     };
 
-    const priorCtx = extractPriorContext(input.messages);
+    let resp = "";
 
-    let resp = `## 🎭 Playwright — ${featureName}\n`;
-    resp += `${flowIntro}\n`;
-    if (priorCtx) resp += `_Continuando a partir de: "${priorCtx}"_\n`;
-    resp += `\n`;
-    if (focusNode?.description) resp += `> ${focusNode.description.slice(0, 180)}\n\n`;
+    // Intro conversacional — direto ao ponto com contexto completo
+    if (focusNode) {
+      const descNote = focusNode.description ? ` — ${focusNode.description.slice(0, 110)}` : "";
+      resp += `Spec gerado para **${focusNode.label}** (${nodeType})${descNote}.\n\n`;
 
-    // ── Seção 1: Contexto ─────────────────────────────────────────────────
-    resp += `### 📊 O que encontrei\n`;
-    resp += `- **Nó:** ${focusNode ? `${focusNode.label} (${nodeType})` : "não selecionado — gerado por query"}\n`;
-    resp += `- **Rota:** ${hasRealRoute ? `\`${pageUrl}\`` : "⚠️ **não identificada** — spec gerado como skeleton"}\n`;
-    resp += `- **Memórias de padrão/regra:** ${nodeMemories.length === 0 ? "nenhuma" : `${nodeMemories.length} incorporada(s) ao spec`}\n\n`;
-
-    if (!hasRealRoute) {
-      resp += `> ⚠️ **Rota não encontrada** para o nó "${featureName}". Para que o spec seja executável:\n`;
-      resp += `> 1. Adicione o campo \`route\` ou \`metadata.route\` ao nó Brain\n`;
-      resp += `> 2. Ou inclua a rota na descrição do nó no formato: \`rota: /caminho/da/pagina\`\n`;
-      resp += `> Até lá, substitua \`PAGE_URL\` no spec abaixo pela rota correta.\n\n`;
+      // Contexto do subgrafo
+      if (focusContext) {
+        const parts: string[] = [];
+        if (focusContext.ancestors.length > 0) parts.push(`pertence a ${formatNodeNames(focusContext.ancestors, 2)}`);
+        if (focusContext.defects.length > 0) parts.push(`${focusContext.defects.length} defeito${focusContext.defects.length > 1 ? "s" : ""} no grafo (incluídos como regressão)`);
+        if (focusContext.releases.length > 0) parts.push(`${focusContext.releases.length} release${focusContext.releases.length > 1 ? "s" : ""} associada${focusContext.releases.length > 1 ? "s" : ""}`);
+        if (focusContext.impactedNodes.length > 0) parts.push(`impacto em ${focusContext.impactedNodes.length} nó${focusContext.impactedNodes.length > 1 ? "s" : ""}: ${formatNodeNames(focusContext.impactedNodes, 2)}`);
+        if (focusContext.neighbors.length > 0) parts.push(`${focusContext.neighbors.length} vizinho${focusContext.neighbors.length > 1 ? "s" : ""} no grafo`);
+        if (parts.length > 0) resp += `_${parts.join(" | ")}._\n\n`;
+      }
+    } else {
+      resp += `Spec gerado para **"${input.question}"** — sem nó Brain selecionado, usando a query como referência.\n\n`;
     }
 
-    // ── Seção 2: Spec ────────────────────────────────────────────────────
+    if (!hasRealRoute) {
+      resp += `⚠️ Rota não identificada para "${featureName}". Substitua \`PAGE_URL\` no spec ou adicione \`metadata.route\` ao nó Brain para geração automática.\n\n`;
+    }
+
+    if (nodeMemories.length > 0) {
+      const ruleCount = nodeMemories.filter((m) => m.memoryType === "RULE").length;
+      const patternCount = nodeMemories.filter((m) => m.memoryType === "PATTERN").length;
+      const techCount = nodeMemories.filter((m) => m.memoryType === "TECHNICAL_NOTE").length;
+      const parts = [];
+      if (ruleCount > 0) parts.push(`${ruleCount} regra${ruleCount > 1 ? "s" : ""}`);
+      if (patternCount > 0) parts.push(`${patternCount} padrão${patternCount > 1 ? "ões" : ""}`);
+      if (techCount > 0) parts.push(`${techCount} nota${techCount > 1 ? "s" : ""} técnica${techCount > 1 ? "s" : ""}`);
+      if (parts.length) resp += `Incorporei ${parts.join(", ")} do Brain no spec.\n\n`;
+    }
+
+    if (brainPatterns.length > 0 && nodeMemories.length === 0) {
+      resp += `Padrões globais do Brain usados como referência: ${brainPatterns.slice(0, 3).map((p) => p.title).join("; ")}.\n\n`;
+    }
+
+    // Spec code block — mantém estrutura
     resp += `**Arquivo:** \`tests-e2e/${slug}.spec.ts\`\n\n`;
     resp += "```typescript\n";
     resp += specLines.join("\n");
     resp += "\n```\n\n";
 
-    // ── Seção 3: O que falta para completar ──────────────────────────────
+    // O que falta — inline
     const missingItems: string[] = [];
-    if (!hasRealRoute) missingItems.push("Rota real da tela/endpoint — adicione ao nó Brain ou substitua `PAGE_URL`");
+    if (!hasRealRoute) missingItems.push(`rota real (substitua \`PAGE_URL\`)`);
     if (nodeMemories.filter((m) => m.memoryType === "RULE").length === 0)
-      missingItems.push("Memórias `RULE` — adicione regras de negócio ao nó para gerar assertions automáticas");
+      missingItems.push("memórias `RULE` no nó para gerar assertions automáticas");
     if (nodeType === "Feature" || nodeType === "Module")
-      missingItems.push("Seletores reais (`data-testid`) — adicione aos componentes JSX e substitua os `TODO` no spec");
-    if (nodeType === "API" || nodeType === "Endpoint")
-      missingItems.push("URL e schema da resposta esperada — adicione na descrição do nó");
+      missingItems.push("`data-testid` nos componentes JSX");
 
     if (missingItems.length > 0) {
-      resp += `### 🔧 O que falta para completar o spec\n`;
-      missingItems.forEach((item) => { resp += `- ${item}\n`; });
-      resp += "\n";
+      resp += `Para tornar o spec executável: ${missingItems.join(", ")}.\n\n`;
     }
 
-    if (brainPatterns.length > 0) {
-      resp += `### Padrões globais do Brain\n`;
-      brainPatterns.slice(0, 3).forEach((p) => {
-        resp += `- **[${p.memoryType}]** ${p.title}: ${p.summary.slice(0, 120)}\n`;
+    // Nós vizinhos que também precisam de cobertura
+    if (focusContext && focusContext.neighbors.length > 0) {
+      const untested = focusContext.neighbors.filter((n) => n.type === "Feature" || n.type === "Module" || n.type === "Screen");
+      if (untested.length > 0) {
+        resp += `Nós vizinhos que podem precisar de spec: ${formatNodeNames(untested, 3)}.\n\n`;
+      }
+    }
+
+    // Defeitos no subgrafo que viraram regressão
+    if (focusContext && focusContext.defects.length > 0) {
+      resp += `Defeitos no subgrafo (cobertos como regressão no spec): ${focusContext.defects.slice(0, 4).map((d) => d.label).join(", ")}.\n\n`;
+    }
+
+    // Como executar — compacto
+    resp += `Execute: \`npm run test:e2e -- --grep "${featureName}"\``;
+
+    // Releases recentes com taxa de pass
+    if (snap?.releases.length) {
+      const releaseStats = snap.releases.slice(0, 4).map((r) => {
+        const total = r.statsPass + r.statsFail + r.statsBlocked + r.statsNotRun;
+        const passRate = total > 0 ? `${Math.round((r.statsPass / total) * 100)}% pass` : "sem stats";
+        return `${r.title} (${passRate})`;
       });
-      resp += "\n";
+      resp += `\n\n_Releases recentes para regressão: ${releaseStats.join(" | ")}._`;
     }
-
-    // ── Seção 4: Como executar ────────────────────────────────────────────
-    resp += `### ⏭️ Como executar\n`;
-    resp += `1. Salve como \`tests-e2e/${slug}.spec.ts\`\n`;
-    if (!hasRealRoute) resp += `2. **Substitua** \`PAGE_URL\` pela rota real\n`;
-    resp += `${hasRealRoute ? 2 : 3}. Substitua os \`TODO\` por assertions reais do componente\n`;
-    resp += `${hasRealRoute ? 3 : 4}. Execute: \`npm run test:e2e -- --grep "${featureName}"\`\n`;
 
     yield* yieldText(adaptResponseTone(resp, input.question, "playwright"));
   }
@@ -968,10 +1520,9 @@ export class InternalBrainEngine {
   }
 
   // ─── Memory Agent ─────────────────────────────────────────────────────────
-  private async *runMemory(input: EngineInput & { question: string }): AsyncGenerator<StreamEvent> {
+  private async *runMemory(input: EngineInput & { question: string }, snap: SystemSnapshot | null): AsyncGenerator<StreamEvent> {
     const toolId = makeId("search_brain");
     const learningQuery = buildLearningQuery(input.question, input.messages, input.screenLabel);
-    const flowIntro = buildHumanizedFlowIntro(input.question, input.messages, input.screenLabel);
 
     yield { type: "tool-input-start", id: toolId, toolName: "search_brain" };
     yield { type: "tool-call", toolCallId: toolId, toolName: "search_brain", input: { query: learningQuery, scope: "memory" } };
@@ -979,12 +1530,14 @@ export class InternalBrainEngine {
     const searchResults = await searchNodes({ query: learningQuery, limit: 8 });
 
     let nodeMemories: Array<{ memoryType: string; title: string; summary: string; importance: number }> = [];
-    let focusNode: { id: string; label: string; type: string } | null = null;
+    let focusContext: FocusNodeContext | null = null;
+    let focusNode: FocusNode | null = null;
 
     if (input.nodeId) {
-      focusNode = await prisma.brainNode.findUnique({ where: { id: input.nodeId } });
-      if (focusNode) {
-        nodeMemories = await getNodeMemories(input.nodeId);
+      focusContext = await loadFocusNodeContext(input.nodeId);
+      if (focusContext) {
+        focusNode = focusContext.node;
+        nodeMemories = focusContext.memories;
       }
     }
 
@@ -1010,117 +1563,171 @@ export class InternalBrainEngine {
     yield {
       type: "tool-result",
       toolCallId: toolId,
-      output: { nodeMemories: nodeMemories.length, globalMemories: globalMemories.length },
+      output: {
+        nodeMemories: nodeMemories.length,
+        globalMemories: globalMemories.length,
+        relatedNodes: focusContext?.subgraphNodes.length ?? 0,
+        directMemories: focusContext?.directMemories.length ?? 0,
+      },
     };
 
     let resp = "";
-    const priorCtx = extractPriorContext(input.messages);
 
     if (focusNode) {
-      resp += `## 🧠 Memórias — ${focusNode.label}\n`;
-      resp += `${flowIntro}\n`;
-      if (priorCtx) resp += `_Continuando a partir de: "${priorCtx}"_\n`;
-      resp += `\n`;
+      const descNote = focusNode.description ? ` — ${focusNode.description.slice(0, 110)}` : "";
+      resp += `**${focusNode.label}** (${focusNode.type})${descNote}.\n\n`;
 
-      // ── Seção 1: O que busquei ────────────────────────────────────────────
-      resp += `### 📊 O que encontrei\n`;
-      resp += `- **Nó:** ${focusNode.label} (${focusNode.type}), nodeId: \`${focusNode.id}\`\n`;
-      resp += `- **Memórias do nó:** ${nodeMemories.length === 0 ? "nenhuma registrada" : `${nodeMemories.length} encontrada(s)`}\n`;
-      resp += `- **Memórias relacionadas no Brain:** ${globalMemories.length}\n\n`;
+      // Contexto no grafo
+      if (focusContext) {
+        const structParts: string[] = [];
+        if (focusContext.ancestors.length > 0) structParts.push(`dentro de ${formatNodeNames(focusContext.ancestors, 2)}`);
+        if (focusContext.descendants.length > 0) structParts.push(`${focusContext.descendants.length} descendente${focusContext.descendants.length > 1 ? "s" : ""}`);
+        if (focusContext.neighbors.length > 0) structParts.push(`${focusContext.neighbors.length} vizinho${focusContext.neighbors.length > 1 ? "s" : ""}: ${focusContext.neighbors.slice(0, 2).map((n) => n.label).join(", ")}`);
+        if (focusContext.directMemories.length !== focusContext.memories.length) {
+          structParts.push(`${focusContext.directMemories.length} diretas + ${focusContext.memories.length - focusContext.directMemories.length} herdadas`);
+        }
+        if (structParts.length > 0) resp += `_Contexto: ${structParts.join(" | ")}._\n\n`;
+      }
 
       if (nodeMemories.length === 0) {
-        resp += `Nenhuma memória registrada para este nó ainda.\n\n`;
-        resp += `**Para criar:**\n`;
-        resp += `- Use a aba Memórias no painel do Brain\n`;
-        resp += `- \`POST /api/brain/memories\` com \`nodeId\`, \`memoryType\`, \`title\`, \`summary\`, \`importance\`\n\n`;
-        resp += `**Tipos úteis para começar:**\n`;
-        resp += `- \`DECISION\` — decisões de produto ou arquitetura\n`;
-        resp += `- \`RULE\` — regras de negócio que não mudam\n`;
-        resp += `- \`PATTERN\` — padrões recorrentes de defeitos ou comportamento\n`;
+        resp += `Nenhuma memória registrada neste nó ainda.\n\n`;
+        resp += `Para começar, recomendo:\n`;
+        resp += `- \`DECISION\` — decisão de produto ou arquitetura que define este ${focusNode.type.toLowerCase()}\n`;
+        resp += `- \`RULE\` — regra de negócio invariável que ninguém pode esquecer\n`;
+        resp += `- \`PATTERN\` — comportamento recorrente (positivo ou problemático)\n`;
+        resp += `- \`EXCEPTION\` — caso de erro documentado com contexto ou stack trace\n\n`;
+        resp += `Use a aba Memórias no Brain ou \`POST /api/brain/memories\` com \`nodeId\`, \`memoryType\`, \`title\`, \`summary\`, \`importance\` (1–10).`;
+
+        // Mostra memórias de nós vizinhos como inspiração
+        if (globalMemories.length > 0) {
+          resp += `\n\nMemórias de nós relacionados (referência para o que documentar):\n`;
+          globalMemories.slice(0, 4).forEach((m) => {
+            const nodeInfo = m.node ? ` _[${m.node.label}]_` : "";
+            resp += `- **[${m.memoryType}] ${m.title}**${nodeInfo} _(${m.importance}/10)_ — ${m.summary.slice(0, 150)}\n`;
+          });
+        }
       } else {
-        // Separate critical (high importance) from contextual
         const critical = nodeMemories.filter((m) => m.importance >= 7).sort((a, b) => b.importance - a.importance);
         const contextual = nodeMemories.filter((m) => m.importance < 7).sort((a, b) => b.importance - a.importance);
 
+        resp += `${nodeMemories.length} memória${nodeMemories.length > 1 ? "s" : ""} registrada${nodeMemories.length > 1 ? "s" : ""}${critical.length > 0 ? ` (${critical.length} crítica${critical.length > 1 ? "s" : ""})` : ""}.\n\n`;
+
         if (critical.length > 0) {
-          resp += `### Memórias críticas (importância ≥ 7)\n`;
-          critical.forEach((m) => {
-            resp += `**[${m.memoryType}] ${m.title}** — _(${m.importance}/10)_\n`;
-            resp += `> ${m.summary}\n\n`;
-          });
+          if (critical.length === 1) {
+            resp += `Memória crítica: **[${critical[0].memoryType}] ${critical[0].title}** _(${critical[0].importance}/10)_\n> ${critical[0].summary}\n\n`;
+          } else {
+            critical.forEach((m) => {
+              resp += `**[${m.memoryType}] ${m.title}** _(${m.importance}/10)_\n> ${m.summary.slice(0, 300)}\n\n`;
+            });
+          }
         }
 
         if (contextual.length > 0) {
-          resp += `### Memórias de contexto\n`;
-          contextual.slice(0, 4).forEach((m) => {
-            resp += `**[${m.memoryType}] ${m.title}** — _(${m.importance}/10)_\n`;
-            resp += `> ${m.summary.slice(0, 200)}\n\n`;
-          });
-          if (contextual.length > 4) {
-            resp += `_...e mais ${contextual.length - 4} memória(s) de contexto._\n\n`;
+          if (critical.length > 0) {
+            resp += `Memórias de contexto (${contextual.length}):\n`;
+            contextual.slice(0, 5).forEach((m) => {
+              resp += `- **[${m.memoryType}] ${m.title}** _(${m.importance}/10)_ — ${m.summary.slice(0, 170)}\n`;
+            });
+            if (contextual.length > 5) resp += `_...e mais ${contextual.length - 5}._\n`;
+          } else {
+            contextual.slice(0, 5).forEach((m) => {
+              resp += `**[${m.memoryType}] ${m.title}** _(${m.importance}/10)_\n> ${m.summary.slice(0, 240)}\n\n`;
+            });
+            if (contextual.length > 5) resp += `_...e mais ${contextual.length - 5} memória${contextual.length - 5 > 1 ? "s" : ""}._\n`;
           }
+        }
+
+        // Memórias herdadas de ancestrais
+        if (focusContext && focusContext.ancestors.length > 0) {
+          const ancestorMems = globalMemories.filter(
+            (m) => m.node && focusContext!.ancestors.some((a) => a.label === m.node!.label),
+          );
+          if (ancestorMems.length > 0) {
+            resp += `\nMemórias herdadas dos ancestrais (${ancestorMems.length}):\n`;
+            ancestorMems.slice(0, 3).forEach((m) => {
+              resp += `- **[${m.memoryType}] ${m.title}** _[${m.node!.label}]_ _(${m.importance}/10)_ — ${m.summary.slice(0, 160)}\n`;
+            });
+            if (ancestorMems.length > 3) resp += `_...e mais ${ancestorMems.length - 3}._\n`;
+            resp += "\n";
+          }
+        }
+
+        // Lacunas de documentação
+        const existingTypes = new Set(nodeMemories.map((m) => m.memoryType));
+        const missingTypes = ["DECISION", "RULE"].filter((t) => !existingTypes.has(t));
+        if (missingTypes.length > 0) {
+          resp += `_Tipos ainda não documentados: ${missingTypes.map((t) => `\`${t}\``).join(", ")}._\n`;
         }
       }
     }
 
     if (globalMemories.length > 0) {
-      if (focusNode) {
-        resp += `### Memórias relacionadas no Brain\n`;
-      } else {
-        resp += `## 🧠 Memórias — "${input.question}"\n`;
-        resp += `${flowIntro}\n`;
-        if (priorCtx) resp += `_Continuando a partir de: "${priorCtx}"_\n`;
-        resp += `\n`;
-        resp += `### 📊 O que busquei\n`;
-        resp += `- Termos: ${input.question}\n`;
-        resp += `- Memórias globais encontradas: ${globalMemories.length}\n\n`;
-      }
+      if (focusNode && nodeMemories.length > 0) {
+        // Filtra memórias de ancestrais já mostradas
+        const ancestorLabels = new Set(focusContext?.ancestors.map((a) => a.label) ?? []);
+        const nonAncestorGlobals = globalMemories.filter((m) => !m.node || !ancestorLabels.has(m.node.label));
 
-      // Group by type for scannability
-      const byType: Record<string, typeof globalMemories> = {};
-      globalMemories.forEach((m) => {
-        if (!byType[m.memoryType]) byType[m.memoryType] = [];
-        byType[m.memoryType].push(m);
-      });
+        if (nonAncestorGlobals.length > 0) {
+          resp += `\nMemórias relacionadas no Brain (${nonAncestorGlobals.length}):\n`;
+          nonAncestorGlobals.slice(0, 5).forEach((m) => {
+            const nodeInfo = m.node ? ` [${m.node.label}]` : "";
+            resp += `- **[${m.memoryType}] ${m.title}**${nodeInfo} _(${m.importance}/10)_ — ${m.summary.slice(0, 160)}\n`;
+          });
+          if (nonAncestorGlobals.length > 5) resp += `_...e mais ${nonAncestorGlobals.length - 5}._\n`;
+        }
+      } else if (!focusNode) {
+        resp += `Encontrei ${globalMemories.length} memória${globalMemories.length > 1 ? "s" : ""} para **"${input.question}"**:\n\n`;
 
-      // Show in order: DECISION → RULE → PATTERN → CONTEXT → rest
-      const typeOrder = ["DECISION", "RULE", "PATTERN", "CONTEXT", "EXCEPTION", "TECHNICAL_NOTE"];
-      const sortedTypes = [
-        ...typeOrder.filter((t) => byType[t]),
-        ...Object.keys(byType).filter((t) => !typeOrder.includes(t)),
-      ];
-
-      for (const type of sortedTypes) {
-        const mems = byType[type];
-        resp += `#### ${type} (${mems.length})\n`;
-        mems.slice(0, 3).forEach((m) => {
-          const nodeInfo = m.node ? ` _[${m.node.label}]_` : "";
-          resp += `**${m.title}**${nodeInfo} — importância ${m.importance}/10\n`;
-          resp += `> ${m.summary.slice(0, 220)}\n\n`;
+        const byType: Record<string, typeof globalMemories> = {};
+        globalMemories.forEach((m) => {
+          if (!byType[m.memoryType]) byType[m.memoryType] = [];
+          byType[m.memoryType].push(m);
         });
-        if (mems.length > 3) resp += `_...e mais ${mems.length - 3} do tipo ${type}._\n\n`;
+
+        const typeOrder = ["DECISION", "RULE", "PATTERN", "EXCEPTION", "CONTEXT", "TECHNICAL_NOTE"];
+        const sortedTypes = [
+          ...typeOrder.filter((t) => byType[t]),
+          ...Object.keys(byType).filter((t) => !typeOrder.includes(t)),
+        ];
+
+        for (const type of sortedTypes) {
+          const mems = byType[type];
+          resp += `**${type}${mems.length > 1 ? ` (${mems.length})` : ""}:**\n`;
+          mems.slice(0, 4).forEach((m) => {
+            const nodeInfo = m.node ? ` _[${m.node.label}]_` : "";
+            resp += `- **${m.title}**${nodeInfo} _(${m.importance}/10)_ — ${m.summary.slice(0, 200)}\n`;
+          });
+          if (mems.length > 4) resp += `_...e mais ${mems.length - 4}._\n`;
+          resp += "\n";
+        }
+
+        // Nós da busca como referência adicional
+        if (searchResults.length > 0) {
+          resp += `Nós encontrados (${searchResults.length}):\n`;
+          searchResults.slice(0, 5).forEach((node) => {
+            resp += `- **${node.label}** (${node.type})${node.description ? ` — ${node.description.slice(0, 120)}` : ""}\n`;
+          });
+          resp += "\n";
+        }
       }
     } else if (!focusNode) {
-      resp += `## 🧠 Memórias — sem resultados\n\n`;
-      resp += `${flowIntro}\n\n`;
-      resp += `### 📊 O que busquei\n`;
-      resp += `- Termos: "${input.question}"\n`;
-      resp += `- Memórias globais encontradas: **0**\n\n`;
-      resp += `### 🩺 Diagnóstico\nNenhuma memória corresponde a esta query no Brain.\n\n`;
-      resp += `### ⏭️ Para registrar\n`;
-      resp += `- Use a aba Memórias no Brain\n`;
-      resp += `- Ou \`POST /api/brain/memories\` com \`nodeId\`, \`memoryType\`, \`title\`, \`summary\`, \`importance\`\n`;
-    }
+      resp += `Nenhuma memória encontrada para **"${input.question}"** no Brain.\n\n`;
 
-    if (searchResults.length > 0 && nodeMemories.length === 0 && globalMemories.length === 0) {
-      resp += `### Nós relacionados (sem memórias registradas)\n`;
-      searchResults.slice(0, 4).forEach((node) => {
-        resp += `- **${node.label}** (${node.type})`;
-        if (node.description) resp += `: ${node.description.slice(0, 100)}`;
+      if (searchResults.length > 0) {
+        resp += `Nós relacionados (sem memórias documentadas ainda):\n`;
+        searchResults.slice(0, 5).forEach((node) => {
+          resp += `- **${node.label}** (${node.type})${node.description ? ` — ${node.description.slice(0, 130)}` : ""}\n`;
+        });
         resp += "\n";
-      });
+      }
+
+      resp += `Para registrar: \`POST /api/brain/memories\` com \`nodeId\`, \`memoryType\`, \`title\`, \`summary\`, \`importance\` (1-10).`;
     }
 
+    if (snap) {
+      const inline = snapshotInline(snap);
+      if (inline) resp += `\n\n${inline}`;
+    }
     yield* yieldText(adaptResponseTone(resp, input.question, "memory"));
   }
 }

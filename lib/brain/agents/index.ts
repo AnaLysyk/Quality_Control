@@ -26,14 +26,33 @@ export const AGENT_REGISTRY: Record<AgentMode, AgentConfig> = {
 
 /**
  * Detecta automaticamente o agente mais adequado para uma pergunta.
- * Usa palavras-chave simples — pode ser melhorado com classificador futuro.
+ * Prioridade: playwright > debug > memory > qa (qa é o padrão mais abrangente).
  */
 export function detectAgentMode(message: string): AgentMode {
   const lower = message.toLowerCase();
 
-  const playwrightTerms = ["playwright", "teste automatizado", "spec", "locator", "selector", "pom", "e2e", "gerar teste", "automatizar", "automation"];
-  const debugTerms = ["erro", "bug", "falha", "error", "exception", "crash", "causa raiz", "porque falhou", "log", "stack trace", "debug"];
-  const memoryTerms = ["decisão", "decisao", "memória", "memoria", "histórico", "historico", "regra", "padrão", "padrao", "por que foi feito", "arquitetura"];
+  const playwrightTerms = [
+    "playwright", "teste automatizado", "testes automatizados", "spec", "locator",
+    "selector", "pom", "e2e", "gerar teste", "gerar spec", "automatizar", "automation",
+    "test file", "page object", "end to end", "escrever teste", "criar teste",
+    "cobertura automatizada", "suite de teste",
+  ];
+
+  const debugTerms = [
+    "erro", "bug", "falha", "error", "exception", "crash", "causa raiz",
+    "porque falhou", "por que falhou", "log", "stack trace", "debug",
+    "não funciona", "nao funciona", "quebrou", "quebrando", "regressão", "regressao",
+    "incidente", "postmortem", "rastrear", "rastreamento", "investigar",
+    "o que mudou", "quando parou", "por que está errado",
+  ];
+
+  const memoryTerms = [
+    "decisão", "decisao", "memória", "memoria", "histórico", "historico",
+    "regra", "padrão", "padrao", "por que foi feito", "arquitetura",
+    "contexto", "documentar", "registrar decisão", "o que foi decidido",
+    "por que existe", "origem", "motivação", "motivacao", "knowledge",
+    "base de conhecimento", "o que sabemos", "o que aprendi",
+  ];
 
   if (playwrightTerms.some((t) => lower.includes(t))) return "playwright";
   if (debugTerms.some((t) => lower.includes(t))) return "debug";

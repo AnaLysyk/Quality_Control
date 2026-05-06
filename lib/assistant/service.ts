@@ -264,7 +264,7 @@ async function enrichMessageWithBrainContext(
   }
 }
 
-async function executeTool(user: AuthUser, context: AssistantScreenContext, tool: AssistantToolName, message: string, history: AssistantConversationTurn[] = []): Promise<AssistantExecutorResult> {
+async function executeTool(user: AuthUser, context: AssistantScreenContext, tool: AssistantToolName, message: string, history: AssistantConversationTurn[] = [], brainNodeId?: string | null): Promise<AssistantExecutorResult> {
   switch (tool) {
     case "get_screen_context":     return toolGetScreenContext(user, context);
     case "list_available_actions": return toolListAvailableActions(user, context);
@@ -274,7 +274,7 @@ async function executeTool(user: AuthUser, context: AssistantScreenContext, tool
     case "explain_permission":     return toolExplainPermission(user, context, message);
     case "create_ticket":          return buildTicketCreationAction(user, context, message);
     case "create_comment":         return buildCommentCreationAction(user, context, message);
-    case "use_brain":              return executeUseBrain(user, context, message, history);
+    case "use_brain":              return executeUseBrain(user, context, message, history, brainNodeId);
     case "suggest_next_step":      return toolSuggestNextStep(user, context, history);
     default:                       return toolSuggestNextStep(user, context, history);
   }
@@ -297,7 +297,8 @@ async function executeUseBrain(
   user: AuthUser,
   context: AssistantScreenContext,
   message: string,
-  history: AssistantConversationTurn[] = []
+  history: AssistantConversationTurn[] = [],
+  nodeId?: string | null,
 ): Promise<AssistantExecutorResult> {
   try {
     // Converte histórico do formato Assistant para formato Brain
@@ -317,9 +318,12 @@ async function executeUseBrain(
     const events = engine.run({
       messages: brainMessages,
       agentMode,
+      nodeId: nodeId ?? null,
       companySlug: context.companySlug,
       route: context.route,
       screenLabel: context.screenLabel,
+      userId: user.id,
+      actorName: user.user ?? user.email ?? null,
     });
 
     let replyText = "";
@@ -392,6 +396,7 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
   const action = request.action;
   const message = normalizePromptText(request.message, 3000);
   const history = normalizeConversationHistory(request.history);
+  const brainNodeId = request.brainContext?.nodeId ?? null;
 
   let result: AssistantExecutorResult;
 
@@ -432,6 +437,7 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
             tool,
             tool === "use_brain" ? message : await enrichMessageWithBrainContext(tool, message, context),
             history,
+            brainNodeId,
           );
     }
   }

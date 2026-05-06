@@ -25,6 +25,7 @@ import type {
   BrainTimelineEntry,
 } from "@/hooks/useBrain";
 import { useTranslation } from "@/context/LanguageContext";
+import { fetchApi } from "@/lib/api";
 import styles from "./Brain.module.css";
 
 type SimNode = BrainNode & {
@@ -1320,7 +1321,7 @@ export default function BrainGraphView() {
 
     try {
       const shouldAttachToSelection = Boolean(selectedNodeId && createNodeAttachToSelection);
-      const res = await fetch("/api/brain/nodes", {
+      const res = await fetchApi("/api/brain/nodes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -1335,7 +1336,7 @@ export default function BrainGraphView() {
         const { node } = await res.json();
 
         if (shouldAttachToSelection && selectedNodeId) {
-          const edgeRes = await fetch("/api/brain/edges", {
+          const edgeRes = await fetchApi("/api/brain/edges", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -1388,7 +1389,7 @@ export default function BrainGraphView() {
     setDeleteNodeError(null);
 
     try {
-      const res = await fetch(`/api/brain/nodes/${selectedNode.id}`, {
+      const res = await fetchApi(`/api/brain/nodes/${selectedNode.id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -1432,7 +1433,7 @@ export default function BrainGraphView() {
     setSyncLoading(true);
     setSyncResult(null);
     try {
-      const res = await fetch("/api/brain/sync", {
+      const res = await fetchApi("/api/brain/sync", {
         method: "POST",
         credentials: "include",
       });
@@ -1644,6 +1645,81 @@ export default function BrainGraphView() {
     );
   }
 
+  function briefNode(node: BrainNode) {
+    return {
+      id: node.id,
+      label: node.label,
+      type: node.type,
+      refType: node.refType ?? null,
+      refId: node.refId ?? null,
+      description: node.description ?? null,
+    };
+  }
+
+  function briefMemory(memory: BrainMemory) {
+    return {
+      id: memory.id,
+      title: memory.title,
+      summary: memory.summary,
+      memoryType: memory.memoryType,
+      importance: memory.importance,
+      sourceType: memory.sourceType ?? null,
+      sourceId: memory.sourceId ?? null,
+    };
+  }
+
+  function openNodeAssistant(agentMode: "qa" | "debug" | "playwright" | "memory" | undefined, initialMessage: string) {
+    if (!selectedNode) return;
+
+    window.dispatchEvent(new CustomEvent("assistant:open", {
+      detail: {
+        source: "brain",
+        route: typeof window !== "undefined" ? window.location.pathname : undefined,
+        entityType: "BrainNode",
+        entityId: selectedNode.id,
+        agentMode,
+        nodeId: selectedNode.id,
+        nodeLabel: selectedNode.label,
+        nodeType: selectedNode.type,
+        initialMessage,
+        metadata: {
+          node: briefNode(selectedNode),
+          stats: nodeContext?.stats ?? null,
+          influence: nodeContext?.influence ?? null,
+          counts: {
+            outgoing: nodeOutgoing.length,
+            incoming: nodeIncoming.length,
+            neighbors: nodeNeighbors.length,
+            memories: directMemories.length,
+            relatedMemories: relatedMemories.length,
+            ancestors: ancestors.length,
+            descendants: descendants.length,
+            impactedNodes: impactedNodes.length,
+            suggestions: suggestions.length,
+            similarNodes: similarNodes.length,
+          },
+          outgoing: nodeOutgoing.slice(0, 12),
+          incoming: nodeIncoming.slice(0, 12),
+          neighbors: nodeNeighbors.slice(0, 16).map(briefNode),
+          directMemories: directMemories.slice(0, 10).map(briefMemory),
+          relatedMemories: relatedMemories.slice(0, 12).map(briefMemory),
+          ancestors: ancestors.slice(0, 10).map(briefNode),
+          descendants: descendants.slice(0, 10).map(briefNode),
+          impactedNodes: impactedNodes.slice(0, 10).map(briefNode),
+          impactPaths: impactPaths.slice(0, 10),
+          suggestions: suggestions.slice(0, 8).map((suggestion) => ({
+            suggestedNodeId: suggestion.suggestedNodeId,
+            suggestedNode: briefNode(suggestion.suggestedNode),
+            reason: suggestion.reason,
+            score: suggestion.score,
+          })),
+          similarNodes: similarNodes.slice(0, 8).map(briefNode),
+          timeline: nodeTimeline.slice(0, 6),
+        },
+      },
+    }));
+  }
+
   function renderSuggestionButton(suggestion: BrainNodeSuggestion) {
     return (
       <button
@@ -1716,50 +1792,108 @@ export default function BrainGraphView() {
               ) : null}
             </div>
 
-            <div className={styles.depthControl}>
+            {/* Workspace mode pills */}
+            <div className={styles.toolbarGroup}>
+              {Object.entries(WORKSPACE_MODES).map(([key, mode]) => (
                 <button
+                  key={key}
                   type="button"
-                  className={styles.filterBtn}
-                  onClick={() => setDepth((current) => Math.max(1, current - 1))}
-                  disabled={depth <= 1}
+                  className={workspaceMode === key ? styles.filterBtnActive : styles.filterBtn}
+                  onClick={() => setWorkspaceMode(key as keyof typeof WORKSPACE_MODES)}
+                  title={locale === "pt" ? mode.label : mode.labelEn}
+                >
+                  {locale === "pt" ? mode.label : mode.labelEn}
+                </button>
+              ))}
+            </div>
+
+            {/* Type filter */}
+            {nodeTypes.length > 0 ? (
+              <select
+                className={styles.typeSelect}
+                value={filterType ?? ""}
+                onChange={(e) => setFilterType(e.target.value || null)}
+                title={locale === "pt" ? "Filtrar por tipo" : "Filter by type"}
               >
-                -1
+                <option value="">{locale === "pt" ? "Todos os tipos" : "All types"}</option>
+                {nodeTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            ) : null}
+
+            <div className={styles.depthControl}>
+              <button
+                type="button"
+                className={styles.filterBtn}
+                onClick={() => setDepth((current) => Math.max(1, current - 1))}
+                disabled={depth <= 1}
+              >
+                −
               </button>
               <span className={styles.depthBadge}>
-                {locale === "pt" ? `Profundidade ${depth}` : `Depth ${depth}`}
+                {locale === "pt" ? `Prof. ${depth}` : `Depth ${depth}`}
               </span>
-                <button
-                  type="button"
-                  className={styles.filterBtn}
-                  onClick={() => setDepth((current) => Math.min(MAX_GRAPH_DEPTH, current + 1))}
-                  disabled={depth >= MAX_GRAPH_DEPTH}
-                >
-                  +1
-                </button>
-              </div>
+              <button
+                type="button"
+                className={styles.filterBtn}
+                onClick={() => setDepth((current) => Math.min(MAX_GRAPH_DEPTH, current + 1))}
+                disabled={depth >= MAX_GRAPH_DEPTH}
+              >
+                +
+              </button>
+            </div>
+
+            {/* Stats badge */}
+            {filteredNodes.length > 0 ? (
+              <span className={styles.statsBadge}>
+                {filteredNodes.length} {locale === "pt" ? "nós" : "nodes"}
+                {" · "}
+                {filteredEdges.length} {locale === "pt" ? "arestas" : "edges"}
+              </span>
+            ) : null}
 
             <button
               type="button"
               className={showLabels ? styles.filterBtnActive : styles.filterBtn}
               onClick={() => setShowLabels((current) => !current)}
-              title={locale === "pt" ? "Alternar r\u00f3tulos (L)" : "Toggle labels (L)"}
+              title={locale === "pt" ? "Rótulos (L)" : "Labels (L)"}
             >
-              {locale === "pt" ? "R\u00f3tulos" : "Labels"}
+              {locale === "pt" ? "Rótulos" : "Labels"}
             </button>
 
             <button
               type="button"
               className={showEdgeLabels ? styles.filterBtnActive : styles.filterBtn}
               onClick={() => setShowEdgeLabels((current) => !current)}
+              title={locale === "pt" ? "Rótulos de arestas" : "Edge labels"}
             >
               {locale === "pt" ? "Arestas" : "Edges"}
             </button>
 
             <button
               type="button"
+              className={showExplorer ? styles.filterBtnActive : styles.filterBtn}
+              onClick={() => setShowExplorer((current) => !current)}
+              title={locale === "pt" ? "Mapa neural (E)" : "Neural map (E)"}
+            >
+              {locale === "pt" ? "Mapa" : "Map"}
+            </button>
+
+            <button
+              type="button"
+              className={styles.filterBtn}
+              onClick={zoomToFit}
+              title={locale === "pt" ? "Ajustar ao canvas (F)" : "Fit to canvas (F)"}
+            >
+              {locale === "pt" ? "Ajustar" : "Fit"}
+            </button>
+
+            <button
+              type="button"
               className={panelOpen ? styles.filterBtnActive : styles.filterBtn}
               onClick={() => setPanelOpen((current) => !current)}
-              title={locale === "pt" ? "Alternar painel (P)" : "Toggle panel (P)"}
+              title={locale === "pt" ? "Painel (P)" : "Panel (P)"}
             >
               {locale === "pt" ? "Painel" : "Panel"}
             </button>
@@ -2499,34 +2633,24 @@ export default function BrainGraphView() {
                     </div>
                   ) : null}
 
-                  {/* Assistente IA — abre o assistente flutuante com contexto do nó */}
                   <div className={styles.panelSection}>
                     <p className={styles.panelSectionTitle}>
                       {locale === "pt" ? "Assistente IA" : "AI Assistant"}
                     </p>
 
-                    {/* Botão principal — Tirar dúvidas com IA */}
                     <button
                       type="button"
                       className="w-full mt-1 mb-3 flex items-center justify-center gap-2 rounded-xl border border-[rgba(239,0,1,0.25)] bg-[rgba(239,0,1,0.06)] px-4 py-2.5 text-sm font-semibold text-[#ef0001] hover:bg-[rgba(239,0,1,0.12)] transition-colors"
-                      onClick={() => {
-                        window.dispatchEvent(new CustomEvent("assistant:open", {
-                          detail: {
-                            source: "brain",
-                            nodeId: selectedNode.id,
-                            nodeLabel: selectedNode.label,
-                            nodeType: selectedNode.type,
-                            initialMessage: locale === "pt"
-                              ? `Tenho d\u00favidas sobre o n\u00f3 "${selectedNode.label}" (${selectedNode.type}). Pode me ajudar?`
-                              : `I have questions about the node "${selectedNode.label}" (${selectedNode.type}). Can you help?`,
-                          },
-                        }));
-                      }}
+                      onClick={() => openNodeAssistant(
+                        undefined,
+                        locale === "pt"
+                          ? `Explique o contexto completo do n\u00f3 "${selectedNode.label}" (${selectedNode.type}) e me mostre possibilidades de an\u00e1lise.`
+                          : `Explain the full context for node "${selectedNode.label}" (${selectedNode.type}) and show me analysis options.`,
+                      )}
                     >
-                      💬 {locale === "pt" ? "Tirar d\u00favidas com IA" : "Ask AI about this node"}
+                      💬 {locale === "pt" ? "Abrir contexto completo" : "Open full context"}
                     </button>
 
-                    {/* Ações de análise específicas */}
                     <p className="text-[0.68rem] uppercase tracking-[0.18em] text-[rgba(1,24,72,0.42)] dark:text-[rgba(200,215,255,0.42)] mb-1.5">
                       {locale === "pt" ? "An\u00e1lises r\u00e1pidas" : "Quick analyses"}
                     </p>
@@ -2534,62 +2658,86 @@ export default function BrainGraphView() {
                       <button
                         type="button"
                         className="rounded-lg border border-[rgba(91,146,255,0.3)] bg-[rgba(91,146,255,0.08)] px-3 py-1.5 text-xs text-[#5b92ff] hover:bg-[rgba(91,146,255,0.18)] transition-colors"
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent("assistant:open", {
-                            detail: {
-                              source: "brain",
-                              agentMode: "qa",
-                              nodeId: selectedNode.id,
-                              nodeLabel: selectedNode.label,
-                              nodeType: selectedNode.type,
-                              initialMessage: locale === "pt"
-                                ? `Analise o n\u00f3 "${selectedNode.label}" (${selectedNode.type}) e me d\u00ea um resumo dos riscos e contexto.`
-                                : `Analyze the node "${selectedNode.label}" (${selectedNode.type}) and give me a risk summary.`,
-                            },
-                          }));
-                        }}
+                        onClick={() => openNodeAssistant(
+                          "qa",
+                          locale === "pt"
+                            ? `Analise o n\u00f3 "${selectedNode.label}" (${selectedNode.type}) e me d\u00ea riscos, cobertura, evid\u00eancias e pr\u00f3ximos passos.`
+                            : `Analyze node "${selectedNode.label}" (${selectedNode.type}) with risks, coverage, evidence and next steps.`,
+                        )}
                       >
                         🔍 {locale === "pt" ? "Analisar riscos" : "Analyze risks"}
                       </button>
                       <button
                         type="button"
                         className="rounded-lg border border-[rgba(167,139,250,0.3)] bg-[rgba(167,139,250,0.08)] px-3 py-1.5 text-xs text-[#a78bfa] hover:bg-[rgba(167,139,250,0.18)] transition-colors"
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent("assistant:open", {
-                            detail: {
-                              source: "brain",
-                              agentMode: "memory",
-                              nodeId: selectedNode.id,
-                              nodeLabel: selectedNode.label,
-                              nodeType: selectedNode.type,
-                              initialMessage: locale === "pt"
-                                ? `Busque mem\u00f3rias e decis\u00f5es registradas sobre "${selectedNode.label}".`
-                                : `Find memories and decisions about "${selectedNode.label}".`,
-                            },
-                          }));
-                        }}
+                        onClick={() => openNodeAssistant(
+                          "memory",
+                          locale === "pt"
+                            ? `Busque mem\u00f3rias, decis\u00f5es, regras e notas t\u00e9cnicas registradas sobre "${selectedNode.label}".`
+                            : `Find memories, decisions, rules and technical notes about "${selectedNode.label}".`,
+                        )}
                       >
                         🧠 {locale === "pt" ? "Ver mem\u00f3rias" : "View memories"}
                       </button>
                       <button
                         type="button"
                         className="rounded-lg border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.08)] px-3 py-1.5 text-xs text-[#10b981] hover:bg-[rgba(16,185,129,0.18)] transition-colors"
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent("assistant:open", {
-                            detail: {
-                              source: "brain",
-                              agentMode: "playwright",
-                              nodeId: selectedNode.id,
-                              nodeLabel: selectedNode.label,
-                              nodeType: selectedNode.type,
-                              initialMessage: locale === "pt"
-                                ? `Gere um spec Playwright para testar funcionalidades relacionadas a "${selectedNode.label}".`
-                                : `Generate a Playwright spec for features related to "${selectedNode.label}".`,
-                            },
-                          }));
-                        }}
+                        onClick={() => openNodeAssistant(
+                          "playwright",
+                          locale === "pt"
+                            ? `Gere um spec Playwright e casos de regress\u00e3o para funcionalidades relacionadas a "${selectedNode.label}".`
+                            : `Generate a Playwright spec and regression cases for features related to "${selectedNode.label}".`,
+                        )}
                       >
                         🎭 {locale === "pt" ? "Gerar teste" : "Generate test"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.08)] px-3 py-1.5 text-xs text-[#ef4444] hover:bg-[rgba(239,68,68,0.18)] transition-colors"
+                        onClick={() => openNodeAssistant(
+                          "debug",
+                          locale === "pt"
+                            ? `Investigue o n\u00f3 "${selectedNode.label}" (${selectedNode.type}) como debug: exce\u00e7\u00f5es, defeitos, logs, hip\u00f3teses e evid\u00eancias.`
+                            : `Investigate node "${selectedNode.label}" (${selectedNode.type}) as debug: exceptions, defects, logs, hypotheses and evidence.`,
+                        )}
+                      >
+                        🛠 {locale === "pt" ? "Debug" : "Debug"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-[rgba(245,158,11,0.35)] bg-[rgba(245,158,11,0.09)] px-3 py-1.5 text-xs text-[#d97706] hover:bg-[rgba(245,158,11,0.18)] transition-colors"
+                        onClick={() => openNodeAssistant(
+                          "qa",
+                          locale === "pt"
+                            ? `Mapeie depend\u00eancias e impacto do n\u00f3 "${selectedNode.label}": entradas, sa\u00eddas, ancestrais, descendentes, similares e sugest\u00f5es de conex\u00e3o.`
+                            : `Map dependencies and impact for node "${selectedNode.label}": incoming, outgoing, ancestors, descendants, similar nodes and suggested links.`,
+                        )}
+                      >
+                        🧭 {locale === "pt" ? "Impacto" : "Impact"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-[rgba(20,184,166,0.3)] bg-[rgba(20,184,166,0.08)] px-3 py-1.5 text-xs text-[#0f766e] hover:bg-[rgba(20,184,166,0.18)] transition-colors"
+                        onClick={() => openNodeAssistant(
+                          "qa",
+                          locale === "pt"
+                            ? `Transforme o contexto do n\u00f3 "${selectedNode.label}" em um roteiro QA com cen\u00e1rios, prioridades, dados necess\u00e1rios e crit\u00e9rios de aceite.`
+                            : `Turn node "${selectedNode.label}" context into a QA plan with scenarios, priorities, required data and acceptance criteria.`,
+                        )}
+                      >
+                        ✅ {locale === "pt" ? "Roteiro QA" : "QA plan"}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-[rgba(100,116,139,0.35)] bg-[rgba(100,116,139,0.08)] px-3 py-1.5 text-xs text-[#64748b] hover:bg-[rgba(100,116,139,0.18)] transition-colors"
+                        onClick={() => openNodeAssistant(
+                          "memory",
+                          locale === "pt"
+                            ? `Aponte o que falta documentar sobre "${selectedNode.label}" e sugira novas mem\u00f3rias RULE, DECISION, PATTERN ou TECHNICAL_NOTE.`
+                            : `Point out what is missing from "${selectedNode.label}" and suggest new RULE, DECISION, PATTERN or TECHNICAL_NOTE memories.`,
+                        )}
+                      >
+                        📝 {locale === "pt" ? "Documentar" : "Document"}
                       </button>
                     </div>
                   </div>

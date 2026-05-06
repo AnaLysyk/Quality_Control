@@ -88,6 +88,7 @@ const SCORING_RULES: ScoringRule[] = [
     tool: "summarize_entity",
     score: (n, _ctx, _h, raw, intent) => {
       if (/(perfil|meus dados|meu usuario|meu usuário)/.test(n)) return 75;
+      if (/(resum|sumario|sumário)/.test(n) && Boolean(extractTicketReference(raw))) return 85;
       if (/(resum|sumario|sumário)/.test(n)) return 60;
       // Strong signal: ticket reference (SP-123, #456, etc.)
       if (Boolean(extractTicketReference(raw))) return 65;
@@ -167,6 +168,7 @@ const SCORING_RULES: ScoringRule[] = [
   {
     tool: "search_internal_records",
     score: (n, ctx, _h, raw, intent) => {
+      if (/(resum|sumario|sumário)/.test(n) && Boolean(extractTicketReference(raw))) return 20;
       if (Boolean(extractTicketReference(raw))) return 75; // Strong signal: ticket ref — check BEFORE generic keywords
       if (/(buscar|busca|procura|procurar|localiza|localizar|encontra|encontrar|listar|lista)/.test(n)) return 50;
       // Análise de métricas, dados, relatórios
@@ -187,6 +189,7 @@ const SCORING_RULES: ScoringRule[] = [
   {
     tool: "suggest_next_step",
     score: (n, ctx, _h, _raw, intent) => {
+      if (ctx.module === "dashboard" && /(comparar.*(tendencia|tendência)|ler.*indicador|listar.*riscos operacionais)/.test(n)) return 70;
       if (/(proximo passo|próximo passo|o que faco agora|o que faço agora|sugere|ajuda|dica)/.test(n)) return 60;
       // Boost para confirmação (continuar fluxo)
       if (intent.primary === "confirmation") return 40;

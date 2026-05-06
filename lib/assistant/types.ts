@@ -62,6 +62,16 @@ export type AssistantReplyPayload = {
   tool: AssistantToolName;
   actions?: AssistantAction[];
   context: AssistantScreenContext;
+  meta?: {
+    agentMode?: string | null;
+    agentName?: string | null;
+    agentIcon?: string | null;
+    agentLabel?: string | null;
+    agentColor?: string | null;
+    nodeId?: string | null;
+    source?: string | null;
+    durationMs?: number | null;
+  } | null;
 };
 
 export type AssistantConversationTurn = {
@@ -87,6 +97,16 @@ export type AssistantClientRequest = {
   } | null;
   action?: AssistantToolAction | null;
   history?: AssistantConversationTurn[] | null;
+  /** Contexto enriquecido vindo de telas externas (Brain, tickets, releases…) */
+  brainContext?: {
+    nodeId?: string | null;
+    nodeLabel?: string | null;
+    nodeType?: string | null;
+    source?: string | null;
+    entityId?: string | null;
+    entityType?: string | null;
+    agentMode?: string | null;
+  } | null;
 };
 
 // ─── Evento global para abrir o assistente flutuante ────────────────────────

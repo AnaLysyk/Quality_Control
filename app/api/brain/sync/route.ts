@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { syncBrain } from "@/lib/brain-sync";
 
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {

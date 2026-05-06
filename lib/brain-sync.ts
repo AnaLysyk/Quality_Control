@@ -35,6 +35,54 @@ async function safeConnect(
   }
 }
 
+function jsonRecord(value: Prisma.JsonValue | null | undefined): Record<string, Prisma.JsonValue> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return value as Record<string, Prisma.JsonValue>;
+}
+
+function jsonString(value: Prisma.JsonValue | undefined): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function jsonStringArray(value: Prisma.JsonValue | undefined): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+      .map((item) => item.trim().toUpperCase());
+  }
+  const single = jsonString(value);
+  return single ? [single.toUpperCase()] : [];
+}
+
+function normalizeLinkKey(value?: string | null) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function sanitizeIntegrationConfig(config: Prisma.JsonValue | null | undefined) {
+  const record = jsonRecord(config);
+  const projectCodes = [
+    ...jsonStringArray(record.projects),
+    ...jsonStringArray(record.projectCodes),
+    ...jsonStringArray(record.project_codes),
+    ...jsonStringArray(record.projectCode),
+  ].filter((value, index, items) => items.indexOf(value) === index);
+
+  return {
+    projectCodes,
+    baseUrl: jsonString(record.baseUrl) ?? jsonString(record.base_url),
+    validationStatus: jsonString(record.validationStatus),
+    isActive: record.isActive === true,
+    isValid: record.isValid === true,
+    hasToken: Boolean(
+      jsonString(record.token) ??
+      jsonString(record.apiToken) ??
+      jsonString(record.api_token) ??
+      jsonString(record.qaseToken) ??
+      jsonString(record.qase_token),
+    ),
+  };
+}
+
 /* ─── Company ─────────────────────────────────────────────────────────────── */
 
 export async function syncCompanyToBrain(company: {
@@ -71,6 +119,7 @@ export async function syncIntegrationToBrain(integration: {
   id: string;
   companyId: string;
   type: string;
+  config?: Prisma.JsonValue | null;
 }): Promise<void> {
   try {
     const node = await upsertNode({
@@ -79,9 +128,13 @@ export async function syncIntegrationToBrain(integration: {
       refType: "CompanyIntegration",
       refId: integration.id,
       description: `Integração ${integration.type}`,
-      metadata: { integrationType: integration.type, companyId: integration.companyId },
+      metadata: {
+        integrationType: integration.type,
+        companyId: integration.companyId,
+        config: sanitizeIntegrationConfig(integration.config),
+      },
     });
-    await safeConnect("Integration", integration.id, "Company", integration.companyId, "BELONGS_TO");
+    await safeConnect("CompanyIntegration", integration.id, "Company", integration.companyId, "BELONGS_TO");
     return void node;
   } catch (err) {
     console.error("[brain-sync] syncIntegrationToBrain error:", err);
@@ -197,6 +250,7 @@ export async function syncDefectToBrain(defect: {
   title?: string | null;
   description?: string | null;
   companyId?: string | null;
+  releaseManualId?: string | null;
   status?: string | null;
   assignedToUserId?: string | null;
 }): Promise<void> {
@@ -210,6 +264,7 @@ export async function syncDefectToBrain(defect: {
       metadata: {
         status: defect.status ?? "open",
         companyId: defect.companyId ?? null,
+        releaseManualId: defect.releaseManualId ?? null,
       },
     });
     if (defect.companyId) {
@@ -217,6 +272,9 @@ export async function syncDefectToBrain(defect: {
     }
     if (defect.assignedToUserId) {
       await safeConnect("Defect", defect.id, "User", defect.assignedToUserId, "ASSIGNED_TO");
+    }
+    if (defect.releaseManualId) {
+      await safeConnect("Defect", defect.id, "ReleaseManual", defect.releaseManualId, "FOUND_IN_RELEASE");
     }
   } catch (err) {
     console.error("[brain-sync] syncDefectToBrain error:", err);
@@ -241,7 +299,7 @@ export async function syncReleaseToBrain(release: {
 }): Promise<void> {
   try {
     await upsertNode({
-      type: "Release",
+      type: "ReleaseManual",
       label: release.title ?? release.slug ?? `Release ${release.id.slice(0, 8)}`,
       refType: "Release",
       refId: release.id,
@@ -257,7 +315,7 @@ export async function syncReleaseToBrain(release: {
       },
     });
     if (release.companyId) {
-      await safeConnect("Release", release.id, "Company", release.companyId, "BELONGS_TO");
+      await safeConnect("ReleaseManual", release.id, "Company", release.companyId, "BELONGS_TO");
     }
     if (release.createdByUserId) {
       await safeConnect("Release", release.id, "User", release.createdByUserId, "CREATED_BY");
@@ -326,7 +384,7 @@ export async function syncNoteToBrain(note: {
       },
     });
     if (note.userId) {
-      await safeConnect("Note", note.id, "User", note.userId, "CREATED_BY");
+      await safeConnect("UserNote", note.id, "User", note.userId, "CREATED_BY");
     }
   } catch (err) {
     console.error("[brain-sync] syncNoteToBrain error:", err);
@@ -379,6 +437,9 @@ export async function syncBrain() {
           status: company.status,
           website: company.website ?? null,
           integrationMode: company.integration_mode ?? 'manual',
+          qaseProjectCodes: company.qase_project_codes,
+          hasQaseToken: Boolean(company.qase_token),
+          legacyQaseProjectCode: company.qase_project_code ?? null,
         },
       })
       nodeCount++
@@ -417,6 +478,11 @@ export async function syncBrain() {
         metadata: {
           email: user.email,
           role: user.role,
+          status: user.status,
+          active: user.active,
+          globalRole: user.globalRole ?? null,
+          defaultCompanySlug: user.default_company_slug ?? null,
+          userOrigin: user.user_origin,
           jobTitle: user.job_title ?? null,
         },
       })
@@ -477,8 +543,15 @@ export async function syncBrain() {
           statsPass: release.statsPass,
           statsFail: release.statsFail,
           statsBlocked: release.statsBlocked,
+          statsNotRun: release.statsNotRun,
           environments: release.environments,
           source: release.source,
+          qaseProject: release.qaseProject ?? null,
+          app: release.app ?? null,
+          project: release.project ?? null,
+          runId: release.runId ?? null,
+          runSlug: release.runSlug ?? null,
+          kind: release.kind ?? null,
         },
       })
       nodeCount++
@@ -497,6 +570,7 @@ export async function syncBrain() {
         metadata: {
           integrationType: integration.type,
           companyId: integration.companyId,
+          config: sanitizeIntegrationConfig(integration.config),
         },
       })
       nodeCount++
@@ -536,6 +610,96 @@ export async function syncBrain() {
       nodeCount++
     }
     log(`Created ${testRuns.length} TestRun nodes`)
+
+    // ── Release manuals
+    const releaseManuals = await prisma.releaseManual.findMany({ take: 500 })
+    for (const releaseManual of releaseManuals) {
+      await upsertNode({
+        type: 'ReleaseManual',
+        label: releaseManual.title,
+        refType: 'ReleaseManual',
+        refId: releaseManual.id,
+        description: releaseManual.description ?? undefined,
+        metadata: {
+          status: releaseManual.status,
+          companyId: releaseManual.companyId,
+          source: 'manual',
+          updatedAt: releaseManual.updatedAt.toISOString(),
+        },
+      })
+      nodeCount++
+    }
+    log(`Created ${releaseManuals.length} ReleaseManual nodes`)
+
+    // ── Release cases
+    const releaseCases = await prisma.releaseCase.findMany({ take: 1000 })
+    for (const releaseCase of releaseCases) {
+      await upsertNode({
+        type: 'ReleaseCase',
+        label: releaseCase.title ?? `Caso ${releaseCase.id.slice(0, 8)}`,
+        refType: 'ReleaseCase',
+        refId: releaseCase.id,
+        description: releaseCase.bug ?? releaseCase.link ?? undefined,
+        metadata: {
+          releaseId: releaseCase.releaseId,
+          status: releaseCase.status,
+          bug: releaseCase.bug ?? null,
+          link: releaseCase.link ?? null,
+          fromApi: releaseCase.fromApi,
+        },
+      })
+      nodeCount++
+    }
+    log(`Created ${releaseCases.length} ReleaseCase nodes`)
+
+    // ── Manual test plans
+    const manualTestPlans = await prisma.manualTestPlan.findMany({ take: 500 })
+    for (const plan of manualTestPlans) {
+      await upsertNode({
+        type: 'TestPlan',
+        label: plan.title,
+        refType: 'ManualTestPlan',
+        refId: plan.id,
+        description: plan.description ?? undefined,
+        metadata: {
+          companySlug: plan.companySlug,
+          applicationId: plan.applicationId,
+          applicationName: plan.applicationName,
+          applicationSlug: plan.applicationSlug,
+          projectCode: plan.projectCode ?? null,
+          source: 'manual',
+          updatedAt: plan.updatedAt.toISOString(),
+        },
+      })
+      nodeCount++
+    }
+    log(`Created ${manualTestPlans.length} ManualTestPlan nodes`)
+
+    // ── Quality alerts
+    const qualityAlerts = await prisma.qualityAlert.findMany({ take: 500, orderBy: { timestamp: 'desc' } })
+    for (const alert of qualityAlerts) {
+      await upsertNode({
+        type: 'QualityAlert',
+        label: `${alert.severity}: ${alert.message.slice(0, 80)}`,
+        refType: 'QualityAlert',
+        refId: alert.id,
+        description: alert.message,
+        metadata: {
+          companySlug: alert.companySlug,
+          alertType: alert.type,
+          severity: alert.severity,
+          timestamp: alert.timestamp.toISOString(),
+        },
+      })
+      nodeCount++
+    }
+    log(`Created ${qualityAlerts.length} QualityAlert nodes`)
+
+    log('Step 1.5: Creating system map nodes from code...')
+    const { syncSystemMapToBrain } = await import("@/lib/brain-system-map")
+    const systemMap = await syncSystemMapToBrain()
+    nodeCount += systemMap.nodeCount
+    log(`Created ${systemMap.nodeCount} system/code nodes`)
 
     log(`✓ Total nodes created/updated: ${nodeCount}`)
 
@@ -584,7 +748,19 @@ export async function syncBrain() {
 
     // Company → Integration (BELONGS_TO)
     for (const integration of integrations) {
-      await safeConnectNodes('Integration', integration.id, 'Company', integration.companyId, 'BELONGS_TO')
+      await safeConnectNodes('CompanyIntegration', integration.id, 'Company', integration.companyId, 'BELONGS_TO')
+      if (integration.type === 'QASE') {
+        const projectCodes = new Set(sanitizeIntegrationConfig(integration.config).projectCodes.map(normalizeLinkKey))
+        for (const app of applications) {
+          const appProject = normalizeLinkKey(app.qaseProjectCode)
+          if (app.companyId === integration.companyId && appProject && projectCodes.has(appProject)) {
+            await safeConnectNodes('CompanyIntegration', integration.id, 'Application', app.id, 'INTEGRATES_WITH', {
+              provider: 'QASE',
+              projectCode: app.qaseProjectCode ?? null,
+            })
+          }
+        }
+      }
     }
 
     // Ticket → Company (BELONGS_TO)
@@ -607,6 +783,9 @@ export async function syncBrain() {
       if (defect.companyId) {
         await safeConnectNodes('Defect', defect.id, 'Company', defect.companyId, 'BELONGS_TO')
       }
+      if (defect.releaseManualId) {
+        await safeConnectNodes('Defect', defect.id, 'ReleaseManual', defect.releaseManualId, 'FOUND_IN_RELEASE')
+      }
     }
 
     // Release → Company (BELONGS_TO), Release → User (CREATED_BY / ASSIGNED_TO)
@@ -620,6 +799,34 @@ export async function syncBrain() {
       if (release.assignedToUserId) {
         await safeConnectNodes('Release', release.id, 'User', release.assignedToUserId, 'ASSIGNED_TO')
       }
+      const releaseProject = normalizeLinkKey(release.qaseProject ?? release.project ?? release.app)
+      if (releaseProject) {
+        const app = applications.find((item) =>
+          normalizeLinkKey(item.qaseProjectCode) === releaseProject ||
+          normalizeLinkKey(item.slug) === releaseProject ||
+          normalizeLinkKey(item.name) === releaseProject
+        )
+        if (app) await safeConnectNodes('Release', release.id, 'Application', app.id, 'TESTS_APPLICATION')
+      }
+    }
+
+    for (const releaseManual of releaseManuals) {
+      await safeConnectNodes('ReleaseManual', releaseManual.id, 'Company', releaseManual.companyId, 'BELONGS_TO')
+    }
+
+    for (const releaseCase of releaseCases) {
+      await safeConnectNodes('ReleaseCase', releaseCase.id, 'Release', releaseCase.releaseId, 'BELONGS_TO')
+    }
+
+    for (const plan of manualTestPlans) {
+      await safeConnectNodes('ManualTestPlan', plan.id, 'Application', plan.applicationId, 'COVERS_APPLICATION')
+      const company = companies.find((item) => item.slug === plan.companySlug)
+      if (company) await safeConnectNodes('ManualTestPlan', plan.id, 'Company', company.id, 'BELONGS_TO')
+    }
+
+    for (const alert of qualityAlerts) {
+      const company = companies.find((item) => item.slug === alert.companySlug)
+      if (company) await safeConnectNodes('QualityAlert', alert.id, 'Company', company.id, 'BELONGS_TO')
     }
 
     // User → Company (MEMBER_OF) via Membership
@@ -632,10 +839,28 @@ export async function syncBrain() {
 
     // Note → User (CREATED_BY)
     for (const note of notes) {
-      await safeConnectNodes('Note', note.id, 'User', note.userId, 'CREATED_BY')
+      await safeConnectNodes('UserNote', note.id, 'User', note.userId, 'CREATED_BY')
     }
 
-    log(`✓ Total edges created: ${edgeCount}`)
+    log(`Created ${edgeCount} entity relationship edges`)
+
+    for (const company of companies) await safeConnectNodes('Company', company.id, 'PrismaModel', 'Company', 'INSTANCE_OF')
+    for (const app of applications) await safeConnectNodes('Application', app.id, 'PrismaModel', 'Application', 'INSTANCE_OF')
+    for (const user of users) await safeConnectNodes('User', user.id, 'PrismaModel', 'User', 'INSTANCE_OF')
+    for (const ticket of tickets) await safeConnectNodes('Ticket', ticket.id, 'PrismaModel', 'Ticket', 'INSTANCE_OF')
+    for (const defect of defects) await safeConnectNodes('Defect', defect.id, 'PrismaModel', 'Defect', 'INSTANCE_OF')
+    for (const release of releases) await safeConnectNodes('Release', release.id, 'PrismaModel', 'Release', 'INSTANCE_OF')
+    for (const integration of integrations) await safeConnectNodes('CompanyIntegration', integration.id, 'PrismaModel', 'CompanyIntegration', 'INSTANCE_OF')
+    for (const note of notes) await safeConnectNodes('UserNote', note.id, 'PrismaModel', 'UserNote', 'INSTANCE_OF')
+    for (const run of testRuns) await safeConnectNodes('TestRun', run.id, 'PrismaModel', 'TestRun', 'INSTANCE_OF')
+    for (const releaseManual of releaseManuals) await safeConnectNodes('ReleaseManual', releaseManual.id, 'PrismaModel', 'ReleaseManual', 'INSTANCE_OF')
+    for (const releaseCase of releaseCases) await safeConnectNodes('ReleaseCase', releaseCase.id, 'PrismaModel', 'ReleaseCase', 'INSTANCE_OF')
+    for (const plan of manualTestPlans) await safeConnectNodes('ManualTestPlan', plan.id, 'PrismaModel', 'ManualTestPlan', 'INSTANCE_OF')
+    for (const alert of qualityAlerts) await safeConnectNodes('QualityAlert', alert.id, 'PrismaModel', 'QualityAlert', 'INSTANCE_OF')
+
+    edgeCount += systemMap.edgeCount
+    log(`Created ${systemMap.edgeCount} system/code edges`)
+    log(`Total edges including system/code: ${edgeCount}`)
 
     const duration = Date.now() - startTime
     log(`===== SYNC COMPLETED in ${duration}ms =====`)

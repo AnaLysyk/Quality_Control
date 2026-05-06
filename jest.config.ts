@@ -11,6 +11,7 @@ const config: JestConfigWithTsJest = {
     "^@/data/(.*)$": ["<rootDir>/data/$1", "<rootDir>/app/data/$1"],
     "^@/(.*)$": "<rootDir>/app/$1",
     "^server-only$": "<rootDir>/tests/mocks/server-only.js",
+    "\\.(css|less|sass|scss)$": "<rootDir>/tests/mocks/styleMock.js",
   },
   reporters: ["default"],
   setupFiles: ["<rootDir>/tests/setup-env.js"],

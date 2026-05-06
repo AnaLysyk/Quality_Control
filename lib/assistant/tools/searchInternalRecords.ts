@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
+import { prisma } from "@/lib/prismaClient";
 import type { AssistantScreenContext } from "../types";
 import { normalizeSearch } from "../helpers";
 import {
@@ -15,6 +16,13 @@ import {
 } from "../data";
 import { extractTicketReference } from "../pure/parsing";
 import type { AssistantExecutorResult } from "./types";
+
+function stripInternalAssistantContext(message: string) {
+  const marker = "\n---\n[Contexto Brain | uso interno do assistente]";
+  const markerIndex = message.indexOf(marker);
+  if (markerIndex === -1) return message;
+  return message.slice(0, markerIndex).trim();
+}
 
 function extractSearchText(message: string) {
   return message
@@ -65,14 +73,35 @@ function getStatusEmoji(status: string): string {
   }
 }
 
+function includesAny(value: string, words: string[]) {
+  return words.some((word) => value.includes(word));
+}
+
+function recordMatchesQuery(query: string, ...fields: Array<string | null | undefined>) {
+  if (!query) return true;
+  const haystack = fields.map((field) => normalizeSearch(field ?? "")).join(" ");
+  return query
+    .split(/\s+/)
+    .filter((word) => word.length > 2)
+    .every((word) => haystack.includes(word));
+}
+
+function formatDate(value: Date | string | null | undefined) {
+  if (!value) return "-";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("pt-BR");
+}
+
 export async function toolSearchInternalRecords(user: AuthUser, context: AssistantScreenContext, message: string): Promise<AssistantExecutorResult> {
+  const userMessage = stripInternalAssistantContext(message);
   const visibleTickets = await getVisibleTickets(user);
-  const normalized = normalizeSearch(message);
-  const statusFilters = getStatusFilters(message);
-  const priorityFilters = getPriorityFilters(message);
+  const normalized = normalizeSearch(userMessage);
+  const statusFilters = getStatusFilters(userMessage);
+  const priorityFilters = getPriorityFilters(userMessage);
   const wantsOnlyUnassigned = normalized.includes("sem responsavel") || normalized.includes("sem responsável");
   const wantsOnlyAssigned = normalized.includes("com responsavel") || normalized.includes("com responsável");
-  const reference = extractTicketReference(message);
+  const reference = extractTicketReference(userMessage);
 
   let tickets = [...visibleTickets];
   if (statusFilters) tickets = tickets.filter((t) => statusFilters.has(t.status));
@@ -80,7 +109,7 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
   if (wantsOnlyUnassigned) tickets = tickets.filter((t) => !t.assignedToUserId);
   if (wantsOnlyAssigned) tickets = tickets.filter((t) => Boolean(t.assignedToUserId));
 
-  const query = extractSearchText(message);
+  const query = extractSearchText(userMessage);
   const hasExplicitFilters = Boolean(statusFilters || priorityFilters || wantsOnlyUnassigned || wantsOnlyAssigned);
 
   if (reference?.type === "code" || reference?.type === "numeric") {
@@ -135,28 +164,129 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
   }
 
   const [visibleUsers, visibleCompanies] = await Promise.all([getVisibleUsers(user), getVisibleCompanies(user)]);
+  const companyIds = visibleCompanies.map((company) => company.id).filter(Boolean);
+  const companySlugs = visibleCompanies.map((company) => company.slug).filter(Boolean);
+  const companyIdScope = companyIds.length ? { in: companyIds } : undefined;
+  const companySlugScope = companySlugs.length ? { in: companySlugs } : undefined;
+  const wantsEverything = includesAny(normalized, ["tudo", "sistema", "contexto", "mapa", "geral"]);
+  const wantsApplications = wantsEverything || includesAny(normalized, ["aplicacao", "aplicacoes", "aplicaÃ§Ã£o", "aplicaÃ§Ãµes", "app", "apps", "qase"]);
+  const wantsRuns = wantsEverything || includesAny(normalized, ["run", "runs", "execucao", "execucoes", "release", "releases", "qase"]);
+  const wantsPlans = wantsEverything || includesAny(normalized, ["plano", "planos", "test plan", "caso de teste", "qase"]);
+  const wantsDefects = wantsEverything || includesAny(normalized, ["defeito", "defeitos", "bug", "bugs", "falha"]);
+  const wantsIntegrations = wantsEverything || includesAny(normalized, ["integracao", "integracoes", "integraÃ§Ã£o", "integraÃ§Ãµes", "qase", "jira", "griaule", "biometria"]);
+  const effectiveQuery = wantsEverything ? "" : query;
+
+  const canQueryScopedCompanyData = companyIds.length > 0 || companySlugs.length > 0 || user.isGlobalAdmin;
+  const [
+    applications,
+    releases,
+    manualTestPlans,
+    defects,
+    integrations,
+    testRuns,
+  ] = canQueryScopedCompanyData
+    ? await Promise.all([
+        wantsApplications
+          ? prisma.application.findMany({
+              where: user.isGlobalAdmin
+                ? undefined
+                : { OR: [{ companyId: companyIdScope }, { companySlug: companySlugScope }] },
+              orderBy: { updatedAt: "desc" },
+              take: 20,
+              select: {
+                id: true, name: true, slug: true, companySlug: true, qaseProjectCode: true,
+                source: true, active: true, updatedAt: true,
+              },
+            }).catch(() => [])
+          : Promise.resolve([]),
+        wantsRuns
+          ? prisma.release.findMany({
+              where: user.isGlobalAdmin
+                ? undefined
+                : { OR: [{ companyId: companyIdScope }, { companySlug: companySlugScope }] },
+              orderBy: { updatedAt: "desc" },
+              take: 20,
+              select: {
+                id: true, title: true, slug: true, app: true, qaseProject: true, status: true,
+                statsPass: true, statsFail: true, statsBlocked: true, statsNotRun: true,
+                companySlug: true, updatedAt: true,
+              },
+            }).catch(() => [])
+          : Promise.resolve([]),
+        wantsPlans
+          ? prisma.manualTestPlan.findMany({
+              where: user.isGlobalAdmin ? undefined : { companySlug: companySlugScope },
+              orderBy: { updatedAt: "desc" },
+              take: 20,
+              select: {
+                id: true, title: true, companySlug: true, applicationName: true,
+                applicationSlug: true, projectCode: true, updatedAt: true,
+              },
+            }).catch(() => [])
+          : Promise.resolve([]),
+        wantsDefects
+          ? prisma.defect.findMany({
+              where: user.isGlobalAdmin ? undefined : { companyId: companyIdScope },
+              orderBy: { updatedAt: "desc" },
+              take: 20,
+              select: { id: true, title: true, description: true, companyId: true, releaseManualId: true, updatedAt: true },
+            }).catch(() => [])
+          : Promise.resolve([]),
+        wantsIntegrations
+          ? prisma.companyIntegration.findMany({
+              where: user.isGlobalAdmin ? undefined : { companyId: companyIdScope },
+              orderBy: { createdAt: "desc" },
+              take: 20,
+              select: { id: true, companyId: true, type: true, config: true, createdAt: true },
+            }).catch(() => [])
+          : Promise.resolve([]),
+        wantsRuns
+          ? prisma.testRun.findMany({
+              orderBy: { createdAt: "desc" },
+              take: 12,
+              select: { id: true, status: true, createdAt: true },
+            }).catch(() => [])
+          : Promise.resolve([]),
+      ])
+    : [[], [], [], [], [], []];
 
   const users =
-    /usuario|usuário|perfil|responsavel|responsável|login|email/.test(normalized)
+    wantsEverything || /usuario|usuário|perfil|responsavel|responsável|login|email/.test(normalized)
       ? visibleUsers.users
           .filter((item) => {
-            if (!query) return true;
+            if (!effectiveQuery) return true;
             const haystack = `${item.name} ${item.email} ${item.login}`.toLowerCase();
-            return haystack.includes(normalized);
+            return haystack.includes(effectiveQuery);
           })
           .slice(0, MAX_RESULTS)
       : [];
 
   const companies =
-    /empresa|cliente|tenant/.test(normalized)
+    wantsEverything || /empresa|cliente|tenant|griaule|testing company/.test(normalized)
       ? visibleCompanies
           .filter((item) => {
-            if (!query) return true;
+            if (!effectiveQuery) return true;
             const haystack = `${item.name} ${item.slug}`.toLowerCase();
-            return haystack.includes(normalized);
+            return haystack.includes(effectiveQuery);
           })
           .slice(0, MAX_RESULTS)
       : [];
+
+  const applicationResults = applications
+    .filter((item) => recordMatchesQuery(effectiveQuery, item.name, item.slug, item.companySlug, item.qaseProjectCode, item.source))
+    .slice(0, MAX_RESULTS);
+  const releaseResults = releases
+    .filter((item) => recordMatchesQuery(effectiveQuery, item.title, item.slug, item.app, item.qaseProject, item.companySlug, item.status))
+    .slice(0, MAX_RESULTS);
+  const planResults = manualTestPlans
+    .filter((item) => recordMatchesQuery(effectiveQuery, item.title, item.applicationName, item.applicationSlug, item.projectCode, item.companySlug))
+    .slice(0, MAX_RESULTS);
+  const defectResults = defects
+    .filter((item) => recordMatchesQuery(effectiveQuery, item.title, item.description, item.companyId))
+    .slice(0, MAX_RESULTS);
+  const integrationResults = integrations
+    .filter((item) => recordMatchesQuery(effectiveQuery, item.type, item.companyId))
+    .slice(0, MAX_RESULTS);
 
   const sections: string[] = ["## 🔍 Resultados da Busca", ""];
 
@@ -198,6 +328,84 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
     );
   }
 
+  if (applicationResults.length) {
+    sections.push(
+      "",
+      `### 🧩 Aplicações (${applicationResults.length})`,
+      "",
+      "| Nome | Empresa | Qase | Origem | Ativa |",
+      "|------|---------|------|--------|-------|",
+      ...applicationResults.map((app) =>
+        `| ${app.name} | ${app.companySlug ?? "-"} | ${app.qaseProjectCode ?? "-"} | ${app.source ?? "manual"} | ${app.active ? "sim" : "não"} |`,
+      ),
+    );
+  }
+
+  if (releaseResults.length) {
+    sections.push(
+      "",
+      `### 🚀 Runs/Releases (${releaseResults.length})`,
+      "",
+      "| Título | Status | App/Qase | Pass/Fail/Blocked | Atualizado |",
+      "|--------|--------|----------|-------------------|-----------|",
+      ...releaseResults.map((release) =>
+        `| ${release.title} | ${release.status} | ${release.qaseProject ?? release.app ?? "-"} | ${release.statsPass}/${release.statsFail}/${release.statsBlocked} | ${formatDate(release.updatedAt)} |`,
+      ),
+    );
+  }
+
+  if (planResults.length) {
+    sections.push(
+      "",
+      `### 🧪 Planos de Teste (${planResults.length})`,
+      "",
+      "| Plano | Aplicação | Projeto | Empresa | Atualizado |",
+      "|-------|-----------|---------|---------|-----------|",
+      ...planResults.map((plan) =>
+        `| ${plan.title} | ${plan.applicationName} | ${plan.projectCode ?? "-"} | ${plan.companySlug} | ${formatDate(plan.updatedAt)} |`,
+      ),
+    );
+  }
+
+  if (defectResults.length) {
+    sections.push(
+      "",
+      `### 🐞 Defeitos (${defectResults.length})`,
+      "",
+      "| Defeito | Release manual | Atualizado |",
+      "|---------|----------------|-----------|",
+      ...defectResults.map((defect) =>
+        `| ${defect.title} | ${defect.releaseManualId ?? "-"} | ${formatDate(defect.updatedAt)} |`,
+      ),
+    );
+  }
+
+  if (integrationResults.length) {
+    sections.push(
+      "",
+      `### 🔌 Integrações (${integrationResults.length})`,
+      "",
+      "| Tipo | Empresa | Criada em |",
+      "|------|---------|----------|",
+      ...integrationResults.map((integration) =>
+        `| ${integration.type} | ${integration.companyId} | ${formatDate(integration.createdAt)} |`,
+      ),
+    );
+  }
+
+  if (testRuns.length) {
+    sections.push(
+      "",
+      `### ✅ Execuções de Teste (${testRuns.length})`,
+      "",
+      "| ID | Status | Criado em |",
+      "|----|--------|----------|",
+      ...testRuns.slice(0, MAX_RESULTS).map((run) =>
+        `| ${run.id.slice(0, 8)} | ${run.status} | ${formatDate(run.createdAt)} |`,
+      ),
+    );
+  }
+
   if (sections.length <= 2) {
     return {
       tool: "search_internal_records",
@@ -218,6 +426,7 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
         "- Filtrar por status: `abertos`, `em andamento`, `concluídos`",
         "- Filtrar por prioridade: `alta`, `média`, `baixa`",
         "- Buscar por empresa ou usuário específico",
+        "- Buscar por aplicação, Qase, runs, planos de teste, defeitos ou integrações",
       ].join("\n"),
     };
   }
@@ -234,7 +443,7 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
   return {
     tool: "search_internal_records",
     success: true,
-    summary: `🎫 ${tickets.length} | 👤 ${users.length} | 🏢 ${companies.length}`,
+    summary: `🎫 ${tickets.length} | 👤 ${users.length} | 🏢 ${companies.length} | 🧩 ${applicationResults.length} | 🚀 ${releaseResults.length} | 🧪 ${planResults.length} | 🐞 ${defectResults.length} | 🔌 ${integrationResults.length}`,
     actions: suggestedActions,
     reply: sections.join("\n"),
   };

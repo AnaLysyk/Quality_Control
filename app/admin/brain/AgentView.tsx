@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { fetchApi } from "@/lib/api";
 import styles from "./AgentView.module.css";
 
 type AgentMode = "qa" | "debug" | "playwright" | "memory";
@@ -186,7 +187,7 @@ export default function AgentView({
 
     try {
       const allMessages = [...messages, userMsg];
-      const res = await fetch("/api/brain/ask", {
+      const res = await fetchApi("/api/brain/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

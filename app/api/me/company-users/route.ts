@@ -20,6 +20,7 @@ import {
   canViewCompanyUsersByScope,
   resolveUserScopePolicy,
 } from "@/lib/userScopePolicy";
+import { readSyncedUserProfileFields } from "@/lib/userProfileData";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -83,6 +84,9 @@ export async function GET(req: NextRequest) {
         active: item.active !== false,
         status: item.status ?? (item.active === false ? "inactive" : "active"),
         avatar_url: item.avatar_url ?? null,
+        phone: item.phone ?? null,
+        job_title: item.job_title ?? null,
+        linkedin_url: item.linkedin_url ?? null,
         user_origin: item.user_origin ?? "testing_company",
         user_scope: item.user_scope ?? "shared",
         allow_multi_company_link: item.allow_multi_company_link !== false,
@@ -121,14 +125,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => null);
-  const name = typeof body?.name === "string" ? body.name.trim() : "";
-  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-  const login =
-    typeof body?.username === "string" && body.username.trim()
-      ? body.username.trim().toLowerCase()
-      : typeof body?.user === "string" && body.user.trim()
-        ? body.user.trim().toLowerCase()
-        : "";
+  const profileFields = readSyncedUserProfileFields(body);
+  const name = profileFields.name;
+  const email = profileFields.email;
+  const login = profileFields.login ?? "";
   const password = typeof body?.password === "string" ? body.password.trim() : "";
   const permissionRole =
     typeof body?.permission_role === "string"
@@ -147,11 +147,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const user = await createLocalUser({
-      full_name: name,
+      full_name: profileFields.fullName ?? name,
       name,
       email,
       ...(login ? { user: login } : {}),
       password_hash: hashPasswordSha256(password),
+      phone: profileFields.phone,
+      job_title: profileFields.jobTitle,
+      linkedin_url: profileFields.linkedinUrl,
+      avatar_url: profileFields.avatarUrl,
       active: true,
       role: "company_user",
       globalRole: null,
@@ -200,6 +204,9 @@ export async function POST(req: NextRequest) {
                 active: created.active !== false,
                 status: created.status ?? (created.active === false ? "inactive" : "active"),
                 avatar_url: created.avatar_url ?? null,
+                phone: created.phone ?? null,
+                job_title: created.job_title ?? null,
+                linkedin_url: created.linkedin_url ?? null,
                 user_origin: created.user_origin ?? "client_company",
                 user_scope: created.user_scope ?? "company_only",
                 allow_multi_company_link: created.allow_multi_company_link !== false,

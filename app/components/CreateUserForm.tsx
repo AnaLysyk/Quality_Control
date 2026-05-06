@@ -12,6 +12,10 @@ export default function CreateUserForm({
   const [login, setLogin] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [companyId, setCompanyId] = useState(companies[0]?.id || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +30,18 @@ export default function CreateUserForm({
       const res = await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: login, email, name, password, companyId }),
+        body: JSON.stringify({
+          full_name: name,
+          user: login,
+          email,
+          name,
+          phone,
+          job_title: jobTitle,
+          linkedin_url: linkedinUrl,
+          avatar_url: avatarUrl,
+          password,
+          companyId,
+        }),
       });
       if (!res.ok) {
         let msg = "Erro ao criar usuário";
@@ -40,6 +55,10 @@ export default function CreateUserForm({
       setLogin("");
       setName("");
       setPassword("");
+      setPhone("");
+      setJobTitle("");
+      setLinkedinUrl("");
+      setAvatarUrl("");
       // setCompanyId(companies[0]?.id || ""); // Descomente se quiser resetar empresa
       setSuccess(true);
       if (onCreated) onCreated();
@@ -98,6 +117,43 @@ export default function CreateUserForm({
           required
           type="password"
           autoComplete="new-password"
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm">Telefone</span>
+        <input
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          placeholder="+55 11 99999-9999"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          autoComplete="tel"
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm">Cargo</span>
+        <input
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          placeholder="Cargo"
+          value={jobTitle}
+          onChange={e => setJobTitle(e.target.value)}
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm">LinkedIn</span>
+        <input
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          placeholder="https://www.linkedin.com/in/usuario"
+          value={linkedinUrl}
+          onChange={e => setLinkedinUrl(e.target.value)}
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm">Foto (URL)</span>
+        <input
+          className="form-control-user border rounded px-2 py-1 w-full mt-1"
+          placeholder="https://example.com/avatar.jpg"
+          value={avatarUrl}
+          onChange={e => setAvatarUrl(e.target.value)}
         />
       </label>
       <label className="block">

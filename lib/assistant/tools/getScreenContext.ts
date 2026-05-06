@@ -1,13 +1,12 @@
 import "server-only";
 
-import { getLocalUserById } from "@/lib/auth/localStore";
 import {
   resolvePrimaryCompanySlug,
   type AuthenticatedUserLike,
 } from "@/lib/auth/normalizeAuthenticatedUser";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { compactMultiline } from "../helpers";
-import { buildPromptActions, displayName, displayRole, summarizePermissionMatrix, isEmpresaUser } from "../data";
+import { buildPromptActions, isEmpresaUser } from "../data";
 import type { AssistantScreenContext } from "../types";
 import type { AssistantExecutorResult } from "./types";
 
@@ -103,36 +102,17 @@ function buildPermissionLine(user: AuthUser) {
 }
 
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
-  const currentUser = await getLocalUserById(user.id);
   const actions = buildImmediateActions(context, user);
   const moduleEmoji = getModuleEmoji(context.module);
-  const prompts = context.suggestedPrompts.slice(0, 4);
+  const scopeLabel = buildScopeLabel(user, context);
 
   const replyParts = [
-    `## ${moduleEmoji} ${context.screenLabel}`,
+    `${moduleEmoji} **${context.screenLabel}** (${context.module} / ${scopeLabel})`,
     "",
-    `> ${stripScreenLead(context)}`,
+    stripScreenLead(context),
     "",
-    "### 🎯 O que posso fazer aqui:",
-    "",
-    ...actions.map((a) => `- ${a.emoji} ${a.text}`),
-    "",
-    "### 💡 Sugestões rápidas:",
-    "",
-    ...prompts.map((p, i) => `${i + 1}. ${p}`),
-    "",
-    "---",
-    "",
-    "### 📋 Contexto Atual:",
-    "",
-    `| Campo | Valor |`,
-    `|-------|-------|`,
-    `| **Módulo** | ${context.module} |`,
-    `| **Escopo** | ${buildScopeLabel(user, context)} |`,
-    `| **Perfil** | ${displayRole(user)} |`,
-    `| **Usuário** | ${displayName(currentUser)} |`,
-    "",
-    buildPermissionLine(user),
+    "**O que você pode fazer aqui:**",
+    ...actions.slice(0, 3).map((a) => `- ${a.emoji} ${a.text}`),
   ];
 
   return {

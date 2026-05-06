@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import { canReviewerAccessQueue, canViewAccessRequestQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById } from "@/data/accessRequestsStore";
 import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
+import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,11 +42,15 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   }
 
   const { id } = await context.params;
+  if (extractPasswordResetRequestId(id)) {
+    return NextResponse.json({ items: [] }, { status: 200, headers: NO_STORE_HEADERS });
+  }
+
   const request = await getRequestForReview(id);
   if (!request) {
     return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
   }
-  if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(request.message, request.email))) {
+  if (!canViewAccessRequestQueue(admin, resolveAccessRequestQueue(request.message, request.email))) {
     return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403, headers: NO_STORE_HEADERS });
   }
   try {
@@ -64,6 +69,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   }
 
   const { id } = await context.params;
+  if (extractPasswordResetRequestId(id)) {
+    return NextResponse.json({ error: "Comentarios nao sao suportados para reset de senha nesta fila." }, { status: 409 });
+  }
+
   const body = (await req.json().catch(() => null)) as { body?: string; comment?: string } | null;
   const comment = sanitizeBody(body?.comment ?? body?.body ?? "");
   if (!comment) {

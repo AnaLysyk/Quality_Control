@@ -3,7 +3,7 @@ import "server-only";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { prisma } from "@/lib/prismaClient";
-import type { AssistantScreenContext } from "../types";
+import type { AssistantScreenContext, AssistantConversationTurn } from "../types";
 import { isEmpresaUser } from "../data";
 import type { AssistantExecutorResult } from "./types";
 
@@ -12,11 +12,19 @@ import type { AssistantExecutorResult } from "./types";
  * 1. Contexto da tela atual
  * 2. Permissões do usuário
  * 3. Conhecimento do Brain (memórias e padrões)
- * 4. Atividade recente
+ * 4. Atividade recente / histórico conversacional
  */
-export async function toolSuggestNextStep(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
+export async function toolSuggestNextStep(
+  user: AuthUser,
+  context: AssistantScreenContext,
+  history: AssistantConversationTurn[] = []
+): Promise<AssistantExecutorResult> {
   const suggestions: string[] = [];
   const smartTips: string[] = [];
+
+  // Analisar último contexto conversacional para detectar padrão
+  const lastFewTurns = history.slice(-3);
+  const recentTopics = lastFewTurns.map(t => t.userMessage.toLowerCase()).join(" ");
 
   // Buscar memórias relevantes do Brain para contexto
   try {
@@ -51,6 +59,10 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
       suggestions.push("✏️ Transformar um relato em chamado estruturado");
       suggestions.push("🎫 Criar novo ticket a partir de descrição");
     }
+    // Smart boost: se comentou recentemente, sugerir continuar
+    if (/comenta|respond/.test(recentTopics)) {
+      suggestions[0] = "💬 Continuar revisando respostas de comentários";
+    }
   }
 
   if (context.module === "permissions") {
@@ -63,12 +75,20 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
     suggestions.push("🧪 Gerar caso de teste a partir do bug atual");
     suggestions.push("📝 Criar roteiro de teste estruturado");
     suggestions.push("✅ Validar cobertura de testes existente");
+    // Smart boost: se mencionou teste recentemente
+    if (/teste|qa|qualidade/.test(recentTopics)) {
+      suggestions[0] = "🎯 Continuar estruturando suite de testes";
+    }
   }
 
   if (context.module === "dashboard") {
     suggestions.push("📈 Analisar métricas de qualidade do período");
     suggestions.push("🎯 Identificar tendências nos indicadores");
     suggestions.push("⚠️ Listar áreas que precisam de atenção");
+    // Smart boost: se comparou datas/períodos
+    if (/comparar|periodo|período|historico|histórico/.test(recentTopics)) {
+      suggestions[0] = "📊 Continuar análise comparativa de métricas";
+    }
   }
 
   if (context.module === "releases") {
@@ -99,22 +119,18 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
     suggestions.push("💡 O que posso fazer por você?");
   }
 
-  // Montar resposta
-  const mainSuggestions = suggestions.slice(0, 4);
-  let replyText = "**O que posso ajudar agora:**\n\n";
-  replyText += mainSuggestions.map((item, index) => `${index + 1}. ${item}`).join("\n");
-
-  if (smartTips.length) {
-    replyText += "\n\n---\n**Dicas do Brain:**\n";
-    replyText += smartTips.slice(0, 2).join("\n");
-  }
+  // Montar resposta curta e focada
+  const mainSuggestions = suggestions.slice(0, 3);
+  let replyText = "Posso ajudar com:\n\n";
+  replyText += mainSuggestions.map((item) => `- ${item}`).join("\n");
+  replyText += "\n\nO que você precisa?";
 
   return {
     tool: "suggest_next_step",
     success: true,
     summary: "próximos passos sugeridos com contexto inteligente",
     actions: mainSuggestions.map((prompt) => ({ 
-      kind: "prompt", 
+      kind: "prompt" as const, 
       label: prompt.replace(/^[^\s]+\s/, ""), // Remove emoji for clean label
       prompt: prompt.replace(/^[^\s]+\s/, ""), 
     })),

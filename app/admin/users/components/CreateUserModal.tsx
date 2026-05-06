@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { readApiError } from "@/lib/apiEnvelope";
 import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
+import { getFixedProfileOptions, type FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -24,16 +25,12 @@ type Props = {
   title?: string;
   subtitle?: string;
   submitLabel?: string;
+  allowedRoles?: FixedProfileKind[];
 };
 
-const ROLE_OPTIONS = [
-  { value: "empresa", label: "Admin da empresa" },
-  { value: "company_user", label: "Usuário da empresa" },
-  { value: "testing_company_user", label: "Usuário TC" },
-  { value: "leader_tc", label: "Lider TC" },
-  { value: "technical_support", label: "Suporte Técnico" },
-];
+const ROLE_OPTIONS = getFixedProfileOptions();
 const EMPTY_JOB_TITLE = "__empty_job_title__";
+type RoleValue = FixedProfileKind;
 
 export function CreateUserModal({
   open,
@@ -48,13 +45,15 @@ export function CreateUserModal({
   title = "Criar usuário",
   subtitle = "Um convite será enviado por email.",
   submitLabel = "Criar usuário",
+  allowedRoles,
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState(initialRole);
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState<RoleValue>(() => normalizeEditableProfileRole(initialRole));
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -68,7 +67,15 @@ export function CreateUserModal({
   });
 
   const normalizedRole = useMemo(() => normalizeEditableProfileRole(role), [role]);
-  const roleOptions = useMemo(() => ROLE_OPTIONS, []);
+  const roleOptions = useMemo(() => {
+    if (!allowedRoles?.length) return ROLE_OPTIONS;
+    const allowed = new Set(allowedRoles);
+    return ROLE_OPTIONS.filter((option) => allowed.has(option.value));
+  }, [allowedRoles]);
+  const roleHint = useMemo(
+    () => roleOptions.find((option) => option.value === role)?.hint ?? ROLE_OPTIONS.find((option) => option.value === role)?.hint ?? "",
+    [role, roleOptions],
+  );
   const requiresClient = useMemo(
     () =>
       showCompanyField &&
@@ -135,10 +142,12 @@ export function CreateUserModal({
     setMessage(null);
     try {
       const payload = {
+        full_name: name.trim(),
         name: name.trim(),
         ...(login.trim() ? { user: login.trim() } : {}),
         ...(password.trim() ? { password: password.trim() } : {}),
         email: email.trim(),
+        phone: phone.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
         role,
         client_id: localClientId,
@@ -193,10 +202,11 @@ export function CreateUserModal({
     setLogin("");
     setPassword("");
     setEmail("");
+    setPhone("");
     setJobTitle("");
     setLinkedin("");
     setAvatarUrl("");
-    setRole(initialRole);
+    setRole(normalizeEditableProfileRole(initialRole));
     if (clientId) setLocalClientId(clientId);
     else if (clients && clients.length === 1) setLocalClientId(clients[0].id);
     setMessage(null);
@@ -273,7 +283,7 @@ export function CreateUserModal({
                     placeholder="Mínimo 8 caracteres"
                     required
                   />
-                  <span className="mt-1 block text-xs text-gray-500">Obrigatória para criar Lider TC.</span>
+                  <span className="mt-1 block text-xs text-gray-500">Obrigatória para criar Líder TC.</span>
                 </label>
               ) : null}
               <label className="block text-sm">
@@ -285,6 +295,15 @@ export function CreateUserModal({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="email@empresa.com"
                   required
+                />
+              </label>
+              <label className="block text-sm">
+                Telefone
+                <input
+                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+55 11 99999-9999"
                 />
               </label>
               <label className="block text-sm">
@@ -314,7 +333,7 @@ export function CreateUserModal({
                   <select
                     className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => setRole(normalizeEditableProfileRole(e.target.value))}
                   >
                     {roleOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -322,6 +341,7 @@ export function CreateUserModal({
                       </option>
                     ))}
                   </select>
+                  {roleHint ? <span className="mt-1 block text-xs text-gray-500">{roleHint}</span> : null}
                 </label>
               ) : null}
               <label className="block text-sm">

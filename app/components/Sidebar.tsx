@@ -522,6 +522,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const rootTriggerRefs = useRef(new Map<string, HTMLAnchorElement>());
   const favoritesTriggerRef = useRef<HTMLButtonElement>(null);
   const closeFlyoutTimerRef = useRef<number | null>(null);
+  const navListRef = useRef<HTMLDivElement>(null);
 
   const clearFlyoutCloseTimer = useCallback(() => {
     if (closeFlyoutTimerRef.current === null) return;
@@ -1395,6 +1396,10 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     );
   }, [canUseAdminClientTools, companyRunsMenuLabel, searchQuery, t, visibleNavigation]);
 
+  useEffect(() => {
+    navListRef.current?.style.setProperty("--sidebar-item-count", String(desktopNavigationItems.length));
+  }, [desktopNavigationItems.length]);
+
   const actionLookup = useMemo(() => {
     const map = new Map<string, SidebarMenuItem>();
     const visit = (item: SidebarMenuItem) => {
@@ -1988,8 +1993,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
               Navegação
             </div>
             <div
+              ref={navListRef}
               className="sidebar-desktop-nav-list mt-1.5 flex flex-col gap-2"
-              style={{ "--sidebar-item-count": desktopNavigationItems.length } as CSSProperties}
             >
               {desktopNavigationItems.map((item) => renderDesktopNavigationItem(item))}
             </div>

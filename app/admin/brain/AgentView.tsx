@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import styles from "./AgentView.module.css";
 
 type AgentMode = "qa" | "debug" | "playwright" | "memory";
 
@@ -295,9 +296,10 @@ export default function AgentView({
                 ),
               }));
             } else if (type === "error") {
+              const errMsg = (part.error as string) || "Erro ao processar resposta do agente.";
               updateAssistant((m) => ({
                 ...m,
-                content: m.content || "Erro ao processar resposta do agente.",
+                content: m.content || errMsg,
               }));
             }
           } catch {
@@ -329,21 +331,12 @@ export default function AgentView({
 
   const agentInfo = AGENTS[mode];
 
-  // All runtime-dynamic values collected in a single CSS-variables declaration on the root.
-  const rootVars = {
-    "--agent-color": agentInfo.color,
-    "--border-clr": darkMode ? "rgba(91,146,255,0.14)" : "#e5e7eb",
-    "--muted-clr": darkMode ? "#6c7fa4" : "#94a3b8",
-    "--prompt-clr": darkMode ? "#c7d2e8" : "#334155",
-    "--input-bg": darkMode ? "rgba(255,255,255,0.04)" : "#fff",
-    "--text-clr": darkMode ? "#e2e8f0" : "#0f172a",
-  } as React.CSSProperties;
-
   return (
     <div
       data-testid="agent-view"
-      style={rootVars}
-      className={`flex h-full flex-col font-[inherit] ${
+      data-dark={String(darkMode)}
+      data-mode={mode}
+      className={`${styles.root} flex h-full flex-col font-[inherit] ${
         darkMode ? "bg-[rgba(7,19,40,0.98)] text-slate-200" : "bg-slate-50 text-slate-900"
       }`}
     >

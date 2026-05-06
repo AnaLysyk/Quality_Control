@@ -9,6 +9,8 @@ import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
+import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
+import { reviewPasswordResetRequest } from "@/lib/passwordResetReview";
 
 function applyAdminNotes(message: string, notes: string | null) {
   if (!notes || !notes.trim()) return message;
@@ -28,6 +30,36 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   const comment = typeof body?.comment === "string" ? body.comment.trim() : "";
 
   const { id } = await context.params;
+  const passwordResetRequestId = extractPasswordResetRequestId(id);
+
+  if (passwordResetRequestId) {
+    const result = await reviewPasswordResetRequest(
+      passwordResetRequestId,
+      "REJECTED",
+      { id: admin.id || admin.email || "access-requests" },
+      reason || comment || "Recusado pela central de solicitacoes",
+    );
+    if (!result.ok) {
+      return NextResponse.json({ error: result.message }, { status: result.status });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      item: {
+        id,
+        status:
+          result.item?.status === "APPROVED"
+            ? "closed"
+            : result.item?.status === "REJECTED"
+              ? "rejected"
+              : result.item?.status === "NEEDS_REVISION"
+                ? "in_progress"
+                : "open",
+        requestId: passwordResetRequestId,
+      },
+    });
+  }
+
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {

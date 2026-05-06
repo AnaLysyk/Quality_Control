@@ -102,6 +102,9 @@ type CompanyUser = {
   active: boolean;
   status: string | null;
   avatar_url: string | null;
+  phone: string | null;
+  job_title: string | null;
+  linkedin_url: string | null;
   user_origin: string | null;
   user_scope: string | null;
   allow_multi_company_link: boolean;
@@ -366,6 +369,9 @@ function normalizeCompanyUsers(payload: unknown): CompanyUser[] {
       active: typeof current.active === "boolean" ? current.active : true,
       status: typeof current.status === "string" ? current.status : null,
       avatar_url: typeof current.avatar_url === "string" ? current.avatar_url : null,
+      phone: typeof current.phone === "string" ? current.phone : null,
+      job_title: typeof current.job_title === "string" ? current.job_title : null,
+      linkedin_url: typeof current.linkedin_url === "string" ? current.linkedin_url : null,
       user_origin: typeof current.user_origin === "string" ? current.user_origin : null,
       user_scope: typeof current.user_scope === "string" ? current.user_scope : null,
       allow_multi_company_link:
@@ -2797,6 +2803,11 @@ export default function SettingsProfilePage() {
                             <h3 className="truncate text-base font-semibold text-(--tc-text-primary)">{companyUser.name}</h3>
                             <p className="text-sm font-medium text-[#0b1f52] dark:text-[#d7e5ff]">@{companyUser.user || companyUser.email}</p>
                             <p className="truncate text-sm font-medium text-[#0b1f52] dark:text-[#d7e5ff]">{companyUser.email}</p>
+                            {companyUser.job_title || companyUser.phone ? (
+                              <p className="truncate text-xs font-semibold text-[#47628f] dark:text-[#b8ccf2]">
+                                {[companyUser.job_title, companyUser.phone].filter(Boolean).join(" · ")}
+                              </p>
+                            ) : null}
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 lg:justify-end">

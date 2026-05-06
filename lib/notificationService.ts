@@ -343,6 +343,7 @@ export async function notifyPasswordResetRequest(request: RequestRecord) {
     title: "Reset de senha solicitado",
     description: `${userLabel} solicitou reset de senha para o Suporte tecnico.`,
     requestId: request.id,
+    link: "/admin/access-requests",
     dedupeKey: `reset:reviewers:${request.id}`,
   });
 

@@ -731,8 +731,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                     </p>
                   </div>
                 ) : null}
-
-              <div className="min-h-0 flex-1 overflow-y-auto space-y-4 px-4 py-4 bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)]">
                 {messages.map((message, index) => {
                   const isUser = message.from === "user";
                   return (
@@ -863,8 +861,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                 Assistente Testing Company
                 <span className="absolute -bottom-1.25 right-5 h-2.5 w-2.5 rotate-45 bg-[#011848]" />
               </span>
-            </button>
-          ) : null}
+            </div>
+          </button>
         </div>
       </div>
 

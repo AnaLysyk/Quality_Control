@@ -190,7 +190,7 @@ for (const profile of profilesForReset) {
       }
 
       // ── 7. Permissões coerentes após reset ────────────────────────────────
-      const adminApiRes = await page.request.get(`${BASE_URL}/api/admin/users`, {
+      const adminApiRes = await page.request.get(`${BASE_URL}/api/admin/access-requests`, {
         headers: { cookie: `session_id=${sessionId}` },
       });
       if (!["leader_tc", "technical_support"].includes(profile.role)) {

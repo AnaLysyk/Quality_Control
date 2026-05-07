@@ -144,10 +144,24 @@ export async function login(page: Page, email: string, password: string) {
   const role = (lastRole ?? creds.role) === "admin" ? "admin" : "user";
   const companySlug = lastClientSlug || "DEMO";
   const defaultPath = role === "admin" ? "/admin/clients" : `/empresas/${companySlug}/dashboard`;
-  await page.goto(defaultPath, { timeout: 120000, waitUntil: "domcontentloaded" });
-  const authLoading = page.getByText(/Validando sessao/i);
-  if (await authLoading.isVisible().catch(() => false)) {
-    await authLoading.waitFor({ state: "hidden", timeout: 15000 }).catch(() => {});
+
+  // Some pages can be heavy during long suites; fall back to a lighter route.
+  const navigationTargets = [defaultPath, "/"];
+  let lastNavigationError: unknown = null;
+  for (const target of navigationTargets) {
+    try {
+      await page.goto(target, { timeout: 120000, waitUntil: "domcontentloaded" });
+      const authLoading = page.getByText(/Validando sessao/i);
+      if (await authLoading.isVisible().catch(() => false)) {
+        await authLoading.waitFor({ state: "hidden", timeout: 15000 }).catch(() => {});
+      }
+      return;
+    } catch (error) {
+      lastNavigationError = error;
+    }
   }
+  throw lastNavigationError instanceof Error
+    ? lastNavigationError
+    : new Error("login navigation failed");
 }
 

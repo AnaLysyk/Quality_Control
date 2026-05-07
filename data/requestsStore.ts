@@ -3,8 +3,12 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
+function shouldUsePostgresStore() {
+  return USE_POSTGRES && !shouldUseJsonStore();
+}
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
   return prisma;
@@ -39,6 +43,9 @@ export type RequestRecord = {
 };
 
 type StorePayload = { items: RequestRecord[] };
+type GlobalRequestsStore = typeof globalThis & {
+  __qcRequestsStore?: StorePayload;
+};
 
 const STORE_KEY = "qc:requests_store:v1";
 const USE_REDIS = isRedisConfigured();
@@ -57,7 +64,19 @@ const DEFAULT_ITEMS: RequestRecord[] = [
     createdAt: new Date().toISOString(),
   },
 ];
-let memoryStore: StorePayload = { items: DEFAULT_ITEMS };
+
+function getMemoryStore() {
+  const globalStore = globalThis as GlobalRequestsStore;
+  if (!globalStore.__qcRequestsStore) {
+    globalStore.__qcRequestsStore = { items: DEFAULT_ITEMS };
+  }
+  return globalStore.__qcRequestsStore;
+}
+
+function setMemoryStore(next: StorePayload) {
+  const globalStore = globalThis as GlobalRequestsStore;
+  globalStore.__qcRequestsStore = next;
+}
 
 async function readRedisStore(): Promise<StorePayload | null> {
   try {
@@ -97,7 +116,7 @@ async function readStore(): Promise<StorePayload> {
     const redisStore = await readRedisStore();
     if (redisStore) return redisStore;
   }
-  return memoryStore;
+  return getMemoryStore();
 }
 
 async function writeStore(next: StorePayload) {
@@ -105,7 +124,7 @@ async function writeStore(next: StorePayload) {
     const ok = await writeRedisStore(next);
     if (ok) return;
   }
-  memoryStore = next;
+  setMemoryStore(next);
 }
 
 async function loadItems() {
@@ -125,7 +144,7 @@ export async function listUserRequests(
   userId: string,
   filters?: { status?: RequestStatus; type?: RequestType; sort?: RequestSort },
 ) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const rows = await prisma.request.findMany({
       where: {
@@ -158,7 +177,7 @@ export async function listAllRequests(filters?: {
   companyId?: string;
   sort?: RequestSort;
 }) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const rows = await prisma.request.findMany({
       where: { ...(filters?.status ? { status: filters.status } : {}), ...(filters?.type ? { type: filters.type } : {}), ...(filters?.companyId ? { companyId: filters.companyId } : {}) },
@@ -180,7 +199,7 @@ export async function listAllRequests(filters?: {
 }
 
 export async function getRequestById(id: string) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const r = await prisma.request.findUnique({ where: { id } });
     return r ? pgRowToRecord(r) : null;
@@ -190,7 +209,7 @@ export async function getRequestById(id: string) {
 }
 
 export async function addRequest(user: RequestUser, type: RequestType, payload: Record<string, unknown>) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const duplicate = await prisma.request.findFirst({ where: { userId: user.id, type, status: "PENDING" } });
     if (duplicate) {
@@ -239,7 +258,7 @@ export async function updateRequestStatus(
   reviewer: { id: string },
   reviewNote?: string,
 ) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const current = await prisma.request.findUnique({ where: { id } });
     if (!current || (current.status !== "PENDING" && current.status !== "NEEDS_REVISION")) return current ? pgRowToRecord(current) : null;
@@ -265,7 +284,7 @@ export async function updateRequestStatus(
 }
 
 export async function resubmitRequest(id: string, payload: Record<string, unknown>) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const current = await prisma.request.findUnique({ where: { id } });
     if (!current || current.status !== "NEEDS_REVISION") return current ? pgRowToRecord(current) : null;

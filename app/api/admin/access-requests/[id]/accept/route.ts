@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
-import { createLocalCompany, createLocalUser, findLocalCompanyById, listLocalCompanies, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
+import { createLocalCompany, createLocalUser, findLocalCompanyById, findLocalCompanyBySlug, listLocalCompanies, listLocalUsers, upsertLocalLink } from "@/lib/auth/localStore";
 import {
   composeAccessRequestMessage,
   normalizeAccessType,
@@ -238,7 +238,47 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
     };
   }
 
+  if (accessType === "empresa" && companyId) {
+    const profileRole = profileType === "company_user" ? "company_user" : "empresa";
+    return {
+      email,
+      login,
+      fullName,
+      displayName,
+      profileRole: profileRole as EditableProfileRole,
+      role: profileRole,
+      globalRole: null,
+      isGlobalAdmin: false,
+      linkCompanyId: companyId,
+      membershipRole: profileRole,
+      passwordHash: parsed.passwordHash,
+    };
+  }
+
   if (accessType === "empresa") {
+    const existingCompany =
+      (parsed.company ? await findLocalCompanyBySlug(parsed.company).catch(() => null) : null) ??
+      (parsed.companyProfile?.companyName
+        ? await findLocalCompanyBySlug(parsed.companyProfile.companyName).catch(() => null)
+        : null);
+
+    if (existingCompany?.id) {
+      const profileRole = profileType === "company_user" ? "company_user" : "empresa";
+      return {
+        email,
+        login,
+        fullName,
+        displayName,
+        profileRole: profileRole as EditableProfileRole,
+        role: profileRole,
+        globalRole: null,
+        isGlobalAdmin: false,
+        linkCompanyId: existingCompany.id,
+        membershipRole: profileRole,
+        passwordHash: parsed.passwordHash,
+      };
+    }
+
     const companyName = parsed.companyProfile?.companyName?.trim() || parsed.company?.trim() || "";
     if (!companyName) {
       const error = new Error("Nome da empresa obrigatório") as Error & { code?: string };

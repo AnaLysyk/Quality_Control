@@ -18,6 +18,7 @@ import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import {
   createLocalUser,
   findLocalCompanyById,
+  findLocalCompanyBySlug,
   listLocalLinksForUser,
   listLocalUsers,
   removeLocalLink,
@@ -25,6 +26,7 @@ import {
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { readSyncedUserProfileFields, sanitizeUserProfileText } from "@/lib/userProfileData";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -83,16 +85,23 @@ export async function GET(req: NextRequest) {
   }
 
   const resolvedRole = normalizeLegacyRole(access.role);
+  const resolvedCompanyRole = normalizeLegacyRole(access.companyRole);
   const isGlobalAdmin =
     access.isGlobalAdmin === true ||
     resolvedRole === SYSTEM_ROLES.LEADER_TC ||
     resolvedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  const canManageOwnCompanyUsers =
+    resolvedRole === SYSTEM_ROLES.EMPRESA ||
+    resolvedCompanyRole === SYSTEM_ROLES.EMPRESA;
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("client_id");
 
   if (!isGlobalAdmin) {
     if (!access.companyId) {
       return NextResponse.json({ error: "Sem empresa vinculada" }, { status: 403 });
+    }
+    if (!canManageOwnCompanyUsers) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
     }
     const items = await listAdminUserItems({ companyId: access.companyId });
     return NextResponse.json({ items }, { status: 200 });
@@ -122,7 +131,15 @@ export async function POST(req: NextRequest) {
   const name = profileFields.name;
   const email = profileFields.email;
   const rawLogin = profileFields.login ?? "";
-  const clientId = typeof body?.client_id === "string" ? body.client_id : null;
+  const rawClientId = typeof body?.client_id === "string" ? body.client_id.trim() : "";
+  const rawClientSlug =
+    (typeof body?.clientSlug === "string" ? body.clientSlug.trim() : "") ||
+    (typeof body?.companySlug === "string" ? body.companySlug.trim() : "");
+  let clientId = rawClientId || null;
+  if (!clientId && rawClientSlug) {
+    const companyBySlug = await findLocalCompanyBySlug(rawClientSlug);
+    clientId = companyBySlug?.id ?? null;
+  }
   const phone = profileFields.phone;
   const password = typeof body?.password === "string" ? body.password : null;
   const jobTitle = profileFields.jobTitle;
@@ -238,7 +255,7 @@ export async function POST(req: NextRequest) {
   }).catch(() => {});
 
   const item = user ? await getAdminUserItem(user.id) : null;
-  return NextResponse.json({ ok: true, item }, { status: 201 });
+  return NextResponse.json({ ok: true, id: user?.id ?? null, user, item }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {

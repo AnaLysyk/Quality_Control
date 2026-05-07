@@ -104,6 +104,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<RoleValue>("testing_company_user");
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");

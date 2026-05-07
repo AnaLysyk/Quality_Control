@@ -51,6 +51,10 @@ function parseClientThemeMap(raw: string): Record<string, ClientTheme> {
 
 const CLIENT_THEME_MAP = parseClientThemeMap(CLIENT_THEME_MAP_RAW);
 
+function normalizeSlug(value?: string | null): string {
+  return (value ?? "").trim().toLowerCase();
+}
+
 const DEFAULT_THEME: Required<Pick<ClientTheme, "accent" | "accentHover" | "accentActive" | "accentSoft">> = {
   accent: "#ef0001",
   accentHover: "#c80001",
@@ -88,7 +92,8 @@ const getSessionStorage = () => (typeof window === "undefined" ? null : window.s
 
 export function ClientProvider({ children }: { children: ReactNode }) {
   const { user, companies, normalizedUser, loading: authLoading, refreshUser } = useAuth();
-  const { primaryCompanySlug, defaultCompanySlug, companySlugs } = normalizedUser;
+  const { primaryCompanySlug, defaultCompanySlug, companySlugs } =
+    normalizedUser ?? { primaryCompanySlug: null, defaultCompanySlug: null, companySlugs: [] };
   const [activeClientSlug, setActiveClientSlugState] = useState<string | null>(null);
   const [loading, setLoading] = useState(authLoading);
   const [error, setError] = useState<string | null>(null);

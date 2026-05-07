@@ -178,6 +178,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback(
     (theme: Theme) => {
       setSettings((prev) => {
+        if (prev.theme === theme) return prev;
         const next = { ...prev, theme };
         persistLocalSettings(next);
         // Fire-and-forget: persist theme to server so it survives reload
@@ -191,6 +192,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const setLanguage = useCallback(
     (language: Language) => {
       setSettings((prev) => {
+        if (prev.language === language) return prev;
         const next = { ...prev, language };
         persistLocalSettings(next);
         // Fire-and-forget: persist language to server so it survives reload
@@ -325,19 +327,29 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
 
   // Sync LanguageContext → AppSettings when user toggles LanguageSelector
   useEffect(() => {
+    if (syncingRef.current) return;
     const mapped = localeToLanguage(locale);
     if (mapped !== settings.language) {
+      syncingRef.current = true;
       setLanguage(mapped);
+      Promise.resolve().then(() => {
+        syncingRef.current = false;
+      });
     }
-  }, [locale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [locale, setLanguage, settings.language]);
 
   // Sync AppSettings → LanguageContext when settings change (e.g. from server)
   useEffect(() => {
+    if (syncingRef.current) return;
     const mapped = languageToLocale(settings.language);
     if (mapped !== locale) {
+      syncingRef.current = true;
       setLocale(mapped);
+      Promise.resolve().then(() => {
+        syncingRef.current = false;
+      });
     }
-  }, [settings.language]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [locale, setLocale, settings.language]);
 
   useEffect(() => {
     document.documentElement.lang = settings.language;

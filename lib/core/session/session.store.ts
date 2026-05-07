@@ -222,6 +222,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   // 8) Resolve papel de empresa e capacidades efetivas.
   const rawRole = session.companyRole ?? primaryLink?.role ?? user.role ?? null;
   const companyRole = normalizeLocalRole(rawRole);
+  const permissionRole = resolvePermissionRoleForUser(user, links);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,

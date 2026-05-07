@@ -93,3 +93,9 @@ node_modules/**/lint.log
 # Temporary files
 *.tmp
 .dev.pid
+
+# E2E next build output
+/.next-e2e/
+
+# tmp runtime files
+tmp/

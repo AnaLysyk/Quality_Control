@@ -9,6 +9,41 @@ export default async function globalSetup() {
 
   if (useJson) {
     console.log("[e2e] JSON mode enabled: skipping prisma db push and seed.");
+
+    const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
+    const warmups = [
+      "/admin/clients",
+      "/admin/access-requests",
+      "/admin/users",
+      "/api/health",
+      "/api/support/access-request",
+      "/api/admin/access-requests",
+      "/api/admin/users",
+      "/api/auth/login",
+    ];
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4 * 60 * 1000);
+      for (const path of warmups) {
+        const url = `${baseURL}${path}`;
+        try {
+          const res = await fetch(url, {
+            method: "GET",
+            signal: controller.signal,
+            headers: { "cache-control": "no-store" },
+          });
+          console.log(`[e2e] warmup ${path} -> ${res.status}`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(`[e2e] warmup ${path} failed: ${msg}`);
+        }
+      }
+      clearTimeout(timeout);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[e2e] warmup skipped: ${msg}`);
+    }
     return;
   }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createAccessRequest, listAccessRequests } from "@/data/accessRequestsStore";
-import { findLocalCompanyById } from "@/lib/auth/localStore";
+import { findLocalCompanyById, findLocalCompanyBySlug } from "@/lib/auth/localStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import {
   composeAccessRequestMessage,
@@ -83,6 +83,7 @@ export async function POST(req: Request) {
   const profileTypeRaw = sanitize(body.profile_type, 80);
   const profileType =
     normalizeRequestProfileType(profileTypeRaw) ??
+    normalizeRequestProfileType(role) ??
     normalizeRequestProfileType(accessTypeRaw) ??
     null;
   const accessType = profileType ? toInternalAccessType(profileType) : accessTypeRaw ? normalizeAccessType(accessTypeRaw) : null;
@@ -100,10 +101,22 @@ export async function POST(req: Request) {
 
   if (requestProfileTypeNeedsCompany(profileType)) {
     if (!resolvedClientId) {
-      return NextResponse.json(
-        { message: "Selecione uma empresa cadastrada para vincular ao perfil Usuário" },
-        { status: 400 },
-      );
+      const guessCompany = company || companyProfile.companyName || "";
+      if (guessCompany) {
+        const selectedCompany = await findLocalCompanyBySlug(guessCompany).catch(() => null);
+        if (selectedCompany?.id) {
+          resolvedClientId = selectedCompany.id;
+          resolvedCompanySlug = selectedCompany.slug ?? null;
+          resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || resolvedCompanyName;
+        }
+      }
+
+      if (!resolvedClientId) {
+        return NextResponse.json(
+          { message: "Selecione uma empresa cadastrada para vincular ao perfil Usuário" },
+          { status: 400 },
+        );
+      }
     }
 
     const selectedCompany = await findLocalCompanyById(resolvedClientId);
@@ -112,13 +125,33 @@ export async function POST(req: Request) {
     }
 
     resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || "Empresa";
-    resolvedCompanySlug = selectedCompany.slug ?? null;
+    resolvedCompanySlug = resolvedCompanySlug ?? selectedCompany.slug ?? null;
   } else if (profileType === "company_user") {
-    if (!companyProfile.companyName) {
+    const guessCompany = company || companyProfile.companyName || "";
+    if (guessCompany) {
+      const selectedCompany = await findLocalCompanyBySlug(guessCompany).catch(() => null);
+      if (selectedCompany?.id) {
+        resolvedClientId = selectedCompany.id;
+        resolvedCompanySlug = selectedCompany.slug ?? null;
+        resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || resolvedCompanyName;
+      }
+    }
+
+    if (!resolvedClientId && !companyProfile.companyName) {
       return NextResponse.json({ message: "Informe o nome ou razao social da empresa" }, { status: 400 });
     }
-    resolvedCompanyName = companyProfile.companyName;
-    resolvedClientId = null;
+
+    resolvedCompanyName = resolvedCompanyName || companyProfile.companyName;
+  } else if (profileType === "empresa") {
+    const guessCompany = company || companyProfile.companyName || "";
+    if (guessCompany) {
+      const selectedCompany = await findLocalCompanyBySlug(guessCompany).catch(() => null);
+      if (selectedCompany?.id) {
+        resolvedClientId = selectedCompany.id;
+        resolvedCompanySlug = selectedCompany.slug ?? null;
+        resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || resolvedCompanyName;
+      }
+    }
   }
 
   const authUser = await authenticateRequest(req);
@@ -145,6 +178,26 @@ export async function POST(req: Request) {
   });
 
   const useJson = shouldUseJsonStore();
+  const duplicate = useJson
+    ? (await listAccessRequests()).find(
+        (item) =>
+          item.email.toLowerCase() === email &&
+          (item.status === "open" || item.status === "in_progress"),
+      )
+    : await prisma.supportRequest.findFirst({
+        where: {
+          email,
+          status: { in: ["open", "in_progress"] },
+        },
+        select: { id: true },
+      }).catch(() => null);
+
+  if (duplicate) {
+    return NextResponse.json({ message: "Solicitação já registrada para este e-mail" }, { status: 409 });
+  }
+
+  let createdRequest: { id: string; email: string; status: string } | null = null;
+
   if (useJson) {
     const created = await createAccessRequest({
       email,
@@ -154,13 +207,16 @@ export async function POST(req: Request) {
       user_agent,
       user_id: userId,
     });
-    await notifyAccessRequestCreated({
+    createdRequest = { id: created.id, email: created.email, status: created.status };
+    void notifyAccessRequestCreated({
       requestId: created.id,
-        requesterName: fullName,
+      requesterName: fullName,
       profileType,
       reviewQueue: resolveReviewQueue(profileType),
       companySlug: resolvedCompanySlug,
       clientId: resolvedClientId,
+    }).catch((error) => {
+      console.warn("[ACCESS-REQUESTS][NOTIFY][CREATED] failed:", error);
     });
   } else {
     try {
@@ -174,13 +230,16 @@ export async function POST(req: Request) {
           user_id: userId,
         },
       });
-      await notifyAccessRequestCreated({
+      createdRequest = { id: created.id, email: created.email, status: created.status };
+      void notifyAccessRequestCreated({
         requestId: created.id,
         requesterName: fullName,
         profileType,
         reviewQueue: resolveReviewQueue(profileType),
         companySlug: resolvedCompanySlug,
         clientId: resolvedClientId,
+      }).catch((error) => {
+        console.warn("[ACCESS-REQUESTS][NOTIFY][CREATED] failed:", error);
       });
     } catch (error) {
       console.error("Erro ao registrar support_request:", error);
@@ -193,13 +252,16 @@ export async function POST(req: Request) {
           user_agent,
           user_id: userId,
         });
-        await notifyAccessRequestCreated({
+        createdRequest = { id: created.id, email: created.email, status: created.status };
+        void notifyAccessRequestCreated({
           requestId: created.id,
           requesterName: fullName,
           profileType,
           reviewQueue: resolveReviewQueue(profileType),
           companySlug: resolvedCompanySlug,
           clientId: resolvedClientId,
+        }).catch((error) => {
+          console.warn("[ACCESS-REQUESTS][NOTIFY][CREATED] failed:", error);
         });
       } catch (jsonError) {
         console.error("Fallback JSON store falhou:", jsonError);
@@ -219,6 +281,8 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
+    id: createdRequest?.id ?? null,
+    request: createdRequest,
     message: resolveRequestQueueMessage(resolveReviewQueue(profileType)),
   });
 }

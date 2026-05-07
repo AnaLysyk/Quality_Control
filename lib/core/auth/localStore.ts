@@ -1,6 +1,9 @@
 import "server-only";
 
+import * as fs from "fs/promises";
+import * as path from "path";
 import { randomUUID } from "crypto";
+import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
@@ -83,6 +86,125 @@ const STORE_KEY = "qc:local_auth_store:v1";
 const USE_REDIS = process.env.LOCAL_AUTH_STORE === "redis" || isRedisConfigured();
 const USE_MEMORY_STORE = process.env.LOCAL_AUTH_IN_MEMORY === "true";
 let warnedFsFailure = false;
+
+function shouldForceLocalAuthStore() {
+  const e2eJson = String(process.env.E2E_USE_JSON || "").toLowerCase();
+  return (
+    e2eJson === "1" ||
+    e2eJson === "true" ||
+    process.env.NODE_ENV === "test" ||
+    process.env.PLAYWRIGHT === "1"
+  );
+}
+
+function shouldUsePostgresAuthStore() {
+  return USE_POSTGRES && !shouldForceLocalAuthStore();
+}
+
+function buildDefaultLocalAuthStore(): LocalAuthStore {
+  const demoPasswordHash = hashPasswordSha256("Demo@123");
+
+  return {
+    users: [
+      {
+        id: "usr_demo_admin",
+        full_name: "Demo Admin",
+        name: "Demo Admin",
+        email: "admin@demo.test",
+        user: "admin",
+        password_hash: demoPasswordHash,
+        active: true,
+        role: SYSTEM_ROLES.LEADER_TC,
+        globalRole: "global_admin",
+        is_global_admin: true,
+        user_origin: "testing_company",
+      },
+      {
+        id: "usr_demo_company",
+        full_name: "Demo Company",
+        name: "Demo Company",
+        email: "company@demo.test",
+        user: "demo",
+        password_hash: demoPasswordHash,
+        active: true,
+        role: SYSTEM_ROLES.EMPRESA,
+        default_company_slug: "DEMO",
+        home_company_id: "cmp_demo",
+        user_origin: "client_company",
+        user_scope: "company_only",
+        allow_multi_company_link: false,
+      },
+      {
+        id: "usr_demo_user",
+        full_name: "Demo User",
+        name: "Demo User",
+        email: "user@demo.test",
+        user: "anapaula",
+        password_hash: demoPasswordHash,
+        active: true,
+        role: SYSTEM_ROLES.TESTING_COMPANY_USER,
+        default_company_slug: "DEMO",
+        home_company_id: "cmp_demo",
+        user_origin: "testing_company",
+      },
+      {
+        id: "usr_demo_no_company",
+        full_name: "Demo No Company",
+        name: "Demo No Company",
+        email: "nocompany@demo.test",
+        user: "analysyk",
+        password_hash: demoPasswordHash,
+        active: true,
+        role: SYSTEM_ROLES.TESTING_COMPANY_USER,
+        user_origin: "testing_company",
+      },
+    ],
+    companies: [
+      {
+        id: "cmp_demo",
+        name: "Demo",
+        slug: "DEMO",
+        status: "active",
+        active: true,
+      },
+      {
+        id: "cmp_other",
+        name: "Other Client",
+        slug: "OTHER",
+        status: "active",
+        active: true,
+      },
+    ],
+    memberships: [
+      {
+        id: "mem_demo_company",
+        userId: "usr_demo_company",
+        companyId: "cmp_demo",
+        role: SYSTEM_ROLES.EMPRESA,
+      },
+      {
+        id: "mem_demo_user",
+        userId: "usr_demo_user",
+        companyId: "cmp_demo",
+        role: SYSTEM_ROLES.TESTING_COMPANY_USER,
+      },
+    ],
+    links: [
+      {
+        user_id: "usr_demo_company",
+        company_id: "cmp_demo",
+        role: SYSTEM_ROLES.EMPRESA,
+        active: true,
+      },
+      {
+        user_id: "usr_demo_user",
+        company_id: "cmp_demo",
+        role: SYSTEM_ROLES.TESTING_COMPANY_USER,
+        active: true,
+      },
+    ],
+  };
+}
 
 function normalizeDatabaseUrl(value?: string | null) {
   return (value ?? "").trim().replace(/^['"]|['"]$/g, "");
@@ -195,7 +317,7 @@ export async function suggestNextUniqueLogin(input: {
   excludeUserId?: string;
   avoid?: string[] | null;
 }) {
-  if (USE_POSTGRES) return (await pg()).pgSuggestNextUniqueLogin(input);
+  if (shouldUsePostgresAuthStore()) return (await pg()).pgSuggestNextUniqueLogin(input);
   const store = await readLocalAuthStore();
   const base = slugifyLoginSeed(input.seed);
   const taken = new Set(
@@ -327,8 +449,31 @@ function setMemoryStore(store: LocalAuthStore) {
 }
 
 async function readStoreFromDisk(): Promise<LocalAuthStore> {
-  // No filesystem access — return an empty store as the baseline
-  return { users: [], companies: [], memberships: [], links: [] };
+  const readJsonStore = async (filePath: string): Promise<LocalAuthStore | null> => {
+    try {
+      const raw = await fs.readFile(filePath, "utf8");
+      const parsed = JSON.parse(raw) as LocalAuthStore;
+      if (!parsed || typeof parsed !== "object") return null;
+      const normalized: LocalAuthStore = {
+        users: Array.isArray(parsed.users) ? parsed.users : [],
+        companies: Array.isArray(parsed.companies) ? parsed.companies : [],
+        memberships: Array.isArray(parsed.memberships) ? parsed.memberships : [],
+        links: Array.isArray(parsed.links) ? parsed.links : [],
+      };
+      normalized.memberships = normalizeMemberships(normalized);
+      return normalized;
+    } catch {
+      return null;
+    }
+  };
+
+  const fromStore = await readJsonStore(STORE_PATH);
+  if (fromStore) return cloneStore(fromStore);
+
+  const fromSample = await readJsonStore(SAMPLE_PATH);
+  if (fromSample) return cloneStore(fromSample);
+
+  return cloneStore(buildDefaultLocalAuthStore());
 }
 
 async function readStoreFromRedis(): Promise<LocalAuthStore | null> {
@@ -366,11 +511,16 @@ async function writeStoreToRedis(store: LocalAuthStore): Promise<boolean> {
 }
 
 async function storeExists() {
-  return false;
+  try {
+    await fs.access(STORE_PATH);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function readLocalAuthStore(): Promise<LocalAuthStore> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgReadLocalAuthStore();
     } catch (error) {
@@ -405,7 +555,7 @@ export async function readLocalAuthStore(): Promise<LocalAuthStore> {
 }
 
 export async function writeLocalAuthStore(store: LocalAuthStore): Promise<void> {
-  if (USE_POSTGRES) return; // PG mode: individual CRUD ops handle persistence
+  if (shouldUsePostgresAuthStore()) return; // PG mode: individual CRUD ops handle persistence
   const payload: LocalAuthStore = {
     users: store.users ?? [],
     companies: store.companies ?? [],
@@ -415,6 +565,19 @@ export async function writeLocalAuthStore(store: LocalAuthStore): Promise<void> 
   if (USE_REDIS) {
     const ok = await writeStoreToRedis(payload);
     if (ok) return;
+  }
+  if (!USE_MEMORY_STORE) {
+    try {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+      await fs.writeFile(STORE_PATH, JSON.stringify(payload, null, 2), "utf8");
+      return;
+    } catch (err) {
+      if (!warnedFsFailure) {
+        warnedFsFailure = true;
+        const message = err instanceof Error ? err.message : String(err ?? "");
+        console.warn(`[localAuthStore] Falha ao persistir em disco (${STORE_PATH}): ${message}`);
+      }
+    }
   }
   // Memory fallback (covers USE_MEMORY_STORE and non-Postgres-non-Redis)
   setMemoryStore(cloneStore(payload));
@@ -432,7 +595,7 @@ async function loadStoreForWrite(): Promise<LocalAuthStore> {
 }
 
 export async function listLocalUsers(): Promise<LocalAuthUser[]> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgListLocalUsers();
     } catch (error) {
@@ -449,7 +612,7 @@ export async function listLocalUsers(): Promise<LocalAuthUser[]> {
 }
 
 export async function listLocalCompanies(): Promise<LocalAuthCompany[]> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgListLocalCompanies();
     } catch (error) {
@@ -466,7 +629,7 @@ export async function listLocalCompanies(): Promise<LocalAuthCompany[]> {
 }
 
 export async function listLocalMemberships(): Promise<LocalAuthMembership[]> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgListLocalMemberships();
     } catch (error) {
@@ -487,9 +650,18 @@ export async function listLocalLinks(): Promise<LocalAuthMembership[]> {
 }
 
 export async function findLocalUserByEmailOrId(identifier: string): Promise<LocalAuthUser | null> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
-      return await (await pg()).pgFindLocalUserByEmailOrId(identifier);
+      const pgUser = await (await pg()).pgFindLocalUserByEmailOrId(identifier);
+      if (pgUser) return pgUser;
+
+      const forceLocalFallback =
+        process.env.E2E_USE_JSON === "1" ||
+        process.env.E2E_USE_JSON === "true" ||
+        process.env.NODE_ENV === "test" ||
+        process.env.PLAYWRIGHT === "1";
+
+      if (!forceLocalFallback) return null;
     } catch (error) {
       if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
@@ -510,7 +682,7 @@ export async function findLocalUserByEmailOrId(identifier: string): Promise<Loca
 }
 
 export async function getLocalUserById(id: string): Promise<LocalAuthUser | null> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgGetLocalUserById(id);
     } catch (error) {
@@ -528,7 +700,7 @@ export async function getLocalUserById(id: string): Promise<LocalAuthUser | null
 }
 
 export async function findLocalCompanyById(id: string): Promise<LocalAuthCompany | null> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgFindLocalCompanyById(id);
     } catch (error) {
@@ -546,7 +718,7 @@ export async function findLocalCompanyById(id: string): Promise<LocalAuthCompany
 }
 
 export async function findLocalCompanyBySlug(slug: string): Promise<LocalAuthCompany | null> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgFindLocalCompanyBySlug(slug);
     } catch (error) {
@@ -565,7 +737,7 @@ export async function findLocalCompanyBySlug(slug: string): Promise<LocalAuthCom
 }
 
 export async function listLocalLinksForUser(userId: string): Promise<LocalAuthMembership[]> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgListLocalLinksForUser(userId);
     } catch (error) {
@@ -582,7 +754,7 @@ export async function listLocalLinksForUser(userId: string): Promise<LocalAuthMe
 }
 
 export async function listLocalLinksForCompany(companyId: string): Promise<LocalAuthMembership[]> {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresAuthStore()) {
     try {
       return await (await pg()).pgListLocalLinksForCompany(companyId);
     } catch (error) {
@@ -621,7 +793,7 @@ export async function createLocalUser(input: {
   user_scope?: "shared" | "company_only";
   allow_multi_company_link?: boolean;
 }): Promise<LocalAuthUser> {
-  if (USE_POSTGRES) return (await pg()).pgCreateLocalUser(input);
+  if (shouldUsePostgresAuthStore()) return (await pg()).pgCreateLocalUser(input);
   const store = await loadStoreForWrite();
   const email = normalizeLogin(input.email);
   const fullName = (input.full_name ?? input.name ?? input.email ?? "").trim();
@@ -671,7 +843,7 @@ export async function updateLocalUser(
   id: string,
   patch: Partial<Omit<LocalAuthUser, "id" | "password_hash">> & { password_hash?: string | null },
 ): Promise<LocalAuthUser | null> {
-  if (USE_POSTGRES) return (await pg()).pgUpdateLocalUser(id, patch);
+  if (shouldUsePostgresAuthStore()) return (await pg()).pgUpdateLocalUser(id, patch);
   const store = await loadStoreForWrite();
   const idx = store.users.findIndex((user) => user.id === id);
   if (idx === -1) return null;
@@ -731,7 +903,7 @@ export async function updateLocalUser(
 }
 
 export async function createLocalCompany(input: Partial<LocalAuthCompany> & { name: string; slug?: string | null }) {
-  if (USE_POSTGRES) return (await pg()).pgCreateLocalCompany(input);
+  if (shouldUsePostgresAuthStore()) return (await pg()).pgCreateLocalCompany(input);
   const store = await loadStoreForWrite();
   const normalizedName = normalizeComparableFullName(input.name ?? "");
   const normalizedTaxId =
@@ -778,7 +950,7 @@ export async function createLocalCompany(input: Partial<LocalAuthCompany> & { na
 }
 
 export async function updateLocalCompany(id: string, patch: Partial<LocalAuthCompany>): Promise<LocalAuthCompany | null> {
-  if (USE_POSTGRES) return (await pg()).pgUpdateLocalCompany(id, patch);
+  if (shouldUsePostgresAuthStore()) return (await pg()).pgUpdateLocalCompany(id, patch);
   const store = await loadStoreForWrite();
   const idx = store.companies.findIndex((company) => company.id === id);
   if (idx === -1) return null;
@@ -807,7 +979,7 @@ export async function updateLocalCompany(id: string, patch: Partial<LocalAuthCom
 }
 
 export async function deleteLocalCompany(id: string): Promise<boolean> {
-  if (USE_POSTGRES) return (await pg()).pgDeleteLocalCompany(id);
+  if (shouldUsePostgresAuthStore()) return (await pg()).pgDeleteLocalCompany(id);
   const store = await loadStoreForWrite();
   const idx = store.companies.findIndex((company) => company.id === id);
   if (idx === -1) return false;
@@ -823,7 +995,7 @@ export async function upsertLocalLink(input: {
   role?: string | null;
   capabilities?: string[] | null;
 }) {
-  if (USE_POSTGRES) return (await pg()).pgUpsertLocalLink(input);
+  if (shouldUsePostgresAuthStore()) return (await pg()).pgUpsertLocalLink(input);
   const store = await loadStoreForWrite();
   const user = store.users.find((candidate) => candidate.id === input.userId) ?? null;
   assertUserCanLinkToCompany(user, input.companyId);
@@ -854,7 +1026,7 @@ export async function upsertLocalLink(input: {
 }
 
 export async function removeLocalLink(userId: string, companyId: string) {
-  if (USE_POSTGRES) return (await pg()).pgRemoveLocalLink(userId, companyId);
+  if (shouldUsePostgresAuthStore()) return (await pg()).pgRemoveLocalLink(userId, companyId);
   const store = await loadStoreForWrite();
   const before = (store.memberships ?? []).length;
   store.memberships = (store.memberships ?? []).filter(

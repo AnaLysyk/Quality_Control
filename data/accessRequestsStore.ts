@@ -3,8 +3,12 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
+function shouldUsePostgresStore() {
+  return USE_POSTGRES && !shouldUseJsonStore();
+}
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
   return prisma;
@@ -25,11 +29,26 @@ export type AccessRequestRecord = {
 };
 
 type StorePayload = { items: AccessRequestRecord[] };
+type GlobalAccessRequestsStore = typeof globalThis & {
+  __qcAccessRequestsStore?: StorePayload;
+};
 
 const STORE_KEY = "qc:access_requests:v1";
 const USE_REDIS = isRedisConfigured();
 let warnedRedisFailure = false;
-let memoryStore: StorePayload = { items: [] };
+
+function getMemoryStore() {
+  const globalStore = globalThis as GlobalAccessRequestsStore;
+  if (!globalStore.__qcAccessRequestsStore) {
+    globalStore.__qcAccessRequestsStore = { items: [] };
+  }
+  return globalStore.__qcAccessRequestsStore;
+}
+
+function setMemoryStore(next: StorePayload) {
+  const globalStore = globalThis as GlobalAccessRequestsStore;
+  globalStore.__qcAccessRequestsStore = next;
+}
 
 async function readRedisStore(): Promise<StorePayload | null> {
   try {
@@ -69,7 +88,7 @@ async function readStore(): Promise<StorePayload> {
     const redisStore = await readRedisStore();
     if (redisStore) return redisStore;
   }
-  return memoryStore;
+  return getMemoryStore();
 }
 
 async function writeStore(next: StorePayload) {
@@ -77,11 +96,11 @@ async function writeStore(next: StorePayload) {
     const ok = await writeRedisStore(next);
     if (ok) return;
   }
-  memoryStore = next;
+  setMemoryStore(next);
 }
 
 export async function listAccessRequests() {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const rows = await prisma.accessRequest.findMany({ orderBy: { createdAt: "desc" } });
     return rows.map((r) => ({ id: r.id, email: r.email, message: r.description ?? r.notes ?? "", status: r.status as AccessRequestStatus, created_at: r.createdAt.toISOString(), updated_at: r.updatedAt.toISOString(), user_id: r.userId ?? null, ip_address: r.ip_address ?? null, user_agent: r.user_agent ?? null }));
@@ -91,7 +110,7 @@ export async function listAccessRequests() {
 }
 
 export async function getAccessRequestById(id: string) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const r = await prisma.accessRequest.findUnique({ where: { id } });
     if (!r) return null;
@@ -109,7 +128,7 @@ export async function createAccessRequest(input: {
   ip_address?: string | null;
   user_agent?: string | null;
 }) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const r = await prisma.accessRequest.create({
       data: { email: input.email, description: input.message, status: input.status ?? "open", userId: input.user_id ?? null, ip_address: input.ip_address ?? null, user_agent: input.user_agent ?? null },
@@ -138,7 +157,7 @@ export async function updateAccessRequest(
   id: string,
   patch: Partial<Pick<AccessRequestRecord, "email" | "message" | "status" | "user_id">>,
 ) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const r = await prisma.accessRequest.update({
       where: { id },

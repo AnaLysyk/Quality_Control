@@ -482,6 +482,9 @@ export default function AppShell({ children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [coverSlotContent, setCoverSlotContent] = useState<ReactNode | null>(null);
   const [, setLogoFailureTick] = useState(0);
+  const companyCount = companies.length;
+  const primaryCompanySlug = activeClientSlug ?? companies[0]?.slug ?? null;
+  const defaultCompanySlug = companies[0]?.slug ?? null;
   const mobileSidebarId = "app-shell-mobile-sidebar";
   const mobileMenuA11y = {
     "aria-controls": mobileSidebarId,
@@ -542,6 +545,12 @@ export default function AppShell({ children }: AppShellProps) {
       companyBrand &&
       (viewerProfile === "empresa" || viewerProfile === "company_user");
     const shortProfileLabel = profileLabel(viewerProfile, shellCopy);
+    const isOperationalModule =
+      pathname.startsWith("/operacao") ||
+      pathname.startsWith("/operacoes") ||
+      pathname.startsWith("/admin/operacao");
+    const operationalTitle = "Operacao";
+    const operationalNote = "Visao operacional do ambiente";
 
     return {
       ...baseIdentity,

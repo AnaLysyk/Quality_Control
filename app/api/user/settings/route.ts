@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
+
 import {
   APP_SETTINGS_COOKIE_MAX_AGE,
   THEME_PREFERENCE_COOKIE,
@@ -6,25 +7,9 @@ import {
 } from "@/lib/appSettingsCookies";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
-import { readPersistentJson, writePersistentJson, canUsePersistentJsonStore } from "@/lib/persistentJsonStore";
+import { readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
 
 export const revalidate = 0;
-
-let fs: typeof import("fs/promises") | undefined;
-let path: typeof import("path") | undefined;
-if (typeof process !== "undefined" && process.release?.name === "node") {
-  fs = require("fs/promises");
-  path = require("path");
-}
-
-const DEFAULT_DATA_DIR = path && path.join(process.cwd(), "data");
-const DATA_DIR = path && (process.env.USER_SETTINGS_DATA_DIR || DEFAULT_DATA_DIR);
-const STORE_PATH = path && DATA_DIR ? path.join(DATA_DIR, "user-settings.json") : undefined;
-const STORE_KEY_PREFIX = "qc:user_settings:v1";
-const USE_REDIS = process.env.USER_SETTINGS_STORE === "redis" || isRedisConfigured();
-const USE_MEMORY = process.env.USER_SETTINGS_IN_MEMORY === "true";
-let memoryStore: Record<string, StoredSettings> = {};
-let warnedFsFailure = false;
 
 type Theme = "light" | "dark" | "system";
 
@@ -35,6 +20,8 @@ type StoredSettings = {
   created_at?: string;
   updated_at?: string;
 };
+
+const STORE_KEY_PREFIX = "qc:user_settings:v1";
 
 const DEFAULT_SETTINGS: Omit<StoredSettings, "user_id"> = {
   language: DEFAULT_LOCALE,
@@ -63,26 +50,6 @@ function applyThemeCookies(response: NextResponse, theme: Theme) {
   }
 }
 
-async function readStoreFile(): Promise<Record<string, StoredSettings>> {
-  if (!fs || !STORE_PATH) return {};
-  try {
-    const raw = await fs.readFile(STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? (parsed as Record<string, StoredSettings>) : {};
-  } catch {
-    return {};
-  }
-}
-
-  if (theme === "light" || theme === "dark") {
-    response.cookies.set(THEME_RESOLVED_COOKIE, theme, {
-      path: "/",
-      sameSite: "lax",
-      maxAge: APP_SETTINGS_COOKIE_MAX_AGE,
-    });
-  }
-}
-
 function normalizeSettings(input?: Partial<StoredSettings> | null): Omit<StoredSettings, "user_id"> {
   return {
     language: isValidLanguage(input?.language) ? (input?.language as Locale) : DEFAULT_SETTINGS.language,
@@ -90,16 +57,16 @@ function normalizeSettings(input?: Partial<StoredSettings> | null): Omit<StoredS
   };
 }
 
+async function resolveUserId(req: Request): Promise<string | null> {
+  const auth = await authenticateRequest(req);
+  return auth?.id ?? null;
+}
+
 async function fetchSettings(userId: string): Promise<StoredSettings> {
   const key = `${STORE_KEY_PREFIX}:${userId}`;
   const fallback: StoredSettings = { user_id: userId, ...DEFAULT_SETTINGS };
-
-  if (canUsePersistentJsonStore()) {
-    const stored = await readPersistentJson<StoredSettings>(key, fallback);
-    return stored ?? fallback;
-  }
-
-  return fallback;
+  const stored = await readPersistentJson<StoredSettings>(key, fallback);
+  return stored ?? fallback;
 }
 
 async function saveSettings(userId: string, next: Omit<StoredSettings, "user_id">): Promise<StoredSettings> {
@@ -123,7 +90,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const stored = await fetchSettingsFromStore(userId);
+  const stored = await fetchSettings(userId);
   const settings = normalizeSettings(stored);
   const response = NextResponse.json({ settings }, { status: 200 });
   applyThemeCookies(response, settings.theme);
@@ -152,7 +119,7 @@ export async function PATCH(req: Request) {
     theme: rawTheme as Theme | undefined,
   });
 
-  const saved = await saveSettingsToStore(userId, normalized);
+  const saved = await saveSettings(userId, normalized);
   const settings = normalizeSettings(saved);
   const response = NextResponse.json({ settings }, { status: 200 });
   applyThemeCookies(response, settings.theme);

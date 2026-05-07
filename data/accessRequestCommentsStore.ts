@@ -3,8 +3,12 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
+function shouldUsePostgresStore() {
+  return USE_POSTGRES && !shouldUseJsonStore();
+}
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
   return prisma;
@@ -22,11 +26,26 @@ export type AccessRequestComment = {
 };
 
 type StorePayload = { items: AccessRequestComment[] };
+type GlobalAccessRequestCommentsStore = typeof globalThis & {
+  __qcAccessRequestCommentsStore?: StorePayload;
+};
 
 const STORE_KEY = "qc:access_request_comments:v1";
 const USE_REDIS = isRedisConfigured();
 let warnedRedisFailure = false;
-let memoryStore: StorePayload = { items: [] };
+
+function getMemoryStore() {
+  const globalStore = globalThis as GlobalAccessRequestCommentsStore;
+  if (!globalStore.__qcAccessRequestCommentsStore) {
+    globalStore.__qcAccessRequestCommentsStore = { items: [] };
+  }
+  return globalStore.__qcAccessRequestCommentsStore;
+}
+
+function setMemoryStore(next: StorePayload) {
+  const globalStore = globalThis as GlobalAccessRequestCommentsStore;
+  globalStore.__qcAccessRequestCommentsStore = next;
+}
 
 async function readRedisStore(): Promise<StorePayload | null> {
   try {
@@ -66,7 +85,7 @@ async function readStore(): Promise<StorePayload> {
     const redisStore = await readRedisStore();
     if (redisStore) return redisStore;
   }
-  return memoryStore;
+  return getMemoryStore();
 }
 
 async function writeStore(next: StorePayload) {
@@ -74,12 +93,12 @@ async function writeStore(next: StorePayload) {
     const ok = await writeRedisStore(next);
     if (ok) return;
   }
-  memoryStore = next;
+  setMemoryStore(next);
 }
 
 export async function listAccessRequestComments(requestId: string) {
   if (!requestId) return [];
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const rows = await prisma.accessRequestComment.findMany({
       where: { requestId },
@@ -101,7 +120,7 @@ export async function createAccessRequestComment(input: {
   authorId?: string | null;
   body: string;
 }) {
-  if (USE_POSTGRES) {
+  if (shouldUsePostgresStore()) {
     const prisma = await getPrisma();
     const r = await prisma.accessRequestComment.create({
       data: { requestId: input.requestId, authorRole: input.authorRole, authorName: input.authorName.trim() || "Usuario", authorEmail: input.authorEmail ?? null, authorId: input.authorId ?? null, body: input.body.trim() },

@@ -86,7 +86,13 @@ const args = isWin
 
 const child = spawn(command, args, {
   cwd: root,
-  env: { ...process.env, NEXT_DIST_DIR: devDistDir },
+  env: {
+    ...process.env,
+    NEXT_DIST_DIR: devDistDir,
+    ...(process.env.E2E_USE_JSON === "1" || String(process.env.E2E_USE_JSON || "").toLowerCase() === "true"
+      ? { AUTH_STORE: "json", USE_JSON_STORE: "true", NEXT_DEV_BUNDLER: process.env.NEXT_DEV_BUNDLER || "turbo" }
+      : {}),
+  },
   detached: true,
   stdio: ["ignore", outFd, errFd],
 });

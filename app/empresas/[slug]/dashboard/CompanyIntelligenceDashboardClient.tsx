@@ -760,13 +760,13 @@ function StatCard(props: {
   icon: ReactNode;
 }) {
   const tone =
-    props.tone === "critical" ? "text-rose-600" :
-    props.tone === "warning" ? "text-amber-600" :
-    props.tone === "positive" ? "text-emerald-600" :
-    "text-(--tc-text,#0b1a3c)";
+    props.tone === "critical" ? "text-rose-600 dark:text-rose-300" :
+    props.tone === "warning" ? "text-amber-600 dark:text-amber-300" :
+    props.tone === "positive" ? "text-emerald-600 dark:text-emerald-300" :
+    "text-(--tc-text,#0b1a3c) dark:text-(--tc-text,#e2e8f0)";
 
   return (
-    <div className="h-full min-h-43 rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-4 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)">
+    <div className="h-full min-h-[10.75rem] rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-4 shadow-[0_10px_30px_rgba(1,24,72,0.06)] transition hover:-translate-y-[1px] hover:shadow-[0_16px_40px_rgba(1,24,72,0.08)] dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a) dark:shadow-none">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">{props.label}</div>
@@ -1169,8 +1169,8 @@ function ResultViewButton(props: { active: boolean; label: string; onClick: () =
       onClick={props.onClick}
       className={`inline-flex items-center rounded-full border px-3.5 py-2 text-sm font-semibold transition ${
         props.active
-          ? "border-transparent bg-(--tc-primary,#0b1a3c) text-white dark:bg-(--tc-primary,#245295)"
-          : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
+          ? "border-transparent bg-(--tc-primary,#0b1a3c) text-white shadow-[0_10px_20px_rgba(1,24,72,0.18)] dark:bg-(--tc-primary,#245295) dark:shadow-none"
+          : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface-2,#f8fafc) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a) dark:text-(--tc-text,#e2e8f0) dark:hover:bg-(--tc-surface-2,#1e293b)"
       }`}
     >
       {props.label}
@@ -2549,7 +2549,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                         <span className={`h-2 w-2 rounded-full ${softInsightAccent(insights[0].tone)}`} />
                         Principal
                       </div>
-                      <div className="mt-2 text-base font-bold text-(--tc-text,#0b1a3c)">{insights[0].title}</div>
+                      <div className="mt-2 text-base font-bold text-(--tc-text,#0b1a3c) dark:text-(--tc-text,#e2e8f0)">{insights[0].title}</div>
                       <p className="mt-2 text-sm leading-5 text-[rgba(8,32,77,0.72)] dark:text-slate-300">{insights[0].detail}</p>
                     </div>
                   ) : null}

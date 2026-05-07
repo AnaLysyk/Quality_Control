@@ -674,13 +674,6 @@ export default function AppShell({ children }: AppShellProps) {
         onClose={() => setMobileOpen(false)}
       />
 
-      <Sidebar
-        pathname={pathname}
-        mobileOpen={mobileOpen}
-        mobilePanelId={mobileSidebarId}
-        onClose={() => setMobileOpen(false)}
-      />
-
       {/* Botão de menu mobile/hamburguer */}
       <button
         type="button"

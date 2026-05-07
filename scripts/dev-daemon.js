@@ -77,9 +77,12 @@ const outFd = fs.openSync(outFile, "a");
 const errFd = fs.openSync(errFile, "a");
 
 const command = isWin ? process.execPath : nextBin;
-const host = process.env.HOST || "0.0.0.0";
+const host = process.env.HOST || process.env.HOSTNAME || "0.0.0.0";
+const port = process.env.PORT || "3000";
 const bundlerFlag = bundler === "webpack" ? "--webpack" : "--turbo";
-const args = isWin ? [nextJsBin, "dev", "--hostname", host, bundlerFlag] : ["dev", "--hostname", host, bundlerFlag];
+const args = isWin
+  ? [nextJsBin, "dev", "--hostname", host, "--port", port, bundlerFlag]
+  : ["dev", "--hostname", host, "--port", port, bundlerFlag];
 
 const child = spawn(command, args, {
   cwd: root,
@@ -93,4 +96,4 @@ fs.writeFileSync(pidFile, String(child.pid), "utf8");
 
 console.log(`Dev server started (pid ${child.pid}).`);
 console.log(`Logs: ${path.basename(outFile)} / ${path.basename(errFile)}`);
-console.log(`Open: http://localhost:3000 (host ${host}, bundler ${bundler})`);
+console.log(`Open: http://localhost:${port} (host ${host}, bundler ${bundler})`);

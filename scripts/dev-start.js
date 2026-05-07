@@ -72,9 +72,11 @@ function run() {
 
   const bundlerFlag = process.argv.includes("--turbo") ? "--turbo" : "--webpack";
   const command = isWin ? process.execPath : nextBin;
+  const hostname = process.env.HOST || process.env.HOSTNAME || "0.0.0.0";
+  const port = process.env.PORT || "3000";
   const args = isWin
-    ? [nextJsBin, "dev", "--hostname", process.env.HOST || "0.0.0.0", bundlerFlag]
-    : ["dev", "--hostname", process.env.HOST || "0.0.0.0", bundlerFlag];
+    ? [nextJsBin, "dev", "--hostname", hostname, "--port", port, bundlerFlag]
+    : ["dev", "--hostname", hostname, "--port", port, bundlerFlag];
 
   const child = spawn(command, args, {
     cwd: root,

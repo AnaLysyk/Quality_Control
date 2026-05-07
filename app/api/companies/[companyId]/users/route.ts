@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { canDeleteUserByProfile } from "@/lib/adminUserDeleteAccess";
@@ -45,17 +46,15 @@ function buildTempPasswordHash() {
 }
 
 async function parseCompanyId(
-  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> },
+  context: { params: Promise<{ companyId: string }> },
 ) {
-  const params = context.params;
-  return typeof (params as Promise<{ companyId: string }>).then === "function"
-    ? (await (params as Promise<{ companyId: string }>)).companyId
-    : (params as { companyId: string }).companyId;
+  const { companyId } = await context.params;
+  return companyId;
 }
 
 export async function GET(
   _req: NextRequest,
-  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> },
+  context: { params: Promise<{ companyId: string }> },
 ) {
   const companyId = await parseCompanyId(context);
   const users = await listAdminUserItems({ companyId });
@@ -64,7 +63,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> },
+  context: { params: Promise<{ companyId: string }> },
 ) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
@@ -147,7 +146,7 @@ export async function POST(
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> },
+  context: { params: Promise<{ companyId: string }> },
 ) {
   const companyId = await parseCompanyId(context);
   const body = await req.json().catch(() => null);
@@ -216,7 +215,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { companyId: string } } | { params: Promise<{ companyId: string }> },
+  context: { params: Promise<{ companyId: string }> },
 ) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {

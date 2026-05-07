@@ -24,7 +24,8 @@ import {
 } from "react-icons/fi";
 
 // Monaco Editor is large — load dynamically to avoid SSR issues
-const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+// TODO: Install @monaco-editor/react package when available
+// const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -1342,8 +1343,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           </div>
         )}
 
-        {/* Monaco editor */}
-        {activeFile ? (
+        {/* Monaco editor - commented out until @monaco-editor/react is installed */}
+        {/* {activeFile ? (
           <div className="min-h-0 flex-1">
             <MonacoEditor
               height="100%"
@@ -1376,7 +1377,15 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               <p className="text-sm">Selecione um arquivo para editar</p>
             </div>
           </div>
-        )}
+        )} */}
+
+        {/* Placeholder while Monaco editor is not available */}
+        <div className="flex flex-1 items-center justify-center text-slate-400 dark:text-zinc-600">
+          <div className="text-center">
+            <FiCode className="mx-auto mb-3 h-10 w-10 opacity-30" />
+            <p className="text-sm">Editor não está disponível. Instale @monaco-editor/react para habilitar.</p>
+          </div>
+        </div>
       </div>
 
       {/* ── Panel 3: Config + Terminal ── */}

@@ -52,7 +52,7 @@ export async function GET(req: Request) {
       client_name: company.name ?? company.company_name ?? "Empresa",
       client_slug: company.slug,
       client_active: company.active ?? true,
-      role: isGlobalAdmin || normalized === "empresa" ? "ADMIN" : "USER",
+      role: access.isGlobalAdmin === true || normalized === "empresa" ? "ADMIN" : "USER",
       link_active: true,
       created_at: createdAt,
       companyRole: normalized ?? null,

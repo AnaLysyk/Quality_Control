@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
+import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -123,6 +124,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         name: "",
         login: "",
         email: "",
+        phone: "",
         role: "testing_company_user" as RoleValue,
         clientId: null as string | null,
         jobTitle: "",
@@ -176,6 +178,11 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     !!email.trim();
   const roleLabel =
     ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
+  const roleHint = canEditRole
+    ? requiresClient
+      ? "Este perfil precisa de empresa vinculada."
+      : "Perfil interno sem empresa obrigatoria."
+    : "Somente Lider TC pode alterar este perfil.";
   const linkedCompanyName =
     clients?.find((client) => client.id === clientId)?.name ?? (clientId ? "Empresa vinculada" : "Sem empresa");
   const displayName = name.trim() || user?.name || "Usuário";

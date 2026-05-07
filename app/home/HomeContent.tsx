@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext, type ClientAccess } from "@/context/ClientContext";
 import type { AuthUser } from "@/contracts/auth";
 import { CompanySelector } from "@/components/CompanySelector";
@@ -48,7 +48,7 @@ function decideLandingRoute(
   const role = (user.role ?? "").toLowerCase();
   if (role === "admin") return "/admin";
   if (role === "company" || role === "user" || role === "viewer") {
-    const slug = resolveCompanySlug(user, clients, activeClientSlug);
+    const slug = resolveCompanySlug(user, clients, activeClientSlug, normalizedUser);
     return slug
       ? buildCompanyPathForAccess(slug, "home", {
           isGlobalAdmin: user.isGlobalAdmin === true,
@@ -70,7 +70,7 @@ function decideLandingRoute(
 export default function HomeContent() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading: authLoading, normalizedUser } = useAuth();
+  const { user, loading: authLoading, normalizedUser } = useAuthUser();
   const { clients, activeClientSlug, loading: clientsLoading } = useClientContext();
   const isLoggedOut = !user;
 

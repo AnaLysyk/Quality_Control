@@ -1,7 +1,21 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { createQualityProjects } from "./playwright.projects";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
+
+function isTruthy(value?: string | null) {
+  return value === "1" || value?.toLowerCase() === "true" || value?.toLowerCase() === "yes";
+}
+
+function isFalsey(value?: string | null) {
+  return value === "0" || value?.toLowerCase() === "false" || value?.toLowerCase() === "no";
+}
+
+function numberFromEnv(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
 function loadDotenv(path: string): Record<string, string> {
   try {
@@ -40,6 +54,19 @@ const envOverrides = {
 };
 Object.assign(process.env, envOverrides);
 const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING === "1" || process.env.PLAYWRIGHT_USE_EXISTING === "true";
+const headed = isTruthy(process.env.PLAYWRIGHT_HEADED) || isFalsey(process.env.PLAYWRIGHT_HEADLESS);
+const browserChannel = process.env.PLAYWRIGHT_CHANNEL?.trim();
+const slowMo = numberFromEnv(process.env.PLAYWRIGHT_SLOW_MO, headed ? 150 : 0);
+const traceMode =
+  (process.env.PLAYWRIGHT_TRACE as "off" | "on" | "retain-on-failure" | "on-first-retry" | undefined) ??
+  "on-first-retry";
+const videoMode =
+  (process.env.PLAYWRIGHT_VIDEO as "off" | "on" | "retain-on-failure" | "on-first-retry" | undefined) ??
+  "retain-on-failure";
+const screenshotMode =
+  (process.env.PLAYWRIGHT_SCREENSHOT as "off" | "on" | "only-on-failure" | undefined) ??
+  "only-on-failure";
+
 export default defineConfig({
   testDir: "./tests-e2e",
   globalSetup: "./tests-e2e/global-setup.ts",
@@ -50,8 +77,11 @@ export default defineConfig({
   workers: 1,
   use: {
     baseURL,
-    trace: "on-first-retry",
-    headless: true,
+    trace: traceMode,
+    video: videoMode,
+    screenshot: screenshotMode,
+    headless: !headed,
+    ...(slowMo > 0 ? { launchOptions: { slowMo } } : {}),
   },
   webServer: useExistingServer
     ? undefined
@@ -83,10 +113,5 @@ export default defineConfig({
           NEXT_PUBLIC_BASE_URL: baseURL,
         },
       },
-  projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
-  ],
+  projects: createQualityProjects(browserChannel),
 });

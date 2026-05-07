@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getNextId, readKanbanStore, writeKanbanStore } from "./store";
 import type { Status } from "./types";
 import { getAuthContext } from "@/lib/rbac";
+import type { AuthUser } from "@/lib/jwtAuth";
 
 export const revalidate = 0;
 

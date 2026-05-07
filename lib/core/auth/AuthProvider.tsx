@@ -5,6 +5,7 @@ import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contrac
 import { getAccessToken, refreshClientSession } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import { publishAuthUser, subscribeAuthUserSync } from "@/lib/authUserSync";
+import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 
 type MeResult = {
   user: AuthUser | null;
@@ -18,6 +19,7 @@ type AuthContextValue = {
   error: string | null;
   refreshUser: (showSpinner?: boolean) => Promise<void>;
   logout: () => Promise<void>;
+  normalizedUser: NormalizedAuthenticatedUser | null;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -227,9 +229,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const normalizedUser = useMemo(() => normalizeAuthenticatedUser(user, companies), [user, companies]);
+
   const value = useMemo(
-    () => ({ user, companies, loading, error, refreshUser, logout }),
-    [user, companies, loading, error, refreshUser, logout],
+    () => ({ user, companies, loading, error, refreshUser, logout, normalizedUser }),
+    [user, companies, loading, error, refreshUser, logout, normalizedUser],
   );
 
   return (

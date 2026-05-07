@@ -10,7 +10,7 @@
  *   6. Validar sessão, perfil, empresa e permissões pós-redefinição
  *   7. Senha antiga NÃO deve funcionar (se o reset foi aplicado)
  *
- * Perfis testados: empresa, company_user, testing_company_user, leader_tc
+ * Perfis testados: empresa, company_user, testing_company_user, leader_tc, technical_support
  */
 
 import { test, expect } from "./fixtures/test";
@@ -113,6 +113,7 @@ const profilesForReset = [
   { role: "company_user", label: "Usuário da Empresa" },
   { role: "testing_company_user", label: "Usuário TC" },
   { role: "leader_tc", label: "Líder TC" },
+  { role: "technical_support", label: "Suporte Tecnico" },
 ];
 
 for (const profile of profilesForReset) {

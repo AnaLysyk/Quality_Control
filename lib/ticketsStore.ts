@@ -75,6 +75,7 @@ const STORE_COUNTER_KEY = "qc:support_suportes:counter:v1";
 const VERSION_DB_KEY_PREFIX = "qc:support_suportes:versions:v1:";
 const BACKUP_DB_KEY_PREFIX = "qc:support_suportes:backups:v1:";
 const FORCE_REDIS = process.env.TICKETS_STORE === "redis";
+const FORCE_FILE = process.env.TICKETS_STORE === "file";
 const REDIS_AVAILABLE = isRedisConfigured();
 const USE_REDIS = !FORCE_FILE && REDIS_AVAILABLE;
 const SHOULD_FLUSH_ON_WRITE = Boolean(

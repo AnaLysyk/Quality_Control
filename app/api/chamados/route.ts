@@ -5,6 +5,7 @@ import { notifySuporteCreated } from "@/lib/notificationService";
 import { attachAssigneeInfo, attachAssigneeToSuporte } from "@/lib/ticketsPresenter";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
+import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import { canAccessGlobalTicketWorkspace } from "@/lib/rbac/tickets";
 import { addAuditLogSafe } from "@/data/auditLogRepository";

@@ -16,6 +16,7 @@ import {
   FiPlay,
   FiSearch,
   FiShield,
+  FiTerminal,
 } from "react-icons/fi";
 
 import type { AutomationAccess } from "@/lib/automations/access";
@@ -59,6 +60,13 @@ const COVERAGE_META = {
   manual: "Manual",
 } as const;
 
+const EXECUTION_STATUS_META = {
+  passed: { label: "Passou", tone: "text-emerald-700" },
+  failed: { label: "Falhou", tone: "text-rose-700" },
+  blocked: { label: "Bloqueado", tone: "text-amber-700" },
+  not_run: { label: "Nao executado", tone: "text-slate-600" },
+} as const;
+
 export default function AutomationCasesBoard({ access, activeCompanySlug, companies }: Props) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AutomationCaseDefinition["status"] | "all">("all");
@@ -94,6 +102,9 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
         testCase.application,
         testCase.domain,
         testCase.tags.join(" "),
+        testCase.linkedPlanName ?? "",
+        testCase.linkedRunName ?? "",
+        testCase.playwrightSpecPath ?? "",
         testCase.externalCaseRef ?? "",
       ]
         .join(" ")
@@ -127,6 +138,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
 
   const selectedCompany = companies.find((company) => company.slug === activeCompanySlug) ?? companies[0] ?? null;
   const linkedPlansHref = activeCompanySlug ? `/empresas/${activeCompanySlug}/planos-de-teste` : null;
+  const linkedRunsHref = activeCompanySlug ? `/empresas/${activeCompanySlug}/runs` : "/runs";
 
   const metrics = useMemo(
     () => [
@@ -149,12 +161,27 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
         hint: "manual ou Qase",
         icon: FiFileText,
       },
+      {
+        label: "Com run",
+        value: `${AUTOMATION_CASES.filter((testCase) => Boolean(testCase.linkedRunName)).length}`,
+        hint: "rastreavel em execucoes",
+        icon: FiPlay,
+      },
+      {
+        label: "Com spec",
+        value: `${AUTOMATION_CASES.filter((testCase) => Boolean(testCase.playwrightSpecPath)).length}`,
+        hint: "Playwright vinculado",
+        icon: FiTerminal,
+      },
     ],
     [],
   );
 
   return (
-    <section className="space-y-4 rounded-[32px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
+    <section
+      data-testid="test-case-repository"
+      className="space-y-4 rounded-[32px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
@@ -187,6 +214,15 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
           </Link>
         </div>
       </div>
+
+      <header className="rounded-[28px] border border-(--tc-border,#d7deea) bg-[linear-gradient(135deg,#011848,#162b68)] p-5 text-white shadow-sm">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-white/70">Repositorio Central</p>
+        <h1 className="mt-2 text-2xl font-black tracking-[-0.04em] sm:text-3xl">Casos de Teste</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-white/78">
+          Repositorio central de casos manuais, integrados e automatizados, com vinculo para planos, runs,
+          evidencias e automacao Playwright.
+        </p>
+      </header>
 
       <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
@@ -445,6 +481,18 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                     <div className="mt-3 space-y-2 text-sm text-(--tc-text,#0b1a3c)">
                       <p>Plano: {selectedCase.linkedPlanName ?? "Não vinculado"}</p>
                       <p>Referência: {selectedCase.externalCaseRef ?? "Interno"}</p>
+                      <p>Run: {selectedCase.linkedRunName ?? "Nao vinculado"}</p>
+                      <p>Spec: {selectedCase.playwrightSpecPath ?? "Sem spec vinculada"}</p>
+                      <p>
+                        Ultima execucao:{" "}
+                        {selectedCase.lastExecutionStatus ? (
+                          <span className={EXECUTION_STATUS_META[selectedCase.lastExecutionStatus].tone}>
+                            {EXECUTION_STATUS_META[selectedCase.lastExecutionStatus].label}
+                          </span>
+                        ) : (
+                          "Sem execucao"
+                        )}
+                      </p>
                       <p>Cobertura: {COVERAGE_META[selectedCase.coverage]}</p>
                     </div>
                   </section>
@@ -473,6 +521,15 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                   <FiActivity className="h-4 w-4" />
                   Execuções
                 </Link>
+                {selectedCase.linkedRunName ? (
+                  <Link
+                    href={linkedRunsHref}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+                  >
+                    <FiPlay className="h-4 w-4" />
+                    Abrir runs
+                  </Link>
+                ) : null}
                 {linkedPlansHref ? (
                   <Link
                     href={linkedPlansHref}

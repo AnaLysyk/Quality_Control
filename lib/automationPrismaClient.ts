@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import {
-  getAutomationPrismaClientOptions,
+  getPrismaClientOptions,
   resetPrismaAdapter,
 } from "@/lib/prismaClientOptions";
 
@@ -9,11 +9,11 @@ const globalForAutomationPrisma = globalThis as unknown as {
 };
 
 function createAutomationPrismaClient() {
-  return new PrismaClient(getAutomationPrismaClientOptions());
+  return new PrismaClient(getPrismaClientOptions());
 }
 
 function recreateAutomationPrismaClient() {
-  resetPrismaAdapter("automation");
+  resetPrismaAdapter();
   const client = createAutomationPrismaClient();
   globalForAutomationPrisma.automationPrisma = client;
   return client;

@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { getAppMeta } from "@/lib/appMeta";
@@ -51,6 +51,9 @@ const APP_COLOR_CLASS: Record<string, string> = {
 export default function AdminRunsPage() {
   const { user } = useAuthUser();
   const router = useRouter();
+  const pathname = usePathname();
+  const isOperationalContext =
+    pathname.startsWith("/operacao") || pathname.startsWith("/operacoes") || pathname.startsWith("/admin/operacao");
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
   const isAdmin = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support");
   const isCompany = role === "empresa";

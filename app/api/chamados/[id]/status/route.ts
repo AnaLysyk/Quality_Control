@@ -22,17 +22,13 @@ import { canAccessGlobalTicketWorkspace, canMoveTicket } from "@/lib/rbac/ticket
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } } | { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
-  // Next.js App Router: context.params pode ser Promise
-  const params = (context.params && typeof (context.params as any).then === 'function')
-    ? await (context.params as Promise<{ id: string }>)
-    : (context.params as { id: string });
-  const id = params.id;
+  const { id } = await context.params;
   const body = await req.json().catch(() => ({}));
   const nextStatus = typeof body?.status === "string" ? body.status : "";
   const reason = typeof body?.reason === "string" ? body.reason.trim() : null;

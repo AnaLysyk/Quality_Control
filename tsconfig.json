@@ -72,6 +72,8 @@
   ],
   "exclude": [
     "node_modules",
-    "backend"
+    "backend",
+    "tests",
+    "tests-e2e"
   ]
 }

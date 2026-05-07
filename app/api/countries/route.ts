@@ -15,6 +15,14 @@ function normalizeRole(role?: string | null) {
   return (role ?? "").trim().toLowerCase();
 }
 
+function canAccessCompanyScope(user: Awaited<ReturnType<typeof authenticateRequest>>, companyId: string) {
+  if (!user) return false;
+  if (user.isGlobalAdmin) return true;
+  const slugs: string[] = (user as { companySlugs?: string[] }).companySlugs ?? [];
+  if (slugs.includes(companyId)) return true;
+  return user.companyId === companyId;
+}
+
 function canCreateCountry(user: Awaited<ReturnType<typeof authenticateRequest>>) {
   if (!user) return false;
   if (user.isGlobalAdmin) return true;

@@ -172,7 +172,7 @@ export async function PATCH(request: Request) {
 
   if (!parsed.data.caseId) {
     const mergedPlanAutomation = mergePlanAutomation(
-      normalizeTestPlanAutomationState(plan.automation, plan.automation.enabled),
+      normalizeTestPlanAutomationState(plan.automation, plan.automation?.enabled),
       parsed.data.automation,
     );
 

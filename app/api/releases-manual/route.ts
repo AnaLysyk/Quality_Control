@@ -41,12 +41,6 @@ function normalizeOptionalLabel(value: unknown) {
   return normalized || null;
 }
 
-function normalizeOptionalLabel(value: unknown) {
-  if (typeof value !== "string") return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
-
 export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);
   const mockRole = await getMockRole();

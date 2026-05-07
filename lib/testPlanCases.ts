@@ -5,6 +5,24 @@ export type TestPlanCaseStep = {
   data?: string | null;
 };
 
+export type TestPlanAutomationState = {
+  enabled: boolean;
+  status: "not_started" | "draft" | "published";
+  linkedAt: string | null;
+  updatedAt: string | null;
+  publishedAt: string | null;
+};
+
+export type TestPlanCaseAutomation = {
+  enabled: boolean;
+  status: "not_started" | "draft" | "published";
+  flowId: string | null;
+  scriptTemplateId: string | null;
+  linkedAt: string | null;
+  updatedAt: string | null;
+  publishedAt: string | null;
+};
+
 export type TestPlanCase = {
   id: string;
   title?: string | null;
@@ -14,6 +32,7 @@ export type TestPlanCase = {
   severity?: string | null;
   link?: string | null;
   steps?: TestPlanCaseStep[];
+  automation?: TestPlanCaseAutomation;
 };
 
 function normalizeOptionalString(value: unknown) {
@@ -79,6 +98,7 @@ export function normalizeTestPlanCase(raw: unknown, fallbackId?: string | null):
     severity: normalizeOptionalString(record.severity),
     link: normalizeOptionalString(record.link) ?? normalizeOptionalString(record.url),
     steps: steps.length ? steps : undefined,
+    automation: record.automation ? normalizeTestPlanCaseAutomation(record.automation) : undefined,
   };
 }
 
@@ -186,6 +206,72 @@ export function buildQaseCaseLink(projectCode: string, caseId: string) {
   const normalizedCaseId = String(caseId ?? "").trim();
   if (!normalizedProjectCode || !normalizedCaseId) return null;
   return `https://app.qase.io/case/${normalizedProjectCode}-${normalizedCaseId}`;
+}
+
+export function normalizeTestPlanAutomationState(
+  raw: unknown,
+  defaultEnabled = false,
+): TestPlanAutomationState {
+  const now = new Date().toISOString();
+
+  if (!raw || typeof raw !== "object") {
+    return {
+      enabled: defaultEnabled,
+      status: "not_started",
+      linkedAt: null,
+      updatedAt: now,
+      publishedAt: null,
+    };
+  }
+
+  const record = raw as Record<string, unknown>;
+  const enabled = record.enabled === true || record.enabled === "true";
+  const status = ["draft", "published"].includes(String(record.status))
+    ? (String(record.status) as "draft" | "published")
+    : "not_started";
+
+  return {
+    enabled,
+    status: enabled ? status : "not_started",
+    linkedAt: typeof record.linkedAt === "string" ? record.linkedAt : null,
+    updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : now,
+    publishedAt: typeof record.publishedAt === "string" ? record.publishedAt : null,
+  };
+}
+
+export function normalizeTestPlanCaseAutomation(
+  raw: unknown,
+  defaultEnabled = false,
+): TestPlanCaseAutomation {
+  const now = new Date().toISOString();
+
+  if (!raw || typeof raw !== "object") {
+    return {
+      enabled: defaultEnabled,
+      status: "not_started",
+      flowId: null,
+      scriptTemplateId: null,
+      linkedAt: null,
+      updatedAt: now,
+      publishedAt: null,
+    };
+  }
+
+  const record = raw as Record<string, unknown>;
+  const enabled = record.enabled === true || record.enabled === "true";
+  const status = ["draft", "published"].includes(String(record.status))
+    ? (String(record.status) as "draft" | "published")
+    : "not_started";
+
+  return {
+    enabled,
+    status: enabled ? status : "not_started",
+    flowId: typeof record.flowId === "string" ? record.flowId : null,
+    scriptTemplateId: typeof record.scriptTemplateId === "string" ? record.scriptTemplateId : null,
+    linkedAt: typeof record.linkedAt === "string" ? record.linkedAt : null,
+    updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : now,
+    publishedAt: typeof record.publishedAt === "string" ? record.publishedAt : null,
+  };
 }
 
 export function isCaseEffectivelyEmpty(testCase: TestPlanCase) {

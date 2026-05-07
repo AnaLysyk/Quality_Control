@@ -207,7 +207,8 @@ export function CreateManualReleaseButton({
   const [draggingColumnKey, setDraggingColumnKey] = useState<CaseStatus | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<CaseStatus | null>(null);
   const [form, setForm] = useState<NewManualRelease>(initialState);
-  const [cases, setCases] = useState<RunCaseDraft[]>([]);
+  const [cases, setCases] = useState<ManualCaseDraft[]>([]);
+  const [caseDraft, setCaseDraft] = useState<ManualCaseDraft>({ ...initialCaseDraft, id: nextAutoId() });
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [plans, setPlans] = useState<TestPlanItem[]>([]);
@@ -387,22 +388,8 @@ export function CreateManualReleaseButton({
     setForm((current) => ({ ...current, [field]: coercePositiveInteger(value) }));
   }
 
-  async function resolvePlanDetail(plan: TestPlanItem) {
-    if (!resolvedCompanySlug || !selectedApplicationId) {
-      throw new Error("Selecione a aplicação antes de carregar o plano.");
-    }
-
-    const response = await fetchApi(
-      `/api/test-plans?companySlug=${encodeURIComponent(resolvedCompanySlug)}&applicationId=${encodeURIComponent(selectedApplicationId)}&planId=${encodeURIComponent(plan.id)}&source=${encodeURIComponent(plan.source)}`,
-      { cache: "no-store" },
-    );
-    const payload = await response.json().catch(() => null);
-    if (!response.ok || !payload?.plan) {
-      throw new Error(
-        (typeof payload?.error === "string" && payload.error) || "Não foi possível carregar o plano de teste.",
-      );
-    }
-    return payload.plan as TestPlanItem;
+  function handleCaseDraftChange(field: keyof ManualCaseDraft, value: string) {
+    setCaseDraft((current) => ({ ...current, [field]: value }));
   }
 
   function handleAddCase() {
@@ -604,8 +591,7 @@ export function CreateManualReleaseButton({
               id: item.id,
               title: item.title,
               link: item.link || undefined,
-              status: RUN_CASE_STATUS_VALUES[item.status],
-              bug: item.bug ?? null,
+              status: CASE_STATUS_VALUES[item.status],
               fromApi: false,
             })),
           ),
@@ -1025,20 +1011,21 @@ export function CreateManualReleaseButton({
                         Marcar falha
                       </button>
                     </div>
-                    <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Total executado</p>
-                      <div className="mt-1 text-lg font-extrabold text-white">{total} caso(s)</div>
+
+                    <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(160px,1fr))]">
+                      <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Total executado</p>
+                        <div className="mt-1 text-lg font-extrabold text-white">{total} caso(s)</div>
+                      </div>
+                      <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Pass rate</p>
+                        <div className="mt-1 text-lg font-extrabold text-white">{passRate}%</div>
+                      </div>
+                      <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Casos no quadro</p>
+                        <div className="mt-1 text-lg font-extrabold text-white">{cases.length}</div>
+                      </div>
                     </div>
-                    <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Pass rate</p>
-                      <div className="mt-1 text-lg font-extrabold text-white">{passRate}%</div>
-                    </div>
-                    <div className="rounded-xl border border-white/20 bg-white/14 px-4 py-3 backdrop-blur">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Casos no quadro</p>
-                      <div className="mt-1 text-lg font-extrabold text-white">{cases.length}</div>
-                    </div>
-                  </div>
-                </div>
 
                     <div className="mt-5 grid gap-4 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
                       {([
@@ -1062,7 +1049,8 @@ export function CreateManualReleaseButton({
                             onChange={(event) => handleNumber(item.key, event.target.value)}
                           />
                         </div>
-                      </div>
+                      ))}
+                    </div>
 
                       <div className="mt-5 space-y-4">
                         <label className="block space-y-2">
@@ -1166,7 +1154,6 @@ export function CreateManualReleaseButton({
                           </div>
                         </div>
                       </div>
-                    </div>
 
                     <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
                       <div className="flex items-center justify-between rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3">

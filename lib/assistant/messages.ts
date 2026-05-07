@@ -26,6 +26,8 @@ export const REPEATED_REPLY_MESSAGES: Record<AssistantToolName, string> = {
     "💬 Já tratei esse comentário. Quer fazer uma atualização diferente?",
   suggest_next_step:
     "💡 Já sugeri os próximos passos. Escolha uma das opções ou descreva o que precisa fazer.",
+  use_brain:
+    "🧠 Já usamos o Brain para esse mesmo assunto. Quer que eu aprofunde em impacto, riscos ou próximos passos?",
 };
 
 /* ──────────────────── Clarify / low-signal ──────────────────── */

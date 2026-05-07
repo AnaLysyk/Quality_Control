@@ -18,7 +18,13 @@ import {
   FiTrendingUp,
   FiZap,
 } from "react-icons/fi";
+import DashboardFilterBar from "@/components/dashboard/DashboardFilterBar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardMetricGrid from "@/components/dashboard/DashboardMetricGrid";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDashboardContext } from "@/hooks/useDashboardContext";
+import { useDashboardFilters } from "@/hooks/useDashboardFilters";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAppMeta } from "@/lib/appMeta";
 import css from "./CompanyIntelligenceDashboard.module.css";
@@ -2074,10 +2080,123 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const resultSummaryLine = analysisRequested && hasFilterResults
     ? `Recorte atual: ${activeFilterChips[0] ?? "Filtro aplicado"} | ${filteredRuns.length} runs | ${filteredDefects.length} defeitos | ${applicationRanking.length} aplicações`
     : "Defina o recorte para gerar a leitura executiva.";
+  const dashboardContext = useDashboardContext({
+    user: user ?? undefined,
+    companies: [{ slug: props.companySlug, name: props.companyName }],
+    fixedCompanySlug: props.companySlug,
+    labels: {
+      companyLabel: props.companyName,
+      applicationLabel:
+        activeApplicationFilter !== "all"
+          ? filterOptions.applications.find((option) => option.key === activeApplicationFilter)?.label ?? activeApplicationFilter
+          : "Todas as aplicações",
+      moduleLabel: activeChartLabel,
+      periodLabel: PERIOD_OPTIONS.find((option) => option.value === activePeriodPreset)?.label ?? activePeriodPreset,
+    },
+  });
+  const dashboardFilters = useDashboardFilters({
+    chips: activeFilterChips,
+    maxVisible: 5,
+  });
+  const executiveMetricCards = useDashboardMetrics([
+    {
+      id: "health-score",
+      label: "Saúde geral",
+      value: `${Math.round(Math.max(0, executiveSummary.passRate - executiveSummary.failRate))}%`,
+      note: resultSummaryLine,
+      tone: executiveSummary.failRate >= 15 ? "critical" : executiveSummary.failRate > 0 ? "warning" : "positive",
+    },
+    {
+      id: "pass-rate",
+      label: "Pass rate",
+      value: formatPercent(executiveSummary.passRate),
+      note: `${executiveSummary.totalRuns} runs no recorte atual`,
+      tone: executiveSummary.passRate >= 90 ? "positive" : executiveSummary.passRate >= 70 ? "warning" : "critical",
+    },
+    {
+      id: "active-runs",
+      label: "Runs em andamento",
+      value: filteredRuns.filter((run) => run.statusTone === "warning").length,
+      note: `${filteredRuns.length} runs consideradas`,
+      tone: "default",
+    },
+    {
+      id: "recent-failures",
+      label: "Falhas recentes",
+      value: executiveSummary.defects,
+      note: `${filteredDefects.length} defeitos vinculados`,
+      tone: executiveSummary.defects > 0 ? "warning" : "positive",
+    },
+    {
+      id: "automation-scope",
+      label: "Aplicações em risco",
+      value: executiveSummary.applicationsAtRisk,
+      note: `${applicationRanking.length} aplicações monitoradas`,
+      tone: executiveSummary.applicationsAtRisk > 0 ? "critical" : "positive",
+    },
+    {
+      id: "avg-execution",
+      label: "Casos analisados",
+      value: executiveSummary.totalCases,
+      note: topApplication ? `${topApplication.label} lidera o volume` : "Sem aplicação dominante no recorte",
+      tone: "default",
+    },
+  ]);
 
   return (
     <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 pb-6 pt-2 text-(--page-text,#0b1a3c) sm:px-6 sm:pb-7 sm:pt-3 lg:px-10 lg:pb-8 lg:pt-4">
       <div className="relative z-10 flex w-full max-w-none flex-col gap-4 2xl:gap-5">
+        <DashboardHeader
+          kicker="Base unificada"
+          title="Dashboard contextual de qualidade"
+          subtitle="A mesma base de dashboard adapta a leitura por perfil, empresa, aplicação e recorte analítico sem abrir telas paralelas."
+          contextLabel={dashboardContext.contextLabel}
+          chips={dashboardFilters.compactChips}
+          hiddenChipCount={dashboardFilters.hiddenChipCount}
+        />
+
+        <DashboardFilterBar
+          chips={compactDraftChips}
+          hiddenChipCount={hiddenDraftChipCount}
+          actions={
+            <>
+              <button
+                type="button"
+                onClick={() => setAppliedFilters(currentDraftFilters)}
+                className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+              >
+                Aplicar recorte
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPeriodPreset(DEFAULT_FILTERS.periodPreset);
+                  setGroupBy(DEFAULT_FILTERS.groupBy);
+                  setChartView(DEFAULT_FILTERS.chartView);
+                  setApplicationFilter(DEFAULT_FILTERS.applicationFilter);
+                  setRunFilter(DEFAULT_FILTERS.runFilter);
+                  setStatusFilter(DEFAULT_FILTERS.statusFilter);
+                  setEnvironmentFilter(DEFAULT_FILTERS.environmentFilter);
+                  setSourceFilter(DEFAULT_FILTERS.sourceFilter);
+                  setResponsibleFilter(DEFAULT_FILTERS.responsibleFilter);
+                  setRiskFilter(DEFAULT_FILTERS.riskFilter);
+                  setCompareEnabled(DEFAULT_FILTERS.compareEnabled);
+                  setOnlyWithDefects(DEFAULT_FILTERS.onlyWithDefects);
+                  setOnlyRegression(DEFAULT_FILTERS.onlyRegression);
+                  setDateFrom(DEFAULT_FILTERS.dateFrom);
+                  setDateTo(DEFAULT_FILTERS.dateTo);
+                  setAppliedFilters(DEFAULT_FILTERS);
+                }}
+                className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3.5 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+              >
+                Limpar filtros
+              </button>
+            </>
+          }
+        />
+
+        <DashboardMetricGrid metrics={executiveMetricCards} />
+
         <section className="flex flex-col gap-2.5 border-b border-[rgba(15,23,42,0.08)] pb-3 dark:border-slate-700/30 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">

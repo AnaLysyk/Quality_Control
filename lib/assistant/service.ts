@@ -81,6 +81,26 @@ function getLastUserTurn(history: AssistantConversationTurn[]) {
   return null;
 }
 
+function getLatestUserTopic(history: AssistantConversationTurn[], message?: string) {
+  const candidates = [
+    normalizeSearch(message ?? ""),
+    ...history
+      .filter((turn) => turn.from === "user")
+      .map((turn) => normalizeSearch(turn.text)),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const cleaned = String(candidate)
+      .replace(/["'`]/g, "")
+      .trim();
+    if (cleaned.length < 4) continue;
+    if (/^\d+$/.test(cleaned)) continue;
+    return cleaned.slice(0, 80);
+  }
+
+  return null;
+}
+
 /* ──────────────────── Low-signal detection ──────────────────── */
 
 function isLowSignalMessage(message: string, context: AssistantScreenContext) {

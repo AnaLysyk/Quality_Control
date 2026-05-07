@@ -14,7 +14,11 @@ import {
   FiTrendingDown,
   FiTrendingUp,
 } from "react-icons/fi";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import TicketsButton from "@/components/TicketsButton";
+import { useDashboardContext } from "@/hooks/useDashboardContext";
+import { useDashboardFilters } from "@/hooks/useDashboardFilters";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
 import type { CompanyRow, QualityGateStatus, Stats } from "@/lib/quality";
@@ -301,6 +305,7 @@ function attentionToneClass(tone: AttentionItem["tone"]) {
 
 export default function AdminHomePage() {
   const router = useRouter();
+  const { user } = useAuthUser();
   const companyContextRef = useRef<HTMLElement | null>(null);
   const rankingSectionRef = useRef<HTMLElement | null>(null);
   const [overview, setOverview] = useState<QualityOverviewResponse | null>(null);
@@ -583,6 +588,22 @@ export default function AdminHomePage() {
     { id: "defects", label: "Defeitos ativos", value: openDefects, note: `${failingDefects} com falha aberta` },
     { id: "releases", label: "Releases sob risco", value: overview?.riskCount ?? "--", note: `${overview?.warningCount ?? 0} em observação` },
   ];
+  const dashboardContext = useDashboardContext({
+    user: user ?? undefined,
+    companies: companies.map((company) => ({ id: company.id, slug: resolveCompanyKey(company), name: company.name })),
+    selectedCompanySlugs: selectedCompany ? [resolveCompanyKey(selectedCompany)] : [],
+    labels: {
+      companyLabel: selectedCompany?.name ?? null,
+      periodLabel: `Últimos ${overview?.period ?? 30} dias`,
+    },
+  });
+  const dashboardFilters = useDashboardFilters({
+    chips: [
+      selectedCompany?.name ?? (dashboardContext.canSelectAllCompanies ? "Todas as empresas permitidas" : null),
+      selectedRun?.title ?? null,
+      `Últimos ${overview?.period ?? 30} dias`,
+    ],
+  });
   const rankingRows = useMemo<RankedCompanyRow[]>(
     () =>
       (ranking?.companies ?? []).map((entry, index) => {
@@ -625,6 +646,15 @@ export default function AdminHomePage() {
   return (
     <div className="min-h-screen bg-(--page-bg,#eef3fb) text-(--tc-text-primary)">
         <div className="w-full flex flex-col gap-4 px-3 py-4 sm:px-4 sm:py-5 lg:px-8 lg:py-7">
+          <DashboardHeader
+            kicker="Base unificada"
+            title="Dashboard operacional contextual"
+            subtitle="Mesma base de dashboard para leitura consolidada, comparação por empresa e aprofundamento por contexto permitido."
+            contextLabel={dashboardContext.contextLabel}
+            chips={dashboardFilters.compactChips}
+            hiddenChipCount={dashboardFilters.hiddenChipCount}
+          />
+
           <section className="tc-hero-panel">
             <div className="flex flex-col gap-4">
               {/* Top row: title + actions */}

@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { buildCompanyPathForAccess, shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
+import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 
 type AuthUserShape = {
   role?: string | null;

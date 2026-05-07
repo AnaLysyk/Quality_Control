@@ -9,7 +9,10 @@ import { hasCapability, type Capability } from "@/lib/permissions";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import Breadcrumb from "@/components/Breadcrumb";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { useClientContext } from "@/context/ClientContext";
+import { useDashboardContext } from "@/hooks/useDashboardContext";
+import { useDashboardFilters } from "@/hooks/useDashboardFilters";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
 
 export default function DashboardClient() {
@@ -161,11 +164,33 @@ export default function DashboardClient() {
         { label: "Sessoes", value: metrics.overview.activeSessions, note: "Sessoes autenticadas ativas." },
       ]
     : [];
+  const dashboardContext = useDashboardContext({
+    user: user ?? undefined,
+    companies: companySlug ? [{ slug: companySlug, name: companyDisplayValue }] : [],
+    fixedCompanySlug: isCompanyIdentity ? companySlug : null,
+    labels: {
+      companyLabel: isCompanyIdentity ? companyDisplayValue : undefined,
+      periodLabel: canViewSystemMetrics ? "Últimos 30 dias" : null,
+    },
+  });
+  const dashboardFilters = useDashboardFilters({
+    chips: [roleLabel, companyDisplayValue, canViewSystemMetrics ? "Últimos 30 dias" : null],
+  });
 
   return (
     <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className="tc-page-shell py-4 sm:py-6">
         <Breadcrumb items={[{ label: "Painel" }]} />
+
+        <DashboardHeader
+          kicker="Base unificada"
+          title="Dashboard contextual"
+          subtitle="Entrada única para indicadores, qualidade e execução, respeitando perfil, empresa ativa e escopo permitido."
+          contextLabel={dashboardContext.contextLabel}
+          chips={dashboardFilters.compactChips}
+          hiddenChipCount={dashboardFilters.hiddenChipCount}
+          className="mb-4"
+        />
 
         <section className="tc-hero-panel">
           <div className="tc-hero-grid">

@@ -8,7 +8,7 @@
  *   4. Usuário aprovado faz primeiro login
  *   5. Validar sessão, perfil, empresa e permissões
  *
- * Perfis testados: empresa, company_user, testing_company_user
+ * Perfis testados: empresa, company_user, testing_company_user, leader_tc, technical_support
  */
 
 import { test, expect } from "./fixtures/test";
@@ -116,6 +116,18 @@ const accessRequestProfiles = [
     accessType: "user" as const,
     expectedRole: "testing_company_user",
   },
+  {
+    role: "leader_tc",
+    label: "Lider TC",
+    accessType: "user" as const,
+    expectedRole: "leader_tc",
+  },
+  {
+    role: "technical_support",
+    label: "Suporte Tecnico",
+    accessType: "user" as const,
+    expectedRole: "technical_support",
+  },
 ];
 
 for (const profile of accessRequestProfiles) {
@@ -205,14 +217,21 @@ for (const profile of accessRequestProfiles) {
     expect(me.user.role).toBe(profile.expectedRole);
 
     // Vínculo de empresa
+    const isInternalAdminProfile = ["leader_tc", "technical_support"].includes(profile.expectedRole);
     const hasCompany =
       me.user.clientSlug === "DEMO" ||
       me.companies?.some((c: { slug: string }) => c.slug === "DEMO");
-    expect(hasCompany, `Usuário ${email} sem vínculo com DEMO`).toBeTruthy();
+    if (!isInternalAdminProfile) {
+      expect(hasCompany, `Usuario ${email} sem vinculo com DEMO`).toBeTruthy();
+    }
 
     // ── 8. Validar que admin está bloqueado ───────────────────────────────────
     const adminRes = await page.request.get(`${BASE_URL}/api/admin/access-requests`);
-    expect([401, 403]).toContain(adminRes.status());
+    if (isInternalAdminProfile) {
+      expect(adminRes.ok(), `Perfil interno ${profile.expectedRole} deve acessar fila de solicitacoes`).toBeTruthy();
+    } else {
+      expect([401, 403]).toContain(adminRes.status());
+    }
 
     // ── 9. Validar acesso à dashboard da empresa ──────────────────────────────
     const sessionRes = await page.request.get(`${BASE_URL}/api/me`);

@@ -7,6 +7,7 @@ import { getAccessRequestById } from "@/data/accessRequestsStore";
 import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
+import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

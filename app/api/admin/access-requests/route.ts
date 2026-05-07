@@ -36,7 +36,7 @@ async function listPasswordResetQueueItems(admin: AccessRequestReviewer): Promis
   const requests = await listAllRequests({ type: "PASSWORD_RESET", sort: "createdAt_desc" });
   return requests
     .map(mapPasswordResetRequestToAccessQueueItem)
-    .filter((item) => canViewAccessRequestQueue(admin, resolveAccessRequestQueue(item.message, item.email)));
+    .filter((item) => canReviewerAccessQueue(admin, resolveAccessRequestQueue(item.message, item.email)));
 }
 
 function sortMappedItems(items: MappedAccessRequestRow[]) {
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Falha ao listar access-requests (fallback JSON):", error);
     const items = (await listAccessRequests()).filter((item) =>
-      canViewAccessRequestQueue(admin, resolveAccessRequestQueue(item.message, item.email)),
+      canReviewerAccessQueue(admin, resolveAccessRequestQueue(item.message, item.email)),
     );
     const mapped = items.map((item) => ({
       id: item.id,

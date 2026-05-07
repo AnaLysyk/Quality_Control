@@ -6,7 +6,7 @@
  *   2. Logar como Líder TC (admin) → criar cada perfil permitido
  *   3. Para cada usuário criado: logout → login → validar visão + bloqueios
  *
- * Perfis testados: empresa, company_user, testing_company_user, leader_tc
+ * Perfis testados: empresa, company_user, testing_company_user, leader_tc, technical_support
  */
 
 import { test, expect } from "./fixtures/test";
@@ -126,7 +126,7 @@ test.describe("Suporte Técnico — criação de perfis", () => {
     { role: "empresa", label: "Empresa" },
     { role: "company_user", label: "Usuário da Empresa" },
     { role: "testing_company_user", label: "Usuário TC" },
-    { role: "leader_tc", label: "Líder TC" },
+    { role: "technical_support", label: "Suporte Tecnico" },
   ];
 
   for (const profile of profilesToCreate) {
@@ -194,6 +194,8 @@ test.describe("Líder TC — criação de perfis", () => {
     { role: "empresa", label: "Empresa" },
     { role: "company_user", label: "Usuário da Empresa" },
     { role: "testing_company_user", label: "Usuário TC" },
+    { role: "technical_support", label: "Suporte Tecnico" },
+    { role: "leader_tc", label: "Lider TC" },
   ];
 
   for (const profile of profilesToCreate) {

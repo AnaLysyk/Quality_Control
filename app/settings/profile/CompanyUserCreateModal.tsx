@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { fetchApi } from "@/lib/api";
-import { getFixedProfileOptions } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 
 type CompanyUserCreateModalProps = {
@@ -48,6 +47,10 @@ export function CompanyUserCreateModal({
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [role, setRole] = useState("company_user");
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -64,6 +67,10 @@ export function CompanyUserCreateModal({
     setEmail("");
     setUsername("");
     setPassword("");
+    setPhone("");
+    setJobTitle("");
+    setLinkedinUrl("");
+    setAvatarUrl("");
     setRole("company_user");
     setLoading(false);
     setGenerating(false);

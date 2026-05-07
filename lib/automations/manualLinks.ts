@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { AutomationCaseDefinition } from "@/data/automationCases";
+import type { AutomationCaseDefinition, AutomationCaseStatus } from "@/data/automationCases";
 import type { Release } from "@/types/release";
 import { readManualReleaseCases, readManualReleases } from "@/lib/manualReleaseStore";
 import { resolveManualReleaseKind } from "@/lib/manualReleaseKind";
@@ -10,6 +10,7 @@ import {
   aggregateAutomationWorkflowStatus,
   type AutomationWorkflowStatus,
 } from "@/lib/automations/workflowStatus";
+import { normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
 
 export type ManualAutomationLinkedCase = AutomationCaseDefinition & {
   linkedPlanId: string | null;
@@ -158,14 +159,22 @@ function buildTags(plan: ManualTestPlanRecord, testCase: TestPlanCase) {
   return Array.from(new Set(tokens)).slice(0, 8);
 }
 
-function resolveCaseStatus(testCase: TestPlanCase): AutomationWorkflowStatus {
+function resolveCaseWorkflowStatus(testCase: TestPlanCase): AutomationWorkflowStatus {
   if (!testCase.automation?.enabled) return "not_started";
   return testCase.automation.status;
 }
 
+function resolveCaseStatus(testCase: TestPlanCase): AutomationCaseStatus {
+  if (!testCase.automation?.enabled) return "draft";
+  const ws = testCase.automation.status;
+  if (ws === "published") return "automated";
+  if (ws === "draft") return "ready";
+  return "draft";
+}
+
 function resolvePlanStatus(plan: ManualTestPlanRecord) {
   return aggregateAutomationWorkflowStatus([
-    plan.automation.enabled ? plan.automation.status : null,
+    plan.automation?.enabled ? plan.automation.status : null,
     ...plan.cases
       .filter((testCase) => testCase.automation?.enabled)
       .map((testCase) => testCase.automation?.status),
@@ -196,7 +205,7 @@ function toLinkedCase(plan: ManualTestPlanRecord, testCase: TestPlanCase, index:
     externalCaseRef: testCase.id,
     manualCaseId: testCase.id,
     workflowUpdatedAt: testCase.automation?.updatedAt ?? null,
-    companyScope: plan.companySlug,
+    companyScope: (normalizeAutomationCompanyScope(plan.companySlug) ?? "all"),
     preconditions: trimText(testCase.preconditions) ? [trimText(testCase.preconditions) as string] : [],
     inputBindings: buildInputBindings(testCase),
     tags: buildTags(plan, testCase),
@@ -209,7 +218,7 @@ function toPlanCaseSummary(plan: ManualTestPlanRecord, testCase: TestPlanCase): 
   return {
     id: testCase.id,
     title: trimText(testCase.title) ?? testCase.id,
-    status: resolveCaseStatus(testCase),
+    status: resolveCaseWorkflowStatus(testCase),
     flowId,
     scriptTemplateId: inferScriptTemplateId(flowId, testCase),
     priority: inferPriority(testCase),
@@ -266,7 +275,7 @@ export async function buildManualAutomationIndex(companySlug: string): Promise<M
 
   for (const plan of plans) {
     const linkedPlanCases = plan.cases.filter((testCase) => testCase.automation?.enabled);
-    const visibleInAutomation = plan.automation.enabled || linkedPlanCases.length > 0;
+    const visibleInAutomation = plan.automation?.enabled || linkedPlanCases.length > 0;
     if (!visibleInAutomation) continue;
 
     const planCaseSummaries = linkedPlanCases.map((testCase) => toPlanCaseSummary(plan, testCase));
@@ -295,7 +304,7 @@ export async function buildManualAutomationIndex(companySlug: string): Promise<M
           .sort((left, right) => Date.parse(right) - Date.parse(left))[0] ?? null,
       status: resolvePlanStatus(plan),
       visibleInAutomation,
-      automationEnabled: plan.automation.enabled,
+      automationEnabled: plan.automation?.enabled ?? false,
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt,
       cases: planCaseSummaries,

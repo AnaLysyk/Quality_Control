@@ -24,7 +24,7 @@ import { fetchApi } from "@/lib/api";
 import { isCompanyProfileContext, isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
-import { hasPermissionAccess, normalizePermissionMatrix } from "@/lib/permissionMatrix";
+import { hasPermissionAccess, normalizePermissionMatrix, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 import {
   canCreateCompanyUsersByScope,
   canViewCompanyUsersByScope,

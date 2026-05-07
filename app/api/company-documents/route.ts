@@ -70,6 +70,21 @@ const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files"
 let memoryDocumentsStore: { items: CompanyDocumentItem[] } = { items: [] };
 let memoryHistoryStore: { items: DocumentHistoryEvent[] } = { items: [] };
 
+async function ensureStore() {
+  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
+  await fs.mkdir(LOCAL_UPLOAD_ROOT, { recursive: true });
+  try {
+    await fs.access(STORE_PATH);
+  } catch {
+    await fs.writeFile(STORE_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
+  }
+  try {
+    await fs.access(HISTORY_PATH);
+  } catch {
+    await fs.writeFile(HISTORY_PATH, JSON.stringify({ items: [] }, null, 2), "utf8");
+  }
+}
+
 function pgRowToDocItem(row: {
   id: string; companySlug: string; kind: string; title: string;
   description?: string | null; url?: string | null; fileName?: string | null;

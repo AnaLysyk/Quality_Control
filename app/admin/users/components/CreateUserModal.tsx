@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { readApiError } from "@/lib/apiEnvelope";
 import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
+import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -337,7 +338,6 @@ export function CreateUserModal({
                       </option>
                     ))}
                   </select>
-                  {roleHint ? <span className="mt-1 block text-xs text-gray-500">{roleHint}</span> : null}
                 </label>
               ) : null}
               <label className="block text-sm">

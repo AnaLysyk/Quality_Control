@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listApplications, createApplication } from "../../../lib/applicationsStore";
 import { getCompanyIntegratedDefects } from "../../../lib/companyDefects";
+import { syncApplicationToBrain } from "@/lib/brain-sync";
 
 function normalizeProjectCode(value: unknown) {
   if (typeof value !== "string") return null;

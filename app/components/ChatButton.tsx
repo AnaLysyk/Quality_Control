@@ -4,9 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
-import type { AssistantAction, AssistantConversationTurn, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
+import type { AssistantAction, AssistantConversationTurn, AssistantOpenEventDetail, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import styles from "./ChatButton.module.css";
 import ConfirmDialog from "./ConfirmDialog";
 import UserAvatar from "./UserAvatar";
 
@@ -27,7 +29,8 @@ type ChatMessage = {
 
 type ConfirmState =
   | { open: false }
-  | { open: true; kind: "tool"; action: AssistantToolAction; label: string };
+  | { open: true; kind: "tool"; action: AssistantToolAction; label: string }
+  | { open: true; kind: "clearAll" };
 
 type ChatButtonProps = {
   defaultOpen?: boolean;
@@ -361,6 +364,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(defaultOpen);
   const [panelMode, setPanelMode] = useState<"bubble" | "expanded" | "docked">("bubble");
+  const isExpandedMode = panelMode === "expanded";
+  const isDockedMode = panelMode === "docked";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -607,6 +612,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     switch (confirmState.kind) {
       case "tool":
         return confirmState.label;
+      case "clearAll":
+        return "Limpar conversa";
       default:
         return "";
     }
@@ -617,6 +624,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     switch (confirmState.kind) {
       case "tool":
         return "A a\u00e7\u00e3o ser\u00e1 executada dentro do seu perfil atual e respeitando o RBAC da sess\u00e3o.";
+      case "clearAll":
+        return "Isso remove o hist\u00f3rico local desta conversa para o seu usu\u00e1rio.";
       default:
         return "";
     }
@@ -624,6 +633,17 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
   async function executeConfirm() {
     if (!confirmState.open) return;
+    if (confirmState.kind === "clearAll") {
+      setMessages([]);
+      try {
+        const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
+        localStorage.removeItem(key);
+      } catch {
+        // ignore storage errors
+      }
+      setConfirmState({ open: false });
+      return;
+    }
     if (confirmState.kind !== "tool") {
       setConfirmState({ open: false });
       return;

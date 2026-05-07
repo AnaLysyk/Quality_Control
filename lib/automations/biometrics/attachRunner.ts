@@ -267,7 +267,7 @@ async function attachBiometrics(config: BiometricApiConfig, token: string, proce
 }
 
 function ensureGeneratedDir(outputDir?: string | null) {
-  const dir = path.resolve(process.cwd(), outputDir || path.join("generated", "biometrics"));
+  const dir = path.resolve(/*turbopackIgnore: true*/ process.cwd(), outputDir || path.join("generated", "biometrics"));
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }

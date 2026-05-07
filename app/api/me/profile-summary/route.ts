@@ -45,6 +45,21 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
+  const visibleCompanies = resolveVisibleCompanies(companies, {
+    user: {
+      role: access.role ?? null,
+      companyRole: access.companyRole ?? null,
+      userOrigin: access.userOrigin ?? null,
+      isGlobalAdmin: access.isGlobalAdmin === true,
+      companySlug: access.companySlug ?? null,
+      clientSlug: access.companySlug ?? null,
+      companySlugs: access.companySlugs ?? [],
+      clientSlugs: access.companySlugs ?? [],
+    },
+    links,
+    preferredSlug: access.companySlug ?? null,
+  });
+
   const hasFullCompanyAccess =
     access.isGlobalAdmin === true ||
     (access.role ?? "").toLowerCase() === "technical_support" ||

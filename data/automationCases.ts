@@ -5,6 +5,7 @@ export type AutomationCaseSource = "manual" | "qase" | "catalog";
 export type AutomationCaseStatus = "draft" | "ready" | "automated" | "review";
 export type AutomationCasePriority = "critical" | "high" | "medium";
 export type AutomationCaseCoverage = "manual" | "automation" | "hybrid";
+export type AutomationCaseExecutionStatus = "passed" | "failed" | "blocked" | "not_run";
 
 export type AutomationCaseDefinition = {
   id: string;
@@ -21,6 +22,10 @@ export type AutomationCaseDefinition = {
   priority: AutomationCasePriority;
   coverage: AutomationCaseCoverage;
   linkedPlanName: string | null;
+  linkedRunName?: string | null;
+  playwrightSpecPath?: string | null;
+  lastExecutionStatus?: AutomationCaseExecutionStatus | null;
+  lastExecutionAt?: string | null;
   externalCaseRef: string | null;
   companyScope: AutomationCompanyScope;
   preconditions: string[];
@@ -61,6 +66,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "critical",
     coverage: "hybrid",
     linkedPlanName: "Plano biometria Smart",
+    linkedRunName: "Run biometria Smart - regressao",
+    playwrightSpecPath: "tests-e2e/biometrics-smoke.spec.ts",
+    lastExecutionStatus: "not_run",
+    lastExecutionAt: null,
     externalCaseRef: null,
     companyScope: "griaule",
     preconditions: ["Empresa selecionada", "Processo disponível para anexar biometria", "Digital e face na biblioteca da empresa"],
@@ -83,6 +92,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Regressão biometria",
+    linkedRunName: "Run biometria Smart - base64",
+    playwrightSpecPath: "tests-e2e/biometrics-base64.spec.ts",
+    lastExecutionStatus: "not_run",
+    lastExecutionAt: null,
     externalCaseRef: "QASE-481",
     companyScope: "griaule",
     preconditions: ["Processo válido", "Imagem acima do limite ou com risco de overflow", "Log técnico habilitado para suporte"],
@@ -105,6 +118,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "high",
     coverage: "automation",
     linkedPlanName: null,
+    linkedRunName: "Run API RFB - smoke",
+    playwrightSpecPath: "tests-e2e/cpf-rfb.spec.ts",
+    lastExecutionStatus: "not_run",
+    lastExecutionAt: null,
     externalCaseRef: null,
     companyScope: "griaule",
     preconditions: ["Ambiente liberado", "CPF de sandbox válido"],
@@ -127,6 +144,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "medium",
     coverage: "hybrid",
     linkedPlanName: "Smoke operacional",
+    linkedRunName: "Run Core Processos - smoke",
+    playwrightSpecPath: "tests-e2e/token-processo.spec.ts",
+    lastExecutionStatus: "not_run",
+    lastExecutionAt: null,
     externalCaseRef: null,
     companyScope: "griaule",
     preconditions: ["Credencial técnica válida", "Processo conhecido para leitura"],
@@ -149,6 +170,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "critical",
     coverage: "hybrid",
     linkedPlanName: "Cadastro Smart",
+    linkedRunName: "Run Smart UI - cadastro",
+    playwrightSpecPath: "tests-e2e/smart-cadastro.spec.ts",
+    lastExecutionStatus: "not_run",
+    lastExecutionAt: null,
     externalCaseRef: null,
     companyScope: "griaule",
     preconditions: ["Usuário habilitado no Smart", "Assets disponíveis para foto e documento", "Ambiente com UI acessível"],
@@ -171,6 +196,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "high",
     coverage: "automation",
     linkedPlanName: null,
+    linkedRunName: "Run Smart UI - uploads",
+    playwrightSpecPath: "tests-e2e/smart-upload.spec.ts",
+    lastExecutionStatus: "not_run",
+    lastExecutionAt: null,
     externalCaseRef: null,
     companyScope: "griaule",
     preconditions: ["Arquivos de teste carregados", "Fluxo configurado para anexos múltiplos"],
@@ -193,6 +222,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "critical",
     coverage: "automation",
     linkedPlanName: "Painel QA Smoke",
+    linkedRunName: "Run Painel QA - smoke",
+    playwrightSpecPath: "tests-e2e/smoke.spec.ts",
+    lastExecutionStatus: "passed",
+    lastExecutionAt: "2026-05-07T00:00:00.000Z",
     externalCaseRef: null,
     companyScope: "testing-company",
     preconditions: ["Sessão autenticada", "Perfil Testing Company ativo"],
@@ -215,6 +248,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Painel QA Smoke",
+    linkedRunName: "Run Painel QA - automacoes",
+    playwrightSpecPath: "tests-e2e/automation-studio.spec.ts",
+    lastExecutionStatus: "passed",
+    lastExecutionAt: "2026-05-07T00:00:00.000Z",
     externalCaseRef: null,
     companyScope: "testing-company",
     preconditions: ["Sessão autenticada", "Módulo de automação habilitado"],
@@ -237,6 +274,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "high",
     coverage: "automation",
     linkedPlanName: "Painel QA Smoke",
+    linkedRunName: "Run Painel QA - empresa",
+    playwrightSpecPath: "tests-e2e/happy-path.spec.ts",
+    lastExecutionStatus: "passed",
+    lastExecutionAt: "2026-05-07T00:00:00.000Z",
     externalCaseRef: null,
     companyScope: "testing-company",
     preconditions: ["Empresa Testing Company ativa", "Sessão autenticada"],
@@ -259,6 +300,10 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     priority: "medium",
     coverage: "automation",
     linkedPlanName: "Painel QA Smoke",
+    linkedRunName: "Run Painel QA - runs",
+    playwrightSpecPath: "tests-e2e/runs-quality.spec.ts",
+    lastExecutionStatus: "passed",
+    lastExecutionAt: "2026-05-07T00:00:00.000Z",
     externalCaseRef: null,
     companyScope: "testing-company",
     preconditions: ["Empresa Testing Company ativa", "Sessão autenticada"],

@@ -143,7 +143,7 @@ async function prepareAcceptanceMessage(
       throw error;
     }
     company = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || company;
-  } else if (profileType === "company_user") {
+  } else if (profileType === "empresa") {
     company = parsed.companyProfile?.companyName?.trim() || company || "(não informado)";
   } else {
     clientId = null;

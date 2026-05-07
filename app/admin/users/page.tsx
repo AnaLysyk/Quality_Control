@@ -22,6 +22,7 @@ import {
   getFixedProfileLabel,
   getFixedProfileTone,
   resolveFixedProfileKind,
+  type FixedProfileKind,
 } from "@/lib/fixedProfilePresentation";
 
 type CompanyOption = {

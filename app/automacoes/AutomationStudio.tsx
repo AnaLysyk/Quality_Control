@@ -1216,8 +1216,8 @@ export default function AutomationStudio({
     const breadcrumbCompany = selectedCompany?.name || selectedCompanySlug || "Empresa";
 
     return (
-      <section className="space-y-4 rounded-[32px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+      <section className="space-y-4 rounded-4xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
           <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
               <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -1358,7 +1358,7 @@ export default function AutomationStudio({
                           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                             Etapa {index + 1}
                           </p>
-                          <p className="mt-1 break-words text-sm font-black tracking-[-0.02em] text-(--tc-text,#0b1a3c)">{step.title}</p>
+                          <p className="mt-1 wrap-break-word text-sm font-black tracking-[-0.02em] text-(--tc-text,#0b1a3c)">{step.title}</p>
                         </div>
                         <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${kindTone(step.kind)}`}>
                           {kindLabel(step.kind)}
@@ -1406,6 +1406,9 @@ export default function AutomationStudio({
             <textarea
               ref={scriptEditorRef}
               value={scriptValue}
+              aria-label="Editor de script"
+              title="Editor de script"
+              placeholder="Digite ou cole o script do fluxo"
               onChange={(event) => {
                 if (!canEditFlow) return;
                 if (scriptTarget === "step") {
@@ -1418,7 +1421,7 @@ export default function AutomationStudio({
               }}
               readOnly={!canEditFlow}
               rows={26}
-              className="mt-4 w-full rounded-[24px] border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
+              className="mt-4 w-full rounded-3xl border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
             />
           </article>
 
@@ -1430,11 +1433,13 @@ export default function AutomationStudio({
               </div>
 
               <div className="mt-4 space-y-4">
-                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Templates</p>
                   <select
                     value={selectedTemplateId}
                     onChange={(event) => setSelectedTemplateId(event.target.value)}
+                    aria-label="Selecionar template de script"
+                    title="Selecionar template de script"
                     className="mt-3 min-h-11 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none"
                   >
                     {AUTOMATION_STUDIO_SCRIPT_TEMPLATES.map((template) => (
@@ -1472,7 +1477,7 @@ export default function AutomationStudio({
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Biblioteca de funções</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {AUTOMATION_STUDIO_SCRIPT_API.map((item) => (
@@ -1486,7 +1491,7 @@ export default function AutomationStudio({
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
                   <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Versionamento</p>
                   <label className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                     Nota da versão
@@ -1531,6 +1536,8 @@ export default function AutomationStudio({
                 <button
                   type="button"
                   onClick={() => setIsFileLibraryOpen(false)}
+                  aria-label="Fechar biblioteca de arquivos"
+                  title="Fechar biblioteca de arquivos"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
                   <FiX className="h-4 w-4" />
@@ -1621,7 +1628,7 @@ export default function AutomationStudio({
 
   return (
     <section className="space-y-3 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 shadow-sm sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
             <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -1654,7 +1661,7 @@ export default function AutomationStudio({
       </div>
       {showOverviewHero ? (
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+          <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Resumo rápido</p>
@@ -1678,7 +1685,7 @@ export default function AutomationStudio({
               </div>
             </div>
 
-            <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+            <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
               {compactOverviewCards.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -1695,7 +1702,7 @@ export default function AutomationStudio({
             </div>
           </article>
 
-          <aside className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+          <aside className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiShield className="h-4 w-4" />
               Acesso atual
@@ -1719,7 +1726,7 @@ export default function AutomationStudio({
         </div>
       ) : null}
 
-      <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+      <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
         <div className="grid gap-3 xl:grid-cols-[minmax(180px,0.78fr)_minmax(160px,0.56fr)_minmax(260px,1fr)_auto]">
           <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             Empresa
@@ -1790,7 +1797,7 @@ export default function AutomationStudio({
       </article>
 
       {mode === "flows" ? (
-        <div className="flex flex-wrap gap-2 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
+        <div className="flex flex-wrap gap-2 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
           {[
             { id: "overview" as const, label: "Visão geral", icon: FiLayers },
             { id: "steps" as const, label: "Etapas", icon: FiGitBranch },
@@ -1819,7 +1826,7 @@ export default function AutomationStudio({
       ) : null}
 
       <div className={showAssetSidebar ? "grid gap-4 2xl:grid-cols-[minmax(0,1.22fr)_minmax(360px,0.78fr)]" : "grid gap-4"}>
-        <article className="min-w-0 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+        <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -1848,7 +1855,7 @@ export default function AutomationStudio({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+          <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
             <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Empresa</p>
               <p className="mt-2 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedCompany?.name || "Sem empresa"}</p>
@@ -1931,7 +1938,7 @@ export default function AutomationStudio({
                   return (
                     <article
                       key={step.id}
-                      className={`rounded-[24px] border p-4 transition ${
+                      className={`rounded-3xl border p-4 transition ${
                         selected
                           ? "border-(--tc-accent,#ef0001) bg-[#fff5f5] shadow-[0_12px_30px_rgba(239,0,1,0.08)]"
                           : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"
@@ -1943,7 +1950,7 @@ export default function AutomationStudio({
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                               Etapa {index + 1}
                             </p>
-                            <h4 className="mt-2 break-words text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{step.title}</h4>
+                            <h4 className="mt-2 wrap-break-word text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{step.title}</h4>
                           </div>
                           <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${kindTone(step.kind)}`}>
                             {kindLabel(step.kind)}
@@ -1954,7 +1961,7 @@ export default function AutomationStudio({
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
                           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Binding</p>
-                            <p className="mt-1 break-words text-sm font-semibold text-(--tc-text,#0b1a3c)">{step.inputBinding || "Não definido"}</p>
+                            <p className="mt-1 wrap-break-word text-sm font-semibold text-(--tc-text,#0b1a3c)">{step.inputBinding || "Não definido"}</p>
                           </div>
                           <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Controle</p>
@@ -1974,6 +1981,8 @@ export default function AutomationStudio({
                         <button
                           type="button"
                           onClick={() => moveStep(step.id, -1)}
+                          aria-label="Mover etapa para cima"
+                          title="Mover etapa para cima"
                           disabled={!canEditFlow || index === 0}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -1982,6 +1991,8 @@ export default function AutomationStudio({
                         <button
                           type="button"
                           onClick={() => moveStep(step.id, 1)}
+                          aria-label="Mover etapa para baixo"
+                          title="Mover etapa para baixo"
                           disabled={!canEditFlow || index === draft.steps.length - 1}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -1990,6 +2001,8 @@ export default function AutomationStudio({
                         <button
                           type="button"
                           onClick={() => duplicateStep(step.id)}
+                          aria-label="Duplicar etapa"
+                          title="Duplicar etapa"
                           disabled={!canEditFlow}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -1998,6 +2011,8 @@ export default function AutomationStudio({
                         <button
                           type="button"
                           onClick={() => removeStep(step.id)}
+                          aria-label="Remover etapa"
+                          title="Remover etapa"
                           disabled={!canEditFlow || draft.steps.length === 1}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -2116,7 +2131,7 @@ export default function AutomationStudio({
 
         {showAssetSidebar ? (
           <aside className="space-y-4">
-            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiFolderPlus className="h-4 w-4" />
               Biblioteca de assets
@@ -2178,6 +2193,8 @@ export default function AutomationStudio({
                     <button
                       type="button"
                       onClick={() => removeUpload(upload.id)}
+                      aria-label="Remover arquivo"
+                      title="Remover arquivo"
                       disabled={!canEditFlow}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-40"
                     >
@@ -2195,7 +2212,7 @@ export default function AutomationStudio({
       {activePanel !== "files" ? (
         <div className={splitExecutionLayout ? "grid gap-4 2xl:grid-cols-[minmax(0,1.14fr)_minmax(380px,0.86fr)]" : "grid gap-4"}>
         {activePanel === "steps" ? (
-          <article className="min-w-0 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+          <article className="min-w-0 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
             <FiCode className="h-4 w-4" />
             Configuração da etapa e do fluxo
@@ -2404,7 +2421,7 @@ export default function AutomationStudio({
                 </label>
               </div>
 
-              <div className="mt-5 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Edição de script</p>
@@ -2434,7 +2451,7 @@ export default function AutomationStudio({
         {activePanel === "overview" || activePanel === "mappings" || activePanel === "results" ? (
           <aside className="space-y-4">
           {activePanel === "overview" ? (
-            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
               <FiUploadCloud className="h-4 w-4" />
               Triggers e runtime
@@ -2611,7 +2628,7 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "mappings" ? (
-            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Variáveis e subfluxos</p>
@@ -2620,6 +2637,8 @@ export default function AutomationStudio({
               <button
                 type="button"
                 onClick={appendVariable}
+                aria-label="Adicionar variável"
+                title="Adicionar variável"
                 disabled={!canEditFlow}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-primary,#011848) disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -2634,12 +2653,18 @@ export default function AutomationStudio({
                       <input
                         value={variable.key}
                         onChange={(event) => updateVariable(variable.id, "key", event.target.value)}
+                        aria-label="Chave da variável"
+                        title="Chave da variável"
+                        placeholder="ex: usuario_id"
                         readOnly={!canEditFlow}
                         className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                       />
                       <input
                         value={variable.value}
                         onChange={(event) => updateVariable(variable.id, "value", event.target.value)}
+                        aria-label="Valor da variável"
+                        title="Valor da variável"
+                        placeholder="ex: 12345"
                         readOnly={!canEditFlow}
                         className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                       />
@@ -2648,6 +2673,8 @@ export default function AutomationStudio({
                       <select
                         value={variable.scope}
                         onChange={(event) => updateVariable(variable.id, "scope", event.target.value)}
+                        aria-label="Escopo da variável"
+                        title="Escopo da variável"
                         disabled={!canEditFlow}
                         className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                       >
@@ -2657,6 +2684,8 @@ export default function AutomationStudio({
                       <select
                         value={variable.source}
                         onChange={(event) => updateVariable(variable.id, "source", event.target.value)}
+                        aria-label="Origem da variável"
+                        title="Origem da variável"
                         disabled={!canEditFlow}
                         className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
                       >
@@ -2671,6 +2700,9 @@ export default function AutomationStudio({
                     <textarea
                       value={variable.description}
                       onChange={(event) => updateVariable(variable.id, "description", event.target.value)}
+                      aria-label="Descrição da variável"
+                      title="Descrição da variável"
+                      placeholder="Descreva quando e como usar esta variável"
                       readOnly={!canEditFlow}
                       rows={2}
                       className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-6 outline-none"
@@ -2706,7 +2738,7 @@ export default function AutomationStudio({
           ) : null}
 
           {activePanel === "results" ? (
-            <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
+            <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Depuração e histórico</p>
@@ -2734,7 +2766,7 @@ export default function AutomationStudio({
               </div>
             ) : null}
 
-            <div className="mt-4 space-y-2 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
+            <div className="mt-4 space-y-2 rounded-3xl border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
               {(runPreview?.lines || [
                 "Clique em Preparar execução para gerar um preview do fluxo atual.",
                 "O preview usa empresa, ambiente, etapas habilitadas, variáveis, trigger e runtime configurados.",
@@ -2746,7 +2778,7 @@ export default function AutomationStudio({
               ))}
             </div>
 
-            <div className="mt-4 rounded-[24px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+            <div className="mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-sm font-black text-(--tc-text,#0b1a3c)">
                   <FiEye className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -2760,6 +2792,8 @@ export default function AutomationStudio({
                 <button
                   type="button"
                   onClick={() => setDebugCursor((current) => Math.max(current - 1, 0))}
+                  aria-label="Etapa anterior"
+                  title="Etapa anterior"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
                   <FiArrowUp className="h-4 w-4" />
@@ -2767,6 +2801,8 @@ export default function AutomationStudio({
                 <button
                   type="button"
                   onClick={() => setDebugCursor((current) => Math.min(current + 1, Math.max(enabledSteps.length - 1, 0)))}
+                  aria-label="Próxima etapa"
+                  title="Próxima etapa"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
                   <FiArrowDown className="h-4 w-4" />
@@ -2884,7 +2920,7 @@ export default function AutomationStudio({
             </div>
 
             {canSeeLogs ? (
-              <div className="rounded-[24px] border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
+              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-[#071227] p-4 text-white">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/58">
                   <FiEye className="h-4 w-4" />
                   Observabilidade avançada
@@ -2896,13 +2932,13 @@ export default function AutomationStudio({
                   ]).map((line) => (
                     <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
                       <FiZap className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
-                      <span className="break-words font-mono text-[12px]">{line}</span>
+                      <span className="wrap-break-word font-mono text-[12px]">{line}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="rounded-[24px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <div className="rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                 <p className="text-sm font-semibold text-(--tc-text,#0b1a3c)">Logs técnicos, selectors internos e brain operacional ficam restritos a suporte técnico e líder TC.</p>
                 <p className="mt-2 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
                   A identidade do studio permanece igual, mas a telemetria avançada não é exibida fora do escopo técnico.

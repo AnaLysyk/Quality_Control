@@ -18,7 +18,7 @@ export default function DashboardFilterBar({
   actions,
 }: DashboardFilterBarProps) {
   return (
-    <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-1.5">
           <h2 className="text-sm font-bold text-(--tc-text,#0b1a3c)">{title}</h2>

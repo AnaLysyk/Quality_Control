@@ -62,6 +62,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     id: "operations",
     label: "Operação",
     iconKey: "monitor",
+    allowedRoles: ALL_INTERNAL,
     items: [
       { id: "ops-dashboard", label: "Dashboard",       iconKey: "compass",      module: "operations", companyRoute: "dashboard",       href: "/admin/dashboard",   favoriteEnabled: true },
       { id: "ops-metrics",   label: "Métricas",        iconKey: "bar-chart",    module: "operations", companyRoute: "metrics",         href: "/admin/test-metric", favoriteEnabled: true },
@@ -72,7 +73,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       { id: "ops-cases",     label: "Casos de teste",  iconKey: "clipboard",    module: "operations", href: "/casos-de-teste",                                     favoriteEnabled: true },
       { id: "ops-brain",     label: "Brain / IA",      iconKey: "cpu",          module: "operations", href: "/chat",                                               favoriteEnabled: true },
       { id: "ops-support",   label: "Suporte",         iconKey: "help-circle",  module: "operations", companyRoute: "chamados",        href: "/meus-chamados",     favoriteEnabled: true },
-      { id: "ops-kanban",    label: "Kanban",          iconKey: "layout",       module: "operations", href: "/kanban-it",              allowedRoles: ALL_INTERNAL, favoriteEnabled: true },
+      { id: "ops-kanban",    label: "Kanban",          iconKey: "layout",       module: "operations", href: "/kanban-it",              favoriteEnabled: true },
     ],
   },
   {

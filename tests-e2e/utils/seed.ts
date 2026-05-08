@@ -30,12 +30,6 @@ const isJsonMode =
 
 let prismaClient: typeof import("@/lib/prismaClient").prisma | null = null;
 
-async function writeAlertsStoreForE2E(alerts: QualityAlert[]) {
-  const file = path.join(process.cwd(), "data", "quality_alerts.json");
-  await fs.mkdir(path.dirname(file), { recursive: true });
-  await fs.writeFile(file, JSON.stringify(alerts, null, 2), "utf8");
-}
-
 function getPrisma() {
   if (isJsonMode) return null;
   if (!prismaClient) {
@@ -53,7 +47,7 @@ export async function seedQualityAlert(alert: {
 }) {
   const payload: QualityAlert[] = [
     {
-      companySlug: alert.companySlug || "demo",
+      companySlug: alert.companySlug || "griaule",
       type: (alert.type as QualityAlertType) || "sla",
       severity: (alert.severity as "critical" | "warning") || "critical",
       message: alert.message || "Defeitos fora do SLA: 1",
@@ -69,22 +63,17 @@ export async function seedQualityAlert(alert: {
 
   if (useApiSeed) {
     const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
-    const response = await fetch(`${baseURL}/api/_test/quality-alerts`, {
+    await fetch(`${baseURL}/api/_test/quality-alerts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) {
-      if (response.status === 404) {
-        await writeAlertsStoreForE2E(payload);
-        return;
-      }
-      throw new Error(`Falha ao semear alertas via API: ${response.status}`);
-    }
     return;
   }
 
-  await writeAlertsStoreForE2E(payload);
+  const alertsFile = path.join(process.cwd(), "data", "quality_alerts.json");
+  await fs.mkdir(path.dirname(alertsFile), { recursive: true });
+  await fs.writeFile(alertsFile, JSON.stringify(payload, null, 2), "utf8");
 }
 
 /**

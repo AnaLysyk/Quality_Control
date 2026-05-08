@@ -667,13 +667,6 @@ export default function AppShell({ children }: AppShellProps) {
         />
       ) : null}
 
-      <Sidebar
-        pathname={pathname}
-        mobileOpen={mobileOpen}
-        mobilePanelId={mobileSidebarId}
-        onClose={() => setMobileOpen(false)}
-      />
-
       {/* Botão de menu mobile/hamburguer */}
       <button
         type="button"
@@ -704,8 +697,17 @@ export default function AppShell({ children }: AppShellProps) {
 
       <DeferredChatButton />
 
-      <div className="flex flex-col min-h-screen app-main">
-        <div className="app-stage flex-1 min-h-screen overflow-y-auto overflow-x-hidden">
+      {/* Flex row: sidebar (desktop) + main content */}
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar
+          pathname={pathname}
+          mobileOpen={mobileOpen}
+          mobilePanelId={mobileSidebarId}
+          onClose={() => setMobileOpen(false)}
+        />
+
+        <div className="flex flex-col flex-1 min-w-0 app-main">
+          <div className="app-stage flex-1 overflow-y-auto">
           <AppShellCoverSlotProvider setCoverSlot={setCoverSlotContent}>
             <MainWrapper
               pathname={pathname}
@@ -762,6 +764,7 @@ export default function AppShell({ children }: AppShellProps) {
               {children}
             </MainWrapper>
           </AppShellCoverSlotProvider>
+        </div>
         </div>
       </div>
     </div>

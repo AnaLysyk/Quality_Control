@@ -43,7 +43,7 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
 
   return (
     <main
-      className={`flex-1 w-full min-w-0 pt-(--topbar-h) pr-(--content-pr) ${leftPx} ${bottomPb} ${isDocsRoute ? "h-screen overflow-hidden flex flex-col" : "min-h-full overflow-x-hidden"}`}
+      className={`flex-1 w-full min-w-0 pt-3 sm:pt-4 pr-(--content-pr) ${leftPx} ${bottomPb} ${isDocsRoute ? "h-full overflow-hidden flex flex-col" : "min-h-full overflow-x-hidden"}`}
     >
       {beforeContent ? <div className={`shrink-0 ${beforeTopGap} ${beforeBottomGap} ${beforeHorizontalPad}`}>{beforeContent}</div> : null}
       {children}

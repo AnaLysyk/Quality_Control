@@ -5802,12 +5802,12 @@ video {
     overflow: visible;
   }
   .app-shell .app-main {
-    margin-left: var(--sidebar-collapsed);
-    transition: margin-left 0.2s ease;
+    /* flex layout: sidebar is a flex sibling, no margin-left needed */
+    margin-left: 0;
   }
   .app-shell .sidebar-shell:hover ~ .app-main,
   .app-shell .sidebar-shell[data-flyout-open="1"] ~ .app-main {
-    margin-left: var(--sidebar-expanded);
+    margin-left: 0;
   }
   .app-shell .sidebar-shell:not(:hover) .sidebar-label,
   .app-shell .sidebar-shell:not(:hover) .sidebar-brand,
@@ -9506,7 +9506,6 @@ video {
 .app-shell .app-main,
 .app-shell .app-stage {
   position: relative;
-  min-height: 100vh;
   background: var(--page-bg);
 }
 

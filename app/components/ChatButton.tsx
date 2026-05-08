@@ -660,12 +660,18 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         <div className="flex items-end">
           {open ? (
             <div
-              className={`mr-3 flex w-[min(36rem,calc(100vw-1rem))] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 ${
+              className={`mr-3 flex flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 transition-[width,height] duration-300 ease-in-out ${
+                isExpandedMode
+                  ? "w-[min(72rem,calc(100vw-2rem))]"
+                  : "w-[min(36rem,calc(100vw-1rem))]"
+              } ${
                 denseViewport
                   ? "h-[min(74dvh,calc(100dvh-0.75rem))] max-h-[calc(100dvh-0.75rem)]"
                   : compactViewport
                     ? "h-[min(76dvh,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)]"
-                    : "h-[min(78dvh,calc(100dvh-1.25rem))] max-h-[calc(100dvh-1.25rem)]"
+                    : isExpandedMode
+                      ? "h-[min(92dvh,calc(100dvh-1.25rem))] max-h-[calc(100dvh-1.25rem)]"
+                      : "h-[min(78dvh,calc(100dvh-1.25rem))] max-h-[calc(100dvh-1.25rem)]"
               }`}
             >
               <div

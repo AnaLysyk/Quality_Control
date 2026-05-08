@@ -864,3 +864,23 @@ model AssistantAuditLog {
   @@index([module])
   @@map("assistant_audit_logs")
 }
+
+// ─── User Favorites (navigation bookmarks) ──────────────────────────────────
+
+model Favorite {
+  id          String   @id @default(cuid())
+  userId      String
+  label       String
+  description String?
+  href        String
+  iconKey     String?
+  type        String   @default("page")
+  context     Json?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("favorites")
+}
+

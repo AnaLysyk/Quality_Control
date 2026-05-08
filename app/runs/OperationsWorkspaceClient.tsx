@@ -114,13 +114,6 @@ export function OperationsWorkspaceClient() {
       icon: FiAlertTriangle,
     },
     {
-      key: "releases",
-      route: "releases",
-      label: t("nav.releases"),
-      description: "Gerenciar releases e versões da aplicação",
-      icon: FiBarChart2,
-    },
-    {
       key: "support",
       route: "chamados",
       label: t("nav.support"),

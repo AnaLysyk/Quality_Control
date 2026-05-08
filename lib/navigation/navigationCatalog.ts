@@ -53,7 +53,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     id: "operations",
     label: "Operação",
     iconKey: "monitor",
-    allowedRoles: ALL_INTERNAL,
+    allowedRoles: PRIVILEGED,
     items: [
       { id: "ops-dashboard", label: "Dashboard",       iconKey: "compass",      module: "operations", companyRoute: "dashboard",       href: "/admin/dashboard",   favoriteEnabled: true },
       { id: "ops-metrics",   label: "Métricas",        iconKey: "bar-chart",    module: "operations", companyRoute: "metrics",         href: "/admin/test-metric", favoriteEnabled: true },

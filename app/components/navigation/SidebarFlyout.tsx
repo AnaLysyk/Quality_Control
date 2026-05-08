@@ -66,8 +66,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
       {open && (
         <div
           className="fixed z-50 ml-1 min-w-56 max-w-72 overflow-hidden rounded-xl border border-white/15 bg-[#0c1f4a] shadow-2xl [left:76px]"
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          style={{ "--flyout-top": `${top}px`, top: "var(--flyout-top)" } as any}
+          style={{ top: `${top}px` }}
           onMouseEnter={clearClose}
           onMouseLeave={scheduleClose}
         >

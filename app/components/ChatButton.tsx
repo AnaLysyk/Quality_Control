@@ -370,6 +370,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [assistantContext, setAssistantContext] = useState<AssistantScreenContext>(screenContext);
+  const [brainOpenContext, setBrainOpenContext] = useState<AssistantOpenEventDetail | null>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
   const boxRef = useRef<HTMLDivElement | null>(null);
@@ -448,6 +449,25 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     setAssistantContext(screenContext);
   }, [screenContext]);
 
+  // Listen for assistant:open events dispatched by Brain or other screens
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleAssistantOpen(e: Event) {
+      const detail = (e as CustomEvent<AssistantOpenEventDetail>).detail ?? {};
+      setBrainOpenContext(detail);
+      setOpen(true);
+      if (detail.initialMessage) {
+        setInput(detail.initialMessage);
+      }
+    }
+
+    window.addEventListener("assistant:open", handleAssistantOpen);
+    return () => {
+      window.removeEventListener("assistant:open", handleAssistantOpen);
+    };
+  }, []);
+
   if (!assistantEnabled) return null;
   if (!user) return null;
   if (!can("ai", "view") || !can("ai", "use")) return null;
@@ -514,6 +534,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         body: JSON.stringify({
           ...payload,
           context: { route: screenContext.route },
+          brainContext: brainOpenContext ?? undefined,
           actor: {
             userId: user.id,
             permissionRole: user.permissionRole ?? null,
@@ -687,8 +708,12 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                     <div className="space-y-0.5">
                       <p className="text-[0.58rem] font-semibold uppercase tracking-[0.34em] text-white/72">Testing Company</p>
                       <div>
-                        <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} font-black tracking-[-0.03em] text-white`}>Assistente</h3>
-                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>{activeScreenLabel}</p>
+                        <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} font-black tracking-[-0.03em] text-white`}>
+                          {brainOpenContext?.source === "brain" ? "Brain" : "Assistente"}
+                        </h3>
+                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>
+                          {brainOpenContext?.nodeLabel ? `${brainOpenContext.nodeLabel} — ${brainOpenContext.nodeType ?? "nó"}` : activeScreenLabel}
+                        </p>
                       </div>
                       <div className={`flex flex-wrap gap-2 pt-1 text-[0.68rem] uppercase tracking-[0.26em] text-white/72 ${compactConversationChrome ? "hidden" : ""}`}>
                         <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{roleLabel}</span>
@@ -733,15 +758,15 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                 <div className={`border-b border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f7faff_0%,#fff9fb_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#13213a_0%,#17253f_100%)] ${denseViewport ? "px-4 py-2.5" : "px-5 py-4"}`}>
                   <p className={`${denseViewport ? "text-[0.9rem] leading-5" : "text-base leading-6"} font-semibold text-[#011848] dark:text-[#e7efff]`}>{summaryText}</p>
                   <div className={`${compactViewport ? "mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "mt-3 flex flex-wrap gap-2"}`}>
-                  {screenContext.suggestedPrompts.slice(0, visiblePrompts).map((prompt) => (
+                  {(buildBrainQuickActions(brainOpenContext) ?? screenContext.suggestedPrompts.slice(0, visiblePrompts).map((p) => ({ kind: "prompt" as const, label: p, prompt: p }))).map((action) => (
                     <button
-                      key={prompt}
+                      key={action.label}
                       type="button"
-                      onClick={() => void sendMessage(prompt)}
+                      onClick={() => void sendMessage(action.kind === "prompt" ? action.prompt : action.label)}
                       className={`inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7dff1) bg-white/95 font-semibold text-(--tc-primary,#011848) shadow-[0_8px_18px_rgba(1,24,72,0.06)] transition hover:border-[rgba(239,0,1,0.24)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#122038] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4] ${compactViewport ? "shrink-0 px-3 py-1.5 text-[0.68rem]" : "px-3 py-2 text-xs"}`}
                     >
                       <FiZap size={12} />
-                      {prompt}
+                      {action.label}
                     </button>
                   ))}
                   </div>
@@ -751,10 +776,26 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               <div className={`min-h-0 flex-1 ${hasConversation ? "overflow-y-auto" : "overflow-y-hidden"} bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)] ${denseViewport ? "space-y-4 px-4 py-4" : hasConversation ? "space-y-4 px-4 py-4" : "space-y-5 px-5 py-5"}`}>
                 {messages.length === 0 ? (
                   <div className={`rounded-[1.6rem] border border-[#dfe6f3] bg-[#ffffff] shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-[#36507f] dark:bg-[#13213a] dark:shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${denseViewport ? "p-4" : "p-5"}`}>
-                    <p className="text-base font-bold text-[#ef0001] dark:text-[#ff8a8a]">Pronto para atuar dentro do seu perfil.</p>
-                    <p className="mt-2 text-base leading-7 text-[#011848] dark:text-[#d7e5ff]">
-                      Uso a sessão atual, enxergo apenas o que o seu perfil pode ver e executo ações somente dentro do seu RBAC.
-                    </p>
+                    {brainOpenContext?.nodeId ? (
+                      <>
+                        <p className="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-[#ef0001] dark:text-[#ff8a8a]">
+                          Contexto do Brain — {brainOpenContext.nodeType ?? "Nó"}
+                        </p>
+                        <p className="mt-1 text-base font-bold text-[#011848] dark:text-[#f2f7ff]">
+                          {brainOpenContext.nodeLabel ?? "Nó selecionado"}
+                        </p>
+                        <p className="mt-1 text-sm text-[#4a5568] dark:text-[#a0b4d0]">
+                          Agente ativo: {brainOpenContext.agentMode ?? "qa"} · escopo {brainOpenContext.companySlug ?? "global"}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-base font-bold text-[#ef0001] dark:text-[#ff8a8a]">Pronto para atuar dentro do seu perfil.</p>
+                        <p className="mt-2 text-base leading-7 text-[#011848] dark:text-[#d7e5ff]">
+                          Uso a sessão atual, enxergo apenas o que o seu perfil pode ver e executo ações somente dentro do seu RBAC.
+                        </p>
+                      </>
+                    )}
                   </div>
                 ) : null}
                 {messages.map((message, index) => {

@@ -116,3 +116,19 @@ export function useBrainMemories(nodeId: string | null) {
     revalidateOnFocus: false,
   });
 }
+
+export type BrainTimelineEvent = {
+  id: string;
+  action: string;
+  reason: string | null;
+  timestamp: string;
+};
+
+export function useBrainTimeline(nodeId: string | null) {
+  const key = nodeId ? `/api/brain/nodes/${nodeId}/timeline` : null;
+
+  return useSWR<{ timeline: BrainTimelineEvent[] }>(key, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 15000,
+  });
+}

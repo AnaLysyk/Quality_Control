@@ -569,3 +569,107 @@
   background: var(--badge-bg, rgba(96,125,139,0.12));
   color: var(--badge-color, #607d8b);
 }
+
+/* ===== Ask AI button ===== */
+.askAiBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 0, 1, 0.3);
+  background: linear-gradient(135deg, rgba(239, 0, 1, 0.08) 0%, rgba(239, 0, 1, 0.04) 100%);
+  color: var(--tc-accent, #ef0001);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.askAiBtn:hover {
+  background: linear-gradient(135deg, rgba(239, 0, 1, 0.16) 0%, rgba(239, 0, 1, 0.08) 100%);
+  border-color: rgba(239, 0, 1, 0.5);
+  box-shadow: 0 4px 16px rgba(239, 0, 1, 0.18);
+  transform: translateY(-1px);
+}
+
+:global(.dark) .askAiBtn {
+  background: linear-gradient(135deg, rgba(239, 0, 1, 0.12) 0%, rgba(239, 0, 1, 0.06) 100%);
+  color: #ff4444;
+}
+
+/* ===== Timeline section ===== */
+.timelineList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--tc-border, rgba(0,0,0,0.06));
+  position: relative;
+}
+
+.timelineItem:last-child {
+  border-bottom: none;
+}
+
+:global(.dark) .timelineItem {
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+
+.timelineDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tc-accent, #ef0001);
+  margin-top: 5px;
+  box-shadow: 0 0 6px rgba(239, 0, 1, 0.4);
+}
+
+.timelineContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.timelineAction {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tc-text-primary);
+  margin: 0;
+}
+
+:global(.dark) .timelineAction {
+  color: #ffffff;
+}
+
+.timelineReason {
+  font-size: 0.75rem;
+  color: var(--tc-text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+:global(.dark) .timelineReason {
+  color: rgba(255,255,255,0.55);
+}
+
+.timelineTs {
+  font-size: 0.7rem;
+  color: var(--tc-text-muted);
+  margin: 2px 0 0;
+  opacity: 0.7;
+}
+
+:global(.dark) .timelineTs {
+  color: rgba(255,255,255,0.4);
+}

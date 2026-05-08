@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useBrainGraph, useBrainStats, useBrainNodeContext, useBrainMemories } from "@/hooks/useBrain";
-import type { BrainNode, BrainEdge, BrainMemory } from "@/hooks/useBrain";
+import { useBrainGraph, useBrainStats, useBrainNodeContext, useBrainMemories, useBrainTimeline } from "@/hooks/useBrain";
+import type { BrainNode, BrainEdge, BrainMemory, BrainTimelineEvent } from "@/hooks/useBrain";
 import { useTranslation } from "@/context/LanguageContext";
 import styles from "./Brain.module.css";
 
@@ -211,10 +211,12 @@ export default function BrainGraphView() {
   const { data: stats } = useBrainStats();
   const { data: nodeContext } = useBrainNodeContext(selectedNodeId);
   const { data: memoriesData } = useBrainMemories(selectedNodeId);
+  const { data: timelineData } = useBrainTimeline(selectedNodeId);
 
   const nodes = graphData?.nodes ?? [];
   const edges = graphData?.edges ?? [];
   const memories: BrainMemory[] = memoriesData?.memories ?? [];
+  const timeline = timelineData?.timeline ?? [];
 
   // Filter nodes
   const filteredNodes = nodes.filter((n) => {
@@ -820,6 +822,56 @@ export default function BrainGraphView() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {/* Ask AI about this node */}
+              {selectedNode && (
+                <div className={styles.panelSection}>
+                  <button
+                    type="button"
+                    className={styles.askAiBtn}
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                          new CustomEvent("assistant:open", {
+                            detail: {
+                              source: "brain",
+                              nodeId: selectedNode.id,
+                              nodeLabel: selectedNode.label,
+                              nodeType: selectedNode.type,
+                              agentMode: "qa",
+                              initialMessage: `Analise o nó "${selectedNode.label}" (${selectedNode.type}): resumo, conexões, impacto e próximos passos.`,
+                            },
+                          }),
+                        );
+                      }
+                    }}
+                  >
+                    🧠 Perguntar para IA sobre este nó
+                  </button>
+                </div>
+              )}
+
+              {/* Timeline */}
+              {timeline.length > 0 && (
+                <div className={styles.panelSection}>
+                  <p className={styles.panelSectionTitle}>
+                    {locale === "pt" ? "Histórico" : "History"} ({timeline.length})
+                  </p>
+                  <div className={styles.timelineList}>
+                    {timeline.slice(0, 15).map((entry) => (
+                      <div key={entry.id} className={styles.timelineItem}>
+                        <span className={styles.timelineDot} />
+                        <div className={styles.timelineContent}>
+                          <p className={styles.timelineAction}>{entry.action}</p>
+                          {entry.reason && <p className={styles.timelineReason}>{entry.reason}</p>}
+                          <p className={styles.timelineTs}>
+                            {new Date(entry.timestamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </>

@@ -1,7 +1,7 @@
-import RunsPage from "../runs/page";
+import { OperationsWorkspaceClient } from "../runs/OperationsWorkspaceClient";
 
 export const dynamic = "force-dynamic";
 
 export default function OperacaoPage() {
-  return <RunsPage />;
+  return <OperationsWorkspaceClient />;
 }

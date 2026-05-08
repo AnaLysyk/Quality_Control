@@ -70,7 +70,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
       { id: "ops-runs",      label: "Runs",            iconKey: "play",         module: "operations", companyRoute: "runs",            href: "/admin/runs",        favoriteEnabled: true },
       { id: "ops-defects",   label: "Defeitos",        iconKey: "alert-circle", module: "operations", companyRoute: "defeitos",        href: "/admin/defeitos",    favoriteEnabled: true },
       { id: "ops-cases",     label: "Casos de teste",  iconKey: "clipboard",    module: "operations", href: "/casos-de-teste",                                     favoriteEnabled: true },
-      { id: "ops-quality",   label: "Qualidade",       iconKey: "check-circle", module: "operations", companyRoute: "releases",        href: "/admin/releases",    favoriteEnabled: true },
       { id: "ops-brain",     label: "Brain / IA",      iconKey: "cpu",          module: "operations", href: "/chat",                                               favoriteEnabled: true },
       { id: "ops-support",   label: "Suporte",         iconKey: "help-circle",  module: "operations", companyRoute: "chamados",        href: "/meus-chamados",     favoriteEnabled: true },
       { id: "ops-kanban",    label: "Kanban",          iconKey: "layout",       module: "operations", href: "/kanban-it",              allowedRoles: ALL_INTERNAL, favoriteEnabled: true },

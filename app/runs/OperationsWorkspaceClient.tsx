@@ -12,7 +12,6 @@ import {
   FiBriefcase,
   FiClipboard,
   FiColumns,
-  FiGrid,
   FiList,
   FiSearch,
   FiShield,
@@ -29,7 +28,7 @@ type OperationContextItem = {
   route: string;
   label: string;
   description: string;
-  icon: typeof FiGrid;
+  icon: React.ComponentType<{ className?: string }>;
 };
 
 type CompanyRouteInput = {
@@ -78,13 +77,6 @@ export function OperationsWorkspaceClient() {
   };
 
   const operationContexts: OperationContextItem[] = [
-    {
-      key: "dashboard",
-      route: "dashboard",
-      label: t("nav.dashboard"),
-      description: t("operationsPage.contexts.dashboard"),
-      icon: FiGrid,
-    },
     {
       key: "applications",
       route: "aplicacoes",
@@ -164,7 +156,7 @@ export function OperationsWorkspaceClient() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
         <section className="overflow-hidden rounded-4xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm md:p-8">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-accent,#ef0001)">
-            <FiGrid className="h-4 w-4" />
+            <FiSearch className="h-4 w-4" />
             {t("operationsPage.kicker")}
           </div>
 

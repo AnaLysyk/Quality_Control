@@ -545,10 +545,19 @@ export default function AppShell({ children }: AppShellProps) {
       companyBrand &&
       (viewerProfile === "empresa" || viewerProfile === "company_user");
     const shortProfileLabel = profileLabel(viewerProfile, shellCopy);
+    const roleForOps = String(user?.role ?? "").toLowerCase();
+    const permissionRoleForOps = String(user?.permissionRole ?? "").toLowerCase();
+    const isPrivilegedOperationsProfile =
+      user?.isGlobalAdmin === true ||
+      roleForOps === "leader_tc" ||
+      roleForOps === "technical_support" ||
+      permissionRoleForOps === "leader_tc" ||
+      permissionRoleForOps === "technical_support";
     const isOperationalModule =
-      pathname.startsWith("/operacao") ||
-      pathname.startsWith("/operacoes") ||
-      pathname.startsWith("/admin/operacao");
+      isPrivilegedOperationsProfile &&
+      (pathname.startsWith("/operacao") ||
+        pathname.startsWith("/operacoes") ||
+        pathname.startsWith("/admin/operacao"));
     const operationalTitle = "Operacao";
     const operationalNote = "Visao operacional do ambiente";
 

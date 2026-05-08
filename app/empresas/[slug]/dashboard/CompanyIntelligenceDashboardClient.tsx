@@ -1306,7 +1306,6 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [exportingPdf, setExportingPdf] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState<DashboardFilterState | null>(DEFAULT_FILTERS);
   const [activeView, setActiveView] = useState<ResultView>("overview");
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -1348,9 +1347,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   );
   const draftRanges = useMemo(() => resolveRange(periodPreset, dateFrom, dateTo), [periodPreset, dateFrom, dateTo]);
 
-  const analysisRequested = appliedFilters !== null;
-  const hasPendingFilterChanges = !analysisRequested || !areFilterStatesEqual(currentDraftFilters, appliedFilters);
-  const activeFilters = appliedFilters ?? DEFAULT_FILTERS;
+  const activeFilters = currentDraftFilters;
   const activePeriodPreset = activeFilters.periodPreset;
   const activeGroupBy = activeFilters.groupBy;
   const activeChartView = activeFilters.chartView;
@@ -1786,16 +1783,11 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
   const applyAnalysis = (next: DashboardFilterState = currentDraftFilters) => {
     syncDraftFilters(next);
-    setAppliedFilters(next);
     setActiveView("overview");
-    requestAnimationFrame(() => {
-      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
   };
 
   const resetFilters = () => {
     syncDraftFilters(DEFAULT_FILTERS);
-    setAppliedFilters(null);
     setActiveView("overview");
   };
 
@@ -2077,9 +2069,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const compactActiveChips = activeFilterChips.slice(0, 4);
   const hiddenDraftChipCount = Math.max(0, draftFilterChips.length - compactDraftChips.length);
   const hiddenActiveChipCount = Math.max(0, activeFilterChips.length - compactActiveChips.length);
-  const resultSummaryLine = analysisRequested && hasFilterResults
+  const resultSummaryLine = hasFilterResults
     ? `Recorte atual: ${activeFilterChips[0] ?? "Filtro aplicado"} | ${filteredRuns.length} runs | ${filteredDefects.length} defeitos | ${applicationRanking.length} aplicações`
-    : "Defina o recorte para gerar a leitura executiva.";
+    : "Nenhum dado encontrado para o recorte atual.";
   const dashboardContext = useDashboardContext({
     user: user ?? undefined,
     companies: [{ slug: props.companySlug, name: props.companyName }],
@@ -2147,9 +2139,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 pb-6 pt-2 text-(--page-text,#0b1a3c) sm:px-6 sm:pb-7 sm:pt-3 lg:px-10 lg:pb-8 lg:pt-4">
       <div className="relative z-10 flex w-full max-w-none flex-col gap-4 2xl:gap-5">
         <DashboardHeader
-          kicker="Base unificada"
-          title="Dashboard contextual de qualidade"
-          subtitle="A mesma base de dashboard adapta a leitura por perfil, empresa, aplicação e recorte analítico sem abrir telas paralelas."
+          kicker={props.companyName}
+          title="Inteligência de qualidade"
+          subtitle="Visão executiva em tempo real — filtre por período, aplicação, status ou risco e os resultados atualizam instantaneamente."
           contextLabel={dashboardContext.contextLabel}
           chips={dashboardFilters.compactChips}
           hiddenChipCount={dashboardFilters.hiddenChipCount}
@@ -2159,39 +2151,13 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           chips={compactDraftChips}
           hiddenChipCount={hiddenDraftChipCount}
           actions={
-            <>
-              <button
-                type="button"
-                onClick={() => setAppliedFilters(currentDraftFilters)}
-                className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-sm font-semibold text-(--tc-text,#0b1a3c)"
-              >
-                Aplicar recorte
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPeriodPreset(DEFAULT_FILTERS.periodPreset);
-                  setGroupBy(DEFAULT_FILTERS.groupBy);
-                  setChartView(DEFAULT_FILTERS.chartView);
-                  setApplicationFilter(DEFAULT_FILTERS.applicationFilter);
-                  setRunFilter(DEFAULT_FILTERS.runFilter);
-                  setStatusFilter(DEFAULT_FILTERS.statusFilter);
-                  setEnvironmentFilter(DEFAULT_FILTERS.environmentFilter);
-                  setSourceFilter(DEFAULT_FILTERS.sourceFilter);
-                  setResponsibleFilter(DEFAULT_FILTERS.responsibleFilter);
-                  setRiskFilter(DEFAULT_FILTERS.riskFilter);
-                  setCompareEnabled(DEFAULT_FILTERS.compareEnabled);
-                  setOnlyWithDefects(DEFAULT_FILTERS.onlyWithDefects);
-                  setOnlyRegression(DEFAULT_FILTERS.onlyRegression);
-                  setDateFrom(DEFAULT_FILTERS.dateFrom);
-                  setDateTo(DEFAULT_FILTERS.dateTo);
-                  setAppliedFilters(DEFAULT_FILTERS);
-                }}
-                className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3.5 text-sm font-semibold text-(--tc-text,#0b1a3c)"
-              >
-                Limpar filtros
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3.5 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+            >
+              Limpar filtros
+            </button>
           }
         />
 
@@ -2208,7 +2174,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             <p className="mt-1.5 text-sm leading-5 text-(--tc-text-muted,#6b7280)">
               {resultSummaryLine}
             </p>
-            {analysisRequested && hasFilterResults ? (
+            {hasFilterResults ? (
               <div className="mt-2.5 flex flex-wrap gap-2">
                 <span className={`inline-flex rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(trendSummary.tone)}`}>
                   {trendSummary.label}
@@ -2256,7 +2222,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             <button
               type="button"
               onClick={handleExportPdf}
-              disabled={!analysisRequested || !hasFilterResults || exportingPdf}
+              disabled={!hasFilterResults || exportingPdf}
               className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
             >
               <FiDownload className="h-4 w-4" />
@@ -2265,7 +2231,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             <button
               type="button"
               onClick={() => downloadCsv(filteredRuns)}
-              disabled={!analysisRequested || !hasFilterResults}
+              disabled={!hasFilterResults}
               className="inline-flex h-10.5 items-center gap-2 rounded-2xl bg-(--tc-primary,#0b1a3c) px-3.5 text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FiDownload className="h-4 w-4" />
@@ -2277,7 +2243,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         <Panel
           eyebrow="Filtros"
           title="Recorte analítico"
-          description={analysisRequested && !hasPendingFilterChanges ? "Recorte aplicado." : undefined}
+          description="Filtros aplicados em tempo real."
           variant="softGradient"
         >
           <div className="space-y-3.5">
@@ -2430,7 +2396,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
             <div className="flex flex-col gap-3 border-t border-(--tc-border,#e6ecf5) pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-(--tc-text-muted,#6b7280)">
-                {analysisRequested && !hasPendingFilterChanges ? "Recorte atual sincronizado." : "Aplique para atualizar a leitura."}
+                Filtros aplicados em tempo real.
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -2441,42 +2407,13 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                   <FiRefreshCw className="h-4 w-4" />
                   Limpar filtros
                 </button>
-                <button
-                  type="button"
-                  onClick={() => applyAnalysis(currentDraftFilters)}
-                  disabled={!hasPendingFilterChanges}
-                  className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,var(--tc-primary-dark,#245295)_72%,var(--tc-accent,#ef0001)_130%)] px-5 py-2 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(1,24,72,0.16)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <FiZap className="h-4 w-4" />
-                  {analysisRequested ? "Aplicar nova análise" : "Aplicar análise"}
-                </button>
               </div>
             </div>
           </div>
         </Panel>
 
         <div ref={resultsRef} />
-        {!analysisRequested ? (
-          <Panel
-            eyebrow="Estado inicial"
-            title="Selecione os filtros para gerar a leitura analítica."
-            description={undefined}
-          >
-            <div className="rounded-[20px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-(--tc-surface,#ffffff) dark:bg-(--tc-surface-2,#1e293b) text-(--tc-primary,#0b1a3c) dark:text-(--tc-text,#e2e8f0)">
-                <FiFilter className="h-5 w-5" />
-              </div>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-(--tc-text-muted,#6b7280)">
-                Defina o recorte e aplique a análise. Os resultados entram só depois disso.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, periodPreset: "7d", dateFrom: "", dateTo: "" })} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Últimos 7 dias</button>
-                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, periodPreset: "30d", groupBy: "release", runFilter: "all", dateFrom: "", dateTo: "" })} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Últimas runs</button>
-                <button type="button" onClick={() => applyAnalysis({ ...currentDraftFilters, riskFilter: "critical", applicationFilter: "all", runFilter: "all" })} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Aplicações críticas</button>
-              </div>
-            </div>
-          </Panel>
-        ) : !hasFilterResults ? (
+        {!hasFilterResults ? (
           <Panel
             eyebrow="Sem dados"
             title="Nenhum dado encontrado para esse recorte."
@@ -2520,7 +2457,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           </>
         )}
 
-        {analysisRequested && hasFilterResults && activeView === "overview" ? (
+        {hasFilterResults && activeView === "overview" ? (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] 2xl:grid-cols-[minmax(0,1.45fr)_minmax(24rem,0.75fr)]">
             {chartHasData ? (
               <Panel
@@ -2580,7 +2517,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           </div>
         ) : null}
 
-        {analysisRequested && hasFilterResults && activeView === "comparatives" ? (
+        {hasFilterResults && activeView === "comparatives" ? (
           filteredRuns.length > 0 ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] 2xl:grid-cols-[minmax(0,1.2fr)_minmax(26rem,0.8fr)]">
           <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href="../runs" className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
@@ -2647,7 +2584,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           )
         ) : null}
 
-        {analysisRequested && hasFilterResults && activeView === "drilldown" ? (
+        {hasFilterResults && activeView === "drilldown" ? (
           filteredRuns.length > 0 ? (
         <Panel eyebrow="Drilldown" title="Base detalhada" description={undefined} actions={<div className="flex flex-wrap gap-2"><button type="button" onClick={handleExportPdf} disabled={exportingPdf} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) disabled:opacity-60"><FiDownload className="h-4 w-4" />{exportingPdf ? "Gerando PDF..." : "PDF do filtro"}</button><button type="button" onClick={() => downloadCsv(filteredRuns)} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"><FiDownload className="h-4 w-4" />CSV do filtro</button></div>}>
           <div className="mb-4 flex flex-wrap gap-2">

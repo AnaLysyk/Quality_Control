@@ -43,8 +43,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
     label: "Home",
     iconKey: "home",
     items: [
-      { id: "home-page",      label: "Início",    iconKey: "home",      module: "home", href: "/home",              favoriteEnabled: true },
-      { id: "home-dashboard", label: "Dashboard", iconKey: "compass",   module: "home", href: "/admin/home",        favoriteEnabled: true },
+      { id: "home-page",      label: "Início",    iconKey: "home",      module: "home", companyRoute: "dashboard", href: "/admin/dashboard", favoriteEnabled: true },
+      { id: "home-dashboard", label: "Dashboard", iconKey: "compass",   module: "home", href: "/admin/home",        allowedRoles: ALL_INTERNAL, favoriteEnabled: true },
       { id: "home-metrics",   label: "Métricas",  iconKey: "bar-chart", module: "home", href: "/admin/test-metric", favoriteEnabled: true },
     ],
   },

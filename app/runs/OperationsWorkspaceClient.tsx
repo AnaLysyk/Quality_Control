@@ -114,6 +114,13 @@ export function OperationsWorkspaceClient() {
       icon: FiAlertTriangle,
     },
     {
+      key: "releases",
+      route: "releases",
+      label: t("nav.releases"),
+      description: "Gerenciar releases e versões da aplicação",
+      icon: FiBarChart2,
+    },
+    {
       key: "support",
       route: "chamados",
       label: t("nav.support"),
@@ -126,6 +133,13 @@ export function OperationsWorkspaceClient() {
       label: t("nav.metrics"),
       description: t("operationsPage.contexts.metrics"),
       icon: FiBarChart2,
+    },
+    {
+      key: "documentos",
+      route: "documentos",
+      label: t("nav.docs") || "Documentos",
+      description: "Documentos e arquivos da empresa",
+      icon: FiClipboard,
     },
   ];
 

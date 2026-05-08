@@ -87,10 +87,6 @@ function asString(value: unknown, fallback = "") {
   return trimmed || fallback;
 }
 
-function asArray(value: unknown) {
-  return Array.isArray(value) ? value : [];
-}
-
 function parseItemsFromPayload(payload: unknown, ...keys: string[]) {
   if (Array.isArray(payload)) return payload;
   const root = asRecord(payload);
@@ -112,50 +108,6 @@ function parseItemsFromPayload(payload: unknown, ...keys: string[]) {
   }
 
   return [];
-}
-
-function mapSeverity(value: unknown): OperationSignal["severity"] {
-  const raw = asString(value).toLowerCase();
-  if (raw.includes("crit")) return "critical";
-  if (raw.includes("high") || raw.includes("alta")) return "high";
-  if (raw.includes("low") || raw.includes("baixa")) return "low";
-  return "medium";
-}
-
-function mapPriority(value: unknown): OperationSignal["priority"] {
-  const raw = asString(value).toUpperCase();
-  if (raw === "P0" || raw === "P1" || raw === "P2" || raw === "P3") {
-    return raw as OperationSignal["priority"];
-  }
-  return "P2";
-}
-
-function mapDefectStatus(value: unknown): OperationSignal["status"] {
-  const raw = asString(value).toLowerCase();
-  if (raw.includes("done") || raw.includes("closed") || raw.includes("resolved") || raw.includes("aprovado")) return "resolved";
-  if (raw.includes("block")) return "blocked";
-  if (raw.includes("progress") || raw.includes("andamento")) return "in_progress";
-  if (raw.includes("fail")) return "failed";
-  if (raw.includes("alert")) return "alert";
-  if (raw.includes("anal")) return "analyzing";
-  return "new";
-}
-
-function mapRunStatus(value: unknown): OperationSignal["status"] {
-  const raw = asString(value).toLowerCase();
-  if (!raw) return "in_progress";
-  if (raw.includes("fail")) return "failed";
-  if (raw.includes("block")) return "blocked";
-  if (raw.includes("done") || raw.includes("pass") || raw.includes("success") || raw.includes("completed")) return "resolved";
-  if (raw.includes("alert")) return "alert";
-  return "in_progress";
-}
-
-function periodToUnixSeconds(period: string) {
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (period === "7d") return nowSec - 7 * 24 * 60 * 60;
-  if (period === "30d") return nowSec - 30 * 24 * 60 * 60;
-  return nowSec - 24 * 60 * 60;
 }
 
 export function OperationsWorkspaceClient() {
@@ -336,141 +288,52 @@ export function OperationsWorkspaceClient() {
 
       setLoadingLiveData(true);
       setLiveDataError(null);
-      const fromStartTime = periodToUnixSeconds(periodFilter);
 
       try {
-        const signalAccumulator: OperationSignal[] = [];
-        const historyAccumulator: OperationHistoryItem[] = [];
+        const query = new URLSearchParams();
+        query.set("period", periodFilter);
+        companiesTarget.forEach((company) => query.append("companySlug", company.slug));
 
-        for (const company of companiesTarget) {
-          const [runsRes, defectsRes, appsRes, summaryRes, docsRes] = await Promise.allSettled([
-            fetch(`/api/v1/runs?all=1&limit=100&companySlug=${encodeURIComponent(company.slug)}&from_start_time=${fromStartTime}`, { cache: "no-store" }),
-            fetch(`/api/company-defects?companySlug=${encodeURIComponent(company.slug)}`, { cache: "no-store" }),
-            fetch(`/api/applications?companySlug=${encodeURIComponent(company.slug)}`, { cache: "no-store" }),
-            fetch(`/api/dashboard/summary?slug=${encodeURIComponent(company.slug)}&period=${encodeURIComponent(periodFilter)}`, { cache: "no-store" }),
-            fetch(`/api/company-documents?slug=${encodeURIComponent(company.slug)}&history=1`, { cache: "no-store" }),
-          ]);
+        const response = await fetch(`/api/operacao/summary?${query.toString()}`, { cache: "no-store" });
+        const payload = response.ok ? await response.json().catch(() => null) : null;
 
-          const runsJson = runsRes.status === "fulfilled" && runsRes.value.ok
-            ? await runsRes.value.json().catch(() => null)
-            : null;
-          const defectsJson = defectsRes.status === "fulfilled" && defectsRes.value.ok
-            ? await defectsRes.value.json().catch(() => null)
-            : null;
-          const appsJson = appsRes.status === "fulfilled" && appsRes.value.ok
-            ? await appsRes.value.json().catch(() => null)
-            : null;
-          const summaryJson = summaryRes.status === "fulfilled" && summaryRes.value.ok
-            ? await summaryRes.value.json().catch(() => null)
-            : null;
-          const docsJson = docsRes.status === "fulfilled" && docsRes.value.ok
-            ? await docsRes.value.json().catch(() => null)
-            : null;
+        if (!payload) {
+          throw new Error("Resposta invalida do resumo operacional");
+        }
 
-          const appItems = parseItemsFromPayload(appsJson, "items");
-          const appNames = appItems
-            .map((item) => asString(asRecord(item)?.name))
-            .filter((value) => Boolean(value));
+        const signalAccumulator = parseItemsFromPayload(payload, "signals").map((item) => asRecord(item)).filter((item): item is Record<string, unknown> => Boolean(item)).map((row, index) => ({
+          id: asString(row.id, `signal-${index}`),
+          type: (asString(row.type, "run") as OperationSignal["type"]),
+          title: asString(row.title, "Item operacional"),
+          companySlug: asString(row.companySlug),
+          companyName: asString(row.companyName),
+          application: asString(row.application, "N/A"),
+          module: asString(row.module, "N/A"),
+          status: (asString(row.status, "new") as OperationSignal["status"]),
+          owner: asString(row.owner, "Sem responsavel"),
+          severity: (asString(row.severity, "medium") as OperationSignal["severity"]),
+          priority: (asString(row.priority, "P2") as OperationSignal["priority"]),
+          runCode: asString(row.runCode),
+          defectCode: asString(row.defectCode),
+          updatedAtIso: asString(row.updatedAtIso, new Date().toISOString()),
+          passRate: typeof row.passRate === "number" ? row.passRate : undefined,
+          failCount: typeof row.failCount === "number" ? row.failCount : undefined,
+          durationMin: typeof row.durationMin === "number" ? row.durationMin : undefined,
+        }));
 
-          const runItems = parseItemsFromPayload(runsJson, "data", "items");
-          runItems.forEach((item, index) => {
-            const row = asRecord(item);
-            if (!row) return;
-            const runIdRaw = row.runId ?? row.id ?? row.slug ?? `run-${index}`;
-            const runCode = asString(runIdRaw, `RUN-${index + 1}`).toUpperCase();
-            const projectCode = asString(row.project ?? row.app ?? row.qaseProject, appNames[0] ?? "N/A");
-            const status = mapRunStatus(row.status ?? row.state ?? row.result);
-            const owner = asString(row.responsibleLabel ?? row.responsibleName ?? row.createdByName, "Sem responsavel");
-            const updatedAt = asString(row.createdAt ?? row.created_at ?? row.updatedAt, new Date().toISOString());
+        const historyAccumulator = parseItemsFromPayload(payload, "history").map((item) => asRecord(item)).filter((item): item is Record<string, unknown> => Boolean(item)).map((row, index) => ({
+          id: asString(row.id, `history-${index}`),
+          title: asString(row.title, "Atualizacao operacional"),
+          companyName: asString(row.companyName),
+          module: asString(row.module, "N/A"),
+          updatedAtIso: asString(row.updatedAtIso, new Date().toISOString()),
+        }));
 
-            signalAccumulator.push({
-              id: `${company.slug}-run-${runIdRaw}-${index}`,
-              type: "run",
-              title: asString(row.title ?? row.name, `Run ${runCode}`),
-              companySlug: company.slug,
-              companyName: company.name,
-              application: projectCode,
-              module: "Runs",
-              status,
-              owner,
-              severity: status === "failed" || status === "blocked" ? "high" : "medium",
-              priority: status === "failed" ? "P1" : "P2",
-              runCode,
-              defectCode: "",
-              updatedAtIso: updatedAt,
-              passRate: typeof row.passRate === "number" ? row.passRate : undefined,
-              failCount: typeof row.failCount === "number" ? row.failCount : undefined,
-              durationMin: typeof row.durationMin === "number" ? row.durationMin : undefined,
-            });
-          });
-
-          const defectItems = parseItemsFromPayload(defectsJson, "items", "defects");
-          defectItems.forEach((item, index) => {
-            const row = asRecord(item);
-            if (!row) return;
-
-            const defectCode = asString(row.slug ?? row.id, `DEF-${index + 1}`).toUpperCase();
-            const projectCode = asString(row.projectCode ?? row.app, appNames[0] ?? "N/A");
-            const status = mapDefectStatus(row.status ?? row.kanbanStatus);
-            const owner = asString(row.assigneeName ?? row.ownerName, "Sem responsavel");
-            const updatedAt = asString(row.openedAt ?? row.updatedAt ?? row.createdAt, new Date().toISOString());
-
-            signalAccumulator.push({
-              id: `${company.slug}-def-${defectCode}-${index}`,
-              type: "defect",
-              title: asString(row.title, `Defeito ${defectCode}`),
-              companySlug: company.slug,
-              companyName: company.name,
-              application: projectCode,
-              module: "Defeitos",
-              status,
-              owner,
-              severity: mapSeverity(row.severity),
-              priority: mapPriority(row.priority),
-              runCode: asString(row.runSlug ?? row.runCode),
-              defectCode,
-              updatedAtIso: updatedAt,
-            });
-          });
-
-          const summaryAlerts = parseItemsFromPayload(summaryJson, "alerts");
-          summaryAlerts.forEach((item, index) => {
-            const row = asRecord(item);
-            if (!row) return;
-            const alertType = asString(row.type).toLowerCase();
-            const severity = mapSeverity(row.severity);
-            const asIntegration = alertType.includes("sla") || alertType.includes("mttr");
-
-            signalAccumulator.push({
-              id: `${company.slug}-alert-${alertType}-${index}`,
-              type: asIntegration ? "integration" : "automation",
-              title: asString(row.message, "Alerta operacional"),
-              companySlug: company.slug,
-              companyName: company.name,
-              application: "N/A",
-              module: asIntegration ? "Integracoes" : "Automacoes",
-              status: severity === "critical" ? "alert" : "analyzing",
-              owner: "Sistema",
-              severity,
-              priority: severity === "critical" ? "P1" : "P2",
-              runCode: "",
-              defectCode: "",
-              updatedAtIso: asString(row.timestamp, new Date().toISOString()),
-            });
-          });
-
-          const docHistoryItems = parseItemsFromPayload(docsJson, "history", "items");
-          docHistoryItems.slice(0, 6).forEach((item, index) => {
-            const row = asRecord(item);
-            if (!row) return;
-            historyAccumulator.push({
-              id: `${company.slug}-doc-${index}`,
-              title: asString(row.title ?? row.docTitle ?? row.action, "Documento atualizado"),
-              companyName: company.name,
-              module: "Documentos",
-              updatedAtIso: asString(row.createdAt ?? row.timestamp, new Date().toISOString()),
-            });
-          });
+        const warnings = parseItemsFromPayload(payload, "warnings")
+          .map((item) => asString(item))
+          .filter((item) => Boolean(item));
+        if (warnings.length > 0) {
+          setLiveDataError(warnings[0]);
         }
 
         if (!cancelled) {

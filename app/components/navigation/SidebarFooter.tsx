@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FiMoon, FiSun } from "react-icons/fi";
 import { useAppSettings } from "@/context/AppSettingsContext";
@@ -45,9 +46,14 @@ export default function SidebarFooter({ collapsed }: SidebarFooterProps) {
   return (
     <div className="border-t border-white/10 px-3 py-2.5 flex items-center justify-between gap-2">
       <div className="flex min-w-0 flex-col">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60 truncate">
+        <Link
+          href="https://www.testingcompany.com.br/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60 truncate hover:text-white/90 transition"
+        >
           Testing Company
-        </span>
+        </Link>
         <span className="text-[10px] font-mono text-white/30 leading-tight select-none">
           {APP_VERSION}
         </span>

@@ -80,6 +80,15 @@ const DICTIONARY: Record<Locale, Dictionary> = {
       brandIdentity: "Identidade visual",
       brain: "Brain",
     },
+    operationsPage: {
+      kicker: "Operacoes",
+      title: "Central de Operacoes",
+      subtitle: "Acompanhe a saude operacional das empresas, runs, defeitos, automacoes e integracoes.",
+      companySelectorTitle: "Contexto operacional",
+      companySelectorDescription:
+        "Selecione uma ou mais empresas para filtrar a operacao, ou visualize todas as empresas permitidas ao seu perfil.",
+      selectCompanyCta: "Abrir operacao",
+    },
     profileMenu: {
       loading: "Carregando...",
       userFallback: "Usuario",
@@ -644,6 +653,15 @@ const DICTIONARY: Record<Locale, Dictionary> = {
       documents: "Documents",
       brandIdentity: "Brand identity",
       brain: "Brain",
+    },
+    operationsPage: {
+      kicker: "Operations",
+      title: "Operations Center",
+      subtitle: "Track operational health for companies, runs, defects, automations, and integrations.",
+      companySelectorTitle: "Operational context",
+      companySelectorDescription:
+        "Select one or more companies to filter operations, or view all companies allowed by your profile.",
+      selectCompanyCta: "Open operations",
     },
     profileMenu: {
       loading: "Loading...",

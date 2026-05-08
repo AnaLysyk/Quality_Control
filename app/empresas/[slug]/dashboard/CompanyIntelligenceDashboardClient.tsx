@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   FiActivity,
@@ -1278,6 +1279,7 @@ function buildResolvedFilterChipList(
 }
 
 export default function CompanyIntelligenceDashboardClient(props: CompanyDashboardData) {
+  const router = useRouter();
   const { user } = useAuthUser();
   const _role = user?.role?.toLowerCase() ?? null;
   const _permissionRole = user?.permissionRole?.toLowerCase() ?? null;
@@ -2259,6 +2261,21 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 </button>
               ))}
             </div>
+
+            {isInternalProfile && props.companiesForSelector.length > 1 ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-(--tc-text-muted,#6b7280) shrink-0">Empresa</span>
+                <select
+                  value={props.companySlug}
+                  onChange={(e) => router.push(`/empresas/${e.target.value}/dashboard`)}
+                  className="h-9 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 text-sm font-semibold text-(--tc-text,#0b1a3c) focus:outline-none"
+                >
+                  {props.companiesForSelector.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
 
             <div className="grid gap-2.5 lg:grid-cols-3">
               <SelectField

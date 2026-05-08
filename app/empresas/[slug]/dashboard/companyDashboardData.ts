@@ -1,7 +1,7 @@
 import "server-only";
 
 import { readManualReleaseStore } from "@/data/manualData";
-import { findLocalCompanyBySlug, listLocalLinksForCompany, listLocalUsers } from "@/lib/auth/localStore";
+import { findLocalCompanyBySlug, listLocalCompanies, listLocalLinksForCompany, listLocalUsers } from "@/lib/auth/localStore";
 import { resolveLocalUserDisplayName } from "@/lib/manualReleaseResponsible";
 import { type AppRecord, listApplications } from "@/lib/applicationsStore";
 import { mapCompanyRecord, normalizeProjectCodes } from "@/lib/companyRecord";
@@ -88,6 +88,7 @@ export type CompanyDashboardData = {
   applications: CompanyDashboardApplication[];
   projectCodes: string[];
   companyMembers: CompanyMember[];
+  companiesForSelector: { slug: string; name: string }[];
 };
 
 function normalizeKey(value: unknown) {
@@ -651,12 +652,13 @@ export async function loadCompanyDashboardData(slug: string): Promise<CompanyDas
   if (!companyRecord) return null;
 
   const company = mapCompanyRecord(companyRecord);
-  const [manualReleases, integratedReleases, applicationsRaw, alertsRaw, companyMembers] = await Promise.all([
+  const [manualReleases, integratedReleases, applicationsRaw, alertsRaw, companyMembers, allCompanies] = await Promise.all([
     readManualReleaseStore(),
     getAllReleases(),
     listApplications({ companySlug: company.slug ?? slug }),
     readAlertsStore(),
     loadCompanyMembers(companyRecord),
+    listLocalCompanies(),
   ]);
 
   const applications = applicationsRaw.map((app) => ({
@@ -776,6 +778,10 @@ export async function loadCompanyDashboardData(slug: string): Promise<CompanyDas
     applications,
     projectCodes: Array.from(signals.projectCodes),
     companyMembers,
+    companiesForSelector: allCompanies
+      .filter((c) => c.slug)
+      .map((c) => ({ slug: c.slug, name: c.company_name || c.name || c.slug }))
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
   };
 }
 

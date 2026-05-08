@@ -39,23 +39,14 @@ const LEADER_ONLY: SystemRole[] = ["leader_tc"];
 
 export const NAV_CATALOG: NavModuleDef[] = [
   {
-    id: "home",
-    label: "Home",
-    iconKey: "home",
-    items: [
-      { id: "home-page",      label: "Início",    iconKey: "home",      module: "home", companyRoute: "dashboard", href: "/admin/dashboard", favoriteEnabled: true },
-      { id: "home-dashboard", label: "Dashboard", iconKey: "compass",   module: "home", href: "/admin/home",        allowedRoles: ALL_INTERNAL, favoriteEnabled: true },
-      { id: "home-metrics",   label: "Métricas",  iconKey: "bar-chart", module: "home", href: "/admin/test-metric", favoriteEnabled: true },
-    ],
-  },
-  {
     id: "companies",
     label: "Empresas",
     iconKey: "building",
     allowedRoles: ALL_INTERNAL,
     items: [
-      { id: "companies-list",   label: "Buscar empresa", iconKey: "list",        module: "companies", href: "/empresas",      favoriteEnabled: true },
-      { id: "companies-create", label: "Criar empresa",  iconKey: "plus-circle", module: "companies", href: "/admin/clients", allowedRoles: PRIVILEGED, favoriteEnabled: true },
+      { id: "companies-listing", label: "Listagem",        iconKey: "layout",      module: "companies", href: "/empresas",      favoriteEnabled: true },
+      { id: "companies-list",    label: "Buscar empresa",  iconKey: "list",        module: "companies", href: "/empresas",      favoriteEnabled: true },
+      { id: "companies-create",  label: "Criar empresa",   iconKey: "plus-circle", module: "companies", href: "/admin/clients", allowedRoles: PRIVILEGED, favoriteEnabled: true },
     ],
   },
   {

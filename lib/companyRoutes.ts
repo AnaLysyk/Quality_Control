@@ -44,6 +44,7 @@ const RESERVED_APP_ROOTS = new Set([
   "admin",
   "api",
   "automacoes",
+  "casos-de-teste",
   "login",
   "settings",
   "me",

@@ -60,7 +60,7 @@ export default function SidebarFooter({ collapsed }: SidebarFooterProps) {
       </div>
 
       {/* Theme toggle: pill com claro/escuro */}
-      <div className="flex-shrink-0 flex items-center gap-0.5 rounded-full border border-white/15 bg-white/8 p-0.5">
+      <div className="shrink-0 flex items-center gap-0.5 rounded-full border border-white/15 bg-white/8 p-0.5">
         <button
           type="button"
           onClick={() => setTheme("light")}

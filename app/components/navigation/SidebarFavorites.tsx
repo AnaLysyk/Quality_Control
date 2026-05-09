@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FiBookmark, FiX } from "react-icons/fi";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FavoriteItem } from "@/lib/navigation/favoritesTypes";
 
 type SidebarFavoritesProps = {
@@ -24,6 +24,7 @@ export default function SidebarFavorites({
   const [flyoutTop, setFlyoutTop] = useState(0);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const flyoutRef = useRef<HTMLDivElement>(null);
 
   const clearClose = useCallback(() => {
     if (closeTimer.current) {
@@ -36,6 +37,13 @@ export default function SidebarFavorites({
     clearClose();
     closeTimer.current = setTimeout(() => setFlyoutOpen(false), 150);
   }, [clearClose]);
+
+  useEffect(() => {
+    if (!flyoutOpen) return;
+    if (!flyoutRef.current) return;
+    flyoutRef.current.style.top = `${flyoutTop}px`;
+    flyoutRef.current.style.left = "76px";
+  }, [flyoutOpen, flyoutTop]);
 
   if (favorites.length === 0) {
     if (collapsed) return null;
@@ -64,8 +72,8 @@ export default function SidebarFavorites({
 
         {flyoutOpen && (
           <div
+            ref={flyoutRef}
             className="fixed z-50 ml-1 min-w-56 overflow-hidden rounded-xl border border-white/15 bg-[#0c1f4a] shadow-2xl"
-            style={{ top: `${flyoutTop}px`, left: "76px" }}
             onMouseEnter={clearClose}
             onMouseLeave={scheduleClose}
           >
@@ -85,7 +93,7 @@ export default function SidebarFavorites({
                       pathname === fav.href ? "text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    <FiBookmark size={13} className="flex-shrink-0 text-amber-300/60" />
+                    <FiBookmark size={13} className="shrink-0 text-amber-300/60" />
                     <span className="truncate">{fav.label}</span>
                   </Link>
                   <button
@@ -120,7 +128,7 @@ export default function SidebarFavorites({
                 pathname === fav.href ? "bg-white/14 text-white" : "text-white/75 hover:bg-white/8 hover:text-white"
               }`}
             >
-              <FiBookmark size={12} className="flex-shrink-0 text-amber-300/60" />
+              <FiBookmark size={12} className="shrink-0 text-amber-300/60" />
               <span className="truncate">{fav.label}</span>
             </Link>
             <button

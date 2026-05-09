@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   FiActivity,
   FiAlertTriangle,
@@ -19,13 +19,7 @@ import {
   FiTrendingUp,
   FiZap,
 } from "react-icons/fi";
-import DashboardFilterBar from "@/components/dashboard/DashboardFilterBar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardMetricGrid from "@/components/dashboard/DashboardMetricGrid";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useDashboardContext } from "@/hooks/useDashboardContext";
-import { useDashboardFilters } from "@/hooks/useDashboardFilters";
-import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { getAppMeta } from "@/lib/appMeta";
 import css from "./CompanyIntelligenceDashboard.module.css";
@@ -33,12 +27,12 @@ import type { CompanyDashboardData } from "./companyDashboardData";
 
 type PeriodPreset = "all" | "7d" | "30d" | "90d" | "180d" | "custom";
 type GroupBy = "day" | "week" | "month" | "release" | "application";
-type ChartMetric = "passRate" | "failRate" | "runs" | "blocked";
+type ChartMetric = "passRate" | "failRate" | "runs" | "blocked" | "defects" | "logs" | "cycleTimeHours";
 type ChartView = "qualityTimeline" | "runsTimeline" | "applicationHealth" | "applicationDefects";
 type RiskLevel = "critical" | "warning" | "stable";
 type StatusFilter = string;
 type SourceFilter = "all" | "manual" | "integration";
-type ResultView = "overview" | "comparatives" | "drilldown";
+type DefectScope = "filtered" | "periodTotal";
 
 type EnrichedRun = CompanyDashboardData["runs"][number] & {
   time: number;
@@ -60,6 +54,8 @@ type SeriesPoint = {
   failRate: number;
   blocked: number;
   defects: number;
+  logs: number;
+  cycleTimeHours: number;
 };
 
 type ApplicationAggregate = {
@@ -109,6 +105,8 @@ type DashboardFilterState = {
   periodPreset: PeriodPreset;
   groupBy: GroupBy;
   chartView: ChartView;
+  chartMetric: ChartMetric;
+  defectScope: DefectScope;
   applicationFilter: string;
   runFilter: string;
   statusFilter: StatusFilter;
@@ -153,10 +151,27 @@ const CHART_VIEW_OPTIONS: Array<{ value: ChartView; label: string }> = [
   { value: "applicationDefects", label: "Defeitos por aplicação" },
 ];
 
+const CHART_METRIC_OPTIONS: Array<{ value: ChartMetric; label: string }> = [
+  { value: "passRate", label: "Pass rate" },
+  { value: "failRate", label: "Taxa de falha" },
+  { value: "runs", label: "Quantidade de runs" },
+  { value: "blocked", label: "Bloqueios" },
+  { value: "defects", label: "Defeitos" },
+  { value: "logs", label: "Logs técnicos" },
+  { value: "cycleTimeHours", label: "Tempo médio de fechamento" },
+];
+
+const DEFECT_SCOPE_OPTIONS: Array<{ value: DefectScope; label: string }> = [
+  { value: "filtered", label: "Defeitos filtrados" },
+  { value: "periodTotal", label: "Defeitos totais do período" },
+];
+
 const DEFAULT_FILTERS: DashboardFilterState = {
   periodPreset: "all",
   groupBy: "month",
   chartView: "qualityTimeline",
+  chartMetric: "passRate",
+  defectScope: "filtered",
   applicationFilter: "all",
   runFilter: "all",
   statusFilter: "all",
@@ -401,6 +416,12 @@ function summarizeRuns(runs: EnrichedRun[], defects: CompanyDashboardData["defec
   const passRate = totalCases > 0 ? (totalPass / totalCases) * 100 : 0;
   const failRate = totalCases > 0 ? (totalFail / totalCases) * 100 : 0;
   const applicationsAtRisk = new Set(runs.filter((run) => run.riskLevel !== "stable").map((run) => run.applicationKey)).size;
+  
+  // Debug zerado
+  if (runs.length === 0 && process.env.NODE_ENV === "development") {
+    console.warn("[summarizeRuns] No runs provided - summary will be all zeros");
+  }
+  
   const worstRun = [...runs].sort((left, right) => {
     if (riskWeight(left.riskLevel) !== riskWeight(right.riskLevel)) {
       return riskWeight(right.riskLevel) - riskWeight(left.riskLevel);
@@ -447,19 +468,43 @@ function buildDelta(
   };
 }
 
+function runCycleTimeHours(run: EnrichedRun) {
+  const start = toTimestamp(run.createdAt);
+  const end = toTimestamp(run.updatedAt ?? run.createdAt);
+  if (!start || !end || end < start) return 0;
+  return (end - start) / (1000 * 60 * 60);
+}
+
+function formatDurationHours(value: number) {
+  if (value < 1) {
+    const minutes = Math.max(0, Math.round(value * 60));
+    return `${minutes} min`;
+  }
+  return `${value.toFixed(1)} h`;
+}
+
 function chartMetricValue(point: SeriesPoint, metric: ChartMetric) {
   return (
     metric === "passRate" ? point.passRate :
     metric === "failRate" ? point.failRate :
     metric === "runs" ? point.runs :
-    point.blocked
+    metric === "blocked" ? point.blocked :
+    metric === "defects" ? point.defects :
+    metric === "logs" ? point.logs :
+    point.cycleTimeHours
   );
 }
 
+function metricAverage(points: SeriesPoint[], metric: ChartMetric) {
+  if (points.length === 0) return 0;
+  const total = points.reduce((sum, point) => sum + chartMetricValue(point, metric), 0);
+  return total / points.length;
+}
+
 function formatChartMetricValue(metric: ChartMetric, value: number) {
-  return metric === "passRate" || metric === "failRate"
-    ? formatPercent(value)
-    : formatCompactNumber(value);
+  if (metric === "passRate" || metric === "failRate") return formatPercent(value);
+  if (metric === "cycleTimeHours") return formatDurationHours(value);
+  return formatCompactNumber(value);
 }
 
 function resolveChartMetricMeta(metric: ChartMetric) {
@@ -493,6 +538,36 @@ function resolveChartMetricMeta(metric: ChartMetric) {
     };
   }
 
+  if (metric === "defects") {
+    return {
+      label: "Defeitos",
+      hint: "Ocorrências no recorte e no período",
+      targetValue: null,
+      colors: ["#7f1d1d", "#dc2626", "#f97316"],
+      surface: "rgba(239,68,68,0.08)",
+    };
+  }
+
+  if (metric === "logs") {
+    return {
+      label: "Logs técnicos",
+      hint: "Eventos e alertas no período filtrado",
+      targetValue: null,
+      colors: ["#0f172a", "#0ea5e9", "#14b8a6"],
+      surface: "rgba(14,165,233,0.09)",
+    };
+  }
+
+  if (metric === "cycleTimeHours") {
+    return {
+      label: "Tempo médio de fechamento",
+      hint: "Média entre abertura e atualização final das runs",
+      targetValue: null,
+      colors: ["#0f172a", "#1d4ed8", "#06b6d4"],
+      surface: "rgba(29,78,216,0.08)",
+    };
+  }
+
   return {
     label: "Bloqueios",
     hint: "Interrupções no período",
@@ -505,6 +580,13 @@ function resolveChartMetricMeta(metric: ChartMetric) {
 function buildChartScale(values: number[], metric: ChartMetric) {
   if (metric === "passRate" || metric === "failRate") {
     return { min: 0, max: 100, ticks: [100, 75, 50, 25, 0] };
+  }
+
+  if (metric === "cycleTimeHours") {
+    const peak = Math.max(...values, 0);
+    const max = peak <= 2 ? 2 : peak <= 8 ? 8 : peak <= 24 ? 24 : Math.ceil(peak / 12) * 12;
+    const step = max / 4;
+    return { min: 0, max, ticks: [max, max - step, max - step * 2, max - step * 3, 0] };
   }
 
   const peak = Math.max(...values, 0);
@@ -565,8 +647,13 @@ function resolveChartPanelCopy(view: ChartView) {
   };
 }
 
-function buildSeries(runs: EnrichedRun[], defects: CompanyDashboardData["defects"], groupBy: GroupBy) {
-  const buckets = new Map<string, { label: string; runs: EnrichedRun[]; defects: number; sortValue: number }>();
+function buildSeries(
+  runs: EnrichedRun[],
+  defects: CompanyDashboardData["defects"],
+  logs: CompanyDashboardData["alerts"],
+  groupBy: GroupBy,
+) {
+  const buckets = new Map<string, { label: string; runs: EnrichedRun[]; defects: number; logs: number; sortValue: number }>();
  
   for (const run of runs) {
     let key = run.slug;
@@ -591,7 +678,7 @@ function buildSeries(runs: EnrichedRun[], defects: CompanyDashboardData["defects
       label = run.applicationName;
     }
 
-    const current = buckets.get(key) ?? { label, runs: [], defects: 0, sortValue };
+    const current = buckets.get(key) ?? { label, runs: [], defects: 0, logs: 0, sortValue };
     current.runs.push(run);
     current.sortValue = groupBy === "application" ? Math.max(current.sortValue, sortValue) : sortValue;
     buckets.set(key, current);
@@ -600,12 +687,60 @@ function buildSeries(runs: EnrichedRun[], defects: CompanyDashboardData["defects
   for (const defect of defects) {
     const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
     let key = defect.runSlug || defect.slug;
+    let label = defect.title;
+    let sortValue = time;
     if (groupBy === "day") key = String(startOfDay(time));
     else if (groupBy === "week") key = String(startOfWeek(time));
     else if (groupBy === "month") key = String(startOfMonth(time));
     else if (groupBy === "application") key = defect.applicationKey;
-    const current = buckets.get(key);
-    if (current) current.defects += 1;
+
+    if (groupBy === "day") {
+      sortValue = startOfDay(time);
+      label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue);
+    } else if (groupBy === "week") {
+      sortValue = startOfWeek(time);
+      const end = sortValue + 6 * 24 * 60 * 60 * 1000;
+      label = `${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue)} - ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(end)}`;
+    } else if (groupBy === "month") {
+      sortValue = startOfMonth(time);
+      label = formatMonthLabel(sortValue);
+    } else if (groupBy === "application") {
+      sortValue = time;
+      label = defect.applicationName;
+    }
+
+    const current = buckets.get(key) ?? { label, runs: [], defects: 0, logs: 0, sortValue };
+    current.defects += 1;
+    buckets.set(key, current);
+  }
+
+  for (const log of logs) {
+    const time = toTimestamp(log.timestamp);
+    let key = log.type || log.message;
+    let label = log.message;
+    let sortValue = time;
+
+    if (groupBy === "day") {
+      sortValue = startOfDay(time);
+      key = String(sortValue);
+      label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue);
+    } else if (groupBy === "week") {
+      sortValue = startOfWeek(time);
+      key = String(sortValue);
+      const end = sortValue + 6 * 24 * 60 * 60 * 1000;
+      label = `${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(sortValue)} - ${new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(end)}`;
+    } else if (groupBy === "month") {
+      sortValue = startOfMonth(time);
+      key = String(sortValue);
+      label = formatMonthLabel(sortValue);
+    } else if (groupBy === "application") {
+      key = "company-logs";
+      label = "Logs da empresa";
+    }
+
+    const current = buckets.get(key) ?? { label, runs: [], defects: 0, logs: 0, sortValue };
+    current.logs += 1;
+    buckets.set(key, current);
   }
 
   return Array.from(buckets.entries())
@@ -614,6 +749,9 @@ function buildSeries(runs: EnrichedRun[], defects: CompanyDashboardData["defects
       const totalPass = bucket.runs.reduce((sum, run) => sum + run.stats.pass, 0);
       const totalFail = bucket.runs.reduce((sum, run) => sum + run.stats.fail, 0);
       const totalBlocked = bucket.runs.reduce((sum, run) => sum + run.stats.blocked, 0);
+      const cycleTimeHours = bucket.runs.length > 0
+        ? bucket.runs.reduce((sum, run) => sum + runCycleTimeHours(run), 0) / bucket.runs.length
+        : 0;
       return {
         key,
         label: bucket.label,
@@ -622,6 +760,8 @@ function buildSeries(runs: EnrichedRun[], defects: CompanyDashboardData["defects
         failRate: totalCases > 0 ? (totalFail / totalCases) * 100 : 0,
         blocked: totalBlocked,
         defects: bucket.defects,
+        logs: bucket.logs,
+        cycleTimeHours,
         sortValue: bucket.sortValue,
       };
     })
@@ -634,6 +774,8 @@ function buildSeries(runs: EnrichedRun[], defects: CompanyDashboardData["defects
       failRate: point.failRate,
       blocked: point.blocked,
       defects: point.defects,
+      logs: point.logs,
+      cycleTimeHours: point.cycleTimeHours,
     }));
 }
 
@@ -767,7 +909,7 @@ function StatCard(props: {
     "text-(--tc-text,#0b1a3c) dark:text-(--tc-text,#e2e8f0)";
 
   return (
-    <div className="h-full min-h-[10.75rem] rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-4 shadow-[0_10px_30px_rgba(1,24,72,0.06)] transition hover:-translate-y-[1px] hover:shadow-[0_16px_40px_rgba(1,24,72,0.08)] dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a) dark:shadow-none">
+    <div className="h-full min-h-43 rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-4 shadow-[0_10px_30px_rgba(1,24,72,0.06)] transition hover:-translate-y-px hover:shadow-[0_16px_40px_rgba(1,24,72,0.08)] dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a) dark:shadow-none">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">{props.label}</div>
@@ -788,17 +930,38 @@ function StatCard(props: {
   );
 }
 
-function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetric, "all"> }) {
-  const values = props.points.map((point) => chartMetricValue(point, props.metric));
-  const meta = resolveChartMetricMeta(props.metric);
-  const scale = buildChartScale(values, props.metric);
+function MiniLineChart(props: {
+  points: SeriesPoint[];
+  metric: ChartMetric;
+  previousAverage?: number | null;
+  compareEnabled?: boolean;
+}) {
+  const shouldFallbackToRuns =
+    props.metric === "passRate" &&
+    props.points.length > 0 &&
+    props.points.every((point) => chartMetricValue(point, "passRate") <= 0.001) &&
+    props.points.some((point) => point.runs > 0);
+
+  const effectiveMetric: ChartMetric = shouldFallbackToRuns ? "runs" : props.metric;
+  const values = props.points.map((point) => chartMetricValue(point, effectiveMetric));
+  const meta = resolveChartMetricMeta(effectiveMetric);
+  const scale = buildChartScale(values, effectiveMetric);
   const chartHeight = 58;
   const chartPadding = 5;
   const plotBottom = chartHeight - chartPadding;
-  const { line, area, points } = buildLinePath(values, scale.min, scale.max, 100, chartHeight, 5);
+  const { line, points } = buildLinePath(values, scale.min, scale.max, 100, chartHeight, 5);
   const latest = values.at(-1) ?? 0;
   const previous = values.length > 1 ? values[values.length - 2] : null;
   const momentum = previous == null ? null : latest - previous;
+  const avg = values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+  const previousAverage = props.previousAverage ?? null;
+  const compareDelta = previousAverage == null ? null : avg - previousAverage;
+  const compareLabel =
+    previousAverage == null
+      ? "Sem período anterior comparável"
+      : `${compareDelta && compareDelta >= 0 ? "+" : ""}${(compareDelta ?? 0).toFixed(1)} ${effectiveMetric === "cycleTimeHours" ? "h" : effectiveMetric === "passRate" || effectiveMetric === "failRate" ? "p.p." : ""} vs período anterior`;
+  const best = values.length > 0 ? Math.max(...values) : 0;
+  const worst = values.length > 0 ? Math.min(...values) : 0;
   const targetY = meta.targetValue == null
     ? null
     : chartValueToY(meta.targetValue, scale.min, scale.max, chartHeight, 5);
@@ -811,20 +974,20 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
     const stride = Math.max(1, Math.floor((props.points.length - 1) / 3));
     return index % stride === 0;
   }).slice(0, 5);
-  const metricFormatter = (value: number) => formatChartMetricValue(props.metric, value);
+  const metricFormatter = (value: number) => formatChartMetricValue(effectiveMetric, value);
   const momentumTone =
     momentum == null || Math.abs(momentum) < 0.01
       ? "neutral"
-      : props.metric === "failRate" || props.metric === "blocked"
+      : effectiveMetric === "failRate" || effectiveMetric === "blocked"
         ? (momentum < 0 ? "positive" : "warning")
         : (momentum > 0 ? "positive" : "warning");
   const momentumLabel =
     momentum == null
       ? "Sem referência"
-      : `${momentum >= 0 ? "+" : ""}${props.metric === "passRate" || props.metric === "failRate" ? momentum.toFixed(1) : Math.round(momentum)}${props.metric === "passRate" || props.metric === "failRate" ? " p.p." : ""}`;
-  const chartGradientId = `desktopboard-line-${props.metric}`;
-  const chartAreaId = `desktopboard-area-${props.metric}`;
-  const chartShadowId = `desktopboard-shadow-${props.metric}`;
+      : `${momentum >= 0 ? "+" : ""}${effectiveMetric === "passRate" || effectiveMetric === "failRate" ? momentum.toFixed(1) : Math.round(momentum)}${effectiveMetric === "passRate" || effectiveMetric === "failRate" ? " p.p." : ""}`;
+  const chartGradientId = `desktopboard-line-${effectiveMetric}`;
+  const chartShadowId = `desktopboard-shadow-${effectiveMetric}`;
+  const barGradientId = `desktopboard-bars-${effectiveMetric}`;
   const periodStartLabel = props.points[0]?.label ?? "-";
   const periodEndLabel = props.points.at(-1)?.label ?? "-";
 
@@ -854,11 +1017,17 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
             </div>
           ) : null}
           <div>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Período</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Período</span>
             <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{periodStartLabel} a {periodEndLabel}</span>
           </div>
         </div>
       </div>
+
+      {shouldFallbackToRuns ? (
+        <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+          Pass rate sem massa suficiente neste recorte. Exibindo volume de runs para manter a leitura útil.
+        </div>
+      ) : null}
 
       {props.points.length > 0 ? (
         <div className="grid gap-3 lg:grid-cols-[auto_1fr]">
@@ -869,17 +1038,27 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
           </div>
 
           <div>
-            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-medium text-[rgba(8,32,77,0.58)] dark:text-slate-400">
-              <span className="inline-flex items-center gap-2">
-                <span className={`h-2.5 w-2.5 rounded-full ${css.seriesDot}`} {...{ style: { '--dot-color': meta.colors[1] } as React.CSSProperties }} />
-                Série: {meta.label}
-              </span>
-              {meta.targetValue != null ? (
-                <span className="inline-flex items-center gap-2">
-                  <span className="block h-px w-5 border-t border-dashed border-[rgba(16,185,129,0.45)]" />
-                  Meta: {metricFormatter(meta.targetValue)}
-                </span>
-              ) : null}
+            <div className="mb-3 grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-5">
+              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Atual</div>
+                <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{metricFormatter(latest)}</div>
+              </div>
+              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Média</div>
+                <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{metricFormatter(avg)}</div>
+              </div>
+                <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                  <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Média anterior</div>
+                  <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{previousAverage == null ? "-" : metricFormatter(previousAverage)}</div>
+                </div>
+              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Pico</div>
+                <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{metricFormatter(best)}</div>
+              </div>
+              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Pior</div>
+                <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{metricFormatter(worst)}</div>
+              </div>
             </div>
 
             <svg viewBox={`0 0 100 ${chartHeight}`} className="h-64 w-full overflow-visible">
@@ -889,9 +1068,9 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
                   <stop offset="60%" stopColor={meta.colors[1]} />
                   <stop offset="100%" stopColor={meta.colors[2]} />
                 </linearGradient>
-                <linearGradient id={chartAreaId} x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={barGradientId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={meta.surface} />
-                  <stop offset="100%" stopColor="rgba(255,255,255,0.01)" />
+                  <stop offset="100%" stopColor="rgba(15,23,42,0.03)" />
                 </linearGradient>
                 <filter id={chartShadowId} x="-20%" y="-20%" width="140%" height="160%">
                   <feDropShadow dx="0" dy="1.25" stdDeviation="1.35" floodColor={meta.colors[1]} floodOpacity="0.18" />
@@ -915,21 +1094,39 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
                 );
               })}
 
-              <line x1="0" y1={plotBottom} x2="100" y2={plotBottom} stroke="rgba(148,163,184,0.18)" />
-
               {targetY != null ? (
                 <line
                   x1="0"
                   y1={targetY}
                   x2="100"
                   y2={targetY}
-                  stroke="rgba(16,185,129,0.18)"
+                  stroke="rgba(16,185,129,0.22)"
                   strokeDasharray="3 6"
                 />
               ) : null}
 
-              <path d={area} fill={`url(#${chartAreaId})`} />
-              <path d={line} fill="none" stroke={`url(#${chartGradientId})`} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${chartShadowId})`} />
+              {points.map((point, index) => {
+                const next = points[index + 1];
+                const prevX = index === 0 ? 0 : (points[index - 1]?.x ?? point.x);
+                const nextX = next ? next.x : 100;
+                const colWidth = Math.max(4, (nextX - prevX) / 2.2);
+                const x = Math.max(0, point.x - colWidth / 2);
+                const h = Math.max(0.8, plotBottom - point.y);
+                return (
+                  <rect
+                    key={`bar-${point.x}-${point.y}`}
+                    x={x}
+                    y={point.y}
+                    width={colWidth}
+                    height={h}
+                    rx="1.6"
+                    fill={`url(#${barGradientId})`}
+                    opacity="0.9"
+                  />
+                );
+              })}
+
+              <path d={line} fill="none" stroke={`url(#${chartGradientId})`} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${chartShadowId})`} />
 
               {points.map((point, index) => (
                 <g key={`${point.x}-${point.y}`}>
@@ -937,11 +1134,11 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
                   <circle
                     cx={point.x}
                     cy={point.y}
-                    r={index === points.length - 1 ? "1.95" : "1.3"}
+                    r={index === points.length - 1 ? "1.95" : "1.25"}
                     fill={index === points.length - 1 ? meta.colors[1] : undefined}
                     className={index === points.length - 1 ? undefined : css.chartDotFill}
                     stroke={meta.colors[1]}
-                    strokeWidth={index === points.length - 1 ? "1.35" : "1.05"}
+                    strokeWidth={index === points.length - 1 ? "1.3" : "1.0"}
                   />
                 </g>
               ))}
@@ -955,14 +1152,217 @@ function MiniLineChart(props: { points: SeriesPoint[]; metric: Exclude<ChartMetr
               ))}
             </div>
 
-            <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
-              Período analisado: {periodStartLabel} a {periodEndLabel}
+            <div className="mt-4 space-y-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
+              <div>Visualização: série + colunas | Período analisado: {periodStartLabel} a {periodEndLabel}</div>
+              {props.compareEnabled ? <div>Comparativo: {compareLabel}</div> : null}
             </div>
           </div>
         </div>
       ) : (
         <div className="flex h-44 items-center justify-center rounded-[22px] border border-dashed border-(--tc-border,#d7deea) text-sm text-(--tc-text-muted,#6b7280)">
           Sem pontos suficientes no filtro atual.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LogsTimelineChart(props: {
+  points: SeriesPoint[];
+  previousAverage?: number | null;
+  compareEnabled?: boolean;
+}) {
+  const values = props.points.map((point) => point.logs);
+  const scale = buildChartScale(values, "logs");
+  const chartHeight = 58;
+  const chartPadding = 5;
+  const plotBottom = chartHeight - chartPadding;
+  const { line, points } = buildLinePath(values, scale.min, scale.max, 100, chartHeight, 5);
+  const latest = values.at(-1) ?? 0;
+  const previous = values.length > 1 ? values[values.length - 2] : null;
+  const momentum = previous == null ? null : latest - previous;
+  const avg = values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+  const previousAverage = props.previousAverage ?? null;
+  const compareDelta = previousAverage == null ? null : avg - previousAverage;
+  const compareLabel =
+    previousAverage == null
+      ? "Sem período anterior comparável"
+      : `${compareDelta && compareDelta >= 0 ? "+" : ""}${Math.round(compareDelta ?? 0)} alertas vs período anterior`;
+  const best = values.length > 0 ? Math.max(...values) : 0;
+  const worst = values.length > 0 ? Math.min(...values) : 0;
+  
+  const momentumTone =
+    momentum == null || Math.abs(momentum) < 0.01
+      ? "neutral"
+      : (momentum < 0 ? "positive" : "warning");
+  const momentumLabel =
+    momentum == null
+      ? "Sem referência"
+      : `${momentum >= 0 ? "+" : ""}${Math.round(momentum)} alertas`;
+
+  const chartGradientId = `desktopboard-logs-line`;
+  const chartShadowId = `desktopboard-logs-shadow`;
+  const barGradientId = `desktopboard-logs-bars`;
+  const periodStartLabel = props.points[0]?.label ?? "-";
+  const periodEndLabel = props.points.at(-1)?.label ?? "-";
+
+  return (
+    <div className={`overflow-hidden rounded-[20px] border p-5 ${css.chartContainer}`}>
+      <div className="mb-4 flex flex-col gap-4 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">
+            Alertas técnicos
+          </div>
+          <div className="mt-2 flex flex-wrap items-end gap-3">
+            <div className="text-[40px] font-extrabold leading-none tracking-[-0.06em] text-(--tc-text,#0b1a3c)">
+              {Math.round(latest)}
+            </div>
+            <div className={`mb-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${toneClasses(momentumTone)}`}>
+              {momentumTone === "positive" ? <FiArrowDownRight className="h-3.5 w-3.5" /> : momentumTone === "warning" ? <FiArrowUpRight className="h-3.5 w-3.5" /> : <FiMinus className="h-3.5 w-3.5" />}
+              {momentumLabel}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <div>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Período</span>
+            <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{periodStartLabel} a {periodEndLabel}</span>
+          </div>
+        </div>
+      </div>
+
+      {props.points.length > 0 ? (
+        <div className="grid gap-3 lg:grid-cols-[auto_1fr]">
+          <div className="hidden h-64 flex-col justify-between py-2 text-[11px] font-semibold text-[rgba(8,32,77,0.52)] dark:text-slate-400 lg:flex">
+            {(scale.ticks.length <= 3
+              ? scale.ticks
+              : [scale.ticks[0], scale.ticks[Math.floor(scale.ticks.length / 2)] ?? scale.ticks[0], scale.ticks.at(-1) ?? scale.ticks[0]]
+            ).map((tick) => (
+              <div key={tick}>{Math.round(tick)}</div>
+            ))}
+          </div>
+
+          <div>
+            <div className="mb-3 grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-5">
+              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Atual</div>
+                <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{Math.round(latest)}</div>
+              </div>
+              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Média</div>
+                <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{Math.round(avg)}</div>
+              </div>
+              {props.compareEnabled && previousAverage != null ? (
+                <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                  <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Média anterior</div>
+                  <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{Math.round(previousAverage)}</div>
+                </div>
+              ) : null}
+              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Pico</div>
+                <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{Math.round(best)}</div>
+              </div>
+              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-2.5 py-2">
+                <div className="uppercase tracking-widest text-(--tc-text-muted,#6b7280)">Pior</div>
+                <div className="mt-1 text-sm font-bold text-(--tc-text,#0b1a3c)">{Math.round(worst)}</div>
+              </div>
+            </div>
+
+            <svg viewBox={`0 0 100 ${chartHeight}`} className="h-64 w-full overflow-visible">
+              <defs>
+                <linearGradient id={chartGradientId} x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#f97316" />
+                  <stop offset="60%" stopColor="#ea580c" />
+                  <stop offset="100%" stopColor="#c2410c" />
+                </linearGradient>
+                <linearGradient id={barGradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fed7aa" />
+                  <stop offset="100%" stopColor="rgba(15,23,42,0.03)" />
+                </linearGradient>
+                <filter id={chartShadowId} x="-20%" y="-20%" width="140%" height="160%">
+                  <feDropShadow dx="0" dy="1.25" stdDeviation="1.35" floodColor="#ea580c" floodOpacity="0.18" />
+                </filter>
+              </defs>
+
+              <rect x="0" y={chartPadding} width="100" height={plotBottom - chartPadding} rx="3.5" className={css.chartBgRect} />
+
+              {scale.ticks.map((tick) => {
+                const y = chartValueToY(tick, scale.min, scale.max, chartHeight, 5);
+                return (
+                  <line
+                    key={tick}
+                    x1="0"
+                    y1={y}
+                    x2="100"
+                    y2={y}
+                    stroke={tick === 0 ? "rgba(148,163,184,0.18)" : "rgba(148,163,184,0.08)"}
+                    strokeDasharray="2 6"
+                  />
+                );
+              })}
+
+              {points.map((point, index) => {
+                const next = points[index + 1];
+                const prevX = index === 0 ? 0 : (points[index - 1]?.x ?? point.x);
+                const nextX = next ? next.x : 100;
+                const colWidth = Math.max(4, (nextX - prevX) / 2.2);
+                const x = Math.max(0, point.x - colWidth / 2);
+                const h = Math.max(0.8, plotBottom - point.y);
+                return (
+                  <rect
+                    key={`bar-${point.x}-${point.y}`}
+                    x={x}
+                    y={point.y}
+                    width={colWidth}
+                    height={h}
+                    rx="1.6"
+                    fill={`url(#${barGradientId})`}
+                    opacity="0.9"
+                  />
+                );
+              })}
+
+              <path d={line} fill="none" stroke={`url(#${chartGradientId})`} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${chartShadowId})`} />
+
+              {points.map((point, index) => (
+                <g key={`${point.x}-${point.y}`}>
+                  {index === points.length - 1 ? <circle cx={point.x} cy={point.y} r="3.2" fill="rgba(249,115,22,0.12)" /> : null}
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r={index === points.length - 1 ? "1.95" : "1.25"}
+                    fill={index === points.length - 1 ? "#ea580c" : undefined}
+                    className={index === points.length - 1 ? undefined : "fill-[#fed7aa]"}
+                    stroke="#ea580c"
+                    strokeWidth={index === points.length - 1 ? "1.3" : "1.0"}
+                  />
+                </g>
+              ))}
+            </svg>
+
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] text-[rgba(8,32,77,0.56)] dark:text-slate-400 sm:grid-cols-3 lg:grid-cols-5">
+              {props.points.filter((_, index) => {
+                if (props.points.length <= 5) return true;
+                if (index === 0 || index === props.points.length - 1) return true;
+                const stride = Math.max(1, Math.floor((props.points.length - 1) / 3));
+                return index % stride === 0;
+              }).slice(0, 5).map((point) => (
+                <div key={point.key} className="truncate">
+                  <span className="font-medium">{point.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 space-y-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
+              <div>Visualização: série de alertas + colunas | Período analisado: {periodStartLabel} a {periodEndLabel}</div>
+              {props.compareEnabled ? <div>Comparativo: {compareLabel}</div> : null}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex h-44 items-center justify-center rounded-[22px] border border-dashed border-(--tc-border,#d7deea) text-sm text-(--tc-text-muted,#6b7280)">
+          Sem alertas registrados neste período.
         </div>
       )}
     </div>
@@ -1163,28 +1563,14 @@ function ToggleChip(props: { active: boolean; onClick: () => void; label: string
   );
 }
 
-function ResultViewButton(props: { active: boolean; label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={props.onClick}
-      className={`inline-flex items-center rounded-full border px-3.5 py-2 text-sm font-semibold transition ${
-        props.active
-          ? "border-transparent bg-(--tc-primary,#0b1a3c) text-white shadow-[0_10px_20px_rgba(1,24,72,0.18)] dark:bg-(--tc-primary,#245295) dark:shadow-none"
-          : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text,#0b1a3c) hover:bg-(--tc-surface-2,#f8fafc) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a) dark:text-(--tc-text,#e2e8f0) dark:hover:bg-(--tc-surface-2,#1e293b)"
-      }`}
-    >
-      {props.label}
-    </button>
-  );
-}
-
 function areFilterStatesEqual(left: DashboardFilterState | null, right: DashboardFilterState | null) {
   if (!left || !right) return false;
   return (
     left.periodPreset === right.periodPreset &&
     left.groupBy === right.groupBy &&
     left.chartView === right.chartView &&
+    left.chartMetric === right.chartMetric &&
+    left.defectScope === right.defectScope &&
     left.applicationFilter === right.applicationFilter &&
     left.runFilter === right.runFilter &&
     left.statusFilter === right.statusFilter &&
@@ -1237,6 +1623,12 @@ function buildFilterChipList(
   }
   if (filters.onlyWithDefects) chips.push("Com defeitos");
   if (filters.onlyRegression) chips.push("Com regressão");
+  if (filters.chartView === "qualityTimeline") {
+    chips.push(`Métrica ${CHART_METRIC_OPTIONS.find((option) => option.value === filters.chartMetric)?.label ?? filters.chartMetric}`);
+    if (filters.chartMetric === "defects") {
+      chips.push(filters.defectScope === "periodTotal" ? "Defeitos totais do período" : "Defeitos filtrados");
+    }
+  }
   if (isTimeChartView(filters.chartView) && filters.groupBy !== "month") {
     chips.push(`Agrupado por ${GROUP_OPTIONS.find((option) => option.value === filters.groupBy)?.label ?? filters.groupBy}`);
   }
@@ -1272,6 +1664,12 @@ function buildResolvedFilterChipList(
   }
   if (filters.onlyWithDefects) chips.push("Com defeitos");
   if (filters.onlyRegression) chips.push("Com regressão");
+  if (filters.chartView === "qualityTimeline") {
+    chips.push(`Métrica ${CHART_METRIC_OPTIONS.find((option) => option.value === filters.chartMetric)?.label ?? filters.chartMetric}`);
+    if (filters.chartMetric === "defects") {
+      chips.push(filters.defectScope === "periodTotal" ? "Defeitos totais do período" : "Defeitos filtrados");
+    }
+  }
   if (isTimeChartView(filters.chartView) && filters.groupBy !== "month") {
     chips.push(`Agrupado por ${GROUP_OPTIONS.find((option) => option.value === filters.groupBy)?.label ?? filters.groupBy}`);
   }
@@ -1281,6 +1679,61 @@ function buildResolvedFilterChipList(
 export default function CompanyIntelligenceDashboardClient(props: CompanyDashboardData) {
   const router = useRouter();
   const { user } = useAuthUser();
+
+  // Debug: Log initial data load
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.debug(
+        `[Dashboard] Loaded: ${props.runs.length} runs, ${props.defects.length} defects, ${props.applications.length} apps`,
+        {
+          runs: props.runs.map(r => ({ slug: r.slug, passRate: r.stats.passRate, total: r.stats.total })).slice(0, 5),
+          heroStats: props.heroStats,
+        }
+      );
+    }
+  }, [props.runs.length, props.defects.length]);
+  
+      // Executive Analysis via Agent API
+      const [executiveAnalysis, setExecutiveAnalysis] = useState<any>(null);
+      const [analysisLoading, setAnalysisLoading] = useState(false);
+
+      useEffect(() => {
+        const loadExecutiveAnalysis = async () => {
+          if (props.runs.length === 0) return;
+      
+          setAnalysisLoading(true);
+          try {
+            const response = await fetch("/api/dashboard/executive-analysis", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                companySlug: props.companySlug,
+                companyName: props.companyName,
+                runs: props.runs,
+                defects: props.defects,
+                applications: props.applications,
+                filters: {
+                  periodPreset: "all",
+                  applicationFilter: "all",
+                  riskFilter: "all",
+                  sourceFilter: "all",
+                },
+              }),
+            });
+        
+            if (response.ok) {
+              const data = await response.json();
+              setExecutiveAnalysis(data);
+            }
+          } catch (error) {
+            console.error("[executive-analysis] Failed to load:", error);
+          } finally {
+            setAnalysisLoading(false);
+          }
+        };
+    
+        loadExecutiveAnalysis();
+      }, [props.companySlug, props.companyName, props.runs.length, props.defects.length, props.applications.length]);
   const _role = user?.role?.toLowerCase() ?? null;
   const _permissionRole = user?.permissionRole?.toLowerCase() ?? null;
   const isInternalProfile =
@@ -1295,6 +1748,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(DEFAULT_FILTERS.periodPreset);
   const [groupBy, setGroupBy] = useState<GroupBy>(DEFAULT_FILTERS.groupBy);
   const [chartView, setChartView] = useState<ChartView>(DEFAULT_FILTERS.chartView);
+  const [chartMetric, setChartMetric] = useState<ChartMetric>(DEFAULT_FILTERS.chartMetric);
+  const [defectScope, setDefectScope] = useState<DefectScope>(DEFAULT_FILTERS.defectScope);
   const [applicationFilter, setApplicationFilter] = useState<string>(DEFAULT_FILTERS.applicationFilter);
   const [runFilter, setRunFilter] = useState<string>(DEFAULT_FILTERS.runFilter);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(DEFAULT_FILTERS.statusFilter);
@@ -1308,7 +1763,6 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [exportingPdf, setExportingPdf] = useState(false);
-  const [activeView, setActiveView] = useState<ResultView>("overview");
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const currentDraftFilters = useMemo<DashboardFilterState>(
@@ -1316,6 +1770,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       periodPreset,
       groupBy,
       chartView,
+      chartMetric,
+      defectScope,
       applicationFilter,
       runFilter,
       statusFilter,
@@ -1333,6 +1789,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       periodPreset,
       groupBy,
       chartView,
+      chartMetric,
+      defectScope,
       applicationFilter,
       runFilter,
       statusFilter,
@@ -1349,10 +1807,14 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   );
   const draftRanges = useMemo(() => resolveRange(periodPreset, dateFrom, dateTo), [periodPreset, dateFrom, dateTo]);
 
-  const activeFilters = currentDraftFilters;
+  const deferredFilters = useDeferredValue(currentDraftFilters);
+  const isApplyingFilters = !areFilterStatesEqual(currentDraftFilters, deferredFilters);
+  const activeFilters = deferredFilters;
   const activePeriodPreset = activeFilters.periodPreset;
   const activeGroupBy = activeFilters.groupBy;
   const activeChartView = activeFilters.chartView;
+  const activeChartMetric = activeFilters.chartMetric;
+  const activeDefectScope = activeFilters.defectScope;
   const activeApplicationFilter = activeFilters.applicationFilter;
   const activeRunFilter = activeFilters.runFilter;
   const activeStatusFilter = activeFilters.statusFilter;
@@ -1642,6 +2104,22 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     });
   }, [props.defects, previousRuns, enrichedRuns, previousRange, activeApplicationFilter, activeRunFilter, activeEnvironmentFilter, hasMultipleEnvironments, activeSourceFilter]);
 
+  const periodDefects = useMemo(() => {
+    if (activeSourceFilter === "integration") return [];
+    return props.defects.filter((defect) => {
+      const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
+      return withinRange(time, ranges.start, ranges.end);
+    });
+  }, [props.defects, ranges, activeSourceFilter]);
+
+  const previousPeriodDefects = useMemo(() => {
+    if (!previousRange || activeSourceFilter === "integration") return [];
+    return props.defects.filter((defect) => {
+      const time = Math.max(toTimestamp(defect.updatedAt), toTimestamp(defect.createdAt));
+      return withinRange(time, previousRange.start, previousRange.end);
+    });
+  }, [props.defects, previousRange, activeSourceFilter]);
+
   const executiveSummary = useMemo(
     () => summarizeRuns(filteredRuns, filteredDefects),
     [filteredRuns, filteredDefects],
@@ -1652,12 +2130,44 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     [previousRuns, previousDefects],
   );
 
+  const chartDefectsCurrent = activeDefectScope === "periodTotal" ? periodDefects : filteredDefects;
+  const chartDefectsPrevious = activeDefectScope === "periodTotal" ? previousPeriodDefects : previousDefects;
+
+  const chartLogsCurrent = useMemo(
+    () =>
+      props.alerts.filter((alert) => {
+        const time = toTimestamp(alert.timestamp);
+        return withinRange(time, ranges.start, ranges.end);
+      }),
+    [props.alerts, ranges],
+  );
+
+  const chartLogsPrevious = useMemo(
+    () =>
+      previousRange
+        ? props.alerts.filter((alert) => {
+            const time = toTimestamp(alert.timestamp);
+            return withinRange(time, previousRange.start, previousRange.end);
+          })
+        : [],
+    [props.alerts, previousRange],
+  );
+
   const series = useMemo(
-    () => buildSeries(filteredRuns, filteredDefects, activeGroupBy),
-    [filteredRuns, filteredDefects, activeGroupBy],
+    () => buildSeries(filteredRuns, chartDefectsCurrent, chartLogsCurrent, activeGroupBy),
+    [filteredRuns, chartDefectsCurrent, chartLogsCurrent, activeGroupBy],
+  );
+
+  const previousSeries = useMemo(
+    () => buildSeries(previousRuns, chartDefectsPrevious, chartLogsPrevious, activeGroupBy),
+    [previousRuns, chartDefectsPrevious, chartLogsPrevious, activeGroupBy],
   );
 
   const chartPoints = useMemo(() => series.slice(-12), [series]);
+  const previousChartPoints = useMemo(() => previousSeries.slice(-12), [previousSeries]);
+
+  const chartLogsPoints = useMemo(() => series.slice(-12), [series]);
+  const previousChartLogsPoints = useMemo(() => previousSeries.slice(-12), [previousSeries]);
 
   const applicationRanking = useMemo<ApplicationAggregate[]>(() => {
     const map = new Map<string, ApplicationAggregate>();
@@ -1769,6 +2279,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     setPeriodPreset(next.periodPreset);
     setGroupBy(next.groupBy);
     setChartView(next.chartView);
+    setChartMetric(next.chartMetric);
+    setDefectScope(next.defectScope);
     setApplicationFilter(next.applicationFilter);
     setRunFilter(next.runFilter);
     setStatusFilter(next.statusFilter);
@@ -1785,12 +2297,10 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
   const applyAnalysis = (next: DashboardFilterState = currentDraftFilters) => {
     syncDraftFilters(next);
-    setActiveView("overview");
   };
 
   const resetFilters = () => {
     syncDraftFilters(DEFAULT_FILTERS);
-    setActiveView("overview");
   };
 
   async function handleExportPdf() {
@@ -1874,6 +2384,72 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       for (const answer of overviewAnswers) {
         writeLine(answer.label, { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
         writeLine(`${answer.value}. ${answer.detail}`, { size: 10, color: [75, 85, 99], indent: 10, gapAfter: 8 });
+      }
+            // Integração de Análise Executiva (se disponível)
+            if (executiveAnalysis) {
+              writeLine("Análise executiva avançada", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
+        
+              // Risk Assessment
+              const riskColor: [number, number, number] = executiveAnalysis.riskAssessment.level === "critical" ? [220, 38, 38] : executiveAnalysis.riskAssessment.level === "warning" ? [217, 119, 6] : [34, 197, 94];
+              writeLine(`Nível de Risco: ${executiveAnalysis.riskAssessment.level.toUpperCase()}`, { size: 11, weight: "bold", color: riskColor, gapAfter: 4 });
+              writeLine(executiveAnalysis.riskAssessment.description, { size: 10, color: [75, 85, 99], gapAfter: 8 });
+        
+              // Key Findings
+              writeLine("Descobertas principais:", { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
+              writeBulletList(executiveAnalysis.keyFindings);
+        
+              // Recommendations
+              writeLine("Recomendações:", { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
+              writeBulletList(executiveAnalysis.recommendations);
+        
+              writeDivider();
+            }
+      writeDivider();
+
+      // Seção: Análise Técnica Avançada
+      writeLine("Análise técnica avançada", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
+      const technicalInsights: string[] = [];
+      
+      // Métrica 1: Distribuição de cobertura
+      const coverageByApp = new Map<string, { total: number; pass: number }>();
+      for (const run of filteredRuns) {
+        const current = coverageByApp.get(run.applicationKey) || { total: 0, pass: 0 };
+        current.total += run.stats.total;
+        current.pass += run.stats.pass;
+        coverageByApp.set(run.applicationKey, current);
+      }
+      const avgAppCoverage = Array.from(coverageByApp.values()).reduce((sum, v) => sum + (v.total > 0 ? (v.pass / v.total) * 100 : 0), 0) / Math.max(coverageByApp.size, 1);
+      technicalInsights.push(`Cobertura média por aplicação: ${formatPercent(avgAppCoverage)}`);
+      
+      // Métrica 2: Variação de qualidade entre períodos
+      if (activeCompareEnabled && previousSummary.totalRuns > 0) {
+        const deltaPass = executiveSummary.passRate - previousSummary.passRate;
+        const trend = deltaPass > 2 ? "tendência ascendente" : deltaPass < -2 ? "tendência descendente" : "estabilidade";
+        technicalInsights.push(`Qualidade em ${trend} (Δ ${deltaPass.toFixed(1)}p.p.))`);
+      }
+      
+      // Métrica 3: Concentração de problemas
+      if (applicationRanking.length > 0) {
+        const topAppDefects = applicationRanking[0]?.defects ?? 0;
+        const totalDefects = applicationRanking.reduce((sum, a) => sum + a.defects, 0);
+        const concentration = totalDefects > 0 ? (topAppDefects / totalDefects) * 100 : 0;
+        technicalInsights.push(`Concentração de defeitos: ${formatPercent(concentration)} na aplicação de maior risco`);
+      }
+      
+      // Métrica 4: Taxa de bloqueios críticos
+      const totalBlocked = filteredRuns.reduce((sum, r) => sum + r.stats.blocked, 0);
+      const totalCasesRuns = filteredRuns.reduce((sum, r) => sum + r.stats.total, 0);
+      const blockageRate = totalCasesRuns > 0 ? (totalBlocked / totalCasesRuns) * 100 : 0;
+      technicalInsights.push(`Taxa de bloqueios: ${formatPercent(blockageRate)} (${totalBlocked}/${totalCasesRuns} casos)`);
+      
+      // Métrica 5: Regressões detectadas
+      const regressionCount = filteredRuns.filter(r => r.isRegression).length;
+      technicalInsights.push(`Regressões identificadas: ${regressionCount} execução(ões)`);
+      
+      if (technicalInsights.length > 0) {
+        writeBulletList(technicalInsights);
+      } else {
+        writeLine("Massa de dados insuficiente para análise técnica detalhada.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
       }
       writeDivider();
 
@@ -2060,187 +2636,38 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const showEnvironmentFilter = draftFilterOptions.environments.length > 1;
   const showResponsibleFilter = filterOptions.responsibles.length > 0;
   const chartUsesGrouping = isTimeChartView(activeChartView);
+  const chartMetricAverage = metricAverage(chartPoints, activeChartMetric);
+  const previousChartMetricAverage = previousChartPoints.length > 0 ? metricAverage(previousChartPoints, activeChartMetric) : null;
+  const chartLogsAverage = metricAverage(chartLogsPoints, "logs");
+  const previousChartLogsAverage = previousChartLogsPoints.length > 0 ? metricAverage(previousChartLogsPoints, "logs") : null;
+  const defectScopeLabel = activeDefectScope === "periodTotal" ? "defeitos totais do período" : "defeitos filtrados";
+  const logsScopeLabel = "logs técnicos por período filtrado";
   const activeChartLabel = CHART_VIEW_OPTIONS.find((option) => option.value === activeChartView)?.label ?? activeChartView;
+  const activeMetricLabel = CHART_METRIC_OPTIONS.find((option) => option.value === activeChartMetric)?.label ?? activeChartMetric;
   const chartPanelCopy = resolveChartPanelCopy(activeChartView);
   const activeGroupLabel = GROUP_OPTIONS.find((option) => option.value === activeGroupBy)?.label ?? activeGroupBy;
   const chartHasData =
     activeChartView === "applicationHealth" || activeChartView === "applicationDefects"
       ? applicationRanking.length > 0
       : chartPoints.length > 0;
-  const compactDraftChips = draftFilterChips.slice(0, 4);
   const compactActiveChips = activeFilterChips.slice(0, 4);
-  const hiddenDraftChipCount = Math.max(0, draftFilterChips.length - compactDraftChips.length);
   const hiddenActiveChipCount = Math.max(0, activeFilterChips.length - compactActiveChips.length);
   const resultSummaryLine = hasFilterResults
     ? `Recorte atual: ${activeFilterChips[0] ?? "Filtro aplicado"} | ${filteredRuns.length} runs | ${filteredDefects.length} defeitos | ${applicationRanking.length} aplicações`
     : "Nenhum dado encontrado para o recorte atual.";
-  const dashboardContext = useDashboardContext({
-    user: user ?? undefined,
-    companies: [{ slug: props.companySlug, name: props.companyName }],
-    fixedCompanySlug: props.companySlug,
-    labels: {
-      companyLabel: props.companyName,
-      applicationLabel:
-        activeApplicationFilter !== "all"
-          ? filterOptions.applications.find((option) => option.key === activeApplicationFilter)?.label ?? activeApplicationFilter
-          : "Todas as aplicações",
-      moduleLabel: activeChartLabel,
-      periodLabel: PERIOD_OPTIONS.find((option) => option.value === activePeriodPreset)?.label ?? activePeriodPreset,
-    },
-  });
-  const dashboardFilters = useDashboardFilters({
-    chips: activeFilterChips,
-    maxVisible: 5,
-  });
-  const executiveMetricCards = useDashboardMetrics([
-    {
-      id: "health-score",
-      label: "Saúde geral",
-      value: `${Math.round(Math.max(0, executiveSummary.passRate - executiveSummary.failRate))}%`,
-      note: resultSummaryLine,
-      tone: executiveSummary.failRate >= 15 ? "critical" : executiveSummary.failRate > 0 ? "warning" : "positive",
-    },
-    {
-      id: "pass-rate",
-      label: "Pass rate",
-      value: formatPercent(executiveSummary.passRate),
-      note: `${executiveSummary.totalRuns} runs no recorte atual`,
-      tone: executiveSummary.passRate >= 90 ? "positive" : executiveSummary.passRate >= 70 ? "warning" : "critical",
-    },
-    {
-      id: "active-runs",
-      label: "Runs em andamento",
-      value: filteredRuns.filter((run) => run.statusTone === "warning").length,
-      note: `${filteredRuns.length} runs consideradas`,
-      tone: "default",
-    },
-    {
-      id: "recent-failures",
-      label: "Falhas recentes",
-      value: executiveSummary.defects,
-      note: `${filteredDefects.length} defeitos vinculados`,
-      tone: executiveSummary.defects > 0 ? "warning" : "positive",
-    },
-    {
-      id: "automation-scope",
-      label: "Aplicações em risco",
-      value: executiveSummary.applicationsAtRisk,
-      note: `${applicationRanking.length} aplicações monitoradas`,
-      tone: executiveSummary.applicationsAtRisk > 0 ? "critical" : "positive",
-    },
-    {
-      id: "avg-execution",
-      label: "Casos analisados",
-      value: executiveSummary.totalCases,
-      note: topApplication ? `${topApplication.label} lidera o volume` : "Sem aplicação dominante no recorte",
-      tone: "default",
-    },
-  ]);
 
   return (
     <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 pb-6 pt-2 text-(--page-text,#0b1a3c) sm:px-6 sm:pb-7 sm:pt-3 lg:px-10 lg:pb-8 lg:pt-4">
       <div className="relative z-10 flex w-full max-w-none flex-col gap-4 2xl:gap-5">
-        <DashboardHeader
-          kicker={props.companyName}
-          title="Inteligência de qualidade"
-          subtitle="Visão executiva em tempo real — filtre por período, aplicação, status ou risco e os resultados atualizam instantaneamente."
-          contextLabel={dashboardContext.contextLabel}
-          chips={dashboardFilters.compactChips}
-          hiddenChipCount={dashboardFilters.hiddenChipCount}
-        />
-
-        <DashboardFilterBar
-          chips={compactDraftChips}
-          hiddenChipCount={hiddenDraftChipCount}
-          actions={
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3.5 text-sm font-semibold text-(--tc-text,#0b1a3c)"
-            >
-              Limpar filtros
-            </button>
-          }
-        />
-
-        <DashboardMetricGrid metrics={executiveMetricCards} />
-
-        <section className="flex flex-col gap-2.5 border-b border-[rgba(15,23,42,0.08)] pb-3 dark:border-slate-700/30 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-              Dashboard {props.companyName}
-            </div>
-            <h1 className="mt-0.5 text-[clamp(1.55rem,1.9vw,1.95rem)] font-extrabold tracking-[-0.04em] text-(--tc-text,#0b1a3c)">
-              Resumo executivo de qualidade
-            </h1>
-            <p className="mt-1.5 text-sm leading-5 text-(--tc-text-muted,#6b7280)">
-              {resultSummaryLine}
-            </p>
-            {hasFilterResults ? (
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                <span className={`inline-flex rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(trendSummary.tone)}`}>
-                  {trendSummary.label}
-                </span>
-                {compactActiveChips.map((chip) => (
-                  <span key={chip} className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text,#0b1a3c)">
-                    {chip}
-                  </span>
-                ))}
-                {hiddenActiveChipCount > 0 ? (
-                  <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text,#0b1a3c)">
-                    +{hiddenActiveChipCount}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex shrink-0 flex-wrap items-start gap-2 lg:justify-end lg:self-start">
-            {isInternalProfile ? (
-              <Link
-                href="/documentos"
-                className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
-              >
-                <FiArrowLeft className="h-4 w-4" />
-                Voltar às empresas
-              </Link>
-            ) : null}
-            <Link
-              href="../metrics"
-              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
-            >
-              <FiLayers className="h-4 w-4" />
-              Métricas
-            </Link>
-            <a
-              data-testid="export-quality"
-              href={`/api/empresas/${encodeURIComponent(props.companySlug)}/quality/export`}
-              download={`quality-${props.companySlug}.csv`}
-              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
-            >
-              <FiDownload className="h-4 w-4" />
-              Exportar qualidade
-            </a>
-            <button
-              type="button"
-              onClick={handleExportPdf}
-              disabled={!hasFilterResults || exportingPdf}
-              className="inline-flex h-10.5 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-[14px] font-semibold text-(--tc-text,#0b1a3c) disabled:cursor-not-allowed disabled:opacity-60 dark:border-(--tc-border,#334155) dark:bg-(--tc-surface,#0f172a)"
-            >
-              <FiDownload className="h-4 w-4" />
-              {exportingPdf ? "Gerando PDF..." : "Exportar PDF"}
-            </button>
-            <button
-              type="button"
-              onClick={() => downloadCsv(filteredRuns)}
-              disabled={!hasFilterResults}
-              className="inline-flex h-10.5 items-center gap-2 rounded-2xl bg-(--tc-primary,#0b1a3c) px-3.5 text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <FiDownload className="h-4 w-4" />
-              Exportar CSV
-            </button>
-          </div>
-        </section>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3.5 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+          >
+            Limpar filtros
+          </button>
+        </div>
 
         <Panel
           eyebrow="Filtros"
@@ -2264,8 +2691,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
             {isInternalProfile && props.companiesForSelector.length > 1 ? (
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-(--tc-text-muted,#6b7280) shrink-0">Empresa</span>
+                <span className="shrink-0 text-xs font-semibold text-(--tc-text-muted,#6b7280)">Empresa</span>
                 <select
+                  title="Empresa"
                   value={props.companySlug}
                   onChange={(e) => router.push(`/empresas/${e.target.value}/dashboard`)}
                   className="h-9 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 text-sm font-semibold text-(--tc-text,#0b1a3c) focus:outline-none"
@@ -2354,13 +2782,29 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               />
             </div>
 
-            <div className="grid gap-2.5 lg:grid-cols-3">
+            <div className="grid gap-2.5 lg:grid-cols-5">
               <SelectField
                 label="Visualização principal"
                 value={chartView}
                 onChange={(value) => setChartView(value as ChartView)}
                 options={CHART_VIEW_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
                 hint="Escolha como deseja enxergar as execuções já filtradas."
+              />
+              <SelectField
+                label="Métrica temporal"
+                value={chartMetric}
+                onChange={(value) => setChartMetric(value as ChartMetric)}
+                options={CHART_METRIC_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                hint="Controla a leitura no gráfico de qualidade no tempo."
+                disabled={chartView !== "qualityTimeline"}
+              />
+              <SelectField
+                label="Escopo de defeitos"
+                value={defectScope}
+                onChange={(value) => setDefectScope(value as DefectScope)}
+                options={DEFECT_SCOPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+                hint="Filtrado ou total do período selecionado."
+                disabled={chartView !== "qualityTimeline" || chartMetric !== "defects"}
               />
               <label className="flex flex-col gap-1.5">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)] dark:text-slate-400">Data inicial</span>
@@ -2397,23 +2841,10 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {compactDraftChips.map((chip) => (
-                <span key={chip} className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1 text-[10px] font-semibold tracking-[0.03em] text-(--tc-text,#0b1a3c)">
-                  <FiFilter className="mr-1.5 h-3 w-3" />
-                  {chip}
-                </span>
-              ))}
-              {hiddenDraftChipCount > 0 ? (
-                <span className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1 text-[10px] font-semibold tracking-[0.03em] text-(--tc-text,#0b1a3c)">
-                  +{hiddenDraftChipCount}
-                </span>
-              ) : null}
-            </div>
-
             <div className="flex flex-col gap-3 border-t border-(--tc-border,#e6ecf5) pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm text-(--tc-text-muted,#6b7280)">
-                Filtros aplicados em tempo real.
+              <div className="flex items-center gap-2 text-sm text-(--tc-text-muted,#6b7280)">
+                {isApplyingFilters ? <FiRefreshCw className="h-4 w-4 animate-spin" /> : null}
+                {isApplyingFilters ? "Atualizando recorte com os filtros selecionados..." : "Filtros aplicados em tempo real."}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -2457,24 +2888,37 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 <div className="mt-1 text-sm text-(--tc-text-muted,#6b7280)">{resultSummaryLine}</div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <ResultViewButton active={activeView === "overview"} label="Visão geral" onClick={() => setActiveView("overview")} />
-                <ResultViewButton active={activeView === "comparatives"} label="Comparativos" onClick={() => setActiveView("comparatives")} />
-                <ResultViewButton active={activeView === "drilldown"} label="Drilldown" onClick={() => setActiveView("drilldown")} />
+                <button
+                  type="button"
+                  onClick={handleExportPdf}
+                  disabled={!hasFilterResults || exportingPdf || isApplyingFilters}
+                  className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) disabled:opacity-60"
+                >
+                  <FiDownload className="h-4 w-4" />
+                  {exportingPdf ? "Gerando PDF..." : isApplyingFilters ? "Atualizando filtros..." : "PDF do filtro"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadCsv(filteredRuns)}
+                  disabled={!hasFilterResults || isApplyingFilters}
+                  className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) disabled:opacity-60"
+                >
+                  <FiDownload className="h-4 w-4" />
+                  CSV do filtro
+                </button>
               </div>
             </div>
 
-            {activeView === "overview" ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
-                <StatCard label="Runs" value={formatCompactNumber(executiveSummary.totalRuns)} note="Total no recorte aplicado." tone="neutral" delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.totalRuns, previousSummary.totalRuns, "neutral") : null} icon={<FiActivity className="h-5 w-5" />} />
-                <StatCard label="Pass rate" value={formatPercent(executiveSummary.passRate)} note="Leitura consolidada." tone={trendSummary.tone} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.") : null} icon={<FiTrendingUp className="h-5 w-5" />} />
-                <StatCard label="Falhas" value={formatPercent(executiveSummary.failRate)} note="Falhas sobre o total executado." tone={executiveSummary.failRate >= 15 ? "critical" : executiveSummary.failRate > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.failRate, previousSummary.failRate, "lower_better", " p.p.") : null} icon={<FiTrendingDown className="h-5 w-5" />} />
-                <StatCard label="Defeitos" value={formatCompactNumber(executiveSummary.defects)} note="Vinculados ao recorte." tone={executiveSummary.defects > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.defects, previousSummary.defects, "lower_better") : null} icon={<FiAlertTriangle className="h-5 w-5" />} />
-              </div>
-            ) : null}
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
+              <StatCard label="Runs" value={formatCompactNumber(executiveSummary.totalRuns)} note="Total no recorte aplicado." tone="neutral" delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.totalRuns, previousSummary.totalRuns, "neutral") : null} icon={<FiActivity className="h-5 w-5" />} />
+              <StatCard label="Pass rate" value={formatPercent(executiveSummary.passRate)} note="Leitura consolidada." tone={trendSummary.tone} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.") : null} icon={<FiTrendingUp className="h-5 w-5" />} />
+              <StatCard label="Falhas" value={formatPercent(executiveSummary.failRate)} note="Falhas sobre o total executado." tone={executiveSummary.failRate >= 15 ? "critical" : executiveSummary.failRate > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.failRate, previousSummary.failRate, "lower_better", " p.p.") : null} icon={<FiTrendingDown className="h-5 w-5" />} />
+              <StatCard label="Defeitos" value={formatCompactNumber(executiveSummary.defects)} note="Vinculados ao recorte." tone={executiveSummary.defects > 0 ? "warning" : "positive"} delta={activeCompareEnabled && previousSummary.totalRuns > 0 ? buildDelta(executiveSummary.defects, previousSummary.defects, "lower_better") : null} icon={<FiAlertTriangle className="h-5 w-5" />} />
+            </div>
           </>
         )}
 
-        {hasFilterResults && activeView === "overview" ? (
+        {hasFilterResults ? (
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] 2xl:grid-cols-[minmax(0,1.45fr)_minmax(24rem,0.75fr)]">
             {chartHasData ? (
               <Panel
@@ -2482,13 +2926,27 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 title={chartPanelCopy.title}
                 description={chartPanelCopy.description}
               >
-                {activeChartView === "qualityTimeline" ? <MiniLineChart points={chartPoints} metric="passRate" /> : null}
+                {activeChartView === "qualityTimeline" && activeChartMetric !== "logs" ? (
+                  <MiniLineChart
+                    points={chartPoints}
+                    metric={activeChartMetric}
+                    previousAverage={activeCompareEnabled ? previousChartMetricAverage : null}
+                    compareEnabled={activeCompareEnabled}
+                  />
+                ) : null}
+                {activeChartView === "qualityTimeline" && activeChartMetric === "logs" ? (
+                  <LogsTimelineChart
+                    points={chartLogsPoints}
+                    previousAverage={activeCompareEnabled ? previousChartLogsAverage : null}
+                    compareEnabled={activeCompareEnabled}
+                  />
+                ) : null}
                 {activeChartView === "runsTimeline" ? <RunsBarChart points={chartPoints} /> : null}
                 {activeChartView === "applicationHealth" ? <ApplicationHealthChart applications={applicationRanking} /> : null}
                 {activeChartView === "applicationDefects" ? <ApplicationDefectsChart applications={applicationRanking} /> : null}
                 <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
                   {chartUsesGrouping
-                    ? `Visualização: ${activeChartLabel} | Agrupado por: ${activeGroupLabel}`
+                    ? `Visualização: ${activeChartLabel} | Métrica: ${activeMetricLabel} | Média atual: ${formatChartMetricValue(activeChartMetric, chartMetricAverage)} | ${activeChartMetric === "defects" ? `Escopo: ${defectScopeLabel}` : activeChartMetric === "logs" ? `Escopo: ${logsScopeLabel}` : `Agrupado por: ${activeGroupLabel}`}`
                     : `Visualização: ${activeChartLabel} | Base: aplicações filtradas`}
                 </div>
               </Panel>
@@ -2534,7 +2992,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           </div>
         ) : null}
 
-        {hasFilterResults && activeView === "comparatives" ? (
+        {hasFilterResults ? (
           filteredRuns.length > 0 ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] 2xl:grid-cols-[minmax(0,1.2fr)_minmax(26rem,0.8fr)]">
           <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href="../runs" className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
@@ -2601,9 +3059,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           )
         ) : null}
 
-        {hasFilterResults && activeView === "drilldown" ? (
+        {hasFilterResults ? (
           filteredRuns.length > 0 ? (
-        <Panel eyebrow="Drilldown" title="Base detalhada" description={undefined} actions={<div className="flex flex-wrap gap-2"><button type="button" onClick={handleExportPdf} disabled={exportingPdf} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) disabled:opacity-60"><FiDownload className="h-4 w-4" />{exportingPdf ? "Gerando PDF..." : "PDF do filtro"}</button><button type="button" onClick={() => downloadCsv(filteredRuns)} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"><FiDownload className="h-4 w-4" />CSV do filtro</button></div>}>
+        <Panel eyebrow="Drilldown" title="Base detalhada" description={undefined}>
           <div className="mb-4 flex flex-wrap gap-2">
             {compactActiveChips.map((chip) => (
               <span key={chip} className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f1f5f9) px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] text-(--tc-text,#0b1a3c)">

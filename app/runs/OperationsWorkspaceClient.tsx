@@ -1,41 +1,14 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import {
-  FiActivity,
-  FiAlertTriangle,
-  FiArrowRight,
-  FiBarChart2,
-  FiBook,
-  FiBriefcase,
-  FiCheckCircle,
-  FiClipboard,
-  FiColumns,
-  FiDownload,
-  FiFilter,
-  FiLayers,
-  FiList,
-  FiRefreshCw,
-  FiShield,
-  FiUser,
-  FiZap,
-} from "react-icons/fi";
+import { FiCheckCircle, FiClock, FiFilter, FiRefreshCw, FiSearch, FiXCircle } from "react-icons/fi";
 
 import { useClientContext } from "@/context/ClientContext";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { useI18n } from "@/hooks/useI18n";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
-
-type OperationContextItem = {
-  key: string;
-  route: string;
-  label: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
 
 type OperationSignal = {
   id: string;
@@ -68,12 +41,23 @@ type CompanyRouteInput = {
   defaultClientSlug: string | null;
 };
 
-type OperationHistoryItem = {
-  id: string;
-  title: string;
-  companyName: string;
-  module: string;
-  updatedAtIso: string;
+type PeriodPreset = "24h" | "7d" | "30d" | "month" | "custom";
+type ModuleView = "none" | "Aplicacoes" | "Runs" | "Defeitos" | "Automacoes" | "Integracoes";
+
+type AppliedFilters = {
+  companySlugs: string[];
+  application: string;
+  module: ModuleView;
+  status: string;
+  periodPreset: PeriodPreset;
+  dateFrom: string;
+  dateTo: string;
+  search: string;
+};
+
+type StatusOption = {
+  value: string;
+  label: string;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -110,30 +94,98 @@ function parseItemsFromPayload(payload: unknown, ...keys: string[]) {
   return [];
 }
 
+function normalizeModule(raw: string): ModuleView {
+  const value = raw.toLowerCase();
+  if (value.includes("run")) return "Runs";
+  if (value.includes("defeit")) return "Defeitos";
+  if (value.includes("automat")) return "Automacoes";
+  if (value.includes("integra")) return "Integracoes";
+  return "none";
+}
+
+function mapStatusByModule(module: ModuleView): StatusOption[] {
+  if (module === "Runs") {
+    return [
+      { value: "all", label: "Todos" },
+      { value: "in_progress", label: "Em andamento" },
+      { value: "failed", label: "Falhou" },
+      { value: "blocked", label: "Bloqueada" },
+      { value: "resolved", label: "Finalizada" },
+      { value: "new", label: "Pendente" },
+      { value: "analyzing", label: "Em análise" },
+    ];
+  }
+
+  if (module === "Defeitos") {
+    return [
+      { value: "all", label: "Todos" },
+      { value: "new", label: "Aberto" },
+      { value: "analyzing", label: "Em análise" },
+      { value: "in_progress", label: "Em correção" },
+      { value: "alert", label: "Reaberto" },
+      { value: "resolved", label: "Fechado" },
+      { value: "blocked", label: "Bloqueado" },
+    ];
+  }
+
+  if (module === "Automacoes") {
+    return [
+      { value: "all", label: "Todos" },
+      { value: "new", label: "Nova" },
+      { value: "in_progress", label: "Em execução" },
+      { value: "failed", label: "Falhou" },
+      { value: "alert", label: "Com alerta" },
+      { value: "resolved", label: "Concluída" },
+    ];
+  }
+
+  if (module === "Integracoes") {
+    return [
+      { value: "all", label: "Todos" },
+      { value: "in_progress", label: "Ativa" },
+      { value: "failed", label: "Falha" },
+      { value: "alert", label: "Com alerta" },
+      { value: "resolved", label: "Saudável" },
+    ];
+  }
+
+  return [];
+}
+
+function statusFieldLabel(module: ModuleView) {
+  if (module === "Runs") return "Status da run";
+  if (module === "Defeitos") return "Status do defeito";
+  if (module === "Automacoes") return "Status da automação";
+  if (module === "Integracoes") return "Status da integração";
+  return "Status";
+}
+
+function formatAgo(iso: string) {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const sec = Math.max(0, Math.floor(diffMs / 1000));
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}min`;
+  const hour = Math.floor(min / 60);
+  return `${hour}h`;
+}
+
+function filterCustomPeriod(items: OperationSignal[], from: string, to: string) {
+  if (!from && !to) return items;
+  const fromTs = from ? new Date(`${from}T00:00:00`).getTime() : null;
+  const toTs = to ? new Date(`${to}T23:59:59`).getTime() : null;
+
+  return items.filter((item) => {
+    const ts = new Date(item.updatedAtIso).getTime();
+    if (fromTs != null && ts < fromTs) return false;
+    if (toTs != null && ts > toTs) return false;
+    return true;
+  });
+}
+
 export function OperationsWorkspaceClient() {
-  const { t } = useI18n();
   const { user, normalizedUser } = useAuthUser();
   const { clients, activeClientSlug } = useClientContext();
-
-  const tx = (key: string, fallback: string) => {
-    const value = t(key);
-    return value === key ? fallback : value;
-  };
-
-  const normalizedRole = String(user?.role ?? "").toLowerCase();
-  const normalizedPermissionRole = String(user?.permissionRole ?? "").toLowerCase();
-  const canAccessOperationsWorkspace =
-    user?.isGlobalAdmin === true ||
-    normalizedRole === "leader_tc" ||
-    normalizedRole === "technical_support" ||
-    normalizedPermissionRole === "leader_tc" ||
-    normalizedPermissionRole === "technical_support";
-
-  const isCompanyScopedUser =
-    normalizedRole === "empresa" ||
-    normalizedRole === "company_user" ||
-    normalizedPermissionRole === "empresa" ||
-    normalizedPermissionRole === "company_user";
 
   const visibleCompanies = useMemo(() => {
     const nonSeed = clients.filter((company) => {
@@ -143,114 +195,36 @@ export function OperationsWorkspaceClient() {
     return nonSeed.length > 0 ? nonSeed : clients;
   }, [clients]);
 
-  const hiddenSeedCompanies = Math.max(0, clients.length - visibleCompanies.length);
+  const [draftCompanySlugs, setDraftCompanySlugs] = useState<string[]>([]);
+  const [draftApplication, setDraftApplication] = useState("all");
+  const [draftModule, setDraftModule] = useState<ModuleView>("none");
+  const [draftStatus, setDraftStatus] = useState("all");
+  const [draftPeriodPreset, setDraftPeriodPreset] = useState<PeriodPreset>("24h");
+  const [draftDateFrom, setDraftDateFrom] = useState("");
+  const [draftDateTo, setDraftDateTo] = useState("");
+  const [draftSearch, setDraftSearch] = useState("");
+  const [companyFilterQuery, setCompanyFilterQuery] = useState("");
+  const [applicationFilterQuery, setApplicationFilterQuery] = useState("");
+  const [moduleFilterQuery, setModuleFilterQuery] = useState("");
 
-  const allowedCompanies = useMemo(() => {
-    if (!isCompanyScopedUser) return visibleCompanies;
+  const [applied, setApplied] = useState<AppliedFilters>({
+    companySlugs: [],
+    application: "all",
+    module: "none",
+    status: "all",
+    periodPreset: "24h",
+    dateFrom: "",
+    dateTo: "",
+    search: "",
+  });
 
-    const preferredSlug =
-      activeClientSlug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? null;
-
-    const scoped = preferredSlug
-      ? visibleCompanies.find((company) => company.slug === preferredSlug)
-      : null;
-
-    if (scoped) return [scoped];
-    return visibleCompanies.length > 0 ? [visibleCompanies[0]] : [];
-  }, [
-    activeClientSlug,
-    isCompanyScopedUser,
-    normalizedUser.defaultCompanySlug,
-    normalizedUser.primaryCompanySlug,
-    visibleCompanies,
-  ]);
-
-  const [selectedCompanySlugs, setSelectedCompanySlugs] = useState<string[]>([]);
-  const [applicationFilter, setApplicationFilter] = useState("all");
-  const [moduleFilter, setModuleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("critical_blocked");
-  const [runFilter, setRunFilter] = useState("");
-  const [defectFilter, setDefectFilter] = useState("");
-  const [responsibleFilter, setResponsibleFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
-  const [severityFilter, setSeverityFilter] = useState("all");
-  const [periodFilter, setPeriodFilter] = useState("24h");
-  const [assistantPrompt, setAssistantPrompt] = useState("");
-
-  const selectedCompanies = useMemo(() => {
-    if (allowedCompanies.length === 0) return [];
-
-    const safeSelected = selectedCompanySlugs.filter((slug) =>
-      allowedCompanies.some((company) => company.slug === slug),
-    );
-
-    if (isCompanyScopedUser) return allowedCompanies;
-    if (safeSelected.length === 0) return allowedCompanies;
-
-    return allowedCompanies.filter((company) => safeSelected.includes(company.slug));
-  }, [allowedCompanies, isCompanyScopedUser, selectedCompanySlugs]);
-
-  const companyScopeLabel = useMemo(() => {
-    if (selectedCompanies.length === 0) {
-      return "Nenhuma empresa permitida";
-    }
-    if (selectedCompanies.length === 1) {
-      return selectedCompanies[0].name;
-    }
-    return `${selectedCompanies.length} empresas selecionadas`;
-  }, [selectedCompanies]);
-
-  const operationContexts: OperationContextItem[] = [
-    {
-      key: "applications",
-      route: "aplicacoes",
-      label: "Aplicacoes",
-      description: "Visao de aplicacoes por empresa",
-      icon: FiBriefcase,
-    },
-    {
-      key: "runs",
-      route: "runs",
-      label: "Runs",
-      description: "Execucoes de teste em andamento",
-      icon: FiList,
-    },
-    {
-      key: "test-plans",
-      route: "planos-de-teste",
-      label: "Planos de teste",
-      description: "Planejamento e cobertura",
-      icon: FiClipboard,
-    },
-    {
-      key: "defects",
-      route: "defeitos",
-      label: "Defeitos",
-      description: "Bugs ativos por severidade",
-      icon: FiAlertTriangle,
-    },
-    {
-      key: "support",
-      route: "chamados",
-      label: "Chamados",
-      description: "Fila de suporte tecnico",
-      icon: FiColumns,
-    },
-    {
-      key: "metrics",
-      route: "metrics",
-      label: "Metricas",
-      description: "Indicadores de qualidade",
-      icon: FiBarChart2,
-    },
-    {
-      key: "documents",
-      route: "documentos",
-      label: "Documentos",
-      description: "Documentos e evidencias",
-      icon: FiBook,
-    },
-  ];
+  const [signals, setSignals] = useState<OperationSignal[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingApplications, setLoadingApplications] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   const companyRouteInput: CompanyRouteInput = {
     isGlobalAdmin: user?.isGlobalAdmin === true,
@@ -266,670 +240,733 @@ export function OperationsWorkspaceClient() {
     defaultClientSlug: normalizedUser.defaultCompanySlug,
   };
 
-  const [operationsSignals, setOperationsSignals] = useState<OperationSignal[]>([]);
-  const [historyItems, setHistoryItems] = useState<OperationHistoryItem[]>([]);
-  const [loadingLiveData, setLoadingLiveData] = useState(false);
-  const [liveDataError, setLiveDataError] = useState<string | null>(null);
-  const [refreshNonce, setRefreshNonce] = useState(0);
+  useEffect(() => {
+    if (visibleCompanies.length === 0) return;
+    if (draftCompanySlugs.length > 0) return;
+
+    const firstSlug =
+      activeClientSlug && visibleCompanies.some((company) => company.slug === activeClientSlug)
+        ? activeClientSlug
+        : visibleCompanies[0]?.slug;
+
+    if (firstSlug) {
+      setDraftCompanySlugs([firstSlug]);
+    }
+  }, [activeClientSlug, draftCompanySlugs.length, visibleCompanies]);
+
+  useEffect(() => {
+    if (draftCompanySlugs.length !== 1) {
+      setDraftApplication("all");
+      setDraftModule("none");
+      setDraftStatus("all");
+    }
+  }, [draftCompanySlugs]);
+
+  useEffect(() => {
+    setDraftStatus("all");
+  }, [draftModule]);
+
+  const periodForApi = useMemo(() => {
+    if (applied.periodPreset === "24h") return "24h";
+    if (applied.periodPreset === "7d") return "7d";
+    return "30d";
+  }, [applied.periodPreset]);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadLiveData() {
-      const companiesTarget = selectedCompanies.length > 0 ? selectedCompanies : allowedCompanies;
-      if (companiesTarget.length === 0) {
+    async function loadData() {
+      if (applied.companySlugs.length === 0) {
         if (!cancelled) {
-          setOperationsSignals([]);
-          setHistoryItems([]);
-          setLiveDataError(null);
+          setSignals([]);
+          setError(null);
+          setLoading(false);
+          setLoadingApplications(false);
         }
         return;
       }
 
-      setLoadingLiveData(true);
-      setLiveDataError(null);
+      setLoading(true);
+      setLoadingApplications(true);
+      setError(null);
 
       try {
         const query = new URLSearchParams();
-        query.set("period", periodFilter);
-        companiesTarget.forEach((company) => query.append("companySlug", company.slug));
+        query.set("period", periodForApi);
+        applied.companySlugs.forEach((slug) => query.append("companySlug", slug));
 
         const response = await fetch(`/api/operacao/summary?${query.toString()}`, { cache: "no-store" });
         const payload = response.ok ? await response.json().catch(() => null) : null;
 
         if (!payload) {
-          throw new Error("Resposta invalida do resumo operacional");
+          throw new Error("Falha ao carregar dados operacionais.");
         }
 
-        const signalAccumulator = parseItemsFromPayload(payload, "signals").map((item) => asRecord(item)).filter((item): item is Record<string, unknown> => Boolean(item)).map((row, index) => ({
-          id: asString(row.id, `signal-${index}`),
-          type: (asString(row.type, "run") as OperationSignal["type"]),
-          title: asString(row.title, "Item operacional"),
-          companySlug: asString(row.companySlug),
-          companyName: asString(row.companyName),
-          application: asString(row.application, "N/A"),
-          module: asString(row.module, "N/A"),
-          status: (asString(row.status, "new") as OperationSignal["status"]),
-          owner: asString(row.owner, "Sem responsavel"),
-          severity: (asString(row.severity, "medium") as OperationSignal["severity"]),
-          priority: (asString(row.priority, "P2") as OperationSignal["priority"]),
-          runCode: asString(row.runCode),
-          defectCode: asString(row.defectCode),
-          updatedAtIso: asString(row.updatedAtIso, new Date().toISOString()),
-          passRate: typeof row.passRate === "number" ? row.passRate : undefined,
-          failCount: typeof row.failCount === "number" ? row.failCount : undefined,
-          durationMin: typeof row.durationMin === "number" ? row.durationMin : undefined,
-        }));
-
-        const historyAccumulator = parseItemsFromPayload(payload, "history").map((item) => asRecord(item)).filter((item): item is Record<string, unknown> => Boolean(item)).map((row, index) => ({
-          id: asString(row.id, `history-${index}`),
-          title: asString(row.title, "Atualizacao operacional"),
-          companyName: asString(row.companyName),
-          module: asString(row.module, "N/A"),
-          updatedAtIso: asString(row.updatedAtIso, new Date().toISOString()),
-        }));
-
-        const warnings = parseItemsFromPayload(payload, "warnings")
-          .map((item) => asString(item))
-          .filter((item) => Boolean(item));
-        if (warnings.length > 0) {
-          setLiveDataError(warnings[0]);
-        }
+        const mappedSignals = parseItemsFromPayload(payload, "signals")
+          .map((item) => asRecord(item))
+          .filter((item): item is Record<string, unknown> => Boolean(item))
+          .map((row, index) => ({
+            id: asString(row.id, `signal-${index}`),
+            type: asString(row.type, "run") as OperationSignal["type"],
+            title: asString(row.title, "Item operacional"),
+            companySlug: asString(row.companySlug),
+            companyName: asString(row.companyName),
+            application: asString(row.application, "N/A"),
+            module: asString(row.module, "N/A"),
+            status: asString(row.status, "new") as OperationSignal["status"],
+            owner: asString(row.owner, "Sem responsável"),
+            severity: asString(row.severity, "medium") as OperationSignal["severity"],
+            priority: asString(row.priority, "P2") as OperationSignal["priority"],
+            runCode: asString(row.runCode),
+            defectCode: asString(row.defectCode),
+            updatedAtIso: asString(row.updatedAtIso, new Date().toISOString()),
+            passRate: typeof row.passRate === "number" ? row.passRate : undefined,
+            failCount: typeof row.failCount === "number" ? row.failCount : undefined,
+            durationMin: typeof row.durationMin === "number" ? row.durationMin : undefined,
+          }));
 
         if (!cancelled) {
-          setOperationsSignals(signalAccumulator);
-          setHistoryItems(historyAccumulator);
+          setSignals(mappedSignals);
+          setLastUpdatedAt(new Date().toISOString());
         }
-      } catch (error) {
+      } catch (err) {
         if (!cancelled) {
-          const message = error instanceof Error ? error.message : "Falha ao carregar dados operacionais";
-          setLiveDataError(message);
+          setError(err instanceof Error ? err.message : "Erro ao carregar operação.");
+          setSignals([]);
         }
       } finally {
         if (!cancelled) {
-          setLoadingLiveData(false);
+          setLoading(false);
+          setLoadingApplications(false);
         }
       }
     }
 
-    void loadLiveData();
+    void loadData();
 
     return () => {
       cancelled = true;
     };
-  }, [allowedCompanies, periodFilter, refreshNonce, selectedCompanies]);
+  }, [applied.companySlugs, periodForApi, refreshNonce]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = window.setInterval(() => setRefreshNonce((current) => current + 1), 60000);
+    return () => window.clearInterval(id);
+  }, [autoRefresh]);
+
+  const selectedCompanies = useMemo(
+    () => visibleCompanies.filter((company) => applied.companySlugs.includes(company.slug)),
+    [applied.companySlugs, visibleCompanies],
+  );
+
+  const filteredVisibleCompanies = useMemo(() => {
+    const term = companyFilterQuery.trim().toLowerCase();
+    if (!term) return visibleCompanies;
+    return visibleCompanies.filter((company) =>
+      `${company.name} ${company.slug}`.toLowerCase().includes(term),
+    );
+  }, [companyFilterQuery, visibleCompanies]);
+
+  const hasCompanySearchQuery = companyFilterQuery.trim().length > 0;
+
+  const applicationsForSelection = useMemo(() => {
+    const apps = new Set(
+      signals
+        .filter((signal) => applied.companySlugs.includes(signal.companySlug))
+        .map((signal) => signal.application)
+        .filter((value) => value && value !== "N/A"),
+    );
+    return Array.from(apps).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [applied.companySlugs, signals]);
+
+  const modulesForSelection = useMemo(() => {
+    if (applied.application === "all") return [] as ModuleView[];
+
+    const available = new Set<ModuleView>();
+    signals
+      .filter((signal) => signal.application === applied.application)
+      .forEach((signal) => {
+        const module = normalizeModule(signal.module);
+        if (module !== "none") available.add(module);
+      });
+
+    available.add("Aplicacoes");
+    return Array.from(available);
+  }, [applied.application, signals]);
+
+  const filteredApplicationsForSelection = useMemo(() => {
+    const term = applicationFilterQuery.trim().toLowerCase();
+    if (!term) return applicationsForSelection;
+    return applicationsForSelection.filter((application) => application.toLowerCase().includes(term));
+  }, [applicationFilterQuery, applicationsForSelection]);
+
+  const availableModulesForSelection = useMemo<ModuleView[]>(
+    () =>
+      modulesForSelection.length > 0
+        ? modulesForSelection
+        : ["Aplicacoes", "Runs", "Defeitos", "Automacoes", "Integracoes"],
+    [modulesForSelection],
+  );
+
+  const filteredModulesForSelection = useMemo(() => {
+    const term = moduleFilterQuery.trim().toLowerCase();
+    if (!term) return availableModulesForSelection;
+    return availableModulesForSelection.filter((module) => module.toLowerCase().includes(term));
+  }, [availableModulesForSelection, moduleFilterQuery]);
 
   const filteredSignals = useMemo(() => {
-    return operationsSignals.filter((signal) => {
-      if (selectedCompanies.length > 0 && !selectedCompanies.some((company) => company.slug === signal.companySlug)) {
-        return false;
-      }
-      if (applicationFilter !== "all" && signal.application !== applicationFilter) return false;
-      if (moduleFilter !== "all" && signal.module !== moduleFilter) return false;
-      if (responsibleFilter !== "all" && signal.owner !== responsibleFilter) return false;
-      if (priorityFilter !== "all" && signal.priority !== priorityFilter) return false;
-      if (severityFilter !== "all" && signal.severity !== severityFilter) return false;
+    let result = signals.filter((signal) => applied.companySlugs.includes(signal.companySlug));
 
-      if (statusFilter === "critical_blocked") {
-        if (!(signal.status === "blocked" || signal.severity === "critical" || signal.status === "failed")) {
-          return false;
-        }
-      } else if (statusFilter === "active") {
-        if (!(signal.status === "new" || signal.status === "analyzing" || signal.status === "in_progress")) {
-          return false;
-        }
-      } else if (statusFilter !== "all" && signal.status !== statusFilter) {
-        return false;
-      }
-
-      if (runFilter.trim() && !signal.runCode.toLowerCase().includes(runFilter.trim().toLowerCase())) return false;
-      if (defectFilter.trim() && !signal.defectCode.toLowerCase().includes(defectFilter.trim().toLowerCase())) return false;
-
-      const cutoffByPeriod: Record<string, number> = {
-        "24h": 24,
-        "7d": 24 * 7,
-        "30d": 24 * 30,
-      };
-      const maxHours = cutoffByPeriod[periodFilter] ?? 24;
-      const ageHours = (Date.now() - new Date(signal.updatedAtIso).getTime()) / (1000 * 60 * 60);
-      if (ageHours > maxHours) return false;
-
-      return true;
-    });
-  }, [
-    applicationFilter,
-    defectFilter,
-    moduleFilter,
-    operationsSignals,
-    periodFilter,
-    priorityFilter,
-    responsibleFilter,
-    runFilter,
-    selectedCompanies,
-    severityFilter,
-    statusFilter,
-  ]);
-
-  const operationalCards = useMemo(() => {
-    const runs = filteredSignals.filter((item) => item.type === "run");
-    const defects = filteredSignals.filter((item) => item.type === "defect");
-    const automations = filteredSignals.filter((item) => item.type === "automation");
-    const integrations = filteredSignals.filter((item) => item.type === "integration");
-
-    const blockedCount = filteredSignals.filter((item) => item.status === "blocked").length;
-    const failedCount = filteredSignals.filter((item) => item.status === "failed").length;
-    const criticalCount = filteredSignals.filter((item) => item.severity === "critical").length;
-    const unresolved = filteredSignals.filter((item) => item.status !== "resolved").length;
-    const healthScore = Math.max(0, 100 - blockedCount * 6 - failedCount * 7 - criticalCount * 4 - Math.floor(unresolved / 2));
-
-    return [
-      { label: "Saude operacional", value: `${healthScore}%`, accent: "text-emerald-700" },
-      { label: "Runs em andamento", value: String(runs.filter((item) => item.status === "in_progress").length), accent: "text-sky-700" },
-      { label: "Runs com falha", value: String(runs.filter((item) => item.status === "failed").length), accent: "text-rose-700" },
-      { label: "Runs bloqueadas", value: String(runs.filter((item) => item.status === "blocked").length), accent: "text-amber-700" },
-      { label: "Defeitos abertos", value: String(defects.filter((item) => item.status !== "resolved").length), accent: "text-orange-700" },
-      { label: "Defeitos criticos", value: String(defects.filter((item) => item.severity === "critical").length), accent: "text-red-700" },
-      { label: "Automacoes com erro", value: String(automations.filter((item) => item.status === "failed" || item.status === "alert").length), accent: "text-fuchsia-700" },
-      { label: "Integracoes com alerta", value: String(integrations.filter((item) => item.status === "alert" || item.status === "failed").length), accent: "text-violet-700" },
-      { label: "Itens sem responsavel", value: String(filteredSignals.filter((item) => item.owner === "Sem responsavel").length), accent: "text-slate-700" },
-    ];
-  }, [filteredSignals]);
-
-  const riskAlerts = useMemo(() => {
-    const alerts: string[] = [];
-    const failedRuns = filteredSignals.filter((item) => item.type === "run" && item.status === "failed").length;
-    const blockedRuns = filteredSignals.filter((item) => item.type === "run" && item.status === "blocked").length;
-    const criticalWithoutOwner = filteredSignals.filter(
-      (item) => item.severity === "critical" && item.owner === "Sem responsavel",
-    ).length;
-    const integrationAlerts = filteredSignals.filter(
-      (item) => item.type === "integration" && (item.status === "alert" || item.status === "failed"),
-    ).length;
-
-    if (failedRuns >= 3) alerts.push("Risco alto: modulo Runs concentra falhas recentes.");
-    if (integrationAlerts >= 2) alerts.push("Risco medio: integracoes sem sincronizacao recente.");
-    if (criticalWithoutOwner >= 1) alerts.push("Risco alto: defeitos criticos sem responsavel.");
-    if (blockedRuns >= 2) alerts.push("Risco medio: existe acumulado de runs bloqueadas.");
-
-    if (alerts.length === 0) {
-      alerts.push("Sem alertas criticos no periodo atual. Monitoramento continua ativo.");
+    if (applied.application !== "all") {
+      result = result.filter((signal) => signal.application === applied.application);
     }
 
-    return alerts;
-  }, [filteredSignals]);
-
-  const statusToKanbanColumn = (status: OperationSignal["status"]) => {
-    if (status === "new") return "Novo";
-    if (status === "analyzing") return "Em analise";
-    if (status === "in_progress") return "Em andamento";
-    if (status === "blocked" || status === "alert" || status === "failed") return "Bloqueado";
-    return "Resolvido";
-  };
-
-  const kanbanColumns = useMemo(() => {
-    const base: Record<string, OperationSignal[]> = {
-      Novo: [],
-      "Em analise": [],
-      "Em andamento": [],
-      Bloqueado: [],
-      Resolvido: [],
-    };
-
-    filteredSignals.forEach((signal) => {
-      const column = statusToKanbanColumn(signal.status);
-      base[column].push(signal);
-    });
-
-    return base;
-  }, [filteredSignals]);
-
-  const recentHistory = useMemo(() => {
-    if (historyItems.length > 0) {
-      return [...historyItems]
-        .sort((a, b) => new Date(b.updatedAtIso).getTime() - new Date(a.updatedAtIso).getTime())
-        .slice(0, 10);
+    if (applied.module !== "none" && applied.module !== "Aplicacoes") {
+      result = result.filter((signal) => normalizeModule(signal.module) === applied.module);
     }
 
-    return [...filteredSignals]
-      .sort((a, b) => new Date(b.updatedAtIso).getTime() - new Date(a.updatedAtIso).getTime())
-      .slice(0, 10)
-      .map((item) => ({
-        id: item.id,
-        title: item.title,
-        companyName: item.companyName,
-        module: item.module,
-        updatedAtIso: item.updatedAtIso,
-      }));
-  }, [filteredSignals, historyItems]);
+    if (applied.status !== "all") {
+      result = result.filter((signal) => signal.status === applied.status);
+    }
 
-  const runMetrics = useMemo(() => {
-    return filteredSignals
-      .filter((signal) => signal.type === "run")
-      .slice(0, 8);
-  }, [filteredSignals]);
+    if (applied.periodPreset === "custom") {
+      result = filterCustomPeriod(result, applied.dateFrom, applied.dateTo);
+    }
 
-  const applicationOptions = useMemo(() => {
-    const values = Array.from(new Set(operationsSignals.map((signal) => signal.application)));
-    return values.sort((a, b) => a.localeCompare(b));
-  }, [operationsSignals]);
-
-  const moduleOptions = useMemo(() => {
-    const values = Array.from(new Set(operationsSignals.map((signal) => signal.module)));
-    return values.sort((a, b) => a.localeCompare(b));
-  }, [operationsSignals]);
-
-  const ownerOptions = useMemo(() => {
-    const values = Array.from(new Set(operationsSignals.map((signal) => signal.owner)));
-    return values.sort((a, b) => a.localeCompare(b));
-  }, [operationsSignals]);
-
-  const activeCompanyForLinks = selectedCompanies.length === 1 ? selectedCompanies[0].slug : null;
-
-  const toggleCompanySlug = (slug: string) => {
-    if (isCompanyScopedUser) return;
-    setSelectedCompanySlugs((current) => {
-      if (current.includes(slug)) {
-        const next = current.filter((item) => item !== slug);
-        return next.length === 0 ? current : next;
+    if (applied.search.trim()) {
+      const term = applied.search.trim().toLowerCase();
+      if (applied.module === "Runs") {
+        result = result.filter((signal) =>
+          signal.title.toLowerCase().includes(term) || signal.runCode.toLowerCase().includes(term),
+        );
+      } else if (applied.module === "Defeitos") {
+        result = result.filter((signal) =>
+          signal.title.toLowerCase().includes(term) || signal.defectCode.toLowerCase().includes(term),
+        );
+      } else if (applied.module === "Aplicacoes") {
+        result = result.filter((signal) => signal.application.toLowerCase().includes(term));
       }
-      return [...current, slug];
-    });
-  };
+    }
 
-  const selectAllCompanies = () => {
-    if (isCompanyScopedUser) return;
-    setSelectedCompanySlugs(allowedCompanies.map((company) => company.slug));
+    return result;
+  }, [applied, signals]);
+
+  const applicationsSummary = useMemo(() => {
+    const map = new Map<string, { name: string; lastIso: string; modules: Set<string>; total: number }>();
+
+    signals
+      .filter((signal) => applied.companySlugs.includes(signal.companySlug))
+      .forEach((signal) => {
+        const current = map.get(signal.application);
+        if (!current) {
+          map.set(signal.application, {
+            name: signal.application,
+            lastIso: signal.updatedAtIso,
+            modules: new Set([signal.module]),
+            total: 1,
+          });
+          return;
+        }
+
+        current.total += 1;
+        current.modules.add(signal.module);
+        if (new Date(signal.updatedAtIso).getTime() > new Date(current.lastIso).getTime()) {
+          current.lastIso = signal.updatedAtIso;
+        }
+      });
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [applied.companySlugs, signals]);
+
+  const canSelectApplication = draftCompanySlugs.length === 1;
+  const statusOptions = mapStatusByModule(draftModule);
+
+  const applyFilters = () => {
+    setApplied({
+      companySlugs: [...draftCompanySlugs],
+      application: canSelectApplication ? draftApplication : "all",
+      module: canSelectApplication ? draftModule : "none",
+      status: draftStatus,
+      periodPreset: draftPeriodPreset,
+      dateFrom: draftDateFrom,
+      dateTo: draftDateTo,
+      search: draftSearch,
+    });
   };
 
   const clearFilters = () => {
-    setApplicationFilter("all");
-    setModuleFilter("all");
-    setStatusFilter("critical_blocked");
-    setRunFilter("");
-    setDefectFilter("");
-    setResponsibleFilter("all");
-    setPriorityFilter("all");
-    setSeverityFilter("all");
-    setPeriodFilter("24h");
-    setSelectedCompanySlugs(allowedCompanies.map((company) => company.slug));
+    const firstSlug =
+      activeClientSlug && visibleCompanies.some((company) => company.slug === activeClientSlug)
+        ? [activeClientSlug]
+        : [];
+
+    setDraftCompanySlugs(firstSlug);
+    setDraftApplication("all");
+    setDraftModule("none");
+    setDraftStatus("all");
+    setDraftPeriodPreset("24h");
+    setDraftDateFrom("");
+    setDraftDateTo("");
+    setDraftSearch("");
+
+    setApplied({
+      companySlugs: firstSlug,
+      application: "all",
+      module: "none",
+      status: "all",
+      periodPreset: "24h",
+      dateFrom: "",
+      dateTo: "",
+      search: "",
+    });
   };
 
+  const toggleDraftCompany = (slug: string) => {
+    setDraftCompanySlugs((current) =>
+      current.includes(slug) ? current.filter((item) => item !== slug) : [...current, slug],
+    );
+  };
+
+  const singleCompanySlug = applied.companySlugs.length === 1 ? applied.companySlugs[0] : null;
+
   useEffect(() => {
-    if (allowedCompanies.length === 0) {
-      if (selectedCompanySlugs.length > 0) setSelectedCompanySlugs([]);
-      return;
-    }
+    if (typeof window === "undefined") return;
 
-    if (isCompanyScopedUser) {
-      const scopedSlugs = allowedCompanies.map((company) => company.slug);
-      const current = selectedCompanySlugs.join("|");
-      const next = scopedSlugs.join("|");
-      if (current !== next) setSelectedCompanySlugs(scopedSlugs);
-      return;
-    }
+    const context = {
+      companySlugs: applied.companySlugs,
+      application: applied.application,
+      module: applied.module,
+      status: applied.status,
+      periodPreset: applied.periodPreset,
+      dateFrom: applied.dateFrom,
+      dateTo: applied.dateTo,
+      resultCount: filteredSignals.length,
+      lastUpdatedAt,
+      state:
+        applied.companySlugs.length === 0
+          ? "initial"
+          : applied.application === "all"
+            ? "company_selected"
+            : applied.module === "none"
+              ? "application_selected"
+              : "module_selected",
+    };
 
-    const valid = selectedCompanySlugs.filter((slug) =>
-      allowedCompanies.some((company) => company.slug === slug),
-    );
-
-    if (valid.length === 0) {
-      setSelectedCompanySlugs(allowedCompanies.map((company) => company.slug));
-      return;
-    }
-
-    if (valid.length !== selectedCompanySlugs.length) {
-      setSelectedCompanySlugs(valid);
-    }
-  }, [allowedCompanies, isCompanyScopedUser, selectedCompanySlugs]);
-
-  if (!canAccessOperationsWorkspace) {
-    return (
-      <div className="min-h-screen bg-(--page-bg,#ffffff) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 md:px-10 md:py-10">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-accent,#ef0001)">Operação</p>
-          <h1 className="mt-2 text-2xl font-bold">Acesso restrito</h1>
-          <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-            Este workspace de operação com seleção de empresa e contexto está disponível apenas para líder TC e suporte técnico.
-          </p>
-        </div>
-      </div>
-    );
-  }
+    (window as unknown as { __TC_OPERATIONS_CONTEXT__?: unknown }).__TC_OPERATIONS_CONTEXT__ = context;
+  }, [applied, filteredSignals.length, lastUpdatedAt]);
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#ffffff) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 md:px-10 md:py-10">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm md:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-5">
-            <div className="space-y-3">
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-accent,#ef0001)">
-                <FiActivity className="h-4 w-4" />
-                {tx("operationsPage.kicker", "Operacoes")}
-              </p>
-              <h1 className="text-3xl font-black tracking-tight text-(--tc-text,#0b1a3c) md:text-4xl">
-                {tx("operationsPage.title", "Central de Operacoes")}
-              </h1>
-              <p className="max-w-4xl text-sm leading-7 text-(--tc-text-secondary,#4b5563) md:text-base">
-                {tx(
-                  "operationsPage.subtitle",
-                  "Acompanhe a saude operacional das empresas, runs, defeitos, automacoes e integracoes.",
-                )}
-              </p>
-              <p className="text-sm font-medium text-(--tc-text-secondary,#4b5563)">
-                Contexto atual: {companyScopeLabel} · Ultimas {periodFilter === "24h" ? "24h" : periodFilter === "7d" ? "7 dias" : "30 dias"}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setRefreshNonce((current) => current + 1)}
-                className="rounded-xl border border-(--tc-border,#d7deea) px-3 py-2 text-xs font-semibold"
-              >
-                <span className="inline-flex items-center gap-2"><FiRefreshCw className="h-4 w-4" />Atualizar</span>
-              </button>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="rounded-xl border border-(--tc-border,#d7deea) px-3 py-2 text-xs font-semibold"
-              >
-                <span className="inline-flex items-center gap-2"><FiFilter className="h-4 w-4" />Limpar filtros</span>
-              </button>
-              <button type="button" className="rounded-xl border border-(--tc-border,#d7deea) px-3 py-2 text-xs font-semibold">
-                <span className="inline-flex items-center gap-2"><FiDownload className="h-4 w-4" />Exportar</span>
-              </button>
-              <button type="button" className="rounded-xl bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold text-white">
-                <span className="inline-flex items-center gap-2"><FiZap className="h-4 w-4" />Perguntar ao assistente</span>
-              </button>
-            </div>
+    <div className="min-h-screen bg-(--page-bg,#fff) px-4 py-6 text-(--page-text,#0b1a3c) sm:px-6 lg:px-10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-5">
+        <header className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 sm:p-6">
+          <h1 className="text-2xl font-extrabold tracking-tight">Operações</h1>
+          <p className="mt-2 text-sm text-(--tc-text-muted,#6b7280)">
+            Monitore em tempo real as aplicações, módulos, runs, defeitos e eventos das empresas.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) px-2.5 py-1">
+              <FiClock className="h-3.5 w-3.5" />
+              {lastUpdatedAt ? `Atualizado há ${formatAgo(lastUpdatedAt)}` : "Sem atualização"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setAutoRefresh((current) => !current)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) px-2.5 py-1 font-semibold"
+            >
+              {autoRefresh ? <FiCheckCircle className="h-3.5 w-3.5 text-emerald-600" /> : <FiXCircle className="h-3.5 w-3.5 text-rose-600" />}
+              Atualização automática {autoRefresh ? "ativada" : "desativada"}
+            </button>
+          </div>
+        </header>
+
+        <section className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 sm:p-6">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <FiFilter className="h-4 w-4" />
+            Filtros principais
           </div>
 
-          {hiddenSeedCompanies > 0 ? (
-            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-              {hiddenSeedCompanies} empresa(s) de seed/teste foram ocultadas automaticamente nesta visao operacional.
-            </p>
-          ) : null}
-
-          {loadingLiveData ? (
-            <p className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
-              Atualizando dados operacionais em tempo real...
-            </p>
-          ) : null}
-
-          {liveDataError ? (
-            <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">
-              Nao foi possivel carregar parte dos dados operacionais: {liveDataError}
-            </p>
-          ) : null}
-        </section>
-
-        <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm">
-          <div className="grid gap-3 lg:grid-cols-6">
-            <div className="lg:col-span-2">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Empresa</p>
-              <div className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-medium">{isCompanyScopedUser ? "Empresa vinculada" : "Multiselecao"}</span>
-                  {!isCompanyScopedUser ? (
-                    <button type="button" onClick={selectAllCompanies} className="text-xs font-semibold text-(--tc-accent,#ef0001)">
-                      Selecionar todas
-                    </button>
-                  ) : null}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-12">
+            <div className="md:col-span-2 lg:col-span-4">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Empresa</label>
+              <div className="space-y-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2.5">
+                <div className="relative">
+                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                  <input
+                    type="search"
+                    value={companyFilterQuery}
+                    onChange={(event) => setCompanyFilterQuery(event.target.value)}
+                    placeholder="Buscar empresa"
+                    className="min-h-10 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) pl-9 pr-3 text-sm"
+                  />
                 </div>
-                <div className="max-h-32 space-y-1 overflow-auto pr-1">
-                  {allowedCompanies.map((company) => (
-                    <label key={company.slug} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={selectedCompanies.some((selected) => selected.slug === company.slug)}
-                        onChange={() => toggleCompanySlug(company.slug)}
-                        disabled={isCompanyScopedUser}
-                      />
-                      <span>{company.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <label className="grid gap-1 text-sm font-medium">
-              Aplicacao
-              <select value={applicationFilter} onChange={(event) => setApplicationFilter(event.target.value)} className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3">
-                <option value="all">Todas</option>
-                {applicationOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
+                <div className="max-h-32 space-y-1 overflow-auto rounded-xl bg-(--tc-surface,#fff) p-1.5">
+                {filteredVisibleCompanies.map((company) => (
+                  <label key={company.slug} className="flex items-center gap-2 rounded px-1.5 py-1 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={draftCompanySlugs.includes(company.slug)}
+                      onChange={() => toggleDraftCompany(company.slug)}
+                    />
+                    <span className="truncate">{company.name}</span>
+                  </label>
                 ))}
-              </select>
-            </label>
-
-            <label className="grid gap-1 text-sm font-medium">
-              Modulo
-              <select value={moduleFilter} onChange={(event) => setModuleFilter(event.target.value)} className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3">
-                <option value="all">Todos</option>
-                {moduleOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="grid gap-1 text-sm font-medium">
-              Status
-              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3">
-                <option value="critical_blocked">Criticos + Bloqueados</option>
-                <option value="active">Ativos</option>
-                <option value="all">Todos</option>
-                <option value="blocked">Bloqueado</option>
-                <option value="failed">Falha</option>
-                <option value="alert">Alerta</option>
-              </select>
-            </label>
-
-            <label className="grid gap-1 text-sm font-medium">
-              Responsavel
-              <select value={responsibleFilter} onChange={(event) => setResponsibleFilter(event.target.value)} className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3">
-                <option value="all">Todos</option>
-                {ownerOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="grid gap-1 text-sm font-medium">
-              Periodo
-              <select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value)} className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3">
-                <option value="24h">Ultimas 24h</option>
-                <option value="7d">Ultimos 7 dias</option>
-                <option value="30d">Ultimos 30 dias</option>
-              </select>
-            </label>
-          </div>
-
-          <div className="mt-3 grid gap-3 md:grid-cols-5">
-            <label className="grid gap-1 text-sm font-medium">
-              Run
-              <input value={runFilter} onChange={(event) => setRunFilter(event.target.value)} placeholder="RUN-" className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3" />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              Defeito
-              <input value={defectFilter} onChange={(event) => setDefectFilter(event.target.value)} placeholder="DEF-" className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3" />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              Prioridade
-              <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)} className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3">
-                <option value="all">Todas</option>
-                <option value="P0">P0</option>
-                <option value="P1">P1</option>
-                <option value="P2">P2</option>
-                <option value="P3">P3</option>
-              </select>
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              Severidade
-              <select value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value)} className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3">
-                <option value="all">Todas</option>
-                <option value="critical">Critica</option>
-                <option value="high">Alta</option>
-                <option value="medium">Media</option>
-                <option value="low">Baixa</option>
-              </select>
-            </label>
-            <div className="grid gap-1 text-sm font-medium">
-              Modulos da empresa
-              {activeCompanyForLinks ? (
-                <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-2 py-1">
-                  {operationContexts.slice(0, 4).map((context) => {
-                    const href = buildCompanyPathForAccess(activeCompanyForLinks, context.route, companyRouteInput);
-                    return (
-                      <Link key={context.key} href={href} className="inline-flex items-center gap-1 rounded-lg border border-(--tc-border,#d7deea) px-2 py-1 text-xs font-semibold">
-                        <context.icon className="h-3.5 w-3.5" />
-                        {context.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="flex min-h-10 items-center rounded-xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 text-xs text-(--tc-text-muted,#6b7280)">
-                  Selecione uma unica empresa para abrir modulo direto.
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {operationalCards.map((card) => (
-            <article key={card.label} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">{card.label}</p>
-              <p className={`mt-3 text-3xl font-black ${card.accent}`}>{card.value}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-[1.1fr_1.3fr]">
-          <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-bold">Alertas e riscos</h2>
-            <div className="mt-3 space-y-2">
-              {riskAlerts.map((alert) => (
-                <p key={alert} className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-900">
-                  {alert}
-                </p>
-              ))}
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-bold">Operacao em andamento</h2>
-            <div className="mt-3 space-y-2">
-              {filteredSignals.filter((item) => item.status !== "resolved").slice(0, 8).map((item) => (
-                <div key={item.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold">{item.title}</p>
-                    <span className="text-xs font-semibold uppercase text-(--tc-accent,#ef0001)">{item.status.replace("_", " ")}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-(--tc-text-secondary,#4b5563)">
-                    {item.companyName} · {item.application} · {item.module} · {item.owner}
+                {filteredVisibleCompanies.length === 0 ? (
+                  <p className="px-1.5 py-1 text-xs text-(--tc-text-muted,#6b7280)">
+                    {visibleCompanies.length === 0
+                      ? "Sem empresas disponíveis para o seu acesso."
+                      : hasCompanySearchQuery
+                        ? "Nenhuma empresa encontrada para a busca."
+                        : "Selecione uma empresa para continuar."}
                   </p>
-                </div>
-              ))}
-              {filteredSignals.length === 0 ? (
-                <p className="text-sm text-(--tc-text-secondary,#4b5563)">Sem itens no recorte atual.</p>
-              ) : null}
-            </div>
-          </article>
-        </section>
-
-        <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <FiLayers className="h-5 w-5 text-(--tc-accent,#ef0001)" />
-            <h2 className="text-lg font-bold">Kanban operacional</h2>
-          </div>
-          <div className="grid gap-3 lg:grid-cols-5">
-            {Object.entries(kanbanColumns).map(([column, items]) => (
-              <div key={column} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
-                  {column} ({items.length})
-                </p>
-                <div className="mt-2 space-y-2">
-                  {items.slice(0, 4).map((item) => (
-                    <div key={item.id} className="rounded-lg border border-white bg-white px-2 py-1.5 text-xs">
-                      <p className="font-semibold">{item.runCode}</p>
-                      <p className="text-(--tc-text-secondary,#4b5563)">{item.companyName}</p>
-                    </div>
-                  ))}
+                ) : null}
                 </div>
               </div>
-            ))}
+            </div>
+
+            <label className="grid gap-1 text-sm lg:col-span-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Aplicação</span>
+              <div className="relative">
+                <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                <input
+                  type="search"
+                  value={applicationFilterQuery}
+                  onChange={(event) => setApplicationFilterQuery(event.target.value)}
+                  disabled={!canSelectApplication || loadingApplications}
+                  placeholder="Buscar aplicação"
+                  className="min-h-10 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) pl-9 pr-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </div>
+              <select
+                value={draftApplication}
+                onChange={(event) => setDraftApplication(event.target.value)}
+                disabled={!canSelectApplication || loadingApplications}
+                className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {draftCompanySlugs.length === 0 ? (
+                  <option value="all">Selecione uma empresa primeiro</option>
+                ) : draftCompanySlugs.length > 1 ? (
+                  <option value="all">Selecione apenas uma empresa para filtrar aplicação específica</option>
+                ) : loadingApplications ? (
+                  <option value="all">Carregando aplicações...</option>
+                ) : (
+                  <>
+                    <option value="all">Todas as aplicações da empresa selecionada</option>
+                    {filteredApplicationsForSelection.map((application) => (
+                      <option key={application} value={application}>{application}</option>
+                    ))}
+                    {filteredApplicationsForSelection.length === 0 ? (
+                      <option value="all">Nenhuma aplicação encontrada na busca</option>
+                    ) : null}
+                  </>
+                )}
+              </select>
+            </label>
+
+            <label className="grid gap-1 text-sm lg:col-span-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Módulo</span>
+              <div className="relative">
+                <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                <input
+                  type="search"
+                  value={moduleFilterQuery}
+                  onChange={(event) => setModuleFilterQuery(event.target.value)}
+                  disabled={draftApplication === "all" || !canSelectApplication}
+                  placeholder="Buscar módulo"
+                  className="min-h-10 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) pl-9 pr-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </div>
+              <select
+                value={draftModule}
+                onChange={(event) => setDraftModule(event.target.value as ModuleView)}
+                disabled={draftApplication === "all" || !canSelectApplication}
+                className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {draftApplication === "all" ? (
+                  <option value="none">Selecione uma aplicação primeiro</option>
+                ) : (
+                  <>
+                    <option value="none">Selecione o módulo</option>
+                    {filteredModulesForSelection.map((module) => (
+                        <option key={module} value={module}>{module}</option>
+                      ))}
+                    {filteredModulesForSelection.length === 0 ? (
+                      <option value="none">Nenhum módulo encontrado na busca</option>
+                    ) : null}
+                  </>
+                )}
+              </select>
+            </label>
+
+            <label className="grid gap-1 text-sm lg:col-span-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Período</span>
+              <select
+                value={draftPeriodPreset}
+                onChange={(event) => setDraftPeriodPreset(event.target.value as PeriodPreset)}
+                className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3"
+              >
+                <option value="24h">Últimas 24h</option>
+                <option value="7d">Últimos 7 dias</option>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="month">Este mês</option>
+                <option value="custom">Personalizado</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="mt-3 grid gap-3 lg:grid-cols-4">
+            {statusOptions.length > 0 ? (
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">{statusFieldLabel(draftModule)}</span>
+                <select
+                  value={draftStatus}
+                  onChange={(event) => setDraftStatus(event.target.value)}
+                  className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3"
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            {draftPeriodPreset === "custom" ? (
+              <>
+                <label className="grid gap-1 text-sm">
+                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Data inicial</span>
+                  <input
+                    type="date"
+                    value={draftDateFrom}
+                    onChange={(event) => setDraftDateFrom(event.target.value)}
+                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3"
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Data final</span>
+                  <input
+                    type="date"
+                    value={draftDateTo}
+                    onChange={(event) => setDraftDateTo(event.target.value)}
+                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3"
+                  />
+                </label>
+              </>
+            ) : null}
+
+            {draftModule !== "none" && draftModule !== "Automacoes" && draftModule !== "Integracoes" ? (
+              <label className="grid gap-1 text-sm lg:col-span-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">
+                  {draftModule === "Runs"
+                    ? "Buscar run por ID ou nome"
+                    : draftModule === "Defeitos"
+                      ? "Buscar defeito por título ou ID"
+                      : "Buscar aplicação"}
+                </span>
+                <div className="relative">
+                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                  <input
+                    value={draftSearch}
+                    onChange={(event) => setDraftSearch(event.target.value)}
+                    placeholder={draftModule === "Runs" ? "Ex.: RUN-123" : draftModule === "Defeitos" ? "Ex.: DEF-10" : "Ex.: Quality Control"}
+                    className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) pl-9 pr-3"
+                  />
+                </div>
+              </label>
+            ) : null}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={applyFilters}
+              className="rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white"
+            >
+              Aplicar filtros
+            </button>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-4 py-2 text-sm font-semibold"
+            >
+              Limpar
+            </button>
+            <button
+              type="button"
+              onClick={() => setRefreshNonce((current) => current + 1)}
+              className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-4 py-2 text-sm font-semibold"
+            >
+              <FiRefreshCw className="h-4 w-4" />
+              Atualizar
+            </button>
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
-          <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-bold">Metricas por run</h2>
-            <div className="mt-3 overflow-auto">
+        <section className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 sm:p-6">
+          {applied.companySlugs.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6 text-sm text-(--tc-text-muted,#6b7280)">
+              <p className="font-semibold text-(--page-text,#0b1a3c)">Selecione uma empresa para começar.</p>
+              <p className="mt-1">Depois escolha a aplicação e o módulo que deseja monitorar.</p>
+            </div>
+          ) : loading ? (
+            <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando dados operacionais...</p>
+          ) : error ? (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</p>
+          ) : applied.application === "all" ? (
+            <div>
+              <h2 className="text-lg font-bold">Aplicações da empresa {selectedCompanies[0]?.name ?? "selecionada"}</h2>
+              <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {applicationsSummary.map((app) => (
+                  <button
+                    key={app.name}
+                    type="button"
+                    onClick={() => {
+                      setDraftApplication(app.name);
+                      setApplied((current) => ({ ...current, application: app.name, module: "none", status: "all", search: "" }));
+                    }}
+                    className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4 text-left"
+                  >
+                    <p className="font-semibold text-(--page-text,#0b1a3c)">{app.name}</p>
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Status geral: {app.total > 0 ? "Com eventos" : "Sem eventos"}</p>
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Última atividade: {new Date(app.lastIso).toLocaleString("pt-BR")}</p>
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Módulos disponíveis: {app.modules.size}</p>
+                    <p className="mt-1 text-xs font-semibold text-(--tc-accent,#ef0001)">Abrir</p>
+                  </button>
+                ))}
+                {applicationsSummary.length === 0 ? (
+                  <p className="text-sm text-(--tc-text-muted,#6b7280)">Sem aplicações encontradas para o recorte.</p>
+                ) : null}
+              </div>
+            </div>
+          ) : applied.module === "none" ? (
+            <div>
+              <h2 className="text-lg font-bold">Módulos de {applied.application}</h2>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {(
+                  modulesForSelection.length > 0
+                    ? modulesForSelection
+                    : (["Aplicacoes", "Runs", "Defeitos", "Automacoes", "Integracoes"] as ModuleView[])
+                ).map((module) => (
+                  <button
+                    key={module}
+                    type="button"
+                    onClick={() => {
+                      setDraftModule(module);
+                      setApplied((current) => ({ ...current, module, status: "all", search: "" }));
+                    }}
+                    className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3 py-2 text-left text-sm font-semibold"
+                  >
+                    {module}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : applied.module === "Runs" ? (
+            <div className="overflow-auto">
+              <h2 className="mb-3 text-lg font-bold">Runs em tempo real</h2>
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">
+                  <tr className="border-b border-(--tc-border,#d7deea) text-left text-xs uppercase tracking-widest text-(--tc-text-muted,#6b7280)">
                     <th className="px-2 py-2">Run</th>
-                    <th className="px-2 py-2">Empresa</th>
-                    <th className="px-2 py-2">Pass rate</th>
-                    <th className="px-2 py-2">Falhas</th>
-                    <th className="px-2 py-2">Duracao</th>
-                    <th className="px-2 py-2">Status</th>
+                    <th className="px-2 py-2">Status da run</th>
+                    <th className="px-2 py-2">Aplicação</th>
+                    <th className="px-2 py-2">Módulo</th>
+                    <th className="px-2 py-2">Responsável</th>
+                    <th className="px-2 py-2">Início</th>
+                    <th className="px-2 py-2">Fim ou duração</th>
+                    <th className="px-2 py-2">Resultado</th>
+                    <th className="px-2 py-2">Última atualização</th>
+                    <th className="px-2 py-2">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {runMetrics.map((run) => (
-                    <tr key={run.id} className="border-t border-(--tc-border,#d7deea)">
-                      <td className="px-2 py-2 font-semibold">{run.runCode}</td>
-                      <td className="px-2 py-2">{run.companyName}</td>
-                      <td className="px-2 py-2">{run.passRate ?? 0}%</td>
-                      <td className="px-2 py-2">{run.failCount ?? 0}</td>
-                      <td className="px-2 py-2">{run.durationMin ?? 0} min</td>
-                      <td className="px-2 py-2">{run.status}</td>
+                  {filteredSignals.map((item) => (
+                    <tr key={item.id} className="border-b border-(--tc-border,#eef2f7)">
+                      <td className="px-2 py-2 font-semibold">{item.runCode || item.title}</td>
+                      <td className="px-2 py-2">{item.status}</td>
+                      <td className="px-2 py-2">{item.application}</td>
+                      <td className="px-2 py-2">{item.module}</td>
+                      <td className="px-2 py-2">{item.owner}</td>
+                      <td className="px-2 py-2">{new Date(item.updatedAtIso).toLocaleString("pt-BR")}</td>
+                      <td className="px-2 py-2">{item.durationMin != null ? `${item.durationMin} min` : "-"}</td>
+                      <td className="px-2 py-2">{item.passRate != null ? `${item.passRate}%` : "-"}</td>
+                      <td className="px-2 py-2">{formatAgo(item.updatedAtIso)}</td>
+                      <td className="px-2 py-2">
+                        {singleCompanySlug ? (
+                          <Link href={buildCompanyPathForAccess(singleCompanySlug, "runs", companyRouteInput)} className="text-(--tc-accent,#ef0001)">
+                            Abrir
+                          </Link>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {filteredSignals.length === 0 ? <p className="mt-3 text-sm text-(--tc-text-muted,#6b7280)">Nenhuma run encontrada para o recorte.</p> : null}
             </div>
-          </article>
-
-          <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-bold">Historico recente</h2>
-            <div className="mt-3 space-y-2">
-              {recentHistory.map((item) => (
-                <div key={item.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
-                  <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="mt-1 text-xs text-(--tc-text-secondary,#4b5563)">
-                    {new Date(item.updatedAtIso).toLocaleString("pt-BR")} · {item.companyName} · {item.module}
-                  </p>
-                </div>
-              ))}
+          ) : applied.module === "Defeitos" ? (
+            <div className="overflow-auto">
+              <h2 className="mb-3 text-lg font-bold">Defeitos em tempo real</h2>
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-(--tc-border,#d7deea) text-left text-xs uppercase tracking-widest text-(--tc-text-muted,#6b7280)">
+                    <th className="px-2 py-2">Defeito</th>
+                    <th className="px-2 py-2">Título</th>
+                    <th className="px-2 py-2">Severidade</th>
+                    <th className="px-2 py-2">Prioridade</th>
+                    <th className="px-2 py-2">Status do defeito</th>
+                    <th className="px-2 py-2">Responsável</th>
+                    <th className="px-2 py-2">Criado em</th>
+                    <th className="px-2 py-2">Atualizado em</th>
+                    <th className="px-2 py-2">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSignals.map((item) => (
+                    <tr key={item.id} className="border-b border-(--tc-border,#eef2f7)">
+                      <td className="px-2 py-2 font-semibold">{item.defectCode || item.id}</td>
+                      <td className="px-2 py-2">{item.title}</td>
+                      <td className="px-2 py-2">{item.severity}</td>
+                      <td className="px-2 py-2">{item.priority}</td>
+                      <td className="px-2 py-2">{item.status}</td>
+                      <td className="px-2 py-2">{item.owner}</td>
+                      <td className="px-2 py-2">{new Date(item.updatedAtIso).toLocaleString("pt-BR")}</td>
+                      <td className="px-2 py-2">{formatAgo(item.updatedAtIso)}</td>
+                      <td className="px-2 py-2">
+                        {singleCompanySlug ? (
+                          <Link href={buildCompanyPathForAccess(singleCompanySlug, "defeitos", companyRouteInput)} className="text-(--tc-accent,#ef0001)">
+                            Abrir
+                          </Link>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredSignals.length === 0 ? <p className="mt-3 text-sm text-(--tc-text-muted,#6b7280)">Nenhum defeito encontrado para o recorte.</p> : null}
             </div>
-          </article>
-        </section>
-
-        <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-5 shadow-sm">
-          <h2 className="mb-2 text-lg font-bold">Assistente operacional contextualizado</h2>
-          <p className="mb-3 text-sm text-(--tc-text-secondary,#4b5563)">
-            Pergunte sobre riscos, bloqueios, prioridades e proximas acoes no recorte atual.
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <input
-              value={assistantPrompt}
-              onChange={(event) => setAssistantPrompt(event.target.value)}
-              placeholder="Ex.: Quais itens criticos estao sem responsavel nas ultimas 24h?"
-              className="min-h-11 flex-1 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3"
-            />
-            <button type="button" className="min-h-11 rounded-xl bg-(--tc-accent,#ef0001) px-4 text-sm font-semibold text-white">
-              <span className="inline-flex items-center gap-2"><FiArrowRight className="h-4 w-4" />Perguntar sobre esta operacao</span>
-            </button>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-            <span className="inline-flex items-center gap-1 rounded-full border border-(--tc-border,#d7deea) px-2 py-1"><FiCheckCircle className="h-3.5 w-3.5" />Contexto aplicado</span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-(--tc-border,#d7deea) px-2 py-1"><FiShield className="h-3.5 w-3.5" />Escopo de acesso respeitado</span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-(--tc-border,#d7deea) px-2 py-1"><FiUser className="h-3.5 w-3.5" />Responsaveis mapeados</span>
-          </div>
+          ) : (
+            <div>
+              <h2 className="text-lg font-bold">{applied.module}</h2>
+              <div className="mt-3 space-y-2">
+                {filteredSignals.map((item) => (
+                  <div key={item.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
+                    <p className="font-semibold">{item.title}</p>
+                    <p className="text-xs text-(--tc-text-muted,#6b7280)">
+                      {item.companyName} · {item.application} · {item.status} · {new Date(item.updatedAtIso).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                ))}
+                {filteredSignals.length === 0 ? <p className="text-sm text-(--tc-text-muted,#6b7280)">Sem resultados para o módulo no recorte aplicado.</p> : null}
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </div>
   );
 }
+

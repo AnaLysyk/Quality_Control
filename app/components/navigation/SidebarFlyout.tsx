@@ -14,9 +14,7 @@ type SidebarFlyoutProps = {
 
 export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: SidebarFlyoutProps) {
   const [open, setOpen] = useState(false);
-  const [top, setTop] = useState(0);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const clearClose = useCallback(() => {
     if (closeTimer.current) {
@@ -32,10 +30,6 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
 
   const handleButtonMouseEnter = useCallback(() => {
     clearClose();
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setTop(rect.top);
-    }
     setOpen(true);
   }, [clearClose]);
 
@@ -51,7 +45,6 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
   return (
     <div className="relative">
       <button
-        ref={buttonRef}
         onMouseEnter={handleButtonMouseEnter}
         onMouseLeave={scheduleClose}
         title={mod.label}
@@ -65,8 +58,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
 
       {open && (
         <div
-          className="fixed z-50 ml-1 min-w-56 max-w-72 overflow-hidden rounded-xl border border-white/15 bg-[#0c1f4a] shadow-2xl [left:76px]"
-          style={{ top: `${top}px` }}
+          className="absolute left-19 top-0 z-50 ml-1 min-w-56 max-w-72 overflow-hidden rounded-xl border border-white/15 bg-[#0c1f4a] shadow-2xl"
           onMouseEnter={clearClose}
           onMouseLeave={scheduleClose}
         >
@@ -89,7 +81,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
                     active ? "bg-white/14 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
                   }`}
                 >
-                  <ItemIcon size={14} className="flex-shrink-0 text-white/50" />
+                  <ItemIcon size={14} className="shrink-0 text-white/50" />
                   <span>{item.label}</span>
                 </Link>
               );

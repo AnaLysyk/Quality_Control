@@ -441,6 +441,10 @@ function isCompanyRunDetailRoute(pathname: string) {
   return /^\/empresas\/[^\/]+\/(runs|releases)\/[^\/]+/.test(pathname);
 }
 
+function isCompanyDashboardRoute(pathname: string) {
+  return getCompanyRouteSection(pathname) === "dashboard";
+}
+
 function shouldHideShellCover(pathname: string) {
   const hasAdminHeroCover = /^\/admin\/(?:home|dashboard|test-metric|users|clients|support|access-requests)(?:\/.*)?$/.test(pathname);
   return (
@@ -452,6 +456,7 @@ function shouldHideShellCover(pathname: string) {
     pathname.startsWith("/settings/profile") ||
     pathname.startsWith("/requests") ||
     pathname.startsWith("/dashboard") ||
+    isCompanyDashboardRoute(pathname) ||
     isCompanyAppsRoute(pathname) ||
     isCompanyDefectsRoute(pathname) ||
     isCompanyRunDetailRoute(pathname) ||
@@ -468,7 +473,11 @@ export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "";
   const router = useRouter();
   const { language } = useI18n();
-  const locale = normalizeLocale(language);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+  const locale = normalizeLocale(hydrated ? language : "pt-BR");
   const shellCopy = APP_SHELL_COPY[locale];
   const { user, companies } = useAuth();
   const { activeClient, activeClientSlug } = useClientContext();
@@ -679,7 +688,7 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Botão de menu mobile/hamburguer */}
       <button
         type="button"
-        aria-label={shellCopy.aria.openMenu}
+        aria-label="Abrir menu"
         {...mobileMenuA11y}
         className={[
           "app-shell-menu-toggle fixed top-3 left-3 z-50 rounded-2xl border",

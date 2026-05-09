@@ -7,6 +7,65 @@ import { buildPromptActions, displayName, displayRole, summarizePermissionMatrix
 import type { AssistantScreenContext } from "../types";
 import type { AssistantExecutorResult } from "./types";
 
+function firstName(value: string) {
+  const cleaned = value.trim();
+  if (!cleaned) return "usuário";
+  return cleaned.split(/\s+/)[0] ?? "usuário";
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function asNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function asString(value: unknown, fallback = "") {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function getOperationsSnapshot(context: AssistantScreenContext) {
+  if (context.module !== "operations") return null;
+
+  const metadata = asRecord(context.metadata);
+  if (!metadata) return null;
+
+  const filters = asRecord(metadata.filters);
+  const metrics = asRecord(metadata.metrics);
+  const permissions = asRecord(metadata.permissions);
+  const risksRaw = Array.isArray(metadata.risks) ? metadata.risks : [];
+
+  const companyNames = Array.isArray(filters?.companyNames)
+    ? filters.companyNames.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+
+  const periodLabel = asString(filters?.periodLabel, asString(filters?.period, "nas últimas 24h"));
+  const roleLabel = asString(permissions?.role, "operador");
+
+  return {
+    companyCount: Array.isArray(filters?.companyIds) ? filters.companyIds.length : companyNames.length,
+    companyNames,
+    periodLabel,
+    failedRuns: asNumber(metrics?.failedRuns),
+    blockedRuns: asNumber(metrics?.blockedRuns),
+    openDefects: asNumber(metrics?.openDefects),
+    itemsWithoutOwner: asNumber(metrics?.itemsWithoutOwner),
+    healthScore: asNumber(metrics?.healthScore),
+    roleLabel,
+    risks: risksRaw
+      .map((item) => asRecord(item))
+      .filter((item): item is Record<string, unknown> => Boolean(item))
+      .slice(0, 3)
+      .map((item) => ({
+        severity: asString(item.severity, "atenção"),
+        title: asString(item.title, "Risco operacional"),
+        description: asString(item.description),
+      })),
+  };
+}
+
 function getModuleEmoji(module: string): string {
   switch (module) {
     case "support": return "🎫";
@@ -103,6 +162,39 @@ export async function toolGetScreenContext(user: AuthUser, context: AssistantScr
   const actions = buildImmediateActions(context, user);
   const moduleEmoji = getModuleEmoji(context.module);
   const prompts = context.suggestedPrompts.slice(0, 4);
+  const operations = getOperationsSnapshot(context);
+
+  if (operations) {
+    const userName = firstName(displayName(currentUser));
+    const scopeLabel = operations.companyCount <= 1
+      ? (operations.companyNames[0] ?? buildScopeLabel(user, context))
+      : `${operations.companyCount} empresas selecionadas`;
+
+    const riskLines = operations.risks.length > 0
+      ? operations.risks.map((risk, index) => `${index + 1}. ${risk.title}${risk.description ? ` — ${risk.description}` : ""}`)
+      : ["1. Sem riscos críticos destacados no recorte atual."];
+
+    return {
+      tool: "get_screen_context",
+      success: true,
+      summary: context.screenLabel,
+      actions: buildPromptActions(context),
+      reply: compactMultiline([
+        `Oi, ${userName}. Estou com a ${context.screenLabel} carregada.`,
+        "",
+        `No contexto atual, há ${scopeLabel} ${operations.periodLabel}, com ${operations.failedRuns} runs com falha, ${operations.blockedRuns} runs bloqueadas, ${operations.openDefects} defeitos abertos e ${operations.itemsWithoutOwner} itens sem responsável.`,
+        operations.healthScore > 0 ? `Saúde operacional atual: ${operations.healthScore}%.` : "Saúde operacional atual em nível crítico e precisa de atenção imediata.",
+        "",
+        "### Pontos de atenção",
+        ...riskLines,
+        "",
+        "### Posso ajudar com:",
+        ...prompts.map((prompt, index) => `${index + 1}. ${prompt}`),
+        "",
+        `Perfil ativo: ${operations.roleLabel}.`,
+      ].join("\n")),
+    };
+  }
 
   const replyParts = [
     `## ${moduleEmoji} ${context.screenLabel}`,

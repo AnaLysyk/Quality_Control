@@ -53,7 +53,7 @@ export default function SidebarItem({
 
   return (
     <Link href={href} className={baseClass} onClick={onClose}>
-      {Icon && <Icon size={15} className="flex-shrink-0" />}
+      {Icon && <Icon size={15} className="shrink-0" />}
       <span className="flex-1 truncate">{label}</span>
       {favoriteId && onRemoveFavorite && (
         <button

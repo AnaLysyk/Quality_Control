@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
-import type { AssistantAction, AssistantConversationTurn, AssistantOpenEventDetail, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
+import type { AssistantAction, AssistantConversationTurn, AssistantOpenEventDetail, AssistantPanelMode, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -39,6 +39,67 @@ type ChatButtonProps = {
 const HISTORY_KEY_PREFIX = "assistant_history_v2";
 const PANEL_MODE_KEY = "assistant_panel_mode_v1";
 
+function sanitizePromptList(value: unknown, fallback: string[]) {
+  if (!Array.isArray(value)) return fallback;
+  const next = value
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .slice(0, 8);
+  return next.length > 0 ? next : fallback;
+}
+
+function sanitizeMetadata(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function mergeAssistantContext(base: AssistantScreenContext, incoming?: Partial<AssistantScreenContext> | null): AssistantScreenContext {
+  if (!incoming) return base;
+  return {
+    ...base,
+    ...incoming,
+    route: typeof incoming.route === "string" && incoming.route.trim() ? incoming.route : base.route,
+    screenLabel: typeof incoming.screenLabel === "string" && incoming.screenLabel.trim() ? incoming.screenLabel : base.screenLabel,
+    screenSummary: typeof incoming.screenSummary === "string" && incoming.screenSummary.trim() ? incoming.screenSummary : base.screenSummary,
+    suggestedPrompts: sanitizePromptList(incoming.suggestedPrompts, base.suggestedPrompts),
+    metadata: sanitizeMetadata(incoming.metadata) ?? base.metadata ?? null,
+  };
+}
+
+function getContextCard(context: AssistantScreenContext) {
+  if (context.module !== "operations") return null;
+  const metadata = sanitizeMetadata(context.metadata);
+  if (!metadata) return null;
+
+  const filters = sanitizeMetadata(metadata.filters);
+  const metrics = sanitizeMetadata(metadata.metrics);
+  const risks = Array.isArray(metadata.risks) ? metadata.risks : [];
+
+  const companyNames = Array.isArray(filters?.companyNames)
+    ? filters.companyNames.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+
+  const companyCount = Array.isArray(filters?.companyIds) ? filters.companyIds.length : companyNames.length;
+  const periodLabel = typeof filters?.periodLabel === "string" && filters.periodLabel.trim()
+    ? filters.periodLabel
+    : typeof filters?.period === "string" && filters.period.trim()
+      ? filters.period
+      : "Últimas 24h";
+
+  return {
+    title: context.screenLabel,
+    subtitle: `${companyCount > 1 ? `${companyCount} empresas selecionadas` : companyNames[0] ?? "Escopo operacional"} · ${periodLabel}`,
+    metrics: [
+      { label: "Falhas", value: typeof metrics?.failedRuns === "number" ? String(metrics.failedRuns) : "0" },
+      { label: "Bloqueadas", value: typeof metrics?.blockedRuns === "number" ? String(metrics.blockedRuns) : "0" },
+      { label: "Defeitos", value: typeof metrics?.openDefects === "number" ? String(metrics.openDefects) : "0" },
+      { label: "Sem responsável", value: typeof metrics?.itemsWithoutOwner === "number" ? String(metrics.itemsWithoutOwner) : "0" },
+    ],
+    risk: typeof risks[0] === "object" && risks[0] !== null && typeof (risks[0] as { title?: unknown }).title === "string"
+      ? String((risks[0] as { title: string }).title)
+      : null,
+  };
+}
+
 function formatTime(ts: number) {
   return new Intl.DateTimeFormat("pt-BR", {
     hour: "2-digit",
@@ -52,26 +113,6 @@ function makeId(prefix: string) {
     return `${prefix}-${crypto.randomUUID()}`;
   }
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function firstName(value?: string | null) {
-  const cleaned = String(value ?? "").trim();
-  if (!cleaned) return "usuário";
-  return cleaned.split(/\s+/)[0] ?? "usuário";
-}
-
-function dayGreeting() {
-  const hour = Number(
-    new Intl.DateTimeFormat("pt-BR", {
-      hour: "2-digit",
-      hour12: false,
-      timeZone: "America/Sao_Paulo",
-    }).format(new Date()),
-  );
-
-  if (hour < 12) return "Bom dia";
-  if (hour < 18) return "Boa tarde";
-  return "Boa noite";
 }
 
 function TCLogoSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
@@ -360,12 +401,12 @@ function ChatRichText({ text }: { text: string }) {
 export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const pathname = usePathname() || "/";
   const screenContext = useMemo(() => resolveAssistantScreenContext(pathname), [pathname]);
-  const { user, can, normalizedUser } = usePermissionAccess();
+  const { user, can } = usePermissionAccess();
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(defaultOpen);
-  const [panelMode, setPanelMode] = useState<"bubble" | "expanded" | "docked">("bubble");
+  const [panelMode, setPanelMode] = useState<AssistantPanelMode>("compact");
   const isExpandedMode = panelMode === "expanded";
-  const isDockedMode = panelMode === "docked";
+  const isSideMode = panelMode === "side";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -375,12 +416,14 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
   const boxRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
 
   useEffect(() => {
     if (!open) return undefined;
 
     function close(e: MouseEvent) {
+      if (panelMode !== "compact") return;
       if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
     }
     function esc(e: KeyboardEvent) {
@@ -392,7 +435,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
       document.removeEventListener("mousedown", close);
       document.removeEventListener("keydown", esc);
     };
-  }, [open]);
+  }, [open, panelMode]);
 
   useEffect(() => {
     try {
@@ -443,11 +486,57 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
       window.removeEventListener("resize", updateViewportHeight);
       window.visualViewport?.removeEventListener("resize", updateViewportHeight);
     };
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     setAssistantContext(screenContext);
   }, [screenContext]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleAssistantContext(e: Event) {
+      const detail = (e as CustomEvent<AssistantOpenEventDetail>).detail ?? {};
+      const detailRoute = detail.route ?? pathname;
+      if (detailRoute !== pathname) return;
+      const resolvedContext = resolveAssistantScreenContext(detailRoute);
+      setAssistantContext(mergeAssistantContext(resolvedContext, detail.context ?? null));
+    }
+
+    window.addEventListener("assistant:context", handleAssistantContext);
+    return () => {
+      window.removeEventListener("assistant:context", handleAssistantContext);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(PANEL_MODE_KEY);
+      if (stored === "compact" || stored === "side" || stored === "expanded") {
+        setPanelMode(stored);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(PANEL_MODE_KEY, panelMode);
+    } catch {
+      // ignore storage errors
+    }
+  }, [panelMode]);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => {
+      inputRef.current?.focus();
+    }, 40);
+    return () => window.clearTimeout(timer);
+  }, [open, panelMode]);
 
   // Listen for assistant:open events dispatched by Brain or other screens
   useEffect(() => {
@@ -455,10 +544,19 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
     function handleAssistantOpen(e: Event) {
       const detail = (e as CustomEvent<AssistantOpenEventDetail>).detail ?? {};
+      const nextRoute = detail.route ?? pathname;
+      const resolvedContext = resolveAssistantScreenContext(nextRoute);
       setBrainOpenContext(detail);
+      setAssistantContext(mergeAssistantContext(resolvedContext, detail.context ?? null));
+      setPanelMode(detail.panelMode ?? "compact");
       setOpen(true);
       if (detail.initialMessage) {
         setInput(detail.initialMessage);
+      }
+      if (detail.focusInput !== false) {
+        window.setTimeout(() => {
+          inputRef.current?.focus();
+        }, 60);
       }
     }
 
@@ -466,7 +564,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     return () => {
       window.removeEventListener("assistant:open", handleAssistantOpen);
     };
-  }, []);
+  }, [pathname]);
 
   if (!assistantEnabled) return null;
   if (!user) return null;
@@ -481,6 +579,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const denseViewport = viewportHeight > 0 && viewportHeight <= 740;
   const ultraDenseViewport = viewportHeight > 0 && viewportHeight <= 680;
   const showQuickPrompts = !hasConversation;
+  const contextCard = getContextCard(assistantContext);
   const visiblePrompts = hasConversation
     ? ultraDenseViewport
       ? 1
@@ -494,10 +593,10 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         : 4;
   const compactConversationChrome = hasConversation || compactViewport;
   const summaryText = denseViewport
-    ? `Assistente contextual de ${screenContext.screenLabel.toLowerCase()}.`
+    ? `Assistente contextual de ${assistantContext.screenLabel.toLowerCase()}.`
     : compactViewport && hasConversation
       ? `Contexto: ${activeScreenLabel}.`
-      : screenContext.screenSummary;
+      : assistantContext.screenSummary;
 
   async function pushAssistantResponse(payload: { message?: string; action?: AssistantToolAction | null }, optimisticText?: string) {
     if (sending) return;
@@ -533,7 +632,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...payload,
-          context: { route: screenContext.route },
+          context: assistantContext,
           brainContext: brainOpenContext ?? undefined,
           actor: {
             userId: user.id,
@@ -676,25 +775,31 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   }
 
   return (
-    <div className="relative" ref={boxRef}>
-      <div className="fixed bottom-6 right-6 z-50">
-        <div className="flex items-end">
-          {open ? (
-            <div
-              className={`mr-3 flex flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 transition-[width,height] duration-300 ease-in-out ${
-                isExpandedMode
-                  ? "w-[min(72rem,calc(100vw-2rem))]"
-                  : "w-[min(36rem,calc(100vw-1rem))]"
-              } ${
-                denseViewport
-                  ? "h-[min(74dvh,calc(100dvh-0.75rem))] max-h-[calc(100dvh-0.75rem)]"
-                  : compactViewport
-                    ? "h-[min(76dvh,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)]"
-                    : isExpandedMode
-                      ? "h-[min(92dvh,calc(100dvh-1.25rem))] max-h-[calc(100dvh-1.25rem)]"
-                      : "h-[min(78dvh,calc(100dvh-1.25rem))] max-h-[calc(100dvh-1.25rem)]"
-              }`}
-            >
+    <div className="relative">
+      {open ? (
+        <div
+          ref={boxRef}
+          className={`fixed z-50 transition-all duration-300 ease-in-out ${
+            isExpandedMode
+              ? "left-1/2 top-[5vh] -translate-x-1/2"
+              : isSideMode
+                ? "inset-y-0 right-0"
+                : "bottom-6 right-24"
+          }`}
+        >
+          <div
+            className={`flex flex-col overflow-hidden border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 transition-[width,height,border-radius] duration-300 ease-in-out ${
+              isExpandedMode
+                ? "h-[85vh] w-[min(68.75rem,90vw)] rounded-4xl"
+                : isSideMode
+                  ? "h-screen w-[min(28.75rem,100vw)] rounded-none rounded-l-4xl border-r-0"
+                  : denseViewport
+                    ? "h-[min(74dvh,calc(100dvh-0.75rem))] max-h-[calc(100dvh-0.75rem)] w-[min(27.5rem,calc(100vw-5.5rem))] rounded-4xl"
+                    : compactViewport
+                      ? "h-[min(76dvh,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)] w-[min(27.5rem,calc(100vw-5.5rem))] rounded-4xl"
+                      : "h-170 max-h-[calc(100dvh-1.5rem)] w-110 max-w-[calc(100vw-5.5rem)] rounded-4xl"
+            }`}
+          >
               <div
                 className={`relative overflow-hidden border-b border-[rgba(15,23,42,0.1)] [background-image:var(--tc-brand-gradient-strong)] text-white ${denseViewport ? "px-4 py-3" : "px-5 py-4"}`}
               >
@@ -723,24 +828,72 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPanelMode((mode) => (mode === "expanded" ? "bubble" : "expanded"))}
-                      className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
-                      aria-label={isExpandedMode ? "Voltar para modo balão" : "Expandir chat"}
-                      title={isExpandedMode ? "Voltar para modo balão" : "Expandir chat"}
-                    >
-                      {isExpandedMode ? "Balão" : "Expandir"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPanelMode((mode) => (mode === "docked" ? "bubble" : "docked"))}
-                      className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
-                      aria-label={isDockedMode ? "Voltar para modo balão" : "Acoplar lateralmente"}
-                      title={isDockedMode ? "Voltar para modo balão" : "Acoplar lateralmente"}
-                    >
-                      {isDockedMode ? "Balão" : "Lateral"}
-                    </button>
+                    {panelMode === "compact" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("expanded")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Expandir chat"
+                          title="Expandir"
+                        >
+                          Expandir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("side")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Fixar lateralmente"
+                          title="Lateral"
+                        >
+                          Lateral
+                        </button>
+                      </>
+                    ) : null}
+                    {panelMode === "side" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("expanded")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Expandir chat"
+                          title="Expandir"
+                        >
+                          Expandir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("compact")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Voltar ao modo compacto"
+                          title="Normal"
+                        >
+                          Normal
+                        </button>
+                      </>
+                    ) : null}
+                    {panelMode === "expanded" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("compact")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Voltar ao modo compacto"
+                          title="Normal"
+                        >
+                          Normal
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("side")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Fixar lateralmente"
+                          title="Lateral"
+                        >
+                          Lateral
+                        </button>
+                      </>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
@@ -757,8 +910,27 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               {showQuickPrompts ? (
                 <div className={`border-b border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f7faff_0%,#fff9fb_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#13213a_0%,#17253f_100%)] ${denseViewport ? "px-4 py-2.5" : "px-5 py-4"}`}>
                   <p className={`${denseViewport ? "text-[0.9rem] leading-5" : "text-base leading-6"} font-semibold text-[#011848] dark:text-[#e7efff]`}>{summaryText}</p>
+                  {contextCard ? (
+                    <div className="mt-3 rounded-[1.4rem] border border-[rgba(239,0,1,0.16)] bg-white/88 p-3 shadow-[0_12px_24px_rgba(1,24,72,0.06)] dark:border-[#ff8a8a44] dark:bg-[#13213add]">
+                      <p className="text-[0.66rem] font-black uppercase tracking-[0.24em] text-(--tc-accent,#ef0001)">{contextCard.title}</p>
+                      <p className="mt-1 text-sm font-semibold text-[#011848] dark:text-[#e7efff]">{contextCard.subtitle}</p>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {contextCard.metrics.map((metric) => (
+                          <div key={metric.label} className="rounded-2xl border border-(--tc-border,#d7dff1) bg-white px-3 py-2 dark:border-[#36507f] dark:bg-[#0f192d]">
+                            <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[#8b98b1] dark:text-[#94abd6]">{metric.label}</p>
+                            <p className="mt-1 text-lg font-black text-[#011848] dark:text-[#f2f7ff]">{metric.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {contextCard.risk ? (
+                        <p className="mt-3 rounded-2xl border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.06)] px-3 py-2 text-xs font-medium text-[#7d1d1d] dark:border-[#ff8a8a44] dark:bg-[rgba(239,0,1,0.12)] dark:text-[#ffd7d7]">
+                          {contextCard.risk}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <div className={`${compactViewport ? "mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "mt-3 flex flex-wrap gap-2"}`}>
-                  {(buildBrainQuickActions(brainOpenContext) ?? screenContext.suggestedPrompts.slice(0, visiblePrompts).map((p) => ({ kind: "prompt" as const, label: p, prompt: p }))).map((action) => (
+                  {(buildBrainQuickActions(brainOpenContext) ?? assistantContext.suggestedPrompts.slice(0, visiblePrompts).map((p) => ({ kind: "prompt" as const, label: p, prompt: p }))).map((action) => (
                     <button
                       key={action.label}
                       type="button"
@@ -870,6 +1042,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               <div className={`border-t border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0f192d_0%,#13213a_100%)] ${denseViewport ? "px-4 py-2.5" : hasConversation ? "px-4 py-3" : "px-5 py-4.5"}`}>
                 <div className={`rounded-3xl border border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f8fbff_0%,#fff7fa_100%)] shadow-[0_14px_28px_rgba(15,23,42,0.05)] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.24)] ${denseViewport ? "p-2.5" : hasConversation ? "p-2.5" : "p-3.5"}`}>
                   <textarea
+                    ref={inputRef}
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     onKeyDown={(event) => {
@@ -878,7 +1051,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                         void sendMessage();
                       }
                     }}
-                    placeholder={`Escreva o que você precisa em ${screenContext.screenLabel.toLowerCase()}...`}
+                    placeholder={`Escreva o que você precisa em ${assistantContext.screenLabel.toLowerCase()}...`}
                     className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
                   />
                   <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : hasConversation ? "mt-2" : "mt-3"}`}>
@@ -901,12 +1074,21 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                   </div>
                 </div>
               </div>
-            </div>
-          ) : null}
+          </div>
+        </div>
+      ) : null}
 
+      <div className="fixed bottom-6 right-6 z-50">
           <button
             type="button"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => {
+              if (open) {
+                setOpen(false);
+                return;
+              }
+              setPanelMode("compact");
+              setOpen(true);
+            }}
             aria-label="Abrir assistente da plataforma"
             title="Assistente Testing Company — clique para abrir"
             className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105"
@@ -930,7 +1112,6 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               </span>
             </div>
           </button>
-        </div>
       </div>
 
       <ConfirmDialog

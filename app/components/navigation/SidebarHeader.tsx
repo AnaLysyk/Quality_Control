@@ -18,7 +18,7 @@ export default function SidebarHeader({ collapsed, onToggle, logoSrc, logoHref, 
       <div className="flex flex-col items-center gap-1.5 border-b border-white/10 px-1.5 py-2.5">
         <Link href={logoHref} onClick={onClose} title="Ir para início">
           <div className="relative h-8 w-8 overflow-hidden rounded-xl border border-white/20 bg-white/10 transition hover:bg-white/20">
-            <Image src={logoSrc} alt="Logo" fill className="object-contain p-1" />
+            <Image src={logoSrc} alt="Logo" fill sizes="32px" className="object-contain p-1" />
           </div>
         </Link>
         <button
@@ -36,8 +36,8 @@ export default function SidebarHeader({ collapsed, onToggle, logoSrc, logoHref, 
   return (
     <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5">
       <Link href={logoHref} className="flex min-w-0 items-center gap-2.5" onClick={onClose}>
-        <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-xl border border-white/20 bg-white/10">
-          <Image src={logoSrc} alt="Logo" fill className="object-contain p-1" />
+        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/20 bg-white/10">
+          <Image src={logoSrc} alt="Logo" fill sizes="32px" className="object-contain p-1" />
         </div>
         <div className="flex min-w-0 flex-col">
           <span className="text-[9px] uppercase tracking-[0.2em] text-white/50">Testing Company</span>
@@ -48,7 +48,7 @@ export default function SidebarHeader({ collapsed, onToggle, logoSrc, logoHref, 
         onClick={onToggle}
         aria-label="Recolher menu"
         title="Recolher menu"
-        className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-lg text-white/40 transition hover:bg-white/10 hover:text-white"
+        className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg text-white/40 transition hover:bg-white/10 hover:text-white"
       >
         <FiChevronsLeft size={14} />
       </button>

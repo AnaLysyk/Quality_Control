@@ -29,8 +29,8 @@ function readLocalSet(key: string): Set<string> {
 }
 
 export function useSidebarState() {
-  const [collapsed, setCollapsed] = useState<boolean>(() => readLocalBool(COLLAPSED_KEY, false));
-  const [openSections, setOpenSections] = useState<Set<string>>(() => readLocalSet(OPEN_SECTIONS_KEY));
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
@@ -73,6 +73,11 @@ export function useSidebarState() {
       }
       return next;
     });
+  }, []);
+
+  useEffect(() => {
+    setCollapsed(readLocalBool(COLLAPSED_KEY, false));
+    setOpenSections(readLocalSet(OPEN_SECTIONS_KEY));
   }, []);
 
   return { collapsed, toggleCollapsed, openSections, toggleSection, openSection };

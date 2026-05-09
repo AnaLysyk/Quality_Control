@@ -247,24 +247,53 @@ function normalizeCompanySlug(value?: string | null) {
   return normalized ? normalized : null;
 }
 
+function sanitizePromptList(value: unknown, fallback: string[]) {
+  if (!Array.isArray(value)) return fallback;
+  const next = value
+    .map((item) => normalizeText(typeof item === "string" ? item : "", 180))
+    .filter(Boolean)
+    .slice(0, 8);
+  return next.length > 0 ? next : fallback;
+}
+
+function sanitizeMetadata(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
 function resolveAssistantRequestContext(user: AuthUser, request: AssistantClientRequest) {
-  const baseContext = resolveAssistantScreenContext(sanitizeRoute(request.context?.route));
+  const requestedRoute = sanitizeRoute(request.context?.route ?? request.brainContext?.route);
+  const baseContext = resolveAssistantScreenContext(requestedRoute);
+  const requestedContext = request.context ?? null;
   const actor = request.actor ?? null;
+
+  const mergedContext: AssistantScreenContext = {
+    ...baseContext,
+    route: requestedRoute,
+    module: requestedContext?.module ?? baseContext.module,
+    screenLabel: normalizeText(requestedContext?.screenLabel ?? "", 140) || baseContext.screenLabel,
+    screenSummary: normalizeText(requestedContext?.screenSummary ?? "", 2400) || baseContext.screenSummary,
+    entityType: requestedContext?.entityType ?? baseContext.entityType,
+    entityId: normalizeText(requestedContext?.entityId ?? "", 160) || baseContext.entityId,
+    companySlug: normalizeCompanySlug(requestedContext?.companySlug) ?? baseContext.companySlug,
+    suggestedPrompts: sanitizePromptList(requestedContext?.suggestedPrompts, baseContext.suggestedPrompts),
+    metadata: sanitizeMetadata(requestedContext?.metadata) ?? null,
+  };
 
   const effectiveCompanySlug =
     normalizeCompanySlug(user.companySlug) ??
     normalizeCompanySlug(actor?.companySlug) ??
     normalizeCompanySlug(Array.isArray(user.companySlugs) ? user.companySlugs[0] : null) ??
     normalizeCompanySlug(Array.isArray(actor?.companySlugs) ? actor?.companySlugs?.[0] ?? null : null) ??
-    normalizeCompanySlug(baseContext.companySlug);
+    normalizeCompanySlug(mergedContext.companySlug);
 
   // Keep route-derived module/screen info, but enforce active user company scope when available.
-  if (!effectiveCompanySlug) return baseContext;
+  if (!effectiveCompanySlug) return mergedContext;
 
   return {
-    ...baseContext,
+    ...mergedContext,
     companySlug: effectiveCompanySlug,
-    entityId: baseContext.entityType === "company" ? effectiveCompanySlug : baseContext.entityId,
+    entityId: mergedContext.entityType === "company" ? effectiveCompanySlug : mergedContext.entityId,
   } as AssistantScreenContext;
 }
 

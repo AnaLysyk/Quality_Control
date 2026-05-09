@@ -35,12 +35,12 @@ export default function SidebarSection({
             : "text-white/60 hover:bg-white/10 hover:text-white"
         }`}
       >
-        <ModuleIcon size={16} className="flex-shrink-0" />
+        <ModuleIcon size={16} className="shrink-0" />
         <span className="flex-1 truncate text-left">{mod.label}</span>
         {open ? (
-          <FiChevronDown size={13} className="flex-shrink-0 text-white/40" />
+          <FiChevronDown size={13} className="shrink-0 text-white/40" />
         ) : (
-          <FiChevronRight size={13} className="flex-shrink-0 text-white/40" />
+          <FiChevronRight size={13} className="shrink-0 text-white/40" />
         )}
       </button>
 
@@ -60,7 +60,7 @@ export default function SidebarSection({
                     : "text-white/70 hover:bg-white/8 hover:text-white"
                 }`}
               >
-                <ItemIcon size={13} className="flex-shrink-0 text-white/50" />
+                <ItemIcon size={13} className="shrink-0 text-white/50" />
                 <span className="truncate">{item.label}</span>
               </Link>
             );

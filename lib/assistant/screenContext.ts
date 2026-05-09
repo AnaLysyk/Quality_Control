@@ -111,6 +111,23 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     ],
   },
   {
+    match: /^\/operacao/,
+    module: "operations",
+    screenLabel: "Central de Operações",
+    screenSummary: [
+      "Você está em: Central de Operações.",
+      "Aqui você acompanha a saúde operacional, runs, defeitos, automações, integrações e riscos em andamento.",
+      "Dica: posso resumir riscos, priorizar ações, analisar runs bloqueadas e gerar um resumo do recorte atual."
+    ].join(" "),
+    entityType: "screen",
+    suggestedPrompts: [
+      "Resumir operação atual",
+      "O que está mais crítico?",
+      "Priorizar próximas ações",
+      "Analisar runs bloqueadas"
+    ],
+  },
+  {
     match: /^\/(?:admin|dashboard)/,
     module: "dashboard",
     screenLabel: "Painel administrativo",

@@ -86,6 +86,21 @@ const STORE_KEY = "qc:local_auth_store:v1";
 const USE_REDIS = process.env.LOCAL_AUTH_STORE === "redis" || isRedisConfigured();
 const USE_MEMORY_STORE = process.env.LOCAL_AUTH_IN_MEMORY === "true";
 let warnedFsFailure = false;
+const authStoreFallbackCounts = new Map<string, number>();
+
+function shouldLogAuthStoreFallbackCount(count: number) {
+  return count === 1 || count === 5 || count === 10 || count % 25 === 0;
+}
+
+function logAuthStoreFallback(scope: string, message: string) {
+  const nextCount = (authStoreFallbackCounts.get(scope) ?? 0) + 1;
+  authStoreFallbackCounts.set(scope, nextCount);
+
+  if (!shouldLogAuthStoreFallbackCount(nextCount)) return;
+  console.warn(
+    `[AUTH-STORE] Fallback para JSON/Memory em ${scope} (ocorrencias=${nextCount}). Ultimo erro: ${message}`,
+  );
+}
 
 function shouldForceLocalAuthStore() {
   const e2eJson = String(process.env.E2E_USE_JSON || "").toLowerCase();
@@ -225,7 +240,9 @@ function isRecoverablePrismaDatasourceError(error: unknown) {
     message.includes("Error validating datasource `db`") ||
     message.includes("Environment variable not found: DATABASE_URL") ||
     message.includes("the URL must start with the protocol `prisma://` or `postgresql://`") ||
-    message.includes("the URL must start with the protocol `prisma://` or `prisma+postgres://`")
+    message.includes("the URL must start with the protocol `prisma://` or `prisma+postgres://`") ||
+    message.includes("Operation has timed out") ||
+    message.includes("timed out")
   );
 }
 
@@ -524,9 +541,9 @@ export async function readLocalAuthStore(): Promise<LocalAuthStore> {
     try {
       return await (await pg()).pgReadLocalAuthStore();
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em readLocalAuthStore: ${message}`);
+        logAuthStoreFallback("readLocalAuthStore", message);
       } else {
         throw error;
       }
@@ -599,9 +616,9 @@ export async function listLocalUsers(): Promise<LocalAuthUser[]> {
     try {
       return await (await pg()).pgListLocalUsers();
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalUsers: ${message}`);
+        logAuthStoreFallback("listLocalUsers", message);
       } else {
         throw error;
       }
@@ -616,9 +633,9 @@ export async function listLocalCompanies(): Promise<LocalAuthCompany[]> {
     try {
       return await (await pg()).pgListLocalCompanies();
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalCompanies: ${message}`);
+        logAuthStoreFallback("listLocalCompanies", message);
       } else {
         throw error;
       }
@@ -633,9 +650,9 @@ export async function listLocalMemberships(): Promise<LocalAuthMembership[]> {
     try {
       return await (await pg()).pgListLocalMemberships();
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalMemberships: ${message}`);
+        logAuthStoreFallback("listLocalMemberships", message);
       } else {
         throw error;
       }
@@ -663,9 +680,9 @@ export async function findLocalUserByEmailOrId(identifier: string): Promise<Loca
 
       if (!forceLocalFallback) return null;
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalUserByEmailOrId: ${message}`);
+        logAuthStoreFallback("findLocalUserByEmailOrId", message);
       } else {
         throw error;
       }
@@ -686,9 +703,9 @@ export async function getLocalUserById(id: string): Promise<LocalAuthUser | null
     try {
       return await (await pg()).pgGetLocalUserById(id);
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em getLocalUserById: ${message}`);
+        logAuthStoreFallback("getLocalUserById", message);
       } else {
         throw error;
       }
@@ -704,9 +721,9 @@ export async function findLocalCompanyById(id: string): Promise<LocalAuthCompany
     try {
       return await (await pg()).pgFindLocalCompanyById(id);
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalCompanyById: ${message}`);
+        logAuthStoreFallback("findLocalCompanyById", message);
       } else {
         throw error;
       }
@@ -722,9 +739,9 @@ export async function findLocalCompanyBySlug(slug: string): Promise<LocalAuthCom
     try {
       return await (await pg()).pgFindLocalCompanyBySlug(slug);
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em findLocalCompanyBySlug: ${message}`);
+        logAuthStoreFallback("findLocalCompanyBySlug", message);
       } else {
         throw error;
       }
@@ -741,9 +758,9 @@ export async function listLocalLinksForUser(userId: string): Promise<LocalAuthMe
     try {
       return await (await pg()).pgListLocalLinksForUser(userId);
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalLinksForUser: ${message}`);
+        logAuthStoreFallback("listLocalLinksForUser", message);
       } else {
         throw error;
       }
@@ -758,9 +775,9 @@ export async function listLocalLinksForCompany(companyId: string): Promise<Local
     try {
       return await (await pg()).pgListLocalLinksForCompany(companyId);
     } catch (error) {
-      if (!USE_POSTGRES && isRecoverablePrismaDatasourceError(error)) {
+      if (isRecoverablePrismaDatasourceError(error)) {
         const message = error instanceof Error ? error.message : String(error ?? "");
-        console.warn(`[AUTH-STORE] Fallback para JSON/Memory em listLocalLinksForCompany: ${message}`);
+        logAuthStoreFallback("listLocalLinksForCompany", message);
       } else {
         throw error;
       }

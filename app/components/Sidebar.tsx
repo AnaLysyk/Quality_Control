@@ -83,7 +83,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const sidebarBody = (
     <aside
       className={`sidebar-theme text-white flex h-full flex-col border-r border-white/10 overflow-hidden bg-[linear-gradient(180deg,#011848_0%,#082457_42%,#3a1530_72%,#ef0001_100%)] backdrop-blur-xl transition-[width] duration-300 ease-in-out ${
-        collapsed ? "w-[72px]" : "w-72"
+        collapsed ? "w-18" : "w-72"
       }`}
     >
       <SidebarHeader
@@ -160,7 +160,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
   return (
     <>
-      <div className="hidden lg:block flex-shrink-0 h-full">{sidebarBody}</div>
+      <div className="hidden h-full shrink-0 lg:block">{sidebarBody}</div>
       {mobileOpen && onClose ? (
         <div className="fixed inset-0 z-50 bg-black/45 lg:hidden" onClick={onClose}>
           <div id={mobilePanelId} className="h-full" onClick={(e) => e.stopPropagation()}>

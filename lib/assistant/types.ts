@@ -5,10 +5,13 @@ export type AssistantModule =
   | "companies"
   | "test_plans"
   | "dashboard"
+  | "operations"
   | "releases"
   | "integrations"
   | "admin"
   | "general";
+
+export type AssistantPanelMode = "compact" | "side" | "expanded";
 
 export type AssistantContextEntityType =
   | "ticket"
@@ -28,6 +31,7 @@ export type AssistantScreenContext = {
   entityType?: AssistantContextEntityType;
   entityId?: string | null;
   suggestedPrompts: string[];
+  metadata?: Record<string, unknown> | null;
 };
 
 export type AssistantToolName =
@@ -133,6 +137,12 @@ export type AssistantOpenEventDetail = {
   agentMode?: string;
   /** Mensagem já preenchida no input do assistente */
   initialMessage?: string;
+  /** Contexto parcial para abrir o assistente já enriquecido */
+  context?: Partial<AssistantScreenContext> | null;
+  /** Modo preferido ao abrir o painel */
+  panelMode?: AssistantPanelMode;
+  /** Solicita foco no input assim que o painel abrir */
+  focusInput?: boolean;
   /** Dados extras de contexto (livre) */
   metadata?: Record<string, unknown>;
 };

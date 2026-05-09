@@ -179,6 +179,11 @@ export function DeferredNotificationsButton() {
   const { user, loading } = useAuthUser();
   const { mounted, defaultOpen, prime, open } = useDeferredShellTool();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (!user || loading || mounted) return;
@@ -231,6 +236,21 @@ export function DeferredNotificationsButton() {
       window.removeEventListener("focus", handleFocus);
     };
   }, [loading, mounted, user]);
+
+  if (!hydrated) {
+    return (
+      <span className="relative shrink-0">
+        <ToolbarGhostButton
+          ariaLabel="Abrir notificações"
+          icon={FiBell}
+          loadingLabel="Carregando notificações"
+          mounted
+          onOpen={() => {}}
+          onPrime={() => {}}
+        />
+      </span>
+    );
+  }
 
   if (!user) return null;
   if (mounted) {

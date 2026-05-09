@@ -65,7 +65,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     label: "Qualidade",
     iconKey: "check-circle",
     items: [
-      { id: "quality-cases",    label: "Casos de Teste",  iconKey: "clipboard",    module: "quality", href: "/casos-de-teste",                                               favoriteEnabled: true },
+      { id: "quality-cases",    label: "Casos de Teste",  iconKey: "clipboard",    module: "quality", companyRoute: "planos-de-teste",                                       favoriteEnabled: true },
       { id: "quality-plans",    label: "Planos de Teste", iconKey: "book",         module: "quality", companyRoute: "planos-de-teste",                                       favoriteEnabled: true },
       { id: "quality-runs",     label: "Runs de Teste",   iconKey: "play",         module: "quality", companyRoute: "runs",                                                  favoriteEnabled: true },
       { id: "quality-defects",  label: "Defeitos",        iconKey: "alert-circle", module: "quality", companyRoute: "defeitos",        href: "/admin/defeitos",               favoriteEnabled: true },

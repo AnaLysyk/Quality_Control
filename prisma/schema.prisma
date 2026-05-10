@@ -446,6 +446,7 @@ model ReleaseCase {
   status    String  @default("NOT_RUN")
   bug       String?
   fromApi   Boolean @default(false)
+  metadata  Json?
 
   release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
 
@@ -1322,4 +1323,3 @@ model TestDataAssetAudit {
   @@index([createdAt])
   @@map("test_data_asset_audit")
 }
-

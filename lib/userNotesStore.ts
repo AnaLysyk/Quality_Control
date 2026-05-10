@@ -45,7 +45,7 @@ const USE_REDIS = process.env.NOTES_STORE === "redis" || isRedisConfigured();
 const USE_MEMORY = process.env.NOTES_IN_MEMORY === "true";
 
 // In-memory fallback store (non-persistent)
-let memoryStore: NotesStore = {};
+const memoryStore: NotesStore = {};
 
 async function readStoreRedis(userId?: string): Promise<NotesStore | UserNote[] | null> {
   const redis = getRedis();

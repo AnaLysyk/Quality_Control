@@ -60,13 +60,12 @@ export function useNavigationItems() {
     return normalizedRole;
   }, [isGlobalAdmin, normalizedRole]);
 
-  const companySlug = useMemo(() => {
-    if (activeClientSlug) return activeClientSlug;
-    if (typeof user?.clientSlug === "string" && user.clientSlug.trim()) return user.clientSlug.trim();
-    if (typeof user?.primaryCompanySlug === "string" && user.primaryCompanySlug.trim())
-      return user.primaryCompanySlug.trim();
-    return null;
-  }, [activeClientSlug, user?.clientSlug, user?.primaryCompanySlug]);
+  const companySlug =
+    activeClientSlug ||
+    (typeof user?.clientSlug === "string" && user.clientSlug.trim() ? user.clientSlug.trim() : null) ||
+    (typeof user?.primaryCompanySlug === "string" && user.primaryCompanySlug.trim()
+      ? user.primaryCompanySlug.trim()
+      : null);
 
   const companyRouteInput = useMemo(
     () => ({

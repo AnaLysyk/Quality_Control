@@ -1,7 +1,6 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import "server-only";
+
 import crypto from "node:crypto";
-import { getJsonStoreDir } from "@/data/jsonStorePath";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,83 +47,138 @@ export type PlatformDocsStore = {
   docs: WikiDoc[];
 };
 
-// ─── Storage ──────────────────────────────────────────────────────────────────
+// ─── Prisma helpers ───────────────────────────────────────────────────────────
 
-const SEED_PATH = path.join(process.cwd(), "data", "platform-docs.json");
-
-function getStorePath() {
-  return path.join(getJsonStoreDir(), "platform-docs.json");
+async function getPrisma() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
 }
 
-async function ensureStore(): Promise<void> {
-  const storePath = getStorePath();
-  await fs.mkdir(path.dirname(storePath), { recursive: true });
-  try {
-    await fs.access(storePath);
-  } catch {
-    // Copy seed if available, otherwise write empty store
-    try {
-      await fs.access(SEED_PATH);
-      const seed = await fs.readFile(SEED_PATH, "utf8");
-      await fs.writeFile(storePath, seed, "utf8");
-    } catch {
-      await fs.writeFile(
-        storePath,
-        JSON.stringify({ categories: [], docs: [] } satisfies PlatformDocsStore, null, 2),
-        "utf8",
-      );
+function mapCategory(row: {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  icon: string | null;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string | null;
+}): WikiCategory {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    description: row.description ?? undefined,
+    icon: row.icon ?? undefined,
+    order: row.order,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    createdBy: row.createdBy,
+  };
+}
+
+function mapDoc(row: {
+  id: string;
+  categoryId: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  status: string;
+  order: number;
+  blocks: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string | null;
+  updatedBy: string | null;
+}): WikiDoc {
+  return {
+    id: row.id,
+    categoryId: row.categoryId,
+    slug: row.slug,
+    title: row.title,
+    description: row.description ?? undefined,
+    status: row.status as DocStatus,
+    order: row.order,
+    blocks: Array.isArray(row.blocks) ? (row.blocks as DocBlock[]) : [],
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    createdBy: row.createdBy,
+    updatedBy: row.updatedBy,
+  };
+}
+
+async function upsertStore(companySlug: string | null, store: PlatformDocsStore): Promise<void> {
+  const prisma = await getPrisma();
+  await prisma.$transaction(async (tx) => {
+    await tx.wikiDoc.deleteMany({ where: { companySlug } });
+    await tx.wikiCategory.deleteMany({ where: { companySlug } });
+    for (const cat of store.categories) {
+      await tx.wikiCategory.create({
+        data: {
+          id: cat.id,
+          companySlug,
+          slug: cat.slug,
+          title: cat.title,
+          description: cat.description ?? null,
+          icon: cat.icon ?? null,
+          order: cat.order,
+          createdBy: cat.createdBy ?? null,
+          createdAt: cat.createdAt ? new Date(cat.createdAt) : new Date(),
+          updatedAt: cat.updatedAt ? new Date(cat.updatedAt) : new Date(),
+        },
+      });
     }
-  }
+    for (const doc of store.docs) {
+      await tx.wikiDoc.create({
+        data: {
+          id: doc.id,
+          categoryId: doc.categoryId,
+          companySlug,
+          slug: doc.slug,
+          title: doc.title,
+          description: doc.description ?? null,
+          status: doc.status,
+          order: doc.order,
+          blocks: doc.blocks as object,
+          createdBy: doc.createdBy ?? null,
+          updatedBy: doc.updatedBy ?? null,
+          createdAt: doc.createdAt ? new Date(doc.createdAt) : new Date(),
+          updatedAt: doc.updatedAt ? new Date(doc.updatedAt) : new Date(),
+        },
+      });
+    }
+  });
 }
+
+// ─── Platform-level wiki (companySlug = null) ─────────────────────────────────
 
 export async function readPlatformDocs(): Promise<PlatformDocsStore> {
-  await ensureStore();
-  const raw = await fs.readFile(getStorePath(), "utf8");
-  const parsed = JSON.parse(raw) as Partial<PlatformDocsStore>;
-  return {
-    categories: Array.isArray(parsed.categories) ? (parsed.categories as WikiCategory[]) : [],
-    docs: Array.isArray(parsed.docs) ? (parsed.docs as WikiDoc[]) : [],
-  };
+  const prisma = await getPrisma();
+  const [categories, docs] = await Promise.all([
+    prisma.wikiCategory.findMany({ where: { companySlug: null }, orderBy: { order: "asc" } }),
+    prisma.wikiDoc.findMany({ where: { companySlug: null }, orderBy: { order: "asc" } }),
+  ]);
+  return { categories: categories.map(mapCategory), docs: docs.map(mapDoc) };
 }
 
 export async function writePlatformDocs(store: PlatformDocsStore): Promise<void> {
-  await ensureStore();
-  await fs.writeFile(getStorePath(), JSON.stringify(store, null, 2), "utf8");
+  await upsertStore(null, store);
 }
 
-// ─── Company-scoped wiki storage ──────────────────────────────────────────────
-
-function getCompanyStorePath(companySlug: string) {
-  return path.join(getJsonStoreDir(), `company-docs-${companySlug}.json`);
-}
-
-async function ensureCompanyStore(companySlug: string): Promise<void> {
-  const storePath = getCompanyStorePath(companySlug);
-  await fs.mkdir(path.dirname(storePath), { recursive: true });
-  try {
-    await fs.access(storePath);
-  } catch {
-    await fs.writeFile(
-      storePath,
-      JSON.stringify({ categories: [], docs: [] } satisfies PlatformDocsStore, null, 2),
-      "utf8",
-    );
-  }
-}
+// ─── Company-scoped wiki ──────────────────────────────────────────────────────
 
 export async function readCompanyDocs(companySlug: string): Promise<PlatformDocsStore> {
-  await ensureCompanyStore(companySlug);
-  const raw = await fs.readFile(getCompanyStorePath(companySlug), "utf8");
-  const parsed = JSON.parse(raw) as Partial<PlatformDocsStore>;
-  return {
-    categories: Array.isArray(parsed.categories) ? (parsed.categories as WikiCategory[]) : [],
-    docs: Array.isArray(parsed.docs) ? (parsed.docs as WikiDoc[]) : [],
-  };
+  const prisma = await getPrisma();
+  const [categories, docs] = await Promise.all([
+    prisma.wikiCategory.findMany({ where: { companySlug }, orderBy: { order: "asc" } }),
+    prisma.wikiDoc.findMany({ where: { companySlug }, orderBy: { order: "asc" } }),
+  ]);
+  return { categories: categories.map(mapCategory), docs: docs.map(mapDoc) };
 }
 
 export async function writeCompanyDocs(companySlug: string, store: PlatformDocsStore): Promise<void> {
-  await ensureCompanyStore(companySlug);
-  await fs.writeFile(getCompanyStorePath(companySlug), JSON.stringify(store, null, 2), "utf8");
+  await upsertStore(companySlug, store);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

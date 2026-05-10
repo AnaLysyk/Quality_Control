@@ -346,11 +346,19 @@ export default function AccessRequestClient() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/support/access-request", {
+      const response = await fetch("/api/access-requests/public", {
         method: "POST",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          requestType: profileType,
+          requestedRole: profileType,
+          requestedCompanyId: normalizedClientId || undefined,
+          requestedCompanySlug: normalizedCompany || undefined,
+          requesterName: normalizedFullName,
+          requesterEmail: normalizedEmail,
+          reason: normalizedDescription,
+          priority: "medium",
           full_name: normalizedFullName,
           name: normalizedFullName,
           user: accessType === "technical_support" ? normalizedRequestedUser || undefined : undefined,
@@ -854,7 +862,7 @@ export default function AccessRequestClient() {
               </div>
             )}
 
-            <form className="mt-5 flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+            <form className="mt-5 flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit} data-testid="request-access-form">
               <div className="min-h-0 space-y-4 overflow-y-auto pr-1">
                 {error && (
                   <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -871,6 +879,7 @@ export default function AccessRequestClient() {
                     Tipo de perfil
                   </label>
                   <select
+                    data-testid="request-access-role-select"
                     id="access-type-select"
                     aria-label="Tipo de perfil"
                     value={accessType}
@@ -897,6 +906,7 @@ export default function AccessRequestClient() {
                   <label className={labelClass}>
                     Empresa vinculada
                     <select
+                      data-testid="request-access-company-input"
                       value={clientId}
                       onChange={(event) => setClientId(event.target.value)}
                       required
@@ -1031,6 +1041,7 @@ export default function AccessRequestClient() {
                   <label className={labelClass}>
                     Nome completo
                     <input
+                      data-testid="request-access-name-input"
                       ref={requestNameRef}
                       type="text"
                       value={fullName}
@@ -1059,6 +1070,7 @@ export default function AccessRequestClient() {
                   <label className={labelClass}>
                     E-mail profissional
                     <input
+                      data-testid="request-access-email-input"
                       type="email"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
@@ -1114,6 +1126,7 @@ export default function AccessRequestClient() {
                 <label className={labelClass}>
                   Descrição detalhada
                   <textarea
+                    data-testid="request-access-reason-input"
                     value={descrição}
                     onChange={(event) => setDescricao(event.target.value)}
                     required
@@ -1139,6 +1152,7 @@ export default function AccessRequestClient() {
 
               <div className="pt-4">
                 <button
+                  data-testid="request-access-submit-button"
                   type="submit"
                   title={t("accessRequest.sendRequest")}
                   disabled={loading}

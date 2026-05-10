@@ -2,9 +2,11 @@
 
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
+  FiBookOpen,
   FiChevronDown,
   FiChevronUp,
   FiClipboard,
@@ -19,6 +21,7 @@ import {
 import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { fetchApi } from "@/lib/api";
 import { useI18n } from "@/hooks/useI18n";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   buildQaseCaseLink,
   createEmptyCaseStep,
@@ -344,6 +347,14 @@ const EMPTY_DRAFT: PlanDraft = {
   cases: [],
 };
 
+const PROFILE_LABEL: Record<string, string> = {
+  empresa: "Empresa",
+  technical_support: "Suporte Técnico",
+  leader_tc: "Líder TC",
+  testing_company_user: "Usuário TC",
+  company_user: "Usuário da Empresa",
+};
+
 function formatDate(value?: string | null, noDateLabel = "Sem data") {
   if (!value) return noDateLabel;
   const time = Date.parse(value);
@@ -411,24 +422,29 @@ function normalizeCasesForSave(source: "manual" | "qase", cases: TestPlanCase[])
       .map((id) => ({ id }));
   }
 
+  const seen = new Set<string>();
   return cases
-    .map((testCase) => ({
-      id: String(testCase.id ?? "").trim(),
-      title: trimText(testCase.title),
-      description: trimText(testCase.description),
-      preconditions: trimText(testCase.preconditions),
-      postconditions: trimText(testCase.postconditions),
-      severity: trimText(testCase.severity),
-      steps: normalizeStepsForSave(testCase.steps),
-    }))
-    .filter((testCase) => testCase.id)
-    .filter((testCase) => !isCaseEffectivelyEmpty(testCase));
+    .map((testCase) => String(testCase.id ?? "").trim())
+    .filter(Boolean)
+    .filter((id) => {
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .map((id) => ({ id }));
 }
 
 export default function TestPlansPage() {
+  const { user } = useAuthUser();
   const { slug } = useParams<{ slug: string }>();
   const { language } = useI18n();
   const copy = (COPY[language] ?? COPY["pt-BR"]) as CopyType;
+  const roleKey =
+    (typeof user?.permissionRole === "string" && user.permissionRole.trim()) ||
+    (typeof user?.companyRole === "string" && user.companyRole.trim()) ||
+    (typeof user?.role === "string" && user.role.trim()) ||
+    "";
+  const roleLabel = PROFILE_LABEL[roleKey.toLowerCase()] ?? (roleKey || "Perfil");
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string>("");
   const [plans, setPlans] = useState<TestPlanItem[]>([]);
@@ -447,6 +463,7 @@ export default function TestPlansPage() {
   const [qaseCaseIdsInput, setQaseCaseIdsInput] = useState("");
   const [loadingCaseDetails, setLoadingCaseDetails] = useState<Record<string, boolean>>({});
   const [caseErrors, setCaseErrors] = useState<Record<string, string | null>>({});
+  const [initialCaseIds, setInitialCaseIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!slug) return;
@@ -501,7 +518,6 @@ export default function TestPlansPage() {
       setTotalTests(0);
       return;
     }
-
     setLoadingPlans(true);
     setError(null);
     try {
@@ -572,30 +588,32 @@ export default function TestPlansPage() {
 
   const coverContent = useMemo(
     () => (
-      <div className="flex justify-start lg:justify-end">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/16 bg-white/10 px-4 py-3 backdrop-blur">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">
-              {copy.coverTotal}
-            </div>
-            <div className="mt-2 text-3xl font-black text-white">{totals.total}</div>
-          </div>
-          <div className="rounded-2xl border border-white/16 bg-white/10 px-4 py-3 backdrop-blur">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">
-              {copy.coverQase}
-            </div>
-            <div className="mt-2 text-3xl font-black text-white">{totals.qase}</div>
-          </div>
-          <div className="rounded-2xl border border-white/16 bg-white/10 px-4 py-3 backdrop-blur">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/68">
-              {copy.coverCases}
-            </div>
-            <div className="mt-2 text-3xl font-black text-white">{totalTests}</div>
-          </div>
+      <div className="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto_auto] xl:items-center">
+        <Link
+          href="/docs"
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 py-2 text-center text-sm font-bold text-[#011848] shadow-[0_2px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-[#f0f4ff] sm:justify-start"
+        >
+          <FiBookOpen className="h-4 w-4 shrink-0" />
+          Abrir documentação do código
+        </Link>
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+          <FiLayers className="h-4 w-4 shrink-0" />
+          <span className="wrap-break-word">
+            {roleLabel}
+            {slug ? `: ${slug}` : ""}
+          </span>
+        </div>
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+          <FiClipboard className="h-4 w-4 shrink-0" />
+          <span>{totalTests} {copy.coverCases.toLowerCase()}</span>
+        </div>
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+          <FiLayers className="h-4 w-4 shrink-0" />
+          <span>{totals.total} {copy.coverTotal.toLowerCase()}</span>
         </div>
       </div>
     ),
-    [totalTests, totals.qase, totals.total, copy],
+    [copy.coverCases, copy.coverTotal, roleLabel, slug, totalTests, totals.total],
   );
 
   useAppShellCoverSlot(coverContent);
@@ -611,6 +629,7 @@ export default function TestPlansPage() {
     setModalOpen(false);
     setLoadingPlanDetail(false);
     resetModalAuxState();
+    setInitialCaseIds([]);
     setDraft(EMPTY_DRAFT);
   }
 
@@ -639,6 +658,7 @@ export default function TestPlansPage() {
       source,
       cases: initialCases,
     });
+    setInitialCaseIds([]);
     setExpandedCaseId(initialCases[0]?.id ?? null);
     setModalOpen(true);
   }
@@ -685,6 +705,7 @@ export default function TestPlansPage() {
         description: fullPlan.description ?? "",
         cases: nextCases,
       });
+      setInitialCaseIds(nextCases.map((item) => item.id));
       setExpandedCaseId(nextCases[0]?.id ?? null);
     } catch {
       setError(copy.errOpenPlan);
@@ -736,17 +757,14 @@ export default function TestPlansPage() {
       return;
     }
 
-    if (draft.source === "manual") {
-      const untitledCase = draft.cases.find(
-        (testCase) => !isCaseEffectivelyEmpty(testCase) && !trimText(testCase.title),
-      );
-      if (untitledCase) {
-        setError(copy.errCaseTitle(untitledCase.id));
-        return;
-      }
-    }
-
     const casesPayload = normalizeCasesForSave(draft.source, draft.cases);
+    const manualTestCaseIds = Array.from(
+      new Set(
+        draft.cases
+          .map((testCase) => String(testCase.id ?? "").trim())
+          .filter(Boolean),
+      ),
+    );
     if (draft.source === "qase" && !casesPayload.length) {
       setError(copy.errMinQaseCase);
       return;
@@ -766,7 +784,7 @@ export default function TestPlansPage() {
           planId: draft.id,
           title,
           description: draft.description,
-          cases: casesPayload,
+          ...(draft.source === "qase" ? { cases: casesPayload } : {}),
           projectCode: draftApplication?.qaseProjectCode ?? projectCode,
         }),
       });
@@ -774,6 +792,49 @@ export default function TestPlansPage() {
       if (!response.ok) {
         throw new Error(typeof payload?.error === "string" ? payload.error : copy.errSavePlanShort);
       }
+
+      if (draft.source === "manual") {
+        const savedPlanId = String(payload?.plan?.id ?? draft.id ?? "").trim();
+        if (!savedPlanId) {
+          throw new Error(copy.errSavePlanShort);
+        }
+
+        const previousIds = new Set(initialCaseIds);
+        const nextIds = new Set(manualTestCaseIds);
+        const idsToAdd = manualTestCaseIds.filter((id) => !previousIds.has(id));
+        const idsToRemove = initialCaseIds.filter((id) => !nextIds.has(id));
+
+        if (idsToAdd.length) {
+          const addResponse = await fetchApi(`/api/test-plans/${savedPlanId}/test-cases`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              companySlug: slug,
+              testCaseIds: idsToAdd,
+            }),
+          });
+          const addPayload = await addResponse.json().catch(() => null);
+          if (!addResponse.ok) {
+            throw new Error(typeof addPayload?.message === "string" ? addPayload.message : copy.errSavePlanShort);
+          }
+        }
+
+        if (idsToRemove.length) {
+          const removeResponse = await fetchApi(`/api/test-plans/${savedPlanId}/test-cases`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              companySlug: slug,
+              testCaseIds: idsToRemove,
+            }),
+          });
+          const removePayload = await removeResponse.json().catch(() => null);
+          if (!removeResponse.ok) {
+            throw new Error(typeof removePayload?.message === "string" ? removePayload.message : copy.errSavePlanShort);
+          }
+        }
+      }
+
       closeModal();
       await loadPlans();
     } catch (cause) {
@@ -930,9 +991,18 @@ export default function TestPlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-8">
+    <div data-testid="test-plan-repository" className="min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-none space-y-6">
-        <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-[linear-gradient(180deg,var(--tc-surface-filter-1,#ffffff)_0%,var(--tc-surface-filter-2,#fbfcff)_100%)] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:shadow-none">
+        <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-5 shadow-sm dark:shadow-none">
+          <div className="mb-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Repositório de Planos de Teste</p>
+            <h1 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c) sm:text-2xl">
+              Planos vinculados ao repositório central
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+              Crie planos manuais ou integrados e vincule apenas casos já existentes no repositório central.
+            </p>
+          </div>
           <div className="grid gap-4 xl:grid-cols-[minmax(0,280px)_minmax(0,1fr)_auto] xl:items-end">
             <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
               {copy.filterApp}
@@ -974,7 +1044,7 @@ export default function TestPlansPage() {
                 type="button"
                 onClick={() => openCreate("manual")}
                 disabled={!canCreateManual}
-                className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
+                data-testid="test-plan-new-button" className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
               >
                 <FiPlus className="h-4 w-4" />
                 {copy.newPlan}
@@ -983,6 +1053,10 @@ export default function TestPlansPage() {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+            <span data-testid="test-plan-context-chip" className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+              {roleLabel}
+              {slug ? ` - ${slug}` : ""}
+            </span>
             <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
               {copy.projectLabel}{" "}
               {projectCode ??
@@ -1023,9 +1097,10 @@ export default function TestPlansPage() {
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div data-testid="test-plan-list" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filteredPlans.map((plan) => (
                 <article
+                  data-testid="test-plan-card"
                   key={`${plan.source}:${plan.id}`}
                   className="rounded-3xl border border-(--tc-border,#d7deea) bg-[linear-gradient(180deg,var(--tc-surface-card-1,#f7f9fd)_0%,var(--tc-surface-card-2,#ffffff)_100%)] p-5 shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition hover:border-[rgba(239,0,1,0.28)] hover:shadow-[0_18px_44px_rgba(15,23,42,0.08)] dark:shadow-none"
                 >
@@ -1038,6 +1113,9 @@ export default function TestPlansPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
+                          <span data-testid="test-plan-key" className="rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#55657f]">
+                            {plan.id}
+                          </span>
                           <span
                             className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${
                               plan.source === "qase"
@@ -1120,7 +1198,7 @@ export default function TestPlansPage() {
             }
           }}
         >
-          <div className="max-h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-y-auto rounded-4xl border border-(--tc-border) bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)]">
+          <div data-testid="test-plan-create-modal" className="max-h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-y-auto rounded-4xl border border-(--tc-border) bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)]">
             <div className="bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-5 text-white">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -1154,6 +1232,7 @@ export default function TestPlansPage() {
                     {copy.titleLabel}
                   </span>
                   <input
+                    data-testid="test-plan-title-input"
                     value={draft.title}
                     onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
                     className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
@@ -1250,6 +1329,7 @@ export default function TestPlansPage() {
                   {copy.descLabel}
                 </span>
                 <textarea
+                  data-testid="test-plan-description-input"
                   value={draft.description}
                   onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
                   rows={4}
@@ -1294,6 +1374,7 @@ export default function TestPlansPage() {
                           {copy.qaseIdsLabel}
                         </span>
                         <textarea
+                          data-testid="test-plan-case-search-input"
                           value={qaseCaseIdsInput}
                           onChange={(event) => setQaseCaseIdsInput(event.target.value)}
                           rows={3}
@@ -1304,6 +1385,7 @@ export default function TestPlansPage() {
                       <button
                         type="button"
                         onClick={handleAddQaseCases}
+                        data-testid="test-plan-add-case-button"
                         className="inline-flex items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
                       >
                         <FiPlus className="h-4 w-4" />
@@ -1316,7 +1398,7 @@ export default function TestPlansPage() {
                   </div>
                 ) : null}
 
-                <div className="mt-5 space-y-3">
+                <div data-testid="test-plan-linked-cases" className="mt-5 space-y-3">
                   {loadingPlanDetail ? (
                     <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-4 text-sm text-(--tc-text-muted,#6b7280)">
                       {copy.loadingPlanDetail}
@@ -1336,6 +1418,7 @@ export default function TestPlansPage() {
 
                       return (
                         <div
+                          data-testid="test-plan-case-option"
                           key={`${draft.source}:${testCase.id}:${index}`}
                           className="overflow-hidden rounded-3xl border border-(--tc-border,#dfe5f1) bg-white shadow-sm"
                         >
@@ -1411,7 +1494,7 @@ export default function TestPlansPage() {
                           ) : null}
 
                           {isExpanded ? (
-                            <div className="border-t border-(--tc-border,#e5e7eb) px-4 py-4 dark:border-white/10">
+                            <div data-testid="test-plan-detail" className="border-t border-(--tc-border,#e5e7eb) px-4 py-4 dark:border-white/10">
                               {draft.source === "qase" ? (
                                 detailLoading ? (
                                   <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) px-4 py-4 text-sm text-(--tc-text-muted,#6b7280)">
@@ -1504,8 +1587,15 @@ export default function TestPlansPage() {
                                       </span>
                                       <input
                                         value={testCase.id}
-                                        readOnly
-                                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#eef2ff) px-4 py-3 text-sm font-mono text-(--tc-text,#0f172a) outline-none"
+                                        onChange={(event) => {
+                                          const nextId = event.target.value;
+                                          updateDraftCase(testCase.id, (current) => ({
+                                            ...current,
+                                            id: nextId,
+                                          }));
+                                        }}
+                                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-mono text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                        placeholder="TC-000"
                                       />
                                     </label>
 
@@ -1749,6 +1839,7 @@ export default function TestPlansPage() {
                     type="button"
                     onClick={() => void handleSave()}
                     disabled={saving || loadingPlanDetail}
+                    data-testid="test-plan-save-button"
                     className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
                   >
                     {saving ? copy.saving : draft.id ? copy.savePlan : copy.createPlan}

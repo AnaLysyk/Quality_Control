@@ -21,6 +21,7 @@ import { UserDetailsModal } from "@/admin/users/components/UserDetailsModal";
 import {
   getFixedProfileLabel,
   getFixedProfileTone,
+  normalizeFixedProfileKind,
   resolveFixedProfileKind,
   type FixedProfileKind,
 } from "@/lib/fixedProfilePresentation";
@@ -281,9 +282,12 @@ export default function AdminUsersPage() {
   const [openCreate, setOpenCreate] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
   const openCreateTokenRef = useRef<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [createRolePreset, setCreateRolePreset] = useState<FixedProfileKind | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+
     setError(null);
     try {
       const [usersRes, companiesRes] = await Promise.all([fetchApi("/api/admin/users"), fetchApi("/api/companies")]);
@@ -323,25 +327,35 @@ export default function AdminUsersPage() {
     void load();
   }, [load]);
 
-  useEffect(() => {
-    const nextTab = resolveUserTabParam(searchParams.get("tab"));
-    if (nextTab && nextTab !== activeTab) {
-      setActiveTab(nextTab);
-    }
-
-    if (searchParams.get("create") === "1") {
-      const token = searchParams.toString();
-      if (openCreateTokenRef.current !== token) {
-        openCreateTokenRef.current = token;
-        setOpenCreate(true);
-      }
-    }
-  }, [activeTab, searchParams]);
 
   const sortUsers = useCallback(
     (items: UserItem[]) => [...items].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })),
     [],
   );
+
+  useEffect(() => {
+    const focusParam = searchParams.get("focus");
+    const roleParam = searchParams.get("role");
+    const modalParam = searchParams.get("modal");
+
+    if (focusParam === "search" && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        window.history.replaceState({}, "", window.location.pathname);
+      }, 100);
+    }
+
+    setCreateRolePreset(normalizeFixedProfileKind(roleParam));
+
+    if (modalParam === "create" || searchParams.get("create") === "1") {
+      const token = searchParams.toString();
+      if (openCreateTokenRef.current !== token) {
+        openCreateTokenRef.current = token;
+        setOpenCreate(true);
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, [searchParams]);
 
   const searchedUsers = useMemo(() => {
     const term = normalize(search);
@@ -598,6 +612,8 @@ export default function AdminUsersPage() {
                 <label className="flex flex-1 items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
                   <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
                   <input
+                                       data-testid="users-search-input"
+                                       ref={searchInputRef}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Buscar por nome, usuário, e-mail ou empresa"
@@ -859,7 +875,7 @@ export default function AdminUsersPage() {
         companyOptional={createModalConfig.companyOptional}
         showCompanyField={createModalConfig.showCompanyField}
         requireCompanySelection={createModalConfig.requireCompanySelection}
-        initialRole={createModalConfig.initialRole}
+        initialRole={createRolePreset ?? createModalConfig.initialRole}
         lockRole={createModalConfig.lockRole}
         allowedRoles={createModalConfig.allowedRoles}
         title={createModalConfig.title}

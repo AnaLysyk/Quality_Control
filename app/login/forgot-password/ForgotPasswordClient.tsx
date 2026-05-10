@@ -6,19 +6,9 @@ import loginStyles from "../LoginClient.module.css";
 import styles from "./ForgotPasswordClient.module.css";
 import { useI18n } from "@/hooks/useI18n";
 
-const PROFILE_OPTIONS = [
-  { value: "empresa" },
-  { value: "testing_company_user" },
-  { value: "company_user" },
-  { value: "leader_tc" },
-  { value: "technical_support" },
-] as const;
-
 export default function ForgotPasswordClient() {
   const { t } = useI18n();
-  const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
-  const [profileType, setProfileType] = useState<(typeof PROFILE_OPTIONS)[number]["value"]>("testing_company_user");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -28,9 +18,8 @@ export default function ForgotPasswordClient() {
     setError(null);
     setSuccess(null);
 
-    const normalizedLogin = login.trim().toLowerCase();
     const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedLogin || !normalizedEmail) {
+    if (!normalizedEmail) {
       setError(t("forgotPassword.requiredFields"));
       return;
     }
@@ -43,16 +32,14 @@ export default function ForgotPasswordClient() {
 
     setLoading(true);
     try {
-      const response = await fetch("/api/auth/reset-request", {
+      const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user: normalizedLogin,
           email: normalizedEmail,
-          profile_type: profileType,
         }),
       });
 
@@ -62,10 +49,8 @@ export default function ForgotPasswordClient() {
         throw new Error(data?.error || t("forgotPassword.requestFailed"));
       }
 
-      setSuccess(typeof data?.message === "string" ? data.message : t("forgotPassword.successMessage"));
-      setLogin("");
+      setSuccess(typeof data?.message === "string" ? data.message : "Se o e-mail informado estiver cadastrado, enviaremos as instruções para redefinir sua senha.");
       setEmail("");
-      setProfileType("testing_company_user");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("forgotPassword.unknownError"));
     } finally {
@@ -106,6 +91,7 @@ export default function ForgotPasswordClient() {
           } ${styles.introDelay2}`}
           onSubmit={onSubmit}
           noValidate
+          data-testid="forgot-password-form"
         >
           {error && (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -121,27 +107,11 @@ export default function ForgotPasswordClient() {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="login" className="mb-2 block text-sm font-semibold text-[#011848]">
-                {t("forgotPassword.username")}
-              </label>
-              <input
-                id="login"
-                name="login"
-                type="text"
-                autoComplete="username"
-                required
-                className="form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-[#011848] caret-[#ef0001] placeholder:text-[#9aa3b2] focus:border-[#ef0001]/60 focus:ring-2 focus:ring-[#ef0001]/40"
-                placeholder={t("forgotPassword.usernamePlaceholder")}
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-              />
-            </div>
-
-            <div>
               <label htmlFor="email" className="mb-2 block text-sm font-semibold text-[#011848]">
                 {t("forgotPassword.email")}
               </label>
               <input
+                data-testid="forgot-password-email-input"
                 id="email"
                 name="email"
                 type="email"
@@ -154,35 +124,10 @@ export default function ForgotPasswordClient() {
               />
             </div>
 
-            <div>
-              <label htmlFor="profileType" className="mb-2 block text-sm font-semibold text-[#011848]">
-                {t("forgotPassword.profileType")}
-              </label>
-              <select
-                id="profileType"
-                name="profileType"
-                value={profileType}
-                onChange={(e) => setProfileType(e.target.value as (typeof PROFILE_OPTIONS)[number]["value"])}
-                className="form-control-user w-full rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-[#011848] focus:border-[#ef0001]/60 focus:ring-2 focus:ring-[#ef0001]/40"
-              >
-                {PROFILE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.value === "empresa"
-                      ? t("roles.company")
-                      : option.value === "testing_company_user"
-                        ? t("roles.userTc")
-                        : option.value === "company_user"
-                          ? t("roles.companyUser")
-                          : option.value === "leader_tc"
-                            ? t("roles.leaderTc")
-                            : t("roles.technicalSupport")}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
           <button
+            data-testid="forgot-password-submit-button"
             type="submit"
             disabled={loading}
             className="mt-6 w-full rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 font-semibold text-white transition-all duration-200 hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:ring-2 focus:ring-[#ef0001]/60 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"

@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { useAutomationModuleContext } from "../_components/AutomationModuleContext";
+import AutomacoesCasosPage from "../casos/page";
 
 function LoadingStudio() {
   return (
@@ -19,7 +21,12 @@ const PlaywrightStudio = dynamic(() => import("./PlaywrightStudio"), {
 });
 
 export default function PlaywrightStudioPage() {
+  const searchParams = useSearchParams();
   const { clients, activeClient } = useAutomationModuleContext();
+
+  if (searchParams.get("testCaseId")) {
+    return <AutomacoesCasosPage />;
+  }
 
   return (
     <div className="h-full min-h-0 w-full">

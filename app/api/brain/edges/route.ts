@@ -36,13 +36,27 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { fromId, toId, type, metadata } = body;
+    const { fromId, toId, type, metadata, reason, source, confidence, companySlug } = body;
 
     if (!fromId || !toId || !type) {
       return NextResponse.json({ error: "fromId, toId e type sao obrigatorios" }, { status: 400 });
     }
 
-    const edge = await connectNodes(fromId, toId, type, metadata, admin.id);
+    const edge = await connectNodes(
+      fromId,
+      toId,
+      type,
+      {
+        ...(metadata ?? {}),
+        reason: reason ?? metadata?.reason,
+        source: source ?? metadata?.source ?? "manual_link",
+        confidence: confidence ?? metadata?.confidence,
+        companySlug: companySlug ?? metadata?.companySlug,
+        createdBy: admin.id,
+      },
+      admin.id,
+      { enforceOntology: true },
+    );
     return NextResponse.json({ edge }, { status: 201 });
   } catch (error) {
     console.error("[brain/edges] POST error:", error);

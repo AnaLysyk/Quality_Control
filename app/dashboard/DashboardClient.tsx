@@ -44,14 +44,6 @@ export default function DashboardClient() {
     }
   }
 
-  if (userLoading) {
-    return <div className="tc-empty-state min-h-80">Carregando painel.</div>;
-  }
-
-  if (!user) {
-    return <div className="tc-empty-state min-h-80">Redirecionando para login.</div>;
-  }
-
   const safeUser: Partial<AuthUser> = user ?? {};
   const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
   const isGlobalAdmin = safeUser.isGlobalAdmin === true || safeUser.globalRole === "global_admin";
@@ -176,6 +168,14 @@ export default function DashboardClient() {
   const dashboardFilters = useDashboardFilters({
     chips: [roleLabel, companyDisplayValue, canViewSystemMetrics ? "Últimos 30 dias" : null],
   });
+
+  if (userLoading) {
+    return <div className="tc-empty-state min-h-80">Carregando painel.</div>;
+  }
+
+  if (!user) {
+    return <div className="tc-empty-state min-h-80">Redirecionando para login.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">

@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+import TestCaseRepositoryClient from "./TestCaseRepositoryClient";
+
+export const dynamic = "force-dynamic";
 
 export default function CasosDeTestePage() {
-  redirect("/automacoes/casos");
+  return <TestCaseRepositoryClient />;
 }

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prismaClient'
 import { BrainNode, BrainEdge, BrainMemory, Prisma } from '@prisma/client'
+import { normalizeEdgeContract, normalizeNodeContract, toRecord } from '@/lib/brain/ontology'
 
 /**
  * Recupera um nó com seus vizinhos até uma profundidade especificada
@@ -102,20 +103,34 @@ export async function upsertNode(data: {
   description?: string
   metadata?: Prisma.InputJsonValue
   userId?: string
+  enforceOntology?: boolean
 }): Promise<BrainNode> {
   try {
-    const { id, type, label, refType, refId, description, metadata, userId } = data
+    const { id, type, label, description, userId, enforceOntology } = data
+    const normalized = normalizeNodeContract({
+      type,
+      label,
+      refType: data.refType,
+      refId: data.refId,
+      metadata: data.metadata,
+      userId,
+      enforceOntology,
+    })
 
     // Se refId e refType existem, tenta encontrar nó existente
-    if (refType && refId) {
+    if (normalized.refType && normalized.refId) {
       const existing = await prisma.brainNode.findFirst({
-        where: { refType, refId },
+        where: { refType: normalized.refType, refId: normalized.refId },
       })
 
       if (existing) {
+        const mergedMetadata = {
+          ...toRecord(existing.metadata),
+          ...toRecord(normalized.metadata),
+        }
         return await prisma.brainNode.update({
           where: { id: existing.id },
-          data: { label, description, metadata },
+          data: { label, description, metadata: mergedMetadata as Prisma.InputJsonValue },
         })
       }
     }
@@ -126,10 +141,10 @@ export async function upsertNode(data: {
         id,
         type,
         label,
-        refType,
-        refId,
+        refType: normalized.refType,
+        refId: normalized.refId,
         description,
-        metadata,
+        metadata: normalized.metadata,
       },
     })
 
@@ -158,9 +173,17 @@ export async function connectNodes(
   toId: string,
   edgeType: string,
   metadata?: Prisma.InputJsonValue,
-  userId?: string
+  userId?: string,
+  options?: { enforceOntology?: boolean }
 ): Promise<BrainEdge> {
   try {
+    const normalized = normalizeEdgeContract({
+      type: edgeType,
+      metadata,
+      userId,
+      enforceOntology: options?.enforceOntology,
+    })
+
     // Validar que ambos nós existem
     const [from, to] = await Promise.all([
       prisma.brainNode.findUnique({ where: { id: fromId } }),
@@ -180,12 +203,16 @@ export async function connectNodes(
           type: edgeType,
         },
       },
-      update: { metadata },
+      update: {
+        metadata: normalized.metadata,
+        weight: normalized.confidence,
+      },
       create: {
         fromId,
         toId,
         type: edgeType,
-        metadata,
+        metadata: normalized.metadata,
+        weight: normalized.confidence,
       },
     })
 
@@ -1888,5 +1915,99 @@ export async function validateNodeReferences(): Promise<{
   } catch (error) {
     console.error('Error in validateNodeReferences:', error)
     throw error
+  }
+}
+
+/**
+ * Lista lacunas operacionais no grafo para suporte de curadoria
+ */
+export async function getBrainGaps(options?: {
+  companySlug?: string
+  sampleSize?: number
+}): Promise<{
+  summary: {
+    casesWithoutPlan: number
+    casesWithoutRun: number
+    casesWithoutAutomation: number
+    scriptsWithoutCase: number
+    defectsWithoutRun: number
+    documentsWithoutModule: number
+  }
+  samples: {
+    casesWithoutPlan: BrainNode[]
+    casesWithoutRun: BrainNode[]
+    casesWithoutAutomation: BrainNode[]
+    scriptsWithoutCase: BrainNode[]
+    defectsWithoutRun: BrainNode[]
+    documentsWithoutModule: BrainNode[]
+  }
+}> {
+  const sampleSize = Math.min(50, Math.max(1, options?.sampleSize ?? 10))
+
+  const scoped = async (type: string) => {
+    const where: Prisma.BrainNodeWhereInput = { type }
+    if (options?.companySlug) {
+      where.metadata = {
+        path: ['companySlug'],
+        equals: options.companySlug,
+      }
+    }
+    return prisma.brainNode.findMany({ where })
+  }
+
+  const [testCases, testRuns, testPlans, scripts, defects, documents, modules] = await Promise.all([
+    scoped('TestCase'),
+    scoped('TestRun'),
+    scoped('TestPlan'),
+    scoped('AutomationScript'),
+    scoped('Defect'),
+    scoped('Document'),
+    scoped('Module'),
+  ])
+
+  const [allPlanEdges, allRunEdges, allAutomationEdges, allDefectEdges, allDocModuleEdges] = await Promise.all([
+    prisma.brainEdge.findMany({ where: { type: { in: ['LINKED_TO', 'BELONGS_TO'] } } }),
+    prisma.brainEdge.findMany({ where: { type: { in: ['EXECUTED_IN', 'FAILED_IN'] } } }),
+    prisma.brainEdge.findMany({ where: { type: 'AUTOMATED_BY' } }),
+    prisma.brainEdge.findMany({ where: { type: { in: ['FAILED_IN', 'FOUND_DEFECT', 'LINKED_TO'] } } }),
+    prisma.brainEdge.findMany({ where: { type: { in: ['DOCUMENTED_BY', 'LINKED_TO'] } } }),
+  ])
+
+  const planIds = new Set(testPlans.map((node) => node.id))
+  const runIds = new Set(testRuns.map((node) => node.id))
+  const scriptIds = new Set(scripts.map((node) => node.id))
+  const caseIds = new Set(testCases.map((node) => node.id))
+  const defectIds = new Set(defects.map((node) => node.id))
+  const moduleIds = new Set(modules.map((node) => node.id))
+
+  const isConnected = (nodeId: string, related: Set<string>, edges: BrainEdge[]) =>
+    edges.some((edge) => (edge.fromId === nodeId && related.has(edge.toId)) || (edge.toId === nodeId && related.has(edge.fromId)))
+
+  const casesWithoutPlan = testCases.filter((node) => !isConnected(node.id, planIds, allPlanEdges))
+  const casesWithoutRun = testCases.filter((node) => !isConnected(node.id, runIds, allRunEdges))
+  const casesWithoutAutomation = testCases.filter((node) => !isConnected(node.id, scriptIds, allAutomationEdges))
+  const scriptsWithoutCase = scripts.filter((node) => !isConnected(node.id, caseIds, allAutomationEdges))
+  const defectsWithoutRun = defects.filter((node) => !isConnected(node.id, runIds, allDefectEdges))
+  const documentsWithoutModule = documents.filter((node) => !isConnected(node.id, moduleIds, allDocModuleEdges))
+
+  const onlyType = (nodes: BrainNode[]) => nodes.slice(0, sampleSize)
+
+  return {
+    summary: {
+      casesWithoutPlan: casesWithoutPlan.length,
+      casesWithoutRun: casesWithoutRun.length,
+      casesWithoutAutomation: casesWithoutAutomation.length,
+      scriptsWithoutCase: scriptsWithoutCase.length,
+      defectsWithoutRun: defectsWithoutRun.length,
+      documentsWithoutModule: documentsWithoutModule.length,
+    },
+    samples: {
+      casesWithoutPlan: onlyType(casesWithoutPlan),
+      casesWithoutRun: onlyType(casesWithoutRun),
+      casesWithoutAutomation: onlyType(casesWithoutAutomation),
+      scriptsWithoutCase: onlyType(scriptsWithoutCase),
+      defectsWithoutRun: onlyType(defectsWithoutRun),
+      documentsWithoutModule: onlyType(documentsWithoutModule),
+    },
   }
 }

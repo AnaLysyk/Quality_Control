@@ -1,5 +1,5 @@
 import type { RequestRecord } from "@/data/requestsStore";
-import { isTechnicalSupportUser } from "@/lib/supportAccess";
+import { isSupportAdminUser, isTechnicalSupportUser } from "@/lib/supportAccess";
 
 type SelfServiceRequestUser = {
   id?: string | null;
@@ -12,7 +12,7 @@ type SelfServiceRequestUser = {
 export type SelfServiceRequestScope = "all" | "own";
 
 export function canReviewSelfServiceRequests(user: SelfServiceRequestUser) {
-  return isTechnicalSupportUser(user);
+  return isTechnicalSupportUser(user) || isSupportAdminUser(user);
 }
 
 export function resolveSelfServiceRequestScope(user: SelfServiceRequestUser): SelfServiceRequestScope | null {

@@ -232,6 +232,28 @@ function AdminClientsPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
   const openCreateTokenRef = useRef<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Handle query parameters for focus search and open create modal
+  useEffect(() => {
+    const focusParam = searchParams.get("focus");
+    const modalParam = searchParams.get("modal");
+
+    if (focusParam === "search" && searchInputRef.current) {
+      // Focus search input after a small delay to ensure DOM is ready
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        // Clean up query param
+        window.history.replaceState({}, "", window.location.pathname);
+      }, 100);
+    }
+
+    if (modalParam === "create") {
+      setOpenCreate(true);
+      // Clean up query param
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [searchParams]);
 
   async function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -795,6 +817,8 @@ function AdminClientsPage() {
             <label className="flex w-full items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
               <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
               <input
+                               data-testid="company-search-input"
+                               ref={searchInputRef}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Buscar por nome, slug, CNPJ, site ou telefone"

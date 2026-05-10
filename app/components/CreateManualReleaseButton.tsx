@@ -644,7 +644,7 @@ export function CreateManualReleaseButton({
   return (
     <div className="relative">
       <button
-        data-testid="create-run"
+        data-testid="test-run-new-button"
         type="button"
         onClick={handleOpen}
         className="rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white shadow hover:brightness-110"
@@ -663,7 +663,7 @@ export function CreateManualReleaseButton({
             }
           }}
         >
-          <div className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
+          <div data-testid="test-run-create-modal" className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
             <div className="bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-4 text-white sm:px-8 sm:py-5">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
@@ -820,6 +820,7 @@ export function CreateManualReleaseButton({
 
                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
                           <select
+                            data-testid="test-run-plan-search-input"
                             aria-label="Selecionar plano de teste"
                             value={selectedPlanKey}
                             onChange={(event) => setSelectedPlanKey(event.target.value)}
@@ -834,7 +835,7 @@ export function CreateManualReleaseButton({
                                   : "Nenhum plano disponível"}
                             </option>
                             {plans.map((plan) => (
-                              <option key={makePlanKey(plan.source, plan.id)} value={makePlanKey(plan.source, plan.id)}>
+                              <option data-testid="test-run-plan-option" key={makePlanKey(plan.source, plan.id)} value={makePlanKey(plan.source, plan.id)}>
                                 {plan.title} · {plan.source === "qase" ? "Qase" : "Manual"}
                               </option>
                             ))}
@@ -878,7 +879,7 @@ export function CreateManualReleaseButton({
                         <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título da run *</span>
                         <input
                           className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
-                          data-testid="run-title"
+                          data-testid="test-run-title-input"
                           value={form.name}
                           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                           placeholder="Será preenchido ao aplicar o plano"
@@ -938,7 +939,7 @@ export function CreateManualReleaseButton({
                         <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título da run *</span>
                         <input
                           className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
-                          data-testid="run-title"
+                          data-testid="test-run-title-input"
                           value={form.name}
                           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                           placeholder="Ex: Run 1.9.0 - Regressao"
@@ -1114,6 +1115,7 @@ export function CreateManualReleaseButton({
 
                           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
                             <select
+                              data-testid="test-run-plan-search-input"
                               aria-label="Selecionar plano de teste"
                               value={selectedPlanKey}
                               onChange={(event) => setSelectedPlanKey(event.target.value)}
@@ -1128,7 +1130,7 @@ export function CreateManualReleaseButton({
                                     : "Nenhum plano disponível"}
                               </option>
                               {plans.map((plan) => (
-                                <option key={makePlanKey(plan.source, plan.id)} value={makePlanKey(plan.source, plan.id)}>
+                                <option data-testid="test-run-plan-option" key={makePlanKey(plan.source, plan.id)} value={makePlanKey(plan.source, plan.id)}>
                                   {plan.title} · {plan.source === "qase" ? "Qase" : "Manual"}
                                 </option>
                               ))}
@@ -1144,6 +1146,7 @@ export function CreateManualReleaseButton({
                             </button>
 
                             <button
+                              data-testid="test-run-save-button"
                               type="button"
                               onClick={() => setSelectedPlanKey("")}
                               disabled={!selectedPlanKey}

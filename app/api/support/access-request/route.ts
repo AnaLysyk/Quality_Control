@@ -10,7 +10,7 @@ import {
 import { notifyAccessRequestCreated } from "@/lib/notificationService";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { prisma } from "@/lib/prismaClient";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
+import { isSupportAdminUser, isTechnicalSupportUser } from "@/lib/supportAccess";
 import {
   normalizeRequestProfileType,
   requestProfileTypeNeedsCompany,
@@ -20,6 +20,7 @@ import {
 } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { rateLimit } from "@/lib/rateLimit";
 
 type Payload = {
   email?: string;
@@ -91,6 +92,12 @@ export async function POST(req: Request) {
   if (!email || !name || !fullName || !role || !phone || !password || !title || !description || !profileType || !accessType) {
     return NextResponse.json({ message: "Campos obrigatorios ausentes" }, { status: 400 });
   }
+
+  const limiter = await rateLimit(req, `access-request:${email}`, 10, 60 * 10);
+  if (limiter.limited) {
+    return NextResponse.json({ ok: true, message: "Sua solicitação foi recebida. Se os dados informados forem válidos, enviaremos atualizações pelo e-mail informado." });
+  }
+
   if (password.length < 8) {
     return NextResponse.json({ message: "Senha obrigatória com pelo menos 8 caracteres" }, { status: 400 });
   }
@@ -193,7 +200,7 @@ export async function POST(req: Request) {
       }).catch(() => null);
 
   if (duplicate) {
-    return NextResponse.json({ message: "Solicitação já registrada para este e-mail" }, { status: 409 });
+    return NextResponse.json({ ok: true, message: "Sua solicitação foi recebida. Se os dados informados forem válidos, enviaremos atualizações pelo e-mail informado." });
   }
 
   let createdRequest: { id: string; email: string; status: string } | null = null;
@@ -288,9 +295,12 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ message: status === 401 ? "Não autorizado" : "Acesso proibido" }, { status });
+  const authUser = await authenticateRequest(req);
+  if (!authUser) {
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  }
+  if (!isTechnicalSupportUser(authUser) && !isSupportAdminUser(authUser)) {
+    return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
 
   const useJson = shouldUseJsonStore();

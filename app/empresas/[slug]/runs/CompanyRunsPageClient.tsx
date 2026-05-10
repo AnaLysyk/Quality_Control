@@ -1065,7 +1065,7 @@ export default function CompanyRunsPageClient() {
                   ].map((item) => (
                     <div key={item.label} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
                       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{item.label}</p>
-                      <p className="mt-2 break-words text-sm font-semibold text-(--tc-text,#0b1a3c)">{item.value}</p>
+                      <p className="mt-2 wrap-break-word text-sm font-semibold text-(--tc-text,#0b1a3c)">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -1073,7 +1073,7 @@ export default function CompanyRunsPageClient() {
 
               {detailTab === "bruto" ? (
                 <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#0b1220) p-4">
-                  <pre className="max-h-[56vh] overflow-auto whitespace-pre-wrap break-words text-xs leading-6 text-slate-100">
+                  <pre className="max-h-[56vh] overflow-auto whitespace-pre-wrap wrap-break-word text-xs leading-6 text-slate-100">
                     {JSON.stringify(activeRun.raw, null, 2)}
                   </pre>
                 </div>

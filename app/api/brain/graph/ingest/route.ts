@@ -1,0 +1,157 @@
+import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
+
+import { addMemory, connectNodes, upsertNode } from "@/lib/brain";
+import { resolveBrainAccess } from "@/lib/brain/access";
+import { isAllowedBrainEvent } from "@/lib/brain/contracts";
+import { prisma } from "@/lib/prismaClient";
+
+type IngestPayload = {
+  eventType?: string;
+  source?: string;
+  companySlug?: string;
+  node?: {
+    type?: string;
+    label?: string;
+    refType?: string;
+    refId?: string;
+    description?: string;
+    metadata?: Prisma.InputJsonValue;
+  };
+  edge?: {
+    fromId?: string;
+    toId?: string;
+    type?: string;
+    metadata?: Prisma.InputJsonValue;
+  };
+  memory?: {
+    title?: string;
+    summary?: string;
+    memoryType?: string;
+    importance?: number;
+    relatedNodeIds?: string[];
+    sourceType?: string;
+    sourceId?: string;
+    metadata?: Prisma.InputJsonValue;
+  };
+};
+
+function toRecord(value: Prisma.InputJsonValue | undefined) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
+function normalizeMemoryType(value: unknown) {
+  if (value === "DECISION" || value === "RULE" || value === "PATTERN" || value === "CONTEXT" || value === "EXCEPTION" || value === "TECHNICAL_NOTE") {
+    return value;
+  }
+  return null;
+}
+
+export async function POST(req: Request) {
+  const accessResult = await resolveBrainAccess(req, { requireManage: true });
+  if (!accessResult.ok) {
+    return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
+  }
+
+  try {
+    const body = (await req.json()) as IngestPayload;
+    const eventType = (body.eventType ?? "custom.event").trim();
+
+    if (!eventType) {
+      return NextResponse.json({ error: "eventType e obrigatorio" }, { status: 400 });
+    }
+
+    if (!isAllowedBrainEvent(eventType) && !eventType.startsWith("custom.")) {
+      return NextResponse.json({
+        error: "eventType fora do contrato de ingestao do Brain",
+        hint: "Use eventos registrados em BrainModuleEvents ou prefixo custom.*",
+      }, { status: 400 });
+    }
+
+    let node = null;
+    if (body.node?.type && body.node?.label) {
+      const metadata = {
+        ...toRecord(body.node.metadata),
+        ...(body.companySlug ? { companySlug: body.companySlug } : {}),
+        source: body.source ?? eventType,
+        createdBy: accessResult.context.user.id,
+      };
+
+      node = await upsertNode({
+        type: body.node.type,
+        label: body.node.label,
+        refType: body.node.refType,
+        refId: body.node.refId,
+        description: body.node.description,
+        metadata,
+        userId: accessResult.context.user.id,
+        enforceOntology: true,
+      });
+    }
+
+    let edge = null;
+    if (body.edge?.fromId && body.edge?.toId && body.edge?.type) {
+      edge = await connectNodes(
+        body.edge.fromId,
+        body.edge.toId,
+        body.edge.type,
+        {
+          ...toRecord(body.edge.metadata),
+          reason: toRecord(body.edge.metadata).reason ?? `event:${eventType}`,
+          source: body.source ?? eventType,
+          createdBy: accessResult.context.user.id,
+          ...(body.companySlug ? { companySlug: body.companySlug } : {}),
+        },
+        accessResult.context.user.id,
+        { enforceOntology: true },
+      );
+    }
+
+    let memory = null;
+    const memoryType = normalizeMemoryType(body.memory?.memoryType);
+    if (body.memory?.title && body.memory?.summary && memoryType) {
+      memory = await addMemory({
+        title: body.memory.title,
+        summary: body.memory.summary,
+        memoryType,
+        importance: body.memory.importance ?? 1,
+        relatedNodeIds: body.memory.relatedNodeIds ?? (node ? [node.id] : []),
+        sourceType: body.memory.sourceType ?? "MANUAL",
+        sourceId: body.memory.sourceId,
+        userId: accessResult.context.user.id,
+      });
+    }
+
+    await prisma.brainAuditLog.create({
+      data: {
+        action: "INGEST_EVENT",
+        entityType: "BrainGraphEvent",
+        entityId: node?.id ?? edge?.id ?? memory?.id ?? eventType,
+        userId: accessResult.context.user.id,
+        reason: `Ingest event: ${eventType}`,
+        after: {
+          eventType,
+          source: body.source ?? "api",
+          companySlug: body.companySlug ?? null,
+          hasNode: Boolean(node),
+          hasEdge: Boolean(edge),
+          hasMemory: Boolean(memory),
+        },
+      },
+    });
+
+    return NextResponse.json({
+      eventType,
+      node,
+      edge,
+      memory,
+      status: "ingested",
+    }, { status: 201 });
+  } catch (error) {
+    console.error("[brain/graph/ingest] POST error:", error);
+    return NextResponse.json({ error: "Erro ao ingerir evento no Brain" }, { status: 500 });
+  }
+}

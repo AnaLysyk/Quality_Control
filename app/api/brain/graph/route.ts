@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 
 import { getSubgraph, searchNodes } from "@/lib/brain";
+import { filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
 import { prisma } from "@/lib/prismaClient";
-import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  const accessResult = await resolveBrainAccess(req);
+  if (!accessResult.ok) {
+    return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
   }
+  const { context: access } = accessResult;
 
   const url = new URL(req.url);
   const nodeId = url.searchParams.get("nodeId");
@@ -21,11 +22,16 @@ export async function GET(req: Request) {
     if (!rootId) {
       if (nodeType) {
         const nodes = await searchNodes({ type: nodeType, limit: 1 });
-        rootId = nodes[0]?.id ?? null;
+        const visible = nodes.find((node) => isBrainNodeVisible(node, access));
+        rootId = visible?.id ?? null;
       }
       if (!rootId) {
-        const firstNode = await prisma.brainNode.findFirst({ orderBy: { createdAt: "asc" } });
-        rootId = firstNode?.id ?? null;
+        const initialNodes = await prisma.brainNode.findMany({
+          take: 250,
+          orderBy: { createdAt: "asc" },
+        });
+        const firstVisibleNode = initialNodes.find((node) => isBrainNodeVisible(node, access));
+        rootId = firstVisibleNode?.id ?? null;
       }
     }
 
@@ -34,6 +40,11 @@ export async function GET(req: Request) {
     }
 
     const subgraph = await getSubgraph(rootId, depth);
+    const visibility = filterBrainGraphByAccess(subgraph.nodes, subgraph.edges, access);
+
+    if (!visibility.visibleNodeIds.has(rootId)) {
+      return NextResponse.json({ error: "Sem permissao para o no solicitado" }, { status: 403 });
+    }
 
     const graphNodes = subgraph.nodes.map((node) => ({
       id: node.id,
@@ -44,7 +55,7 @@ export async function GET(req: Request) {
       description: node.description,
       metadata: node.metadata,
       isRoot: node.id === rootId,
-    }));
+    })).filter((node) => visibility.visibleNodeIds.has(node.id));
 
     const graphEdges = subgraph.edges.map((edge) => ({
       id: edge.id,
@@ -52,7 +63,9 @@ export async function GET(req: Request) {
       target: edge.toId,
       type: edge.type,
       weight: edge.weight,
-    }));
+      metadata: edge.metadata,
+      createdAt: edge.createdAt,
+    })).filter((edge) => visibility.visibleEdgeIds.has(edge.id));
 
     const uniqueNodes = Array.from(new Map(graphNodes.map((node) => [node.id, node])).values());
     const uniqueEdges = Array.from(new Map(graphEdges.map((edge) => [edge.id, edge])).values());

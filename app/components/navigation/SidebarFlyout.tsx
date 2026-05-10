@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import { getIcon } from "./iconRegistry";
 import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
 
@@ -39,7 +39,6 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
     };
   }, []);
 
-  const ModuleIcon = getIcon(mod.iconKey);
   const visibleItems = mod.items.filter((item) => item.href);
 
   return (
@@ -47,13 +46,14 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
       <button
         onMouseEnter={handleButtonMouseEnter}
         onMouseLeave={scheduleClose}
+        data-testid={mod.testId}
         title={mod.label}
         aria-label={mod.label}
         className={`flex w-full items-center justify-center rounded-xl p-2 transition ${
           isActive ? "bg-white/16 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
         }`}
       >
-        <ModuleIcon size={17} />
+        {createElement(getIcon(mod.iconKey), { size: 17 })}
       </button>
 
       {open && (
@@ -67,12 +67,12 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
           </div>
           <nav className="p-2">
             {visibleItems.map((item) => {
-              const ItemIcon = getIcon(item.iconKey);
               const active = isItemActive(item);
               return (
                 <Link
                   key={item.id}
                   href={item.href!}
+                  data-testid={item.testId}
                   onClick={() => {
                     setOpen(false);
                     onClose?.();
@@ -81,7 +81,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
                     active ? "bg-white/14 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
                   }`}
                 >
-                  <ItemIcon size={14} className="shrink-0 text-white/50" />
+                  {createElement(getIcon(item.iconKey), { size: 14, className: "shrink-0 text-white/50" })}
                   <span>{item.label}</span>
                 </Link>
               );

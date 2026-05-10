@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { CompanyDashboardData } from "@/app/empresas/[slug]/dashboard/companyDashboardData";
+import type { CompanyDashboardData } from "@/empresas/[slug]/dashboard/companyDashboardData";
 
 export const maxDuration = 30;
 export const runtime = "nodejs";
@@ -47,8 +47,17 @@ async function generateExecutiveAnalysis(req: ExecutiveAnalysisRequest): Promise
     defectsByApp.set(defect.applicationKey, (defectsByApp.get(defect.applicationKey) ?? 0) + 1);
   }
 
-  const appsAtRisk = req.runs.filter((r) => r.riskLevel !== "stable").length;
-  const regressions = req.runs.filter((r) => r.isRegression ?? false).length;
+  const atRiskApplicationKeys = new Set(
+    req.runs
+      .filter((r) => r.statusTone === "critical" || r.statusTone === "warning")
+      .map((r) => r.applicationKey),
+  );
+  const appsAtRisk = atRiskApplicationKeys.size;
+
+  const regressions = req.runs.filter((r) => {
+    const marker = `${r.statusRaw ?? ""} ${r.statusLabel}`.toLowerCase();
+    return marker.includes("regress");
+  }).length;
   const blocked = req.runs.reduce((sum, r) => sum + (r.stats.blocked ?? 0), 0);
   const blockageRate = totalCases > 0 ? (blocked / totalCases) * 100 : 0;
 

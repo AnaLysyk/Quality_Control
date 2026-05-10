@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { listApplications } from "@/lib/applicationsStore";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { QaseError } from "@/lib/qaseSdk";
+import { listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
 import {
   extractNumericCaseIds,
   parseTestPlanCases,
@@ -85,6 +86,77 @@ function normalizeWarningList(values: Array<string | null | undefined>) {
   return unique.length ? unique.join(" ") : null;
 }
 
+async function resolveCentralTestPlanCases(caseRefs: TestPlanCase[]) {
+  if (!caseRefs.length) return [];
+
+  const records = await listTestCaseRecords();
+  const byId = new Map(records.map((record) => [record.testCase.id, record]));
+
+  return caseRefs.map((caseRef) => {
+    const record = byId.get(caseRef.id);
+    if (!record) {
+      throw new Error(`TEST_CASE_NOT_FOUND:${caseRef.id}`);
+    }
+
+    return {
+      id: record.testCase.id,
+      title: record.testCase.title,
+      description: record.testCase.description ?? null,
+      preconditions: record.testCase.preconditions ?? null,
+      postconditions: record.testCase.postconditions ?? null,
+      severity: record.testCase.severity ?? null,
+      link: null,
+      steps: record.steps.map((step) => ({
+        id: step.id,
+        action: step.action,
+        expectedResult: step.expectedResult,
+        data: step.data ?? null,
+      })),
+    } satisfies TestPlanCase;
+  });
+}
+
+async function hydrateManualPlanCases(caseRefs: TestPlanCase[]) {
+  if (!caseRefs.length) return [];
+
+  const records = await listTestCaseRecords();
+  const byId = new Map(records.map((record) => [record.testCase.id, record]));
+
+  return caseRefs.map((caseRef) => {
+    const record = byId.get(caseRef.id);
+    if (!record) {
+      return {
+        id: caseRef.id,
+        ...(caseRef.automation ? { automation: caseRef.automation } : {}),
+      };
+    }
+
+    return {
+      id: record.testCase.id,
+      title: record.testCase.title,
+      description: record.testCase.description ?? null,
+      preconditions: record.testCase.preconditions ?? null,
+      postconditions: record.testCase.postconditions ?? null,
+      severity: record.testCase.severity ?? null,
+      link: null,
+      steps: record.steps.map((step) => ({
+        id: step.id,
+        action: step.action,
+        expectedResult: step.expectedResult,
+        data: step.data ?? null,
+      })),
+      ...(caseRef.automation ? { automation: caseRef.automation } : {}),
+    } satisfies TestPlanCase;
+  });
+}
+
+async function resolveCentralTestPlanCasesByIds(testCaseIds: string[]) {
+  if (!testCaseIds.length) return [];
+
+  const caseRefs = testCaseIds.map((id) => ({ id }));
+  return resolveCentralTestPlanCases(caseRefs);
+}
+
 function resolveWarningFromQaseError(error: unknown) {
   const status = error instanceof QaseError ? error.status : 500;
   if (status === 401 || status === 403) {
@@ -136,7 +208,7 @@ export async function GET(request: Request) {
           source: "manual",
           applicationId: plan.applicationId,
           applicationName: plan.applicationName,
-          cases: plan.cases,
+          cases: await hydrateManualPlanCases(plan.cases),
         }),
       });
     }
@@ -278,6 +350,9 @@ export async function POST(request: Request) {
   const title = String(body.title ?? "").trim();
   const description = typeof body.description === "string" ? body.description.trim() || null : null;
   const caseRefs = parseTestPlanCases(body.cases);
+  const testCaseIds = Array.isArray(body.testCaseIds)
+    ? body.testCaseIds.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : [];
 
   if (!companySlug || !applicationId || !title) {
     return NextResponse.json({ error: "companySlug, applicationId and title are required" }, { status: 400 });
@@ -286,6 +361,18 @@ export async function POST(request: Request) {
   const { selectedApplication } = await resolveApplication(companySlug, applicationId);
   if (!selectedApplication) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
+  }
+
+  let resolvedCaseRefs = testCaseIds.length ? await resolveCentralTestPlanCasesByIds(testCaseIds) : caseRefs;
+  try {
+    if (!testCaseIds.length) {
+      resolvedCaseRefs = await resolveCentralTestPlanCases(caseRefs);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("TEST_CASE_NOT_FOUND:")) {
+      return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
+    }
+    throw error;
   }
 
   if (source === "qase") {
@@ -337,7 +424,7 @@ export async function POST(request: Request) {
     projectCode: normalizeProjectCode(body.projectCode) || normalizeProjectCode(selectedApplication.qaseProjectCode),
     title,
     description,
-    cases: caseRefs,
+    cases: resolvedCaseRefs,
   });
 
   return NextResponse.json({
@@ -352,7 +439,7 @@ export async function POST(request: Request) {
       source: "manual",
       applicationId: created.applicationId,
       applicationName: created.applicationName,
-      cases: created.cases,
+      cases: await hydrateManualPlanCases(created.cases),
     }),
   }, { status: 201 });
 }
@@ -373,6 +460,9 @@ export async function PATCH(request: Request) {
   }
 
   const caseRefs = body.cases === undefined ? undefined : parseTestPlanCases(body.cases);
+  const testCaseIds = Array.isArray(body.testCaseIds)
+    ? body.testCaseIds.map((item) => String(item ?? "").trim()).filter(Boolean)
+    : undefined;
 
   if (source === "qase") {
     const { selectedApplication } = await resolveApplication(companySlug, applicationId);
@@ -417,12 +507,33 @@ export async function PATCH(request: Request) {
   }
 
   const { selectedApplication } = await resolveApplication(companySlug, applicationId);
+  let resolvedCaseRefs = caseRefs;
+  if (testCaseIds !== undefined) {
+    try {
+      resolvedCaseRefs = await resolveCentralTestPlanCasesByIds(testCaseIds);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("TEST_CASE_NOT_FOUND:")) {
+        return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
+      }
+      throw error;
+    }
+  } else if (caseRefs !== undefined) {
+    try {
+      resolvedCaseRefs = await resolveCentralTestPlanCases(caseRefs);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("TEST_CASE_NOT_FOUND:")) {
+        return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
+      }
+      throw error;
+    }
+  }
+
   const updated = await updateManualTestPlan(companySlug, planId, {
     ...(body.title !== undefined ? { title: String(body.title ?? "").trim() } : {}),
     ...(body.description !== undefined
       ? { description: typeof body.description === "string" ? body.description.trim() || null : null }
       : {}),
-    ...(caseRefs !== undefined ? { cases: caseRefs } : {}),
+    ...(resolvedCaseRefs !== undefined ? { cases: resolvedCaseRefs } : {}),
     ...(selectedApplication
       ? {
           applicationId: selectedApplication.id,
@@ -450,7 +561,7 @@ export async function PATCH(request: Request) {
       source: "manual",
       applicationId: updated.applicationId,
       applicationName: updated.applicationName,
-      cases: updated.cases,
+      cases: await hydrateManualPlanCases(updated.cases),
     }),
   });
 }

@@ -25,7 +25,6 @@ export async function GET(req: Request) {
   // Try Prisma first
   try {
     const { prisma } = await import("@/lib/prismaClient");
-    // @ts-expect-error - Favorite model added via migration
     const rows = await (prisma as any).favorite.findMany({
       where: { userId },
       orderBy: { sortOrder: "asc" },
@@ -71,7 +70,6 @@ export async function POST(req: Request) {
   // Try Prisma
   try {
     const { prisma } = await import("@/lib/prismaClient");
-    // @ts-expect-error - Favorite model added via migration
     const existing = await (prisma as any).favorite.findFirst({ where: { userId, href: body.href } });
     if (existing) {
       const fav: FavoriteItem = {
@@ -88,7 +86,6 @@ export async function POST(req: Request) {
     }
 
     const count = await (prisma as any).favorite.count({ where: { userId } });
-    // @ts-expect-error
     const row = await (prisma as any).favorite.create({
       data: {
         userId,

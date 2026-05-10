@@ -37,12 +37,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     if (activeModuleId) openSection(activeModuleId);
   }, [activeModuleId, openSection]);
 
-  const logoSrc = useMemo(() => {
-    const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
-    if (dbLogo) return dbLogo;
-    if (menuLogoEnv) return menuLogoEnv;
-    return "/images/tc.png";
-  }, [user?.companyLogoUrl]);
+  const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
+  const logoSrc = dbLogo || menuLogoEnv || "/images/tc.png";
 
   const normalizedRole = useMemo(
     () =>

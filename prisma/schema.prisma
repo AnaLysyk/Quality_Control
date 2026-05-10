@@ -12,11 +12,17 @@ model BrainNode {
   refId       String?  // ID no modelo original
 
   metadata    Json?    // custom fields: {severity, status, owner, tags, etc}
+  importanceScore Float @default(0)
+  riskScore       Float @default(0)
+  qualityScore    Float @default(0)
+  privacyLevel    String @default("company") // private | company | project | global | restricted
+  confidenceLevel Float  @default(0.8)
 
   outgoing    BrainEdge[] @relation("OutgoingEdges")
   incoming    BrainEdge[] @relation("IncomingEdges")
 
   memories    BrainMemory[]
+  suggestions BrainSuggestion[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -24,6 +30,10 @@ model BrainNode {
   @@index([type])
   @@index([refType, refId])
   @@index([label])
+  @@index([privacyLevel])
+  @@index([importanceScore])
+  @@index([riskScore])
+  @@index([qualityScore])
 }
 
 model BrainEdge {
@@ -94,6 +104,139 @@ model BrainAuditLog {
   @@index([entityType, entityId])
   @@index([action])
   @@index([createdAt])
+}
+
+model BrainSuggestion {
+  id            String   @id @default(cuid())
+  companySlug   String?
+  projectId     String?
+  targetNodeId  String
+  type          String
+  title         String
+  description   String
+  confidence    Float    @default(0.5)
+  status        String   @default("suggested") // suggested | accepted | rejected | resolved | archived
+  createdBy     String   @default("system")
+  riskLevel     String   @default("medium") // low | medium | high
+  requiresReview Boolean @default(true)
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  targetNode BrainNode @relation(fields: [targetNodeId], references: [id], onDelete: Cascade)
+  inboxItems  BrainInboxItem[]
+
+  @@index([companySlug])
+  @@index([targetNodeId])
+  @@index([status])
+  @@index([type])
+}
+
+model BrainInboxItem {
+  id           String   @id @default(cuid())
+  kind         String   // suggestion | duplicate | gap | failed_event | doc_unlinked | script_without_case
+  companySlug  String?
+  status       String   @default("pending") // pending | approved | rejected | merged | archived | needs_review
+  title        String
+  summary      String?
+  payload      Json?
+  suggestionId String?
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  suggestion BrainSuggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
+
+  @@index([companySlug])
+  @@index([status])
+  @@index([kind])
+}
+
+model BrainWorkspace {
+  id          String   @id @default(cuid())
+  userId      String
+  companySlug String?
+  name        String
+  description String?
+  status      String   @default("active") // active | archived
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  nodes      BrainWorkspaceNode[]
+  edges      BrainWorkspaceEdge[]
+  savedViews BrainSavedView[]
+
+  @@index([userId])
+  @@index([companySlug])
+  @@index([status])
+}
+
+model BrainWorkspaceNode {
+  id          String   @id @default(cuid())
+  workspaceId String
+  brainNodeId String?
+  label       String
+  type        String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace BrainWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([brainNodeId])
+}
+
+model BrainWorkspaceEdge {
+  id          String   @id @default(cuid())
+  workspaceId String
+  fromNodeId  String
+  toNodeId    String
+  type        String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  workspace BrainWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+}
+
+model BrainSavedView {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  mode        String   @default("graph") // graph | list | table | tree | compare
+  filters     Json?
+  layout      Json?
+  isShared    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace BrainWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([mode])
+}
+
+model BrainRetentionPolicy {
+  id                    String   @id @default(cuid())
+  scope                 String   @unique // default | company:{slug}
+  eventDays             Int      @default(90)
+  agentRunDays          Int      @default(90)
+  rejectedMemoryDays    Int      @default(30)
+  heavyArtifactDays     Int      @default(30)
+  staleMemoryDays       Int      @default(30)
+  weeklyReviewEnabled   Boolean  @default(true)
+  metadata              Json?
+  updatedBy             String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([scope])
 }
 // Prisma Schema — Quality Control
 // Provider: PostgreSQL (Render)
@@ -882,5 +1025,301 @@ model Favorite {
 
   @@index([userId])
   @@map("favorites")
+}
+
+// ─── Test Case Repository ─────────────────────────────────────────────────────
+
+model StoredTestCase {
+  id        String   @id  // equals testCase.id
+  companyId String?
+  data      Json     // full TestCaseRecord serialized
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("stored_test_cases")
+}
+
+// ─── Test Data Hub: Automation Documents ────────────────────────────────────
+
+model AutomationDocument {
+  id           String   @id @default(cuid())
+  companySlug  String
+  projectId    String?
+  title        String
+  documentType String
+  fileName     String
+  mimeType     String
+  storagePath  String
+  status       String   @default("active")
+  version      Int      @default(1)
+  checksum     String?
+  metadata     Json?
+  createdBy    String
+  updatedBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fragments    AutomationDocumentFragment[]
+  assets       TestDataAsset[]
+
+  @@index([companySlug])
+  @@index([projectId])
+  @@index([documentType])
+  @@map("automation_documents")
+}
+
+model AutomationDocumentFragment {
+  id             String   @id @default(cuid())
+  documentId     String
+  companySlug    String
+  projectId      String?
+  label          String
+  fragmentType   String
+  pageNumber     Int?
+  coordinates    Json?
+  mimeType       String
+  storagePath    String?
+  base64Preview  String?
+  checksum       String?
+  metadata       Json?
+  createdBy      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  document       AutomationDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  assets         TestDataAsset[]
+
+  @@index([documentId])
+  @@index([companySlug])
+  @@index([fragmentType])
+  @@map("automation_document_fragments")
+}
+
+// ─── Test Data Hub: Test Data Assets ──────────────────────────────────────
+
+model TestDataAsset {
+  id             String   @id @default(cuid())
+  companySlug    String
+  projectId      String?
+  documentId     String?
+  fragmentId     String?
+
+  key            String   @unique
+  label          String
+  assetType      String
+  // biometric_image | base64_payload | document_file | face_photo | signature | api_payload | upload_file
+
+  mimeType       String?
+  encoding       String?
+  // file | base64 | json | text
+
+  storagePath    String?
+  base64Value    String?
+  sizeBytes      Int?
+  checksum       String?
+
+  sensitivity    String   @default("internal")
+  // public | internal | restricted | sensitive
+
+  status         String   @default("active")
+  metadata       Json?
+
+  createdBy      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  document       AutomationDocument? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  fragment       AutomationDocumentFragment? @relation(fields: [fragmentId], references: [id], onDelete: SetNull)
+
+  caseLinks      TestCaseAssetLink[]
+  automationLinks AutomationAssetUsage[]
+  packItems      TestDataPackItem[]
+  usagePolicy    TestDataAssetUsagePolicy?
+  audit          TestDataAssetAudit[]
+
+  @@index([companySlug])
+  @@index([projectId])
+  @@index([assetType])
+  @@index([sensitivity])
+  @@index([key])
+  @@map("test_data_assets")
+}
+
+model TestDataAssetUsagePolicy {
+  id        String @id @default(cuid())
+  assetId   String @unique
+
+  allowPlaywrightUpload Boolean @default(true)
+  allowApiMultipart     Boolean @default(true)
+  allowBase64Api        Boolean @default(false)
+  allowPromptMetadata   Boolean @default(true)
+  allowPromptContent    Boolean @default(false)
+  allowGithubCommit     Boolean @default(false)
+  allowReportMetadata   Boolean @default(true)
+  allowReportContent    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  asset     TestDataAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("test_data_asset_usage_policies")
+}
+
+// ─── Test Data Hub: Test Data Packs ───────────────────────────────────────
+
+model TestDataPack {
+  id          String   @id @default(cuid())
+  companySlug String
+  projectId   String?
+  key         String   @unique
+  label       String
+  description String?
+  packType    String
+  // biometric_set | document_set | api_payload_set | mixed
+
+  sensitivity String @default("internal")
+  status      String @default("active")
+  metadata    Json?
+
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       TestDataPackItem[]
+
+  @@index([companySlug])
+  @@index([projectId])
+  @@index([packType])
+  @@map("test_data_packs")
+}
+
+model TestDataPackItem {
+  id        String @id @default(cuid())
+  packId    String
+  assetId   String
+  role      String
+  // right_thumb | right_index | left_thumb | face_photo | signature | document_front, etc
+
+  required  Boolean @default(true)
+  order     Int?
+
+  pack      TestDataPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  asset     TestDataAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@unique([packId, assetId, role])
+  @@index([packId])
+  @@index([assetId])
+  @@map("test_data_pack_items")
+}
+
+model TestDataPackEnvironmentBinding {
+  id          String @id @default(cuid())
+  packId      String
+  environment String
+  active      Boolean @default(true)
+  metadata    Json?
+
+  @@unique([packId, environment])
+  @@map("test_data_pack_environment_bindings")
+}
+
+model TestDataPackProfileBinding {
+  id        String @id @default(cuid())
+  packId    String
+  profile   String
+  // leader_tc | support | user_tc | user_company
+  
+  active    Boolean @default(true)
+  metadata  Json?
+
+  @@unique([packId, profile])
+  @@map("test_data_pack_profile_bindings")
+}
+
+// ─── Test Data Hub: Linking to Test Cases ────────────────────────────────
+
+model TestCaseAssetLink {
+  id          String   @id @default(cuid())
+  testCaseId  String
+  assetId     String
+  stepId      String?
+  usage       String
+  // upload | api_payload | assertion_fixture | visual_reference | biometric_input
+
+  variableName String?
+  required     Boolean  @default(true)
+  createdBy    String
+  createdAt    DateTime @default(now())
+
+  asset        TestDataAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@unique([testCaseId, assetId, stepId])
+  @@index([testCaseId])
+  @@index([assetId])
+  @@map("test_case_asset_links")
+}
+
+// ─── Test Data Hub: Automation Asset Usage ────────────────────────────────
+
+model AutomationAssetUsage {
+  id                  String   @id @default(cuid())
+  automationLinkId     String
+  assetId              String
+  variableName         String
+  usage                String
+  // setInputFiles | apiMultipart | apiBase64 | assertion | fixture
+
+  generatedSnippet     String?
+  createdBy            String
+  createdAt            DateTime @default(now())
+
+  asset                TestDataAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@unique([automationLinkId, assetId, variableName])
+  @@index([automationLinkId])
+  @@index([assetId])
+  @@map("automation_asset_usages")
+}
+
+// ─── Test Data Hub: Execution Asset Usage ──────────────────────────────────
+
+model ExecutionAssetUsage {
+  id              String   @id @default(cuid())
+  executionId     String
+  resultId        String?
+  assetId         String
+  testCaseId      String?
+  usage           String
+  status          String   @default("used")
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([executionId])
+  @@index([assetId])
+  @@index([testCaseId])
+  @@map("execution_asset_usages")
+}
+
+// ─── Test Data Hub: Asset Audit Log ────────────────────────────────────────
+
+model TestDataAssetAudit {
+  id          String   @id @default(cuid())
+  assetId     String
+  action      String
+  actorUserId String
+  companySlug String
+  projectId   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  asset       TestDataAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@index([companySlug])
+  @@index([action])
+  @@index([createdAt])
+  @@map("test_data_asset_audit")
 }
 

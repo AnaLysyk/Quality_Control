@@ -27,6 +27,8 @@
     "test:e2e:smoke": "cross-env E2E_USE_JSON=1 playwright test --project=quality-smoke",
     "test:e2e:access": "cross-env E2E_USE_JSON=1 playwright test --project=quality-access",
     "test:e2e:cases": "cross-env E2E_USE_JSON=1 playwright test --project=quality-test-cases",
+    "test:e2e:profile-cycle": "cross-env E2E_USE_JSON=1 playwright test tests-e2e/case-repository-profile-cycle.spec.ts --project=chromium",
+    "test:e2e:automation-link": "cross-env E2E_USE_JSON=1 playwright test tests-e2e/test-case-automation-link.spec.ts --project=chromium",
     "test:e2e:runs": "cross-env E2E_USE_JSON=1 playwright test --project=quality-runs",
     "test:e2e:automation": "cross-env E2E_USE_JSON=1 playwright test --project=quality-automation",
     "test:e2e:dashboards": "cross-env E2E_USE_JSON=1 playwright test --project=quality-dashboards",
@@ -55,7 +57,10 @@
     "db:check": "node scripts/test-db-connection.js",
     "migrate:upstash": "node tmp/migrate_to_upstash.js",
     "brain:sync": "tsx scripts/sync-brain.ts",
-    "brain:test": "jest --config jest.config.ts --runInBand __tests__/brain.test.ts"
+    "brain:maintenance": "tsx scripts/brain-maintenance.ts",
+    "brain:reindex": "tsx scripts/sync-brain.ts",
+    "brain:test": "jest --config jest.config.ts --runInBand __tests__/brain.test.ts",
+    "test:brain:contracts": "jest --config jest.config.ts --runInBand tests/brain-ingest-contract.test.ts tests/brain-commands-confirmation.test.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.61",
@@ -70,6 +75,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@upstash/redis": "^1.36.1",
+    "@xyflow/react": "^12.10.2",
     "ai": "^6.0.175",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",

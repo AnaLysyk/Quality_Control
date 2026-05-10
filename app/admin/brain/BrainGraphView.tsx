@@ -94,6 +94,22 @@ const NODE_ICONS: Record<string, string> = {
   Note: "📝",
 };
 
+function lightenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, ((num >> 16) & 0xff) + percent);
+  const g = Math.min(255, ((num >> 8) & 0xff) + percent);
+  const b = Math.min(255, (num & 0xff) + percent);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function darkenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, ((num >> 16) & 0xff) - percent);
+  const g = Math.max(0, ((num >> 8) & 0xff) - percent);
+  const b = Math.max(0, (num & 0xff) - percent);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 function getNodeColor(type: string, isDark: boolean) {
   const colors = isDark ? NODE_COLORS_DARK : NODE_COLORS_LIGHT;
   return colors[type] ?? (isDark ? "#78909c" : "#546e7a");
@@ -493,112 +509,84 @@ export default function BrainGraphView() {
     };
   }, [filteredEdges, selectedNodeId, hoveredNodeId, isDark]);
 
-  // Helper functions for colors
-  function lightenColor(hex: string, percent: number): string {
-    const num = parseInt(hex.slice(1), 16);
-    const r = Math.min(255, ((num >> 16) & 0xff) + percent);
-    const g = Math.min(255, ((num >> 8) & 0xff) + percent);
-    const b = Math.min(255, (num & 0xff) + percent);
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-
-  function darkenColor(hex: string, percent: number): string {
-    const num = parseInt(hex.slice(1), 16);
-    const r = Math.max(0, ((num >> 16) & 0xff) - percent);
-    const g = Math.max(0, ((num >> 8) & 0xff) - percent);
-    const b = Math.max(0, (num & 0xff) - percent);
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-
   // Mouse interaction
-  const findNodeAtPoint = useCallback(
-    (clientX: number, clientY: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return null;
+  const findNodeAtPoint = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const pan = panRef.current;
+    const mx = (clientX - rect.left - pan.x) / pan.scale;
+    const my = (clientY - rect.top - pan.y) / pan.scale;
+
+    for (let i = simNodesRef.current.length - 1; i >= 0; i--) {
+      const node = simNodesRef.current[i];
+      const r = getNodeRadius(node.type, node.isRoot ?? false);
+      const dx = mx - node.x;
+      const dy = my - node.y;
+      if (dx * dx + dy * dy <= (r + 4) * (r + 4)) return node;
+    }
+    return null;
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const node = findNodeAtPoint(e.clientX, e.clientY);
+    if (node) {
+      const canvas = canvasRef.current!;
       const rect = canvas.getBoundingClientRect();
       const pan = panRef.current;
-      const mx = (clientX - rect.left - pan.x) / pan.scale;
-      const my = (clientY - rect.top - pan.y) / pan.scale;
+      const mx = (e.clientX - rect.left - pan.x) / pan.scale;
+      const my = (e.clientY - rect.top - pan.y) / pan.scale;
+      dragRef.current = { nodeId: node.id, offsetX: mx - node.x, offsetY: my - node.y };
+      node.fx = node.x;
+      node.fy = node.y;
+    } else {
+      panRef.current.dragging = true;
+      panRef.current.lastX = e.clientX;
+      panRef.current.lastY = e.clientY;
+    }
+  };
 
-      for (let i = simNodesRef.current.length - 1; i >= 0; i--) {
-        const node = simNodesRef.current[i];
-        const r = getNodeRadius(node.type, node.isRoot ?? false);
-        const dx = mx - node.x;
-        const dy = my - node.y;
-        if (dx * dx + dy * dy <= (r + 4) * (r + 4)) return node;
-      }
-      return null;
-    },
-    []
-  );
-
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const node = findNodeAtPoint(e.clientX, e.clientY);
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (dragRef.current) {
+      const canvas = canvasRef.current!;
+      const rect = canvas.getBoundingClientRect();
+      const pan = panRef.current;
+      const mx = (e.clientX - rect.left - pan.x) / pan.scale;
+      const my = (e.clientY - rect.top - pan.y) / pan.scale;
+      const node = simNodesRef.current.find((n) => n.id === dragRef.current!.nodeId);
       if (node) {
-        const canvas = canvasRef.current!;
-        const rect = canvas.getBoundingClientRect();
-        const pan = panRef.current;
-        const mx = (e.clientX - rect.left - pan.x) / pan.scale;
-        const my = (e.clientY - rect.top - pan.y) / pan.scale;
-        dragRef.current = { nodeId: node.id, offsetX: mx - node.x, offsetY: my - node.y };
-        node.fx = node.x;
-        node.fy = node.y;
-      } else {
-        panRef.current.dragging = true;
-        panRef.current.lastX = e.clientX;
-        panRef.current.lastY = e.clientY;
+        node.fx = mx - dragRef.current.offsetX;
+        node.fy = my - dragRef.current.offsetY;
+        node.x = node.fx;
+        node.y = node.fy;
       }
-    },
-    [findNodeAtPoint]
-  );
+    } else if (panRef.current.dragging) {
+      panRef.current.x += e.clientX - panRef.current.lastX;
+      panRef.current.y += e.clientY - panRef.current.lastY;
+      panRef.current.lastX = e.clientX;
+      panRef.current.lastY = e.clientY;
+    } else {
+      const hoverNode = findNodeAtPoint(e.clientX, e.clientY);
+      setHoveredNodeId(hoverNode?.id ?? null);
+    }
+  };
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (dragRef.current) {
-        const canvas = canvasRef.current!;
-        const rect = canvas.getBoundingClientRect();
-        const pan = panRef.current;
-        const mx = (e.clientX - rect.left - pan.x) / pan.scale;
-        const my = (e.clientY - rect.top - pan.y) / pan.scale;
-        const node = simNodesRef.current.find((n) => n.id === dragRef.current!.nodeId);
-        if (node) {
-          node.fx = mx - dragRef.current.offsetX;
-          node.fy = my - dragRef.current.offsetY;
-          node.x = node.fx;
-          node.y = node.fy;
-        }
-      } else if (panRef.current.dragging) {
-        panRef.current.x += e.clientX - panRef.current.lastX;
-        panRef.current.y += e.clientY - panRef.current.lastY;
-        panRef.current.lastX = e.clientX;
-        panRef.current.lastY = e.clientY;
-      } else {
-        // Hover detection
-        const hoverNode = findNodeAtPoint(e.clientX, e.clientY);
-        setHoveredNodeId(hoverNode?.id ?? null);
+  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (dragRef.current) {
+      const node = simNodesRef.current.find((n) => n.id === dragRef.current!.nodeId);
+      if (node) {
+        node.fx = null;
+        node.fy = null;
       }
-    },
-    [findNodeAtPoint]
-  );
-
-  const handleMouseUp = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (dragRef.current) {
-        const node = simNodesRef.current.find((n) => n.id === dragRef.current!.nodeId);
-        if (node) { node.fx = null; node.fy = null; }
-        // Click = select
-        const moved = dragRef.current.offsetX !== 0 || dragRef.current.offsetY !== 0;
-        if (!moved || true) {
-          setSelectedNodeId(dragRef.current.nodeId);
-        }
-        dragRef.current = null;
-      } else {
-        panRef.current.dragging = false;
+      const moved = dragRef.current.offsetX !== 0 || dragRef.current.offsetY !== 0;
+      if (!moved || true) {
+        setSelectedNodeId(dragRef.current.nodeId);
       }
-    },
-    []
-  );
+      dragRef.current = null;
+    } else {
+      panRef.current.dragging = false;
+    }
+  };
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();

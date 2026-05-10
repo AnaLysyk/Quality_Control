@@ -36,7 +36,7 @@ export default defineConfig({
   expect: { timeout: 5000 },
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
-  workers: 1,
+  workers: process.env.CI ? 1 : undefined,
   use: {
     baseURL,
     trace: "on-first-retry",

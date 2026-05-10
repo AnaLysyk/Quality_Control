@@ -18,7 +18,7 @@ function Skeleton() {
     <div className="w-full bg-(--page-bg,#f3f6fb) px-4 pt-4 pb-8 sm:px-6 lg:px-10 xl:px-12 2xl:px-14">
       <div className="space-y-4 2xl:grid 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:gap-4 2xl:space-y-0">
         <div className="h-40 animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) 2xl:h-64" />
-        <div className="h-[520px] animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
+        <div className="h-130 animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
       </div>
     </div>
   );

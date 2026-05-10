@@ -180,9 +180,9 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
   return (
     <section
       data-testid="test-case-repository"
-      className="space-y-4 rounded-[32px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6"
+      className="space-y-4 rounded-4xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-sm sm:p-6"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
           <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
             <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
@@ -285,7 +285,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
           </label>
         </div>
 
-        <div className="mt-4 grid auto-rows-fr gap-3 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
+        <div className="mt-4 grid auto-rows-fr gap-3 grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
           {metrics.map((item) => {
             const Icon = item.icon;
             return (
@@ -341,7 +341,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">{testCase.application}</p>
-                        <h3 className="mt-1 break-words text-base font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{testCase.title}</h3>
+                        <h3 className="mt-1 wrap-break-word text-base font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{testCase.title}</h3>
                       </div>
                       <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${priorityMeta.tone}`}>
                         {priorityMeta.label}
@@ -447,7 +447,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                 </div>
 
                 <aside className="space-y-4">
-                  <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                  <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                       <FiGitBranch className="h-4 w-4" />
                       Fluxo vinculado
@@ -464,7 +464,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                     ) : null}
                   </section>
 
-                  <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                  <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                       <FiCode className="h-4 w-4" />
                       Script
@@ -473,7 +473,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                     <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{selectedScriptTemplate?.summary ?? "Caso ainda sem estratégia de script."}</p>
                   </section>
 
-                  <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                  <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
                       <FiFileText className="h-4 w-4" />
                       Vínculo QA

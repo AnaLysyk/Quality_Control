@@ -103,6 +103,7 @@ export type AssistantClientRequest = {
   history?: AssistantConversationTurn[] | null;
   /** Contexto enriquecido vindo de telas externas (Brain, tickets, releases…) */
   brainContext?: {
+    route?: string | null;
     nodeId?: string | null;
     nodeLabel?: string | null;
     nodeType?: string | null;

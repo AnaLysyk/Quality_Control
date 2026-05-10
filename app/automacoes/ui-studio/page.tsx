@@ -17,7 +17,7 @@ export default function AutomacoesUiStudioPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3">
         <Link
-          href="/automacoes/casos"
+          href="/casos-de-teste"
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
         >
           <FiClipboard className="h-4 w-4" />

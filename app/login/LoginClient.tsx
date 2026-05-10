@@ -8,7 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { buildCompanyPathForAccess, shortenCompanyPathname, shouldUseShortCompanyRoutes } from "@/lib/companyRoutes";
-import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 
 type AuthUserShape = {
   role?: string | null;
@@ -125,11 +124,7 @@ export default function LoginClient() {
     };
   }, []);
 
-  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null, companies: Array<{ id: string; name: string; slug: string; role?: string; active?: boolean; createdAt?: string | null; logoUrl?: string | null }> = []) {
-    const normalizedAuth = normalizeAuthenticatedUser(
-      authUser as Parameters<typeof normalizeAuthenticatedUser>[0],
-      companies as Parameters<typeof normalizeAuthenticatedUser>[1],
-    );
+  function resolvePostLoginRedirect(nextParam: string | null, authUser: AuthUserShape | null) {
     const safeNext = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "";
     const companyRouteInput = {
       isGlobalAdmin: authUser?.isGlobalAdmin === true,
@@ -187,10 +182,9 @@ export default function LoginClient() {
         const meRes = await fetch("/api/me", { cache: "no-store", credentials: "include" });
         const meJson = await meRes.json().catch(() => null);
         const authUser = meJson?.user ?? null;
-        const meCompanies = Array.isArray(meJson?.companies) ? meJson.companies : [];
         await refreshUser();
         const nextParam = searchParams?.get("next") ?? null;
-        const redirectTo = resolvePostLoginRedirect(nextParam, authUser, meCompanies);
+        const redirectTo = resolvePostLoginRedirect(nextParam, authUser);
         router.push(redirectTo);
         router.refresh();
       } else {
@@ -326,7 +320,7 @@ export default function LoginClient() {
 
           <div className="mt-6 text-sm text-[#4b5563]">
             <div className="flex flex-col items-center gap-2">
-              <Link href="/login/forgot-password" className="font-semibold text-[#011848]/90 hover:text-[#011848]">
+              <Link href="/login/forgot-password" className="font-semibold text-[#011848]/90 hover:text-[#011848]" data-testid="login-forgot-password-link">
                 Esqueci minha senha
               </Link>
               <div className="flex w-full items-center gap-3 text-xs uppercase tracking-[0.4em] text-[#c1c5d1]">
@@ -334,7 +328,7 @@ export default function LoginClient() {
                 <span className="px-1 text-[10px] tracking-[0.35em] text-[#c1c5d1]">OU</span>
                 <span className="flex-1 h-px bg-linear-to-r from-[#E5E7EB]/0 via-[#E5E7EB] to-[#E5E7EB]/0" />
               </div>
-              <Link href="/login/access-request" className="font-semibold text-[#ef0001] hover:text-[#c70000]">
+              <Link href="/login/access-request" className="font-semibold text-[#ef0001] hover:text-[#c70000]" data-testid="login-request-access-link">
                 Solicitar acesso
               </Link>
             </div>

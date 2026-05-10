@@ -27,6 +27,8 @@ export type BrainEdge = {
   target: string;
   type: string;
   weight?: number;
+  metadata?: Record<string, unknown> | null;
+  createdAt?: string;
 };
 
 export type BrainGraphData = {

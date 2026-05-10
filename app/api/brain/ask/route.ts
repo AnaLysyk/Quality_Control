@@ -4,6 +4,7 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import type { AgentMode } from "@/lib/brain/agents";
+import { runAllGuardrails } from "@/lib/brain/guardrails";
 
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
@@ -27,6 +28,15 @@ export async function POST(req: NextRequest) {
 
     if (!messages?.length) {
       return NextResponse.json({ error: "Mensagens obrigatorias" }, { status: 400 });
+    }
+
+    const lastUserMessage = [...messages].reverse().find((item) => item.role === "user")?.content ?? "";
+    const guardrailResult = runAllGuardrails(lastUserMessage);
+    if (!guardrailResult.allowed) {
+      return NextResponse.json({
+        error: guardrailResult.blocked?.reason ?? "Mensagem bloqueada por guardrails de segurança.",
+        guardrail: guardrailResult.blocked?.guardrail ?? "unknown",
+      }, { status: 400 });
     }
 
     const engine = new InternalBrainEngine();

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FiMenu } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
@@ -487,7 +487,7 @@ export default function AppShell({ children }: AppShellProps) {
   const isCompanyHomeRoute = isCompanyHomePathname(pathname);
   const isHomeRoute = pathname === "/" || pathname === "/home" || /\/home$/.test(pathname);
   const hideShellCover = shouldHideShellCover(pathname);
-  const isBrainCanvasRoute = pathname.startsWith("/admin/brain");
+  const isBrainCanvasRoute = pathname.startsWith("/admin/brain") || pathname.startsWith("/brain");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [coverSlotContent, setCoverSlotContent] = useState<ReactNode | null>(null);
   const [, setLogoFailureTick] = useState(0);
@@ -499,7 +499,7 @@ export default function AppShell({ children }: AppShellProps) {
     "aria-controls": mobileSidebarId,
     "aria-expanded": mobileOpen,
   } as const;
-  const shellIdentity = useMemo(() => {
+  const shellIdentity = (() => {
     const baseIdentity = resolveShellIdentity(pathname, shellCopy);
     const routeCompanySlug = resolveRouteCompanySlug(pathname);
     const preferredCompanySlug =
@@ -589,17 +589,7 @@ export default function AppShell({ children }: AppShellProps) {
       logoAlt,
       logoFallbackText,
     };
-  }, [
-    pathname,
-    isCompanyRoute,
-    isCompanyHomeRoute,
-    isHomeRoute,
-    user,
-    companies,
-    activeClient,
-    activeClientSlug,
-    shellCopy,
-  ]);
+  })();
 
   const shellLogoSrc =
     typeof shellIdentity.logoSrc === "string" && shellIdentity.logoSrc.trim()

@@ -12,10 +12,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
   try {
     const { prisma } = await import("@/lib/prismaClient");
-    // @ts-expect-error - Favorite model added via migration
     const row = await (prisma as any).favorite.findFirst({ where: { id, userId } });
     if (!row) return NextResponse.json({ message: "Favorito não encontrado" }, { status: 404 });
-    // @ts-expect-error
     await (prisma as any).favorite.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch {

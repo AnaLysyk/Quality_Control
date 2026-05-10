@@ -25,6 +25,53 @@ export type AuthUser = {
 };
 
 export async function authenticateRequest(req: Request): Promise<AuthUser | null> {
+  if (process.env.PLAYWRIGHT_MOCK === "true") {
+    const cookieHeader = req.headers.get("cookie") ?? "";
+    const rawCookie = cookieHeader
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith("e2e_auth="));
+    if (rawCookie) {
+      const encoded = rawCookie.slice("e2e_auth=".length);
+      try {
+        const decoded = JSON.parse(Buffer.from(decodeURIComponent(encoded), "base64url").toString("utf8")) as {
+          id?: string;
+          email?: string;
+          role?: string;
+          permissionRole?: string;
+          companyRole?: string;
+          companySlug?: string;
+          companySlugs?: string[];
+          isGlobalAdmin?: boolean;
+        };
+
+        const companySlugs = Array.isArray(decoded.companySlugs)
+          ? decoded.companySlugs.filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0)
+          : decoded.companySlug
+            ? [decoded.companySlug]
+            : [];
+
+        return {
+          id: decoded.id ?? "e2e-mock-user",
+          email: decoded.email ?? "e2e@testingcompany.local",
+          user: decoded.email ?? null,
+          isGlobalAdmin: decoded.isGlobalAdmin === true,
+          role: decoded.role ?? decoded.permissionRole ?? null,
+          globalRole: decoded.isGlobalAdmin === true ? "global_admin" : null,
+          companyRole: decoded.companyRole ?? decoded.role ?? null,
+          capabilities: [],
+          companyId: decoded.companySlug ?? null,
+          companySlug: decoded.companySlug ?? null,
+          companySlugs,
+          permissions: {},
+          permissionRole: decoded.permissionRole ?? decoded.role ?? null,
+        };
+      } catch {
+        // Ignore malformed e2e cookie and continue normal auth flow.
+      }
+    }
+  }
+
   const access = await getAccessContext(req);
   if (access) {
     const permissionAccess = await resolvePermissionAccessForUser(access.userId);

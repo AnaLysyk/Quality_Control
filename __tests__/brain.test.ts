@@ -327,7 +327,7 @@ describe('Brain - Cérebro do Quality Control', () => {
         refId: 'hierarchy-app',
       })
 
-      const module = await upsertNode({
+      const moduleNode = await upsertNode({
         type: 'Module',
         label: 'Hierarchy Module',
         refType: 'Module',
@@ -335,7 +335,7 @@ describe('Brain - Cérebro do Quality Control', () => {
       })
 
       await connectNodes(company.id, app.id, 'HAS_APPLICATION')
-      await connectNodes(app.id, module.id, 'HAS_MODULE')
+      await connectNodes(app.id, moduleNode.id, 'HAS_MODULE')
 
       const context = await getNodeWithContext(company.id, 2)
 

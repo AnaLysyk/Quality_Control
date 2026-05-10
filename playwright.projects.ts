@@ -17,7 +17,7 @@ export const QUALITY_PROJECT_MATCHES = {
     "**/user-creation-by-profile.spec.ts",
     "**/user-without-companies.spec.ts",
   ],
-  "quality-test-cases": ["**/test-cases-repository.spec.ts"],
+  "quality-test-cases": ["**/test-cases-repository.spec.ts", "**/case-repository-profile-cycle.spec.ts"],
   "quality-automation": ["**/automation-studio.spec.ts"],
   "quality-ai": ["**/brain-agents.spec.ts"],
   "quality-runs": [

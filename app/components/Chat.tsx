@@ -601,6 +601,16 @@ export default function Chat() {
   }, [searchParams, selectedPeerId]);
 
   useEffect(() => {
+    const focusParam = searchParams.get("focus");
+    if (focusParam === "search" && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        window.history.replaceState({}, "", window.location.pathname);
+      }, 100);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     void loadMessages(selectedPeerId);
   }, [loadMessages, selectedPeerId]);
 
@@ -908,6 +918,7 @@ export default function Chat() {
               <label className="flex items-center gap-3 rounded-[20px] border border-black/10 bg-(--tc-surface) px-4 py-3 text-sm text-(--tc-text-primary) focus-within:border-black/18 focus-within:bg-(--tc-surface) dark:border-white/10 dark:bg-white/6 dark:text-white/78 dark:focus-within:border-white/18 dark:focus-within:bg-white/8">
                 <FiSearch className="shrink-0 text-(--tc-text-muted) dark:text-white/42" />
                 <input
+                                    data-testid="chat-search-input"
                   ref={searchInputRef}
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}

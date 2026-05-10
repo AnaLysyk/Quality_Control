@@ -3,6 +3,7 @@ import { listApplications } from "@/lib/applicationsStore";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { QaseError } from "@/lib/qaseSdk";
 import { getQaseCase } from "@/lib/qasePlans";
+import { getTestCaseRecord } from "@/lib/test-cases/testCaseRepository";
 import { getManualTestPlan } from "@/lib/testPlansStore";
 
 function normalizeProjectCode(value: unknown) {
@@ -45,11 +46,33 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "planId is required for manual cases" }, { status: 400 });
     }
     const plan = await getManualTestPlan({ companySlug, id: planId });
-    const testCase = plan?.cases.find((item) => item.id === caseId) ?? null;
-    if (!testCase) {
+    const linkedCase = plan?.cases.find((item) => item.id === caseId) ?? null;
+    if (!linkedCase) {
       return NextResponse.json({ error: "Case not found" }, { status: 404 });
     }
-    return NextResponse.json({ case: testCase });
+    const centralRecord = await getTestCaseRecord(caseId);
+    if (!centralRecord) {
+      return NextResponse.json({ case: linkedCase });
+    }
+
+    return NextResponse.json({
+      case: {
+        id: centralRecord.testCase.id,
+        title: centralRecord.testCase.title,
+        description: centralRecord.testCase.description ?? null,
+        preconditions: centralRecord.testCase.preconditions ?? null,
+        postconditions: centralRecord.testCase.postconditions ?? null,
+        severity: centralRecord.testCase.severity ?? null,
+        link: null,
+        steps: centralRecord.steps.map((step) => ({
+          id: step.id,
+          action: step.action,
+          expectedResult: step.expectedResult,
+          data: step.data ?? null,
+        })),
+        ...(linkedCase.automation ? { automation: linkedCase.automation } : {}),
+      },
+    });
   }
 
   const requestedProjectCode = normalizeProjectCode(url.searchParams.get("project"));

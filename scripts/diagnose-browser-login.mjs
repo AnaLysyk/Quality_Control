@@ -58,10 +58,8 @@ function ensureDir(d) {
     } else {
       await userInput.fill(adminUser.user).catch(() => {});
       await passInput.fill(adminUser.password).catch(() => {});
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {}),
-        submit.click().catch(() => {}),
-      ]);
+      await submit.click().catch(() => {});
+      await page.waitForURL('**/*', { timeout: 60000 }).catch(() => {});
     }
 
     // try loading admin home

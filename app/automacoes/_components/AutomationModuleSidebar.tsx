@@ -15,7 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/automacoes/tools", icon: FiTool, label: "Tools" },
   { href: "/automacoes/api-lab", icon: FiServer, label: "API Lab" },
   { href: "/automacoes/ui-studio", icon: FiCode, label: "UI Studio" },
-  { href: "/automacoes/casos", icon: FiClipboard, label: "Casos" },
+  { href: "/casos-de-teste", icon: FiClipboard, label: "Casos" },
   { href: "/automacoes/arquivos", icon: FiFolder, label: "Assets" },
   { href: "/automacoes/execucoes", icon: FiActivity, label: "Runs" },
 ];

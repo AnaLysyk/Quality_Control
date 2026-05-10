@@ -387,8 +387,8 @@ export function OperationsWorkspaceClient() {
     signals
       .filter((signal) => signal.application === applied.application)
       .forEach((signal) => {
-        const module = normalizeModule(signal.module);
-        if (module !== "none") available.add(module);
+        const moduleName = normalizeModule(signal.module);
+        if (moduleName !== "none") available.add(moduleName);
       });
 
     available.add("Aplicacoes");

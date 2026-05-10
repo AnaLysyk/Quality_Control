@@ -632,7 +632,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             />
           </label>
 
-          <div className="mt-3 rounded-[16px] border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3">
+          <div className="mt-3 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">URL resolvida</p>
             <p className="mt-1 break-all font-mono text-xs leading-6 text-white">{resolvedUrlPreview}</p>
           </div>
@@ -643,7 +643,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             </div>
           ) : null}
 
-          <div className="mt-4 flex flex-wrap gap-2 rounded-[16px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
+          <div className="mt-4 flex flex-wrap gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
             {[
               { id: "params" as const, label: "Params", icon: FiSliders },
               { id: "auth" as const, label: "Auth", icon: FiLock },
@@ -672,7 +672,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           </div>
 
           {activePanel === "params" ? (
-            <section className="mt-4 rounded-[16px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+            <section className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Query params</p>
@@ -681,6 +681,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 <button
                   type="button"
                   onClick={() => appendKeyValueRow(setQueryRows)}
+                  aria-label="Adicionar query param"
+                  title="Adicionar query param"
                   className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
                   <FiPlus className="h-4 w-4" />
@@ -704,6 +706,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                     <button
                       type="button"
                       onClick={() => removeKeyValueRow(setQueryRows, row.id)}
+                      aria-label="Remover query param"
+                      title="Remover query param"
                       className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)"
                     >
                       <FiTrash2 className="h-4 w-4" />
@@ -715,7 +719,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           ) : null}
 
           {activePanel === "auth" ? (
-            <section className="mt-4 rounded-[16px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+            <section className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
                   Tipo de autenticaÃ§Ã£o
@@ -824,7 +828,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
           {activePanel === "variables" ? (
             <section className="mt-4 grid gap-4 xl:grid-cols-2">
-              <article className="rounded-[16px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+              <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis do ambiente</p>
@@ -833,6 +837,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                   <button
                     type="button"
                     onClick={() => appendKeyValueRow(setEnvironmentVariableRows)}
+                    aria-label="Adicionar variável de ambiente"
+                    title="Adicionar variável de ambiente"
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                   >
                     <FiPlus className="h-4 w-4" />
@@ -856,6 +862,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       <button
                         type="button"
                         onClick={() => removeKeyValueRow(setEnvironmentVariableRows, row.id)}
+                        aria-label="Remover variável de ambiente"
+                        title="Remover variável de ambiente"
                         className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)"
                       >
                         <FiTrash2 className="h-4 w-4" />
@@ -865,7 +873,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 </div>
               </article>
 
-              <article className="rounded-[16px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+              <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis do request</p>
@@ -874,6 +882,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                   <button
                     type="button"
                     onClick={() => appendKeyValueRow(setLocalVariableRows)}
+                    aria-label="Adicionar variável da request"
+                    title="Adicionar variável da request"
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                   >
                     <FiPlus className="h-4 w-4" />
@@ -897,6 +907,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       <button
                         type="button"
                         onClick={() => removeKeyValueRow(setLocalVariableRows, row.id)}
+                        aria-label="Remover variável da request"
+                        title="Remover variável da request"
                         className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)"
                       >
                         <FiTrash2 className="h-4 w-4" />
@@ -906,7 +918,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 </div>
               </article>
 
-              <article className="rounded-[16px] border border-(--tc-border,#d7deea) bg-white p-3 xl:col-span-2">
+              <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3 xl:col-span-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis de sistema</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {systemVariables.map((item) => (
@@ -923,7 +935,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           ) : null}
 
           {activePanel === "headers" ? (
-            <section className="mt-4 rounded-[16px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+            <section className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Headers</p>
@@ -932,6 +944,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 <button
                   type="button"
                   onClick={() => appendKeyValueRow(setHeaderRows)}
+                  aria-label="Adicionar header"
+                  title="Adicionar header"
                   className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
                 >
                   <FiPlus className="h-4 w-4" />
@@ -955,6 +969,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                     <button
                       type="button"
                       onClick={() => removeKeyValueRow(setHeaderRows, row.id)}
+                      aria-label="Remover header"
+                      title="Remover header"
                       className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)"
                     >
                       <FiTrash2 className="h-4 w-4" />
@@ -973,7 +989,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 onChange={(event) => setBody(event.target.value)}
                 rows={14}
                 placeholder='{"cpf":"{{cpf}}"}'
-                className="rounded-[16px] border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
+                className="rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
               />
             </label>
           ) : null}
@@ -987,6 +1003,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 type="button"
                 onClick={copyResponse}
                 disabled={!response}
+                aria-label="Copiar resposta"
+                title="Copiar resposta"
                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:opacity-40"
               >
                 <FiCopy className="h-4 w-4" />
@@ -994,7 +1012,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             </div>
           </div>
 
-          <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
+          <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
             <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Status</p>
               <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{response ? `${response.status} ${response.statusText}` : "--"}</p>
@@ -1033,7 +1051,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             ))}
           </div>
 
-          <div className="mt-3 min-h-[420px] rounded-[16px] border border-(--tc-border,#d7deea) bg-[#081227] p-4">
+          <div className="mt-3 min-h-105 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] p-4">
             <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs leading-6 text-white">
               {responseTab === "headers"
                 ? JSON.stringify(response?.headers ?? {}, null, 2)

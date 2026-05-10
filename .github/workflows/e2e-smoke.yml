@@ -8,13 +8,24 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.0-jammy
+      options: --user 1001 --ipc=host --init
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
       - run: npm ci
-      - run: npx playwright install --with-deps
-      - run: npm run test:e2e:smoke
+      - env:
+          CI: "true"
+        run: npm run test:e2e:smoke
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report-smoke
+          path: playwright-report/
+          retention-days: 30

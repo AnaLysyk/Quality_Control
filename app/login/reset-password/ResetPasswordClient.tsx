@@ -130,6 +130,7 @@ export default function ResetPasswordClient() {
         </div>
 
         <form
+          data-testid="reset-password-form"
           className="w-full rounded-2xl border border-[#011848]/10 bg-white/90 p-5 shadow-2xl backdrop-blur-sm sm:p-7"
           onSubmit={handleSubmit}
         >
@@ -151,6 +152,7 @@ export default function ResetPasswordClient() {
                 {t("resetPassword.newPassword")}
               </label>
               <input
+                data-testid="reset-password-new-password-input"
                 id="new-password"
                 name="newPassword"
                 type="password"
@@ -167,6 +169,7 @@ export default function ResetPasswordClient() {
                 {t("resetPassword.confirmPassword")}
               </label>
               <input
+                data-testid="reset-password-confirm-password-input"
                 id="confirm-password"
                 name="confirmPassword"
                 type="password"
@@ -181,6 +184,7 @@ export default function ResetPasswordClient() {
           </div>
 
           <button
+            data-testid="reset-password-submit-button"
             type="submit"
             disabled={loading}
             className="mt-6 w-full rounded-lg bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 font-medium text-white transition-all duration-200 hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:ring-2 focus:ring-[#ef0001] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"

@@ -26,10 +26,8 @@ async function tryPort(port) {
 
     await userInput.fill(adminUser.user);
     await passInput.fill(adminUser.password);
-    await Promise.all([
-      page.waitForNavigation({ timeout: 30000, waitUntil: 'domcontentloaded' }),
-      submit.click(),
-    ]).catch(() => {});
+    await submit.click().catch(() => {});
+    await page.waitForURL('**/*', { timeout: 30000 }).catch(() => {});
 
     // After login, try visiting admin/home in case redirect didn't happen
     try {

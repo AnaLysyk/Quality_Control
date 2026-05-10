@@ -31,14 +31,21 @@ export function filterTestCasesByPermission(records: TestCaseRecord[], user: Aut
   if (canUseGlobalTestCaseScope(user)) return records;
   const allowedCompanies = resolveAllowedTestCaseCompanies(user);
   return records.filter((record) => {
-    const companyId = record.testCase.companyId?.toLowerCase();
-    return Boolean(companyId && allowedCompanies.includes(companyId));
+    const companySlug = record.testCase.companyId?.toLowerCase();
+    return Boolean(companySlug && allowedCompanies.includes(companySlug));
   });
 }
 
-export function canCreateTestCaseForCompany(user: AuthUser, companyId: string | null | undefined) {
+export function canCreateTestCaseForCompany(user: AuthUser, companySlug: string | null | undefined) {
   if (canUseGlobalTestCaseScope(user)) return true;
-  const normalizedCompanyId = companyId?.trim().toLowerCase();
-  if (!normalizedCompanyId) return false;
-  return resolveAllowedTestCaseCompanies(user).includes(normalizedCompanyId);
+  const normalizedCompanySlug = companySlug?.trim().toLowerCase();
+  if (!normalizedCompanySlug) return false;
+  return resolveAllowedTestCaseCompanies(user).includes(normalizedCompanySlug);
+}
+
+export function canAccessTestCaseRecord(user: AuthUser, record: TestCaseRecord) {
+  if (canUseGlobalTestCaseScope(user)) return true;
+  const companySlug = record.testCase.companyId?.toLowerCase();
+  if (!companySlug) return false;
+  return resolveAllowedTestCaseCompanies(user).includes(companySlug);
 }

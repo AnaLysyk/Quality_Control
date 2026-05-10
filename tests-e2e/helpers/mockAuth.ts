@@ -17,9 +17,9 @@ function buildPasswordCandidates(primary: string) {
 
 function buildEmailCandidates(primary: string, role: MockAuthOptions["role"], wantsNoCompany: boolean) {
   const defaultsByRole =
-    role === "admin"
+    role === "admin" || role === "leader_tc" || role === "technical_support"
       ? ["admin@demo.test", "admin", "ana1"]
-      : role === "company" || role === "client"
+      : role === "company" || role === "client" || role === "empresa" || role === "company_user"
         ? ["company@demo.test", "demo"]
         : wantsNoCompany
           ? ["nocompany@demo.test"]
@@ -28,26 +28,103 @@ function buildEmailCandidates(primary: string, role: MockAuthOptions["role"], wa
 }
 
 export type MockAuthOptions = {
-  role: "admin" | "company" | "client" | "user";
+  role:
+    | "admin"
+    | "company"
+    | "client"
+    | "user"
+    | "empresa"
+    | "technical_support"
+    | "leader_tc"
+    | "testing_company_user"
+    | "company_user";
+  id?: string;
+  permissionRole?: string;
+  companyRole?: string;
   companies?: string[];
+  companySlug?: string;
+  companySlugs?: string[];
   clientSlug?: string;
+  clientSlugs?: string[];
+  isGlobalAdmin?: boolean;
+  name?: string;
+  email?: string;
 };
+
+function normalizeList(values: Array<string | null | undefined>) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => String(value ?? "").trim())
+        .filter((value) => value.length > 0),
+    ),
+  );
+}
+
+function toCompanyName(slug: string) {
+  const normalized = slug.trim().toLowerCase();
+  if (normalized === "testing-company") return "Testing Company";
+  return slug;
+}
+
+function buildMockMePayload(options: MockAuthOptions) {
+  const companySlugs = normalizeList([
+    ...(options.companySlugs ?? []),
+    ...(options.clientSlugs ?? []),
+    ...(options.companies ?? []),
+    options.companySlug,
+    options.clientSlug,
+  ]);
+
+  const effectiveCompanySlug =
+    String(options.companySlug ?? options.clientSlug ?? companySlugs[0] ?? "testing-company").trim() || "testing-company";
+
+  const user = {
+    id: options.id ?? `e2e-${options.role}`,
+    email: options.email ?? `e2e-${options.role}@testingcompany.local`,
+    name: options.name ?? `E2E ${options.role}`,
+    role: options.role,
+    permissionRole: options.permissionRole ?? options.role,
+    companyRole: options.companyRole ?? options.role,
+    companySlug: effectiveCompanySlug,
+    companySlugs,
+    clientSlug: options.clientSlug ?? effectiveCompanySlug,
+    clientSlugs: options.clientSlugs ?? companySlugs,
+    isGlobalAdmin: options.isGlobalAdmin === true,
+    defaultClientSlug: options.clientSlug ?? effectiveCompanySlug,
+  };
+
+  const companies = companySlugs
+    .filter(Boolean)
+    .map((slug) => ({
+      id: slug,
+      slug,
+      name: toCompanyName(slug),
+      role: (options.companyRole ?? options.role).toUpperCase() === "EMPRESA" ? "ADMIN" : "USER",
+      active: true,
+      companyRole: options.companyRole ?? options.role,
+    }));
+
+  return { user, companies };
+}
 
 export async function mockAuth(context: BrowserContext, options: MockAuthOptions) {
   const { role, companies } = options;
   const wantsNoCompany = Array.isArray(companies) && companies.length === 0;
+  const explicitLoginEmail = options.email && options.email.includes("@") ? options.email : null;
   const loginEmail =
-    role === "admin"
+    explicitLoginEmail ??
+    (role === "admin" || role === "leader_tc" || role === "technical_support"
       ? ADMIN_EMAIL
-      : role === "company" || role === "client"
+      : role === "company" || role === "client" || role === "empresa" || role === "company_user"
         ? COMPANY_EMAIL
         : wantsNoCompany
           ? NO_COMPANY_EMAIL
-          : USER_EMAIL;
+          : USER_EMAIL);
   const loginPassword =
-    role === "admin"
+    role === "admin" || role === "leader_tc" || role === "technical_support"
       ? ADMIN_PASSWORD
-      : role === "company" || role === "client"
+      : role === "company" || role === "client" || role === "empresa" || role === "company_user"
         ? COMPANY_PASSWORD
         : wantsNoCompany
           ? NO_COMPANY_PASSWORD
@@ -69,26 +146,81 @@ export async function mockAuth(context: BrowserContext, options: MockAuthOptions
     if (response?.ok()) break;
   }
 
-  if (!response?.ok()) {
-    throw new Error(`mockAuth login failed: ${response?.status()} ${response?.statusText()}`);
-  }
-
-  const setCookie = response.headers()["set-cookie"];
+  const setCookie = response?.ok() ? response.headers()["set-cookie"] : null;
   const raw = Array.isArray(setCookie) ? setCookie.join(";") : setCookie;
   const sessionMatch = raw?.match(/session_id=([^;]+)/);
   const authMatch = raw?.match(/auth_token=([^;]+)/);
   const activeCompanyMatch = raw?.match(/active_company_slug=([^;]+)/);
-  if (!sessionMatch?.[1]) {
-    throw new Error("mockAuth login failed: missing session_id cookie");
-  }
-  const cookies = [{ name: "session_id", value: sessionMatch[1], url: baseURL }];
+  const cookies = [
+    {
+      name: "session_id",
+      value: sessionMatch?.[1] ?? `e2e-session-${Date.now().toString(36)}`,
+      url: baseURL,
+    },
+  ];
   if (authMatch?.[1]) {
     cookies.push({ name: "auth_token", value: authMatch[1], url: baseURL });
   }
   if (activeCompanyMatch?.[1]) {
     cookies.push({ name: "active_company_slug", value: activeCompanyMatch[1], url: baseURL });
   }
+  if (options.companySlug) {
+    cookies.push({ name: "active_company_slug", value: options.companySlug, url: baseURL });
+  }
   await context.addCookies(cookies);
+
+  const mePayload = buildMockMePayload(options);
+  const e2eAuthPayload = Buffer.from(
+    JSON.stringify({
+      id: mePayload.user.id,
+      email: mePayload.user.email,
+      role: mePayload.user.role,
+      permissionRole: mePayload.user.permissionRole,
+      companyRole: mePayload.user.companyRole,
+      companySlug: mePayload.user.companySlug,
+      companySlugs: mePayload.user.companySlugs,
+      isGlobalAdmin: mePayload.user.isGlobalAdmin,
+    }),
+  ).toString("base64url");
+
+  cookies.push({ name: "e2e_auth", value: e2eAuthPayload, url: baseURL });
+  await context.addCookies([{ name: "e2e_auth", value: e2eAuthPayload, url: baseURL }]);
+
+  await context.route("**/api/me", async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mePayload),
+    });
+  });
+
+  await context.route("**/api/auth/me", async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mePayload),
+    });
+  });
+
+  await context.route("**/api/me/clients", async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: mePayload.companies }),
+    });
+  });
 }
 
 

@@ -2,27 +2,33 @@ import { expect, test } from "./fixtures/test";
 import { mockAuth } from "./helpers/mockAuth";
 
 test.describe("Repositorio central de casos de teste", () => {
-  test("@case=TC-CASES-001 abre o repositorio e mostra vinculos com planos, runs e Playwright", async ({
+  test("@case=TC-CASES-001 abre o repositorio central e mostra a tela unica", async ({
     context,
     page,
   }) => {
-    await mockAuth(context, { role: "admin" });
-
-    const apiResponse = await context.request.get("/api/test-cases");
-    expect(apiResponse.ok()).toBeTruthy();
-    const repositoryPayload = (await apiResponse.json()) as { total: number; metrics: { total: number } };
-    expect(repositoryPayload.total).toBeGreaterThan(0);
-    expect(repositoryPayload.metrics.total).toBe(repositoryPayload.total);
+    await mockAuth(context, {
+      role: "leader_tc",
+      permissionRole: "leader_tc",
+      companyRole: "leader_tc",
+      companySlug: "testing-company",
+      companySlugs: ["testing-company", "griaule"],
+      clientSlug: "testing-company",
+      clientSlugs: ["testing-company", "griaule"],
+      isGlobalAdmin: true,
+    });
 
     await page.goto("/casos-de-teste");
 
-    await expect(page).toHaveURL(/\/automacoes\/casos/);
+    await expect(page).toHaveURL(/\/casos-de-teste/);
+    await expect(page).not.toHaveURL(/\/automacoes\/casos/);
 
     const repository = page.getByTestId("test-case-repository");
     await expect(repository).toBeVisible();
     await expect(repository.getByRole("heading", { name: "Casos de Teste" })).toBeVisible();
-    await expect(repository.getByText(/Repositorio central de casos manuais/i)).toBeVisible();
-    await expect(repository.getByText("Com run")).toBeVisible();
-    await expect(repository.getByText("Com spec")).toBeVisible();
+    await expect(repository.getByText(/Repositório Central/i)).toBeVisible();
+    await expect(repository.getByRole("button", { name: "Novo caso de teste" })).toBeVisible();
+    await expect(repository.getByLabel("Origem")).toBeVisible();
+    await expect(repository.getByLabel("Status")).toBeVisible();
+    await expect(repository.getByLabel("Automação")).toBeVisible();
   });
 });

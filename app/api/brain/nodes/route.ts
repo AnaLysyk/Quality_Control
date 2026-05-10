@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { type, label, refType, refId, description, metadata } = body;
+    const { type, label, refType, refId, description, metadata, companySlug, source } = body;
 
     if (!type || !label) {
       return NextResponse.json({ error: "type e label sao obrigatorios" }, { status: 400 });
@@ -38,8 +38,14 @@ export async function POST(req: Request) {
       refType,
       refId,
       description,
-      metadata,
+      metadata: {
+        ...(metadata ?? {}),
+        companySlug: companySlug ?? metadata?.companySlug,
+        source: source ?? metadata?.source ?? "manual_node.create",
+        createdBy: admin.id,
+      },
       userId: admin.id,
+      enforceOntology: true,
     });
 
     return NextResponse.json({ node }, { status: 201 });

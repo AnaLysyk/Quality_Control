@@ -5,11 +5,13 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
 import { useI18n } from "@/hooks/useI18n";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { formatRunTitle } from "@/lib/runPresentation";
-import { FiSearch, FiCalendar, FiChevronLeft, FiChevronRight, FiActivity, FiLayers, FiGrid } from "react-icons/fi";
+import { FiSearch, FiCalendar, FiChevronLeft, FiChevronRight, FiActivity, FiLayers, FiGrid, FiBookOpen, FiShield } from "react-icons/fi";
 
 type RunStats = {
   pass: number;
@@ -85,6 +87,14 @@ type UnifiedRun = {
   testPlanName: string | null;
   testPlanSource: "manual" | "qase" | null;
   testPlanProjectCode: string | null;
+};
+
+const PROFILE_LABEL: Record<string, string> = {
+  empresa: "Empresa",
+  technical_support: "Suporte Técnico",
+  leader_tc: "Líder TC",
+  testing_company_user: "Usuário TC",
+  company_user: "Usuário da Empresa",
 };
 
 function normalizeKey(value: unknown) {
@@ -360,6 +370,7 @@ function statusColor(label: string) {
 }
 
 export default function CompanyRunsPage() {
+  const { user } = useAuthUser();
   const { t, language } = useI18n();
   const params = useParams();
   const router = useRouter();
@@ -375,6 +386,12 @@ export default function CompanyRunsPage() {
   const [applicationFilter, setApplicationFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const roleKey =
+    (typeof user?.permissionRole === "string" && user.permissionRole.trim()) ||
+    (typeof user?.companyRole === "string" && user.companyRole.trim()) ||
+    (typeof user?.role === "string" && user.role.trim()) ||
+    "";
+  const roleLabel = PROFILE_LABEL[roleKey.toLowerCase()] ?? (roleKey || "Perfil");
 
   useEffect(() => {
     const currentCompanySlug = companySlug ?? "";
@@ -593,15 +610,51 @@ export default function CompanyRunsPage() {
     [runs],
   );
 
+  const coverContent = useMemo(
+    () => (
+      <div className="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto_auto] xl:items-center">
+        <Link
+          href="/docs"
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 py-2 text-center text-sm font-bold text-[#011848] shadow-[0_2px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-[#f0f4ff] sm:justify-start"
+        >
+          <FiBookOpen className="h-4 w-4 shrink-0" />
+          Abrir documentação do código
+        </Link>
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+          <FiShield className="h-4 w-4 shrink-0" />
+          <span className="wrap-break-word">
+            {roleLabel}
+            {companySlug ? `: ${companySlug}` : ""}
+          </span>
+        </div>
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+          <FiGrid className="h-4 w-4 shrink-0" />
+          <span>{totals.total} {t("runsPage.totalLabel").toLowerCase()}</span>
+        </div>
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+          <FiActivity className="h-4 w-4 shrink-0" />
+          <span>{totals.integrated} {t("runsPage.integratedLabel").toLowerCase()}</span>
+        </div>
+      </div>
+    ),
+    [companySlug, roleLabel, t, totals.integrated, totals.total],
+  );
+
+  useAppShellCoverSlot(coverContent);
+
   return (
-    <div className="w-full space-y-4 py-4 sm:py-6" data-testid="runs-page">
+    <div className="w-full space-y-4 py-4 sm:py-6" data-testid="test-run-repository">
         {/* â”€â”€ Header â”€â”€ */}
-        <header className="rounded-[28px] border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm sm:p-6">
+        <header className="rounded-[28px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">{t("runsPage.kicker")}</p>
-              <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-(--tc-text,#0b1a3c)">{t("runsPage.title")}</h1>
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-(--tc-text,#0b1a3c)">{t("runsPage.title")}</h1>
               <p className="mt-1 max-w-xl text-sm text-(--tc-text-muted,#6b7280)">{t("runsPage.subtitle")}</p>
+              <p data-testid="test-run-context-chip" className="mt-2 inline-flex rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-xs font-bold">
+                {roleLabel}
+                {companySlug ? ` - ${companySlug}` : ""}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {[
@@ -625,7 +678,7 @@ export default function CompanyRunsPage() {
 
         </header>
         {/* â”€â”€ Runs list â”€â”€ */}
-        <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm sm:p-5" data-testid="runs-list">
+        <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm sm:p-5" data-testid="test-run-list">
           {/* Filters */}
           <div className="flex flex-col gap-3 pb-3 md:flex-row md:items-center">
             <div className="relative flex-1">
@@ -724,6 +777,7 @@ export default function CompanyRunsPage() {
                 return (
                   <div
                     key={run.key}
+                    data-testid="test-run-card"
                     onClick={() => router.push(runHref)}
                     role="button"
                     tabIndex={0}
@@ -737,6 +791,9 @@ export default function CompanyRunsPage() {
                       {/* Left: Info */}
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
+                          <span data-testid="test-run-key" className="rounded-full border border-slate-300 bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-800">
+                            {run.slug}
+                          </span>
                           <Link
                             href={runHref}
                             onClick={(e) => e.stopPropagation()}

@@ -1,17 +1,15 @@
-FROM mcr.microsoft.com/playwright:v1.37.0-focal
+FROM mcr.microsoft.com/playwright:v1.49.0-jammy
 
-WORKDIR /workspace
+WORKDIR /home/pwuser/app
 
-# Copy package files first for caching
+# Install node dependencies from lockfile first to maximize layer cache reuse.
 COPY package.json package-lock.json* ./
-
 RUN npm ci --prefer-offline --no-audit --progress=false
 
-# Copy the rest of the repo
+# Copy repository files after dependencies.
 COPY . .
 
-# Install playwright browsers (image may already include them)
-RUN npx playwright install --with-deps || true
+# Run tests as non-root by default.
+USER pwuser
 
-# Default command: run tests
 CMD ["npx", "playwright", "test", "--reporter=list", "--workers=1"]

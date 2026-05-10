@@ -31,7 +31,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
   }
 
   return (
-    <div className="w-full py-6 sm:py-8 text-(--tc-text,#0b1a3c)">
+    <div data-testid="test-run-detail" className="w-full py-6 sm:py-8 text-(--tc-text,#0b1a3c)">
       <div className="w-full space-y-5">
         {/* ── Main card — hero + stats ── */}
         <div className="overflow-hidden rounded-3xl shadow-[0_20px_50px_rgba(15,23,42,0.16)]">

@@ -6,7 +6,7 @@ import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
 import { emailService } from "@/lib/email";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { notifyPasswordResetStatus, notifyProfileDeletionStatus } from "@/lib/notificationService";
-import { getRedis } from "@/lib/redis";
+import { storePasswordResetToken } from "@/lib/auth/passwordResetToken";
 import { canAccessSelfServiceRequest, canReviewSelfServiceRequests } from "@/lib/selfServiceRequestAccess";
 
 function isFinalStatus(value: string | null): value is Exclude<RequestStatus, "PENDING" | "NEEDS_REVISION"> {
@@ -41,6 +41,16 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (!canReviewSelfServiceRequests(authUser)) {
     return NextResponse.json({ message: "Sem permissão para revisar solicitações" }, { status: 403 });
   }
+
+  const reviewNote = (body?.reviewNote ?? "").trim();
+  if (nextStatus === "REJECTED" && reviewNote.length === 0) {
+    return NextResponse.json({ message: "Comentário é obrigatório para rejeitar" }, { status: 400 });
+  }
+
+  if (nextStatus === "APPROVED" && requestRecord.userId === authUser.id) {
+    return NextResponse.json({ message: "Autoaprovação não é permitida" }, { status: 403 });
+  }
+
   if (requestRecord.status !== "PENDING" && requestRecord.status !== "NEEDS_REVISION") {
     return NextResponse.json({ item: requestRecord });
   }
@@ -51,8 +61,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
     }
     const token = randomUUID();
-    const redis = getRedis();
-    await redis.set(`reset:${token}`, user.id, { ex: 15 * 60 });
+    await storePasswordResetToken(token, user.id);
     const targetEmail = user.email || requestRecord.userEmail;
     if (!targetEmail) {
       return NextResponse.json({ message: "Email do usuário não encontrado" }, { status: 400 });
@@ -77,7 +86,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     }
   }
 
-  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, body?.reviewNote);
+  const updated = await updateRequestStatus(id, nextStatus, { id: authUser.id }, reviewNote || undefined);
   if (updated && isFinalStatus(nextStatus)) {
     if (updated.type === "PASSWORD_RESET") {
       try {

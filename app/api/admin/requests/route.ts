@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { listAllRequests, listUserRequests, type RequestStatus, type RequestType } from "@/data/requestsStore";
+import { listAllRequests, type RequestStatus, type RequestType } from "@/data/requestsStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { canReviewSelfServiceRequests, resolveSelfServiceRequestScope } from "@/lib/selfServiceRequestAccess";
 
@@ -24,6 +24,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
+  if (!canReviewSelfServiceRequests(authUser)) {
+    return NextResponse.json({ message: "Acesso proibido para esta fila administrativa" }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const statusParam = searchParams.get("status");
   const typeParam = searchParams.get("type");
@@ -37,10 +41,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
-  const items =
-    scope === "all"
-      ? await listAllRequests({ status, type, companyId, sort })
-      : await listUserRequests(authUser.id, { status, type, sort });
+  const items = await listAllRequests({ status, type, companyId, sort });
 
   return NextResponse.json({
     items,

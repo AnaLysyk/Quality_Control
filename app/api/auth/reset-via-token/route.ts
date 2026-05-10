@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getRedis } from "@/lib/redis";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { updateLocalUser } from "@/lib/auth/localStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
+import { consumePasswordResetToken } from "@/lib/auth/passwordResetToken";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -17,8 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "A senha deve ter pelo menos 8 caracteres" }, { status: 400 });
   }
 
-  const redis = getRedis();
-  const userId = await redis.get<string>(`reset:${token}`);
+  const userId = await consumePasswordResetToken(token);
   if (!userId) {
     return NextResponse.json({ error: "Token invalido ou expirado" }, { status: 400 });
   }
@@ -26,7 +25,6 @@ export async function POST(req: Request) {
   try {
     const hashedPassword = hashPasswordSha256(newPassword);
     await updateLocalUser(userId, { password_hash: hashedPassword });
-    await redis.del(`reset:${token}`);
     addAuditLogSafe({
       action: "auth.password.reset",
       entityType: "user",

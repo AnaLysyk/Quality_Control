@@ -7,7 +7,7 @@ export function RunKanbanSection({ vm }: { vm: RunDetailViewModel }) {
   const companySlug = vm.companySlug !== "demo" ? vm.companySlug : undefined;
 
   return (
-    <section>
+    <section data-testid="test-run-linked-case">
       {vm.source === "API" ? (
         <RunKanbanStream
           projectKey={vm.projectKey}

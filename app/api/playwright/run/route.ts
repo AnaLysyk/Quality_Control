@@ -10,6 +10,8 @@ export const dynamic = "force-dynamic";
 
 const RunSchema = z.object({
   companySlug: z.string().trim().min(1),
+  projectId: z.string().trim().optional(),
+  planId: z.string().trim().optional(),
   title: z.string().trim().default("Execução manual"),
   /** Array of { path, content } – scripts to include in the run */
   scripts: z.array(z.object({ path: z.string(), content: z.string() })).default([]),
@@ -59,12 +61,14 @@ export async function POST(request: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
-  const { companySlug, title, scripts, config } = parsed.data;
+  const { companySlug, projectId, planId, title, scripts, config } = parsed.data;
   if (!assertAccess(user, companySlug))
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   const runId = await startPlaywrightRun({
     companySlug,
+    projectId: projectId ?? null,
+    planId: planId ?? null,
     title,
     scripts,
     config,

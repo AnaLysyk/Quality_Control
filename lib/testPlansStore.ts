@@ -20,6 +20,7 @@ export type ManualTestPlanRecord = {
   applicationName: string;
   applicationSlug: string;
   projectCode?: string | null;
+  projectId?: string | null;
   title: string;
   description?: string | null;
   cases: TestPlanCase[];
@@ -49,6 +50,7 @@ function rowToRecord(row: {
   applicationName: string;
   applicationSlug: string;
   projectCode: string | null;
+  projectId?: string | null;
   title: string;
   description: string | null;
   cases: unknown;
@@ -63,6 +65,7 @@ function rowToRecord(row: {
     applicationName: row.applicationName,
     applicationSlug: row.applicationSlug,
     projectCode: row.projectCode,
+    projectId: row.projectId ?? null,
     title: row.title,
     description: row.description,
     cases: parseTestPlanCases(row.cases),
@@ -75,6 +78,7 @@ function rowToRecord(row: {
 export async function listManualTestPlans(filter: {
   companySlug: string;
   applicationId?: string | null;
+  projectId?: string | null;
 }) {
   const prisma = await getPrisma();
   const companySlug = filter.companySlug.trim().toLowerCase();
@@ -82,6 +86,7 @@ export async function listManualTestPlans(filter: {
     where: {
       companySlug,
       ...(filter.applicationId?.trim() ? { applicationId: filter.applicationId.trim() } : {}),
+      ...(filter.projectId?.trim() ? { projectId: filter.projectId.trim() } : {}),
     },
     orderBy: { createdAt: "desc" },
   });
@@ -111,6 +116,7 @@ export async function createManualTestPlan(
       applicationName: input.applicationName,
       applicationSlug: input.applicationSlug.trim().toLowerCase(),
       projectCode: normalizeOptionalString(input.projectCode),
+      projectId: normalizeOptionalString(input.projectId),
       title: input.title,
       description: normalizeOptionalString(input.description),
       cases: toStoredCaseLinks(input.cases) as object,
@@ -139,6 +145,7 @@ export async function updateManualTestPlan(
       ...(patch.applicationName !== undefined ? { applicationName: patch.applicationName } : {}),
       ...(patch.applicationSlug !== undefined ? { applicationSlug: patch.applicationSlug.trim().toLowerCase() } : {}),
       ...(patch.projectCode !== undefined ? { projectCode: normalizeOptionalString(patch.projectCode) } : {}),
+      ...(patch.projectId !== undefined ? { projectId: normalizeOptionalString(patch.projectId) } : {}),
       ...(patch.title !== undefined ? { title: patch.title } : {}),
       ...(patch.description !== undefined ? { description: normalizeOptionalString(patch.description) } : {}),
       ...(patch.cases !== undefined ? { cases: toStoredCaseLinks(patch.cases) as object } : {}),

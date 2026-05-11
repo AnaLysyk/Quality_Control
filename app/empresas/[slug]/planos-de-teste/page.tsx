@@ -22,6 +22,7 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { fetchApi } from "@/lib/api";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { useProjectContext } from "@/lib/core/project/ProjectContext";
 import {
   buildQaseCaseLink,
   createEmptyCaseStep,
@@ -438,6 +439,7 @@ export default function TestPlansPage() {
   const { user } = useAuthUser();
   const { slug } = useParams<{ slug: string }>();
   const { language } = useI18n();
+  const { selectedProject } = useProjectContext();
   const copy = (COPY[language] ?? COPY["pt-BR"]) as CopyType;
   const roleKey =
     (typeof user?.permissionRole === "string" && user.permissionRole.trim()) ||
@@ -527,6 +529,9 @@ export default function TestPlansPage() {
       if (selectedApplicationId) {
         query.set("applicationId", selectedApplicationId);
       }
+      if (selectedProject) {
+        query.set("projectId", selectedProject.id);
+      }
       const response = await fetchApi(`/api/test-plans?${query.toString()}`);
       const payload = await response.json().catch(() => null);
 
@@ -547,7 +552,7 @@ export default function TestPlansPage() {
     } finally {
       setLoadingPlans(false);
     }
-  }, [selectedApplicationId, slug]);
+  }, [selectedApplicationId, selectedProject, slug]);
 
   useEffect(() => {
     void loadPlans();
@@ -786,6 +791,7 @@ export default function TestPlansPage() {
           description: draft.description,
           ...(draft.source === "qase" ? { cases: casesPayload } : {}),
           projectCode: draftApplication?.qaseProjectCode ?? projectCode,
+          ...(selectedProject ? { projectId: selectedProject.id } : {}),
         }),
       });
       const payload = await response.json().catch(() => null);

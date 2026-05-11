@@ -45,10 +45,11 @@ async function writeManualRecords(records: TestCaseRecord[]) {
     for (const record of records) {
       const id = record.testCase.id;
       const companyId = record.testCase.companyId ?? null;
+      const projectId = record.testCase.projectId ?? null;
       await tx.storedTestCase.upsert({
         where: { id },
-        update: { data: record as object, companyId },
-        create: { id, companyId, data: record as object },
+        update: { data: record as object, companyId, projectId },
+        create: { id, companyId, projectId, data: record as object },
       });
     }
     // Remove records that are no longer in the list
@@ -232,7 +233,7 @@ export async function listTestCaseRecords(filters: TestCaseFilters = {}): Promis
     const testCase = record.testCase;
     if (query && !searchableText(record).includes(query)) return false;
     if (!matchesFilterValue(testCase.companyId, filters.companyId)) return false;
-    if (filters.projectId && (testCase as unknown as { projectId?: string | null }).projectId !== filters.projectId) return false;
+    if (filters.projectId && testCase.projectId !== filters.projectId) return false;
     if (!matchesFilterValue(testCase.applicationId, filters.applicationId)) return false;
     if (!matchesFilterValue(testCase.moduleId, filters.moduleId)) return false;
     if (!matchesProjectCode(testCase, filters.projectCode)) return false;
@@ -277,6 +278,7 @@ export async function createManualTestCaseRecord(input: CreateTestCaseInput, act
     severity: input.severity,
     risk: input.risk,
     companyId: input.companyId ?? null,
+    projectId: input.projectId ?? null,
     applicationId: normalizeText(input.applicationId) || null,
     moduleId: normalizeText(input.moduleId) || null,
     testProjectCode: normalizeText(input.testProjectCode)?.toUpperCase() || null,

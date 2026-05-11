@@ -175,6 +175,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const companySlug = url.searchParams.get("companySlug")?.trim().toLowerCase() || "";
   const applicationId = url.searchParams.get("applicationId")?.trim() || "";
+  const projectId = url.searchParams.get("projectId")?.trim() || "";
   const requestedProjectCode = normalizeProjectCode(url.searchParams.get("project"));
   const planId = url.searchParams.get("planId")?.trim() || "";
   const source = normalizeSource(url.searchParams.get("source"));
@@ -188,6 +189,7 @@ export async function GET(request: Request) {
   const manualPlans = await listManualTestPlans({
     companySlug,
     applicationId: applicationId || undefined,
+    projectId: projectId || undefined,
   });
 
   if (planId) {
@@ -346,6 +348,7 @@ export async function POST(request: Request) {
 
   const companySlug = String(body.companySlug ?? "").trim().toLowerCase();
   const applicationId = String(body.applicationId ?? "").trim();
+  const planProjectId = String(body.projectId ?? "").trim() || null;
   const source = normalizeSource(body.source);
   const title = String(body.title ?? "").trim();
   const description = typeof body.description === "string" ? body.description.trim() || null : null;
@@ -422,6 +425,7 @@ export async function POST(request: Request) {
     applicationName: selectedApplication.name,
     applicationSlug: selectedApplication.slug,
     projectCode: normalizeProjectCode(body.projectCode) || normalizeProjectCode(selectedApplication.qaseProjectCode),
+    projectId: planProjectId,
     title,
     description,
     cases: resolvedCaseRefs,

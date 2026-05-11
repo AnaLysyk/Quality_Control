@@ -87,6 +87,7 @@ function matchesTestCaseFilters(record: Awaited<ReturnType<typeof listTestCaseRe
     if (!haystack.includes(query)) return false;
   }
   if (!matchesFilterValue(testCase.companyId, filters.companyId)) return false;
+  if (filters.projectId && testCase.projectId !== filters.projectId) return false;
   if (!matchesFilterValue(testCase.applicationId, filters.applicationId)) return false;
   if (!matchesFilterValue(testCase.moduleId, filters.moduleId)) return false;
   if (!matchesFilterValue(testCase.suiteId, filters.suiteId)) return false;

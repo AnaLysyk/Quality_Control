@@ -25,6 +25,7 @@ import { useAppShellCoverSlot } from "@/components/AppShellCoverSlotContext";
 import { fetchApi } from "@/lib/api";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useClientContext } from "@/context/ClientContext";
+import { useProjectContext } from "@/lib/core/project/ProjectContext";
 
 type TestCaseStep = {
   id: string;
@@ -286,6 +287,7 @@ type DraftApprovalAction = "request_qa_review" | "approve_publish" | "approve_ex
 export default function TestCaseRepositoryClient() {
   const { user, normalizedUser } = useAuthUser();
   const { activeClientSlug } = useClientContext();
+  const { selectedProject } = useProjectContext();
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("all");
   const [status, setStatus] = useState("all");
@@ -415,7 +417,7 @@ export default function TestCaseRepositoryClient() {
 
   const coverContent = useMemo(
     () => (
-      <div className="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto] xl:items-center">
+      <div className="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto_auto] xl:items-center">
         <Link
           href="/docs"
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 py-2 text-center text-sm font-bold text-[#011848] shadow-[0_2px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-[#f0f4ff] sm:justify-start"
@@ -423,6 +425,12 @@ export default function TestCaseRepositoryClient() {
           <FiBookOpen className="h-4 w-4 shrink-0" />
           Abrir documentação do código
         </Link>
+        {selectedProject && (
+          <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+            <FiLayers className="h-4 w-4 shrink-0" />
+            <span className="max-w-40 truncate">{selectedProject.name}</span>
+          </div>
+        )}
         <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
           <FiShield className="h-4 w-4 shrink-0" />
           <span className="wrap-break-word">
@@ -436,7 +444,7 @@ export default function TestCaseRepositoryClient() {
         </div>
       </div>
     ),
-    [companySlug, roleLabel, visibleCompanyCount],
+    [companySlug, roleLabel, selectedProject, visibleCompanyCount],
   );
 
   useAppShellCoverSlot(coverContent);
@@ -514,6 +522,7 @@ export default function TestCaseRepositoryClient() {
       if (projectFilter !== "all") params.set("projectCode", projectFilter);
       if (suiteFilter !== "all") params.set("suiteId", suiteFilter);
       if (companySlug !== "all") params.set("companySlug", companySlug);
+      if (selectedProject) params.set("projectId", selectedProject.id);
 
       try {
         const response = await fetchApi(`/api/test-cases?${params.toString()}`, {
@@ -546,7 +555,7 @@ export default function TestCaseRepositoryClient() {
     void load();
 
     return () => controller.abort();
-  }, [applicationFilter, automationStatus, companySlug, moduleFilter, projectFilter, query, source, status, suiteFilter]);
+  }, [applicationFilter, automationStatus, companySlug, moduleFilter, projectFilter, query, selectedProject, source, status, suiteFilter]);
 
   useEffect(() => {
     if (!selectedId && items[0]) setSelectedId(items[0].testCase.id);
@@ -714,6 +723,7 @@ export default function TestCaseRepositoryClient() {
       companySlug: form.companySlug.trim() || undefined,
       applicationId: form.applicationId.trim() || undefined,
       moduleId: form.moduleId.trim() || undefined,
+      projectId: selectedProject?.id || undefined,
       testProjectCode: projectFilter !== "all" ? projectFilter : undefined,
       suiteId: suiteFilter !== "all" ? suiteFilter : undefined,
       suiteName: suiteFilter !== "all" ? suiteOptions.find(([id]) => id === suiteFilter)?.[1]?.split(" / ").pop() : undefined,

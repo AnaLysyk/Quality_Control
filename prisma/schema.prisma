@@ -1021,6 +1021,7 @@ model ManualTestPlan {
   applicationName String
   applicationSlug String
   projectCode     String?
+  projectId       String?
   title           String
   description     String?
   cases           Json     @default("[]")
@@ -1030,6 +1031,7 @@ model ManualTestPlan {
 
   @@index([companySlug])
   @@index([applicationId])
+  @@index([projectId])
   @@map("manual_test_plans")
 }
 

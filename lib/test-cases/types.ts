@@ -93,6 +93,7 @@ export type TestCase = {
   severity?: TestCasePriority;
   risk?: TestCasePriority;
   companyId?: string | null;
+  projectId?: string | null;
   applicationId?: string | null;
   moduleId?: string | null;
   testProjectId?: string | null;
@@ -295,6 +296,7 @@ export type CreateTestCaseInput = {
   severity?: TestCasePriority;
   risk?: TestCasePriority;
   companyId?: string | null;
+  projectId?: string | null;
   applicationId?: string | null;
   moduleId?: string | null;
   testProjectCode?: string | null;

@@ -3,6 +3,7 @@ import "server-only";
 import { getAccessContext } from "@/lib/auth/session";
 import { findUserByEmailOrId } from "@/lib/simpleAuth";
 import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole, toLegacyRole } from "@/lib/auth/localStore";
+import { hasForcedGlobalAccessForUser } from "@/lib/auth/specialAccess";
 import { resolveCapabilities } from "@/lib/permissions";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
 import { resolveVisibleCompanies } from "@/lib/companyVisibility";
@@ -107,7 +108,13 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   if (!user) return null;
 
   const [links, companies] = await Promise.all([listLocalLinksForUser(user.id), listLocalCompanies()]);
+  const hasForcedGlobalAccess = hasForcedGlobalAccessForUser({
+    id: user.id,
+    email: user.email,
+    user: (user as { user?: string | null }).user ?? null,
+  });
   const isGlobalAdmin =
+    hasForcedGlobalAccess ||
     (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
     (user as { globalRole?: string | null }).globalRole === "global_admin";
   const hasTechnicalSupportRole =
@@ -116,7 +123,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const hasLeaderTcRole =
     normalizeLocalRole((user as { role?: string | null }).role ?? null) === "leader_tc" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
-  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
+  const hasFullCompanyAccess = hasForcedGlobalAccess || isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const allowedCompanies = hasFullCompanyAccess
     ? companies
@@ -130,7 +137,7 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const rawRole = primaryLink?.role ?? (user as { role?: string | null }).role ?? null;
   const normalizedRole = normalizeLocalRole(rawRole);
   const companyRole = normalizedRole;
-  const effectiveRole = toLegacyRole(companyRole, isGlobalAdmin);
+  const effectiveRole = hasForcedGlobalAccess ? "leader_tc" : toLegacyRole(companyRole, isGlobalAdmin);
   const capabilities = resolveCapabilities({
     globalRole: isGlobalAdmin ? "global_admin" : null,
     companyRole,

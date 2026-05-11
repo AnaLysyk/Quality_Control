@@ -41,6 +41,23 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
 
   const visibleItems = mod.items.filter((item) => item.href);
 
+  if (visibleItems.length === 0 && mod.href) {
+    return (
+      <Link
+        href={mod.href}
+        data-testid={mod.testId}
+        title={mod.label}
+        aria-label={mod.label}
+        onClick={onClose}
+        className={`flex w-full items-center justify-center rounded-xl p-2 transition ${
+          isActive ? "bg-white/16 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
+        }`}
+      >
+        {createElement(getIcon(mod.iconKey), { size: 17 })}
+      </Link>
+    );
+  }
+
   return (
     <div className="relative">
       <button

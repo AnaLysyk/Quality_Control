@@ -17,7 +17,12 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   const { user, loading, error, refreshUser } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname() || "/";
+  const [mounted, setMounted] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!loading) {
@@ -63,7 +68,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
     void isLinkedTcUser;
   }, [isAdmin, loading, loginHref, router, slug, user]);
 
-  if (accessState === "loading") {
+  if (!mounted || accessState === "loading") {
     return (fallback as ReactNode) ?? <AuthSkeleton message="Validando acesso da empresa" />;
   }
 

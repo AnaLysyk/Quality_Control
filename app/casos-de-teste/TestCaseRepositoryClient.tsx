@@ -515,22 +515,32 @@ export default function TestCaseRepositoryClient() {
       if (suiteFilter !== "all") params.set("suiteId", suiteFilter);
       if (companySlug !== "all") params.set("companySlug", companySlug);
 
-      const response = await fetchApi(`/api/test-cases?${params.toString()}`, {
-        signal: controller.signal,
-      });
+      try {
+        const response = await fetchApi(`/api/test-cases?${params.toString()}`, {
+          signal: controller.signal,
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          if (!controller.signal.aborted) {
+            setItems([]);
+            setMetrics(null);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const payload = (await response.json()) as ApiResponse;
+        if (controller.signal.aborted) return;
+        setItems(payload.items || []);
+        setMetrics(payload.metrics);
+        setLoading(false);
+        setSelectedId((current) => current ?? payload.items?.[0]?.testCase.id ?? null);
+      } catch {
+        if (controller.signal.aborted) return;
         setItems([]);
         setMetrics(null);
         setLoading(false);
-        return;
       }
-
-      const payload = (await response.json()) as ApiResponse;
-      setItems(payload.items || []);
-      setMetrics(payload.metrics);
-      setLoading(false);
-      setSelectedId((current) => current ?? payload.items?.[0]?.testCase.id ?? null);
     }
 
     void load();

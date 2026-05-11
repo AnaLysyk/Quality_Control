@@ -81,6 +81,31 @@ type PrismaMembership = {
   createdAt: Date;
 };
 
+function isPrismaConnectionClosedError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const maybeCode = (error as { code?: unknown }).code;
+  if (typeof maybeCode === "string" && maybeCode === "P1017") return true;
+
+  const message =
+    typeof (error as { message?: unknown }).message === "string"
+      ? (error as { message: string }).message
+      : "";
+  if (/connection\s*closed/i.test(message)) return true;
+
+  const metaDriverError = (error as { meta?: { driverAdapterError?: unknown } }).meta?.driverAdapterError;
+  const nestedMessage =
+    typeof (metaDriverError as { message?: unknown } | undefined)?.message === "string"
+      ? ((metaDriverError as { message: string }).message ?? "")
+      : "";
+
+  return /connection\s*closed/i.test(nestedMessage);
+}
+
+async function sleepMs(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function toLocalUser(u: PrismaUser): LocalAuthUser {
   return {
     id: u.id,
@@ -384,8 +409,16 @@ export async function pgFindLocalCompanyBySlug(slug: string): Promise<LocalAuthC
 }
 
 export async function pgListLocalCompanies(): Promise<LocalAuthCompany[]> {
-  const companies = await prisma.company.findMany({ orderBy: { name: "asc" }, include: { integrations: true } });
-  return companies.map(toLocalCompany);
+  try {
+    const companies = await prisma.company.findMany({ orderBy: { name: "asc" }, include: { integrations: true } });
+    return companies.map(toLocalCompany);
+  } catch (error) {
+    if (!isPrismaConnectionClosedError(error)) throw error;
+
+    await sleepMs(120);
+    const companies = await prisma.company.findMany({ orderBy: { name: "asc" }, include: { integrations: true } });
+    return companies.map(toLocalCompany);
+  }
 }
 
 export async function pgCreateLocalCompany(

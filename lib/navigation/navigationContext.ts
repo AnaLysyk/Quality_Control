@@ -9,7 +9,8 @@ export type NavContext = {
 
 const MODULE_PATTERNS: Array<{ pattern: RegExp; module: NavModule }> = [
   { pattern: /^\/admin\/(dashboard|test-metric|runs|operac)/, module: "operations" },
-  { pattern: /^\/admin\/(clients|users|access-requests)/, module: "companies" },
+  { pattern: /^\/admin\/(access-requests)/, module: "requests" },
+  { pattern: /^\/admin\/(clients|users)/, module: "companies" },
   { pattern: /^\/admin\/(defeitos|releases|casos)/, module: "quality" },
   { pattern: /^\/admin\/(support|chamados)/, module: "support" },
   { pattern: /^\/admin\/(audit-logs|logs)/, module: "operations" },

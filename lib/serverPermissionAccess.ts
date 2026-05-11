@@ -4,6 +4,8 @@ import { getUserOverride, effectivePermissions, type UserPermissionsOverride } f
 import { resolveRoleDefaults, type Role } from "./permissions/roleDefaults";
 import { listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
 import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
+import { hasForcedGlobalAccessForUser } from "@/lib/auth/specialAccess";
+import { SYSTEM_ROLES } from "@/lib/auth/roles";
 import { normalizePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
 
 export type RoleKey = Role;
@@ -19,6 +21,12 @@ export type ResolvedPermissionAccess = {
 export async function resolveRoleKeyForUser(userId: string): Promise<RoleKey> {
   const [users, links] = await Promise.all([listLocalUsers(), listLocalLinksForUser(userId)]);
   const user = users.find((item) => item.id === userId) ?? null;
+  if (
+    user &&
+    hasForcedGlobalAccessForUser({ id: user.id, email: user.email, user: user.user ?? null })
+  ) {
+    return SYSTEM_ROLES.LEADER_TC;
+  }
   return resolvePermissionRoleForUser(user, links);
 }
 

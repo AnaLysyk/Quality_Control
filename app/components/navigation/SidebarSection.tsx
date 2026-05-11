@@ -24,6 +24,23 @@ export default function SidebarSection({
   onClose,
 }: SidebarSectionProps) {
   const visibleItems = mod.items.filter((item) => item.href);
+  const hasChildren = visibleItems.length > 0;
+
+  if (!hasChildren && mod.href) {
+    return (
+      <Link
+        href={mod.href}
+        data-testid={mod.testId}
+        onClick={onClose}
+        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+          isActive ? "text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
+        }`}
+      >
+        {createElement(getIcon(mod.iconKey), { size: 16, className: "shrink-0" })}
+        <span className="flex-1 truncate text-left">{mod.label}</span>
+      </Link>
+    );
+  }
 
   return (
     <div>

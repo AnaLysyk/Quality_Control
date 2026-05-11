@@ -9,6 +9,7 @@ import {
   normalizeGlobalRole,
   normalizeLocalRole,
 } from "@/lib/auth/localStore";
+import { hasForcedGlobalAccessForUser } from "@/lib/auth/specialAccess";
 import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { resolveCapabilities } from "@/lib/permissions";
 import { getJwtSecret } from "@/lib/auth/jwtSecret";
@@ -170,10 +171,19 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
   // 4) Regras de bloqueio basicas.
   if (!user || user.active === false || user.status === "blocked") return null;
 
+  const hasForcedGlobalAccess = hasForcedGlobalAccessForUser({
+    id: user.id,
+    email: user.email,
+    user: user.user,
+  });
+
   // 5) Resolve papel global e se e admin global.
-  const resolvedGlobalRole = normalizeGlobalRole(user.globalRole ?? session.globalRole ?? null);
+  const resolvedGlobalRole = hasForcedGlobalAccess
+    ? "global_admin"
+    : normalizeGlobalRole(user.globalRole ?? session.globalRole ?? null);
   const sessionRole = (session.role ?? "").toLowerCase();
   const isGlobalAdmin =
+    hasForcedGlobalAccess ||
     resolvedGlobalRole === "global_admin" ||
     user.is_global_admin === true ||
     session.isGlobalAdmin === true ||
@@ -188,7 +198,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     sessionRole === "leader_tc" ||
     normalizeLocalRole(user.role ?? null) === "leader_tc" ||
     links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
-  const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
+  const hasFullCompanyAccess = hasForcedGlobalAccess || isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
   const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
   const allowedCompanies = hasFullCompanyAccess
@@ -228,7 +238,7 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     companyRole,
     membershipCapabilities: primaryLink?.capabilities ?? session.capabilities ?? null,
   });
-  const effectiveRole = permissionRole;
+  const effectiveRole = hasForcedGlobalAccess ? "leader_tc" : permissionRole;
 
   // 9) Retorna o contexto final consumido pelo restante do app.
   return {

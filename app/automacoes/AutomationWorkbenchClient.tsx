@@ -319,6 +319,24 @@ export default function AutomationWorkbenchClient() {
                           {item}
                         </span>
                       ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof window !== "undefined") {
+                            window.dispatchEvent(new CustomEvent("assistant:open", {
+                              detail: {
+                                source: "automacoes",
+                                agentMode: "playwright",
+                                panelMode: "side",
+                                initialMessage: "Analise o módulo de automações: cobertura atual, lacunas, requests prioritários para automatizar e estratégia de expansão.",
+                              },
+                            }));
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/12 px-3 py-1 text-xs font-semibold text-white transition hover:bg-white/20"
+                      >
+                        🧠 Perguntar IA
+                      </button>
                     </div>
 
                     <div className="mt-6 grid gap-3 sm:grid-cols-3">

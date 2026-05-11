@@ -939,6 +939,24 @@ export default function Chat() {
               <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/72">
                 {contacts.length} contatos
               </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("assistant:open", {
+                      detail: {
+                        source: "chat",
+                        agentMode: "qa",
+                        panelMode: "side",
+                        initialMessage: "Analise o módulo de chat: contatos, conversas abertas e formas de melhorar a comunicação na plataforma.",
+                      },
+                    }));
+                  }
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-black/12 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-(--tc-text-muted) transition hover:border-black/20 dark:border-white/12 dark:bg-white/8 dark:text-white/72 dark:hover:border-white/20"
+              >
+                🧠 IA
+              </button>
             </div>
 
             <p className="mt-3 text-xs leading-5 text-(--tc-text-muted) dark:text-white/54">{accessNote}</p>

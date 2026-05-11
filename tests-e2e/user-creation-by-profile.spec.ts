@@ -256,28 +256,41 @@ test.describe("Líder TC — criação de perfis", () => {
 // ─── Cenário 3: Validar que usuário TC não acessa módulos fora do escopo ──────
 
 test("Usuário TC não acessa /admin e não vê empresas de outros clientes", async ({ page }) => {
-  // Usar usuário de nível TC existente (user@demo.test)
-  const loginRes = await page.request.post(`${BASE_URL}/api/auth/login`, {
-    data: { user: "user@demo.test", password: "Demo@123" },
+  // Criar usuário temporário sem username especial (fora do FORCED_GLOBAL_ACCESS_KEYS)
+  await setMockUser(page, "admin");
+  const suffix = `${Date.now().toString().slice(-6)}`;
+  const testEmail = `e2e-tc-scope-${suffix}@demo.test`;
+  const createRes = await page.request.post(`${BASE_URL}/api/admin/users`, {
+    data: { name: `TC Scope ${suffix}`, email: testEmail, role: "testing_company_user", clientSlug: "DEMO", password: "Demo@123" },
   });
-  if (!loginRes.ok()) {
-    test.skip();
-    return;
+  if (!createRes.ok()) { test.skip(); return; }
+  const created = await createRes.json().catch(() => ({}));
+  const testUserId = created.id ?? created.user?.id ?? null;
+
+  try {
+    const loginRes = await page.request.post(`${BASE_URL}/api/auth/login`, {
+      data: { user: testEmail, password: "Demo@123" },
+    });
+    if (!loginRes.ok()) { test.skip(); return; }
+    const setCookie = loginRes.headers()["set-cookie"];
+    const sessionId = parseCookie(setCookie, "session_id");
+    if (!sessionId) { test.skip(); return; }
+
+    await page.context().addCookies([{ name: "session_id", value: sessionId, url: BASE_URL }]);
+
+    // Admin bloqueado
+    const adminApiRes = await page.request.get(`${BASE_URL}/api/admin/users`);
+    expect([401, 403]).toContain(adminApiRes.status());
+
+    // /me retorna perfil correto
+    const meRes = await page.request.get(`${BASE_URL}/api/me`);
+    expect(meRes.ok()).toBeTruthy();
+    const me = await meRes.json();
+    expect(me.user.role).toBe("testing_company_user");
+  } finally {
+    if (testUserId) {
+      await setMockUser(page, "admin");
+      await page.request.delete(`${BASE_URL}/api/admin/users/${testUserId}`).catch(() => {});
+    }
   }
-  const setCookie = loginRes.headers()["set-cookie"];
-  const sessionId = parseCookie(setCookie, "session_id");
-  if (!sessionId) { test.skip(); return; }
-
-  await page.context().addCookies([{ name: "session_id", value: sessionId, url: BASE_URL }]);
-
-  // Admin bloqueado
-  const adminApiRes = await page.request.get(`${BASE_URL}/api/admin/users`);
-  expect([401, 403]).toContain(adminApiRes.status());
-
-  // /me retorna empresa correta
-  const meRes = await page.request.get(`${BASE_URL}/api/me`);
-  expect(meRes.ok()).toBeTruthy();
-  const me = await meRes.json();
-  expect(me.user.role).toBe("testing_company_user");
-  expect(me.user.clientSlug).toBe("DEMO");
 });

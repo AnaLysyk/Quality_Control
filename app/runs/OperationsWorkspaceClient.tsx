@@ -577,6 +577,24 @@ export function OperationsWorkspaceClient() {
               {autoRefresh ? <FiCheckCircle className="h-3.5 w-3.5 text-emerald-600" /> : <FiXCircle className="h-3.5 w-3.5 text-rose-600" />}
               Atualização automática {autoRefresh ? "ativada" : "desativada"}
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("assistant:open", {
+                    detail: {
+                      source: "runs",
+                      agentMode: "debug",
+                      panelMode: "side",
+                      initialMessage: "Analise o painel de operações: runs com falha, defeitos críticos e pontos que precisam de atenção imediata.",
+                    },
+                  }));
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 font-semibold text-(--tc-text,#0b1a3c) transition hover:border-[rgba(1,24,72,0.3)]"
+            >
+              🧠 Perguntar IA
+            </button>
           </div>
         </header>
 

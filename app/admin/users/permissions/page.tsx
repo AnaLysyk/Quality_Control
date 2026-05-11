@@ -1177,7 +1177,26 @@ export default function PermissionsPage() {
                   : "Filter users, adjust the base profile, and manage modules and actions in a single panel."}
               </p>
             </div>
-            {canManageProfiles ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("assistant:open", {
+                      detail: {
+                        source: "permissoes",
+                        agentMode: "qa",
+                        panelMode: "side",
+                        initialMessage: "Analise a gestão de permissões: perfis de usuários, módulos mais restritivos e possíveis inconsistências de acesso.",
+                      },
+                    }));
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-[18px] border border-white/24 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/16"
+              >
+                🧠 Perguntar IA
+              </button>
+              {canManageProfiles ? (
               <button
                 type="button"
                 onClick={() => {
@@ -1190,6 +1209,7 @@ export default function PermissionsPage() {
                 {isPt ? "Criar Suporte Técnico" : "Create Technical Support"}
               </button>
             ) : null}
+            </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

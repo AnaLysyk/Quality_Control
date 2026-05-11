@@ -102,7 +102,27 @@ export default function ChamadosPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-10 relative">
-      <h1 className="text-2xl font-bold mb-4">Chamados</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">Chamados</h1>
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("assistant:open", {
+                detail: {
+                  source: "chamados",
+                  agentMode: "qa",
+                  panelMode: "side",
+                  initialMessage: "Analise os chamados abertos: prioridades, padrões e próximas ações recomendadas.",
+                },
+              }));
+            }
+          }}
+          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm transition hover:border-gray-400"
+        >
+          🧠 Perguntar IA
+        </button>
+      </div>
       {/* Botão flutuante para criar chamado */}
       <div className="fixed bottom-8 right-8 z-50">
         <CreateSupportTicketButton />

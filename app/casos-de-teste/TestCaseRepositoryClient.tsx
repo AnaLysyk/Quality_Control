@@ -820,6 +820,31 @@ export default function TestCaseRepositoryClient() {
     setIsFormOpen(false);
     setEditingId(null);
     setSaving(false);
+
+    // Modo IA: gera draft Playwright automaticamente após criar o caso base
+    if (createMode === "ai" && !editingId) {
+      setGeneratingDraft(true);
+      setDraftError(null);
+      const draftResponse = await fetchApi(`/api/test-cases/${finalSaved.testCase.id}/ai/generate-playwright`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playwrightProject: "chromium",
+          testDescribe: "Repositório de Casos",
+        }),
+      });
+      if (!draftResponse.ok) {
+        const draftErr = await draftResponse.json().catch(() => null);
+        setDraftError(draftErr?.message || "Caso criado, mas não foi possível gerar draft de IA automaticamente.");
+      } else {
+        const draftPayload = (await draftResponse.json()) as { draft?: AutomationDraft };
+        if (draftPayload.draft) {
+          setDrafts((current) => [draftPayload.draft as AutomationDraft, ...current.filter((item) => item.id !== draftPayload.draft?.id)]);
+        }
+        setDraftRefreshToken((current) => current + 1);
+      }
+      setGeneratingDraft(false);
+    }
   }
 
   async function handleArchive(record: TestCaseRecord) {
@@ -1137,7 +1162,26 @@ export default function TestCaseRepositoryClient() {
             </p>
           </div>
 
-          <div className="relative">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("assistant:open", {
+                    detail: {
+                      source: "casos-de-teste",
+                      agentMode: "qa",
+                      panelMode: "side",
+                      initialMessage: "Analise o repositório de casos de teste: cobertura, lacunas e próximas prioridades.",
+                    },
+                  }));
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1.5 text-xs font-semibold text-(--tc-text,#0b1a3c) transition hover:border-[rgba(1,24,72,0.3)] hover:text-(--tc-primary,#011848)"
+            >
+              🧠 Perguntar IA
+            </button>
+            <div className="relative">
             <button
               type="button"
               onClick={() => setIsCreateMenuOpen((current) => !current)}
@@ -1177,6 +1221,7 @@ export default function TestCaseRepositoryClient() {
                 </button>
               </div>
             ) : null}
+          </div>
           </div>
         </div>
       </header>

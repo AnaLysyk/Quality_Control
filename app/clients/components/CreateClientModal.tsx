@@ -19,6 +19,7 @@ export type ClientFormValues = {
   website?: string;
   logoUrl?: string;
   linkedin?: string;
+  docsLink?: string;
   notificationsFanoutEnabled?: boolean;
   companyUsername?: string;
   notes?: string;
@@ -30,6 +31,9 @@ export type ClientFormValues = {
   qaseProjectCodes?: string[];
   qase_projects?: { code: string; title?: string; imageUrl?: string | null; status?: "unknown" | "valid" | "invalid" }[];
   integrations?: { type: string; config?: Record<string, unknown> }[];
+  jiraBaseUrl?: string;
+  jiraEmail?: string;
+  jiraApiToken?: string;
 };
 
 type ProjectStatus = "unknown" | "valid" | "invalid";

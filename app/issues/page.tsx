@@ -85,6 +85,24 @@ export default function DefectsPage() {
             <p className="text-sm text-gray-300">Dados vindos da Qase via backend.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("assistant:open", {
+                    detail: {
+                      source: "defeitos",
+                      agentMode: "debug",
+                      panelMode: "side",
+                      initialMessage: "Analise os defeitos abertos: padrões, severity, aplicações mais afetadas e próximas ações.",
+                    },
+                  }));
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/12"
+            >
+              🧠 Perguntar IA
+            </button>
             <input
               value={project}
               onChange={(e) => setProject(e.target.value)}

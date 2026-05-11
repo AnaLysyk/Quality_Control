@@ -996,12 +996,34 @@ export default function TestPlansPage() {
         <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-5 shadow-sm dark:shadow-none">
           <div className="mb-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Repositório de Planos de Teste</p>
-            <h1 className="mt-2 text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c) sm:text-2xl">
-              Planos vinculados ao repositório central
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-              Crie planos manuais ou integrados e vincule apenas casos já existentes no repositório central.
-            </p>
+            <div className="mt-2 flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c) sm:text-2xl">
+                  Planos vinculados ao repositório central
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                  Crie planos manuais ou integrados e vincule apenas casos já existentes no repositório central.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("assistant:open", {
+                      detail: {
+                        source: "planos-de-teste",
+                        agentMode: "qa",
+                        panelMode: "side",
+                        initialMessage: "Analise os planos de teste: cobertura, status de execução, lacunas e próximas prioridades.",
+                      },
+                    }));
+                  }
+                }}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1.5 text-xs font-semibold text-(--tc-text,#0b1a3c) transition hover:border-[rgba(1,24,72,0.3)] hover:text-(--tc-primary,#011848)"
+              >
+                🧠 Perguntar IA
+              </button>
+            </div>
           </div>
           <div className="grid gap-4 xl:grid-cols-[minmax(0,280px)_minmax(0,1fr)_auto] xl:items-end">
             <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">

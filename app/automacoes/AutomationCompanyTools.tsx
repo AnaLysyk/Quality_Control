@@ -384,7 +384,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                 ))}
               </div>
 
-              <div className="mt-4 rounded-[16px] border border-(--tc-border,#d7deea) bg-[#081227] p-4 text-white">
+              <div className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] p-4 text-white">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
                   <FiServer className="h-4 w-4" />
                   Request gerada
@@ -417,13 +417,15 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
               type="button"
               onClick={copyResult}
               disabled={!result}
+              aria-label="Copiar resultado"
+              title="Copiar resultado"
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:opacity-40"
             >
               <FiCopy className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
+          <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">  
             <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Status</p>
               <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{result?.status ? `${result.status} ${result.statusText ?? ""}` : "--"}</p>
@@ -462,7 +464,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             ))}
           </div>
 
-          <div className="mt-3 min-h-[420px] rounded-[16px] border border-(--tc-border,#d7deea) bg-[#081227] p-4">
+          <div className="mt-3 min-h-105 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] p-4">
             <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs leading-6 text-white">
               {resultTab === "summary"
                 ? JSON.stringify(

@@ -20,7 +20,6 @@ import {
 import { FiCommand, FiGitBranch, FiList, FiMessageCircle, FiShare2, FiTable, FiUsers } from "react-icons/fi";
 
 import { useBrainGraph } from "@/hooks/useBrain";
-import AgentView from "./AgentView";
 import styles from "./Brain.module.css";
 
 type BrainNodeApi = {
@@ -654,7 +653,56 @@ export default function BrainReactFlowView() {
 
         {viewMode === "agents" ? (
           <div className={styles.agentStage}>
-            <AgentView nodeId={selectedNodeId} darkMode />
+            <div className="flex h-full flex-col items-center justify-center gap-6 p-8">
+              <div className="text-center">
+                <p className="text-lg font-black text-slate-200">Agentes Brain</p>
+                <p className="mt-1 text-sm text-slate-400">
+                  {selectedNodeId
+                    ? `Nó: ${nodeDetails?.node?.label ?? selectedNodeId} — escolha um agente`
+                    : "Selecione um nó no grafo ou escolha um agente para começar"}
+                </p>
+              </div>
+              <div className="grid w-full max-w-sm grid-cols-2 gap-3">
+                {[
+                  { mode: "qa", icon: "🔍", name: "QA Analyst", label: "Riscos e cobertura", borderCls: "border-[#5b92ff44]" },
+                  { mode: "debug", icon: "🐛", name: "Debug Agent", label: "Diagnóstico e causa raiz", borderCls: "border-[#f59e0b44]" },
+                  { mode: "playwright", icon: "🎭", name: "Playwright", label: "Specs e automação", borderCls: "border-[#10b98144]" },
+                  { mode: "memory", icon: "🧠", name: "Memory Agent", label: "Conhecimento e decisões", borderCls: "border-[#a78bfa44]" },
+                ].map(({ mode, icon, name, label, borderCls }) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                          new CustomEvent("assistant:open", {
+                            detail: {
+                              source: "brain",
+                              nodeId: selectedNodeId ?? undefined,
+                              nodeLabel: nodeDetails?.node?.label ?? undefined,
+                              nodeType: nodeDetails?.node?.type ?? undefined,
+                              agentMode: mode,
+                              panelMode: "side",
+                              initialMessage: selectedNodeId
+                                ? `Analise o nó "${nodeDetails?.node?.label ?? selectedNodeId}" com o agente ${name}.`
+                                : undefined,
+                            },
+                          }),
+                        );
+                      }
+                    }}
+                    className={`flex flex-col items-start rounded-2xl border bg-white/4 p-4 text-left transition hover:bg-white/8 active:scale-[0.97] ${borderCls}`}
+                  >
+                    <span className="text-2xl">{icon}</span>
+                    <span className="mt-2 text-sm font-bold text-slate-200">{name}</span>
+                    <span className="mt-0.5 text-[11px] text-slate-400">{label}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-center text-[11px] text-slate-500">
+                Os agentes abrem no Assistente Flutuante (lateral)
+              </p>
+            </div>
           </div>
         ) : null}
 
@@ -700,6 +748,30 @@ export default function BrainReactFlowView() {
                 In: {nodeDetails?.incoming?.length ?? 0}
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(
+                    new CustomEvent("assistant:open", {
+                      detail: {
+                        source: "brain",
+                        nodeId: selectedNodeId,
+                        nodeLabel: nodeDetails?.node?.label ?? selectedNodeId,
+                        nodeType: nodeDetails?.node?.type ?? undefined,
+                        agentMode: "qa",
+                        panelMode: "side",
+                        initialMessage: `Analise o nó "${nodeDetails?.node?.label ?? selectedNodeId}" (${nodeDetails?.node?.type ?? "Brain"}): resumo, conexões, impacto e próximos passos.`,
+                      },
+                    }),
+                  );
+                }
+              }}
+              className="mb-3 w-full rounded-lg border border-[rgba(1,24,72,0.14)] bg-[linear-gradient(135deg,#011848_0%,#1f4aa3_100%)] px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 active:scale-[0.98]"
+            >
+              🧠 Perguntar IA sobre este nó
+            </button>
 
             <div>
               <p className="mb-1 text-xs font-semibold uppercase text-slate-500">Vizinhanca</p>

@@ -522,6 +522,26 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                     Voltar às empresas
                   </Link>
                 ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new CustomEvent("assistant:open", {
+                        detail: {
+                          source: isMetricsView ? "metrics" : "runs",
+                          agentMode: "debug",
+                          panelMode: "side",
+                          initialMessage: isMetricsView
+                            ? `Analise as métricas operacionais da empresa ${companyName}: runs, defeitos, tendências e pontos de atenção.`
+                            : `Analise as runs da empresa ${companyName}: execuções recentes, falhas e próximas ações.`,
+                        },
+                      }));
+                    }
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                >
+                  🧠 Perguntar IA
+                </button>
                 <CreateManualReleaseButton companySlug={companySlug} redirectToRun={false} />
                 <Link
                   href="../runs"

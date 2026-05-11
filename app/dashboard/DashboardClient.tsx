@@ -192,6 +192,27 @@ export default function DashboardClient() {
           className="mb-4"
         />
 
+        <div className="mb-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("assistant:open", {
+                  detail: {
+                    source: "dashboard",
+                    agentMode: "qa",
+                    panelMode: "side",
+                    initialMessage: "Analise o dashboard: indicadores de qualidade, cobertura, runs recentes e pontos críticos que precisam de atenção.",
+                  },
+                }));
+              }
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1.5 text-xs font-semibold text-(--tc-text,#0b1a3c) shadow-sm transition hover:border-[rgba(1,24,72,0.3)] hover:text-(--tc-primary,#011848)"
+          >
+            🧠 Perguntar IA
+          </button>
+        </div>
+
         <section className="tc-hero-panel">
           <div className="tc-hero-grid">
             <div className="space-y-5">

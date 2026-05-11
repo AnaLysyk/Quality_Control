@@ -36,6 +36,15 @@ type ChatButtonProps = {
   defaultOpen?: boolean;
 };
 
+type AgentMode = "qa" | "debug" | "playwright" | "memory";
+
+const ASSISTANT_AGENTS: Array<{ mode: AgentMode; icon: string; name: string }> = [
+  { mode: "qa", icon: "🔍", name: "QA" },
+  { mode: "debug", icon: "🐛", name: "Debug" },
+  { mode: "playwright", icon: "🎭", name: "Playwright" },
+  { mode: "memory", icon: "🧠", name: "Memory" },
+];
+
 const HISTORY_KEY_PREFIX = "assistant_history_v2";
 const PANEL_MODE_KEY = "assistant_panel_mode_v1";
 
@@ -414,6 +423,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const [sending, setSending] = useState(false);
   const [assistantContext, setAssistantContext] = useState<AssistantScreenContext>(screenContext);
   const [brainOpenContext, setBrainOpenContext] = useState<AssistantOpenEventDetail | null>(null);
+  const [activeAgentMode, setActiveAgentMode] = useState<AgentMode | null>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
   const boxRef = useRef<HTMLDivElement | null>(null);
@@ -549,6 +559,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
       const nextRoute = detail.route ?? pathname;
       const resolvedContext = resolveAssistantScreenContext(nextRoute);
       setBrainOpenContext(detail);
+      if (detail.agentMode && (["qa", "debug", "playwright", "memory"] as string[]).includes(detail.agentMode)) {
+        setActiveAgentMode(detail.agentMode as AgentMode);
+      }
       setAssistantContext(mergeAssistantContext(resolvedContext, detail.context ?? null));
       setPanelMode(detail.panelMode ?? "compact");
       setOpen(true);
@@ -635,7 +648,9 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
         body: JSON.stringify({
           ...payload,
           context: assistantContext,
-          brainContext: brainOpenContext ?? undefined,
+          brainContext: (brainOpenContext || activeAgentMode)
+            ? { ...(brainOpenContext ?? {}), ...(activeAgentMode ? { agentMode: activeAgentMode } : {}) }
+            : undefined,
           actor: {
             userId: user.id,
             permissionRole: user.permissionRole ?? null,
@@ -660,6 +675,10 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
       if (data.context) {
         setAssistantContext(data.context);
+      }
+
+      if (data.meta?.agentMode && (["qa", "debug", "playwright", "memory"] as string[]).includes(String(data.meta.agentMode))) {
+        setActiveAgentMode(data.meta.agentMode as AgentMode);
       }
 
       setMessages((current) => [
@@ -827,6 +846,29 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                         <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{activeModule}</span>
                         <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">escopo {activeCompanyScope}</span>
                       </div>
+                      {brainOpenContext?.source === "brain" ? (
+                        <div className="flex flex-wrap gap-1.5 pt-1.5">
+                          {ASSISTANT_AGENTS.map(({ mode, icon, name }) => {
+                            const isActive = (activeAgentMode ?? (brainOpenContext?.agentMode as AgentMode | undefined) ?? "qa") === mode;
+                            return (
+                              <button
+                                key={mode}
+                                type="button"
+                                onClick={() => setActiveAgentMode(mode)}
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold transition ${
+                                  isActive
+                                    ? "border-white/35 bg-white/22 text-white"
+                                    : "border-white/12 bg-white/5 text-white/55 hover:bg-white/14 hover:text-white/80"
+                                }`}
+                                aria-pressed={isActive}
+                              >
+                                <span>{icon}</span>
+                                <span>{name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -959,7 +1001,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                           {brainOpenContext.nodeLabel ?? "Nó selecionado"}
                         </p>
                         <p className="mt-1 text-sm text-[#4a5568] dark:text-[#a0b4d0]">
-                          Agente ativo: {brainOpenContext.agentMode ?? "qa"} · escopo {brainOpenContext.companySlug ?? "global"}
+                          Agente: {activeAgentMode ?? brainOpenContext.agentMode ?? "qa"} · escopo {brainOpenContext.companySlug ?? "global"}
                         </p>
                       </>
                     ) : (

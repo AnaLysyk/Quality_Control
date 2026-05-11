@@ -1,4 +1,4 @@
-import type { SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type NavModule =
   | "home"
@@ -40,17 +40,53 @@ export type NavModuleDef = {
 };
 
 // Role groups for cleaner permissions
-const SYSTEM_USERS = ["leader_tc", "technical_support", "testing_company_user"];
-const INSTITUTIONAL_USERS = ["company_user", "empresa"];
-const ALL_USERS = [...SYSTEM_USERS, ...INSTITUTIONAL_USERS];
+const SYSTEM_USERS: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+  SYSTEM_ROLES.TESTING_COMPANY_USER,
+];
+const INSTITUTIONAL_USERS: SystemRole[] = [SYSTEM_ROLES.COMPANY_USER, SYSTEM_ROLES.EMPRESA];
+const ALL_USERS: SystemRole[] = [...SYSTEM_USERS, ...INSTITUTIONAL_USERS];
 
-const LEADER_TC = ["leader_tc"];
-const LEADER_AND_SUPPORT = ["leader_tc", "technical_support"];
-const ALL_INTERNAL = SYSTEM_USERS;
-const PRIVILEGED = LEADER_AND_SUPPORT;
-const LEADER_ONLY = LEADER_TC;
+const LEADER_TC: SystemRole[] = [SYSTEM_ROLES.LEADER_TC];
+const LEADER_AND_SUPPORT: SystemRole[] = [SYSTEM_ROLES.LEADER_TC, SYSTEM_ROLES.TECHNICAL_SUPPORT];
+const ALL_INTERNAL: SystemRole[] = SYSTEM_USERS;
+const PRIVILEGED: SystemRole[] = LEADER_AND_SUPPORT;
+const LEADER_ONLY: SystemRole[] = LEADER_TC;
 
 export const NAV_CATALOG: NavModuleDef[] = [
+  // ============================================
+  // HOME — All users
+  // ============================================
+  {
+    id: "home",
+    label: "Home",
+    iconKey: "home",
+    allowedRoles: ALL_USERS,
+    testId: "nav-home",
+    items: [
+      {
+        id: "home-entry",
+        label: "Página inicial",
+        iconKey: "home",
+        module: "home",
+        companyRoute: "home",
+        href: "/home",
+        favoriteEnabled: true,
+        testId: "nav-home-entry",
+      },
+      {
+        id: "home-profile",
+        label: "Perfil",
+        iconKey: "user",
+        module: "home",
+        href: "/settings/profile",
+        favoriteEnabled: true,
+        testId: "nav-home-profile",
+      },
+    ],
+  },
+
   // ============================================
   // EMPRESAS — Only for SYSTEM_USERS
   // ============================================

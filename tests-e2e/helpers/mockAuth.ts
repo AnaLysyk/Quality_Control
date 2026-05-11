@@ -141,9 +141,16 @@ export async function mockAuth(context: BrowserContext, options: MockAuthOptions
           ...(options.clientSlug ? { clientSlug: options.clientSlug } : {}),
         },
       });
+      // In E2E mock mode, the login endpoint can be disabled (e.g. 405). In that case we only
+      // need a stable session cookie and the mocked /api/me routes below.
+      if (response.status() === 405 || response.status() === 404) {
+        response = null;
+        break;
+      }
       if (response.ok()) break;
     }
     if (response?.ok()) break;
+    if (response === null) break;
   }
 
   const setCookie = response?.ok() ? response.headers()["set-cookie"] : null;
@@ -222,5 +229,4 @@ export async function mockAuth(context: BrowserContext, options: MockAuthOptions
     });
   });
 }
-
 

@@ -157,6 +157,26 @@ export type ManualCaseItem = {
   status?: string;
   bug?: string | null;
   fromApi?: boolean;
+  origin?: string | null;
+  type?: "manual" | "automated" | "hybrid" | string | null;
+  projectCode?: string | null;
+  suiteId?: string | null;
+  suiteName?: string | null;
+  description?: string | null;
+  preconditions?: string | null;
+  postconditions?: string | null;
+  stepsText?: string | null;
+  expectedText?: string | null;
+  priority?: string | null;
+  severity?: string | null;
+  tags?: string[];
+  responsibleName?: string | null;
+  defectsCount?: number;
+  evidencesCount?: number;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  statusUpdatedAt?: string | null;
+  retestCount?: number;
 };
 
 type StoreState<T> = {
@@ -257,11 +277,51 @@ export async function writeManualReleases(releases: Release[]) {
 export async function readManualReleaseCases(): Promise<Record<string, ManualCaseItem[]>> {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
-    const rows = await prisma.releaseCase.findMany();
+    const rows = (await prisma.releaseCase.findMany()) as Array<{
+      id: string;
+      releaseId: string;
+      title: string | null;
+      link: string | null;
+      status: string;
+      bug: string | null;
+      fromApi: boolean;
+      metadata?: unknown;
+    }>;
     const result: Record<string, ManualCaseItem[]> = {};
     for (const r of rows) {
       if (!result[r.releaseId]) result[r.releaseId] = [];
-      result[r.releaseId].push({ id: r.id, title: r.title ?? undefined, link: r.link ?? undefined, status: r.status, bug: r.bug ?? null, fromApi: r.fromApi });
+      const metadata =
+        r.metadata && typeof r.metadata === "object" && !Array.isArray(r.metadata)
+          ? (r.metadata as Record<string, unknown>)
+          : {};
+      result[r.releaseId].push({
+        id: r.id,
+        title: r.title ?? undefined,
+        link: r.link ?? undefined,
+        status: r.status,
+        bug: r.bug ?? null,
+        fromApi: r.fromApi,
+        origin: typeof metadata.origin === "string" ? metadata.origin : null,
+        type: typeof metadata.type === "string" ? metadata.type : null,
+        projectCode: typeof metadata.projectCode === "string" ? metadata.projectCode : null,
+        suiteId: typeof metadata.suiteId === "string" ? metadata.suiteId : null,
+        suiteName: typeof metadata.suiteName === "string" ? metadata.suiteName : null,
+        description: typeof metadata.description === "string" ? metadata.description : null,
+        preconditions: typeof metadata.preconditions === "string" ? metadata.preconditions : null,
+        postconditions: typeof metadata.postconditions === "string" ? metadata.postconditions : null,
+        stepsText: typeof metadata.stepsText === "string" ? metadata.stepsText : null,
+        expectedText: typeof metadata.expectedText === "string" ? metadata.expectedText : null,
+        priority: typeof metadata.priority === "string" ? metadata.priority : null,
+        severity: typeof metadata.severity === "string" ? metadata.severity : null,
+        tags: Array.isArray(metadata.tags) ? metadata.tags.filter((tag): tag is string => typeof tag === "string") : [],
+        responsibleName: typeof metadata.responsibleName === "string" ? metadata.responsibleName : null,
+        defectsCount: Number(metadata.defectsCount ?? 0) || 0,
+        evidencesCount: Number(metadata.evidencesCount ?? 0) || 0,
+        startedAt: typeof metadata.startedAt === "string" ? metadata.startedAt : null,
+        finishedAt: typeof metadata.finishedAt === "string" ? metadata.finishedAt : null,
+        statusUpdatedAt: typeof metadata.statusUpdatedAt === "string" ? metadata.statusUpdatedAt : null,
+        retestCount: Number(metadata.retestCount ?? 0) || 0,
+      });
     }
     return result;
   }
@@ -289,7 +349,39 @@ export async function writeManualReleaseCases(storeValue: Record<string, ManualC
     for (const [releaseId, cases] of Object.entries(next)) {
       await prisma.releaseCase.deleteMany({ where: { releaseId } });
       if (cases && cases.length) {
-        await prisma.releaseCase.createMany({ data: cases.map((c) => ({ id: c.id, releaseId, title: c.title ?? null, link: c.link ?? null, status: c.status ?? "NOT_RUN", bug: c.bug ?? null, fromApi: c.fromApi ?? false })) });
+        await prisma.releaseCase.createMany({
+          data: cases.map((c) => ({
+            id: c.id,
+            releaseId,
+            title: c.title ?? null,
+            link: c.link ?? null,
+            status: c.status ?? "NOT_RUN",
+            bug: c.bug ?? null,
+            fromApi: c.fromApi ?? false,
+            metadata: {
+              origin: c.origin ?? null,
+              type: c.type ?? null,
+              projectCode: c.projectCode ?? null,
+              suiteId: c.suiteId ?? null,
+              suiteName: c.suiteName ?? null,
+              description: c.description ?? null,
+              preconditions: c.preconditions ?? null,
+              postconditions: c.postconditions ?? null,
+              stepsText: c.stepsText ?? null,
+              expectedText: c.expectedText ?? null,
+              priority: c.priority ?? null,
+              severity: c.severity ?? null,
+              tags: c.tags ?? [],
+              responsibleName: c.responsibleName ?? null,
+              defectsCount: c.defectsCount ?? 0,
+              evidencesCount: c.evidencesCount ?? 0,
+              startedAt: c.startedAt ?? null,
+              finishedAt: c.finishedAt ?? null,
+              statusUpdatedAt: c.statusUpdatedAt ?? null,
+              retestCount: c.retestCount ?? 0,
+            },
+          })),
+        });
       }
     }
     return;

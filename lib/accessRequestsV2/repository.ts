@@ -1,6 +1,12 @@
 import { randomUUID } from "crypto";
 
-import { createAccessRequest, getAccessRequestById, listAccessRequests, updateAccessRequest } from "@/data/accessRequestsStore";
+import {
+  createAccessRequest,
+  getAccessRequestById,
+  listAccessRequests,
+  updateAccessRequest,
+  type AccessRequestStatus,
+} from "@/data/accessRequestsStore";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
 import { prisma } from "@/lib/prismaClient";
 import { shouldUseJsonStore } from "@/lib/storeMode";
@@ -69,6 +75,13 @@ function parseV2Message(message: string): V2Meta | null {
 
 function stringifyV2Message(meta: V2Meta) {
   return `${V2_PREFIX}${JSON.stringify(meta)}`;
+}
+
+function toLegacyAccessRequestStatus(status: AccessRequestV2Status): AccessRequestStatus {
+  if (status === "approved") return "closed";
+  if (status === "rejected" || status === "cancelled" || status === "expired") return "rejected";
+  if (status === "under_review" || status === "needs_more_info") return "in_progress";
+  return "open";
 }
 
 function mapPrismaRowToV2(row: {
@@ -298,7 +311,7 @@ export async function createAccessRequestV2(input: {
   const created = await createAccessRequest({
     email: request.requesterEmail,
     message: stringifyV2Message(meta),
-    status: request.status,
+    status: toLegacyAccessRequestStatus(request.status),
     user_id: request.requesterUserId ?? null,
   });
 
@@ -378,7 +391,7 @@ export async function updateAccessRequestV2(
   };
 
   await updateAccessRequest(id, {
-    status: next.status,
+    status: toLegacyAccessRequestStatus(next.status),
     message: stringifyV2Message(meta),
   });
 

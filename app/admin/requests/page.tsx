@@ -129,10 +129,11 @@ function AdminRequestsPage() {
   useEffect(() => {
     const focusParam = searchParams.get("focus");
     if (focusParam === "search") {
-      setTimeout(() => {
+      // Ensure focus is applied reliably across browsers (including Edge/WebKit quirks)
+      requestAnimationFrame(() => {
         searchInputRef.current?.focus();
         window.history.replaceState({}, "", window.location.pathname);
-      }, 100);
+      });
     }
   }, [searchParams]);
 
@@ -232,6 +233,7 @@ function AdminRequestsPage() {
             id="requests-search-input"
             data-testid="access-request-search-input"
             ref={searchInputRef}
+            autoFocus={searchParams.get("focus") === "search"}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por solicitante, e-mail, empresa ou ID"

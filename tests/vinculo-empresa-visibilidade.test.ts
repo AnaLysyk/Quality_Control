@@ -20,6 +20,7 @@ jest.setTimeout(30000);
 
 import { randomUUID } from "crypto";
 import { prisma } from "../lib/prismaClient";
+import { describeDb } from "./describeDb";
 import {
   upsertLocalLink,
   removeLocalLink,
@@ -71,7 +72,7 @@ afterAll(async () => {
 
 // ── Testes ────────────────────────────────────────────────────────────────────
 
-describe("Vincular usuário a empresa e visibilidade", () => {
+describeDb("Vincular usuário a empresa e visibilidade", () => {
   // ── Cenário 1: vincular como viewer ────────────────────────────────────────
   test("1. Vincular usuário como viewer → membership retornada", async () => {
     const user = await makeUser("viewer");

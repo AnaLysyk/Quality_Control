@@ -172,20 +172,9 @@ export function isCompanyProfileContext(user: AuthUser | null | undefined) {
     typeof record.user_scope === "string" ? record.user_scope : null,
     typeof record.userScope === "string" ? record.userScope : null,
   );
-  const permissionRole = normalizeLegacyRole(user.permissionRole);
-  const role = normalizeLegacyRole(user.role);
-  const companyRole = normalizeLegacyRole(user.companyRole);
-
-  return (
-    origin === "client_company" ||
-    scope === "company_only" ||
-    permissionRole === SYSTEM_ROLES.EMPRESA ||
-    role === SYSTEM_ROLES.EMPRESA ||
-    companyRole === SYSTEM_ROLES.EMPRESA ||
-    permissionRole === SYSTEM_ROLES.COMPANY_USER ||
-    role === SYSTEM_ROLES.COMPANY_USER ||
-    companyRole === SYSTEM_ROLES.COMPANY_USER
-  );
+  // Only treat as company context when the account is explicitly company-scoped.
+  // Empresa/company_user roles can still represent a personal account linked to a company.
+  return origin === "client_company" || scope === "company_only";
 }
 
 export function resolveActiveIdentity({

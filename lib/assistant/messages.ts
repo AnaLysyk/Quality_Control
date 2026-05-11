@@ -18,6 +18,8 @@ export const REPEATED_REPLY_MESSAGES: Record<AssistantToolName, string> = {
     "📋 Já fiz esse resumo. Posso detalhar algum ponto específico ou resumir outra entidade.",
   draft_test_case:
     "🧪 Já gerei um caso de teste com esse contexto. Quer ajustar para **bug**, **melhoria** ou outro cenário?",
+  create_test_case:
+    "Ja preparei esse caso para criacao. Revise o rascunho ou envie novos dados antes de criar outro.",
   explain_permission:
     "🔐 Já expliquei esse escopo. Quer comparar com outra tela, perfil ou módulo?",
   create_ticket:
@@ -33,16 +35,18 @@ export const REPEATED_REPLY_MESSAGES: Record<AssistantToolName, string> = {
 /* ──────────────────── Clarify / low-signal ──────────────────── */
 
 export const CLARIFY_REPLY = [
-  "🤔 Não consegui entender completamente sua solicitação.",
+  "Quero te ajudar, mas não consegui entender completamente sua solicitação.",
   "",
   "**Posso ajudar com:**",
-  "• 📍 Resumir o contexto desta tela",
-  "• 🔐 Explicar seu escopo de acesso",
-  "• 🎫 Criar um chamado a partir de uma descrição",
-  "• 🔍 Buscar tickets, usuários ou empresas",
-  "• 🧪 Gerar casos de teste",
+  "• Resumir o contexto desta tela",
+  "• Explicar seu escopo de acesso",
+  "• Criar um chamado a partir de uma descrição",
+  "• Buscar tickets, usuários ou empresas",
+  "• Gerar casos de teste",
   "",
-  "💡 **Dica:** Seja específico! Por exemplo:",
+  "Para continuarmos o fluxo, me diga qual dessas opções você quer agora (ou descreva em 1 frase).",
+  "",
+  "**Dica:** Seja específico! Por exemplo:",
   "  - \"buscar tickets de alta prioridade\"",
   "  - \"criar chamado sobre erro no login\"",
   "  - \"explicar por que não vejo o módulo X\"",

@@ -103,11 +103,61 @@ function mapRunStatus(value: unknown): OperationSignal["status"] {
   return "in_progress";
 }
 
-function periodToUnixSeconds(period: string) {
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (period === "7d") return nowSec - 7 * 24 * 60 * 60;
-  if (period === "30d") return nowSec - 30 * 24 * 60 * 60;
-  return nowSec - 24 * 60 * 60;
+type PeriodBounds = {
+  period: string;
+  fromMs: number;
+  toMs: number;
+  fromSec: number;
+};
+
+function parseDateBoundary(value: string | null, boundary: "start" | "end") {
+  if (!value) return null;
+  const date = new Date(`${value}T${boundary === "start" ? "00:00:00" : "23:59:59"}`);
+  const time = date.getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+function resolvePeriodBounds(url: URL): PeriodBounds {
+  const now = new Date();
+  const nowMs = now.getTime();
+  const rawPeriod = asString(url.searchParams.get("period"), "24h").toLowerCase();
+  const period = rawPeriod === "month" ? "this_month" : rawPeriod;
+
+  if (period === "7d") {
+    const fromMs = nowMs - 7 * 24 * 60 * 60 * 1000;
+    return { period, fromMs, toMs: nowMs, fromSec: Math.floor(fromMs / 1000) };
+  }
+
+  if (period === "30d") {
+    const fromMs = nowMs - 30 * 24 * 60 * 60 * 1000;
+    return { period, fromMs, toMs: nowMs, fromSec: Math.floor(fromMs / 1000) };
+  }
+
+  if (period === "this_month") {
+    const fromMs = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    return { period, fromMs, toMs: nowMs, fromSec: Math.floor(fromMs / 1000) };
+  }
+
+  if (period === "previous_month") {
+    const fromMs = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+    const toMs = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999).getTime();
+    return { period, fromMs, toMs, fromSec: Math.floor(fromMs / 1000) };
+  }
+
+  if (period === "custom") {
+    const fromMs = parseDateBoundary(url.searchParams.get("dateFrom") ?? url.searchParams.get("from"), "start") ?? nowMs - 30 * 24 * 60 * 60 * 1000;
+    const toMs = parseDateBoundary(url.searchParams.get("dateTo") ?? url.searchParams.get("to"), "end") ?? nowMs;
+    return { period, fromMs, toMs, fromSec: Math.floor(fromMs / 1000) };
+  }
+
+  const fromMs = nowMs - 24 * 60 * 60 * 1000;
+  return { period: "24h", fromMs, toMs: nowMs, fromSec: Math.floor(fromMs / 1000) };
+}
+
+function isInsidePeriod(value: string, bounds: PeriodBounds) {
+  const time = new Date(value).getTime();
+  if (!Number.isFinite(time)) return false;
+  return time >= bounds.fromMs && time <= bounds.toMs;
 }
 
 function normalizeSlug(value: string) {
@@ -129,8 +179,7 @@ export async function GET(request: NextRequest) {
   }
 
   const url = new URL(request.url);
-  const period = asString(url.searchParams.get("period"), "24h").toLowerCase();
-  const fromStartTime = periodToUnixSeconds(period);
+  const periodBounds = resolvePeriodBounds(url);
 
   const requestedSlugs = Array.from(
     new Set(
@@ -146,19 +195,32 @@ export async function GET(request: NextRequest) {
   const allowedSlugs = resolveAllowedCompanySlugs(auth).map((slug) => normalizeSlug(slug));
   const isPrivileged = hasGlobalCompanyVisibility(auth);
 
-  const effectiveSlugs =
-    requestedSlugs.length > 0
-      ? requestedSlugs.filter((slug) => isPrivileged || allowedSlugs.includes(slug))
-      : allowedSlugs;
-
-  if (effectiveSlugs.length === 0) {
-    return NextResponse.json({ signals: [], history: [], companies: [], warnings: ["Nenhuma empresa permitida"] }, { status: 200 });
-  }
-
   const companies = await listLocalCompanies();
   const companyNameMap = new Map(
     companies.map((company) => [normalizeSlug(company.slug), company.name]),
   );
+  const allCompanySlugs = companies
+    .map((company) => normalizeSlug(company.slug))
+    .filter((slug) => Boolean(slug));
+
+  const effectiveSlugs =
+    requestedSlugs.length > 0
+      ? requestedSlugs.filter((slug) => isPrivileged || allowedSlugs.includes(slug))
+      : isPrivileged
+        ? allCompanySlugs
+        : allowedSlugs.filter((slug) => allCompanySlugs.length === 0 || allCompanySlugs.includes(slug));
+
+  if (effectiveSlugs.length === 0) {
+    return NextResponse.json({
+      period: periodBounds.period,
+      periodFrom: new Date(periodBounds.fromMs).toISOString(),
+      periodTo: new Date(periodBounds.toMs).toISOString(),
+      signals: [],
+      history: [],
+      companies: [],
+      warnings: ["Nenhuma empresa permitida"],
+    }, { status: 200 });
+  }
 
   const baseUrl = `${url.protocol}//${url.host}`;
   const headers = new Headers();
@@ -175,10 +237,10 @@ export async function GET(request: NextRequest) {
     const companyName = companyNameMap.get(slug) ?? slug;
 
     const [runsRes, defectsRes, appsRes, summaryRes, docsRes] = await Promise.allSettled([
-      fetch(`${baseUrl}/api/v1/runs?all=1&limit=100&companySlug=${encodeURIComponent(slug)}&from_start_time=${fromStartTime}`, { cache: "no-store", headers }),
+      fetch(`${baseUrl}/api/v1/runs?all=1&limit=100&companySlug=${encodeURIComponent(slug)}&from_start_time=${periodBounds.fromSec}`, { cache: "no-store", headers }),
       fetch(`${baseUrl}/api/company-defects?companySlug=${encodeURIComponent(slug)}`, { cache: "no-store", headers }),
       fetch(`${baseUrl}/api/applications?companySlug=${encodeURIComponent(slug)}`, { cache: "no-store", headers }),
-      fetch(`${baseUrl}/api/dashboard/summary?slug=${encodeURIComponent(slug)}&period=${encodeURIComponent(period)}`, { cache: "no-store", headers }),
+      fetch(`${baseUrl}/api/dashboard/summary?slug=${encodeURIComponent(slug)}&period=${encodeURIComponent(periodBounds.period)}`, { cache: "no-store", headers }),
       fetch(`${baseUrl}/api/company-documents?slug=${encodeURIComponent(slug)}&history=1`, { cache: "no-store", headers }),
     ]);
 
@@ -300,11 +362,16 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  const visibleSignals = signals.filter((signal) => isInsidePeriod(signal.updatedAtIso, periodBounds));
+  const visibleHistory = history.filter((item) => isInsidePeriod(item.updatedAtIso, periodBounds));
+
   return NextResponse.json({
-    period,
+    period: periodBounds.period,
+    periodFrom: new Date(periodBounds.fromMs).toISOString(),
+    periodTo: new Date(periodBounds.toMs).toISOString(),
     companies: effectiveSlugs.map((slug) => ({ slug, name: companyNameMap.get(slug) ?? slug })),
-    signals,
-    history,
+    signals: visibleSignals,
+    history: visibleHistory,
     warnings,
   });
 }

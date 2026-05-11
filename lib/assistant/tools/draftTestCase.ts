@@ -1,9 +1,9 @@
 import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
-import type { AssistantScreenContext } from "../types";
+import type { AssistantAction, AssistantScreenContext } from "../types";
 import type { TicketPriority, TicketType } from "@/lib/ticketsStore";
-import { compactMultiline, normalizeSearch } from "../helpers";
+import { compactMultiline } from "../helpers";
 import { buildPromptActions, findVisibleTicket } from "../data";
 import { looksLikeInstructionOnly, validateAssistantTestCaseDraft } from "../validations";
 import { formatValidationIssues } from "../helpers";
@@ -31,6 +31,95 @@ function getSeverityEmoji(priority: TicketPriority): string {
     case "low": return "🟢";
     default: return "⚪";
   }
+}
+
+function priorityToTestCasePriority(priority: TicketPriority) {
+  if (priority === "high") return "high";
+  if (priority === "low") return "low";
+  return "medium";
+}
+
+function clip(value: string, max: number) {
+  const text = value.replace(/\s+/g, " ").trim();
+  if (text.length <= max) return text;
+  return `${text.slice(0, Math.max(0, max - 3)).trim()}...`;
+}
+
+function metadataText(context: AssistantScreenContext, key: string) {
+  const value = context.metadata?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function buildCreationInput(args: {
+  user: AuthUser;
+  context: AssistantScreenContext;
+  ticket: Awaited<ReturnType<typeof findVisibleTicket>>;
+  ticketType: TicketType;
+  priority: TicketPriority;
+  sourceTitle: string;
+  objective: string;
+  reproductionBase: string;
+  expectedResult: string;
+}) {
+  const companySlug = args.ticket?.companySlug ?? args.context.companySlug ?? args.user.companySlug ?? null;
+  const title = clip(args.ticket ? `${args.ticket.code} - ${args.sourceTitle}` : args.sourceTitle, 120);
+  const route = args.context.route || "/";
+  const flowText = clip(args.reproductionBase, 220);
+  const moduleId = metadataText(args.context, "moduleId") ?? (args.context.module !== "general" ? args.context.module : undefined);
+  const applicationId = metadataText(args.context, "applicationId");
+  const baseTags = [
+    "assistant-ai",
+    args.ticketType,
+    args.context.module !== "general" ? args.context.module : "",
+    args.ticket?.code ? args.ticket.code.toLowerCase() : "",
+  ].filter(Boolean);
+
+  const secondStepAction =
+    args.ticketType === "bug"
+      ? `Reproduzir o comportamento reportado: ${flowText}`
+      : args.ticketType === "melhoria"
+        ? `Executar o fluxo da melhoria: ${flowText}`
+        : `Executar o fluxo principal: ${flowText}`;
+
+  return {
+    title,
+    description: compactMultiline([
+      args.ticket ? `Caso criado a partir do chamado ${args.ticket.code}.` : "Caso criado a partir de contexto informado ao assistente.",
+      args.ticket?.description ? clip(args.ticket.description, 700) : clip(args.reproductionBase, 700),
+    ].join("\n")),
+    objective: args.objective,
+    preconditions: compactMultiline([
+      `Usuario autenticado com acesso ao modulo ${args.context.screenLabel}.`,
+      "Ambiente com dados necessarios para executar o fluxo.",
+      companySlug ? `Empresa ativa: ${companySlug}.` : "",
+    ].join("\n")),
+    postconditions: "Resultado revisado e evidencia registrada no ciclo de QA.",
+    type: "manual",
+    status: "draft",
+    priority: priorityToTestCasePriority(args.priority),
+    companySlug,
+    applicationId,
+    moduleId,
+    tags: baseTags,
+    steps: [
+      {
+        action: `Acessar ${route}`,
+        expectedResult: `${args.context.screenLabel} carrega sem erro e dentro do escopo do usuario.`,
+      },
+      {
+        action: secondStepAction,
+        expectedResult: "O sistema permite executar o fluxo sem bloqueios inesperados.",
+      },
+      {
+        action: "Validar mensagens, estados visuais e dados exibidos.",
+        expectedResult: args.expectedResult,
+      },
+      {
+        action: "Registrar evidencia funcional da execucao.",
+        expectedResult: "Evidencia suficiente fica disponivel para revisao do caso.",
+      },
+    ],
+  };
 }
 
 export async function toolDraftTestCase(user: AuthUser, context: AssistantScreenContext, message: string): Promise<AssistantExecutorResult> {
@@ -105,17 +194,34 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
 
   const typeEmoji = getTypeEmoji(ticketType);
   const severityEmoji = getSeverityEmoji(suggestedPriority);
+  const createTestCaseAction: AssistantAction = {
+    kind: "tool",
+    label: "Criar caso no repositorio",
+    tool: "create_test_case",
+    input: buildCreationInput({
+      user,
+      context,
+      ticket,
+      ticketType,
+      priority: suggestedPriority,
+      sourceTitle: validation.sourceTitle,
+      objective: validation.objective,
+      reproductionBase: validation.reproductionBase,
+      expectedResult: validation.expectedResult,
+    }),
+  };
+  const nextActions: AssistantAction[] = ticket
+    ? [
+        createTestCaseAction,
+        { kind: "prompt", label: `Resumir ${ticket.code}`, prompt: `Resumir o chamado ${ticket.code}` },
+      ]
+    : [createTestCaseAction, ...buildPromptActions(context).slice(0, 3)];
 
   return {
     tool: "draft_test_case",
     success: true,
     summary: validation.sourceTitle,
-    actions: ticket
-      ? [
-          { kind: "prompt", label: `📋 Resumir ${ticket.code}`, prompt: `Resumir o chamado ${ticket.code}` },
-          { kind: "prompt", label: "💾 Salvar caso de teste", prompt: "Salvar este caso de teste" },
-        ]
-      : buildPromptActions(context),
+    actions: nextActions,
     reply: compactMultiline([
       `## 🧪 Caso de Teste`,
       "",

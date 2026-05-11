@@ -21,7 +21,7 @@ type NewManualRelease = {
   observations?: string;
 };
 
-type CaseStatus = "pass" | "fail" | "blocked" | "notRun";
+type CaseStatus = "notRun" | "inProgress" | "blocked" | "fail" | "pass";
 
 type ManualCaseDraft = {
   id: string;
@@ -33,6 +33,21 @@ type ManualCaseDraft = {
   postcondition: string;
   steps: string;
   expected: string;
+  origin?: string | null;
+  type?: string | null;
+  projectCode?: string | null;
+  suiteId?: string | null;
+  suiteName?: string | null;
+  severity?: string | null;
+  priority?: string | null;
+  tags?: string[];
+  responsibleName?: string | null;
+  defectsCount?: number;
+  evidencesCount?: number;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  statusUpdatedAt?: string | null;
+  retestCount?: number;
 };
 
 type ApplicationOption = {
@@ -61,6 +76,7 @@ type TestPlanCaseRef = {
   severity?: string | null;
   link?: string | null;
   steps?: TestPlanCaseStep[];
+  automation?: { enabled?: boolean | null } | null;
 };
 
 type TestPlanItem = {
@@ -104,6 +120,21 @@ const initialCaseDraft: ManualCaseDraft = {
   postcondition: "",
   steps: "",
   expected: "",
+  origin: "manual",
+  type: "manual",
+  projectCode: null,
+  suiteId: null,
+  suiteName: null,
+  severity: "",
+  priority: "",
+  tags: [],
+  responsibleName: "",
+  defectsCount: 0,
+  evidencesCount: 0,
+  startedAt: null,
+  finishedAt: null,
+  statusUpdatedAt: null,
+  retestCount: 0,
 };
 
 let autoIdCounter = 0;
@@ -115,16 +146,18 @@ function nextAutoId() {
 const fallbackApps = ["SMART", "PRINT", "BOOKING", "CDS", "TRUST", "CIDADAO SMART", "GMT"];
 
 const CASE_COLUMNS: CaseColumn[] = [
-  { key: "pass", label: "Aprovado", ringClass: "border-emerald-300 dark:border-emerald-700", chipClass: "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-200 dark:border-emerald-700", toneClass: "from-emerald-50 to-(--tc-surface) dark:from-emerald-950/60 dark:to-(--tc-surface)" },
-  { key: "fail", label: "Falha", ringClass: "border-rose-300 dark:border-rose-700", chipClass: "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-900/50 dark:text-rose-200 dark:border-rose-700", toneClass: "from-rose-50 to-(--tc-surface) dark:from-rose-950/60 dark:to-(--tc-surface)" },
+  { key: "notRun", label: "Novo", ringClass: "border-slate-300 dark:border-slate-600", chipClass: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-600", toneClass: "from-slate-50 to-(--tc-surface) dark:from-slate-900/60 dark:to-(--tc-surface)" },
+  { key: "inProgress", label: "Em andamento", ringClass: "border-blue-300 dark:border-blue-700", chipClass: "bg-blue-50 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-100 dark:border-blue-700", toneClass: "from-blue-50 to-(--tc-surface) dark:from-blue-950/60 dark:to-(--tc-surface)" },
   { key: "blocked", label: "Bloqueado", ringClass: "border-amber-300 dark:border-amber-700", chipClass: "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-900/50 dark:text-amber-100 dark:border-amber-700", toneClass: "from-amber-50 to-(--tc-surface) dark:from-amber-950/60 dark:to-(--tc-surface)" },
-  { key: "notRun", label: "Não executado", ringClass: "border-slate-300 dark:border-slate-600", chipClass: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-600", toneClass: "from-slate-50 to-(--tc-surface) dark:from-slate-900/60 dark:to-(--tc-surface)" },
+  { key: "fail", label: "Falhou", ringClass: "border-rose-300 dark:border-rose-700", chipClass: "bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-900/50 dark:text-rose-200 dark:border-rose-700", toneClass: "from-rose-50 to-(--tc-surface) dark:from-rose-950/60 dark:to-(--tc-surface)" },
+  { key: "pass", label: "Finalizado", ringClass: "border-emerald-300 dark:border-emerald-700", chipClass: "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-200 dark:border-emerald-700", toneClass: "from-emerald-50 to-(--tc-surface) dark:from-emerald-950/60 dark:to-(--tc-surface)" },
 ];
 
-const CASE_STATUS_VALUES: Record<CaseStatus, "APROVADO" | "FALHA" | "BLOQUEADO" | "NAO_EXECUTADO"> = {
+const CASE_STATUS_VALUES: Record<CaseStatus, "APROVADO" | "FALHA" | "BLOQUEADO" | "NAO_EXECUTADO" | "EM_ANDAMENTO"> = {
   pass: "APROVADO",
   fail: "FALHA",
   blocked: "BLOQUEADO",
+  inProgress: "EM_ANDAMENTO",
   notRun: "NAO_EXECUTADO",
 };
 
@@ -141,6 +174,27 @@ function buildQaseCaseLink(projectCode: string | null | undefined, caseId: strin
   const normalizedCaseId = String(caseId ?? "").replace(/\D/g, "").trim();
   if (!normalizedProjectCode || !normalizedCaseId) return "";
   return `https://app.qase.io/case/${encodeURIComponent(normalizedProjectCode)}-${encodeURIComponent(normalizedCaseId)}`;
+}
+
+function applyCaseStatusTransition(item: ManualCaseDraft, status: CaseStatus): ManualCaseDraft {
+  if (item.status === status) return item;
+  const now = new Date().toISOString();
+  const next: ManualCaseDraft = { ...item, status, statusUpdatedAt: now };
+  if (item.status === "notRun" && status === "inProgress" && !item.startedAt) {
+    next.startedAt = now;
+  }
+  if ((status === "pass" || status === "fail") && !item.finishedAt) {
+    next.finishedAt = now;
+  }
+  if (item.status === "fail" && status === "inProgress") {
+    next.finishedAt = null;
+    next.retestCount = Math.max(0, Number(item.retestCount) || 0) + 1;
+    if (!item.startedAt) next.startedAt = now;
+  }
+  if (status === "inProgress" && !next.startedAt) {
+    next.startedAt = now;
+  }
+  return next;
 }
 
 function formatSteps(steps?: TestPlanCaseStep[] | null): string {
@@ -178,6 +232,21 @@ function mergePlanCasesIntoDrafts(plan: TestPlanItem, currentCases: ManualCaseDr
       postcondition: current?.postcondition || item.postconditions?.trim() || "",
       steps: current?.steps || formatSteps(item.steps) || "",
       expected: current?.expected || formatExpected(item.steps) || "",
+      origin: current?.origin || plan.source,
+      type: current?.type || (item.automation?.enabled ? "automatizada" : "manual"),
+      projectCode: current?.projectCode || plan.projectCode || null,
+      suiteId: current?.suiteId || null,
+      suiteName: current?.suiteName || null,
+      severity: current?.severity || item.severity?.trim() || "",
+      priority: current?.priority || "",
+      tags: current?.tags || [],
+      responsibleName: current?.responsibleName || "",
+      defectsCount: current?.defectsCount || 0,
+      evidencesCount: current?.evidencesCount || (current?.link || item.link ? 1 : 0),
+      startedAt: current?.startedAt || null,
+      finishedAt: current?.finishedAt || null,
+      statusUpdatedAt: current?.statusUpdatedAt || null,
+      retestCount: current?.retestCount || 0,
     } satisfies ManualCaseDraft;
   });
 }
@@ -201,9 +270,8 @@ export function CreateManualReleaseButton({
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [columnOrder, setColumnOrder] = useState<CaseStatus[]>(["pass", "fail", "blocked", "notRun"]);
+  const [columnOrder, setColumnOrder] = useState<CaseStatus[]>(["notRun", "inProgress", "blocked", "fail", "pass"]);
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null);
-  const [draggingCardFrom, setDraggingCardFrom] = useState<CaseStatus | null>(null);
   const [draggingColumnKey, setDraggingColumnKey] = useState<CaseStatus | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<CaseStatus | null>(null);
   const [form, setForm] = useState<NewManualRelease>(initialState);
@@ -324,7 +392,7 @@ export function CreateManualReleaseButton({
           accumulator[column.key] = cases.filter((item) => item.status === column.key);
           return accumulator;
         },
-        { pass: [], fail: [], blocked: [], notRun: [] },
+        { notRun: [], inProgress: [], blocked: [], fail: [], pass: [] },
       ),
     [cases],
   );
@@ -333,11 +401,12 @@ export function CreateManualReleaseButton({
     pass: cases.filter((c) => c.status === "pass").length,
     fail: cases.filter((c) => c.status === "fail").length,
     blocked: cases.filter((c) => c.status === "blocked").length,
+    inProgress: cases.filter((c) => c.status === "inProgress").length,
     notRun: cases.filter((c) => c.status === "notRun").length,
   }), [cases]);
 
   const total = runMode === "integration"
-    ? caseStats.pass + caseStats.fail + caseStats.blocked + caseStats.notRun
+    ? caseStats.pass + caseStats.fail + caseStats.blocked + caseStats.inProgress + caseStats.notRun
     : form.pass + form.fail + form.blocked + form.notRun;
   const passRate = total > 0
     ? Math.round(((runMode === "integration" ? caseStats.pass : form.pass) / total) * 100)
@@ -355,9 +424,8 @@ export function CreateManualReleaseButton({
     setPlanActionLoading(false);
     setRunMode("manual");
     setEditingCase(null);
-    setColumnOrder(["pass", "fail", "blocked", "notRun"]);
+    setColumnOrder(["notRun", "inProgress", "blocked", "fail", "pass"]);
     setDraggingCardId(null);
-    setDraggingCardFrom(null);
     setDraggingColumnKey(null);
     setDragOverColumn(null);
   }, []);
@@ -409,6 +477,21 @@ export function CreateManualReleaseButton({
         postcondition: caseDraft.postcondition.trim(),
         steps: caseDraft.steps.trim(),
         expected: caseDraft.expected.trim(),
+        origin: caseDraft.origin || "manual",
+        type: caseDraft.type || "manual",
+        projectCode: caseDraft.projectCode || selectedPlan?.projectCode || selectedApplication?.qaseProjectCode || null,
+        suiteId: caseDraft.suiteId || null,
+        suiteName: caseDraft.suiteName || null,
+        severity: caseDraft.severity || "",
+        priority: caseDraft.priority || "",
+        tags: caseDraft.tags || [],
+        responsibleName: caseDraft.responsibleName || "",
+        defectsCount: caseDraft.defectsCount || 0,
+        evidencesCount: caseDraft.evidencesCount || (caseDraft.link.trim() ? 1 : 0),
+        startedAt: caseDraft.startedAt || null,
+        finishedAt: caseDraft.finishedAt || null,
+        statusUpdatedAt: caseDraft.statusUpdatedAt || null,
+        retestCount: caseDraft.retestCount || 0,
       });
       return next;
     });
@@ -436,7 +519,6 @@ export function CreateManualReleaseButton({
 
   function handleCardDragStart(e: React.DragEvent, id: string, fromColumn: CaseStatus) {
     setDraggingCardId(id);
-    setDraggingCardFrom(fromColumn);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("cardId", id);
     e.dataTransfer.setData("fromColumn", fromColumn);
@@ -447,10 +529,9 @@ export function CreateManualReleaseButton({
     const id = e.dataTransfer.getData("cardId");
     if (!id) return;
     setCases((current) =>
-      current.map((item) => (item.id === id ? { ...item, status: toColumn } : item)),
+      current.map((item) => (item.id === id ? applyCaseStatusTransition(item, toColumn) : item)),
     );
     setDraggingCardId(null);
-    setDraggingCardFrom(null);
     setDragOverColumn(null);
   }
 
@@ -532,12 +613,19 @@ export function CreateManualReleaseButton({
     setSubmitError(null);
 
     try {
-      const currentStats = cases.length > 0 ? caseStats : {
-        pass: form.pass,
-        fail: form.fail,
-        blocked: form.blocked,
-        notRun: form.notRun,
-      };
+      const currentStats = cases.length > 0
+        ? {
+            pass: caseStats.pass,
+            fail: caseStats.fail,
+            blocked: caseStats.blocked,
+            notRun: caseStats.notRun + caseStats.inProgress,
+          }
+        : {
+            pass: form.pass,
+            fail: form.fail,
+            blocked: form.blocked,
+            notRun: form.notRun,
+          };
 
       const response = await fetch("/api/releases-manual", {
         method: "POST",
@@ -555,17 +643,7 @@ export function CreateManualReleaseButton({
             selectedPlan?.projectCode || selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
           slug: form.slug,
           ...(resolvedCompanySlug ? { clientSlug: resolvedCompanySlug } : {}),
-          stats: runMode === "integration" ? {
-            pass: caseStats.pass,
-            fail: caseStats.fail,
-            blocked: caseStats.blocked,
-            notRun: caseStats.notRun,
-          } : {
-            pass: form.pass,
-            fail: form.fail,
-            blocked: form.blocked,
-            notRun: form.notRun,
-          },
+          stats: currentStats,
           observations: form.observations,
         }),
       });
@@ -592,6 +670,27 @@ export function CreateManualReleaseButton({
               title: item.title,
               link: item.link || undefined,
               status: CASE_STATUS_VALUES[item.status],
+              origin: item.origin || selectedPlan?.source || "manual",
+              type: item.type || (runMode === "integration" ? "mista" : "manual"),
+              projectCode:
+                item.projectCode || selectedPlan?.projectCode || selectedApplication?.qaseProjectCode || form.app.toUpperCase(),
+              suiteId: item.suiteId || null,
+              suiteName: item.suiteName || null,
+              description: item.description || null,
+              preconditions: item.precondition || null,
+              postconditions: item.postcondition || null,
+              stepsText: item.steps || null,
+              expectedText: item.expected || null,
+              priority: item.priority || null,
+              severity: item.severity || null,
+              tags: item.tags || [],
+              responsibleName: item.responsibleName || null,
+              defectsCount: item.defectsCount || 0,
+              evidencesCount: item.evidencesCount || (item.link ? 1 : 0),
+              startedAt: item.startedAt || null,
+              finishedAt: item.finishedAt || null,
+              statusUpdatedAt: item.statusUpdatedAt || null,
+              retestCount: item.retestCount || 0,
               fromApi: false,
             })),
           ),
@@ -909,6 +1008,7 @@ export function CreateManualReleaseButton({
                           { label: "Aprovado", value: caseStats.pass, dotClass: "bg-emerald-500", labelClass: "text-emerald-600 dark:text-emerald-400" },
                           { label: "Falha", value: caseStats.fail, dotClass: "bg-rose-500", labelClass: "text-rose-600 dark:text-rose-400" },
                           { label: "Bloqueado", value: caseStats.blocked, dotClass: "bg-amber-500", labelClass: "text-amber-600 dark:text-amber-400" },
+                          { label: "Em andamento", value: caseStats.inProgress, dotClass: "bg-blue-500", labelClass: "text-blue-600 dark:text-blue-400" },
                           { label: "N/Executado", value: caseStats.notRun, dotClass: "bg-slate-400", labelClass: "text-slate-500 dark:text-slate-400" },
                         ]).map((s) => (
                           <div key={s.label} className="flex items-center gap-2 rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) px-3 py-2">
@@ -1353,7 +1453,7 @@ export function CreateManualReleaseButton({
                                 key={`${column.key}-${item.id}`}
                                 draggable
                                 onDragStart={(e) => { e.stopPropagation(); handleCardDragStart(e, item.id, column.key); }}
-                                onDragEnd={() => { setDraggingCardId(null); setDraggingCardFrom(null); }}
+                                onDragEnd={() => setDraggingCardId(null)}
                                 onClick={() => setEditingCase({ ...item })}
                                 className={[
                                   "relative cursor-pointer rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:border-(--tc-accent,#ef0001)/30 hover:shadow-md",
@@ -1491,7 +1591,7 @@ export function CreateManualReleaseButton({
                       <select
                         aria-label="Status do caso"
                         value={editingCase.status}
-                        onChange={(e) => setEditingCase((c) => c ? { ...c, status: e.target.value as CaseStatus } : c)}
+                        onChange={(e) => setEditingCase((c) => c ? applyCaseStatusTransition(c, e.target.value as CaseStatus) : c)}
                         className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                       >
                         {CASE_COLUMNS.map((col) => (

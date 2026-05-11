@@ -28,7 +28,18 @@ const envOverrides = {
   E2E_USE_JSON: process.env.E2E_USE_JSON || "1",
 };
 Object.assign(process.env, envOverrides);
+
+// When running E2E in JSON mode, ensure no Postgres/Prisma connectivity is attempted.
+if (envOverrides.E2E_USE_JSON === "1" || envOverrides.E2E_USE_JSON === "true") {
+  process.env.AUTH_STORE = "json";
+  process.env.TICKETS_STORE = "json";
+  delete process.env.DATABASE_URL;
+  delete process.env.PRISMA_DATABASE_URL;
+  delete process.env.POSTGRES_URL;
+  delete process.env.POSTGRES_PRISMA_URL;
+}
 const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING === "1" || process.env.PLAYWRIGHT_USE_EXISTING === "true";
+const includeEdge = process.env.PLAYWRIGHT_INCLUDE_EDGE === "1" || process.env.PLAYWRIGHT_INCLUDE_EDGE === "true";
 export default defineConfig({
   testDir: "./tests-e2e",
   globalSetup: "./tests-e2e/global-setup.ts",
@@ -36,7 +47,8 @@ export default defineConfig({
   expect: { timeout: 5000 },
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
-  workers: process.env.CI ? 1 : undefined,
+  // Keep webserver stable in local/sandboxed environments.
+  workers: 1,
   use: {
     baseURL,
     trace: "on-first-retry",
@@ -45,7 +57,8 @@ export default defineConfig({
   webServer: useExistingServer
     ? undefined
     : {
-      command: "npm run dev:ci",
+      command:
+        "npm run dev:ci:clean",
         url: baseURL,
         reuseExistingServer: true,
         timeout: 300 * 1000,
@@ -55,6 +68,14 @@ export default defineConfig({
           E2E_USE_JSON: envOverrides.E2E_USE_JSON,
           NODE_ENV: "test",
           JWT_SECRET: envOverrides.JWT_SECRET,
+          NEXT_DISABLE_FONT_DOWNLOAD: "1",
+          NEXT_DISABLE_TURBOPACK: "1",
+          AUTH_STORE: "json",
+          TICKETS_STORE: "json",
+          DATABASE_URL: "",
+          PRISMA_DATABASE_URL: "",
+          POSTGRES_URL: "",
+          POSTGRES_PRISMA_URL: "",
           PORT: "3100",
           HOSTNAME: "127.0.0.1",
           NEXT_PUBLIC_SITE_URL: baseURL,
@@ -66,9 +87,13 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
-    {
-      name: "edge",
-      use: { ...devices["Desktop Edge"], channel: "msedge" },
-    },
+    ...(includeEdge
+      ? [
+          {
+            name: "edge",
+            use: { ...devices["Desktop Edge"], channel: "msedge" as const },
+          },
+        ]
+      : []),
   ],
 });

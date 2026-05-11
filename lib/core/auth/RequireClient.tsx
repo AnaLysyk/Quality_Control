@@ -1,10 +1,11 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import Link from "next/link";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPath, buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 type RequireClientProps = {
   slug?: string; // slug da rota /empresas/[slug]
@@ -13,9 +14,20 @@ type RequireClientProps = {
 };
 
 export function RequireClient({ slug, children, fallback }: RequireClientProps) {
-  const { user, loading } = useAuthUser();
+  const { user, loading, error, refreshUser } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname() || "/";
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setTimedOut(false);
+      return;
+    }
+
+    const handle = setTimeout(() => setTimedOut(true), 10_000);
+    return () => clearTimeout(handle);
+  }, [loading]);
 
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : null;
   const permissionRole = typeof user?.permissionRole === "string" ? user.permissionRole.toLowerCase() : null;
@@ -26,10 +38,20 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   const isLinkedTcUser = isTcUser && !!slug && linkedSlugs.some((s) => s.toLowerCase() === slug.toLowerCase());
   const loginHref =
     pathname.startsWith("/") && pathname !== "/login" ? `/login?next=${encodeURIComponent(pathname)}` : "/login";
-  const shouldRedirectToLogin = !loading && !user;
-  const shouldRedirectToCompanyHome =
-    !loading && !!user && !isAdmin && !isLinkedTcUser && !!slug && !!user.clientSlug && user.clientSlug !== slug;
-  const shouldBlockContent = loading || shouldRedirectToLogin || (!isAdmin && !isLinkedTcUser && !!user && !user.clientSlug) || shouldRedirectToCompanyHome;
+
+  const normalizedClientSlug = typeof user?.clientSlug === "string" ? user.clientSlug : typeof (user as { companySlug?: string | null } | null)?.companySlug === "string" ? (user as { companySlug?: string | null }).companySlug : null;
+
+  const accessState = useMemo(() => {
+    if (error) return "error" as const;
+    if (loading && timedOut) return "timeout" as const;
+    if (loading) return "loading" as const;
+    if (!user) return "expired" as const;
+    if (!slug) return "slug-missing" as const;
+    if (isAdmin || isLinkedTcUser) return "allowed" as const;
+    if (!normalizedClientSlug) return "denied" as const;
+    if (slug && normalizedClientSlug.toLowerCase() !== slug.toLowerCase()) return "denied" as const;
+    return "allowed" as const;
+  }, [error, isAdmin, isLinkedTcUser, loading, normalizedClientSlug, slug, timedOut, user]);
 
   useEffect(() => {
     if (loading) return;
@@ -37,33 +59,77 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
       router.replace(loginHref);
       return;
     }
-    if (isAdmin || isLinkedTcUser) return;
-
-    if (!user.clientSlug) {
-      router.replace(loginHref);
-      return;
-    }
-
-    if (slug && user.clientSlug !== slug) {
-      router.replace(
-        buildCompanyPathForAccess(user.clientSlug, "home", {
-          isGlobalAdmin: user.isGlobalAdmin === true,
-          permissionRole: user.permissionRole ?? null,
-          role: user.role ?? null,
-          companyRole: user.companyRole ?? null,
-          userOrigin:
-            (user as { userOrigin?: string | null } | null)?.userOrigin ??
-            (user as { user_origin?: string | null } | null)?.user_origin ??
-            null,
-          clientSlug: user.clientSlug,
-          defaultClientSlug: user.defaultClientSlug ?? null,
-        }),
-      );
-    }
+    void isAdmin;
+    void isLinkedTcUser;
   }, [isAdmin, loading, loginHref, router, slug, user]);
 
-  if (shouldBlockContent) {
+  if (accessState === "loading") {
     return (fallback as ReactNode) ?? <AuthSkeleton message="Validando acesso da empresa" />;
+  }
+
+  if (accessState === "timeout") {
+    return (
+      <div className="tc-section space-y-3 rounded-2xl p-4">
+        <div className="text-sm font-semibold">Validacao demorou demais</div>
+        <button
+          type="button"
+          className="tc-button tc-button-primary"
+          onClick={() => refreshUser(true)}
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  if (accessState === "expired") {
+    return (
+      <div className="tc-section space-y-3 rounded-2xl p-4">
+        <div className="text-sm font-semibold">Sessao expirada</div>
+        <div className="text-xs text-muted">Redirecionando para login…</div>
+      </div>
+    );
+  }
+
+  if (accessState === "error") {
+    return (
+      <div className="tc-section space-y-3 rounded-2xl p-4">
+        <div className="text-sm font-semibold">Nao foi possivel validar a sessao</div>
+        <button
+          type="button"
+          className="tc-button tc-button-primary"
+          onClick={() => refreshUser(true)}
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  if (accessState === "slug-missing") {
+    return (
+      <div className="tc-section space-y-3 rounded-2xl p-4">
+        <div className="text-sm font-semibold">Empresa nao encontrada</div>
+        <Link className="tc-link" href="/empresas">
+          Voltar para empresas
+        </Link>
+      </div>
+    );
+  }
+
+  if (accessState === "denied") {
+    const openHref = normalizedClientSlug
+      ? buildCompanyPath(normalizedClientSlug, "home", { short: false })
+      : "/empresas";
+
+    return (
+      <div className="tc-section space-y-3 rounded-2xl p-4">
+        <div className="text-sm font-semibold">Acesso negado</div>
+        <Link className="tc-link" href={openHref}>
+          Abrir minha empresa
+        </Link>
+      </div>
+    );
   }
 
   return <>{children}</>;

@@ -20,7 +20,7 @@ export function ProfileShell({
   header: ReactNode;
   tabs: ReactNode;
   actions: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <ProfileProvider context={context}>

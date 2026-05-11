@@ -54,6 +54,12 @@ type TestCaseRecord = {
     applicationId?: string | null;
     moduleId?: string | null;
     featureId?: string | null;
+    externalUrl?: string | null;
+    testProjectId?: string | null;
+    testProjectCode?: string | null;
+    testProjectName?: string | null;
+    suiteId?: string | null;
+    suiteName?: string | null;
     tags: string[];
     automationStatus: string;
     lastExecutionStatus?: string | null;
@@ -140,6 +146,32 @@ type ApiResponse = {
     failedRecently: number;
     automationCoverage: number;
   };
+};
+
+type TestProjectSuite = {
+  id: string;
+  externalId?: string | null;
+  name: string;
+  parentId?: string | null;
+  casesCount?: number;
+};
+
+type TestProject = {
+  id: string;
+  code: string | null;
+  name: string;
+  provider: string;
+  applicationId?: string | null;
+  applicationName?: string | null;
+  status?: string;
+  suites: TestProjectSuite[];
+  casesCount: number;
+  warnings?: string[];
+};
+
+type TestProjectsResponse = {
+  projects?: TestProject[];
+  warnings?: string[];
 };
 
 type StepDraft = {
@@ -260,8 +292,13 @@ export default function TestCaseRepositoryClient() {
   const [automationStatus, setAutomationStatus] = useState("all");
   const [applicationFilter, setApplicationFilter] = useState("all");
   const [moduleFilter, setModuleFilter] = useState("all");
+  const [projectFilter, setProjectFilter] = useState("all");
+  const [suiteFilter, setSuiteFilter] = useState("all");
   const [companySlug, setCompanySlug] = useState("all");
   const [items, setItems] = useState<TestCaseRecord[]>([]);
+  const [testProjects, setTestProjects] = useState<TestProject[]>([]);
+  const [testProjectsWarning, setTestProjectsWarning] = useState<string | null>(null);
+  const [testProjectsLoading, setTestProjectsLoading] = useState(false);
   const [metrics, setMetrics] = useState<ApiResponse["metrics"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -334,6 +371,46 @@ export default function TestCaseRepositoryClient() {
     return values.sort((left, right) => left.localeCompare(right));
   }, [items]);
 
+  const projectOptions = useMemo(() => {
+    const fromProjects = testProjects
+      .map((project) => project.code)
+      .filter((code): code is string => typeof code === "string" && code.trim().length > 0)
+      .map((code) => [code, `${code} - ${testProjects.find((project) => project.code === code)?.name ?? code}`] as [string, string]);
+    const fromCases = items
+      .map((item) => item.testCase.testProjectCode)
+      .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+      .map((code) => [code, code] as [string, string]);
+    const byCode = new Map<string, string>();
+    [...fromProjects, ...fromCases].forEach(([code, label]) => {
+      if (!byCode.has(code)) byCode.set(code, label);
+    });
+    return Array.from(byCode.entries()).sort((left, right) => left[0].localeCompare(right[0]));
+  }, [items, testProjects]);
+
+  const suiteOptions = useMemo(() => {
+    const suites = testProjects
+      .filter((project) => projectFilter === "all" || project.code === projectFilter)
+      .flatMap((project) =>
+        project.suites.map((suite) => [
+          suite.id,
+          `${project.code || project.name} / ${suite.name}`,
+        ] as [string, string]),
+      );
+    const fromCases = items
+      .filter((item) => projectFilter === "all" || item.testCase.testProjectCode === projectFilter)
+      .filter((item) => item.testCase.suiteId || item.testCase.suiteName)
+      .map((item) => [
+        item.testCase.suiteId || item.testCase.suiteName || "",
+        `${item.testCase.testProjectCode || "Projeto"} / ${item.testCase.suiteName || item.testCase.suiteId}`,
+      ] as [string, string])
+      .filter(([id]) => id);
+    const byId = new Map<string, string>();
+    [...suites, ...fromCases].forEach(([id, label]) => {
+      if (!byId.has(id)) byId.set(id, label);
+    });
+    return Array.from(byId.entries()).sort((left, right) => left[1].localeCompare(right[1]));
+  }, [items, projectFilter, testProjects]);
+
   const visibleCompanyCount = canViewCompanyFilter ? Math.max(companyOptions.length, normalizedUser.companySlugs.length) : 1;
 
   const coverContent = useMemo(
@@ -371,6 +448,57 @@ export default function TestCaseRepositoryClient() {
   }, [activeClientSlug, canViewCompanyFilter, normalizedUser.companySlugs, normalizedUser.primaryCompanySlug]);
 
   useEffect(() => {
+    setSuiteFilter("all");
+  }, [projectFilter]);
+
+  useEffect(() => {
+    if (companySlug === "all") {
+      setTestProjects([]);
+      setTestProjectsWarning(null);
+      setTestProjectsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function loadTestProjects() {
+      setTestProjectsLoading(true);
+      setTestProjectsWarning(null);
+      const params = new URLSearchParams({
+        companySlug,
+        includeCases: "false",
+      });
+      if (applicationFilter !== "all") params.set("applicationId", applicationFilter);
+
+      try {
+        const response = await fetchApi(`/api/test-projects?${params.toString()}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const payload = (await response.json().catch(() => null)) as TestProjectsResponse | null;
+        if (!response.ok) {
+          setTestProjects([]);
+          setTestProjectsWarning("Nao foi possivel carregar projetos de casos vinculados.");
+          return;
+        }
+        setTestProjects(payload?.projects ?? []);
+        const warnings = payload?.warnings?.filter(Boolean) ?? [];
+        setTestProjectsWarning(warnings.length ? warnings.join(" ") : null);
+      } catch {
+        if (controller.signal.aborted) return;
+        setTestProjects([]);
+        setTestProjectsWarning("Nao foi possivel carregar projetos de casos vinculados.");
+      } finally {
+        if (!controller.signal.aborted) setTestProjectsLoading(false);
+      }
+    }
+
+    void loadTestProjects();
+
+    return () => controller.abort();
+  }, [applicationFilter, companySlug]);
+
+  useEffect(() => {
     const controller = new AbortController();
 
     async function load() {
@@ -383,6 +511,8 @@ export default function TestCaseRepositoryClient() {
       if (automationStatus !== "all") params.set("automationStatus", automationStatus);
       if (applicationFilter !== "all") params.set("applicationId", applicationFilter);
       if (moduleFilter !== "all") params.set("moduleId", moduleFilter);
+      if (projectFilter !== "all") params.set("projectCode", projectFilter);
+      if (suiteFilter !== "all") params.set("suiteId", suiteFilter);
       if (companySlug !== "all") params.set("companySlug", companySlug);
 
       const response = await fetchApi(`/api/test-cases?${params.toString()}`, {
@@ -406,7 +536,7 @@ export default function TestCaseRepositoryClient() {
     void load();
 
     return () => controller.abort();
-  }, [applicationFilter, automationStatus, companySlug, moduleFilter, query, source, status]);
+  }, [applicationFilter, automationStatus, companySlug, moduleFilter, projectFilter, query, source, status, suiteFilter]);
 
   useEffect(() => {
     if (!selectedId && items[0]) setSelectedId(items[0].testCase.id);
@@ -574,6 +704,9 @@ export default function TestCaseRepositoryClient() {
       companySlug: form.companySlug.trim() || undefined,
       applicationId: form.applicationId.trim() || undefined,
       moduleId: form.moduleId.trim() || undefined,
+      testProjectCode: projectFilter !== "all" ? projectFilter : undefined,
+      suiteId: suiteFilter !== "all" ? suiteFilter : undefined,
+      suiteName: suiteFilter !== "all" ? suiteOptions.find(([id]) => id === suiteFilter)?.[1]?.split(" / ").pop() : undefined,
       source: form.source,
       type: form.type,
       status: form.status,
@@ -1046,7 +1179,7 @@ export default function TestCaseRepositoryClient() {
       </div>
 
       <article className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
           <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
             Buscar
             <span className="relative">
@@ -1079,6 +1212,22 @@ export default function TestCaseRepositoryClient() {
             value={applicationFilter}
             onChange={setApplicationFilter}
             options={[["all", "Todas"], ...applicationOptions.map((item) => [item, item] as [string, string])]}
+          />
+
+          <Select
+            testId="test-case-filter-project"
+            label="Projeto"
+            value={projectFilter}
+            onChange={setProjectFilter}
+            options={[["all", testProjectsLoading ? "Carregando..." : "Todos"], ...projectOptions]}
+          />
+
+          <Select
+            testId="test-case-filter-suite"
+            label="Suite/Pasta"
+            value={suiteFilter}
+            onChange={setSuiteFilter}
+            options={[["all", "Todas"], ...suiteOptions]}
           />
 
           <Select
@@ -1153,6 +1302,88 @@ export default function TestCaseRepositoryClient() {
             </div>
           </div>
 
+          <div className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Projetos e suites</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setProjectFilter("all");
+                  setSuiteFilter("all");
+                }}
+                className="text-xs font-semibold text-(--tc-accent,#ef0001)"
+              >
+                Limpar
+              </button>
+            </div>
+            {testProjectsWarning ? (
+              <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                {testProjectsWarning}
+              </p>
+            ) : null}
+            {companySlug === "all" ? (
+              <p className="mt-2 text-xs text-(--tc-text-muted,#6b7280)">Selecione uma empresa para carregar integrações por aplicação.</p>
+            ) : testProjectsLoading ? (
+              <p className="mt-2 text-xs text-(--tc-text-muted,#6b7280)">Carregando projetos vinculados...</p>
+            ) : testProjects.length === 0 ? (
+              <p className="mt-2 text-xs text-(--tc-text-muted,#6b7280)">Nenhum projeto de casos vinculado para o contexto atual.</p>
+            ) : (
+              <div className="mt-3 space-y-3">
+                {testProjects.map((project) => {
+                  const projectCode = project.code ?? "";
+                  const activeProject = projectCode ? projectFilter === projectCode : false;
+                  return (
+                    <div key={project.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-white p-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (projectCode) setProjectFilter(projectCode);
+                          setSuiteFilter("all");
+                        }}
+                        className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-sm font-bold ${
+                          activeProject ? "bg-[#fff5f5] text-(--tc-accent,#ef0001)" : "text-(--tc-text,#0b1a3c)"
+                        }`}
+                      >
+                        <span className="min-w-0 truncate">{project.code ? `${project.code} - ${project.name}` : project.name}</span>
+                        <span className="shrink-0 rounded-full bg-(--tc-surface-2,#f8fafc) px-2 py-0.5 text-[10px] text-(--tc-text-muted,#6b7280)">
+                          {project.casesCount}
+                        </span>
+                      </button>
+                      {project.suites.length ? (
+                        <div className="mt-1 space-y-1 pl-3">
+                          {project.suites.slice(0, 8).map((suite) => {
+                            const activeSuite = suiteFilter === suite.id;
+                            return (
+                              <button
+                                key={suite.id}
+                                type="button"
+                                onClick={() => {
+                                  if (projectCode) setProjectFilter(projectCode);
+                                  setSuiteFilter(suite.id);
+                                }}
+                                className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-semibold ${
+                                  activeSuite ? "bg-[#fff5f5] text-(--tc-accent,#ef0001)" : "text-(--tc-text-secondary,#4b5563)"
+                                }`}
+                              >
+                                <span className="min-w-0 truncate">{suite.name}</span>
+                                {suite.casesCount ? <span className="shrink-0">{suite.casesCount}</span> : null}
+                              </button>
+                            );
+                          })}
+                          {project.suites.length > 8 ? (
+                            <p className="px-2 py-1 text-[11px] font-semibold text-(--tc-text-muted,#6b7280)">
+                              +{project.suites.length - 8} suite(s)
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <div data-testid="test-case-table" className="mt-4 space-y-2">
             <div data-testid="test-case-list" className="space-y-2">
             {items.length === 0 ? (
@@ -1178,6 +1409,9 @@ export default function TestCaseRepositoryClient() {
                         <span data-testid="test-case-key">{record.testCase.key}</span> • {SOURCE_LABEL[record.testCase.source] ?? record.testCase.source}
                       </p>
                       <h3 className="mt-1 wrap-break-word text-base font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{record.testCase.title}</h3>
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">
+                        {[record.testCase.testProjectCode, record.testCase.suiteName].filter(Boolean).join(" / ") || "Sem projeto/suite"}
+                      </p>
                       <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
                         {record.testCase.applicationId || "Sem aplicação"} / {record.testCase.moduleId || "Sem módulo"}
                       </p>
@@ -1232,6 +1466,18 @@ export default function TestCaseRepositoryClient() {
                 <Badge>{STATUS_LABEL[selected.testCase.status] ?? selected.testCase.status}</Badge>
                 <Badge>{SOURCE_LABEL[selected.testCase.source] ?? selected.testCase.source}</Badge>
                 <Badge>{AUTOMATION_LABEL[selected.testCase.automationStatus] ?? selected.testCase.automationStatus}</Badge>
+                {selected.testCase.testProjectCode ? <Badge>Projeto {selected.testCase.testProjectCode}</Badge> : null}
+                {selected.testCase.suiteName ? <Badge>Suite {selected.testCase.suiteName}</Badge> : null}
+                {selected.testCase.externalUrl ? (
+                  <a
+                    href={selected.testCase.externalUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-(--tc-accent,#ef0001)"
+                  >
+                    Abrir origem
+                  </a>
+                ) : null}
               </div>
 
               <div className="mt-6 flex flex-wrap gap-2">
@@ -1248,6 +1494,8 @@ export default function TestCaseRepositoryClient() {
                   <p className="mt-2"><strong>Pré-condições:</strong> {selected.testCase.preconditions || "Não informado"}</p>
                   <p className="mt-2"><strong>Pós-condições:</strong> {selected.testCase.postconditions || "Não informado"}</p>
                   <p className="mt-2"><strong>Tags:</strong> {selected.testCase.tags.length ? selected.testCase.tags.join(", ") : "Sem tags"}</p>
+                  <p className="mt-2"><strong>Projeto de casos:</strong> {selected.testCase.testProjectCode || selected.testCase.testProjectName || "Nao informado"}</p>
+                  <p className="mt-2"><strong>Suite/Pasta:</strong> {selected.testCase.suiteName || selected.testCase.suiteId || "Nao informado"}</p>
                 </section>
               ) : null}
 

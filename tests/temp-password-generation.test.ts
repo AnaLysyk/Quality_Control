@@ -12,6 +12,8 @@ import { prisma } from "../lib/prismaClient";
 import { pgCreateLocalUser } from "../lib/core/auth/pgStore";
 import { generateTempPassword, hashPasswordSha256, safeEqualHex } from "../lib/passwordHash";
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
 const createdUserIds: string[] = [];
 const uid = randomUUID().slice(0, 8);
 
@@ -46,7 +48,7 @@ describe("generateTempPassword()", () => {
   });
 });
 
-describe("Criação de usuário com senha temporária", () => {
+describePg("Criação de usuário com senha temporária", () => {
   it("armazena hash correto e permite verificar a senha plain-text posteriormente", async () => {
     const tempPassword = generateTempPassword();
     const passwordHash = hashPasswordSha256(tempPassword);

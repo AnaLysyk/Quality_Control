@@ -351,8 +351,8 @@ export default function AccessRequestClient() {
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          requestType: profileType,
-          requestedRole: profileType,
+          requestType: accessType,
+          requestedRole: accessType,
           requestedCompanyId: normalizedClientId || undefined,
           requestedCompanySlug: normalizedCompany || undefined,
           requesterName: normalizedFullName,
@@ -1972,4 +1972,3 @@ export default function AccessRequestClient() {
     </div>
   );
 }
-

@@ -12,9 +12,11 @@
  * ✅ Cleanup total em afterAll — nenhum dado permanece.
  */
 
-process.env.AUTH_STORE = "postgres";
+process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 jest.mock("server-only", () => ({}));
+
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 jest.mock("../lib/email", () => ({
   emailService: {
     sendPasswordResetEmail: jest.fn().mockResolvedValue(true),
@@ -132,7 +134,7 @@ afterAll(async () => {
 
 // ── Fluxo completo ────────────────────────────────────────────────────────────
 
-describe("Esqueci a senha — aprovação por Líder TC / Suporte Técnico", () => {
+describePg("Esqueci a senha — aprovação por Líder TC / Suporte Técnico", () => {
   let resetRequestId: string;
 
   test("1. usuário cria solicitação PASSWORD_RESET", async () => {

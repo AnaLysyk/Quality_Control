@@ -76,7 +76,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     ],
   },
   {
-    match: (r) => /^\/empresas\/[^/]+\/planos-de-teste/.test(r) || r.startsWith("/planos-de-teste"),
+    match: (r) => /^\/empresas\/[^/]+\/planos-de-teste/.test(r) || r.startsWith("/planos-de-teste") || r.startsWith("/casos-de-teste"),
     module: "test_plans",
     screenLabel: "Planos e casos de teste",
     screenSummary: [
@@ -108,6 +108,23 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
       "Buscar chamados abertos desta empresa",
       "Ver defeitos e bugs ativos",
       "Consultar planos de teste em andamento"
+    ],
+  },
+  {
+    match: /^\/operacoes\/dashboard/,
+    module: "dashboard",
+    screenLabel: "Dashboard contextual",
+    screenSummary: [
+      "Voce esta em: Dashboard contextual.",
+      "Aqui a visao se monta por perfil, permissoes, empresas, aplicacoes, modulos, filtros e dados reais.",
+      "Dica: posso explicar graficos, comparar empresas, resumir riscos e priorizar acoes."
+    ].join(" "),
+    entityType: "screen",
+    suggestedPrompts: [
+      "Resumir dashboard atual",
+      "O que esta mais critico?",
+      "Comparar empresas selecionadas",
+      "Gerar resumo executivo"
     ],
   },
   {

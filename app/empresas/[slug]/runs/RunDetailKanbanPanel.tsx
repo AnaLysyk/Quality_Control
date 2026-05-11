@@ -123,7 +123,7 @@ export function RunDetailKanbanPanel({ run, companySlug, onRunUpdated }: RunDeta
   }, [companySlug, refreshNonce, run.projectCode, run.runId, run.slug, run.sourceType]);
 
   const manualStats = useMemo(() => computeRunCaseStats(manualCases), [manualCases]);
-  const manualTotal = manualStats.pass + manualStats.fail + manualStats.blocked + manualStats.notRun;
+  const manualTotal = manualStats.pass + manualStats.fail + manualStats.blocked + manualStats.inProgress + manualStats.notRun;
   const manualPassRate = manualTotal > 0 ? Math.round((manualStats.pass / manualTotal) * 100) : 0;
 
   async function saveManualCases() {
@@ -138,6 +138,26 @@ export function RunDetailKanbanPanel({ run, companySlug, onRunUpdated }: RunDeta
         link: item.link || undefined,
         status: RUN_CASE_STATUS_VALUES[item.status],
         bug: item.bug ?? null,
+        origin: item.origin ?? null,
+        type: item.type ?? null,
+        projectCode: item.projectCode ?? null,
+        suiteId: item.suiteId ?? null,
+        suiteName: item.suiteName ?? null,
+        description: item.description ?? null,
+        preconditions: item.preconditions ?? null,
+        postconditions: item.postconditions ?? null,
+        stepsText: item.stepsText ?? null,
+        expectedText: item.expectedText ?? null,
+        priority: item.priority ?? null,
+        severity: item.severity ?? null,
+        tags: item.tags ?? [],
+        responsibleName: item.responsibleName ?? null,
+        defectsCount: item.defectsCount ?? 0,
+        evidencesCount: item.evidencesCount ?? 0,
+        startedAt: item.startedAt ?? null,
+        finishedAt: item.finishedAt ?? null,
+        statusUpdatedAt: item.statusUpdatedAt ?? null,
+        retestCount: item.retestCount ?? 0,
         fromApi: false,
       }));
 
@@ -157,7 +177,7 @@ export function RunDetailKanbanPanel({ run, companySlug, onRunUpdated }: RunDeta
               pass: manualStats.pass,
               fail: manualStats.fail,
               blocked: manualStats.blocked,
-              notRun: manualStats.notRun,
+              notRun: manualStats.notRun + manualStats.inProgress,
             },
           }),
         }),
@@ -220,7 +240,7 @@ export function RunDetailKanbanPanel({ run, companySlug, onRunUpdated }: RunDeta
     return (
       <div className="space-y-4">
         <div className="flex flex-col gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white px-4 py-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Total atual</p>
               <p className="mt-2 text-xl font-black text-(--tc-text,#0b1a3c)">{manualTotal}</p>
@@ -232,6 +252,10 @@ export function RunDetailKanbanPanel({ run, companySlug, onRunUpdated }: RunDeta
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-700">Fail</p>
               <p className="mt-2 text-xl font-black text-rose-700">{manualStats.fail}</p>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">Em andamento</p>
+              <p className="mt-2 text-xl font-black text-blue-700">{manualStats.inProgress}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Pass rate</p>

@@ -17,9 +17,11 @@ import {
   type Node,
   type NodeChange,
 } from "@xyflow/react";
-import { FiCommand, FiGitBranch, FiList, FiShare2, FiTable, FiUsers } from "react-icons/fi";
+import { FiCommand, FiGitBranch, FiList, FiMessageCircle, FiShare2, FiTable, FiUsers } from "react-icons/fi";
 
 import { useBrainGraph } from "@/hooks/useBrain";
+import AgentView from "./AgentView";
+import styles from "./Brain.module.css";
 
 type BrainNodeApi = {
   id: string;
@@ -89,18 +91,18 @@ const fetcher = (url: string) =>
   });
 
 const NODE_COLORS: Record<string, string> = {
-  Company: "#ef0001",
-  Application: "#ff8f00",
-  Module: "#6d4c41",
-  Ticket: "#0288d1",
-  Defect: "#d81b60",
-  User: "#2e7d32",
-  Screen: "#5e35b1",
-  TestRun: "#00838f",
-  Release: "#1565c0",
-  ReleaseManual: "#1565c0",
-  Integration: "#7b1fa2",
-  Note: "#f57c00",
+  Company: "#011848",
+  Application: "#7b1fa2",
+  Module: "#e65100",
+  Ticket: "#ff8f00",
+  Defect: "#ef0001",
+  User: "#00a862",
+  Screen: "#c2185b",
+  TestRun: "#1976d2",
+  Release: "#388e3c",
+  ReleaseManual: "#388e3c",
+  Integration: "#ab47bc",
+  Note: "#ffa000",
 };
 
 function toRecord(value: unknown): Record<string, unknown> {
@@ -140,9 +142,9 @@ function mapGraphToFlow(nodes: BrainNodeApi[], edges: BrainEdgeApi[]) {
       style: {
         borderRadius: 16,
         border: `2px solid ${color}`,
-        background: "#ffffff",
+        background: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,251,255,0.94) 100%)",
         color: "#0f172a",
-        boxShadow: "0 10px 28px rgba(2, 8, 23, 0.14)",
+        boxShadow: `0 18px 42px rgba(1, 24, 72, 0.14), 0 0 0 5px ${color}14`,
         minWidth: 180,
         fontSize: 12,
         fontWeight: 600,
@@ -169,7 +171,7 @@ function mapGraphToFlow(nodes: BrainNodeApi[], edges: BrainEdgeApi[]) {
   return { flowNodes, flowEdges };
 }
 
-type ViewMode = "graph" | "list" | "table" | "tree" | "communities" | "pending" | "replay";
+type ViewMode = "graph" | "list" | "table" | "tree" | "communities" | "pending" | "replay" | "agents";
 
 export default function BrainReactFlowView() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -345,11 +347,14 @@ export default function BrainReactFlowView() {
   }, [visibleNodesSorted]);
 
   return (
-    <div className="h-[calc(100vh-110px)] w-full overflow-hidden rounded-3xl border border-(--tc-border,#dbe4f0) bg-linear-to-br from-[#f7fbff] via-[#eef6ff] to-[#fff6f2]">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-(--tc-border,#dbe4f0) bg-white/80 px-4 py-3 backdrop-blur">
+    <div className={styles.reactFlowShell}>
+      <div className={styles.reactFlowTopBar}>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-[#011848] px-3 py-1 text-xs font-semibold text-white">Brain Operacional</span>
-          <span className="text-xs text-slate-600">Grafo vivo com filtros e contexto em tempo real</span>
+          <span className={styles.pulseOrb} aria-hidden="true" />
+          <div>
+            <span className={styles.reactFlowEyebrow}>Brain Operacional</span>
+            <p className={styles.reactFlowSubtitle}>Grafo vivo, agentes e contexto em tempo real</p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -357,7 +362,7 @@ export default function BrainReactFlowView() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar no por nome"
-            className="h-9 w-52 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#011848]"
+            className={styles.searchInput}
           />
 
           <select
@@ -365,7 +370,7 @@ export default function BrainReactFlowView() {
             onChange={(event) => setTypeFilter(event.target.value)}
             aria-label="Filtrar por tipo de no"
             title="Filtrar por tipo de no"
-            className="h-9 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#011848]"
+            className={styles.compactSelect}
           >
             {typeOptions.map((type) => (
               <option key={type} value={type}>
@@ -379,7 +384,7 @@ export default function BrainReactFlowView() {
             onChange={(event) => setDepth(Number(event.target.value))}
             aria-label="Selecionar profundidade do grafo"
             title="Selecionar profundidade do grafo"
-            className="h-9 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#011848]"
+            className={styles.compactSelect}
           >
             <option value="1">Profundidade 1</option>
             <option value="2">Profundidade 2</option>
@@ -387,7 +392,7 @@ export default function BrainReactFlowView() {
             <option value="4">Profundidade 4</option>
           </select>
 
-          <div className="ml-2 inline-flex flex-wrap items-center gap-1 rounded-xl border border-slate-300 bg-white p-1" role="tablist" aria-label="Modo de visualização do Brain">
+          <div className={styles.viewTabs} role="tablist" aria-label="Modo de visualização do Brain">
             {([
               ["graph", "Grafo", FiShare2],
               ["list", "Lista", FiList],
@@ -396,18 +401,16 @@ export default function BrainReactFlowView() {
               ["communities", "Comunidades", FiUsers],
               ["pending", "Pendências", FiCommand],
               ["replay", "Estado vs Histórico", FiCommand],
+              ["agents", "Agentes", FiMessageCircle],
             ] as Array<[ViewMode, string, typeof FiList]>).map(([mode, label, Icon]) => (
               <button
                 key={mode}
                 role="tab"
+                data-testid={mode === "agents" ? "brain-agents-tab" : undefined}
                 aria-selected={viewMode === mode}
                 type="button"
                 onClick={() => setViewMode(mode)}
-                className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold ${
-                  viewMode === mode
-                    ? "bg-[#011848] text-white"
-                    : "bg-white text-slate-700 hover:bg-slate-100"
-                }`}
+                className={viewMode === mode ? styles.filterBtnActive : styles.filterBtn}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {label}
@@ -417,7 +420,7 @@ export default function BrainReactFlowView() {
         </div>
       </div>
 
-      <div className="relative h-[calc(100%-62px)] w-full">
+      <div className={styles.reactFlowStage}>
         {viewMode === "graph" ? (
           <ReactFlow
             nodes={nodes}
@@ -434,7 +437,7 @@ export default function BrainReactFlowView() {
             nodesFocusable
             edgesFocusable
           >
-            <Background gap={20} size={1} color="#dbe6f4" />
+            <Background gap={22} size={1} color="rgba(1, 24, 72, 0.16)" />
             <MiniMap zoomable pannable nodeColor={(node) => NODE_COLORS[String(node.data?.type)] ?? "#475569"} />
             <Controls showInteractive={false} />
           </ReactFlow>
@@ -442,7 +445,7 @@ export default function BrainReactFlowView() {
 
         {viewMode === "list" ? (
           <div className="h-full overflow-auto p-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4" role="region" aria-label="Lista de nós">
+            <div className={styles.surfaceCard} role="region" aria-label="Lista de nós">
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Lista</h2>
               <ul className="mt-3 space-y-2" role="list">
                 {visibleNodesSorted.map((node) => (
@@ -464,7 +467,7 @@ export default function BrainReactFlowView() {
 
         {viewMode === "table" ? (
           <div className="h-full overflow-auto p-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className={styles.surfaceCard}>
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Tabela</h2>
               <table className="mt-3 w-full border-collapse text-sm" aria-label="Tabela de nós do Brain">
                 <thead>
@@ -498,7 +501,7 @@ export default function BrainReactFlowView() {
 
         {viewMode === "tree" ? (
           <div className="h-full overflow-auto p-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className={styles.surfaceCard}>
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Árvore</h2>
               <div className="mt-3 space-y-3" role="tree" aria-label="Árvore de tipos e nós">
                 {groupedTree.map(([type, typeNodes]) => (
@@ -526,12 +529,12 @@ export default function BrainReactFlowView() {
 
         {viewMode === "communities" ? (
           <div className="h-full overflow-auto p-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className={styles.surfaceCard}>
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Comunidades</h2>
               <p className="mt-1 text-xs text-slate-500">Clusters conectados para análise de domínio e dependências.</p>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {(communitiesData?.communities ?? []).map((community) => (
-                  <article key={community.communityId} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <article key={community.communityId} className={styles.miniCard}>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{community.communityId}</p>
                     <p className="mt-1 text-sm font-semibold text-slate-800">{community.size} nós</p>
                     <p className="mt-1 text-xs text-slate-600">
@@ -548,7 +551,7 @@ export default function BrainReactFlowView() {
         {viewMode === "pending" ? (
           <div className="h-full overflow-auto p-4">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className={styles.surfaceCard}>
                 <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Pendências do Brain</h2>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   <StatPill label="Relações sugeridas" value={pendingData?.pending?.suggestedRelations ?? 0} />
@@ -558,7 +561,7 @@ export default function BrainReactFlowView() {
                 </div>
                 <div className="mt-4 space-y-2">
                   {(pendingData?.sampleSuggestions ?? []).map((item) => (
-                    <article key={item.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <article key={item.id} className={styles.miniCard}>
                       <p className="text-xs font-bold uppercase tracking-[0.15em] text-slate-500">{item.type}</p>
                       <p className="mt-1 text-sm font-semibold text-slate-800">{item.title}</p>
                       <p className="mt-1 text-xs text-slate-600">{item.description}</p>
@@ -567,7 +570,7 @@ export default function BrainReactFlowView() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className={styles.surfaceCard}>
                 <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Terminal de Comandos</h3>
                 <div className="mt-2 max-h-64 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs">
                   {commandLog.length === 0 ? (
@@ -629,7 +632,7 @@ export default function BrainReactFlowView() {
 
         {viewMode === "replay" ? (
           <div className="h-full overflow-auto p-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className={styles.surfaceCard}>
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Estado atual vs Histórico</h2>
               <p className="mt-1 text-xs text-slate-500">Selecione um nó e acompanhe trilha de eventos.</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -638,7 +641,7 @@ export default function BrainReactFlowView() {
               </div>
               <div className="mt-3 space-y-2">
                 {(replayData?.replay ?? []).slice(0, 80).map((entry) => (
-                  <div key={`${entry.step}-${entry.timestamp}`} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                  <div key={`${entry.step}-${entry.timestamp}`} className={styles.timelineCard}>
                     <p className="font-semibold text-slate-800">#{entry.step} {entry.action}</p>
                     <p className="text-slate-600">{entry.entityType} {entry.entityLabel ? `- ${entry.entityLabel}` : ""}</p>
                     <p className="text-slate-500">{new Date(entry.timestamp).toLocaleString("pt-BR")}</p>
@@ -649,14 +652,20 @@ export default function BrainReactFlowView() {
           </div>
         ) : null}
 
+        {viewMode === "agents" ? (
+          <div className={styles.agentStage}>
+            <AgentView nodeId={selectedNodeId} darkMode />
+          </div>
+        ) : null}
+
         {isLoading ? (
-          <div className="absolute left-4 top-4 rounded-xl bg-[#011848] px-3 py-2 text-xs font-semibold text-white">
+          <div className={styles.loadingPill}>
             Carregando grafo...
           </div>
         ) : null}
 
         {selectedNodeId && viewMode === "graph" ? (
-          <div className="absolute right-4 top-4 z-20 w-[320px] rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-2xl backdrop-blur">
+          <div className={styles.detailPanel}>
             <div className="mb-2 flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase text-slate-500">No selecionado</p>
@@ -666,7 +675,7 @@ export default function BrainReactFlowView() {
               <button
                 type="button"
                 onClick={() => setSelectedNodeId(null)}
-                className="rounded-lg border border-slate-300 px-2 py-1 text-xs text-slate-700"
+                className={styles.panelAction}
               >
                 Fechar
               </button>
@@ -680,7 +689,7 @@ export default function BrainReactFlowView() {
               <button
                 type="button"
                 onClick={() => setRootNodeId(selectedNodeId)}
-                className="rounded-lg bg-[#011848] px-2 py-1.5 text-xs font-semibold text-white"
+                className={styles.primaryPanelAction}
               >
                 Centralizar
               </button>
@@ -714,7 +723,7 @@ export default function BrainReactFlowView() {
           </div>
         ) : null}
 
-        <div className="pointer-events-none absolute bottom-3 left-3 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-[11px] text-slate-600 shadow-sm">
+        <div className={styles.legendPanel}>
           <p className="font-semibold">Legenda Viva</p>
           <p>Azul empresa/usuário • Verde caso/plano/run • Roxo automação • Vermelho defeito/falha</p>
           <p>Linha cheia confirmada • Linha tracejada sugerida</p>
@@ -726,7 +735,7 @@ export default function BrainReactFlowView() {
 
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+    <div className={styles.statPill}>
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
       <p className="mt-1 text-lg font-bold text-[#011848]">{value}</p>
     </div>

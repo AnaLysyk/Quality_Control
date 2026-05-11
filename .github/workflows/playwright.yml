@@ -6,14 +6,17 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  e2e:
+  playwright:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    container:
-      image: mcr.microsoft.com/playwright:v1.49.0-jammy
-      options: --user 1001 --ipc=host --init
+
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+      PLAYWRIGHT_EMAIL: ${{ secrets.PLAYWRIGHT_EMAIL }}
+      PLAYWRIGHT_PASSWORD: ${{ secrets.PLAYWRIGHT_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v5
@@ -24,51 +27,49 @@ jobs:
 
       - run: npm ci
 
-      - name: Run E2E with mock
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Detect Playwright target
+        id: target
+        shell: bash
+        run: |
+          if [ -z "$PLAYWRIGHT_BASE_URL" ]; then
+            echo "has_external_url=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_external_url=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build app for local Playwright
+        if: steps.target.outputs.has_external_url == 'false'
+        run: npm run build
         env:
           CI: "true"
           SUPABASE_MOCK: "true"
-          PLAYWRIGHT_BASE_URL: http://localhost:3000
+
+      - name: Start local app
+        if: steps.target.outputs.has_external_url == 'false'
+        shell: bash
         run: |
-          npm run dev -- --port 3000 &
-          npx wait-on http://localhost:3000
-          npx playwright test
+          npm run start &
+          npx wait-on http://127.0.0.1:3000
 
-      - name: Upload Playwright report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+      - name: Run Playwright against local app
+        if: steps.target.outputs.has_external_url == 'false'
+        run: npx playwright test
+        env:
+          CI: "true"
+          SUPABASE_MOCK: "true"
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
 
-  prod-smoke:
-    runs-on: ubuntu-latest
-    env:
-      PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
-      PLAYWRIGHT_EMAIL: ${{ secrets.PLAYWRIGHT_EMAIL }}
-      PLAYWRIGHT_PASSWORD: ${{ secrets.PLAYWRIGHT_PASSWORD }}
-    steps:
-      - name: Skip job if not configured
-        if: ${{ env.PLAYWRIGHT_BASE_URL == '' }}
-        run: echo "PLAYWRIGHT_BASE_URL secret not set; skipping prod smoke."
-
-      - uses: actions/checkout@v5
-        if: ${{ env.PLAYWRIGHT_BASE_URL != '' }}
-      - uses: actions/setup-node@v6
-        if: ${{ env.PLAYWRIGHT_BASE_URL != '' }}
-        with:
-          node-version: 22
-      - if: ${{ env.PLAYWRIGHT_BASE_URL != '' }}
-        run: npm ci
-      - name: Run E2E on production
-        if: ${{ env.PLAYWRIGHT_BASE_URL != '' }}
+      - name: Run Playwright against configured URL
+        if: steps.target.outputs.has_external_url == 'true'
         run: npm run test:e2e:prod
 
       - name: Upload Playwright report
-        if: ${{ always() && env.PLAYWRIGHT_BASE_URL != '' }}
+        if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: playwright-report-prod
+          name: playwright-report
           path: playwright-report/
           retention-days: 30

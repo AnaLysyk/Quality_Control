@@ -13,6 +13,42 @@ type CompanyRouteAccessInput = {
   isInstitutionalCompany?: boolean;
 };
 
+export function resolveCompanyRouteAccessInput(input: {
+  user?: Record<string, unknown> | null;
+}): CompanyRouteAccessInput {
+  const user = (input?.user ?? {}) as Record<string, unknown>;
+
+  const clientSlug =
+    normalizeSlug(typeof user.clientSlug === "string" ? user.clientSlug : null)?.toLowerCase() ??
+    normalizeSlug(typeof user.client_slug === "string" ? user.client_slug : null)?.toLowerCase() ??
+    normalizeSlug(typeof user.companySlug === "string" ? user.companySlug : null)?.toLowerCase() ??
+    normalizeSlug(typeof user.company_slug === "string" ? user.company_slug : null)?.toLowerCase();
+
+  const defaultClientSlug =
+    normalizeSlug(typeof user.defaultClientSlug === "string" ? user.defaultClientSlug : null)?.toLowerCase() ??
+    normalizeSlug(typeof user.default_client_slug === "string" ? user.default_client_slug : null)?.toLowerCase() ??
+    null;
+
+  const companyCount =
+    typeof user.companyCount === "number"
+      ? user.companyCount
+      : clientSlug
+        ? 1
+        : 0;
+
+  return {
+    isGlobalAdmin: typeof user.isGlobalAdmin === "boolean" ? user.isGlobalAdmin : null,
+    permissionRole: typeof user.permissionRole === "string" ? user.permissionRole : null,
+    role: typeof user.role === "string" ? user.role : null,
+    companyRole: typeof user.companyRole === "string" ? user.companyRole : null,
+    userOrigin: typeof user.user_origin === "string" ? user.user_origin : typeof user.userOrigin === "string" ? user.userOrigin : null,
+    companyCount,
+    clientSlug,
+    defaultClientSlug,
+    isInstitutionalCompany: typeof user.isInstitutionalCompany === "boolean" ? user.isInstitutionalCompany : undefined,
+  };
+}
+
 export type ParsedCompanyRoute = {
   kind: "internal" | FixedProfileKind;
   targetSlug: string;

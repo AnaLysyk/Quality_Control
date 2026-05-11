@@ -14,6 +14,8 @@ import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "../lib/core/auth
 
 const uid = randomUUID().slice(0, 8);
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
 // Slug e nome únicos para cada execução — facilita identificação no banco
 const COMPANY_NAME = `Empresa Teste Persistida ${uid}`;
 const COMPANY_SLUG = `empresa-teste-persistida-${uid}`;
@@ -23,7 +25,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe("Criação de empresa — persistência permanente no banco", () => {
+describePg("Criação de empresa — persistência permanente no banco", () => {
   let createdId: string;
 
   it("cria a empresa e persiste no PostgreSQL", async () => {

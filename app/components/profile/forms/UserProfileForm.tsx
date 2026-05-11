@@ -8,7 +8,6 @@
 import { useState } from "react";
 import { useProfileContext, useProfileAction } from "@/lib/profile/useProfileContext";
 import { USER_PROFILE_FIELDS, isFieldEditable, isFieldVisible } from "@/lib/profile/fieldPermissions";
-import type { ProfileFieldPermission } from "@/lib/profile/types";
 
 export type UserProfileFormProps = {
   userId: string;
@@ -64,7 +63,7 @@ export function UserProfileForm({
   };
 
   const visibleFields = USER_PROFILE_FIELDS.filter((field) =>
-    isFieldVisible(field, context.mode, USER_PROFILE_FIELDS),
+    isFieldVisible(field.field, context.mode, USER_PROFILE_FIELDS),
   );
 
   if (visibleFields.length === 0) {
@@ -85,33 +84,29 @@ export function UserProfileForm({
 
       {visibleFields.map((field) => {
         const editable = isFieldEditable(
-          field,
+          field.field,
           context.mode,
           USER_PROFILE_FIELDS,
           context.permissions,
         );
 
         return (
-          <div key={field.name}>
+          <div key={field.field}>
             <label className="block text-sm font-semibold text-tc-text-primary mb-2">
               {field.label}
               {field.required && <span className="text-red-500 ml-1">*</span>}
             </label>
 
             <input
-              type={field.inputType}
-              name={field.name}
-              value={formData[field.name] || ""}
-              onChange={(e) => handleChange(field.name, e.target.value)}
+              type={field.field === "email" ? "email" : "text"}
+              name={field.field}
+              value={formData[field.field] || ""}
+              onChange={(e) => handleChange(field.field, e.target.value)}
               disabled={!editable}
               required={field.required && editable}
-              placeholder={field.placeholder}
+              placeholder={field.label}
               className="w-full px-3 py-2 rounded-lg border border-tc-border bg-tc-surface text-tc-text-primary disabled:bg-tc-surface-hover disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-tc-accent"
             />
-
-            {field.help && (
-              <p className="text-xs text-tc-text-muted mt-1">{field.help}</p>
-            )}
           </div>
         );
       })}

@@ -9,6 +9,7 @@ import {
   canCreateTestCaseForCompany,
   filterTestCasesByPermission,
 } from "@/lib/test-cases/testCasePermissions";
+import { listIntegratedQaseTestCaseRecords } from "@/lib/test-projects/testProjectsRepository";
 import type { CreateTestCaseInput, TestCaseFilters } from "@/lib/test-cases/types";
 
 function mapTestCaseError(error: unknown) {
@@ -45,6 +46,8 @@ function filtersFromUrl(url: URL): TestCaseFilters {
     companyId: url.searchParams.get("companySlug") ?? url.searchParams.get("companyId"),
     applicationId: url.searchParams.get("applicationId"),
     moduleId: url.searchParams.get("moduleId"),
+    projectCode: url.searchParams.get("projectCode") ?? url.searchParams.get("project"),
+    suiteId: url.searchParams.get("suiteId"),
     type: url.searchParams.get("type") as TestCaseFilters["type"],
     source: url.searchParams.get("source") as TestCaseFilters["source"],
     status: url.searchParams.get("status") as TestCaseFilters["status"],
@@ -54,12 +57,72 @@ function filtersFromUrl(url: URL): TestCaseFilters {
   };
 }
 
+function matchesFilterValue(value: string | null | undefined, filter: string | null | undefined) {
+  if (!filter || filter === "all") return true;
+  return String(value ?? "").trim().toLowerCase() === filter.trim().toLowerCase();
+}
+
+function matchesTestCaseFilters(record: Awaited<ReturnType<typeof listTestCaseRecords>>[number], filters: TestCaseFilters) {
+  const testCase = record.testCase;
+  const query = String(filters.query ?? "").trim().toLowerCase();
+  if (query) {
+    const haystack = [
+      testCase.key,
+      testCase.externalKey,
+      testCase.externalUrl,
+      testCase.title,
+      testCase.description,
+      testCase.applicationId,
+      testCase.moduleId,
+      testCase.testProjectCode,
+      testCase.testProjectName,
+      testCase.suiteId,
+      testCase.suiteName,
+      testCase.tags.join(" "),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    if (!haystack.includes(query)) return false;
+  }
+  if (!matchesFilterValue(testCase.companyId, filters.companyId)) return false;
+  if (!matchesFilterValue(testCase.applicationId, filters.applicationId)) return false;
+  if (!matchesFilterValue(testCase.moduleId, filters.moduleId)) return false;
+  if (!matchesFilterValue(testCase.suiteId, filters.suiteId)) return false;
+  if (!matchesFilterValue(testCase.source, filters.source as string | null | undefined)) return false;
+  if (!matchesFilterValue(testCase.status, filters.status as string | null | undefined)) return false;
+  if (!matchesFilterValue(testCase.type, filters.type as string | null | undefined)) return false;
+  if (!matchesFilterValue(testCase.priority, filters.priority as string | null | undefined)) return false;
+  if (!matchesFilterValue(testCase.automationStatus, filters.automationStatus as string | null | undefined)) return false;
+  if (filters.projectCode) {
+    const projectCode = String(filters.projectCode).trim().toUpperCase();
+    const testProjectCode = String(testCase.testProjectCode ?? testCase.externalKey?.split("-")[0] ?? "").trim().toUpperCase();
+    if (testProjectCode !== projectCode) return false;
+  }
+  if (filters.tag && !testCase.tags.includes(filters.tag)) return false;
+  return true;
+}
+
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const url = new URL(req.url);
-  const records = await listTestCaseRecords(filtersFromUrl(url));
+  const filters = filtersFromUrl(url);
+  const includeIntegrated = String(url.searchParams.get("includeIntegrated") ?? "true").toLowerCase() !== "false";
+  const localRecords = await listTestCaseRecords(filters);
+  const integratedRecords =
+    includeIntegrated && filters.companyId
+      ? await listIntegratedQaseTestCaseRecords({
+          companySlug: filters.companyId,
+          applicationId: filters.applicationId,
+          projectCode: filters.projectCode,
+        })
+      : [];
+  const recordsById = new Map<string, (typeof localRecords)[number]>();
+  for (const record of localRecords.filter((item) => matchesTestCaseFilters(item, filters))) recordsById.set(record.testCase.id, record);
+  for (const record of integratedRecords.filter((item) => matchesTestCaseFilters(item, filters))) recordsById.set(record.testCase.id, record);
+  const records = Array.from(recordsById.values());
   const visibleRecords = filterTestCasesByPermission(records, user);
 
   return NextResponse.json({
@@ -85,6 +148,12 @@ export async function POST(req: Request) {
       {
         ...payload,
         companyId: companySlug,
+        testProjectCode:
+          typeof payload.testProjectCode === "string"
+            ? payload.testProjectCode
+            : typeof (payload as Record<string, unknown>).projectCode === "string"
+              ? String((payload as Record<string, unknown>).projectCode)
+              : undefined,
       },
       user.id,
     );

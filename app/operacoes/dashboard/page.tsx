@@ -1,15 +1,7 @@
-"use client";
+import ContextualDashboardClient from "./ContextualDashboardClient";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+export const dynamic = "force-dynamic";
 
 export default function OperacoesDashboardPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Redirect to admin dashboard
-    router.replace("/admin/dashboard");
-  }, [router]);
-
-  return null;
+  return <ContextualDashboardClient />;
 }

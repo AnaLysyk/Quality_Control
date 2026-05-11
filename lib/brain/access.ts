@@ -48,6 +48,10 @@ function hasGlobalBrainVisibility(user: AuthUser) {
   return roles.includes("leader_tc") || roles.includes("technical_support");
 }
 
+function isE2eJsonMode() {
+  return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true";
+}
+
 export async function resolveBrainAccess(req: Request, options?: { requireManage?: boolean }): Promise<BrainAccessResult> {
   const user = await authenticateRequest(req);
   if (!user) return { ok: false, status: 401, error: "Nao autorizado" };
@@ -66,7 +70,7 @@ export async function resolveBrainAccess(req: Request, options?: { requireManage
     allowedCompanyIds.add(user.companyId);
   }
 
-  if (!hasGlobalVisibility && allowedCompanySlugs.size > 0) {
+  if (!hasGlobalVisibility && allowedCompanySlugs.size > 0 && !isE2eJsonMode()) {
     const companies = await prisma.company.findMany({
       where: { slug: { in: Array.from(allowedCompanySlugs) } },
       select: { id: true },

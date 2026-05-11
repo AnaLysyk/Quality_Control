@@ -2,7 +2,6 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import Script from "next/script";
-import { Geist_Mono, Poppins } from "next/font/google";
 import AppShell from "@/components/AppShell";
 import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
@@ -16,17 +15,6 @@ import {
   normalizeThemePreference,
 } from "@/lib/appSettingsCookies";
 import "./globals.css";
-
-const poppins = Poppins({
-  variable: "--font-poppins",
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Quality Control",
@@ -130,7 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <body
         suppressHydrationWarning
-        className={`min-h-screen w-full overflow-y-auto ${poppins.variable} ${geistMono.variable} antialiased`}
+        className="min-h-screen w-full overflow-y-auto antialiased"
       >
         <Script id="migrate-storage" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
         <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />

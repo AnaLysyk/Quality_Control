@@ -25,6 +25,10 @@ import {
 } from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
+
+
 const PASSWORD = hashPasswordSha256("TC@Teste2026");
 const UID = Math.random().toString(36).slice(2, 10);
 const email = (tag: string) => `edit-${tag}-${UID}@edit-perfil.local`;
@@ -55,7 +59,7 @@ async function makeUser(tag: string, overrides: Record<string, unknown> = {}) {
   return user;
 }
 
-describe("Edição de usuário — por tipo de perfil", () => {
+describePg("Edição de usuário — por tipo de perfil", () => {
 
   // ── 1. Regular — edita nome, email, phone ──────────────────────────────────
   it("Regular: edita nome, email e telefone", async () => {

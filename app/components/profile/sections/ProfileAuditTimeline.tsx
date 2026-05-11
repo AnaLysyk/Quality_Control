@@ -84,20 +84,20 @@ export function ProfileAuditTimeline({
                     {ACTION_LABELS[entry.action] || entry.action}
                   </p>
                   <p className="text-xs text-tc-text-muted">
-                    {new Date(entry.timestamp).toLocaleString("pt-BR")}
+                    {new Date(entry.createdAt).toLocaleString("pt-BR")}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-medium text-tc-text-primary">
-                    {entry.actor}
+                    {entry.actor.name}
                   </p>
                   <p className="text-xs text-tc-text-muted uppercase">
-                    {entry.actorRole}
+                    {entry.actor.role}
                   </p>
                 </div>
               </div>
 
-              {entry.field && entry.before && entry.after && (
+              {entry.field && entry.before != null && entry.after != null ? (
                 <div className="mt-3 space-y-2 text-sm">
                   <p className="text-xs font-semibold text-tc-text-muted">
                     Campo: {entry.field}
@@ -117,7 +117,7 @@ export function ProfileAuditTimeline({
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {entry.reason && (
                 <p className="mt-2 text-xs italic text-tc-text-muted">

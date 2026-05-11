@@ -188,11 +188,16 @@ function searchableText(record: TestCaseRecord) {
   return [
     record.testCase.key,
     record.testCase.externalKey,
+    record.testCase.externalUrl,
     record.testCase.title,
     record.testCase.description,
     record.testCase.objective,
     record.testCase.applicationId,
     record.testCase.moduleId,
+    record.testCase.testProjectCode,
+    record.testCase.testProjectName,
+    record.testCase.suiteId,
+    record.testCase.suiteName,
     record.testCase.tags.join(" "),
   ]
     .filter(Boolean)
@@ -203,6 +208,14 @@ function searchableText(record: TestCaseRecord) {
 function matchesFilterValue(value: string | null | undefined, filter: string | null | undefined) {
   if (!filter || filter === "all") return true;
   return String(value ?? "").toLowerCase() === filter.toLowerCase();
+}
+
+function matchesProjectCode(testCase: TestCase, filter: string | null | undefined) {
+  if (!filter || filter === "all") return true;
+  const normalizedFilter = String(filter).trim().toUpperCase();
+  return [testCase.testProjectCode, testCase.externalKey?.split("-")[0], testCase.applicationId]
+    .map((value) => String(value ?? "").trim().toUpperCase())
+    .some((value) => value === normalizedFilter);
 }
 
 export async function listTestCaseRecords(filters: TestCaseFilters = {}): Promise<TestCaseRecord[]> {
@@ -221,6 +234,8 @@ export async function listTestCaseRecords(filters: TestCaseFilters = {}): Promis
     if (!matchesFilterValue(testCase.companyId, filters.companyId)) return false;
     if (!matchesFilterValue(testCase.applicationId, filters.applicationId)) return false;
     if (!matchesFilterValue(testCase.moduleId, filters.moduleId)) return false;
+    if (!matchesProjectCode(testCase, filters.projectCode)) return false;
+    if (!matchesFilterValue(testCase.suiteId, filters.suiteId)) return false;
     if (!matchesFilterValue(testCase.type, filters.type as TestCaseType | "all" | null | undefined)) return false;
     if (!matchesFilterValue(testCase.source, filters.source as TestCaseSource | "all" | null | undefined)) return false;
     if (!matchesFilterValue(testCase.status, filters.status as TestCaseStatus | "all" | null | undefined)) return false;
@@ -263,6 +278,10 @@ export async function createManualTestCaseRecord(input: CreateTestCaseInput, act
     companyId: input.companyId ?? null,
     applicationId: normalizeText(input.applicationId) || null,
     moduleId: normalizeText(input.moduleId) || null,
+    testProjectCode: normalizeText(input.testProjectCode)?.toUpperCase() || null,
+    testProjectName: normalizeText(input.testProjectName) || null,
+    suiteId: normalizeText(input.suiteId) || null,
+    suiteName: normalizeText(input.suiteName) || null,
     featureId: normalizeText(input.featureId) || null,
     tags: normalizeTags(input.tags),
     lastExecutionStatus: "not_run",
@@ -326,6 +345,16 @@ export async function updateTestCaseRecord(
     applicationId:
       patch.applicationId !== undefined ? normalizeText(patch.applicationId) || null : current.testCase.applicationId,
     moduleId: patch.moduleId !== undefined ? normalizeText(patch.moduleId) || null : current.testCase.moduleId,
+    testProjectCode:
+      patch.testProjectCode !== undefined
+        ? normalizeText(patch.testProjectCode)?.toUpperCase() || null
+        : current.testCase.testProjectCode,
+    testProjectName:
+      patch.testProjectName !== undefined
+        ? normalizeText(patch.testProjectName) || null
+        : current.testCase.testProjectName,
+    suiteId: patch.suiteId !== undefined ? normalizeText(patch.suiteId) || null : current.testCase.suiteId,
+    suiteName: patch.suiteName !== undefined ? normalizeText(patch.suiteName) || null : current.testCase.suiteName,
     featureId: patch.featureId !== undefined ? normalizeText(patch.featureId) || null : current.testCase.featureId,
     tags: patch.tags ? normalizeTags(patch.tags) : current.testCase.tags,
     automationStatus: ensureAllowedEnum(

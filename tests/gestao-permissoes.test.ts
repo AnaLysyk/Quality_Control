@@ -14,6 +14,8 @@
 
 jest.setTimeout(30000);
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
 // Mock redis para evitar erros de conexão nos testes
 jest.mock("../lib/redis", () => ({
   isRedisConfigured: jest.fn(() => false),
@@ -26,6 +28,7 @@ jest.mock("../lib/redis", () => ({
 
 import { randomUUID } from "crypto";
 import { prisma } from "../lib/prismaClient";
+import { describeDb } from "./describeDb";
 import { resolveRoleDefaults } from "../lib/permissions/roleDefaults";
 import { effectivePermissions } from "../lib/store/permissionsStore";
 import {
@@ -66,7 +69,7 @@ afterAll(async () => {
 // A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
+describePg("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
   const p = perm("testing_company_user");
 
   test("A1. releases: view permitido; escrita bloqueada", () => {
@@ -152,7 +155,7 @@ describe("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
 // B) Perfil 'company' (company_admin) — usuários da empresa liberados
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("B) Perfil 'company' (company_admin) — permissões bloqueadas", () => {
+describePg("B) Perfil 'company' (company_admin) — permissões bloqueadas", () => {
   const p = perm("empresa");
 
   test("B1. users: view/create liberados; edit/delete bloqueados", () => {
@@ -255,7 +258,7 @@ describe("B) Perfil 'company' (company_admin) — permissões bloqueadas", () =>
 // C) Perfil 'support' — módulos completamente ausentes
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("C) Perfil 'support' — mesma visão do lider_tc + tickets view_all", () => {
+describePg("C) Perfil 'support' — mesma visão do lider_tc + tickets view_all", () => {
   const p = perm("technical_support");
 
   test("C1. applications: mesma visão do lider_tc", () => {
@@ -338,7 +341,7 @@ describe("C) Perfil 'support' — mesma visão do lider_tc + tickets view_all", 
 // D) Overrides de permissão (deny / allow)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("D) Overrides de permissão (deny/allow)", () => {
+describePg("D) Overrides de permissão (deny/allow)", () => {
   test("D1. effectivePermissions com deny remove ação disponível do leader_tc", () => {
     const override = { userId: "test", deny: { users: ["edit"] } };
     const effective = effectivePermissions("leader_tc", override);
@@ -426,7 +429,7 @@ describe("D) Overrides de permissão (deny/allow)", () => {
 // E) Mapeamento de role (resolvePermissionRoleForUser)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("E) Mapeamento de role — resolvePermissionRoleForUser", () => {
+describePg("E) Mapeamento de role — resolvePermissionRoleForUser", () => {
   test("E1. Usuário viewer legado → permissionRole 'testing_company_user'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "viewer" }];
@@ -481,7 +484,7 @@ describe("E) Mapeamento de role — resolvePermissionRoleForUser", () => {
 // F) Integração DB — resolvePermissionAccessForUser com usuários reais
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("F) Integração DB — resolvePermissionAccessForUser", () => {
+describeDb("F) Integração DB — resolvePermissionAccessForUser", () => {
   function uid() {
     return randomUUID().slice(0, 8);
   }

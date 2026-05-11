@@ -45,6 +45,8 @@ export type AuditAction =
   | "auth.password.changed"
   | "auth.password.reset"
   | "auth.password.reset_requested"
+  | "auth.password.reset_requested_error"
+  | "auth.password.forgot_requested"
   | "auth.access.denied"
   // Tickets / Chamados
   | "ticket.created"

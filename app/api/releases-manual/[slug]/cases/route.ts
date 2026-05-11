@@ -5,6 +5,7 @@ import { readManualReleaseCases, writeManualReleaseCases, type ManualCaseItem } 
 function normalizeItem(raw: Record<string, unknown>): ManualCaseItem | null {
   const id = raw.id ?? raw.caseId ?? raw.case_id;
   if (!id) return null;
+  const tags = Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === "string") : [];
   return {
     id: String(id),
     title: typeof raw.title === "string" ? raw.title : undefined,
@@ -12,6 +13,36 @@ function normalizeItem(raw: Record<string, unknown>): ManualCaseItem | null {
     status: typeof raw.status === "string" ? raw.status : undefined,
     bug: typeof raw.bug === "string" ? raw.bug : null,
     fromApi: Boolean(raw.fromApi ?? raw.from_api),
+    origin: typeof raw.origin === "string" ? raw.origin : null,
+    type: typeof raw.type === "string" ? raw.type : null,
+    projectCode: typeof raw.projectCode === "string" ? raw.projectCode : null,
+    suiteId: typeof raw.suiteId === "string" ? raw.suiteId : null,
+    suiteName: typeof raw.suiteName === "string" ? raw.suiteName : null,
+    description: typeof raw.description === "string" ? raw.description : null,
+    preconditions:
+      typeof raw.preconditions === "string"
+        ? raw.preconditions
+        : typeof raw.precondition === "string"
+          ? raw.precondition
+          : null,
+    postconditions:
+      typeof raw.postconditions === "string"
+        ? raw.postconditions
+        : typeof raw.postcondition === "string"
+          ? raw.postcondition
+          : null,
+    stepsText: typeof raw.stepsText === "string" ? raw.stepsText : typeof raw.steps === "string" ? raw.steps : null,
+    expectedText: typeof raw.expectedText === "string" ? raw.expectedText : typeof raw.expected === "string" ? raw.expected : null,
+    priority: typeof raw.priority === "string" ? raw.priority : null,
+    severity: typeof raw.severity === "string" ? raw.severity : null,
+    tags,
+    responsibleName: typeof raw.responsibleName === "string" ? raw.responsibleName : null,
+    defectsCount: Number(raw.defectsCount ?? 0) || 0,
+    evidencesCount: Number(raw.evidencesCount ?? 0) || 0,
+    startedAt: typeof raw.startedAt === "string" ? raw.startedAt : null,
+    finishedAt: typeof raw.finishedAt === "string" ? raw.finishedAt : null,
+    statusUpdatedAt: typeof raw.statusUpdatedAt === "string" ? raw.statusUpdatedAt : null,
+    retestCount: Number(raw.retestCount ?? 0) || 0,
   };
 }
 

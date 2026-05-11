@@ -147,6 +147,8 @@ function formatToolLabel(tool?: string | null) {
       return "Resumo";
     case "draft_test_case":
       return "Caso de teste";
+    case "create_test_case":
+      return "Criacao de caso";
     case "explain_permission":
       return "Permiss\u00f5es";
     case "create_ticket":

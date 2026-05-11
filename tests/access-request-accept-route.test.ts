@@ -1,4 +1,4 @@
-process.env.AUTH_STORE = "postgres";
+process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 process.env.USE_JSON_STORE = "true";
 
 jest.mock("server-only", () => ({}));
@@ -18,6 +18,8 @@ jest.mock("@/data/auditLogRepository", () => ({
 }));
 
 jest.setTimeout(30000);
+
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 import { POST } from "../app/api/admin/access-requests/[id]/accept/route";
 import { createAccessRequest, getAccessRequestById } from "../data/accessRequestsStore";
@@ -46,7 +48,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe("access request accept route", () => {
+describePg("access request accept route", () => {
   it("links company_user requests to the selected company instead of creating another company", async () => {
     const company = await pgCreateLocalCompany({
       name: `Empresa Usuario Empresa ${uid}`,

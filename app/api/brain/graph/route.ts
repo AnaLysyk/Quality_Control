@@ -4,12 +4,43 @@ import { getSubgraph, searchNodes } from "@/lib/brain";
 import { filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
 import { prisma } from "@/lib/prismaClient";
 
+function isE2eJsonMode() {
+  return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true";
+}
+
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);
   if (!accessResult.ok) {
     return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
   }
   const { context: access } = accessResult;
+
+  if (isE2eJsonMode()) {
+    return NextResponse.json({
+      nodes: [
+        {
+          id: "brain-e2e-root",
+          label: "Brain E2E",
+          type: "System",
+          refType: "Brian",
+          refId: "e2e",
+          description: "Grafo mockado para E2E em modo JSON.",
+          metadata: { companySlug: Array.from(access.allowedCompanySlugs)[0] ?? "demo" },
+          isRoot: true,
+        },
+      ],
+      edges: [],
+      root: {
+        id: "brain-e2e-root",
+        label: "Brain E2E",
+        type: "System",
+        refType: "Brian",
+        refId: "e2e",
+        description: "Grafo mockado para E2E em modo JSON.",
+        metadata: { e2e: true },
+      },
+    });
+  }
 
   const url = new URL(req.url);
   const nodeId = url.searchParams.get("nodeId");

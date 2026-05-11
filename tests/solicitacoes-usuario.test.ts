@@ -29,10 +29,12 @@
  * 20. Dois usuários com mesmo tipo não conflitam entre si
  */
 
-process.env.AUTH_STORE = "postgres";
+process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 jest.mock("server-only", () => ({}));
 jest.mock("../lib/redis", () => ({ isRedisConfigured: jest.fn(() => false) }));
+
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 import { prisma } from "../lib/prismaClient";
 import {
@@ -136,7 +138,7 @@ afterAll(async () => {
 
 // ── Criação ───────────────────────────────────────────────────────────────────
 
-describe("Criação de solicitações", () => {
+describePg("Criação de solicitações", () => {
   test("1. cria solicitação EMAIL_CHANGE com status PENDING", async () => {
     const req = await addRequest(userA, "EMAIL_CHANGE", { newEmail: "novo@email.com" });
     createdRequestIds.push(req.id);
@@ -186,7 +188,7 @@ describe("Criação de solicitações", () => {
 
 // ── Consultas ─────────────────────────────────────────────────────────────────
 
-describe("Consultas de solicitações", () => {
+describePg("Consultas de solicitações", () => {
   test("6. listUserRequests retorna apenas solicitações do usuário", async () => {
     const reqs = await listUserRequests(userA.id);
     expect(reqs.length).toBeGreaterThanOrEqual(3);
@@ -248,7 +250,7 @@ describe("Consultas de solicitações", () => {
 
 // ── Revisão ───────────────────────────────────────────────────────────────────
 
-describe("Revisão de solicitações (updateRequestStatus)", () => {
+describePg("Revisão de solicitações (updateRequestStatus)", () => {
   let pendingId: string;
 
   beforeAll(async () => {

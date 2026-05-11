@@ -16,6 +16,9 @@ import {
 } from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
+
 const TEST_PASSWORD = hashPasswordSha256("TesteSenha@123");
 const uid = randomUUID().slice(0, 8);
 
@@ -28,7 +31,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe("Perfis de usuário — dados persistidos permanentemente no banco", () => {
+describePg("Perfis de usuário — dados persistidos permanentemente no banco", () => {
 
   // ── 1. Usuário Regular ────────────────────────────────────────────────────
   describe("Perfil: Usuário Regular", () => {

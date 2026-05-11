@@ -342,7 +342,7 @@ export default function AgentView({
       }`}
     >
       {/* Agent selector */}
-      <div className="flex flex-wrap gap-1.5 border-b border-(--border-clr) px-3.5 pb-2 pt-2.5">
+      <div className={`${styles.selectorBar} flex flex-wrap gap-1.5 border-b border-(--border-clr) px-3.5 pb-2 pt-2.5`}>
         {(Object.entries(AGENTS) as [AgentMode, typeof AGENTS[AgentMode]][]).map(
           ([key, agent]) => (
             <button
@@ -351,7 +351,7 @@ export default function AgentView({
               data-testid={`agent-selector-${key}`}
               data-active={mode === key}
               onClick={() => setMode(key)}
-              className={`flex cursor-pointer items-center gap-1 rounded-full border border-(--border-clr) bg-transparent px-2.5 py-1 text-[11px] font-normal text-(--muted-clr) transition-all duration-150 data-[active=true]:font-bold ${AGENT_ACTIVE_CLASSES[key]}`}
+              className={`${styles.agentSelector} flex cursor-pointer items-center gap-1 rounded-full border border-(--border-clr) bg-transparent px-2.5 py-1 text-[11px] font-normal text-(--muted-clr) transition-all duration-150 data-[active=true]:font-bold ${AGENT_ACTIVE_CLASSES[key]}`}
             >
               <span>{agent.icon}</span>
               <span>{agent.name}</span>
@@ -361,7 +361,7 @@ export default function AgentView({
       </div>
 
       {/* Active agent info */}
-      <div className="flex items-center gap-1.5 border-b border-(--border-clr) px-3.5 py-1.5 text-[11px] text-(--agent-color)">
+      <div className={`${styles.agentInfoBar} flex items-center gap-1.5 border-b border-(--border-clr) px-3.5 py-1.5 text-[11px] text-(--agent-color)`}>
         <span>{agentInfo.icon}</span>
         <span className="font-semibold">{agentInfo.name}</span>
         <span className="text-(--muted-clr)">
@@ -381,10 +381,10 @@ export default function AgentView({
       <div
         ref={containerRef}
         data-testid="agent-messages"
-        className="flex flex-1 flex-col overflow-y-auto px-3.5 pb-2 pt-3.5"
+        className={`${styles.messagesPanel} flex flex-1 flex-col overflow-y-auto px-3.5 pb-2 pt-3.5`}
       >
         {messages.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+          <div className={`${styles.emptyState} flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center`}>
             <span className="text-4xl">{agentInfo.icon}</span>
             <p className="m-0 text-[13px] text-(--muted-clr)">
               {agentInfo.label}
@@ -394,7 +394,7 @@ export default function AgentView({
                 <button
                   key={prompt}
                   type="button"
-                  className="cursor-pointer rounded-2xl border border-(--border-clr) bg-transparent px-3 py-1 text-[11px] text-(--prompt-clr) transition-opacity hover:opacity-80"
+                  className={`${styles.quickPrompt} cursor-pointer rounded-2xl border border-(--border-clr) bg-transparent px-3 py-1 text-[11px] text-(--prompt-clr) transition-opacity hover:opacity-80`}
                   onClick={() => setInput(prompt)}
                 >
                   {prompt}
@@ -408,7 +408,7 @@ export default function AgentView({
       </div>
 
       {/* Input */}
-      <div className="flex items-end gap-2 border-t border-(--border-clr) px-3.5 py-2.5">
+      <div className={`${styles.inputDock} flex items-end gap-2 border-t border-(--border-clr) px-3.5 py-2.5`}>
         <textarea
           data-testid="agent-input"
           value={input}
@@ -417,14 +417,14 @@ export default function AgentView({
           placeholder={`Perguntar ao ${agentInfo.name}\u2026 (Enter para enviar)`}
           rows={2}
           disabled={loading}
-          className="flex-1 resize-none rounded-xl border border-(--border-clr) bg-(--input-bg) px-3 py-2 font-[inherit] text-[13px] text-(--text-clr) outline-none"
+          className={`${styles.agentInput} flex-1 resize-none rounded-xl border border-(--border-clr) bg-(--input-bg) px-3 py-2 font-[inherit] text-[13px] text-(--text-clr) outline-none`}
         />
         <button
           type="button"
           data-testid="agent-send"
           onClick={sendMessage}
           disabled={loading || !input.trim()}
-          className="cursor-pointer rounded-xl border-none bg-(--agent-color) px-4 py-2 text-[13px] font-semibold text-white transition-all duration-150 disabled:cursor-not-allowed disabled:bg-(--border-clr) disabled:text-(--muted-clr)"
+          className={`${styles.sendButton} cursor-pointer rounded-xl border-none bg-(--agent-color) px-4 py-2 text-[13px] font-semibold text-white transition-all duration-150 disabled:cursor-not-allowed disabled:bg-(--border-clr) disabled:text-(--muted-clr)`}
         >
           {loading ? "\u2026" : "Enviar"}
         </button>

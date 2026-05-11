@@ -1,22 +1,156 @@
-/* AgentView — CSS variables scoped by data attributes, replacing inline styles */
-
 .root[data-dark="true"] {
-  --border-clr: rgba(91, 146, 255, 0.14);
-  --muted-clr: #6c7fa4;
+  --border-clr: rgba(91, 146, 255, 0.18);
+  --muted-clr: #8ea2c7;
   --prompt-clr: #c7d2e8;
-  --input-bg: rgba(255, 255, 255, 0.04);
+  --input-bg: rgba(7, 19, 40, 0.72);
   --text-clr: #e2e8f0;
+  --panel-bg: rgba(7, 19, 40, 0.78);
+  --panel-soft: rgba(91, 146, 255, 0.08);
+  --root-bg:
+    radial-gradient(circle at top left, rgba(239, 0, 1, 0.16), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(91, 146, 255, 0.16), transparent 34%),
+    linear-gradient(145deg, rgba(1, 24, 72, 0.96), rgba(7, 19, 40, 0.98));
 }
 
 .root[data-dark="false"] {
-  --border-clr: #e5e7eb;
-  --muted-clr: #94a3b8;
+  --border-clr: rgba(1, 24, 72, 0.12);
+  --muted-clr: #64748b;
   --prompt-clr: #334155;
   --input-bg: #fff;
   --text-clr: #0f172a;
+  --panel-bg: rgba(255, 255, 255, 0.82);
+  --panel-soft: rgba(1, 24, 72, 0.05);
+  --root-bg:
+    radial-gradient(circle at top left, rgba(239, 0, 1, 0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(1, 24, 72, 0.12), transparent 32%),
+    linear-gradient(145deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.94));
 }
 
-.root[data-mode="qa"]         { --agent-color: #5b92ff; }
-.root[data-mode="debug"]      { --agent-color: #f59e0b; }
-.root[data-mode="playwright"] { --agent-color: #10b981; }
-.root[data-mode="memory"]     { --agent-color: #a78bfa; }
+.root[data-mode="qa"] {
+  --agent-color: #5b92ff;
+  --agent-soft: rgba(91, 146, 255, 0.14);
+}
+
+.root[data-mode="debug"] {
+  --agent-color: #f59e0b;
+  --agent-soft: rgba(245, 158, 11, 0.14);
+}
+
+.root[data-mode="playwright"] {
+  --agent-color: #10b981;
+  --agent-soft: rgba(16, 185, 129, 0.14);
+}
+
+.root[data-mode="memory"] {
+  --agent-color: #a78bfa;
+  --agent-soft: rgba(167, 139, 250, 0.14);
+}
+
+.root {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--border-clr);
+  border-radius: 28px;
+  background: var(--root-bg);
+  box-shadow: 0 24px 80px rgba(1, 24, 72, 0.18);
+}
+
+.root::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent),
+    radial-gradient(circle at 50% 0, var(--agent-soft), transparent 36%);
+  opacity: 0.85;
+}
+
+.selectorBar {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.agentSelector {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.agentSelector:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-clr);
+  border-color: color-mix(in srgb, var(--agent-color) 42%, var(--border-clr));
+  background: var(--agent-soft);
+}
+
+.agentSelector[data-active="true"] {
+  box-shadow:
+    0 10px 26px color-mix(in srgb, var(--agent-color) 20%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.agentInfoBar {
+  background: linear-gradient(90deg, var(--agent-soft), transparent);
+}
+
+.messagesPanel {
+  background:
+    radial-gradient(circle at top right, var(--agent-soft), transparent 34%),
+    linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.03));
+}
+
+.emptyState {
+  margin: 1rem;
+  border: 1px dashed var(--border-clr);
+  border: 1px dashed color-mix(in srgb, var(--agent-color) 36%, var(--border-clr));
+  border-radius: 24px;
+  background: var(--panel-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.quickPrompt {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.quickPrompt:hover {
+  border-color: var(--border-clr);
+  border-color: color-mix(in srgb, var(--agent-color) 48%, var(--border-clr));
+  background: var(--agent-soft);
+  opacity: 1;
+}
+
+.inputDock {
+  background: linear-gradient(180deg, transparent, rgba(1, 24, 72, 0.08));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.agentInput {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 28px rgba(1, 24, 72, 0.08);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.agentInput:focus {
+  border-color: var(--border-clr);
+  border-color: color-mix(in srgb, var(--agent-color) 64%, var(--border-clr));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--agent-color) 18%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.sendButton {
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--agent-color) 30%, transparent);
+}
+
+.sendButton:not(:disabled):hover {
+  transform: translateY(-1px);
+  filter: saturate(1.08) brightness(1.04);
+}

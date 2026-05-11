@@ -9,6 +9,7 @@ const config: JestConfigWithTsJest = {
     "^@/lib/(.*)$": "<rootDir>/lib/$1",
     "^@/core/(.*)$": "<rootDir>/lib/core/$1",
     "^@/data/(.*)$": ["<rootDir>/data/$1", "<rootDir>/app/data/$1"],
+    "^@/design-system/(.*)$": "<rootDir>/src/design-system/$1",
     "^@/(.*)$": "<rootDir>/app/$1",
     "^server-only$": "<rootDir>/tests/mocks/server-only.js",
     "\\.(css|less|sass|scss)$": "<rootDir>/tests/mocks/styleMock.js",

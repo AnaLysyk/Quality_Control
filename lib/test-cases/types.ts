@@ -80,6 +80,7 @@ export type TestCase = {
   key?: string;
   externalId?: string;
   externalKey?: string;
+  externalUrl?: string;
   source: TestCaseSource;
   title: string;
   description?: string;
@@ -94,6 +95,11 @@ export type TestCase = {
   companyId?: string | null;
   applicationId?: string | null;
   moduleId?: string | null;
+  testProjectId?: string | null;
+  testProjectCode?: string | null;
+  testProjectName?: string | null;
+  suiteId?: string | null;
+  suiteName?: string | null;
   featureId?: string | null;
   tags: string[];
   ownerId?: string | null;
@@ -266,6 +272,8 @@ export type TestCaseFilters = {
   companyId?: string | null;
   applicationId?: string | null;
   moduleId?: string | null;
+  projectCode?: string | null;
+  suiteId?: string | null;
   type?: TestCaseType | "all" | null;
   source?: TestCaseSource | "all" | null;
   status?: TestCaseStatus | "all" | null;
@@ -288,6 +296,10 @@ export type CreateTestCaseInput = {
   companyId?: string | null;
   applicationId?: string | null;
   moduleId?: string | null;
+  testProjectCode?: string | null;
+  testProjectName?: string | null;
+  suiteId?: string | null;
+  suiteName?: string | null;
   featureId?: string | null;
   tags?: string[];
   steps?: Array<{

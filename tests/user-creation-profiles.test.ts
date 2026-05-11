@@ -15,6 +15,9 @@ import {
 } from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
+
 // IDs dos recursos criados pelo teste — limpos no afterAll
 const createdUserIds: string[] = [];
 const createdCompanyIds: string[] = [];
@@ -50,7 +53,7 @@ async function createUser(overrides: Partial<Parameters<typeof pgCreateLocalUser
 
 // ─── testes por perfil ────────────────────────────────────────────────────────
 
-describe("Criação de usuários — persistência por perfil", () => {
+describePg("Criação de usuários — persistência por perfil", () => {
 
   // ── 1. Usuário Regular ────────────────────────────────────────────────────
   describe("Perfil: Usuário Regular", () => {

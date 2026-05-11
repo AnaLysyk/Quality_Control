@@ -14,6 +14,12 @@ import type { AuthUser } from "@/lib/jwtAuth";
 
 export type SensitivityLevel = "public" | "internal" | "restricted" | "sensitive";
 
+const SENSITIVITY_LEVELS: SensitivityLevel[] = ["public", "internal", "restricted", "sensitive"];
+
+export function isSensitivityLevel(value: unknown): value is SensitivityLevel {
+  return typeof value === "string" && SENSITIVITY_LEVELS.includes(value as SensitivityLevel);
+}
+
 export type PermissionDenialReason =
   | "not_authenticated"
   | "company_mismatch"
@@ -83,12 +89,13 @@ export function getMaxSensitivityForUser(user: AuthUser | null): SensitivityLeve
 /**
  * Check if user can access asset with given sensitivity
  */
-export function canAccessSensitivity(user: AuthUser | null, sensitivity: SensitivityLevel): boolean {
+export function canAccessSensitivity(user: AuthUser | null, sensitivity: SensitivityLevel | string | null | undefined): boolean {
+  if (!isSensitivityLevel(sensitivity)) return false;
+
   const maxSensitivity = getMaxSensitivityForUser(user);
 
-  const levels: SensitivityLevel[] = ["public", "internal", "restricted", "sensitive"];
-  const maxIndex = levels.indexOf(maxSensitivity);
-  const assetIndex = levels.indexOf(sensitivity);
+  const maxIndex = SENSITIVITY_LEVELS.indexOf(maxSensitivity);
+  const assetIndex = SENSITIVITY_LEVELS.indexOf(sensitivity);
 
   return assetIndex <= maxIndex;
 }
@@ -109,8 +116,12 @@ export function canCreateAsset(user: AuthUser | null, companySlug: string): bool
 /**
  * Check if user can delete asset
  */
-export function canDeleteAsset(user: AuthUser | null, companySlug: string, sensitivity: SensitivityLevel): boolean {
+export function canDeleteAsset(user: AuthUser | null, companySlug: string, sensitivity: SensitivityLevel | string | null | undefined): boolean {
   if (!user || !canAccessCompany(user, companySlug)) {
+    return false;
+  }
+
+  if (!isSensitivityLevel(sensitivity)) {
     return false;
   }
 
@@ -128,7 +139,7 @@ export function canDeleteAsset(user: AuthUser | null, companySlug: string, sensi
  * Check if user can view asset Base64 content
  * (More restrictive than reading metadata)
  */
-export function canViewBase64(user: AuthUser | null, companySlug: string, sensitivity: SensitivityLevel): boolean {
+export function canViewBase64(user: AuthUser | null, companySlug: string, sensitivity: SensitivityLevel | string | null | undefined): boolean {
   // User must have access to company
   if (!user || !canAccessCompany(user, companySlug)) {
     return false;

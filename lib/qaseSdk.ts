@@ -151,6 +151,30 @@ export class QaseClient {
     return data;
   }
 
+  async listProjects(params?: Record<string, string | number | undefined>) {
+    const { data } = await this.getWithStatus<{ result?: { entities?: unknown[]; total?: number; count?: number } }>(
+      "/project",
+      { params, cache: "no-store" },
+    );
+    return data;
+  }
+
+  async getProject(projectCode: string) {
+    const { data } = await this.getWithStatus<{ result?: unknown }>(
+      `/project/${encodeURIComponent(projectCode)}`,
+      { cache: "no-store" },
+    );
+    return data;
+  }
+
+  async listSuites(projectCode: string, params?: Record<string, string | number | undefined>) {
+    const { data } = await this.getWithStatus<{ result?: { entities?: unknown[]; total?: number; count?: number } }>(
+      `/suite/${encodeURIComponent(projectCode)}`,
+      { params, cache: "no-store" },
+    );
+    return data;
+  }
+
   async getPlan(projectCode: string, planId: string | number): Promise<{ result?: unknown }> {
     const { data } = await this.getWithStatus<{ result?: unknown }>(
       `/plan/${projectCode}/${encodeURIComponent(String(planId))}`,

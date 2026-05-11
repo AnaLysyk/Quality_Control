@@ -9,5 +9,6 @@ export { toolDraftTestCase } from "./draftTestCase";
 export { toolExplainPermission } from "./explainPermission";
 export { buildTicketCreationAction, executeCreateTicket } from "./createTicket";
 export { buildCommentCreationAction, executeCreateComment } from "./createComment";
+export { executeCreateTestCase } from "./createTestCase";
 export { toolSuggestNextStep } from "./suggestNextStep";
 export type { AssistantExecutorResult } from "./types";

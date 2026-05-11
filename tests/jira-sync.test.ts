@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prismaClient";
+import { describeDb } from "./describeDb";
 import * as jiraSync from "@/lib/jiraSync";
 
-describe("jiraSync.syncJiraIssuesToApplications", () => {
+describeDb("jiraSync.syncJiraIssuesToApplications", () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });

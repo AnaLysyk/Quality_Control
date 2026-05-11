@@ -443,15 +443,27 @@ function buildHumanContinuationReply(
   const previousTopic = extractPreviousUserTopic(messages, question);
   const label = screenLabel?.trim() ? ` em ${screenLabel}` : "";
 
-  // Continuação explícita com tópico anterior
-  if (/^(sim|isso|ok|blz|beleza|fechou|pode|continua|continuar)\b/.test(n) && previousTopic) {
-    return `Perfeito, continuando sobre "${previousTopic}"${label}. Quer que eu siga com resumo rápido ou já com ação prática?`;
+  // Pedido de detalhamento/explicação baseado no que já foi dito
+  if (/^(explica|explique|detalha|detalhe|aprofund(a|e)|mostra|mostre)\b/.test(n) && previousTopic) {
+    return [
+      `Vou conectar com o que você trouxe antes — fluxo de conversa baseado em "${previousTopic}"${label}.`,
+      "",
+      "Quer que eu aprofunde em qual recorte?",
+      "1) arquitetura/fluxo (passo a passo),",
+      "2) regras de negócio/validações,",
+      "3) ou como testar (Playwright/Jest)?",
+    ].join("\n");
   }
+
+  // Continuação explícita com tópico anterior
+  if (/^(sim|isso|ok|blz|beleza|fechou|pode|continua|continuar)\b/.test(n) && previousTopic) { 
+    return `Perfeito, continuando sobre "${previousTopic}"${label}. Quer que eu siga com resumo rápido ou já com ação prática?`; 
+  } 
 
   // Pedido de ajuda com contexto de tela
   if (/^(me ajuda|pode ajudar|preciso de ajuda|ajuda|o que (eu|vc|você) (pode|conseg))\b/.test(n)) {
     if (screenLabel?.trim()) {
-      return `Claro. Estou na tela **${screenLabel}** com você. Me diz o que quer resolver — análise QA, debug, gerar teste ou consultar memórias do Brain?`;
+      return `Claro. Estou na tela **${screenLabel}** com você. Me diz em uma frase o que você quer resolver — análise QA, debug, gerar teste ou consultar memórias do Brain?`;
     }
     return `Claro. Me diz em uma frase o que quer resolver e eu vou direto ao ponto — análise, debug, spec ou memórias.`;
   }
@@ -723,15 +735,17 @@ export class InternalBrainEngine {
         return;
       }
 
-      if (isCasualConversation(question)) {
-        yield* yieldText(buildHumanContinuationReply(question, input.screenLabel, input.messages));
-        return;
-      }
-
       const agentMode: AgentMode =
         input.agentMode && ["qa", "debug", "playwright", "memory"].includes(input.agentMode)
           ? input.agentMode
           : detectAgentMode(question);
+
+      // For explicit agentMode calls, always run the agent pipeline (even for short follow-ups like "explica isso"),
+      // so the engine can learn from conversation context and query the Brain when appropriate.
+      if (!input.agentMode && isCasualConversation(question)) {
+        yield* yieldText(buildHumanContinuationReply(question, input.screenLabel, input.messages));
+        return;
+      }
 
       // Carrega snapshot real do sistema (tickets, releases, requests)
       const systemSnapshot = await loadRichSystemSnapshot(input.companySlug).catch(
@@ -979,6 +993,11 @@ export class InternalBrainEngine {
     } else {
       resp += `Busquei **"${input.question}"** mas o Brain não retornou nós correspondentes.\n\n`;
       resp += `Brain atual: ${metrics.nodeCount} nós, ${metrics.edgeCount} conexões, ${metrics.memoryCount} memórias.\n\n`;
+
+      const previousTopic = extractPreviousUserTopic(input.messages, input.question);
+      if (previousTopic) {
+        resp += `Vou conectar com o que voce trouxe antes (fluxo de conversa): "${previousTopic}".\n\n`;
+      }
 
       if (snap) {
         const openDefects = snap.recentDefects.filter((d) => d.status !== "done" && d.status !== "closed");

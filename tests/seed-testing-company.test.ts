@@ -19,6 +19,9 @@ import {
 } from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
+
 const PASSWORD = hashPasswordSha256("TC@Teste2026");
 const COMPANY_SLUG = "testing-company";
 
@@ -26,7 +29,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe("Seed — Testing Company + perfis de usuário", () => {
+describePg("Seed — Testing Company + perfis de usuário", () => {
 
   let companyId: string;
 

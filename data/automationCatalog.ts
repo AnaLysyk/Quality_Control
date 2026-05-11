@@ -15,6 +15,31 @@ export type AutomationEnvironment = {
   note: string;
 };
 
+export type AutomationEnvironmentVariable = {
+  key: string;
+  value: string;
+  secret?: boolean;
+};
+
+export function getDefaultAutomationEnvironmentId(companyScope?: string | null) {
+  const scope = (companyScope ?? "").trim().toLowerCase();
+  if (scope === "griaule") return "griaule-hml-api-146";
+  if (scope === "testing-company" || scope === "testing_company") return "qc-local";
+  return "local";
+}
+
+export function getAutomationEnvironmentVariables(environmentId: string): AutomationEnvironmentVariable[] {
+  // Defaults must be safe and non-secret; secrets should be injected at runtime by operators.
+  if (environmentId.startsWith("griaule-hml-")) {
+    return [
+      { key: "smartEmail", value: "" },
+      { key: "smartPassword", value: "", secret: true },
+    ];
+  }
+
+  return [];
+}
+
 export type AutomationFlow = {
   id: string;
   title: string;
@@ -115,6 +140,27 @@ export const AUTOMATION_ENVIRONMENTS: AutomationEnvironment[] = [
     baseUrl: "http://127.0.0.1:3000",
     status: "ready",
     note: "Usado pela Testing Company para smoke de telas e fluxos do proprio sistema.",
+  },
+  {
+    id: "griaule-hml-api-146",
+    title: "Griaule HML API (146)",
+    baseUrl: "http://172.16.1.146:8100",
+    status: "ready",
+    note: "Host homologação Griaule (API principal). Sem segredos por padrão.",
+  },
+  {
+    id: "griaule-hml-smart-146",
+    title: "Griaule HML Smart (146)",
+    baseUrl: "http://172.16.1.146:8128",
+    status: "ready",
+    note: "Host homologação Griaule (Smart UI). Sem segredos por padrão.",
+  },
+  {
+    id: "griaule-hml-api-201",
+    title: "Griaule HML API (201)",
+    baseUrl: "http://172.16.1.201:8100",
+    status: "ready",
+    note: "Host alternativo homologação Griaule. Sem segredos por padrão.",
   },
   {
     id: "staging",

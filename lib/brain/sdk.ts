@@ -2,6 +2,15 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prismaClient";
+export { publishBrianImpulse } from "@/lib/brain/contextual/publisher";
+export { buildBrianImpulseEnvelope } from "@/lib/brain/contextual/pipeline";
+export { runBrianWorkflow } from "@/lib/brain/contextual/runtime";
+export {
+  decideBrianCapabilityAccess,
+  decideBrianVisibility,
+  sanitizeBrianData,
+  validateBrianImpulseContract,
+} from "@/lib/brain/contextual/governance";
 
 export type BrainEmitEventInput = {
   eventType: string;

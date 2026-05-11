@@ -25,6 +25,9 @@ import {
 } from "../lib/core/auth/pgStore";
 import { hashPasswordSha256 } from "../lib/passwordHash";
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
+
 const TEST_PASSWORD = hashPasswordSha256("TesteSenha@123");
 const uid = randomUUID().slice(0, 8);
 
@@ -75,7 +78,7 @@ async function assertActive(id: string) {
 
 // ─── Cenários ─────────────────────────────────────────────────────────────────
 
-describe("Criar 2 usuários e deletar 1 por perfil — verificação de persistência", () => {
+describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persistência", () => {
 
   // ── 1. Usuário Regular ────────────────────────────────────────────────────
   describe("Perfil: Usuário Regular", () => {

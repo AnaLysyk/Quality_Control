@@ -1,7 +1,7 @@
 import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import { prisma } from "@/lib/prismaClient";
 
 /**
@@ -21,21 +21,15 @@ import { prisma } from "@/lib/prismaClient";
  * - User must have permission to access the asset
  * - All downloads are logged to TestDataAssetAudit
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = await getSupabaseServer();
+    const user = await authenticateRequest(request);
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const assetId = params.id;
+    const { id: assetId } = await params;
     const { searchParams } = new URL(request.url);
     const expiresParam = searchParams.get("expires");
     const purpose = searchParams.get("purpose") || "test_execution";
@@ -108,7 +102,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // });
 
     // Return file with appropriate headers
-    return new NextResponse(contentBuffer, {
+    return new NextResponse(new Uint8Array(contentBuffer), {
       headers: {
         "Content-Type": asset.mimeType || "application/octet-stream",
         "Content-Disposition": `attachment; filename="${asset.key}.bin"`,

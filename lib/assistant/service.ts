@@ -45,6 +45,7 @@ import {
   executeCreateTicket,
   buildCommentCreationAction,
   executeCreateComment,
+  executeCreateTestCase,
   toolSuggestNextStep,
   type AssistantExecutorResult,
 } from "./tools";
@@ -226,6 +227,7 @@ async function executeToolAction(user: AuthUser, context: AssistantScreenContext
   switch (action.tool) {
     case "create_ticket":  return executeCreateTicket(user, context, action);
     case "create_comment": return executeCreateComment(user, action);
+    case "create_test_case": return executeCreateTestCase(user, context, action);
     default:
       return { tool: "suggest_next_step", success: false, summary: "ação não suportada", reply: "Essa ação não está disponível neste MVP do agente." };
   }

@@ -208,7 +208,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     assetIds: assetsForFlow("smart-browser"),
   },
   {
-    id: "case-qc-admin-dashboard",
+    id: "case-qc-automation-fab-menu",
     title: "Abrir dashboard admin do Painel QA",
     application: "Quality Control",
     domain: "Smoke de tela",
@@ -234,7 +234,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     assetIds: [],
   },
   {
-    id: "case-qc-automation-ide",
+    id: "case-qc-automation-breadcrumb-back",
     title: "Abrir QA IDE e renderizar ferramentas",
     application: "Quality Control",
     domain: "Automação",
@@ -260,7 +260,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     assetIds: [],
   },
   {
-    id: "case-qc-company-home",
+    id: "case-qc-automation-cards-width",
     title: "Abrir home institucional da empresa",
     application: "Quality Control",
     domain: "Empresa",
@@ -286,7 +286,7 @@ export const AUTOMATION_CASES: AutomationCaseDefinition[] = [
     assetIds: [],
   },
   {
-    id: "case-qc-company-runs",
+    id: "case-qc-automation-detail-actions",
     title: "Abrir runs da empresa e listar execuções",
     application: "Quality Control",
     domain: "Runs",

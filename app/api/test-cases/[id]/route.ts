@@ -82,6 +82,15 @@ function normalizePayload(
           : undefined,
     applicationId: typeof body.applicationId === "string" ? body.applicationId : undefined,
     moduleId: typeof body.moduleId === "string" ? body.moduleId : undefined,
+    testProjectCode:
+      typeof body.testProjectCode === "string"
+        ? body.testProjectCode
+        : typeof body.projectCode === "string"
+          ? body.projectCode
+          : undefined,
+    testProjectName: typeof body.testProjectName === "string" ? body.testProjectName : undefined,
+    suiteId: typeof body.suiteId === "string" ? body.suiteId : undefined,
+    suiteName: typeof body.suiteName === "string" ? body.suiteName : undefined,
     featureId: typeof body.featureId === "string" ? body.featureId : undefined,
     tags: Array.isArray(body.tags) ? body.tags.filter((tag): tag is string => typeof tag === "string") : undefined,
     steps: Array.isArray(body.steps)

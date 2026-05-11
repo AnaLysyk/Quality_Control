@@ -4,7 +4,7 @@
  * Hooks para usar Profile Engine no lado client
  */
 
-import { createContext, ReactNode, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { ProfileRuntimeContext } from "./types";
 
 const ProfileContext = createContext<ProfileRuntimeContext | null>(null);

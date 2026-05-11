@@ -41,6 +41,9 @@
       "@/components/*": [
         "./app/components/*"
       ],
+      "@/design-system/*": [
+        "./src/design-system/*"
+      ],
       "@/contracts/*": [
         "./packages/contracts/src/*"
       ],
@@ -68,7 +71,8 @@
     ".next-e2e/dev/dev/types/**/*.ts",
     ".next/dev/dev/types/**/*.ts",
     ".next/dev-runtime/dev/types/**/*.ts",
-    ".next/dev-runtime/dev/dev/types/**/*.ts"
+    ".next/dev-runtime/dev/dev/types/**/*.ts",
+    ".next/dev-runtime/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

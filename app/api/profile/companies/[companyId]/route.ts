@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getAccessContext } from "@/lib/auth/session";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import { findLocalCompanyById, updateLocalCompany } from "@/lib/auth/localStore";
 import { buildProfileRuntimeContext } from "@/lib/profile/contextBuilder";
 import type { ProfileAuditEntry } from "@/lib/profile/types";
@@ -16,7 +16,7 @@ export async function GET(
 ) {
   try {
     const { companyId } = await params;
-    const viewer = await getAccessContext();
+    const viewer = await authenticateRequest(req);
 
     if (!viewer) {
       return NextResponse.json(
@@ -36,10 +36,14 @@ export async function GET(
     // Construir contexto (valida permissões)
     const context = await buildProfileRuntimeContext({
       viewer,
-      targetType: "company",
-      targetId: companyId,
-      targetEntity: company,
+      entityType: "company",
+      entityId: companyId,
       mode: "view",
+      targetStatus: company.status,
+      isSameCompany:
+        viewer.companyId === company.id ||
+        viewer.companySlug === company.slug ||
+        (viewer.companySlugs ?? []).includes(company.slug),
     });
 
     if (!context.permissions.canView) {
@@ -95,7 +99,7 @@ export async function PATCH(
 ) {
   try {
     const { companyId } = await params;
-    const viewer = await getAccessContext();
+    const viewer = await authenticateRequest(req);
 
     if (!viewer) {
       return NextResponse.json(
@@ -115,10 +119,14 @@ export async function PATCH(
     // Construir contexto (valida permissões)
     const context = await buildProfileRuntimeContext({
       viewer,
-      targetType: "company",
-      targetId: companyId,
-      targetEntity: company,
-      mode: "view",
+      entityType: "company",
+      entityId: companyId,
+      mode: "edit",
+      targetStatus: company.status,
+      isSameCompany:
+        viewer.companyId === company.id ||
+        viewer.companySlug === company.slug ||
+        (viewer.companySlugs ?? []).includes(company.slug),
     });
 
     if (!context.permissions.canEdit) {
@@ -174,12 +182,15 @@ export async function PATCH(
         website: updated.website,
         address: updated.address,
       },
-      actor: viewer.id,
-      actorRole: viewer.role,
-      timestamp: new Date(),
+      actor: {
+        id: viewer.id,
+        name: viewer.user ?? viewer.email,
+        role: (viewer.role ?? "company_user") as ProfileAuditEntry["actor"]["role"],
+      },
       reason: update.reason,
       origin: "web",
       ipAddress: req.headers.get("x-forwarded-for") || "unknown",
+      createdAt: new Date().toISOString(),
     };
 
     // TODO: salvar auditEntry em store
@@ -201,7 +212,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validação falhou", details: error.errors },
+        { error: "Validação falhou", details: error.issues },
         { status: 400 },
       );
     }

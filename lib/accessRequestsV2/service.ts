@@ -5,6 +5,7 @@ import { addAuditLogSafe, listAuditLogs } from "@/data/auditLogRepository";
 import { createLocalUser, findLocalCompanyBySlug, findLocalUserByEmailOrId, upsertLocalLink, updateLocalUser } from "@/lib/auth/localStore";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import type { AuthUser } from "@/lib/jwtAuth";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 import {
   canApproveRequestedRole,
   canReviewAccessRequests,
@@ -297,6 +298,27 @@ export async function getAccessRequestAudit(id: string, user: AuthUser) {
   const request = await getAccessRequestV2ById(id);
   if (!request) return null;
   if (!canViewAccessRequest(user, request)) return "forbidden" as const;
+
+  if (shouldUseJsonStore()) {
+    return [
+      {
+        id: `access-request-v2-${request.id}`,
+        created_at: request.reviewedAt ?? request.updatedAt,
+        actor_user_id: request.reviewedBy ?? request.requesterUserId ?? null,
+        actor_email: user.email,
+        action:
+          request.status === "approved"
+            ? "access_request.accepted"
+            : request.status === "rejected"
+              ? "access_request.rejected"
+              : "access_request.updated",
+        entity_type: "access_request",
+        entity_id: request.id,
+        entity_label: `${request.requesterName ?? "Solicitante"} (${request.requesterEmail})`,
+        metadata: { status: request.status, requestType: request.requestType },
+      },
+    ];
+  }
 
   const logs = await listAuditLogs({ entityType: "access_request", query: id, limit: 200 });
   return logs.filter((log) => log.entity_id === id || String(log.metadata ?? "").includes(id));

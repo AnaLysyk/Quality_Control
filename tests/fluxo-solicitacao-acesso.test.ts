@@ -29,10 +29,12 @@
  * 16. Solicitações de e-mails diferentes não se misturam na listagem
  */
 
-process.env.AUTH_STORE = "postgres";
+process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 jest.mock("server-only", () => ({}));
 jest.mock("../lib/redis", () => ({ isRedisConfigured: jest.fn(() => false) }));
+
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 import { prisma } from "../lib/prismaClient";
 import {
@@ -86,7 +88,7 @@ afterAll(async () => {
 
 // ── QUEM MANDA (Solicitante) ───────────────────────────────────────────────────
 
-describe("Perspectiva do Solicitante", () => {
+describePg("Perspectiva do Solicitante", () => {
   test("1. solicitante abre pedido de acesso com e-mail e mensagem", async () => {
     const req = await createAccessRequest({
       email: SOLICITANTE_A.email,
@@ -158,7 +160,7 @@ describe("Perspectiva do Solicitante", () => {
 
 // ── QUEM RECEBE (Admin) ────────────────────────────────────────────────────────
 
-describe("Perspectiva do Admin", () => {
+describePg("Perspectiva do Admin", () => {
   test("6. admin visualiza todas as solicitações abertas", async () => {
     const all = await listAccessRequests();
     const mine = all.filter((r) => createdRequestIds.includes(r.id));
@@ -241,7 +243,7 @@ describe("Perspectiva do Admin", () => {
 
 // ── FLUXO ACEITE COMPLETO ─────────────────────────────────────────────────────
 
-describe("Fluxo de Aceite completo (ida e volta)", () => {
+describePg("Fluxo de Aceite completo (ida e volta)", () => {
   let reqId: string;
   let solicitanteUserId: string;
 
@@ -312,7 +314,7 @@ describe("Fluxo de Aceite completo (ida e volta)", () => {
 
 // ── FLUXO RECUSA COMPLETO ─────────────────────────────────────────────────────
 
-describe("Fluxo de Recusa completo (ida e volta)", () => {
+describePg("Fluxo de Recusa completo (ida e volta)", () => {
   let reqId: string;
 
   test("13. solicitante abre → admin pede justificativa → solicitante responde → admin rejeita", async () => {
@@ -376,7 +378,7 @@ describe("Fluxo de Recusa completo (ida e volta)", () => {
 
 // ── ISOLAMENTO ────────────────────────────────────────────────────────────────
 
-describe("Isolamento entre solicitações", () => {
+describePg("Isolamento entre solicitações", () => {
   test("15. comentários de uma solicitação não aparecem em outra", async () => {
     const [idA, idB] = createdRequestIds;
     const commentsA = await listAccessRequestComments(idA);

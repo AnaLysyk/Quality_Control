@@ -14,10 +14,12 @@
  * ✅ Cleanup total em afterAll — nenhum dado permanece.
  */
 
-process.env.AUTH_STORE = "postgres";
+process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 jest.mock("server-only", () => ({}));
 jest.mock("../lib/redis", () => ({ isRedisConfigured: jest.fn(() => false) }));
+
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 import { prisma } from "../lib/prismaClient";
 import {
@@ -98,7 +100,7 @@ afterAll(async () => {
 
 // ── Criação da solicitação ────────────────────────────────────────────────────
 
-describe("Criação de solicitação de acesso estruturada", () => {
+describePg("Criação de solicitação de acesso estruturada", () => {
   let requestId: string;
   let composedMessage: string;
 
@@ -160,7 +162,7 @@ describe("Criação de solicitação de acesso estruturada", () => {
 
 // ── Aceitação (aceitar solicitação → cria usuário) ────────────────────────────
 
-describe("Aceitação de solicitação de acesso", () => {
+describePg("Aceitação de solicitação de acesso", () => {
   let requestId: string;
   let createdUserId: string;
   const userEmail = testEmail("accept");
@@ -255,7 +257,7 @@ describe("Aceitação de solicitação de acesso", () => {
 
 // ── Rejeição ──────────────────────────────────────────────────────────────────
 
-describe("Rejeição de solicitação de acesso", () => {
+describePg("Rejeição de solicitação de acesso", () => {
   let requestId: string;
 
   beforeAll(async () => {

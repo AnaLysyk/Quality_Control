@@ -382,12 +382,22 @@ model Membership {
 }
 
 model UserCompanyLink {
-  id          String   @id @default(cuid())
-  userId      String
-  companyId   String
-  role        Role?
-  permissions String[] @default([])
-  active      Boolean  @default(true)
+  id                   String   @id @default(cuid())
+  userId               String
+  companyId            String
+  role                 Role?
+  permissions          String[] @default([])
+  active               Boolean  @default(true)
+
+  // Extended metadata (migration: 20260510214000_expand_user_company_link_metadata)
+  roleInCompany        String?
+  allowedApplicationIds String[] @default([])
+  allowedModuleIds     String[] @default([])
+  status               String   @default("active")
+  linkedAt             DateTime @default(now())
+  linkedBy             String?
+  updatedAt            DateTime @updatedAt
+  updatedBy            String?
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)

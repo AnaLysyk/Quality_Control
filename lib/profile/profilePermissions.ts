@@ -31,8 +31,15 @@ function isGlobalViewer(viewer: Pick<AuthUser, "isGlobalAdmin" | "role" | "compa
   return role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC;
 }
 
+function toAccessRole(viewer: Pick<AuthUser, "role" | "companyRole"> | null | undefined) {
+  return {
+    role: viewer?.role ?? null,
+    companyRole: viewer?.companyRole ?? null,
+  };
+}
+
 function viewerCanManageInstitutional(viewer: Pick<AuthUser, "role" | "companyRole"> | null | undefined) {
-  return canManageInstitutionalProfiles(viewer);
+  return canManageInstitutionalProfiles(toAccessRole(viewer));
 }
 
 function normalizeViewerRole(viewer: Pick<AuthUser, "role" | "companyRole" | "isGlobalAdmin"> | null | undefined) {
@@ -72,7 +79,7 @@ export function resolveUserProfilePermissions(
   const isSelf = viewer?.id === target.id;
   const sameCompany = targetCompanyIds.some((companyId) => companyId === viewer?.companyId);
   const targetRole = normalizeLocalRole(target.role ?? null);
-  const canReviewTarget = canDeleteUserByProfile(viewer, target.role ?? null) || institutional;
+  const canReviewTarget = canDeleteUserByProfile(toAccessRole(viewer), target.role ?? null) || institutional;
 
   return {
     canEdit: institutional || isSelf || sameCompany || mode === "self" || mode === "edit",

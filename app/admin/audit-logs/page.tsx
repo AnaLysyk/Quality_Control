@@ -88,6 +88,8 @@ const ACTION_TITLES: Record<string, string> = {
   "auth.password.changed": "Senha alterada",
   "auth.password.reset": "Senha redefinida",
   "auth.password.reset_requested": "Reset de senha solicitado",
+  "auth.password.reset_requested_error": "Erro ao solicitar reset de senha",
+  "auth.password.forgot_requested": "Esqueci senha solicitado",
   "auth.access.denied": "Acesso negado",
   // Tickets / Chamados
   "ticket.created": "Chamado aberto",

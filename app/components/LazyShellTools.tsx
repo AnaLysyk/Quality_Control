@@ -33,6 +33,8 @@ type ToolbarGhostButtonProps = {
   wrapperClassName?: string;
 };
 
+const noop = () => {};
+
 function ToolbarLoadingBubble({ icon: Icon, ariaLabel }: { icon: IconType; ariaLabel: string }) {
   return (
     <button
@@ -280,8 +282,8 @@ export function DeferredTicketsButton() {
   const { user } = useAuthUser();
   const { mounted, defaultOpen, prime, open } = useDeferredShellTool();
 
-  if (!user) return null;
-  if (mounted) return <LazyTicketsButtonInner defaultOpen={defaultOpen} />;
+  const hasUser = Boolean(user);
+  if (mounted && hasUser) return <LazyTicketsButtonInner defaultOpen={defaultOpen} />;
 
   return (
     <ToolbarGhostButton
@@ -289,8 +291,8 @@ export function DeferredTicketsButton() {
       icon={FiMessageSquare}
       loadingLabel="Carregando chamados"
       mounted={mounted}
-      onOpen={open}
-      onPrime={prime}
+      onOpen={hasUser ? open : noop}
+      onPrime={hasUser ? prime : noop}
     />
   );
 }

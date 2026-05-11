@@ -6,6 +6,7 @@ import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { detectAgentMode, AGENT_REGISTRY } from "@/lib/brain/agents";
 import type { AgentMode } from "@/lib/brain/agents";
 import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
+import { getAiApiKey } from "@/lib/ai/apiKey";
 
 export const runtime = "nodejs";
 
@@ -129,13 +130,13 @@ function buildMessagesFromHistory(body: AssistantRequestBody): Array<{ role: "us
 }
 
 /**
- * AÃ§Ãµes estruturadas (create_ticket, create_comment) precisam passar pelo service.ts
+ * AÃ§Ãµes estruturadas (create_ticket, create_comment, create_test_case) precisam passar pelo service.ts
  * porque dependem de lÃ³gica de RBAC e validaÃ§Ã£o. Tudo mais vai direto para o engine.
  */
 function isStructuredToolAction(body: AssistantRequestBody) {
   return (
     body.action?.kind === "tool" &&
-    (body.action.tool === "create_ticket" || body.action.tool === "create_comment")
+    (body.action.tool === "create_ticket" || body.action.tool === "create_comment" || body.action.tool === "create_test_case")
   );
 }
 
@@ -147,6 +148,13 @@ function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?
 export async function POST(req: Request) {
   if (!ASSISTANT_ENABLED) {
     return NextResponse.json({ error: "Assistente desativado" }, { status: 410 });
+  }
+
+  if (!getAiApiKey()) {
+    return NextResponse.json(
+      { error: "AI API key não configurada. Defina OPENAI_API_KEY (recomendado) ou AI_API_KEY no ambiente." },
+      { status: 503 },
+    );
   }
 
   const authUser = await authenticateRequest(req);
@@ -165,7 +173,7 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => ({}))) as AssistantRequestBody;
     const brainContext = body.brainContext ?? null;
 
-    // â”€â”€â”€ AÃ§Ãµes estruturadas: create_ticket, create_comment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€â”€ AÃ§Ãµes estruturadas: create_ticket, create_comment, create_test_case â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (isStructuredToolAction(body)) {
       const { runAssistantRequest } = await import("@/lib/assistant/service");
       const response = await runAssistantRequest(authUser, {

@@ -10,7 +10,7 @@ import { canAccessCompany, canDeleteAsset, PermissionError } from "@/lib/test-da
  *
  * Get a single test data asset by ID.
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await authenticateRequest(request);
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const assetId = params.id;
+    const { id: assetId } = await params;
 
     const asset = await prisma.testDataAsset.findUnique({
       where: { id: assetId },
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
  *   "metadata": {}
  * }
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await authenticateRequest(request);
 
@@ -81,7 +81,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const assetId = params.id;
+    const { id: assetId } = await params;
     const body = await request.json();
     const { label, status, sensitivity, metadata } = body;
 
@@ -154,7 +154,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
  * Cannot delete if asset is in use (linked to cases or packs).
  * Use PATCH to archive instead.
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await authenticateRequest(request);
 
@@ -162,7 +162,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const assetId = params.id;
+    const { id: assetId } = await params;
 
     // Find existing asset
     const existing = await prisma.testDataAsset.findUnique({

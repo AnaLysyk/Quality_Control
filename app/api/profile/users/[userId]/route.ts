@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getAccessContext } from "@/lib/auth/session";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import { listLocalUsers, updateLocalUser } from "@/lib/auth/localStore";
 import { buildProfileRuntimeContext } from "@/lib/profile/contextBuilder";
-import type { ProfileAuditEntry } from "@/lib/profile/types";
+import type { EntityStatus, ProfileAuditEntry, UserRole } from "@/lib/profile/types";
+
+function normalizeProfileStatus(status: unknown): EntityStatus | undefined {
+  if (
+    status === "active" ||
+    status === "blocked" ||
+    status === "inactive" ||
+    status === "archived" ||
+    status === "suspended" ||
+    status === "pending"
+  ) {
+    return status;
+  }
+  if (status === "invited") return "pending";
+  return undefined;
+}
 
 /**
  * GET /api/profile/users/[userId]
@@ -16,7 +31,7 @@ export async function GET(
 ) {
   try {
     const { userId } = await params;
-    const viewer = await getAccessContext();
+    const viewer = await authenticateRequest(req);
 
     if (!viewer) {
       return NextResponse.json(
@@ -37,10 +52,15 @@ export async function GET(
     // Construir contexto (valida permissões)
     const context = await buildProfileRuntimeContext({
       viewer,
-      targetType: "user",
-      targetId: userId,
-      targetEntity: targetUser,
+      entityType: "user",
+      entityId: userId,
       mode: "view",
+      targetRole: (targetUser.role ?? "company_user") as UserRole,
+      targetStatus: normalizeProfileStatus(targetUser.status),
+      isSelf: viewer.id === userId,
+      isSameCompany:
+        Boolean(viewer.companyId && viewer.companyId === targetUser.home_company_id) ||
+        (viewer.companySlugs ?? []).some((slug) => slug === targetUser.default_company_slug),
     });
 
     if (!context.permissions.canView) {
@@ -55,7 +75,7 @@ export async function GET(
       id: targetUser.id,
       name: targetUser.name,
       email: targetUser.email,
-      avatar: targetUser.avatar ?? null,
+      avatar: targetUser.avatar_url ?? null,
       phone: targetUser.phone ?? null,
       role: targetUser.role,
       status: targetUser.status,
@@ -88,7 +108,7 @@ export async function PATCH(
 ) {
   try {
     const { userId } = await params;
-    const viewer = await getAccessContext();
+    const viewer = await authenticateRequest(req);
 
     if (!viewer) {
       return NextResponse.json(
@@ -109,10 +129,15 @@ export async function PATCH(
     // Construir contexto (valida permissões)
     const context = await buildProfileRuntimeContext({
       viewer,
-      targetType: "user",
-      targetId: userId,
-      targetEntity: targetUser,
-      mode: "view", // Determina modo baseado em lógica se necessário
+      entityType: "user",
+      entityId: userId,
+      mode: "edit",
+      targetRole: (targetUser.role ?? "company_user") as UserRole,
+      targetStatus: normalizeProfileStatus(targetUser.status),
+      isSelf: viewer.id === userId,
+      isSameCompany:
+        Boolean(viewer.companyId && viewer.companyId === targetUser.home_company_id) ||
+        (viewer.companySlugs ?? []).some((slug) => slug === targetUser.default_company_slug),
     });
 
     if (!context.permissions.canEdit) {
@@ -130,7 +155,7 @@ export async function PATCH(
       name: targetUser.name,
       email: targetUser.email,
       phone: targetUser.phone,
-      avatar: targetUser.avatar,
+      avatar: targetUser.avatar_url,
     };
 
     // Aplicar atualização
@@ -138,7 +163,7 @@ export async function PATCH(
       name: update.name ?? targetUser.name,
       email: update.email ?? targetUser.email,
       phone: update.phone ?? targetUser.phone,
-      avatar: update.avatar ?? targetUser.avatar,
+      avatar_url: update.avatar ?? targetUser.avatar_url,
     });
 
     if (!updated) {
@@ -160,14 +185,17 @@ export async function PATCH(
         name: updated.name,
         email: updated.email,
         phone: updated.phone,
-        avatar: updated.avatar,
+        avatar: updated.avatar_url,
       },
-      actor: viewer.id,
-      actorRole: viewer.role,
-      timestamp: new Date(),
+      actor: {
+        id: viewer.id,
+        name: viewer.user ?? viewer.email,
+        role: (viewer.role ?? "company_user") as ProfileAuditEntry["actor"]["role"],
+      },
       reason: update.reason,
       origin: "web",
       ipAddress: req.headers.get("x-forwarded-for") || "unknown",
+      createdAt: new Date().toISOString(),
     };
 
     // TODO: salvar auditEntry em store
@@ -176,7 +204,7 @@ export async function PATCH(
       id: updated.id,
       name: updated.name,
       email: updated.email,
-      avatar: updated.avatar ?? null,
+      avatar: updated.avatar_url ?? null,
       phone: updated.phone ?? null,
       role: updated.role,
       status: updated.status,
@@ -185,7 +213,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validação falhou", details: error.errors },
+        { error: "Validação falhou", details: error.issues },
         { status: 400 },
       );
     }

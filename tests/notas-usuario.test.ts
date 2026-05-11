@@ -24,6 +24,8 @@ import { hashPasswordSha256 } from "../lib/passwordHash";
 
 jest.setTimeout(30000);
 
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
+
 const PASSWORD = hashPasswordSha256("TC@Teste2026");
 const UID = Math.random().toString(36).slice(2, 10);
 
@@ -39,7 +41,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 }, 30000);
 
-describe("Notas de usuário — criar 3, deletar 1, editar 1", () => {
+describePg("Notas de usuário — criar 3, deletar 1, editar 1", () => {
 
   // ── Setup: cria usuário ─────────────────────────────────────────────────────
   beforeAll(async () => {

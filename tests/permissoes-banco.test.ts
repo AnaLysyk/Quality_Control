@@ -28,12 +28,13 @@ jest.mock("../lib/redis", () => ({
 
 import { randomUUID } from "crypto";
 import { prisma } from "../lib/prismaClient";
+import { describeDb } from "./describeDb";
 import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides, effectivePermissions } from "../lib/store/permissionsStore";
 import { hasPermissionAccess } from "../lib/permissionMatrix";
 import { createLocalUser } from "../lib/core/auth/localStore";
 
 // Forçar uso do Postgres para estes testes
-process.env.AUTH_STORE = "postgres";
+process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 // ── Cleanup ───────────────────────────────────────────────────────────────────
 const createdUserIds: string[] = [];
@@ -66,7 +67,7 @@ async function makeUser(tag: string) {
 
 // ── Testes ────────────────────────────────────────────────────────────────────
 
-describe("Tabela user_permission_overrides — gestão de permissões via DB", () => {
+describeDb("Tabela user_permission_overrides — gestão de permissões via DB", () => {
 
   test("1. Criar override allow → persistido no banco", async () => {
     const user = await makeUser(`allow-${uid()}`);

@@ -162,6 +162,15 @@ function debugCompanyRouteDecision(
 }
 
 export function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+
+  if (pathname === "/solicitacoes") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/requests";
+    url.search = search;
+    return NextResponse.redirect(url);
+  }
+
   const mockRole = request.cookies.get("mock_role")?.value;
   const reqWithUser = request as NextRequest & { user?: { role: string; email: string } };
   const globalScope = globalThis as { user?: { role: string; email: string } };

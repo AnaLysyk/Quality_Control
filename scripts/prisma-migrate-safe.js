@@ -42,5 +42,20 @@ function runPrisma(cmd, desc) {
 const prismaConfigArg = fs.existsSync(prismaConfigPath) ? ` --config "${prismaConfigPath}"` : '';
 runPrisma(`npx prisma generate${prismaConfigArg}`, 'Gerando Prisma Client');
 
-// Aplica migrations (deploy)
-runPrisma(`npx prisma migrate deploy${prismaConfigArg}`, 'Aplicando migrations');
+function shouldSkipMigrateDeploy() {
+  const flag = String(prismaEnv.SKIP_PRISMA_MIGRATE || '').trim().toLowerCase();
+  if (flag === '1' || flag === 'true' || flag === 'yes') return true;
+  const e2e = String(prismaEnv.E2E_USE_JSON || '').trim().toLowerCase();
+  if (e2e === '1' || e2e === 'true') return true;
+  // If no DB URL is configured, don't attempt a deploy.
+  const dbUrl = prismaEnv.DATABASE_URL || prismaEnv.POSTGRES_PRISMA_URL || prismaEnv.POSTGRES_URL;
+  if (!dbUrl) return true;
+  return false;
+}
+
+// Aplica migrations (deploy) quando hÃ¡ banco configurado
+if (shouldSkipMigrateDeploy()) {
+  console.log('\n[prisma-migrate-safe] SKIP: migrate deploy (sem DATABASE_URL ou modo E2E/flag habilitado).');
+} else {
+  runPrisma(`npx prisma migrate deploy${prismaConfigArg}`, 'Aplicando migrations');
+}

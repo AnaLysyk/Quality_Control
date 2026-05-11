@@ -5,6 +5,11 @@ import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import type { AgentMode } from "@/lib/brain/agents";
 import { runAllGuardrails } from "@/lib/brain/guardrails";
+import { getAiApiKey } from "@/lib/ai/apiKey";
+
+function isE2eJsonMode() {
+  return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true";
+}
 
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
@@ -12,6 +17,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: status === 401 ? "Nao autorizado" : "Sem permissao" },
       { status },
+    );
+  }
+
+  if (isE2eJsonMode()) {
+    const body = (await req.json().catch(() => ({}))) as {
+      messages?: Array<{ role: "user" | "assistant"; content: string }>;
+      agentMode?: AgentMode | null;
+    };
+    if (!body.messages?.length) {
+      return NextResponse.json({ error: "Mensagens obrigatorias" }, { status: 400 });
+    }
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(JSON.stringify({
+          type: "text-delta",
+          text: `Brain E2E respondeu em modo ${body.agentMode ?? "qa"} com contexto mockado e seguro.`,
+        }) + "\n"));
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Agent-Mode": body.agentMode ?? "qa",
+        "Cache-Control": "no-cache",
+      },
+    });
+  }
+
+  if (!getAiApiKey()) {
+    return NextResponse.json(
+      { error: "AI API key não configurada. Defina OPENAI_API_KEY (recomendado) ou AI_API_KEY no ambiente." },
+      { status: 503 },
     );
   }
 

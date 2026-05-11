@@ -133,6 +133,65 @@ type AuthCache = {
   cachedAt: number;
 };
 
+function readCookieValue(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const cookie = document.cookie
+    .split(";")
+    .map((segment) => segment.trim())
+    .find((segment) => segment.startsWith(`${name}=`));
+  if (!cookie) return null;
+  return decodeURIComponent(cookie.split("=").slice(1).join("="));
+}
+
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  try {
+    if (typeof atob === "function") return atob(padded);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    return Buffer.from(padded, "base64").toString("utf8");
+  } catch {
+    return null;
+  }
+}
+
+function readE2eBootstrap(): AuthCache | null {
+  if (typeof window === "undefined") return null;
+  const raw = readCookieValue("e2e_auth");
+  if (!raw) return null;
+  const decoded = decodeBase64Url(raw);
+  if (!decoded) return null;
+  try {
+    const parsed = JSON.parse(decoded) as Record<string, unknown>;
+    const role = typeof parsed.role === "string" ? parsed.role : null;
+    const id = typeof parsed.id === "string" ? parsed.id : null;
+    const email = typeof parsed.email === "string" ? parsed.email : null;
+    if (!role || !id || !email) return null;
+    const companySlug = typeof parsed.companySlug === "string" ? parsed.companySlug : null;
+    const companySlugs = Array.isArray(parsed.companySlugs)
+      ? (parsed.companySlugs as unknown[]).filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+      : [];
+    const clientSlug = companySlug ?? companySlugs[0] ?? null;
+    const user: AuthUser = {
+      id,
+      email,
+      role,
+      permissionRole: typeof parsed.permissionRole === "string" ? parsed.permissionRole : role,
+      companyRole: typeof parsed.companyRole === "string" ? parsed.companyRole : role,
+      clientSlug,
+      clientSlugs: companySlugs.length ? companySlugs : clientSlug ? [clientSlug] : [],
+      isGlobalAdmin: parsed.isGlobalAdmin === true,
+    };
+    const companies: AuthCompany[] = (user.clientSlugs ?? [])
+      .map((slug) => slug.trim())
+      .filter(Boolean)
+      .map((slug) => ({ id: slug, slug, name: slug, role: "USER", active: true, companyRole: user.companyRole ?? null }));
+    return { user, companies, cachedAt: Date.now() };
+  } catch {
+    return null;
+  }
+}
+
 function readAuthCache(): AuthCache | null {
   try {
     const raw = sessionStorage.getItem(AUTH_CACHE_KEY);
@@ -163,7 +222,7 @@ function clearAuthCache() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const cached = typeof window !== "undefined" ? readAuthCache() : null;
+  const cached = typeof window !== "undefined" ? readE2eBootstrap() ?? readAuthCache() : null;
   const [user, setUser] = useState<AuthUser | null>(cached?.user ?? null);
   const [companies, setCompanies] = useState<AuthCompany[]>(cached?.companies ?? []);
   const [loading, setLoading] = useState(cached === null); // skip spinner if cache hit

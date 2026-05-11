@@ -40,6 +40,7 @@ export type AssistantToolName =
   | "search_internal_records"
   | "summarize_entity"
   | "draft_test_case"
+  | "create_test_case"
   | "explain_permission"
   | "create_ticket"
   | "create_comment"
@@ -55,7 +56,7 @@ export type AssistantPromptAction = {
 export type AssistantToolAction = {
   kind: "tool";
   label: string;
-  tool: "create_ticket" | "create_comment";
+  tool: "create_ticket" | "create_comment" | "create_test_case";
   input: Record<string, unknown>;
 };
 

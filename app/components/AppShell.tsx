@@ -487,6 +487,7 @@ export default function AppShell({ children }: AppShellProps) {
   const isCompanyHomeRoute = isCompanyHomePathname(pathname);
   const isHomeRoute = pathname === "/" || pathname === "/home" || /\/home$/.test(pathname);
   const hideShellCover = shouldHideShellCover(pathname);
+  const renderShellCover = hydrated && !hideShellCover;
   const isBrainCanvasRoute = pathname.startsWith("/admin/brain") || pathname.startsWith("/brain");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [coverSlotContent, setCoverSlotContent] = useState<ReactNode | null>(null);
@@ -695,31 +696,35 @@ export default function AppShell({ children }: AppShellProps) {
         <FiMenu size={20} />
       </button>
 
-      <div className="fixed top-3 right-3 z-40 inline-flex w-fit items-center gap-1.5 sm:top-4 sm:right-4 sm:gap-2">
-        <DeferredNotificationsButton />
-        <DeferredTicketsButton />
-        <DeferredNotesButton className="hidden shrink-0 sm:inline-flex" />
-        <ThemeToggleButton />
-        <DeferredProfileButton />
-      </div>
+      {hydrated ? (
+        <div className="fixed top-3 right-3 z-40 inline-flex w-fit items-center gap-1.5 sm:top-4 sm:right-4 sm:gap-2">
+          <DeferredNotificationsButton />
+          <DeferredTicketsButton />
+          <DeferredNotesButton className="hidden shrink-0 sm:inline-flex" />
+          <ThemeToggleButton />
+          <DeferredProfileButton />
+        </div>
+      ) : null}
 
-      <DeferredChatButton />
+      {hydrated ? <DeferredChatButton /> : null}
 
       {/* Flex row: sidebar (desktop) + main content */}
       <div className="flex h-screen overflow-hidden">
-        <Sidebar
-          pathname={pathname}
-          mobileOpen={mobileOpen}
-          mobilePanelId={mobileSidebarId}
-          onClose={() => setMobileOpen(false)}
-        />
+        {hydrated ? (
+          <Sidebar
+            pathname={pathname}
+            mobileOpen={mobileOpen}
+            mobilePanelId={mobileSidebarId}
+            onClose={() => setMobileOpen(false)}
+          />
+        ) : null}
 
         <div className="flex flex-col flex-1 min-w-0 app-main">
           <div className="app-stage flex-1 overflow-y-auto">
           <AppShellCoverSlotProvider setCoverSlot={setCoverSlotContent}>
             <MainWrapper
               pathname={pathname}
-              beforeContent={hideShellCover ? null :
+              beforeContent={!renderShellCover ? null :
                 <section
                   className={`app-page-cover ${shellIdentity.coverClassName}`}
                   aria-label={replaceName(shellCopy.aria.pageCover, shellIdentity.title)}

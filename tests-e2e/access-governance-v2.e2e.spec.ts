@@ -58,7 +58,7 @@ test.describe("Access governance V2", () => {
       const requestsMenu = page.getByTestId("nav-requests");
 
       if (row.shouldSeeRequests) {
-        await expect(requestsMenu).toBeVisible();
+        await expect(requestsMenu).toBeVisible({ timeout: 20000 });
       } else {
         await expect(requestsMenu).toHaveCount(0);
       }

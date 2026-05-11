@@ -5,8 +5,9 @@ import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalo
 
 function hrefMatches(pathname: string, href: string | undefined): boolean {
   if (!href) return false;
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const baseHref = href.split("?")[0]?.split("#")[0] ?? href;
+  if (baseHref === "/") return pathname === "/";
+  return pathname === baseHref || pathname.startsWith(`${baseHref}/`);
 }
 
 function itemIsActive(item: NavItemDef, pathname: string): boolean {

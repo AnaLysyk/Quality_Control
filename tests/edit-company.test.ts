@@ -13,12 +13,15 @@
  *  8. Retornar null para empresa inexistente
  */
 
-import { prisma } from "../lib/prismaClient";
+import { prisma } from "../lib/prismaClient"; 
+import { describeDb } from "./describeDb";
 import {
   pgCreateLocalCompany,
   pgUpdateLocalCompany,
   pgDeleteLocalCompany,
 } from "../lib/core/auth/pgStore";
+
+const describePg = describeDb; 
 
 const UID = Math.random().toString(36).slice(2, 10);
 const slug = (suffix: string) => `edit-empresa-${UID}-${suffix}`;
@@ -43,7 +46,7 @@ async function makeCompany(suffix: string, extra: Record<string, unknown> = {}) 
   return company;
 }
 
-describe("Edição de empresa — cenários", () => {
+describePg("Edição de empresa — cenários", () => {
 
   // ── 1. Editar nome ─────────────────────────────────────────────────────────
   it("edita o nome da empresa e persiste no banco", async () => {

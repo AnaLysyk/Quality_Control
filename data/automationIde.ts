@@ -62,6 +62,14 @@ export type AutomationCompanyTool = {
 
 export const AUTOMATION_IDE_METHODS: AutomationHttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
+export function getDefaultAutomationApiPreset(companyScope?: string | null) {
+  const scope = (companyScope ?? "").trim().toLowerCase();
+  const scoped = AUTOMATION_API_PRESETS.filter((preset) => preset.companyScope !== "all" && preset.companyScope === (scope as any));
+  if (scope === "griaule") return AUTOMATION_API_PRESETS.find((preset) => preset.id === "griaule-token-credentials") ?? scoped[0] ?? AUTOMATION_API_PRESETS[0];
+  if (scope === "testing-company" || scope === "testing_company") return AUTOMATION_API_PRESETS.find((preset) => preset.id === "qc-health") ?? AUTOMATION_API_PRESETS[0];
+  return AUTOMATION_API_PRESETS[0];
+}
+
 const fingerprintOptions = BIOMETRIC_FIXTURE_DEFINITIONS.filter((fixture) => fixture.kind === "fingerprint").map((fixture) => ({
   label: fixture.label,
   value: fixture.slug,
@@ -77,6 +85,30 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     headers: [],
     companyScope: "all",
     tags: ["base"],
+  },
+  {
+    id: "griaule-token-credentials",
+    title: "Emitir token (credenciais)",
+    method: "POST",
+    path: "/api/tokens",
+    body: "{\"username\":\"{{username}}\",\"password\":\"{{password}}\"}",
+    headers: [{ key: "content-type", value: "application/json" }],
+    variables: [
+      { key: "username", value: "" },
+      { key: "password", value: "" },
+    ],
+    companyScope: "griaule",
+    tags: ["sessao", "token", "credentials"],
+  },
+  {
+    id: "griaule-ping",
+    title: "Ping Griaule",
+    method: "GET",
+    path: "/api/health",
+    body: "",
+    headers: [],
+    companyScope: "griaule",
+    tags: ["health", "ping"],
   },
   {
     id: "rfb-cpf",
@@ -99,6 +131,17 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
     variables: [{ key: "processId", value: "123456" }],
     companyScope: "griaule",
     tags: ["processo"],
+  },
+  {
+    id: "griaule-process-filter-valid-cpf",
+    title: "Filtrar processos por CPF (válido)",
+    method: "GET",
+    path: "/api/processos?cpf={{cpf}}",
+    body: "",
+    headers: [],
+    variables: [{ key: "cpf", value: "12345678900" }],
+    companyScope: "griaule",
+    tags: ["processo", "cpf", "filtro"],
   },
   {
     id: "token-web",
@@ -197,17 +240,20 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
   },
   {
     id: "griaule-token",
-    title: "Emitir token web",
+    title: "Emitir token (credenciais)",
     companySlug: "griaule",
     group: "Sessão",
     summary: "Executa o endpoint de sessão sem precisar abrir Postman ou script local.",
     mode: "proxy",
-    method: "GET",
-    pathTemplate: "/api/tokens/web",
-    pathPreset: "/api/tokens/web",
-    bodyTemplate: null,
+    method: "POST",
+    pathTemplate: "/api/tokens",
+    pathPreset: "/api/tokens",
+    bodyTemplate: { username: "{{smartUser}}", password: "{{smartPassword}}" },
     responseFocus: ["status", "headers", "json"],
-    fields: [],
+    fields: [
+      { id: "smartUser", label: "Usuário", type: "text", required: true, placeholder: "E-mail ou login" },
+      { id: "smartPassword", label: "Senha", type: "text", required: true, placeholder: "Senha (não salvar em catálogo)" },
+    ],
   },
   {
     id: "griaule-biometrics",

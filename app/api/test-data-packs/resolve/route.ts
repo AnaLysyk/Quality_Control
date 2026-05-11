@@ -1,7 +1,7 @@
 import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabaseServer";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import { prisma } from "@/lib/prismaClient";
 
 /**
@@ -41,15 +41,9 @@ import { prisma } from "@/lib/prismaClient";
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await getSupabaseServer();
+    const user = await authenticateRequest(request);
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

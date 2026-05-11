@@ -24,10 +24,12 @@
  * 15. updateAccessRequest vincula user_id
  */
 
-process.env.AUTH_STORE = "postgres";
+process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 jest.mock("server-only", () => ({}));
 jest.mock("../lib/redis", () => ({ isRedisConfigured: jest.fn(() => false) }));
+
+const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 import { prisma } from "../lib/prismaClient";
 import {
@@ -63,7 +65,7 @@ afterAll(async () => {
 
 // ── Criação ───────────────────────────────────────────────────────────────────
 
-describe("Criação de solicitações de acesso", () => {
+describePg("Criação de solicitações de acesso", () => {
   test("1. cria solicitação com status padrão open", async () => {
     const req = await createAccessRequest({
       email: testEmail("solicit1"),
@@ -126,7 +128,7 @@ describe("Criação de solicitações de acesso", () => {
 
 // ── Consultas ─────────────────────────────────────────────────────────────────
 
-describe("Consultas de solicitações de acesso", () => {
+describePg("Consultas de solicitações de acesso", () => {
   test("5. listAccessRequests retorna as solicitações criadas", async () => {
     const all = await listAccessRequests();
     const mine = all.filter((r) => r.id && createdIds.includes(r.id));
@@ -164,7 +166,7 @@ describe("Consultas de solicitações de acesso", () => {
 
 // ── Atualização ───────────────────────────────────────────────────────────────
 
-describe("Atualização de solicitações de acesso", () => {
+describePg("Atualização de solicitações de acesso", () => {
   let targetId: string;
 
   beforeAll(async () => {

@@ -23,8 +23,11 @@
  */
 
 import { prisma } from "../lib/prismaClient";
+import { describeDb } from "./describeDb";
 
 jest.setTimeout(120000);
+
+const describePg = describeDb;
 import {
   createSuporte,
   updateSuporte,
@@ -89,7 +92,7 @@ async function makeTicket(userId: string, overrides: Record<string, unknown> = {
   return ticket;
 }
 
-describe("Chamados (suporte) — criação e edição", () => {
+describePg("Chamados (suporte) — criação e edição", () => {
 
   // ── 1. Chamado básico ──────────────────────────────────────────────────────
   it("cria chamado básico com título e descrição", async () => {

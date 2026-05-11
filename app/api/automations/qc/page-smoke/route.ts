@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
 import { normalizeAutomationCompanyScope } from "@/lib/automations/companyScope";
+import { saveAutomationExecutionAudit } from "@/lib/automations/executionAuditStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 
 export const runtime = "nodejs";
@@ -26,6 +27,11 @@ function resolveAccess(user: Awaited<ReturnType<typeof authenticateRequest>>) {
 function resolveTargetUrl(targetPath: string, requestUrl: string) {
   if (!targetPath.startsWith("/")) {
     throw new Error("A tela precisa ser interna e começar com '/'.");
+  }
+
+  // Reject protocol-relative paths (e.g. //evil.com) to avoid external fetches.
+  if (targetPath.startsWith("//")) {
+    throw new Error("A tela precisa ser interna e não pode ser protocol-relative.");
   }
 
   return new URL(targetPath, requestUrl);
@@ -67,15 +73,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Empresa fora do escopo da sessão." }, { status: 403 });
   }
 
+  let targetUrl: URL;
   try {
-    const targetUrl = resolveTargetUrl(payload.targetPath, request.url);
+    targetUrl = resolveTargetUrl(payload.targetPath, request.url);
+  } catch (error) {
+    await saveAutomationExecutionAudit({
+      route: "/api/automations/qc/page-smoke",
+      ok: false,
+      actorUserId: user.id ?? null,
+      companySlug,
+      statusCode: 400,
+      error: error instanceof Error ? error.message : "invalid-target",
+      metadata: { targetPath: payload.targetPath },
+    });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "A tela precisa ser interna." },
+      { status: 400 },
+    );
+  }
+
+  try {
     const startedAt = Date.now();
+    const requestHost = new URL(request.url).host;
+    const requestProto = new URL(request.url).protocol.replace(":", "");
+    const headers = new Headers();
+    headers.set("Accept", "text/html,application/xhtml+xml");
+    headers.set("cookie", request.headers.get("cookie") ?? "");
+    headers.set("host", requestHost);
+    headers.set("x-forwarded-proto", requestProto);
+
     const response = await fetch(targetUrl, {
       method: "GET",
-      headers: {
-        Accept: "text/html,application/xhtml+xml",
-        cookie: request.headers.get("cookie") ?? "",
-      },
+      headers,
       cache: "no-store",
       redirect: "follow",
     });
@@ -90,6 +119,22 @@ export async function POST(request: Request) {
     const finalUrl = response.url || targetUrl.toString();
     const redirectedToLogin = finalUrl.includes("/login");
     const durationMs = Date.now() - startedAt;
+    const fetchUrl = targetUrl.toString().replace(new URL(request.url).origin, "http://127.0.0.1:10000");
+
+    await saveAutomationExecutionAudit({
+      route: "/api/automations/qc/page-smoke",
+      ok: response.ok && containsExpectedText && matchesTitleHint && !redirectedToLogin,
+      actorUserId: user.id ?? null,
+      companySlug,
+      durationMs,
+      statusCode: response.status,
+      metadata: {
+        targetUrl: targetUrl.toString(),
+        fetchUrl,
+        finalUrl,
+        targetPath: payload.targetPath,
+      },
+    });
 
     return NextResponse.json({
       ok: response.ok && containsExpectedText && matchesTitleHint && !redirectedToLogin,
@@ -107,6 +152,14 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    await saveAutomationExecutionAudit({
+      route: "/api/automations/qc/page-smoke",
+      ok: false,
+      actorUserId: user.id ?? null,
+      companySlug,
+      statusCode: 500,
+      error: error instanceof Error ? error.message : "unknown",
+    });
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Falha ao validar a tela.",

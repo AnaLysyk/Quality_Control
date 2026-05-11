@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 
 import {
   createAccessRequest,
@@ -37,6 +37,10 @@ type V2Meta = {
   reviewedBy?: string;
   reviewedAt?: string;
   reviewComment?: string;
+  /** Chave pública opaca para consulta sem login */
+  accessKey?: string;
+  /** Campos sinalizados para ajuste pelo revisor */
+  adjustmentFields?: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -65,6 +69,8 @@ function parseV2Message(message: string): V2Meta | null {
       reviewedBy: parsed.reviewedBy,
       reviewedAt: parsed.reviewedAt,
       reviewComment: parsed.reviewComment,
+      accessKey: parsed.accessKey,
+      adjustmentFields: Array.isArray(parsed.adjustmentFields) ? parsed.adjustmentFields : undefined,
       createdAt: parsed.createdAt ?? new Date().toISOString(),
       updatedAt: parsed.updatedAt ?? new Date().toISOString(),
     };
@@ -107,6 +113,8 @@ function mapPrismaRowToV2(row: {
   let reviewComment: string | undefined;
   let targetUserId: string | undefined;
   let requestedCompanySlug: string | undefined;
+  let accessKey: string | undefined;
+  let adjustmentFields: string[] | undefined;
 
   if (row.adminNotes?.startsWith(V2_PREFIX)) {
     const meta = parseV2Message(row.adminNotes);
@@ -119,11 +127,14 @@ function mapPrismaRowToV2(row: {
       reviewComment = meta.reviewComment;
       targetUserId = meta.targetUserId;
       requestedCompanySlug = meta.requestedCompanySlug;
+      accessKey = meta.accessKey;
+      adjustmentFields = meta.adjustmentFields;
     }
   }
 
   return {
     id: row.id,
+    accessKey,
     requesterUserId: row.userId ?? undefined,
     requesterEmail: row.email,
     requesterName: row.name ?? undefined,
@@ -138,6 +149,7 @@ function mapPrismaRowToV2(row: {
     reviewedBy,
     reviewedAt,
     reviewComment,
+    adjustmentFields,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -171,6 +183,7 @@ export async function listAccessRequestsV2(filters?: {
       if (meta) {
         return {
           id: record.id,
+          accessKey: meta.accessKey,
           requesterUserId: record.user_id ?? undefined,
           requesterEmail: meta.requesterEmail,
           requesterName: meta.requesterName,
@@ -185,6 +198,7 @@ export async function listAccessRequestsV2(filters?: {
           reviewedBy: meta.reviewedBy,
           reviewedAt: meta.reviewedAt,
           reviewComment: meta.reviewComment,
+          adjustmentFields: meta.adjustmentFields,
           createdAt: meta.createdAt,
           updatedAt: meta.updatedAt,
         } as AccessRequestV2;
@@ -212,6 +226,22 @@ export async function listAccessRequestsV2(filters?: {
         (!filters?.status || item.status === filters.status) &&
         (!filters?.requestType || item.requestType === filters.requestType),
     );
+}
+
+export async function getAccessRequestV2ByKey(accessKey: string) {
+  if (!shouldUseJsonStore()) {
+    // Busca em adminNotes via LIKE (contém o accessKey serializado no JSON)
+    const rows = await prisma.accessRequest.findMany({
+      where: { adminNotes: { contains: accessKey } },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+    const mapped = rows.map((row) => mapPrismaRowToV2(row));
+    return mapped.find((item) => item.accessKey === accessKey) ?? null;
+  }
+
+  const all = await listAccessRequestsV2();
+  return all.find((item) => item.accessKey === accessKey) ?? null;
 }
 
 export async function getAccessRequestV2ById(id: string) {
@@ -242,6 +272,7 @@ export async function createAccessRequestV2(input: {
   const now = new Date().toISOString();
   const request: AccessRequestV2 = {
     id: randomUUID(),
+    accessKey: randomBytes(20).toString("hex"),
     requesterUserId: input.requesterUserId,
     requesterEmail: input.requesterEmail,
     requesterName: input.requesterName,
@@ -270,6 +301,7 @@ export async function createAccessRequestV2(input: {
       requestedCompanyId: request.requestedCompanyId,
       targetUserId: request.targetUserId,
       reason: request.reason,
+      accessKey: request.accessKey,
       createdAt: request.createdAt,
       updatedAt: request.updatedAt,
     };
@@ -304,6 +336,7 @@ export async function createAccessRequestV2(input: {
     requestedCompanyId: request.requestedCompanyId,
     targetUserId: request.targetUserId,
     reason: request.reason,
+    accessKey: request.accessKey,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
   };
@@ -323,7 +356,7 @@ export async function createAccessRequestV2(input: {
 
 export async function updateAccessRequestV2(
   id: string,
-  patch: Partial<Pick<AccessRequestV2, "status" | "priority" | "reviewedBy" | "reviewedAt" | "reviewComment" | "reason">>,
+  patch: Partial<Pick<AccessRequestV2, "status" | "priority" | "reviewedBy" | "reviewedAt" | "reviewComment" | "reason" | "adjustmentFields">>,
 ) {
   const current = await getAccessRequestV2ById(id);
   if (!current) return null;
@@ -336,6 +369,7 @@ export async function updateAccessRequestV2(
     ...(patch.reviewedAt !== undefined ? { reviewedAt: patch.reviewedAt } : {}),
     ...(patch.reviewComment !== undefined ? { reviewComment: patch.reviewComment } : {}),
     ...(patch.reason !== undefined ? { reason: patch.reason } : {}),
+    ...(patch.adjustmentFields !== undefined ? { adjustmentFields: patch.adjustmentFields } : {}),
     updatedAt: new Date().toISOString(),
   };
 
@@ -355,6 +389,8 @@ export async function updateAccessRequestV2(
       reviewedBy: next.reviewedBy,
       reviewedAt: next.reviewedAt,
       reviewComment: next.reviewComment,
+      accessKey: next.accessKey,
+      adjustmentFields: next.adjustmentFields,
       createdAt: next.createdAt,
       updatedAt: next.updatedAt,
     };
@@ -386,6 +422,8 @@ export async function updateAccessRequestV2(
     reviewedBy: next.reviewedBy,
     reviewedAt: next.reviewedAt,
     reviewComment: next.reviewComment,
+    accessKey: next.accessKey,
+    adjustmentFields: next.adjustmentFields,
     createdAt: next.createdAt,
     updatedAt: next.updatedAt,
   };

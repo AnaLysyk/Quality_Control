@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { addRequest } from "@/data/requestsStore";
 import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
+import { storePasswordResetToken } from "@/lib/auth/passwordResetToken";
+import { emailService } from "@/lib/email";
 import { notifyPasswordResetRequest } from "@/lib/notificationService";
 import { rateLimit } from "@/lib/rateLimit";
 import { deriveProfileTypeFromAccount, normalizeRequestProfileType, resolveReviewQueue } from "@/lib/requestRouting";
@@ -47,6 +49,12 @@ export async function POST(req: Request) {
     (links.length > 0 ? companyById.get(links[0].companyId) ?? null : null);
 
   try {
+    // Gera token real para reset via e-mail
+    const resetToken = randomBytes(32).toString("hex");
+    await storePasswordResetToken(resetToken, user.id);
+    await emailService.sendPasswordResetEmail(user.email ?? "", resetToken);
+
+    // Mantém registro de auditoria no requestsStore
     const requestRecord = await addRequest(
       {
         id: user.id,
@@ -61,7 +69,6 @@ export async function POST(req: Request) {
         login: email,
         profileType,
         reviewQueue: resolveReviewQueue(profileType),
-        tokenEntropy: randomBytes(16).toString("hex"),
       },
     );
 

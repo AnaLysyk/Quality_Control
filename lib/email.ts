@@ -543,6 +543,191 @@ Equipe Testing Company
       text,
     });
   }
+
+  async sendAccessApprovedEmail(
+    to: string,
+    data: {
+      name?: string | null;
+      login: string;
+      tempPassword: string;
+      profileType?: string | null;
+      companySlug?: string | null;
+    },
+  ): Promise<boolean> {
+    const loginUrl = `${this.resolvePublicBaseUrl()}/login`;
+    const greeting = data.name ? `Olá, ${data.name}!` : 'Olá!';
+    const profileLabel = data.profileType ? ` (${data.profileType})` : '';
+    const companyLine = data.companySlug ? `<p><strong>Empresa:</strong> ${data.companySlug}</p>` : '';
+    const companyText = data.companySlug ? `Empresa: ${data.companySlug}\n` : '';
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Acesso Aprovado - Quality Control</title>
+<style>
+  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f4f6fb}
+  .wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  .hdr{background:#011848;color:#fff;padding:28px 32px;text-align:center}
+  .hdr h1{margin:0;font-size:22px}
+  .body{padding:32px}
+  .badge{display:inline-block;background:#10b981;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;margin-bottom:16px}
+  .cred{background:#f0f4ff;border-left:4px solid #2563eb;padding:16px 20px;border-radius:4px;margin:20px 0}
+  .cred p{margin:6px 0;font-family:monospace}
+  .btn{display:inline-block;padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:16px}
+  .footer{text-align:center;padding:20px;font-size:12px;color:#888}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr"><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Solicitação de acesso aprovada</p></div>
+  <div class="body">
+    <span class="badge">✓ Acesso aprovado</span>
+    <h2 style="margin-top:0">${greeting}</h2>
+    <p>Sua solicitação de acesso foi <strong>aprovada</strong>. Aqui estão suas credenciais de acesso:</p>
+    <div class="cred">
+      <p><strong>Login:</strong> ${data.login}</p>
+      <p><strong>Senha temporária:</strong> ${data.tempPassword}</p>
+      ${companyLine}
+      <p><strong>Perfil:</strong>${profileLabel || ' padrão'}</p>
+    </div>
+    <p>Acesse o sistema clicando no botão abaixo:</p>
+    <a href="${loginUrl}" class="btn">Acessar o sistema</a>
+    <p style="margin-top:24px;font-size:13px;color:#666"><em>Por segurança, recomendamos trocar sua senha após o primeiro acesso em <strong>Meu Perfil → Alterar Senha</strong>. Não compartilhe suas credenciais.</em></p>
+  </div>
+  <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
+</div>
+</body>
+</html>`;
+
+    const text = `${greeting}\n\nSua solicitação de acesso foi aprovada!\n\nCredenciais de acesso:\nLogin: ${data.login}\nSenha temporária: ${data.tempPassword}\n${companyText}Perfil:${profileLabel || ' padrão'}\n\nAcesse em: ${loginUrl}\n\nTroque sua senha após o primeiro acesso.`;
+
+    return this.sendEmail({
+      to,
+      subject: 'Acesso aprovado - Quality Control',
+      html,
+      text,
+    });
+  }
+
+  async sendAccessRejectedEmail(
+    to: string,
+    data: {
+      name?: string | null;
+      comment?: string | null;
+      accessKey?: string | null;
+    },
+  ): Promise<boolean> {
+    const greeting = data.name ? `Olá, ${data.name}!` : 'Olá!';
+    const commentBlock = data.comment
+      ? `<div style="background:#fff4f4;border-left:4px solid #ef4444;padding:14px 18px;border-radius:4px;margin:16px 0"><p style="margin:0;color:#444"><strong>Motivo:</strong> ${data.comment}</p></div>`
+      : '';
+    const commentText = data.comment ? `\nMotivo informado:\n${data.comment}\n` : '';
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Acesso Rejeitado - Quality Control</title>
+<style>
+  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f4f6fb}
+  .wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  .hdr{background:#011848;color:#fff;padding:28px 32px;text-align:center}
+  .hdr h1{margin:0;font-size:22px}
+  .body{padding:32px}
+  .badge{display:inline-block;background:#ef4444;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;margin-bottom:16px}
+  .footer{text-align:center;padding:20px;font-size:12px;color:#888}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr"><h1>Quality Control</h1></div>
+  <div class="body">
+    <span class="badge">✕ Solicitação rejeitada</span>
+    <h2 style="margin-top:0">${greeting}</h2>
+    <p>Infelizmente sua solicitação de acesso foi <strong>rejeitada</strong>.</p>
+    ${commentBlock}
+    <p>Se tiver dúvidas, entre em contato com a equipe de suporte.</p>
+  </div>
+  <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
+</div>
+</body>
+</html>`;
+
+    const text = `${greeting}\n\nSua solicitação de acesso foi rejeitada.${commentText}\n\nPara dúvidas, entre em contato com o suporte.`;
+
+    return this.sendEmail({
+      to,
+      subject: 'Solicitação de acesso rejeitada - Quality Control',
+      html,
+      text,
+    });
+  }
+
+  async sendAccessAdjustmentEmail(
+    to: string,
+    data: {
+      name?: string | null;
+      adjustmentFields?: string[];
+      comment?: string | null;
+      accessKey: string;
+    },
+  ): Promise<boolean> {
+    const baseUrl = this.resolvePublicBaseUrl();
+    const statusUrl = `${baseUrl}/login/access-request/status?key=${data.accessKey}`;
+    const greeting = data.name ? `Olá, ${data.name}!` : 'Olá!';
+
+    const fieldsHtml = data.adjustmentFields && data.adjustmentFields.length > 0
+      ? `<ul style="margin:8px 0 16px;padding-left:20px">${data.adjustmentFields.map((f) => `<li>${f}</li>`).join('')}</ul>`
+      : '';
+    const fieldsText = data.adjustmentFields && data.adjustmentFields.length > 0
+      ? `\nCampos que precisam de ajuste:\n${data.adjustmentFields.map((f) => `- ${f}`).join('\n')}\n`
+      : '';
+
+    const commentBlock = data.comment
+      ? `<div style="background:#fffbea;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:4px;margin:16px 0"><p style="margin:0;color:#444"><strong>Observação do revisor:</strong> ${data.comment}</p></div>`
+      : '';
+    const commentText = data.comment ? `\nObservação do revisor:\n${data.comment}\n` : '';
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Ajuste necessário - Quality Control</title>
+<style>
+  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f4f6fb}
+  .wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  .hdr{background:#011848;color:#fff;padding:28px 32px;text-align:center}
+  .hdr h1{margin:0;font-size:22px}
+  .body{padding:32px}
+  .badge{display:inline-block;background:#f59e0b;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;margin-bottom:16px}
+  .key{font-family:monospace;background:#f0f4ff;padding:8px 14px;border-radius:4px;font-size:14px;display:inline-block;margin:8px 0}
+  .btn{display:inline-block;padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:16px}
+  .footer{text-align:center;padding:20px;font-size:12px;color:#888}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr"><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Ajuste necessário na solicitação</p></div>
+  <div class="body">
+    <span class="badge">⚠ Ajuste necessário</span>
+    <h2 style="margin-top:0">${greeting}</h2>
+    <p>Sua solicitação de acesso precisa de <strong>ajustes</strong> antes de ser aprovada.</p>
+    ${fieldsHtml ? `<p><strong>Campos que precisam de revisão:</strong></p>${fieldsHtml}` : ''}
+    ${commentBlock}
+    <p>Use o link abaixo para acessar e corrigir sua solicitação:</p>
+    <p class="key">Chave de acesso: <strong>${data.accessKey}</strong></p>
+    <a href="${statusUrl}" class="btn">Abrir minha solicitação</a>
+    <p style="margin-top:24px;font-size:12px;color:#888">Ou copie o link: ${statusUrl}</p>
+  </div>
+  <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
+</div>
+</body>
+</html>`;
+
+    const text = `${greeting}\n\nSua solicitação de acesso precisa de ajustes.${fieldsText}${commentText}\nAcesse sua solicitação em:\n${statusUrl}\n\nChave de acesso: ${data.accessKey}`;
+
+    return this.sendEmail({
+      to,
+      subject: 'Ajuste necessário na sua solicitação - Quality Control',
+      html,
+      text,
+    });
+  }
 }
 
 export const emailService = new EmailService();

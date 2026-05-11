@@ -1,9 +1,10 @@
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { addAuditLogSafe, listAuditLogs } from "@/data/auditLogRepository";
 import { createLocalUser, findLocalCompanyBySlug, findLocalUserByEmailOrId, upsertLocalLink, updateLocalUser } from "@/lib/auth/localStore";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { emailService } from "@/lib/email";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import {
@@ -187,13 +188,17 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
   if (!targetIdentifier) return "target-missing" as const;
 
   const existingUser = await findLocalUserByEmailOrId(targetIdentifier);
+  // Gera sempre senha temporária ao aprovar, para enviar por e-mail
+  const tempPassword = randomBytes(10).toString("hex");
+  const tempPasswordHash = hashPasswordSha256(tempPassword);
+
   const targetUser =
     existingUser ??
     (await createLocalUser({
       name: request.requesterName || request.requesterEmail,
       full_name: request.requesterName || request.requesterEmail,
       email: request.requesterEmail,
-      password_hash: hashPasswordSha256(randomUUID()),
+      password_hash: tempPasswordHash,
       role: request.requestedRole,
       status: "invited",
       active: true,
@@ -204,6 +209,7 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     role: request.requestedRole,
     status: "active",
     active: true,
+    password_hash: tempPasswordHash,
   });
 
   if (request.requestedCompanySlug) {
@@ -233,14 +239,14 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     },
   });
 
-  return targetUser.id;
+  return { userId: targetUser.id, tempPassword, login: targetUser.email ?? request.requesterEmail };
 }
 
 export async function transitionAccessRequest(
   id: string,
   action: "start-review" | "approve" | "reject" | "request-info",
   reviewer: AuthUser,
-  options?: { comment?: string | null },
+  options?: { comment?: string | null; adjustmentFields?: string[] },
 ) {
   const request = await getAccessRequestV2ById(id);
   if (!request) return null;
@@ -256,13 +262,20 @@ export async function transitionAccessRequest(
   if (action === "reject") nextStatus = "rejected";
   if (action === "request-info") nextStatus = "needs_more_info";
 
+  // Para approve: valida e captura credenciais em uma única chamada
+  let approvalCredentials: { userId: string; tempPassword: string; login: string } | null = null;
   if (action === "approve") {
-    const approvalResult = await applyApprovalEffects(request, reviewer);
-    if (approvalResult === "self-approval") return approvalResult;
-    if (approvalResult === "scope-denied") return approvalResult;
+    const result = await applyApprovalEffects(request, reviewer);
+    if (result === "self-approval") return result;
+    if (result === "scope-denied") return result;
+    if (result === "target-missing") return null;
+    if (typeof result === "object") {
+      approvalCredentials = result;
+    }
   }
 
   const updated = await updateAccessRequestV2(id, {
+    ...(action === "request-info" && options?.adjustmentFields ? { adjustmentFields: options.adjustmentFields } : {}),
     status: nextStatus,
     reviewedBy: reviewer.id,
     reviewedAt: new Date().toISOString(),
@@ -290,6 +303,39 @@ export async function transitionAccessRequest(
     entityLabel: `${updated.requesterName ?? "Solicitante"} (${updated.requesterEmail})`,
     metadata: { action, nextStatus, comment: comment ?? null },
   });
+
+  // Enviar e-mails conforme ação
+  const recipientEmail = request.requesterEmail;
+  const recipientName = request.requesterName || null;
+
+  if (action === "approve" && approvalCredentials) {
+    emailService
+      .sendAccessApprovedEmail(recipientEmail, {
+        name: recipientName,
+        login: approvalCredentials.login,
+        tempPassword: approvalCredentials.tempPassword,
+        profileType: request.requestedRole,
+        companySlug: request.requestedCompanySlug,
+      })
+      .catch((err: unknown) => console.error("[email] sendAccessApprovedEmail falhou:", err));
+  } else if (action === "reject") {
+    emailService
+      .sendAccessRejectedEmail(recipientEmail, {
+        name: recipientName,
+        comment,
+        accessKey: request.accessKey,
+      })
+      .catch((err: unknown) => console.error("[email] sendAccessRejectedEmail falhou:", err));
+  } else if (action === "request-info" && request.accessKey) {
+    emailService
+      .sendAccessAdjustmentEmail(recipientEmail, {
+        name: recipientName,
+        adjustmentFields: options?.adjustmentFields,
+        comment,
+        accessKey: request.accessKey,
+      })
+      .catch((err: unknown) => console.error("[email] sendAccessAdjustmentEmail falhou:", err));
+  }
 
   return updated;
 }

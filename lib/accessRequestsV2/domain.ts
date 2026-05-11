@@ -31,6 +31,8 @@ export type AccessRequestV2Priority = "low" | "medium" | "high" | "critical";
 
 export type AccessRequestV2 = {
   id: string;
+  /** Chave pública de acesso segúro — enviada por e-mail, usada sem autenticação */
+  accessKey?: string;
   requesterUserId?: string;
   requesterEmail: string;
   requesterName?: string;
@@ -45,6 +47,8 @@ export type AccessRequestV2 = {
   reviewedBy?: string;
   reviewedAt?: string;
   reviewComment?: string;
+  /** Campos que precisam de ajuste (preenchido em needs_more_info) */
+  adjustmentFields?: string[];
   createdAt: string;
   updatedAt: string;
 };

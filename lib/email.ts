@@ -59,7 +59,7 @@ class EmailService {
       process.env.NEXT_PUBLIC_SITE_URL ||
       process.env.NEXTAUTH_URL ||
       process.env.APP_URL ||
-      "http://localhost:3000";
+      "https://quality-control-qwqs.onrender.com";
     return raw.replace(/\/+$/, "");
   }
 
@@ -166,6 +166,379 @@ class EmailService {
     return this.sendEmail({
       to: email,
       subject: 'Redefinir Senha - Quality Control',
+      html,
+      text,
+    });
+  }
+
+  async sendWelcomeEmail(
+    to: string,
+    login: string,
+    tempPassword: string,
+    fullName?: string | null,
+  ): Promise<boolean> {
+    const loginUrl = `${this.resolvePublicBaseUrl()}/login`;
+    const greeting = fullName ? `Olá, ${fullName}!` : 'Olá!';
+
+    // Design System - Testing Company
+    const colors = {
+      primary: '#011848',      // Login Navy
+      primaryDark: '#02307a',  // Login Dark Navy
+      secondary: '#ef0001',    // Login Red
+      success: '#10b981',      // Green
+      warning: '#f59e0b',      // Amber
+      danger: '#ef4444',       // Red
+      neutral50: '#f9fafb',    // Very Light Gray
+      neutral100: '#f4f6fb',   // Login Background Light
+      neutral200: '#d8dfeb',   // Login Border
+      neutral400: '#5f77a2',   // Login Muted
+      neutral600: '#27457d',   // Login Body Text
+      neutral900: '#081f4d',   // Login Heading
+      white: '#ffffff',
+    };
+
+    const typography = {
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      fontSize: {
+        xs: '12px',
+        sm: '13px',
+        base: '14px',
+        lg: '15px',
+        xl: '18px',
+        '2xl': '24px',
+      },
+      fontWeight: {
+        normal: 400,
+        medium: 500,
+        semibold: 600,
+        bold: 700,
+      },
+    };
+
+    const spacing = {
+      xs: '4px',
+      sm: '8px',
+      md: '12px',
+      lg: '16px',
+      xl: '20px',
+      '2xl': '24px',
+      '3xl': '32px',
+    };
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Bem-vindo ao Testing Company - Quality Control</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: ${typography.fontFamily};
+              line-height: 1.6;
+              color: ${colors.neutral600};
+              background: ${colors.neutral100};
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: ${spacing.lg};
+            }
+            .email-body {
+              background: ${colors.white};
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+              background: linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%);
+              color: ${colors.white};
+              padding: ${spacing['3xl']} ${spacing['2xl']};
+              text-align: center;
+              border-bottom: 4px solid ${colors.secondary};
+            }
+            .header-logo {
+              font-size: ${typography.fontSize['2xl']};
+              font-weight: ${typography.fontWeight.bold};
+              margin-bottom: ${spacing.md};
+              letter-spacing: -0.5px;
+            }
+            .header-subtitle {
+              font-size: ${typography.fontSize.sm};
+              opacity: 0.95;
+              font-weight: ${typography.fontWeight.medium};
+              letter-spacing: 0.5px;
+            }
+            .content {
+              padding: ${spacing['3xl']} ${spacing['2xl']};
+            }
+            .greeting {
+              font-size: ${typography.fontSize.xl};
+              font-weight: ${typography.fontWeight.semibold};
+              margin-bottom: ${spacing.lg};
+              color: ${colors.neutral900};
+            }
+            .intro-text {
+              color: ${colors.neutral600};
+              margin-bottom: ${spacing.xl};
+              font-size: ${typography.fontSize.base};
+              line-height: 1.8;
+            }
+            .section-title {
+              font-size: ${typography.fontSize.sm};
+              font-weight: ${typography.fontWeight.bold};
+              color: ${colors.neutral400};
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: ${spacing.lg};
+              margin-top: ${spacing['2xl']};
+            }
+            .cred-box {
+              background: linear-gradient(135deg, ${colors.neutral50} 0%, ${colors.white} 100%);
+              border: 2px solid ${colors.neutral200};
+              border-radius: 8px;
+              padding: ${spacing.xl};
+              margin: ${spacing.xl} 0;
+              font-family: 'Monaco', 'Courier New', monospace;
+            }
+            .cred-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: ${spacing.md} 0;
+              border-bottom: 1px solid ${colors.neutral200};
+            }
+            .cred-row:last-child {
+              border-bottom: none;
+            }
+            .cred-label {
+              color: ${colors.neutral400};
+              font-size: ${typography.fontSize.sm};
+              font-weight: ${typography.fontWeight.medium};
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .cred-value {
+              color: ${colors.primary};
+              font-weight: ${typography.fontWeight.bold};
+              font-size: ${typography.fontSize.base};
+              letter-spacing: 0.3px;
+            }
+            .button {
+              display: inline-block;
+              padding: ${spacing.md} ${spacing.xl};
+              background: ${colors.secondary};
+              color: ${colors.white};
+              text-decoration: none;
+              border-radius: 8px;
+              font-size: ${typography.fontSize.lg};
+              font-weight: ${typography.fontWeight.semibold};
+              margin: ${spacing.xl} 0;
+              border: none;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              text-align: center;
+              box-shadow: 0 2px 8px rgba(239, 0, 1, 0.28);
+            }
+            .button:hover {
+              background: #c70000;
+              color: ${colors.white};
+            }
+            .button-center {
+              text-align: center;
+            }
+            .link-direct {
+              text-align: center;
+              color: ${colors.neutral400};
+              font-size: ${typography.fontSize.sm};
+              margin-top: ${spacing.lg};
+            }
+            .link-direct code {
+              background: ${colors.neutral50};
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-family: 'Monaco', 'Courier New', monospace;
+              color: ${colors.primary};
+              font-weight: ${typography.fontWeight.semibold};
+            }
+            .steps {
+              margin: ${spacing.xl} 0;
+            }
+            .steps-title {
+              font-weight: ${typography.fontWeight.semibold};
+              margin-bottom: ${spacing.lg};
+              color: ${colors.neutral900};
+              font-size: ${typography.fontSize.base};
+            }
+            .step {
+              display: flex;
+              gap: ${spacing.lg};
+              margin: ${spacing.md} 0;
+              padding: ${spacing.md} 0;
+              align-items: flex-start;
+            }
+            .step-number {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 28px;
+              height: 28px;
+              min-width: 28px;
+              background: ${colors.primary};
+              color: ${colors.white};
+              border-radius: 50%;
+              font-size: ${typography.fontSize.sm};
+              font-weight: ${typography.fontWeight.bold};
+            }
+            .step-text {
+              color: ${colors.neutral600};
+              font-size: ${typography.fontSize.sm};
+              padding-top: 2px;
+            }
+            .divider {
+              height: 1px;
+              background: ${colors.neutral200};
+              margin: ${spacing.xl} 0;
+            }
+            .warning-box {
+              background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+              border-left: 4px solid ${colors.warning};
+              padding: ${spacing.lg};
+              margin: ${spacing.xl} 0;
+              border-radius: 4px;
+              font-size: ${typography.fontSize.sm};
+            }
+            .warning-box strong {
+              color: #b45309;
+              display: block;
+              margin-bottom: ${spacing.sm};
+            }
+            .footer {
+              background: ${colors.neutral50};
+              padding: ${spacing.xl} ${spacing['2xl']};
+              text-align: center;
+              border-top: 1px solid ${colors.neutral200};
+              font-size: ${typography.fontSize.xs};
+              color: ${colors.neutral400};
+            }
+            .footer p {
+              margin: ${spacing.sm} 0;
+            }
+            .badge {
+              display: inline-block;
+              background: ${colors.secondary};
+              color: ${colors.white};
+              padding: 2px 8px;
+              border-radius: 4px;
+              font-size: ${typography.fontSize.xs};
+              font-weight: ${typography.fontWeight.semibold};
+              margin-right: ${spacing.sm};
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="email-body">
+              <!-- HEADER -->
+              <div class="header">
+                <div class="header-logo">🏢 Testing Company</div>
+                <div class="header-subtitle">Quality Control • Bem-vindo à plataforma</div>
+              </div>
+
+              <!-- CONTENT -->
+              <div class="content">
+                <p class="greeting">${greeting}</p>
+                <p class="intro-text">
+                  Sua conta foi criada com sucesso! Você agora tem acesso à plataforma 
+                  <strong>Quality Control da Testing Company</strong>.
+                </p>
+
+                <!-- CREDENTIALS SECTION -->
+                <div class="section-title">🔐 Suas Credenciais de Acesso</div>
+                <div class="cred-box">
+                  <div class="cred-row">
+                    <span class="cred-label">Login</span>
+                    <span class="cred-value">${login}</span>
+                  </div>
+                  <div class="cred-row">
+                    <span class="cred-label">Senha</span>
+                    <span class="cred-value">${tempPassword}</span>
+                  </div>
+                </div>
+
+                <!-- CTA BUTTON -->
+                <div class="button-center">
+                  <a href="${loginUrl}" class="button" style="color:#ffffff !important;background:${colors.secondary};display:inline-block;padding:${spacing.md} ${spacing.xl};border-radius:8px;text-decoration:none;font-weight:${typography.fontWeight.semibold};">🚀 Acessar a Plataforma</a>
+                </div>
+                <div class="link-direct">
+                  Link: <code>${loginUrl}</code>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- NEXT STEPS -->
+                <div class="steps">
+                  <p class="steps-title">📋 Seus Próximos Passos:</p>
+                  <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">Acesse a plataforma com suas credenciais</div>
+                  </div>
+                  <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">Navegue até <strong>Meu Perfil</strong></div>
+                  </div>
+                  <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">Clique em <strong>Alterar Senha</strong> e defina uma nova senha segura</div>
+                  </div>
+                  <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-text">Comece a usar a plataforma!</div>
+                  </div>
+                </div>
+
+                <!-- WARNING -->
+                <div class="warning-box">
+                  <strong>⚠️ Importante:</strong>
+                  Esta senha é <strong>temporária</strong>. Troque-a imediatamente após seu primeiro acesso. 
+                  Não compartilhe estas credenciais com outras pessoas.
+                </div>
+              </div>
+
+              <!-- FOOTER -->
+              <div class="footer">
+                <p><strong>Testing Company</strong> • Quality Control Platform</p>
+                <p>Este é um email automático. Por favor, não responda.</p>
+                <p>&copy; 2026 Testing Company. Todos os direitos reservados.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const text = `
+Quality Control - Seus dados de acesso
+
+${greeting}
+
+Sua conta foi criada. Use as credenciais abaixo para acessar a plataforma:
+
+Login: ${login}
+Senha: ${tempPassword}
+
+Acesse em: ${loginUrl}
+
+IMPORTANTE: Troque sua senha após o primeiro acesso em Meu Perfil > Alterar Senha.
+Não compartilhe estas credenciais.
+
+Atenciosamente,
+Equipe Testing Company
+    `.trim();
+
+    return this.sendEmail({
+      to,
+      subject: 'Seus dados de acesso - Quality Control',
       html,
       text,
     });

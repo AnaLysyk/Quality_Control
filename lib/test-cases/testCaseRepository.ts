@@ -232,6 +232,7 @@ export async function listTestCaseRecords(filters: TestCaseFilters = {}): Promis
     const testCase = record.testCase;
     if (query && !searchableText(record).includes(query)) return false;
     if (!matchesFilterValue(testCase.companyId, filters.companyId)) return false;
+    if (filters.projectId && (testCase as unknown as { projectId?: string | null }).projectId !== filters.projectId) return false;
     if (!matchesFilterValue(testCase.applicationId, filters.applicationId)) return false;
     if (!matchesFilterValue(testCase.moduleId, filters.moduleId)) return false;
     if (!matchesProjectCode(testCase, filters.projectCode)) return false;

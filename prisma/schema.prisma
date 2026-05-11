@@ -328,8 +328,33 @@ model Company {
   tickets      Ticket[]
   releases     Release[]
   applications Application[]
+  projects     Project[]
 
   @@map("companies")
+}
+
+// ─── Project ─────────────────────────────────────────────────────────────────
+
+model Project {
+  id          String   @id @default(cuid())
+  companyId   String
+  slug        String
+  name        String
+  description String?
+  status      String   @default("active")
+  color       String?
+  iconKey     String?
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  testPlans TestPlan[]
+  testRuns  TestRun[]
+
+  @@unique([companyId, slug])
+  @@index([companyId])
+  @@map("projects")
 }
 
 enum IntegrationType {
@@ -567,11 +592,99 @@ model ReleaseManual {
 // ─── Test Run ─────────────────────────────────────────────────────────────────
 
 model TestRun {
+  id           String    @id @default(cuid())
+  companyId    String?
+  projectId    String?
+  planId       String?
+  title        String    @default("Execução manual")
+  source       String    @default("manual") // manual | playwright | integration
+  browser      String?
+  baseUrl      String?
+  headless     Boolean   @default(true)
+  timeoutMs    Int?
+  workers      Int?
+  retries      Int?
+  screenshotOn String?
+  videoOn      String?
+  traceOn      String?
+  status       String    @default("pending") // pending | running | passed | failed | error
+  passCount    Int       @default(0)
+  failCount    Int       @default(0)
+  skipCount    Int       @default(0)
+  totalCount   Int       @default(0)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdById  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  project  Project?          @relation(fields: [projectId], references: [id])
+  plan     TestPlan?         @relation(fields: [planId], references: [id])
+  results  TestRunResult[]
+
+  @@index([companyId])
+  @@index([projectId])
+  @@index([planId])
+  @@index([status])
+  @@map("test_runs")
+}
+
+model TestRunResult {
+  id         String   @id @default(cuid())
+  runId      String
+  caseId     String?
+  title      String
+  status     String   // passed | failed | skipped | flaky
+  durationMs Int?
+  errorMsg   String?
+  filePath   String?
+  retries    Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  run TestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([caseId])
+  @@map("test_run_results")
+}
+
+// ─── Test Plan ────────────────────────────────────────────────────────────────
+
+model TestPlan {
+  id          String   @id @default(cuid())
+  companyId   String
+  projectId   String?
+  title       String
+  description String?
+  status      String   @default("draft") // draft | active | archived
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project?       @relation(fields: [projectId], references: [id])
+  items   TestPlanItem[]
+  runs    TestRun[]
+
+  @@index([companyId])
+  @@index([projectId])
+  @@map("test_plans")
+}
+
+model TestPlanItem {
   id        String   @id @default(cuid())
-  status    String
+  planId    String
+  caseId    String?
+  title     String
+  status    String   @default("not_run") // not_run | passed | failed | blocked | skipped
+  order     Int      @default(0)
+  notes     String?
   createdAt DateTime @default(now())
 
-  @@map("test_runs")
+  plan TestPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@index([caseId])
+  @@map("test_plan_items")
 }
 
 // ─── Support / Access Requests ───────────────────────────────────────────────
@@ -1043,11 +1156,13 @@ model Favorite {
 model StoredTestCase {
   id        String   @id  // equals testCase.id
   companyId String?
+  projectId String?
   data      Json     // full TestCaseRecord serialized
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([companyId])
+  @@index([projectId])
   @@map("stored_test_cases")
 }
 

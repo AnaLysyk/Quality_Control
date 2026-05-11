@@ -270,6 +270,7 @@ export type AutomationAgentRun = {
 export type TestCaseFilters = {
   query?: string | null;
   companyId?: string | null;
+  projectId?: string | null;
   applicationId?: string | null;
   moduleId?: string | null;
   projectCode?: string | null;

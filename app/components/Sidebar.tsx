@@ -14,6 +14,7 @@ import SidebarSection from "./navigation/SidebarSection";
 import SidebarFlyout from "./navigation/SidebarFlyout";
 import SidebarFavorites from "./navigation/SidebarFavorites";
 import SidebarFooter from "./navigation/SidebarFooter";
+import ProjectSelector from "./ProjectSelector";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 
@@ -89,6 +90,14 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         logoHref={logoHref}
         onClose={onClose}
       />
+
+      {/* Project selector — visible when a company is active */}
+      {activeClientSlug && (
+        <div className="pt-2">
+          <ProjectSelector collapsed={collapsed} />
+          <div className="mx-3 border-t border-white/10" />
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Favorites */}

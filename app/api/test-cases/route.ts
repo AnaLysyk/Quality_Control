@@ -44,6 +44,7 @@ function filtersFromUrl(url: URL): TestCaseFilters {
   return {
     query: url.searchParams.get("query"),
     companyId: url.searchParams.get("companySlug") ?? url.searchParams.get("companyId"),
+    projectId: url.searchParams.get("projectId"),
     applicationId: url.searchParams.get("applicationId"),
     moduleId: url.searchParams.get("moduleId"),
     projectCode: url.searchParams.get("projectCode") ?? url.searchParams.get("project"),

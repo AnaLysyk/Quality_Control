@@ -7,6 +7,7 @@ import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
 import { ClientProvider } from "@/context/ClientContext";
+import { ProjectProvider } from "@/lib/core/project/ProjectContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import {
   THEME_PREFERENCE_COOKIE,
@@ -126,10 +127,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <LanguageProvider>
             <AppSettingsProvider>
               <ClientProvider>
-                <AppShell>
-                  {children}
-                  <ToasterProvider />
-                </AppShell>
+                <ProjectProvider>
+                  <AppShell>
+                    {children}
+                    <ToasterProvider />
+                  </AppShell>
+                </ProjectProvider>
               </ClientProvider>
             </AppSettingsProvider>
           </LanguageProvider>

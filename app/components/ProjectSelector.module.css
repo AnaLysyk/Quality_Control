@@ -1,0 +1,21 @@
+.dot {
+  height: 0.5rem;
+  width: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: var(--tc-accent, #ef0001);
+}
+
+.dotMuted {
+  height: 0.5rem;
+  width: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: rgba(239, 0, 1, 0.4);
+}
+
+@supports (background-color: color-mix(in srgb, red 50%, transparent)) {
+  .dotMuted {
+    background-color: color-mix(in srgb, var(--tc-accent, #ef0001) 50%, transparent);
+  }
+}

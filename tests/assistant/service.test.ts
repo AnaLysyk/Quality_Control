@@ -57,6 +57,10 @@ jest.mock("@/lib/notificationService", () => ({
   notifyTicketCommentAdded: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock("@/lib/brain/aiContext", () => ({
+  buildBrainContextForAI: jest.fn().mockResolvedValue(null),
+}));
+
 import { runAssistantRequest } from "@/lib/assistant/service";
 import { appendAssistantAuditEntry } from "@/lib/assistantAuditLog";
 import type { AuthUser } from "@/lib/jwtAuth";

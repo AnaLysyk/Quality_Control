@@ -65,12 +65,12 @@ class EmailService {
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      // Evita chamadas de rede em ambientes de dev/teste.
-      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-        console.log('[DEV MODE] Email would be sent:');
+      // Evita chamadas de rede em ambientes de dev/teste (a menos que FORCE_EMAIL_SEND=true).
+      const forceEmail = String(process.env.FORCE_EMAIL_SEND || '').toLowerCase() === 'true';
+      if (!forceEmail && (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test')) {
+        console.log('[DEV MODE] Email simulado (defina FORCE_EMAIL_SEND=true para enviar de verdade):');
         console.log(`To: ${options.to}`);
         console.log(`Subject: ${options.subject}`);
-        console.log(`HTML: ${options.html.substring(0, 200)}...`);
         return true;
       }
 

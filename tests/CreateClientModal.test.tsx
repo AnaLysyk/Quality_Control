@@ -36,10 +36,10 @@ describe("CreateClientModal", () => {
   it("preenche o nome da empresa a partir do CNPJ usando a BrasilAPI", async () => {
     const fetchSpy = jest.fn().mockImplementation((input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.includes("/api/brasilapi/cnpj/19131243000197")) {
+      if (url.includes("/api/brasilapi/cnpj/77042130000111")) {
         return Promise.resolve(
           createJsonResponse({
-            cnpj: "19131243000197",
+            cnpj: "77042130000111",
             nome_fantasia: "Testing Company",
             razao_social: "Testing Company LTDA",
           }),
@@ -53,10 +53,10 @@ describe("CreateClientModal", () => {
     render(<CreateClientModal open={true} onClose={jest.fn()} onCreate={jest.fn()} />);
 
     const taxIdInput = screen.getByLabelText("CNPJ") as HTMLInputElement;
-    const nameInput = screen.getByLabelText("Nome / razão social") as HTMLInputElement;
+    const nameInput = screen.getByLabelText("Nome da empresa") as HTMLInputElement;
 
-    fireEvent.change(taxIdInput, { target: { value: "19.131.243/0001-97" } });
-    expect(taxIdInput).toHaveValue("19131243000197");
+    fireEvent.change(taxIdInput, { target: { value: "77.042.130/0001-11" } });
+    expect(taxIdInput).toHaveValue("77042130000111");
     fireEvent.blur(taxIdInput);
 
     await waitFor(() => {
@@ -64,7 +64,7 @@ describe("CreateClientModal", () => {
     });
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      "/api/brasilapi/cnpj/19131243000197",
+      "/api/brasilapi/cnpj/77042130000111",
       expect.objectContaining({ cache: "no-store" }),
     );
   });
@@ -73,7 +73,7 @@ describe("CreateClientModal", () => {
     const lookup = createDeferred<Response>();
     const fetchSpy = jest.fn().mockImplementation((input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.includes("/api/brasilapi/cnpj/19131243000197")) {
+      if (url.includes("/api/brasilapi/cnpj/77042130000111")) {
         return lookup.promise;
       }
 
@@ -84,9 +84,9 @@ describe("CreateClientModal", () => {
     render(<CreateClientModal open={true} onClose={jest.fn()} onCreate={jest.fn()} />);
 
     const taxIdInput = screen.getByLabelText("CNPJ") as HTMLInputElement;
-    const nameInput = screen.getByLabelText("Nome / razão social") as HTMLInputElement;
+    const nameInput = screen.getByLabelText("Nome da empresa") as HTMLInputElement;
 
-    fireEvent.change(taxIdInput, { target: { value: "19131243000197" } });
+    fireEvent.change(taxIdInput, { target: { value: "77042130000111" } });
     fireEvent.blur(taxIdInput);
 
     fireEvent.change(nameInput, { target: { value: "Nome manual" } });
@@ -95,7 +95,7 @@ describe("CreateClientModal", () => {
     await act(async () => {
       lookup.resolve(
         createJsonResponse({
-          cnpj: "19131243000197",
+          cnpj: "77042130000111",
           nome_fantasia: "Testing Company",
           razao_social: "Testing Company LTDA",
         }),

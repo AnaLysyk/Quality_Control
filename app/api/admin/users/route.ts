@@ -27,6 +27,7 @@ import {
 } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { readSyncedUserProfileFields, sanitizeUserProfileText } from "@/lib/userProfileData";
+import { emailService } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -159,6 +160,9 @@ export async function POST(req: NextRequest) {
     console.error(`[ADMIN-USERS][POST] missing-fields admin=${admin?.email ?? "-"} name='${name}' email='${email}'`);
     return NextResponse.json({ error: "Nome e e-mail sao obrigatorios" }, { status: 400 });
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: "E-mail inválido" }, { status: 400 });
+  }
   if (wantsGlobalAdmin && !canManageProfiles) {
     return NextResponse.json({ error: "Somente Lider TC pode criar perfis privilegiados" }, { status: 403 });
   }
@@ -192,8 +196,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
   }
 
-  const tempPassword = hashPasswordSha256(`${Date.now()}-${randomUUID()}`);
-  const passwordHash = password && password.trim() ? hashPasswordSha256(password.trim()) : tempPassword;
+  // Generate a readable temporary password for new users
+  const rawTemp = randomUUID().replace(/-/g, '');
+  const plainTempPassword = rawTemp.charAt(0).toUpperCase() + rawTemp.slice(1, 9) + '!';
+  const plainPasswordToSend = password && password.trim() ? password.trim() : plainTempPassword;
+  const passwordHash = hashPasswordSha256(plainPasswordToSend);
   let user = null;
   try {
     user = await createLocalUser({
@@ -253,6 +260,13 @@ export async function POST(req: NextRequest) {
     email: user.email ?? undefined,
     role: user.role ?? undefined,
   }).catch(() => {});
+
+  // Send welcome email with credentials
+  if (user.email) {
+    emailService
+      .sendWelcomeEmail(user.email, login, plainPasswordToSend, fullName ?? name)
+      .catch((err) => console.error('[ADMIN-USERS][POST] welcome-email-error', err));
+  }
 
   const item = user ? await getAdminUserItem(user.id) : null;
   return NextResponse.json({ ok: true, id: user?.id ?? null, user, item }, { status: 201 });

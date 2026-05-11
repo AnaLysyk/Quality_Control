@@ -123,6 +123,36 @@ const ROLE_LABELS: Record<string, string> = {
 
 const STORAGE_PREFIX = "tc:contextual-dashboard-views";
 
+const BAR_FILL_WIDTH_CLASSES = [
+  "w-[8%]",
+  "w-[16%]",
+  "w-[24%]",
+  "w-[32%]",
+  "w-[40%]",
+  "w-[48%]",
+  "w-[56%]",
+  "w-[64%]",
+  "w-[72%]",
+  "w-[80%]",
+  "w-[88%]",
+  "w-full",
+] as const;
+
+const BAR_FILL_HEIGHT_CLASSES = [
+  "h-[8%]",
+  "h-[16%]",
+  "h-[24%]",
+  "h-[32%]",
+  "h-[40%]",
+  "h-[48%]",
+  "h-[56%]",
+  "h-[64%]",
+  "h-[72%]",
+  "h-[80%]",
+  "h-[88%]",
+  "h-full",
+] as const;
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
@@ -215,6 +245,17 @@ function toneClass(tone: "critical" | "warning" | "positive" | "neutral") {
   if (tone === "warning") return "border-[rgba(245,158,11,0.24)] bg-[rgba(245,158,11,0.09)] text-[#a15c07]";
   if (tone === "positive") return "border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.08)] text-[#047857]";
   return "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text,#0b1a3c)";
+}
+
+function fillLevelClass(
+  value: number,
+  max: number,
+  classes: readonly string[],
+) {
+  if (!Number.isFinite(value) || value <= 0) return classes[0];
+  const ratio = Math.max(0.08, Math.min(1, value / Math.max(1, max)));
+  const index = Math.min(classes.length - 1, Math.max(0, Math.ceil(ratio * classes.length) - 1));
+  return classes[index];
 }
 
 function statusTone(status: DashboardSignalStatus) {
@@ -423,8 +464,7 @@ function BucketBars({
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-(--tc-surface-2,#f8fafc)">
               <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,#011848_0%,#ef0001_100%)] transition-all duration-500 group-hover:brightness-110"
-                style={{ width: `${Math.max(8, Math.round((bucket.count / max) * 100))}%` }}
+                className={`h-full rounded-full bg-[linear-gradient(90deg,#011848_0%,#ef0001_100%)] transition-all duration-500 group-hover:brightness-110 ${fillLevelClass(bucket.count, max, BAR_FILL_WIDTH_CLASSES)}`}
               />
             </div>
           </div>
@@ -444,8 +484,7 @@ function TimelineBars({ buckets }: { buckets: DashboardBucket[] }) {
         <div key={bucket.key} className="flex min-w-10 flex-1 flex-col items-center gap-2">
           <div className="flex h-32 w-full items-end">
             <div
-              className="w-full rounded-t-xl bg-[linear-gradient(180deg,#ef0001_0%,#011848_100%)] shadow-[0_8px_20px_rgba(1,24,72,0.16)] transition-all duration-500"
-              style={{ height: `${Math.max(8, Math.round((bucket.count / max) * 100))}%` }}
+              className={`w-full rounded-t-xl bg-[linear-gradient(180deg,#ef0001_0%,#011848_100%)] shadow-[0_8px_20px_rgba(1,24,72,0.16)] transition-all duration-500 ${fillLevelClass(bucket.count, max, BAR_FILL_HEIGHT_CLASSES)}`}
               title={`${bucket.label}: ${bucket.count}`}
             />
           </div>
@@ -471,7 +510,7 @@ function Heatmap({
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[44rem]">
+      <div className="min-w-176">
         <div className="grid grid-cols-[12rem_repeat(4,minmax(7rem,1fr))] gap-2 text-xs font-black uppercase tracking-[0.14em] text-(--tc-text-muted,#6b7280)">
           <span>Empresa</span>
           {modules.map((moduleName) => <span key={moduleName}>{moduleLabel(moduleName)}</span>)}
@@ -998,7 +1037,7 @@ export default function ContextualDashboardClient() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.07),transparent_28%),linear-gradient(180deg,#f7f8fb_0%,#ffffff_46%,#f5f7fb_100%)] px-4 py-6 text-(--tc-text,#0b1a3c) sm:px-6 lg:px-10">
-      <div className="mx-auto flex max-w-[96rem] flex-col gap-5">
+      <div className="mx-auto flex max-w-384 flex-col gap-5">
         <header className="rounded-2xl border border-(--tc-border,#d7deea) bg-white/90 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.06)] backdrop-blur lg:p-6">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="max-w-4xl">

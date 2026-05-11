@@ -28,6 +28,14 @@ jest.mock("@/lib/assistant/service", () => ({
   runAssistantRequest: jest.fn(),
 }));
 
+jest.mock("@/lib/prismaClient", () => ({
+  prisma: {
+    brainMemory: {
+      create: jest.fn().mockResolvedValue({ id: "m1" }),
+    },
+  },
+}));
+
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";

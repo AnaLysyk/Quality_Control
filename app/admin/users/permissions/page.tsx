@@ -514,6 +514,19 @@ export default function PermissionsPage() {
   const modulesPanelRef = useRef<HTMLDivElement | null>(null);
 
   const canManageProfiles = useMemo(() => canManageInstitutionalProfiles(authUser), [authUser]);
+  const canCreateGlobal = useMemo(() => {
+    const fullName = createGlobalDraft.fullName.trim();
+    const user = createGlobalDraft.user.trim();
+    const email = createGlobalDraft.email.trim();
+    const password = createGlobalDraft.password.trim();
+
+    return (
+      !!fullName &&
+      !!user &&
+      isValidEmailAddress(email) &&
+      password.length >= 8
+    );
+  }, [createGlobalDraft]);
 
   async function loadUsers() {
     setUsersLoading(true);
@@ -1645,7 +1658,7 @@ export default function PermissionsPage() {
             <button
               type="button"
               onClick={() => void handleCreateGlobal()}
-              disabled={createGlobalLoading}
+              disabled={createGlobalLoading || !canCreateGlobal}
               className="inline-flex items-center justify-center rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
               {createGlobalLoading ? (isPt ? "Criando..." : "Creating...") : (isPt ? "Criar Suporte Técnico" : "Create Technical Support")}
@@ -1673,13 +1686,14 @@ export default function PermissionsPage() {
             />
           </label>
           <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "E-mail" : "Email"}</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)">{isPt ? "E-mail *" : "Email *"}</span>
             <input
               type="email"
               value={createGlobalDraft.email}
               onChange={(event) => setCreateGlobalDraft((current) => ({ ...current, email: event.target.value }))}
               className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5 text-sm text-(--tc-text-primary) outline-none focus:border-(--tc-accent)"
               placeholder="global@testingcompany.test"
+              required
             />
           </label>
           <label className="space-y-2">

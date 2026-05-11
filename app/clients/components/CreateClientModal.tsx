@@ -3,8 +3,8 @@
 import type { FormEvent } from "react";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
-import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap } from "react-icons/fi";
-import { extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj } from "@/lib/brasilApiCnpj";
+import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap, FiEdit2 } from "react-icons/fi";
+import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, isCnpjValid } from "@/lib/brasilApiCnpj";
 
 export type ClientIntegrationMode = "qase" | "manual";
 
@@ -13,11 +13,14 @@ export type ClientFormValues = {
   taxId?: string;
   zip?: string;
   address?: string;
+  addressNumber?: string;
+  addressDetail?: string;
   phone?: string;
   website?: string;
   logoUrl?: string;
-  docsLink?: string;
   linkedin?: string;
+  notificationsFanoutEnabled?: boolean;
+  companyUsername?: string;
   notes?: string;
   description?: string;
   active: boolean;
@@ -26,9 +29,6 @@ export type ClientFormValues = {
   qaseProjectCode?: string;
   qaseProjectCodes?: string[];
   qase_projects?: { code: string; title?: string; imageUrl?: string | null; status?: "unknown" | "valid" | "invalid" }[];
-  jiraBaseUrl?: string;
-  jiraEmail?: string;
-  jiraApiToken?: string;
   integrations?: { type: string; config?: Record<string, unknown> }[];
 };
 
@@ -45,8 +45,11 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onCreate: (data: ClientFormValues) => Promise<{ id: string } | null> | { id: string } | null | void;
+  onUpdate?: (id: string, data: ClientFormValues) => Promise<void>;
   onOpenUser?: (clientId: string) => void;
   clientId?: string | null;
+  mode?: 'create' | 'view' | 'edit';
+  syncWithMyProfile?: boolean;
 };
 
 function readId(value: unknown): string | null {
@@ -75,20 +78,25 @@ function buildViaCepAddress(data: Record<string, unknown>) {
     .join(", ");
 }
 
-export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientId }: Props) {
+export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUser, clientId, mode = 'create', syncWithMyProfile = false }: Props) {
   const [name, setName] = useState("");
   const [taxId, setTaxId] = useState("");
   const [zip, setZip] = useState("");
   const [address, setAddress] = useState("");
+  const [addressNumber, setAddressNumber] = useState("");
+  const [addressDetail, setAddressDetail] = useState("");
   const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoFileName, setLogoFileName] = useState("");
-  const [docsLink, setDocsLink] = useState("");
+  const [logoPreviewObjectUrl, setLogoPreviewObjectUrl] = useState<string | null>(null);
   const [linkedin, setLinkedin] = useState("");
   const [notes, setNotes] = useState("");
   const [description, setDescription] = useState("");
-  const [active, setActive] = useState(true);
+  const [notificationsFanoutEnabled, setNotificationsFanoutEnabled] = useState(false);
+  const [companyUsername, setCompanyUsername] = useState("");
+  const [generatingUsername, setGeneratingUsername] = useState(false);
+  const [active, setActive] = useState(false);
   // integrationMode removed: Qase fields are always visible
   const [qaseToken, setQaseToken] = useState("");
   const [showQaseToken, setShowQaseToken] = useState(false);
@@ -109,9 +117,6 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [validatingProjects, setValidatingProjects] = useState(false);
   const [manualName, setManualName] = useState("");
   const [manualCode, setManualCode] = useState("");
-  const [jiraBaseUrl, setJiraBaseUrl] = useState("");
-  const [jiraEmail, setJiraEmail] = useState("");
-  const [jiraApiToken, setJiraApiToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdClientId, setCreatedClientId] = useState<string | null>(clientId ?? null);
@@ -121,6 +126,8 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
   const [addressTouched, setAddressTouched] = useState(false);
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjMessage, setCnpjMessage] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(mode === 'create' || mode === 'edit');
+  const [profileSyncDetected, setProfileSyncDetected] = useState(false);
   const cnpjLookupIdRef = useRef(0);
   const cnpjLookupControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
@@ -134,8 +141,9 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     return () => {
       isMountedRef.current = false;
       cnpjLookupControllerRef.current?.abort();
+      if (logoPreviewObjectUrl) URL.revokeObjectURL(logoPreviewObjectUrl);
     };
-  }, []);
+  }, [logoPreviewObjectUrl]);
 
   useEffect(() => {
     if (!open) return;
@@ -198,30 +206,73 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       return;
     }
 
+    if (!isCnpjValid(rawCnpj)) {
+      setCnpjMessage("❌ CNPJ inválido (checksum falhou).");
+      return;
+    }
+
     const lookupId = ++cnpjLookupIdRef.current;
     cnpjLookupControllerRef.current?.abort();
     const controller = new AbortController();
     cnpjLookupControllerRef.current = controller;
 
     setCnpjLoading(true);
-    setCnpjMessage("Consultando BrasilAPI...");
+    setCnpjMessage("✓ CNPJ válido. Consultando BrasilAPI...");
 
     try {
       const data = await lookupCnpjCompany(rawCnpj, controller.signal);
       const companyName = extractCnpjCompanyName(data);
+      const companyAddress = extractCnpjAddress(data);
+      const phonePrimary = typeof data?.ddd_telefone_1 === "string" ? data.ddd_telefone_1 : "";
+      const phoneSecondary = typeof data?.ddd_telefone_2 === "string" ? data.ddd_telefone_2 : "";
+      const contactPhone = phonePrimary || phoneSecondary;
+      const cnae = typeof data?.cnae_fiscal_descricao === "string" ? data.cnae_fiscal_descricao.trim() : "";
+      const companyStatus = typeof data?.descricao_situacao_cadastral === "string" ? data.descricao_situacao_cadastral.trim() : "";
+      const legalNature = typeof data?.natureza_juridica === "string" ? data.natureza_juridica.trim() : "";
+      const openedAt = typeof data?.abertura === "string" ? data.abertura.trim() : "";
+      const contactEmail = typeof data?.email === "string" ? data.email.trim() : "";
+      const simpleOpt = typeof data?.opcao_pelo_simples === "boolean" ? data.opcao_pelo_simples : null;
 
       if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
 
       if (companyName) {
         setName((currentName) => (currentName.trim() ? currentName : companyName));
-        setCnpjMessage("Nome preenchido pelo CNPJ.");
+      }
+      setZip((current) => current.trim() || (typeof data?.cep === "string" ? formatCep(data.cep) : ""));
+      setAddress((current) => current.trim() || companyAddress || "");
+      setAddressNumber((current) => current.trim() || (typeof data?.numero === "string" ? data.numero : ""));
+      setAddressDetail((current) => current.trim() || (typeof data?.complemento === "string" ? data.complemento : ""));
+      setPhone((current) => current.trim() || contactPhone);
+      setDescription((current) => current.trim() || cnae || "");
+
+      if (!notes.trim()) {
+        const notesParts: string[] = [];
+        if (companyStatus) notesParts.push(`Situacao cadastral: ${companyStatus}`);
+        if (legalNature) notesParts.push(`Natureza juridica: ${legalNature}`);
+        if (openedAt) notesParts.push(`Data de abertura: ${openedAt}`);
+        if (contactEmail) notesParts.push(`E-mail cadastral: ${contactEmail}`);
+        if (simpleOpt !== null) notesParts.push(`Simples nacional: ${simpleOpt ? "Sim" : "Nao"}`);
+        if (notesParts.length) {
+          setNotes(notesParts.join(" | "));
+        }
+      }
+
+      if (companyName || companyAddress || data?.cep || data?.numero || data?.complemento || contactPhone || cnae || contactEmail) {
+        setCnpjMessage("✓ CNPJ válido. Dados preenchidos pela BrasilAPI.");
       } else {
-        setCnpjMessage("CNPJ consultado, mas sem nome disponivel.");
+        setCnpjMessage("✓ CNPJ válido, mas sem dados adicionais na BrasilAPI.");
       }
     } catch (error) {
       if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
       if (error instanceof DOMException && error.name === "AbortError") return;
-      setCnpjMessage(error instanceof Error ? error.message : "Nao foi possivel consultar o CNPJ.");
+      const message = error instanceof Error ? error.message : "Nao foi possivel consultar a BrasilAPI";
+      if (/demorou demais/i.test(message) || /504/.test(message)) {
+        setCnpjMessage("BrasilAPI demorou para responder. Tente novamente em instantes.");
+      } else if (/502/.test(message) || /Nao foi possivel consultar a BrasilAPI/i.test(message)) {
+        setCnpjMessage("BrasilAPI indisponivel (502). Preencha manualmente e tente novamente depois.");
+      } else {
+        setCnpjMessage(message);
+      }
     } finally {
       if (isMountedRef.current && lookupId === cnpjLookupIdRef.current) {
         setCnpjLoading(false);
@@ -248,15 +299,17 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         setTaxId((data.tax_id as string) ?? "");
         setZip((data.cep as string) ?? "");
         setAddress((data.address as string) ?? "");
+        setAddressNumber((data.address_number as string) ?? "");
+        setAddressDetail((data.address_detail as string) ?? "");
         setAddressTouched(false);
         setPhone((data.phone as string) ?? "");
         setWebsite((data.website as string) ?? "");
         setLogoUrl((data.logo_url as string) ?? "");
-        setDocsLink((data.docs_link as string) ?? "");
         setLinkedin((data.linkedin_url as string) ?? "");
         setNotes((data.notes as string) ?? "");
         setDescription((data.short_description as string) ?? "");
-        setActive(typeof data.active === "boolean" ? data.active : true);
+        setNotificationsFanoutEnabled(typeof data.notifications_fanout_enabled === "boolean" ? data.notifications_fanout_enabled : false);
+        setActive(typeof data.active === "boolean" ? data.active : false);
         setQaseToken((data.qase_token as string) ?? "");
         const codes = Array.isArray(data.qase_project_codes) ? data.qase_project_codes.map((c: any) => (typeof c === "string" ? c : String(c))) : [];
         setSelectedQaseProjectCodes(codes.map((c: string) => c.trim().toUpperCase()));
@@ -271,6 +324,121 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       mounted = false;
     };
   }, [clientId]);
+
+  useEffect(() => {
+    if (!open || !syncWithMyProfile) return;
+    if (mode !== "create" || clientId) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const [profileRes, meRes] = await Promise.all([
+          fetch("/api/me/company-profile", { credentials: "include", cache: "no-store" }).catch(() => null),
+          fetch("/api/me", { credentials: "include", cache: "no-store" }).catch(() => null),
+        ]);
+
+        if (!mounted) return;
+
+        if (profileRes && profileRes.ok) {
+          const data = (await profileRes.json().catch(() => null)) as Record<string, unknown> | null;
+          if (data) {
+            setProfileSyncDetected(true);
+            setName((current) => current.trim() || (typeof data.company_name === "string" ? data.company_name : typeof data.name === "string" ? data.name : ""));
+            setTaxId((current) => current.trim() || (typeof data.tax_id === "string" ? data.tax_id : ""));
+            setZip((current) => current.trim() || (typeof data.cep === "string" ? data.cep : ""));
+            setAddress((current) => current.trim() || (typeof data.address === "string" ? data.address : ""));
+            setAddressNumber((current) => current.trim() || (typeof data.address_number === "string" ? data.address_number : ""));
+            setAddressDetail((current) => current.trim() || (typeof data.address_detail === "string" ? data.address_detail : ""));
+            setPhone((current) => current.trim() || (typeof data.phone === "string" ? data.phone : ""));
+            setWebsite((current) => current.trim() || (typeof data.website === "string" ? data.website : ""));
+            setLogoUrl((current) => current.trim() || (typeof data.logo_url === "string" ? data.logo_url : ""));
+            setLinkedin((current) => current.trim() || (typeof data.linkedin_url === "string" ? data.linkedin_url : ""));
+            setNotificationsFanoutEnabled(typeof data.notifications_fanout_enabled === "boolean" ? data.notifications_fanout_enabled : false);
+          }
+        }
+
+        if (meRes && meRes.ok) {
+          const me = (await meRes.json().catch(() => null)) as { user?: { user?: string; username?: string } } | null;
+          const login = me?.user?.username || me?.user?.user || "";
+          if (login) {
+            setCompanyUsername((current) => current.trim() || login);
+          }
+        }
+      } catch {
+        // keep modal working even without profile endpoint access
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [open, syncWithMyProfile, mode, clientId]);
+
+  async function handleGenerateCompanyUsername() {
+    const seed = (name || taxId || "empresa").trim();
+    if (!seed) return;
+    setGeneratingUsername(true);
+    try {
+      const response = await fetch("/api/me/username-suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ seed, avoid: companyUsername ? [companyUsername] : [] }),
+      });
+      const payload = (await response.json().catch(() => null)) as { username?: string; error?: string } | null;
+      if (!response.ok) {
+        throw new Error(payload?.error || "Não foi possível gerar o usuário da empresa.");
+      }
+      const generated = (payload?.username ?? "").trim().toLowerCase();
+      if (generated) setCompanyUsername(generated);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Não foi possível gerar o usuário da empresa.";
+      toast.error(message);
+    } finally {
+      setGeneratingUsername(false);
+    }
+  }
+
+  async function syncInstitutionalProfile() {
+    if (!syncWithMyProfile) return;
+    if (!profileSyncDetected) return;
+
+    try {
+      await fetch("/api/me/company-profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: name.trim(),
+          company_name: name.trim(),
+          tax_id: taxId.trim() || null,
+          cep: zip.trim() || null,
+          address: address.trim() || null,
+          address_number: addressNumber.trim() || null,
+          address_detail: addressDetail.trim() || null,
+          phone: phone.trim() || null,
+          website: website.trim() || null,
+          linkedin_url: linkedin.trim() || null,
+          logo_url: logoUrl.trim() || null,
+          notifications_fanout_enabled: notificationsFanoutEnabled,
+          qase_token: qaseToken.trim() || undefined,
+          qase_project_codes: uniqCodes(selectedQaseProjectCodes),
+          integration_mode: uniqCodes(selectedQaseProjectCodes).length || qaseToken.trim() ? "qase" : "manual",
+        }),
+      }).catch(() => null);
+
+      if (companyUsername.trim()) {
+        await fetch("/api/me", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ user: companyUsername.trim().toLowerCase() }),
+        }).catch(() => null);
+      }
+    } catch {
+      // silent: profile sync is best-effort
+    }
+  }
 
   // close projects dropdown when clicking outside or pressing Escape
   useEffect(() => {
@@ -309,6 +477,8 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     setTaxId("");
     setZip("");
     setAddress("");
+    setAddressNumber("");
+    setAddressDetail("");
     setAddressTouched(false);
     setPhone("");
     setWebsite("");
@@ -317,12 +487,15 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
     setLinkedin("");
     setNotes("");
     setDescription("");
-    setActive(true);
+    setNotificationsFanoutEnabled(false);
+    setCompanyUsername("");
+    setActive(false);
     setQaseToken("");
     resetQaseSelection();
-    setJiraBaseUrl("");
-    setJiraEmail("");
-    setJiraApiToken("");
+    if (logoPreviewObjectUrl) {
+      URL.revokeObjectURL(logoPreviewObjectUrl);
+      setLogoPreviewObjectUrl(null);
+    }
     setError(null);
     setCnpjLoading(false);
     setCnpjMessage(null);
@@ -505,6 +678,15 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       return;
     }
 
+    // Validate CNPJ if provided
+    if (taxId.trim()) {
+      const rawCnpj = normalizeCnpj(taxId);
+      if (!isCnpjValid(rawCnpj)) {
+        setError("CNPJ inválido. Verifique o número.");
+        return;
+      }
+    }
+
     // Validate Qase-related fields only when user selected projects or provided a token
     {
       const token = qaseToken.trim();
@@ -523,30 +705,6 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       }
     }
 
-    const jiraUrl = jiraBaseUrl.trim();
-    const jiraMail = jiraEmail.trim();
-    const jiraToken = jiraApiToken.trim();
-    const hasAnyJira = Boolean(jiraUrl || jiraMail || jiraToken);
-
-    if (hasAnyJira) {
-      if (!jiraUrl) {
-        setError("Informe a URL base do Jira ou limpe os campos do Jira.");
-        return;
-      }
-      if (!/^https?:\/\//i.test(jiraUrl)) {
-        setError("A URL do Jira deve comecar com http:// ou https://.");
-        return;
-      }
-      if (!jiraMail) {
-        setError("Informe o e-mail ou usuário do Jira.");
-        return;
-      }
-      if (!jiraToken) {
-        setError("Informe o API token do Jira.");
-        return;
-      }
-    }
-
     setBusy(true);
     try {
       const selectedCodes = uniqCodes(selectedQaseProjectCodes);
@@ -556,20 +714,20 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
       if (qaseToken.trim() || (selectedCodes.length > 0)) {
         integrationsPayload.push({ type: "QASE", config: { token: qaseToken.trim() || null, projects: selectedCodes.length ? selectedCodes : undefined } });
       }
-      if (jiraUrl || jiraMail || jiraToken) {
-        integrationsPayload.push({ type: "JIRA", config: { baseUrl: jiraUrl || null, email: jiraMail || null, apiToken: jiraToken || null } });
-      }
 
-      const result = await onCreate({
+      const formData: ClientFormValues = {
         name: name.trim(),
         taxId: taxId.trim() || undefined,
         zip: zip.trim() || undefined,
         address: address.trim() || undefined,
+        addressNumber: addressNumber.trim() || undefined,
+        addressDetail: addressDetail.trim() || undefined,
         phone: phone.trim() || undefined,
         website: website.trim() || undefined,
         logoUrl: logoUrl.trim() || undefined,
-        docsLink: docsLink.trim() || undefined,
         linkedin: linkedin.trim() || undefined,
+        notificationsFanoutEnabled,
+        companyUsername: companyUsername.trim() || undefined,
         notes: notes.trim() || undefined,
         description: description.trim() || undefined,
         active,
@@ -578,15 +736,26 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
         qaseProjectCode: selectedCodes.length ? (selectedCodes[0] || "").trim().toUpperCase() : undefined,
         qaseProjectCodes: Array.isArray(selectedCodes) ? selectedCodes : [],
         qase_projects: qaseProjectsPayload.length ? qaseProjectsPayload : undefined,
-        jiraBaseUrl: jiraUrl || undefined,
-        jiraEmail: jiraMail || undefined,
-        jiraApiToken: jiraToken || undefined,
         integrations: integrationsPayload.length ? integrationsPayload : undefined,
-      });
+      };
+
+      // Handle UPDATE mode
+      if ((mode === 'edit' || (mode === 'view' && isEditing)) && clientId && onUpdate) {
+        await onUpdate(clientId, formData);
+        await syncInstitutionalProfile();
+        toast.success("Empresa atualizada com sucesso");
+        setIsEditing(false);
+        onClose();
+        return;
+      }
+
+      // Handle CREATE mode
+      const result = await onCreate(formData);
 
       if (result === null || result === undefined) return;
 
       const newId = readId(result) ?? createdClientId;
+      await syncInstitutionalProfile();
       setCreatedClientId(newId);
       resetForm();
       onClose();
@@ -629,27 +798,47 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
 
   if (!open) return null;
 
+  const isViewMode = mode === 'view' && !isEditing;
+  const isEditMode = mode === 'edit' || (mode === 'view' && isEditing);
+  const modalTitle = mode === 'create' ? 'Cadastrar empresa' : isViewMode ? 'Empresa' : 'Editar empresa';
+  const submitButtonText = mode === 'create' ? 'Salvar empresa' : mode === 'edit' ? 'Salvar mudanças' : 'Salvar';
+
+  function handleCloseOrCancel() {
+    // From view->edit, cancel returns to read-only view.
+    if (mode === "view" && isEditing) {
+      setIsEditing(false);
+      return;
+    }
+
+    // In create/edit flows, cancel should close the modal.
+    resetForm();
+    onClose();
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-3 py-4">
       <form
-        aria-label="Cadastrar empresa"
+        aria-label={modalTitle}
         onSubmit={handleSubmit}
         className="w-full max-w-3xl max-h-[calc(100vh-48px)] space-y-4 overflow-y-auto rounded-xl border border-(--tc-border) bg-(--tc-surface) p-4 text-(--tc-text) shadow-2xl sm:p-6"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-(--tc-accent)">Empresa</p>
-            <h3 className="text-xl font-semibold text-(--tc-text)">Cadastrar empresa</h3>
-            <p className="text-sm text-(--tc-text-muted)">Preencha os dados principais e configure a integração se necessário.</p>
+            <h3 className="text-xl font-semibold text-(--tc-text)">{modalTitle}</h3>
+            <p className="text-sm text-(--tc-text-muted)">
+              {mode === 'create' 
+                ? 'Preencha os dados principais e configure a integração se necessário.'
+                : isViewMode
+                ? 'Visualize os dados da empresa.'
+                : 'Edite os dados da empresa.'}
+            </p>
           </div>
           <button
             type="button"
             className="rounded-md px-2 py-1 text-lg text-(--tc-text-muted) hover:bg-(--tc-surface-2) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-            onClick={() => {
-              resetForm();
-              onClose();
-            }}
-            aria-label="Fechar modal"
+            onClick={handleCloseOrCancel}
+            aria-label="Fechar ou cancelar edição"
           >
             x
           </button>
@@ -663,25 +852,41 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
 
         <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
           <label className="block text-sm">
-            Nome / razão social
+            Nome da empresa
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex.: Testing Company LTDA"
               required
+              disabled={isViewMode}
             />
+          </label>
+
+          <label className="block text-sm">
+            Status da empresa
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={active}
+                onChange={(e) => setActive(e.target.checked)}
+                className="h-4 w-4"
+                disabled={isViewMode}
+              />
+              <span className="text-sm text-(--tc-text)">{active ? 'Ativa' : 'Inativa'}</span>
+            </div>
           </label>
 
           <label className="block text-sm">
             CNPJ
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={taxId}
               onChange={(e) => setTaxId(normalizeCnpj(e.target.value))}
               placeholder="00.000.000/0000-00"
               inputMode="numeric"
               onBlur={() => void handleCnpjBlur()}
+              disabled={isViewMode}
             />
             <span className="mt-1 block min-h-4 text-xs text-(--tc-text-muted)" aria-live="polite">
               {cnpjLoading ? "Consultando BrasilAPI..." : cnpjMessage}
@@ -691,12 +896,13 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           <label className="block text-sm md:col-span-2">
             CEP
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={zip}
               onChange={(e) => setZip(formatCep(e.target.value))}
               placeholder="00000-000"
               inputMode="numeric"
               aria-describedby="company-cep-feedback"
+              disabled={isViewMode}
             />
             <span id="company-cep-feedback" className="mt-1 block min-h-4 text-xs text-(--tc-text-muted)">
               {cepLoading ? "Consultando CEP..." : cepMessage}
@@ -706,78 +912,159 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           <label className="block text-sm md:col-span-2">
             Endereço
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Rua, número, cidade"
+              disabled={isViewMode}
             />
           </label>
 
           <label className="block text-sm">
-            Telefone
+            Número
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              value={addressNumber}
+              onChange={(e) => setAddressNumber(e.target.value)}
+              placeholder="Ex.: 123"
+              disabled={isViewMode}
+            />
+          </label>
+
+          <label className="block text-sm md:col-span-2">
+            Complemento / detalhe
+            <input
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              value={addressDetail}
+              onChange={(e) => setAddressDetail(e.target.value)}
+              placeholder="Bloco, sala, referência"
+              disabled={isViewMode}
+            />
+          </label>
+
+          <label className="block text-sm">
+            Telefone comercial
+            <input
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+55 11 99999-9999"
+              placeholder="+55 11 3333-3333"
+              disabled={isViewMode}
             />
           </label>
 
           <label className="block text-sm">
             Website
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://exemplo.com"
-            />
-          </label>
-
-          <label className="block text-sm">
-            Logo URL
-            <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://cdn.../logo.png"
-            />
-          </label>
-
-          <label className="block text-sm">
-            Upload de logo 📤
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-1 w-full text-sm"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                setLogoFileName(file?.name ?? "");
-              }}
-            />
-            {logoFileName ? <p className="mt-1 text-xs text-(--tc-text-muted)">Selecionado: {logoFileName}</p> : null}
-          </label>
-
-          <label className="block text-sm">
-            Link de documentos
-            <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-              value={docsLink}
-              onChange={(e) => setDocsLink(e.target.value)}
-              placeholder="https://empresa.com.br/documentação"
+              disabled={isViewMode}
             />
           </label>
 
           <label className="block text-sm">
             LinkedIn da empresa
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={linkedin}
               onChange={(e) => setLinkedin(e.target.value)}
               placeholder="https://www.linkedin.com/company/..."
+              disabled={isViewMode}
             />
           </label>
 
-          <fieldset className="md:col-span-2 rounded-xl border-2 border-(--tc-accent)/20 bg-[linear-gradient(180deg,var(--tc-surface-2)_0%,rgba(239,0,1,0.03)_100%)] p-4">
+          <label className="block text-sm">
+            Logo da empresa
+            <input
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+              placeholder="https://exemplo.com/logo.png"
+              disabled={isViewMode}
+            />
+          </label>
+
+          <label className="block text-sm">
+            Escolher logo
+            <input
+              type="file"
+              accept="image/*"
+              className="mt-1 w-full text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                setLogoFileName(file?.name ?? "");
+                if (logoPreviewObjectUrl) {
+                  URL.revokeObjectURL(logoPreviewObjectUrl);
+                  setLogoPreviewObjectUrl(null);
+                }
+                if (file) {
+                  setLogoPreviewObjectUrl(URL.createObjectURL(file));
+                }
+              }}
+              disabled={isViewMode}
+            />
+            {logoFileName ? <p className="mt-1 text-xs text-(--tc-text-muted)">Selecionado: {logoFileName}</p> : null}
+          </label>
+
+          <div className="md:col-span-2 rounded-lg border border-(--tc-border) bg-(--tc-surface-2) p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-(--tc-text-muted)">Preview da logo</p>
+            {logoPreviewObjectUrl || logoUrl.trim() ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoPreviewObjectUrl ?? logoUrl.trim()}
+                alt="Preview da logo da empresa"
+                className="mt-2 h-20 w-20 rounded-md border border-(--tc-border) object-contain bg-white"
+              />
+            ) : (
+              <p className="mt-2 text-xs text-(--tc-text-muted)">Informe a URL da logo ou selecione um arquivo para visualizar o preview.</p>
+            )}
+          </div>
+
+          <div className="md:col-span-2 rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-3">
+            <label className="flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={notificationsFanoutEnabled}
+                onChange={(e) => setNotificationsFanoutEnabled(e.target.checked)}
+                className="mt-1 h-4 w-4"
+                disabled={isViewMode}
+              />
+              <span>
+                <span className="block font-semibold text-(--tc-text)">Fan-out de notificações</span>
+                <span className="mt-1 block text-xs text-(--tc-text-muted)">
+                  Quando ativo, mudanças no contexto da empresa notificam também usuários vinculados.
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <label className="block text-sm md:col-span-2">
+            Usuário da empresa
+            <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+              <input
+                className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                value={companyUsername}
+                onChange={(e) => setCompanyUsername(e.target.value)}
+                placeholder="login institucional"
+                disabled={isViewMode}
+              />
+              <button
+                type="button"
+                onClick={() => void handleGenerateCompanyUsername()}
+                className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm font-semibold text-(--tc-text) disabled:opacity-60"
+                disabled={isViewMode || generatingUsername || !name.trim()}
+              >
+                {generatingUsername ? "Gerando..." : "Gerar usuário"}
+              </button>
+            </div>
+            <span className="mt-1 block text-xs text-(--tc-text-muted)">
+              Login único do perfil institucional. A sugestão usa o nome da empresa e evita duplicidade.
+            </span>
+          </label>
+
+          <fieldset className="md:col-span-2 rounded-xl border-2 border-(--tc-accent)/20 bg-[linear-gradient(180deg,var(--tc-surface-2)_0%,rgba(239,0,1,0.03)_100%)] p-4" disabled={isViewMode}>
             <legend className="flex items-center gap-2 px-2 text-sm font-bold text-(--tc-text)">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-(--tc-accent,#ef0001) text-white"><FiLink2 size={12} /></span>
               Integração
@@ -797,7 +1084,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                   Token da Qase
                   <div className="relative mt-2">
                     <input
-                      className="w-full h-10 rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#fff) px-3 pr-10 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                      className="w-full h-10 rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#fff) px-3 pr-10 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
                       type={showQaseToken ? "text" : "password"}
                       value={qaseToken}
                       onChange={(e) => {
@@ -807,13 +1094,15 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                       placeholder="Token da conta"
                       autoComplete="off"
                       spellCheck={false}
+                      disabled={isViewMode}
                     />
                     <button
                       type="button"
                       onClick={() => setShowQaseToken((v) => !v)}
-                      className="absolute right-3 top-3 flex items-center text-(--tc-text-muted) hover:text-(--tc-text)"
+                      className="absolute right-3 top-3 flex items-center text-(--tc-text-muted) hover:text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed"
                       aria-label={showQaseToken ? "Esconder token" : "Mostrar token"}
                       tabIndex={-1}
+                      disabled={isViewMode}
                     >
                       {showQaseToken ? <FiEyeOff size={16} aria-hidden /> : <FiEye size={16} aria-hidden />}
                     </button>
@@ -824,7 +1113,7 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
                   type="button"
                   className="inline-flex items-center gap-2 h-10 rounded-lg bg-linear-to-b from-(--tc-accent,#ff4b4b) to-(--tc-accent-dark,#c30000) px-4 text-sm font-semibold text-white shadow-lg transition duration-150 hover:opacity-95 disabled:opacity-60 sm:self-end"
                   onClick={() => void handleFetchQaseProjects()}
-                  disabled={loadingQaseProjects || !qaseToken}
+                  disabled={loadingQaseProjects || !qaseToken || isViewMode}
                 >
                   <FiSearch size={14} />
                   {loadingQaseProjects ? "Buscando..." : "Buscar projetos"}
@@ -986,74 +1275,34 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
               </div>
             
 
-            <div className="mt-4 rounded-lg border border-(--tc-border) bg-(--tc-surface) p-3">
-              <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><span className="flex h-5 w-5 items-center justify-center rounded bg-(--tc-primary,#011848) text-white"><FiLink2 size={10} /></span>Jira (opcional)</p>
-              <p className="mt-1 text-xs text-(--tc-text-muted)">Se quiser, já deixe o Jira configurado para esta empresa.</p>
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="block text-sm sm:col-span-2">
-                  URL base do Jira
-                  <input
-                    className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-                    value={jiraBaseUrl}
-                    onChange={(e) => setJiraBaseUrl(e.target.value)}
-                    placeholder="https://suaempresa.atlassian.net"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </label>
-
-                <label className="block text-sm">
-                  E-mail / usuário
-                  <input
-                    className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-                    value={jiraEmail}
-                    onChange={(e) => setJiraEmail(e.target.value)}
-                    placeholder="usuário@empresa.com"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </label>
-
-                <label className="block text-sm">
-                  API token
-                  <input
-                    className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-                    type="password"
-                    value={jiraApiToken}
-                    onChange={(e) => setJiraApiToken(e.target.value)}
-                    placeholder="Token do Jira"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </label>
-              </div>
-            </div>
           </fieldset>
 
           <label className="block text-sm md:col-span-2">
             Descrição curta
             <textarea
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder="Resumo da empresa"
+              disabled={isViewMode}
             />
           </label>
 
           <label className="block text-sm md:col-span-2">
             Notas internas
             <textarea
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="Observações adicionais"
+              disabled={isViewMode}
             />
           </label>
 
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} disabled={isViewMode} />
             Status: {active ? "Ativo" : "Inativo"}
           </label>
         </div>
@@ -1062,20 +1311,31 @@ export function CreateClientModal({ open, onClose, onCreate, onOpenUser, clientI
           <button
             type="button"
             className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-4 py-2 text-sm text-(--tc-text) hover:bg-(--tc-surface-2) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-            onClick={() => {
-              resetForm();
-              onClose();
-            }}
+            onClick={handleCloseOrCancel}
           >
-            Cancelar
+            {isViewMode ? 'Fechar' : 'Cancelar'}
           </button>
-          <button
-            type="submit"
-            className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-(--tc-text-inverse,#ffffff) hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-            disabled={busy}
-          >
-            {busy ? "Salvando..." : "Salvar empresa"}
-          </button>
+          
+          {isViewMode && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-(--tc-text-inverse,#ffffff) hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              onClick={() => setIsEditing(true)}
+            >
+              <FiEdit2 size={16} />
+              Editar
+            </button>
+          )}
+          
+          {isEditMode && (
+            <button
+              type="submit"
+              className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-(--tc-text-inverse,#ffffff) hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              disabled={busy}
+            >
+              {busy ? "Salvando..." : submitButtonText}
+            </button>
+          )}
         </div>
       </form>
     </div>

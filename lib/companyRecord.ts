@@ -127,6 +127,7 @@ export function mapCompanyRecord(
     docs_link: asString(company.docs_link ?? company.docs_url),
     notes: asString(company.notes ?? company.description),
     cep: asString(company.cep),
+    address_number: asString(company.address_number),
     address_detail: asString(company.address_detail),
     linkedin_url: asString(company.linkedin_url),
     qase_project_code: qaseProjectCodes?.[0] ?? legacyPrimaryProject,
@@ -309,6 +310,7 @@ export function buildCompanyUpdatePatch(
         current.description ??
         null,
       cep: input.cep ?? current.cep ?? null,
+      address_number: input.address_number ?? current.address_number ?? null,
       address_detail: input.address_detail ?? current.address_detail ?? null,
       linkedin_url: input.linkedin_url ?? current.linkedin_url ?? null,
       qase_project_code: nextProjectCodes?.[0] ?? null,

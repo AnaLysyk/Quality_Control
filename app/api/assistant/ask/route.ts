@@ -6,7 +6,6 @@ import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { detectAgentMode, AGENT_REGISTRY } from "@/lib/brain/agents";
 import type { AgentMode } from "@/lib/brain/agents";
 import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
-import { getAiApiKey } from "@/lib/ai/apiKey";
 
 export const runtime = "nodejs";
 
@@ -148,13 +147,6 @@ function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?
 export async function POST(req: Request) {
   if (!ASSISTANT_ENABLED) {
     return NextResponse.json({ error: "Assistente desativado" }, { status: 410 });
-  }
-
-  if (!getAiApiKey()) {
-    return NextResponse.json(
-      { error: "AI API key não configurada. Defina OPENAI_API_KEY (recomendado) ou AI_API_KEY no ambiente." },
-      { status: 503 },
-    );
   }
 
   const authUser = await authenticateRequest(req);

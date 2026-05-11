@@ -5,7 +5,6 @@ import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import type { AgentMode } from "@/lib/brain/agents";
 import { runAllGuardrails } from "@/lib/brain/guardrails";
-import { getAiApiKey } from "@/lib/ai/apiKey";
 
 function isE2eJsonMode() {
   return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true";
@@ -47,13 +46,6 @@ export async function POST(req: NextRequest) {
         "Cache-Control": "no-cache",
       },
     });
-  }
-
-  if (!getAiApiKey()) {
-    return NextResponse.json(
-      { error: "AI API key não configurada. Defina OPENAI_API_KEY (recomendado) ou AI_API_KEY no ambiente." },
-      { status: 503 },
-    );
   }
 
   try {

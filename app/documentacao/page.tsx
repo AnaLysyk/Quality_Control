@@ -42,7 +42,7 @@ export default function DocumentationPage() {
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
-          <aside className="rounded-[24px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-3 shadow-sm">
+          <aside className="rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-3 shadow-sm">
             {areas.map((area) => (
               <button
                 key={area}
@@ -60,12 +60,12 @@ export default function DocumentationPage() {
 
           <section className="grid gap-4 md:grid-cols-2">
             {filtered.length === 0 ? (
-              <div className="rounded-[24px] border border-dashed border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-8 text-sm text-(--tc-text-muted,#64748b) md:col-span-2">
+              <div className="rounded-3xl border border-dashed border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-8 text-sm text-(--tc-text-muted,#64748b) md:col-span-2">
                 Nenhum documento encontrado para a busca atual.
               </div>
             ) : (
               filtered.map((entry) => (
-                <article key={entry.id} className="rounded-[24px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-5 shadow-sm">
+                <article key={entry.id} className="rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-5 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <span className="rounded-full bg-(--tc-accent-soft,#fee2e2) px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-(--tc-accent,#ef0001)">
                       {entry.area}

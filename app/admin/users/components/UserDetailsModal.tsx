@@ -47,6 +47,12 @@ const EMPTY_JOB_TITLE = "__empty_job_title__";
 
 type RoleValue = FixedProfileKind;
 
+function isValidEmailAddress(value?: string | null) {
+  const source = (value ?? "").trim();
+  if (!source) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(source);
+}
+
 const normalizeRole = (value?: string | null): RoleValue => {
   const normalized = normalizeEditableProfileRole(value);
   return normalized;
@@ -175,7 +181,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     dirty &&
     (!requiresClient || !!clientId) &&
     !!name.trim() &&
-    !!email.trim();
+    isValidEmailAddress(email);
   const roleLabel =
     ROLE_OPTIONS.find((option) => option.value === role)?.label ?? role;
   const roleHint = canEditRole
@@ -277,6 +283,10 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     setError(null);
 
     try {
+      if (!isValidEmailAddress(email)) {
+        setError("Informe um e-mail valido para salvar.");
+        return;
+      }
       const payload = {
         id: user.id,
         name: name.trim(),
@@ -414,7 +424,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 </label>
 
                 <label className="block text-sm">
-                  <span className={labelClass}>Email</span>
+                  <span className={labelClass}>Email *</span>
                   <input
                     type="email"
                     className={fieldClass}

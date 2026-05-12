@@ -1,6 +1,6 @@
-import "server-only";
-import { Suspense } from "react";
-import { getQaseRunKanban } from "@/integrations/qase";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { RunDetailKanbanSection } from "@/components/RunDetailKanbanSection";
 import type { KanbanData } from "@/types/kanban";
 
@@ -15,28 +15,7 @@ type Props = {
   allowLinkEdit: boolean;
 };
 
-async function KanbanLoader(props: Props) {
-  let kanbanData: KanbanData = { pass: [], fail: [], blocked: [], notRun: [] };
-  try {
-    kanbanData = await getQaseRunKanban(props.projectCode, props.runId, props.companySlug);
-  } catch {
-    /* ignore — empty kanban */
-  }
-
-  return (
-    <RunDetailKanbanSection
-      data={kanbanData}
-      project={props.projectKey}
-      runId={props.runId}
-      qaseProject={props.projectCode}
-      companySlug={props.companySlug}
-      persistEndpoint={props.persistEndpoint}
-      editable={props.editable}
-      allowStatusChange={props.allowStatusChange}
-      allowLinkEdit={props.allowLinkEdit}
-    />
-  );
-}
+const EMPTY_KANBAN: KanbanData = { pass: [], fail: [], blocked: [], notRun: [] };
 
 function KanbanSkeleton() {
   return (
@@ -55,10 +34,70 @@ function KanbanSkeleton() {
   );
 }
 
-export function RunKanbanStream(props: Props) {
+function KanbanContent(props: Props) {
+  const [kanbanData, setKanbanData] = useState<KanbanData>(EMPTY_KANBAN);
+  const [loading, setLoading] = useState(true);
+
+  const query = useMemo(() => {
+    const params = new URLSearchParams({
+      project: props.projectCode,
+      runId: String(props.runId),
+    });
+    if (props.companySlug) {
+      params.set("companySlug", props.companySlug);
+    }
+    return params.toString();
+  }, [props.companySlug, props.projectCode, props.runId]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+
+    fetch(`/api/runs/kanban?${query}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json() as Promise<{ data?: KanbanData }>;
+      })
+      .then((payload) => {
+        if (!controller.signal.aborted) {
+          setKanbanData(payload.data ?? EMPTY_KANBAN);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setKanbanData(EMPTY_KANBAN);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [query]);
+
+  if (loading) {
+    return <KanbanSkeleton />;
+  }
+
   return (
-    <Suspense fallback={<KanbanSkeleton />}>
-      <KanbanLoader {...props} />
-    </Suspense>
+    <RunDetailKanbanSection
+      data={kanbanData}
+      project={props.projectKey}
+      runId={props.runId}
+      qaseProject={props.projectCode}
+      companySlug={props.companySlug}
+      persistEndpoint={props.persistEndpoint}
+      editable={props.editable}
+      allowStatusChange={props.allowStatusChange}
+      allowLinkEdit={props.allowLinkEdit}
+    />
   );
+}
+
+export function RunKanbanStream(props: Props) {
+  return <KanbanContent {...props} />;
 }

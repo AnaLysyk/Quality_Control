@@ -489,6 +489,10 @@ export default function AppShell({ children }: AppShellProps) {
   const hideShellCover = shouldHideShellCover(pathname);
   const renderShellCover = hydrated && !hideShellCover;
   const isBrainCanvasRoute = pathname.startsWith("/admin/brain") || pathname.startsWith("/brain");
+  const isPlaywrightWorkspaceRoute =
+    /^\/automacoes\/playwright(?:\/|$)/.test(pathname) ||
+    /\/automacao\/playwright(?:\/|$)/.test(pathname);
+  const hideGlobalSidebar = isPlaywrightWorkspaceRoute;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [coverSlotContent, setCoverSlotContent] = useState<ReactNode | null>(null);
   const [, setLogoFailureTick] = useState(0);
@@ -666,7 +670,7 @@ export default function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen w-full bg-(--page-bg) text-(--page-text) app-shell">
       <NewVersionBanner />
       {/* Detector de hover na lateral esquerda para telas pequenas */}
-      {!isBrainCanvasRoute ? (
+      {!isBrainCanvasRoute && !hideGlobalSidebar ? (
         <div
           className={`fixed top-0 left-0 h-full w-16 z-40 menu-hover-area lg:hidden${mobileOpen ? ' menu-hover-area--disabled' : ''}`}
           onMouseEnter={() => setMobileOpen(true)}
@@ -677,24 +681,26 @@ export default function AppShell({ children }: AppShellProps) {
       ) : null}
 
       {/* Botão de menu mobile/hamburguer */}
-      <button
-        type="button"
-        aria-label="Abrir menu"
-        {...mobileMenuA11y}
-        className={[
-          "app-shell-menu-toggle fixed top-3 left-3 z-50 rounded-2xl border",
-          "p-2.5 text-white backdrop-blur transition duration-200",
-          "hover:-translate-y-0.5",
-          "sm:top-4 sm:left-4 lg:hidden",
-          mobileOpen ? "pointer-events-none opacity-0" : ""
-        ].join(" ")}
-        onClick={() => setMobileOpen(true)}
-        onMouseEnter={isBrainCanvasRoute ? undefined : () => setMobileOpen(true)}
-        onTouchStart={() => setMobileOpen(true)}
-        onMouseLeave={() => setMobileOpen(false)}
-      >
-        <FiMenu size={20} />
-      </button>
+      {!hideGlobalSidebar ? (
+        <button
+          type="button"
+          aria-label="Abrir menu"
+          {...mobileMenuA11y}
+          className={[
+            "app-shell-menu-toggle fixed top-3 left-3 z-50 rounded-2xl border",
+            "p-2.5 text-white backdrop-blur transition duration-200",
+            "hover:-translate-y-0.5",
+            "sm:top-4 sm:left-4 lg:hidden",
+            mobileOpen ? "pointer-events-none opacity-0" : ""
+          ].join(" ")}
+          onClick={() => setMobileOpen(true)}
+          onMouseEnter={isBrainCanvasRoute ? undefined : () => setMobileOpen(true)}
+          onTouchStart={() => setMobileOpen(true)}
+          onMouseLeave={() => setMobileOpen(false)}
+        >
+          <FiMenu size={20} />
+        </button>
+      ) : null}
 
       {hydrated ? (
         <div className="fixed top-3 right-3 z-40 inline-flex w-fit items-center gap-1.5 sm:top-4 sm:right-4 sm:gap-2">
@@ -710,7 +716,7 @@ export default function AppShell({ children }: AppShellProps) {
 
       {/* Flex row: sidebar (desktop) + main content */}
       <div className="flex h-screen overflow-hidden">
-        {hydrated ? (
+        {hydrated && !hideGlobalSidebar ? (
           <Sidebar
             pathname={pathname}
             mobileOpen={mobileOpen}

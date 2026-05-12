@@ -63,7 +63,23 @@ test("@regression-guard admin permissões renderiza", async ({ page }) => {
 });
 
 test("@regression-guard audit logs renderiza", async ({ page }) => {
-  await assertPageLoads(page, "/admin/audit-logs", "Audit Logs");
+  await assertPageLoads(page, "/admin/audit-logs", "Audit Logs (direto)");
+});
+
+test("@regression-guard audit-logs redirect funciona", async ({ page }) => {
+  await page.goto("/audit-logs?source=admin", { waitUntil: "domcontentloaded" });
+  // Deve redirecionar para /admin/audit-logs
+  expect(page.url()).toMatch(/\/admin\/audit-logs/);
+  const bodyText = await page.locator("body").innerText({ timeout: 10_000 });
+  expect(bodyText).not.toMatch(/this page could not be found|404|página não encontrada/i);
+});
+
+test("@regression-guard defeitos redirect funciona", async ({ page }) => {
+  await page.goto("/defeitos", { waitUntil: "domcontentloaded" });
+  // Deve redirecionar para /admin/defeitos
+  expect(page.url()).toMatch(/\/admin\/defeitos/);
+  const bodyText = await page.locator("body").innerText({ timeout: 10_000 });
+  expect(bodyText).not.toMatch(/this page could not be found|404|página não encontrada/i);
 });
 
 // ── AUTOMAÇÃO ─────────────────────────────────────────────────────────────────
@@ -82,6 +98,10 @@ test("@regression-guard api lab renderiza", async ({ page }) => {
 
 test("@regression-guard ferramentas automação renderiza", async ({ page }) => {
   await assertPageLoads(page, "/automacoes/tools", "Automation Tools");
+});
+
+test("@regression-guard base64 studio renderiza", async ({ page }) => {
+  await assertPageLoads(page, "/automacoes/base64", "Base64 Studio");
 });
 
 test("@regression-guard ui studio renderiza", async ({ page }) => {

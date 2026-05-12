@@ -27,6 +27,8 @@ export type NavItemDef = {
   favoriteEnabled?: boolean;
   action?: "navigate" | "focusSearch" | "openCreateModal";
   testId?: string;
+  /** Label de agrupamento visual no sidebar (não afeta filtros de role) */
+  group?: string;
 };
 
 export type NavModuleDef = {
@@ -206,6 +208,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
 
   // ============================================
   // AUTOMAÇÃO — All internal users
+  // Grouped: Workspace | Execuções | Ativos
   // ============================================
   {
     id: "automation",
@@ -221,6 +224,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation", 
         href: "/automacoes/playwright", 
         favoriteEnabled: true,
+        group: "Workspace",
         testId: "nav-automation-playwright",
       },
       { 
@@ -230,6 +234,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation", 
         href: "/automacoes/ui-studio",
         favoriteEnabled: true,
+        group: "Workspace",
         testId: "nav-automation-ui-studio",
       },
       { 
@@ -239,6 +244,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation", 
         href: "/automacoes/execucoes",
         favoriteEnabled: true,
+        group: "Execuções",
         testId: "nav-automation-executions",
       },
       { 
@@ -248,6 +254,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation", 
         href: "/automacoes/fluxos",
         favoriteEnabled: true,
+        group: "Execuções",
         testId: "nav-automation-flows",
       },
       { 
@@ -257,6 +264,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation", 
         href: "/automacoes/casos",
         favoriteEnabled: true,
+        group: "Execuções",
         testId: "nav-automation-cases",
       },
       { 
@@ -266,6 +274,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation", 
         href: "/automacoes/scripts",
         favoriteEnabled: true,
+        group: "Ativos",
         testId: "nav-automation-scripts",
       },
       { 
@@ -275,7 +284,38 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation", 
         href: "/automacoes/tools",
         favoriteEnabled: true,
+        group: "Ativos",
         testId: "nav-automation-tools",
+      },
+      { 
+        id: "auto-api-lab", 
+        label: "API Lab", 
+        iconKey: "code", 
+        module: "automation", 
+        href: "/automacoes/api-lab",
+        favoriteEnabled: true,
+        group: "Workspace",
+        testId: "nav-automation-api-lab",
+      },
+      { 
+        id: "auto-base64", 
+        label: "Base64 / Encoders", 
+        iconKey: "hash", 
+        module: "automation", 
+        href: "/automacoes/base64",
+        favoriteEnabled: true,
+        group: "Workspace",
+        testId: "nav-automation-base64",
+      },
+      { 
+        id: "auto-arquivos", 
+        label: "Arquivos", 
+        iconKey: "folder", 
+        module: "automation", 
+        href: "/automacoes/arquivos",
+        favoriteEnabled: true,
+        group: "Workspace",
+        testId: "nav-automation-arquivos",
       },
       { 
         id: "auto-logs", 
@@ -284,6 +324,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation", 
         href: "/automacoes/logs",
         favoriteEnabled: true,
+        group: "Ativos",
         testId: "nav-automation-logs",
       },
     ],
@@ -318,21 +359,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
         favoriteEnabled: true,
         testId: "nav-requests-search",
       },
-      {
-        id: "requests-identity",
-        label: "Identidade de solicitações",
-        iconKey: "shield",
-        module: "requests",
-        href: "/solicitacoes",
-        favoriteEnabled: true,
-        testId: "nav-requests-identity",
-      },
     ],
   },
 
   // ============================================
   // SUPORTE — All users
-  // Removed: Meus chamados, Solicitações de acesso/perfil, Base de conhecimento
   // ============================================
   {
     id: "support",
@@ -359,6 +390,25 @@ export const NAV_CATALOG: NavModuleDef[] = [
         href: "/suporte/kanban",
         favoriteEnabled: true,
         testId: "nav-support-kanban",
+      },
+      { 
+        id: "support-chamados", 
+        label: "Chamados", 
+        iconKey: "inbox", 
+        module: "support", 
+        href: "/chamados",
+        allowedRoles: PRIVILEGED,
+        favoriteEnabled: true,
+        testId: "nav-support-chamados",
+      },
+      { 
+        id: "support-meus-chamados", 
+        label: "Meus chamados", 
+        iconKey: "bookmark", 
+        module: "support", 
+        href: "/meus-chamados",
+        favoriteEnabled: true,
+        testId: "nav-support-meus-chamados",
       },
     ],
   },
@@ -424,16 +474,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
         favoriteEnabled: true,
         testId: "nav-brain-ask",
       },
-      { 
-        id: "brain-audit-logs", 
-        label: "Audit Logs", 
-        iconKey: "eye", 
-        module: "brain", 
-        href: "/audit-logs?source=brain",
-        allowedRoles: PRIVILEGED,
-        favoriteEnabled: true,
-        testId: "nav-brain-audit-logs",
-      },
     ],
   },
 
@@ -471,6 +511,10 @@ export const NAV_CATALOG: NavModuleDef[] = [
 
   // ============================================
   // GESTÃO DE USUÁRIOS — Only PRIVILEGED users
+  // Grouped by profile type:
+  //   Testing Company (LEADER_ONLY): Líder TC, Suporte Técnico, Usuário TC
+  //   Empresas (PRIVILEGED): Empresa, Usuário da Empresa
+  //   Listagens (PRIVILEGED)
   // ============================================
   {
     id: "users",
@@ -479,55 +523,65 @@ export const NAV_CATALOG: NavModuleDef[] = [
     allowedRoles: PRIVILEGED,
     testId: "nav-users",
     items: [
+      // --- Testing Company: apenas Líder TC cria outros usuários internos ---
       {
-        id: "users-create",
-        label: "Criar usuário",
-        iconKey: "plus-circle",
+        id: "users-create-leader-tc",
+        label: "Criar Líder TC",
+        iconKey: "shield",
         module: "users",
-        href: "/admin/users?modal=create",
+        href: "/admin/users?modal=create&role=leader_tc",
         action: "openCreateModal",
+        allowedRoles: LEADER_ONLY,
         favoriteEnabled: true,
-        testId: "nav-users-create",
+        group: "Testing Company",
+        testId: "nav-users-create-leader-tc",
+      },
+      {
+        id: "users-create-support",
+        label: "Criar Suporte Técnico",
+        iconKey: "headphones",
+        module: "users",
+        href: "/admin/users?modal=create&role=technical_support",
+        action: "openCreateModal",
+        allowedRoles: LEADER_ONLY,
+        favoriteEnabled: true,
+        group: "Testing Company",
+        testId: "nav-users-create-support",
       },
       {
         id: "users-create-user-tc",
-        label: "Criar usuário TC",
-        iconKey: "plus-circle",
+        label: "Criar Usuário TC",
+        iconKey: "user",
         module: "users",
         href: "/admin/users?modal=create&role=testing_company_user",
         action: "openCreateModal",
+        allowedRoles: LEADER_ONLY,
         favoriteEnabled: true,
+        group: "Testing Company",
         testId: "nav-users-create-user-tc",
       },
+      // --- Empresas: Líder TC e Suporte podem criar usuários de empresas ---
       {
         id: "users-create-company-user",
-        label: "Criar usuário da empresa",
-        iconKey: "plus-circle",
+        label: "Criar Usuário da Empresa",
+        iconKey: "user-plus",
         module: "users",
         href: "/admin/users?modal=create&role=company_user",
         action: "openCreateModal",
         favoriteEnabled: true,
+        group: "Empresas",
         testId: "nav-users-create-company-user",
       },
+      // --- Listagens ---
       {
-        id: "users-create-empresa",
-        label: "Criar empresa",
-        iconKey: "building",
+        id: "users-list",
+        label: "Listagem usuários",
+        iconKey: "users",
         module: "users",
-        href: "/admin/clients?modal=create",
-        action: "openCreateModal",
+        href: "/admin/users",
         favoriteEnabled: true,
-        testId: "nav-users-create-empresa",
-      },
-      {
-        id: "users-create-support",
-        label: "Criar suporte técnico",
-        iconKey: "plus-circle",
-        module: "users",
-        href: "/admin/users?modal=create&role=technical_support",
-        action: "openCreateModal",
-        favoriteEnabled: true,
-        testId: "nav-users-create-support",
+        group: "Listagens",
+        testId: "nav-users-list",
       },
       {
         id: "users-list-empresas",
@@ -536,16 +590,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "users",
         href: "/admin/clients",
         favoriteEnabled: true,
+        group: "Listagens",
         testId: "nav-users-list-empresas",
-      },
-      {
-        id: "users-list",
-        label: "Listagem usuários",
-        iconKey: "list",
-        module: "users",
-        href: "/admin/users",
-        favoriteEnabled: true,
-        testId: "nav-users-list",
       },
     ],
   },

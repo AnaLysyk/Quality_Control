@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
+import { checkPermission } from "@/lib/permissions/checkPermission";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,9 @@ async function getDb() {
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!checkPermission(user, "test_run:read")) {
+    return NextResponse.json({ message: "Sem permissão para visualizar runs" }, { status: 403 });
+  }
 
   const { id } = await params;
   const db = await getDb();
@@ -37,6 +41,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ message: "Body inválido" }, { status: 400 });
+  const requiredPermission = body.archive === true ? "test_run:delete" : "test_run:update";
+  if (!checkPermission(user, requiredPermission)) {
+    return NextResponse.json({ message: "Sem permissão para editar runs" }, { status: 403 });
+  }
 
   const db = await getDb();
   const existing = await db.testRun.findUnique({ where: { id } });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
+import { checkPermission } from "@/lib/permissions/checkPermission";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,9 @@ async function getDb() {
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!checkPermission(user, "test_plan:read")) {
+    return NextResponse.json({ error: "Sem permissão para visualizar projetos" }, { status: 403 });
+  }
 
   const { id } = await params;
   const db = await getDb();
@@ -45,6 +49,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ error: "Body inválido" }, { status: 400 });
+  const requiredPermission = body.archive === true ? "test_plan:delete" : "test_plan:update";
+  if (!checkPermission(user, requiredPermission)) {
+    return NextResponse.json({ error: "Sem permissão para editar projetos" }, { status: 403 });
+  }
 
   const db = await getDb();
   const existing = await db.project.findUnique({ where: { id } });

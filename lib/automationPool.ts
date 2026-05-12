@@ -115,5 +115,59 @@ export async function ensureAutomationTables(): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS idx_automation_base64_company
       ON automation_base64_history (company_slug);
+
+    CREATE TABLE IF NOT EXISTS playwright_runs (
+      id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      company_slug TEXT NOT NULL,
+      title        TEXT NOT NULL DEFAULT '',
+      browser      TEXT NOT NULL DEFAULT 'chromium',
+      base_url     TEXT NOT NULL DEFAULT '',
+      headless     BOOLEAN NOT NULL DEFAULT TRUE,
+      timeout_ms   INTEGER NOT NULL DEFAULT 30000,
+      workers      INTEGER NOT NULL DEFAULT 2,
+      retries      INTEGER NOT NULL DEFAULT 0,
+      screenshot_on TEXT NOT NULL DEFAULT 'only-on-failure',
+      video_on     TEXT NOT NULL DEFAULT 'retain-on-failure',
+      trace_on     TEXT NOT NULL DEFAULT 'off',
+      status       TEXT NOT NULL DEFAULT 'queued',
+      started_at   TIMESTAMPTZ,
+      finished_at  TIMESTAMPTZ,
+      exit_code    INTEGER,
+      created_by   TEXT,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_playwright_runs_company
+      ON playwright_runs (company_slug);
+    CREATE INDEX IF NOT EXISTS idx_playwright_runs_status
+      ON playwright_runs (status);
+
+    CREATE TABLE IF NOT EXISTS playwright_run_results (
+      id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      run_id       TEXT NOT NULL,
+      spec_file    TEXT NOT NULL DEFAULT '',
+      title        TEXT NOT NULL DEFAULT '',
+      status       TEXT NOT NULL DEFAULT 'running',
+      duration_ms  INTEGER NOT NULL DEFAULT 0,
+      error_msg    TEXT,
+      stdout       TEXT,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_playwright_run_results_run
+      ON playwright_run_results (run_id);
+
+    CREATE TABLE IF NOT EXISTS playwright_agent_tasks (
+      id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      company_slug TEXT NOT NULL,
+      agent_type   TEXT NOT NULL,
+      status       TEXT NOT NULL DEFAULT 'pending',
+      input_json   JSONB NOT NULL DEFAULT '{}',
+      output_json  JSONB,
+      error        TEXT,
+      created_by   TEXT,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      finished_at  TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_playwright_agent_tasks_company
+      ON playwright_agent_tasks (company_slug);
   `);
 }

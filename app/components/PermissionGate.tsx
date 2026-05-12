@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCurrentWorkspaceContext, type Permission } from "@/app/hooks/useCurrentWorkspaceContext";
+import { useCurrentWorkspaceContext, type Permission } from "@/hooks/useCurrentWorkspaceContext";
 
 type PermissionGateProps = {
   /** Required permission(s). If multiple, ALL must be satisfied unless `mode="any"`. */

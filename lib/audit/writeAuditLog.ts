@@ -21,6 +21,8 @@
  * ```
  */
 
+import type { Prisma } from "@prisma/client";
+
 export type AuditLogInput = {
   actorUserId?: string | null;
   actorEmail?: string | null;
@@ -46,7 +48,7 @@ export function writeAuditLog(input: AuditLogInput): void {
           entity_type: input.entityType,
           entity_id: input.entityId ?? null,
           entity_label: input.entityLabel ?? null,
-          metadata: input.metadata ?? undefined,
+          metadata: (input.metadata ?? undefined) as Prisma.InputJsonValue | undefined,
         },
       });
     } catch {

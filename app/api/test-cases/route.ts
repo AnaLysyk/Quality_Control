@@ -4,9 +4,12 @@ import {
   buildTestCaseMetrics,
   createManualTestCaseRecord,
   listTestCaseRecords,
+  updateTestCaseRecord,
+  archiveTestCaseRecord,
 } from "@/lib/test-cases/testCaseRepository";
 import {
   canCreateTestCaseForCompany,
+  canAccessTestCaseRecord,
   filterTestCasesByPermission,
 } from "@/lib/test-cases/testCasePermissions";
 import { listIntegratedQaseTestCaseRecords } from "@/lib/test-projects/testProjectsRepository";
@@ -170,6 +173,52 @@ export async function POST(req: Request) {
       metadata: { companyId: companySlug, projectId: payload.projectId ?? null },
     });
     return NextResponse.json(record, { status: 201 });
+  } catch (error) {
+    const mapped = mapTestCaseError(error);
+    if (mapped) return mapped;
+    throw error;
+  }
+}
+
+export async function PATCH(req: Request) {
+  const user = await authenticateRequest(req);
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+
+  const payload = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!payload || !payload.id) {
+    return NextResponse.json({ message: "id obrigatório" }, { status: 400 });
+  }
+
+  const id = String(payload.id);
+  const archive = payload.archive === true;
+
+  // Verify record exists + check access
+  const existing = (await listTestCaseRecords()).find(
+    (r) => r.testCase.id === id || r.testCase.key === id,
+  );
+  if (!existing) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
+  if (!canAccessTestCaseRecord(user, existing)) {
+    return NextResponse.json({ message: "Sem permissão para editar este caso" }, { status: 403 });
+  }
+
+  try {
+    const record = archive
+      ? await archiveTestCaseRecord(id, user.id)
+      : await updateTestCaseRecord(id, payload as Parameters<typeof updateTestCaseRecord>[1], user.id);
+
+    if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
+
+    writeAuditLog({
+      actorUserId: user.id,
+      actorEmail: user.email,
+      action: archive ? "archive" : "update",
+      entityType: "TestCase",
+      entityId: record.testCase.id,
+      entityLabel: record.testCase.title,
+      metadata: { companyId: record.testCase.companyId ?? null },
+    });
+
+    return NextResponse.json(record);
   } catch (error) {
     const mapped = mapTestCaseError(error);
     if (mapped) return mapped;

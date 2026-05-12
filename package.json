@@ -66,6 +66,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.61",
     "@aws-sdk/client-s3": "^3.975.0",
+    "@monaco-editor/react": "^4.7.0",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@radix-ui/react-accordion": "^1.2.12",

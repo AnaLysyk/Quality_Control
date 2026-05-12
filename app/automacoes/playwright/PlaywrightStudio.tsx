@@ -7,25 +7,29 @@ import {
   FiCheckCircle,
   FiChevronDown,
   FiChevronRight,
+  FiClock,
   FiCode,
   FiCopy,
+  FiCpu,
   FiEdit2,
   FiFile,
   FiFilePlus,
   FiFolder,
   FiFolderPlus,
+  FiList,
   FiPlay,
+  FiRefreshCw,
   FiSave,
   FiSettings,
   FiTerminal,
   FiTrash2,
   FiUploadCloud,
   FiX,
+  FiZap,
 } from "react-icons/fi";
 
 // Monaco Editor is large — load dynamically to avoid SSR issues
-// TODO: Install @monaco-editor/react package when available
-// const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -138,7 +142,19 @@ type TerminalLine = {
   text: string;
 };
 
-type RightPanelTab = "config" | "terminal";
+type RightPanelTab = "config" | "terminal" | "runs" | "agents";
+type AgentPanelTab = "planner" | "generator" | "healer";
+
+type RunRecord = {
+  id: string;
+  title: string;
+  browser: string;
+  status: string;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
+  exit_code: number | null;
+};
 
 type CompanyOption = { name: string; slug: string };
 
@@ -513,6 +529,19 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   const [addingName, setAddingName] = useState("");
   const [dbLoading, setDbLoading] = useState(false);
   const [isDark, setIsDark] = useState(true);
+
+  // ── Runs + Agents state ──────────────────────────────────────────────────
+  const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  const [runHistory, setRunHistory] = useState<RunRecord[]>([]);
+  const [runsLoading, setRunsLoading] = useState(false);
+  const [agentTab, setAgentTab] = useState<AgentPanelTab>("planner");
+  const [agentLoading, setAgentLoading] = useState(false);
+  const [agentResult, setAgentResult] = useState<string | null>(null);
+  const [plannerInput, setPlannerInput] = useState("");
+  const [generatorInput, setGeneratorInput] = useState("");
+  const [generatorTargetFile, setGeneratorTargetFile] = useState("tests/generated.spec.ts");
+  const [healerError, setHealerError] = useState("");
+
   const terminalRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
 
@@ -583,6 +612,27 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [terminal]);
+
+  // Load run history when company changes
+  const loadRuns = useCallback(async (slug: string) => {
+    if (!slug) return;
+    setRunsLoading(true);
+    try {
+      const res = await fetch(`/api/playwright/run?companySlug=${encodeURIComponent(slug)}`);
+      if (res.ok) {
+        const data = (await res.json()) as { runs: RunRecord[] };
+        setRunHistory(data.runs ?? []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setRunsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedCompany) void loadRuns(selectedCompany);
+  }, [selectedCompany, loadRuns]);
 
   // Derived: active file object
   const activeFile = useMemo(() => {
@@ -680,45 +730,79 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   }, [activeFileId, activeFile, addTerminalLine, selectedCompany]);
 
   const handleRun = useCallback(async () => {
-    if (isRunning) return;
+    if (isRunning || !selectedCompany) return;
     setIsRunning(true);
     setRightTab("terminal");
     setTerminal([]);
 
-    const steps = [
-      { type: "system" as const, text: "► Iniciando execução Playwright..." },
-      {
-        type: "info" as const,
-        text: `  Config: browser=${config.browser}, headless=${config.headless}, workers=${config.workers}`,
-      },
-      { type: "info" as const, text: `  baseURL: ${config.baseURL}` },
-      { type: "info" as const, text: "" },
-      { type: "info" as const, text: "  Running 3 tests using 2 workers" },
-      { type: "info" as const, text: "" },
-      {
-        type: "success" as const,
-        text: "  ✓ [chromium] Login › should login with valid credentials (1.2s)",
-      },
-      {
-        type: "success" as const,
-        text: "  ✓ [chromium] Login › should show error with invalid credentials (0.8s)",
-      },
-      {
-        type: "success" as const,
-        text: "  ✓ [chromium] Login › should redirect unauthenticated users (0.6s)",
-      },
-      { type: "info" as const, text: "" },
-      { type: "success" as const, text: "  3 passed (3.2s)" },
-      { type: "system" as const, text: "► Execução concluída com sucesso." },
-    ];
+    const scripts = getAllFiles(tree).map((f) => ({ path: f.path, content: f.content }));
 
-    for (const step of steps) {
-      await new Promise((r) => setTimeout(r, 200 + Math.random() * 300));
-      addTerminalLine(step.type, step.text);
+    try {
+      // 1. Start the run — get back a runId
+      const startRes = await fetch("/api/playwright/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companySlug: selectedCompany,
+          title: `Execução manual — ${new Date().toLocaleString("pt-BR")}`,
+          scripts,
+          config: {
+            baseURL: config.baseURL,
+            browser: config.browser,
+            headless: config.headless,
+            timeoutMs: config.timeout,
+            workers: config.workers,
+            retries: config.retries,
+            screenshotOn: config.screenshotOn,
+            videoOn: config.videoOn,
+            traceOn: "off",
+          },
+        }),
+      });
+
+      if (!startRes.ok) {
+        const err = (await startRes.json().catch(() => ({ error: "Erro desconhecido" }))) as { error?: string };
+        addTerminalLine("error", `Falha ao iniciar: ${err.error ?? startRes.statusText}`);
+        setIsRunning(false);
+        return;
+      }
+
+      const { runId } = (await startRes.json()) as { runId: string };
+      setActiveRunId(runId);
+      addTerminalLine("system", `► Run iniciada — ID: ${runId}`);
+
+      // 2. Stream SSE output
+      const evtSource = new EventSource(`/api/playwright/run/${runId}/events`);
+
+      evtSource.onmessage = (e) => {
+        const data = JSON.parse(e.data) as { type: string; line?: string; status?: string };
+        if (data.type === "line" && data.line) {
+          const raw = data.line;
+          let type: TerminalLine["type"] = "info";
+          if (raw.startsWith("[system]")) type = "system";
+          else if (raw.startsWith("[error]")) type = "error";
+          else if (raw.startsWith("[stderr]")) type = "warn";
+          else if (raw.includes("passed") || raw.includes("✓")) type = "success";
+          else if (raw.includes("failed") || raw.includes("✘")) type = "error";
+          const text = raw.replace(/^\[(system|stdout|stderr|error)\]\s?/, "");
+          addTerminalLine(type, text);
+        } else if (data.type === "done") {
+          evtSource.close();
+          setIsRunning(false);
+          if (selectedCompany) void loadRuns(selectedCompany);
+        }
+      };
+
+      evtSource.onerror = () => {
+        evtSource.close();
+        setIsRunning(false);
+        if (selectedCompany) void loadRuns(selectedCompany);
+      };
+    } catch (err) {
+      addTerminalLine("error", `Erro: ${err instanceof Error ? err.message : String(err)}`);
+      setIsRunning(false);
     }
-
-    setIsRunning(false);
-  }, [isRunning, config, addTerminalLine]);
+  }, [isRunning, selectedCompany, tree, config, addTerminalLine, loadRuns]);
 
   const handleCloseTab = useCallback(
     (fileId: string, e: React.MouseEvent) => {
@@ -1171,6 +1255,323 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     );
   }
 
+  // ── Render: Runs history ──────────────────────────────────────────────────
+
+  const RUN_STATUS_COLORS: Record<string, string> = {
+    queued:  "text-zinc-400",
+    running: "text-blue-400",
+    passed:  "text-emerald-400",
+    failed:  "text-red-400",
+    error:   "text-red-500",
+  };
+
+  const RUN_STATUS_LABELS: Record<string, string> = {
+    queued:  "Na fila",
+    running: "Executando",
+    passed:  "Passou",
+    failed:  "Falhou",
+    error:   "Erro",
+  };
+
+  function renderRuns() {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-zinc-800">
+          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-zinc-500">
+            Histórico
+          </span>
+          <button
+            type="button"
+            title="Atualizar"
+            onClick={() => selectedCompany && void loadRuns(selectedCompany)}
+            className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+          >
+            <FiRefreshCw className={`h-3.5 w-3.5 ${runsLoading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto p-2 text-[12px]">
+          {runsLoading && (
+            <p className="p-3 text-zinc-500 dark:text-zinc-600">Carregando…</p>
+          )}
+          {!runsLoading && runHistory.length === 0 && (
+            <p className="p-3 text-zinc-500 dark:text-zinc-600">
+              Nenhuma execução registrada.
+            </p>
+          )}
+          {runHistory.map((run) => (
+            <div
+              key={run.id}
+              onClick={() => setActiveRunId(run.id === activeRunId ? null : run.id)}
+              className={`mb-1.5 cursor-pointer rounded-lg border px-3 py-2 transition-colors ${
+                activeRunId === run.id
+                  ? "border-[#ef0001] bg-red-50 dark:border-[#ef0001] dark:bg-zinc-800"
+                  : "border-slate-200 bg-white hover:border-slate-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="min-w-0 truncate font-medium text-slate-700 dark:text-zinc-300">
+                  {run.title || "Execução"}
+                </span>
+                <span className={`shrink-0 font-semibold ${RUN_STATUS_COLORS[run.status] ?? "text-zinc-400"}`}>
+                  {RUN_STATUS_LABELS[run.status] ?? run.status}
+                </span>
+              </div>
+              <div className="mt-1 flex items-center gap-3 text-[10px] text-slate-400 dark:text-zinc-600">
+                <span>{run.browser}</span>
+                <span>{new Date(run.created_at).toLocaleString("pt-BR")}</span>
+                {run.finished_at && run.started_at && (
+                  <span>
+                    {(
+                      (new Date(run.finished_at).getTime() - new Date(run.started_at).getTime()) /
+                      1000
+                    ).toFixed(1)}s
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render: Agents panel ──────────────────────────────────────────────────
+
+  async function callAgentPlanner() {
+    if (!selectedCompany || !plannerInput.trim()) return;
+    setAgentLoading(true);
+    setAgentResult(null);
+    try {
+      const res = await fetch("/api/playwright/agents/planner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companySlug: selectedCompany,
+          testCaseSummary: plannerInput,
+          existingSpec: activeFile?.content,
+          baseURL: config.baseURL,
+        }),
+      });
+      const data = (await res.json()) as { plan?: string; error?: string };
+      setAgentResult(data.plan ?? data.error ?? "Sem resultado");
+    } catch (err) {
+      setAgentResult(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAgentLoading(false);
+    }
+  }
+
+  async function callAgentGenerator() {
+    if (!selectedCompany || !generatorInput.trim()) return;
+    setAgentLoading(true);
+    setAgentResult(null);
+    try {
+      const res = await fetch("/api/playwright/agents/generator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companySlug: selectedCompany,
+          testCaseSummary: generatorInput,
+          baseURL: config.baseURL,
+          browser: config.browser,
+          targetFile: generatorTargetFile,
+        }),
+      });
+      const data = (await res.json()) as { code?: string; error?: string };
+      if (data.code) {
+        // Inject generated code as a new file in the tree
+        const newFile: ProjectFile = {
+          id: uid(),
+          name: generatorTargetFile.split("/").pop() ?? "generated.spec.ts",
+          path: generatorTargetFile,
+          content: data.code,
+          language: "typescript",
+          status: "draft",
+          updatedAt: now(),
+        };
+        setTree((prev) => ({
+          ...prev,
+          folders: prev.folders.map((f) =>
+            f.name === "tests"
+              ? { ...f, children: [...f.children, newFile] }
+              : f,
+          ),
+        }));
+        setActiveFileId(newFile.id);
+        setAgentResult(`✓ Arquivo gerado: ${generatorTargetFile}`);
+        // Persist to DB
+        if (selectedCompany) {
+          void fetch("/api/automations/scripts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ companySlug: selectedCompany, path: generatorTargetFile, content: data.code, status: "draft" }),
+          });
+        }
+      } else {
+        setAgentResult(data.error ?? "Erro ao gerar");
+      }
+    } catch (err) {
+      setAgentResult(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAgentLoading(false);
+    }
+  }
+
+  async function callAgentHealer() {
+    if (!selectedCompany || !activeFile || !healerError.trim()) return;
+    setAgentLoading(true);
+    setAgentResult(null);
+    try {
+      const res = await fetch("/api/playwright/agents/healer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companySlug: selectedCompany,
+          specContent: activeFile.content,
+          errorOutput: healerError,
+        }),
+      });
+      const data = (await res.json()) as { fixedCode?: string; diff?: string; error?: string };
+      if (data.fixedCode && activeFileId) {
+        setTree((prev) => updateFileInTree(prev, activeFileId, (f) => ({ ...f, content: data.fixedCode!, updatedAt: now() })));
+        setAgentResult(`✓ Arquivo curado. Diff:\n${data.diff ?? "(sem diff)"}`);
+        if (selectedCompany && activeFile) {
+          void fetch("/api/automations/scripts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ companySlug: selectedCompany, path: activeFile.path, content: data.fixedCode, status: activeFile.status }),
+          });
+        }
+      } else {
+        setAgentResult(data.error ?? "Erro ao curar");
+      }
+    } catch (err) {
+      setAgentResult(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAgentLoading(false);
+    }
+  }
+
+  function renderAgents() {
+    return (
+      <div className="flex h-full flex-col text-[12px]">
+        {/* Agent sub-tabs */}
+        <div className="flex border-b border-slate-200 dark:border-zinc-800">
+          {(["planner", "generator", "healer"] as const).map((tab) => {
+            const labels = { planner: "Planejador", generator: "Gerador", healer: "Curador" };
+            const icons = { planner: <FiList className="h-3 w-3" />, generator: <FiZap className="h-3 w-3" />, healer: <FiCpu className="h-3 w-3" /> };
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => { setAgentTab(tab); setAgentResult(null); }}
+                className={`flex flex-1 items-center justify-center gap-1 py-2 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
+                  agentTab === tab
+                    ? "border-b-2 border-[#ef0001] text-[#ef0001]"
+                    : "text-slate-400 hover:text-slate-600 dark:text-zinc-600 dark:hover:text-zinc-400"
+                }`}
+              >
+                {icons[tab]} {labels[tab]}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-1 flex-col gap-3 overflow-auto p-3">
+          {agentTab === "planner" && (
+            <>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                Descreva o caso de teste e o agente gera um plano detalhado de automação.
+              </p>
+              <textarea
+                value={plannerInput}
+                onChange={(e) => setPlannerInput(e.target.value)}
+                rows={4}
+                placeholder="Ex: Testar login com email inválido deve exibir mensagem de erro..."
+                className="w-full resize-none rounded-lg bg-slate-50 px-3 py-2 text-slate-900 outline-none ring-1 ring-slate-300 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
+              />
+              <button
+                type="button"
+                onClick={() => void callAgentPlanner()}
+                disabled={agentLoading || !plannerInput.trim()}
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-[#ef0001] py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {agentLoading ? <FiRefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FiList className="h-3.5 w-3.5" />}
+                Gerar plano
+              </button>
+            </>
+          )}
+
+          {agentTab === "generator" && (
+            <>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                Descreva o teste e o agente gera o código Playwright completo.
+              </p>
+              <textarea
+                value={generatorInput}
+                onChange={(e) => setGeneratorInput(e.target.value)}
+                rows={3}
+                placeholder="Ex: Login com credenciais válidas deve redirecionar para o dashboard..."
+                className="w-full resize-none rounded-lg bg-slate-50 px-3 py-2 text-slate-900 outline-none ring-1 ring-slate-300 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
+              />
+              <input
+                value={generatorTargetFile}
+                onChange={(e) => setGeneratorTargetFile(e.target.value)}
+                placeholder="tests/generated.spec.ts"
+                className="w-full rounded-lg bg-slate-50 px-3 py-2 text-slate-900 outline-none ring-1 ring-slate-300 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
+              />
+              <button
+                type="button"
+                onClick={() => void callAgentGenerator()}
+                disabled={agentLoading || !generatorInput.trim()}
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-[#ef0001] py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {agentLoading ? <FiRefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FiZap className="h-3.5 w-3.5" />}
+                Gerar código
+              </button>
+            </>
+          )}
+
+          {agentTab === "healer" && (
+            <>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                Cole o erro do arquivo ativo e o agente corrige o spec automaticamente.
+              </p>
+              {!activeFile && (
+                <p className="rounded-lg bg-amber-50 p-2 text-[11px] text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                  Abra um arquivo para curar.
+                </p>
+              )}
+              <textarea
+                value={healerError}
+                onChange={(e) => setHealerError(e.target.value)}
+                rows={5}
+                placeholder="Cole aqui o erro ou stack trace do Playwright..."
+                className="w-full resize-none rounded-lg bg-slate-50 px-3 py-2 text-slate-900 outline-none ring-1 ring-slate-300 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
+              />
+              <button
+                type="button"
+                onClick={() => void callAgentHealer()}
+                disabled={agentLoading || !healerError.trim() || !activeFile}
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-[#ef0001] py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {agentLoading ? <FiRefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FiCpu className="h-3.5 w-3.5" />}
+                Curar spec
+              </button>
+            </>
+          )}
+
+          {/* Result box */}
+          {agentResult && (
+            <div className="mt-2 max-h-64 overflow-auto rounded-lg bg-zinc-900 p-3 text-[11px] font-mono text-zinc-300 ring-1 ring-zinc-700 whitespace-pre-wrap">
+              {agentResult}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // ── Main render ───────────────────────────────────────────────────────────
 
   return (
@@ -1343,8 +1744,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           </div>
         )}
 
-        {/* Monaco editor - commented out until @monaco-editor/react is installed */}
-        {/* {activeFile ? (
+        {/* Monaco editor */}
+        {activeFile ? (
           <div className="min-h-0 flex-1">
             <MonacoEditor
               height="100%"
@@ -1377,53 +1778,48 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               <p className="text-sm">Selecione um arquivo para editar</p>
             </div>
           </div>
-        )} */}
-
-        {/* Placeholder while Monaco editor is not available */}
-        <div className="flex flex-1 items-center justify-center text-slate-400 dark:text-zinc-600">
-          <div className="text-center">
-            <FiCode className="mx-auto mb-3 h-10 w-10 opacity-30" />
-            <p className="text-sm">Editor não está disponível. Instale @monaco-editor/react para habilitar.</p>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* ── Panel 3: Config + Terminal ── */}
+      {/* ── Panel 3: Config + Terminal + Runs + Agents ── */}
       <aside className="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         {/* Tabs */}
         <div className="flex border-b border-slate-200 dark:border-zinc-800">
-          <button
-            type="button"
-            onClick={() => setRightTab("config")}
-            className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors ${
-              rightTab === "config"
-                ? "border-b-2 border-[#ef0001] text-[#ef0001]"
-                : "text-slate-400 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300"
-            }`}
-          >
-            <FiSettings className="h-3.5 w-3.5" />
-            Config
-          </button>
-          <button
-            type="button"
-            onClick={() => setRightTab("terminal")}
-            className={`relative flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors ${
-              rightTab === "terminal"
-                ? "border-b-2 border-[#ef0001] text-[#ef0001]"
-                : "text-slate-400 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300"
-            }`}
-          >
-            <FiTerminal className="h-3.5 w-3.5" />
-            Terminal
-            {isRunning && (
-              <span className="absolute right-3 top-1/2 h-2 w-2 -translate-y-1/2 animate-pulse rounded-full bg-emerald-500" />
-            )}
-          </button>
+          {(["config", "terminal", "runs", "agents"] as const).map((tab) => {
+            const icons = {
+              config: <FiSettings className="h-3 w-3" />,
+              terminal: <FiTerminal className="h-3 w-3" />,
+              runs: <FiClock className="h-3 w-3" />,
+              agents: <FiZap className="h-3 w-3" />,
+            };
+            const labels = { config: "Config", terminal: "Log", runs: "Runs", agents: "IA" };
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setRightTab(tab)}
+                className={`relative flex flex-1 items-center justify-center gap-1 py-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                  rightTab === tab
+                    ? "border-b-2 border-[#ef0001] text-[#ef0001]"
+                    : "text-slate-400 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300"
+                }`}
+              >
+                {icons[tab]}
+                {labels[tab]}
+                {tab === "terminal" && isRunning && (
+                  <span className="absolute right-1 top-1.5 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Panel content */}
         <div className="min-h-0 flex-1 overflow-hidden">
-          {rightTab === "config" ? renderConfig() : renderTerminal()}
+          {rightTab === "config" && renderConfig()}
+          {rightTab === "terminal" && renderTerminal()}
+          {rightTab === "runs" && renderRuns()}
+          {rightTab === "agents" && renderAgents()}
         </div>
       </aside>
     </div>

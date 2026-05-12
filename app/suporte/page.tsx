@@ -7,8 +7,7 @@ export default function SuportePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to support Kanban
-    router.replace("/suporte/kanban");
+    router.replace("/admin/chamados");
   }, [router]);
 
   return null;

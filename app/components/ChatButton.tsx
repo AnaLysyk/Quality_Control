@@ -583,7 +583,8 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
 
   if (!assistantEnabled) return null;
   if (!user) return null;
-  if (!can("ai", "view") || !can("ai", "use")) return null;
+  const isGlobalAdmin = user.isGlobalAdmin === true || (user as { is_global_admin?: boolean }).is_global_admin === true;
+  if (!isGlobalAdmin && (!can("ai", "view") || !can("ai", "use"))) return null;
 
   const roleLabel = user.permissionRole ?? user.role ?? user.companyRole ?? "usu\u00e1rio";
   const activeCompanyScope = assistantContext.companySlug ?? user.clientSlug ?? user.defaultClientSlug ?? "global";

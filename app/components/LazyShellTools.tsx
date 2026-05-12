@@ -359,9 +359,10 @@ export function DeferredChatButton() {
   const { user, can } = usePermissionAccess();
   const { mounted, defaultOpen, prime, open } = useDeferredShellTool();
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
+  const isGlobalAdmin = user?.isGlobalAdmin === true || (user as { is_global_admin?: boolean } | null)?.is_global_admin === true;
 
   if (!assistantEnabled || !user) return null;
-  if (!can("ai", "view") || !can("ai", "use")) return null;
+  if (!isGlobalAdmin && (!can("ai", "view") || !can("ai", "use"))) return null;
 
   if (mounted) return <ChunkErrorBoundary><LazyChatButtonInner defaultOpen={defaultOpen} /></ChunkErrorBoundary>;
 
@@ -373,8 +374,8 @@ export function DeferredChatButton() {
         onMouseEnter={prime}
         onFocus={prime}
         onTouchStart={prime}
-        aria-label="Abrir assistente da plataforma"
-        title="Assistente Testing Company"
+        aria-label="Abrir Brain"
+        title="Brain"
         className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105 disabled:cursor-progress"
         disabled={mounted}
       >
@@ -383,7 +384,7 @@ export function DeferredChatButton() {
           <div className="relative h-full w-full">
             <Image
               src="/images/tc.png"
-              alt="Assistente Testing Company"
+              alt="Brain"
               fill
               sizes="56px"
               className={`select-none pointer-events-none object-contain ${mounted ? "animate-pulse" : "animate-spin-slower"}`}
@@ -391,7 +392,7 @@ export function DeferredChatButton() {
           </div>
         </div>
         <span className="pointer-events-none absolute bottom-[calc(100%+0.5rem)] right-0 whitespace-nowrap rounded-xl bg-[#011848] px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-          Assistente Testing Company
+          Brain
           <span className="absolute -bottom-1.25 right-5 h-2.5 w-2.5 rotate-45 bg-[#011848]" />
         </span>
       </button>

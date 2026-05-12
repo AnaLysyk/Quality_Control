@@ -27,6 +27,7 @@ import {
   FiX,
   FiZap,
 } from "react-icons/fi";
+import { useProjectContext } from "@/lib/core/project/ProjectContext";
 
 // Monaco Editor is large — load dynamically to avoid SSR issues
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -127,6 +128,7 @@ type ProjectTree = {
 type PlaywrightConfig = {
   baseURL: string;
   browser: "chromium" | "firefox" | "webkit";
+  browsers: Array<"chromium" | "firefox" | "webkit">;
   headless: boolean;
   timeout: number;
   workers: number;
@@ -147,16 +149,70 @@ type AgentPanelTab = "planner" | "generator" | "healer";
 
 type RunRecord = {
   id: string;
+  project_id?: string | null;
   title: string;
   browser: string;
   status: string;
+  run_mode?: "all" | "changed" | "failed";
+  selected_specs?: string[];
+  source_run_id?: string | null;
   started_at: string | null;
   finished_at: string | null;
   created_at: string;
   exit_code: number | null;
 };
 
+type RunResultRecord = {
+  id: string;
+  spec_file: string;
+  title: string;
+  status: string;
+  duration_ms: number;
+  error_msg: string | null;
+  created_at: string;
+};
+
 type CompanyOption = { name: string; slug: string };
+
+type RunComparison = {
+  compareTo: string;
+  regressions: number;
+  improvements: number;
+  unchanged: number;
+  newItems: number;
+  byKey: Record<string, "regression" | "improvement" | "same" | "new">;
+};
+
+type RepositoryTestCase = {
+  id: string;
+  key?: string;
+  title: string;
+  description?: string;
+  steps?: Array<{ action?: string; expectedResult?: string }>;
+};
+
+type TestProjectOption = {
+  id: string;
+  code: string | null;
+  name: string;
+  source: "internal" | "qase";
+  applicationId: string | null;
+  applicationName: string | null;
+  casesCount: number;
+};
+
+type TestPlanOption = {
+  id: string;
+  title: string;
+  source: "manual" | "qase";
+  projectCode?: string | null;
+  applicationId?: string | null;
+  casesCount?: number;
+};
+
+const RUN_STATUS_FILTER_STORAGE_KEY = "pwStudio.runStatusFilter";
+const RUN_SEARCH_QUERY_STORAGE_KEY = "pwStudio.runSearchQuery";
+const RUN_COMPARE_TO_STORAGE_KEY = "pwStudio.runCompareTo";
 
 // ── Default templates ────────────────────────────────────────────────────────
 
@@ -493,6 +549,7 @@ type Props = {
 };
 
 export default function PlaywrightStudio({ activeCompanySlug, companies }: Props) {
+  const { activeProjectId, activeProject } = useProjectContext();
   const [tree, setTree] = useState<ProjectTree>(buildDefaultTree);
   const [activeFileId, setActiveFileId] = useState<string | null>(() => {
     const t = buildDefaultTree();
@@ -503,7 +560,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   const [config, setConfig] = useState<PlaywrightConfig>({
     baseURL: "http://localhost:3000",
     browser: "chromium",
-    headless: true,
+    browsers: ["chromium"],
+    headless: false,
     timeout: 30000,
     workers: 2,
     retries: 0,
@@ -532,15 +590,51 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
 
   // ── Runs + Agents state ──────────────────────────────────────────────────
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  const [compareToRunId, setCompareToRunId] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(RUN_COMPARE_TO_STORAGE_KEY) ?? "";
+  });
   const [runHistory, setRunHistory] = useState<RunRecord[]>([]);
+  const [runDetails, setRunDetails] = useState<Record<string, RunResultRecord[]>>({});
+  const [runComparisons, setRunComparisons] = useState<Record<string, RunComparison | null>>({});
+  const [runMode, setRunMode] = useState<"all" | "changed" | "failed">("all");
+  const [runStatusFilter, setRunStatusFilter] = useState<"all" | "queued" | "running" | "passed" | "failed" | "error">(() => {
+    if (typeof window === "undefined") return "all";
+    const raw = window.localStorage.getItem(RUN_STATUS_FILTER_STORAGE_KEY);
+    if (raw === "queued" || raw === "running" || raw === "passed" || raw === "failed" || raw === "error") {
+      return raw;
+    }
+    return "all";
+  });
+  const [runSearchQuery, setRunSearchQuery] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(RUN_SEARCH_QUERY_STORAGE_KEY) ?? "";
+  });
   const [runsLoading, setRunsLoading] = useState(false);
   const [agentTab, setAgentTab] = useState<AgentPanelTab>("planner");
   const [agentLoading, setAgentLoading] = useState(false);
   const [agentResult, setAgentResult] = useState<string | null>(null);
   const [plannerInput, setPlannerInput] = useState("");
   const [generatorInput, setGeneratorInput] = useState("");
+  const [generatorTargetType, setGeneratorTargetType] = useState<"playwright" | "api">("playwright");
   const [generatorTargetFile, setGeneratorTargetFile] = useState("tests/generated.spec.ts");
   const [healerError, setHealerError] = useState("");
+  const [repositoryCases, setRepositoryCases] = useState<RepositoryTestCase[]>([]);
+  const [selectedRepositoryCaseId, setSelectedRepositoryCaseId] = useState("");
+  const [testProjects, setTestProjects] = useState<TestProjectOption[]>([]);
+  const [selectedTestProjectId, setSelectedTestProjectId] = useState("");
+  const [testPlans, setTestPlans] = useState<TestPlanOption[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [flowCaseTitle, setFlowCaseTitle] = useState("Caso E2E Playwright - Quality Control");
+  const [flowCaseDescription, setFlowCaseDescription] = useState("Validar fluxo crítico do sistema em produção controlada.");
+  const [flowRepository, setFlowRepository] = useState("TestingCompany/quality-control-e2e");
+  const [flowBranch, setFlowBranch] = useState("main");
+  const [flowBusy, setFlowBusy] = useState(false);
+
+  const griauleCompany = useMemo(
+    () => companies.find((company) => /griaule/i.test(company.slug) || /griaule/i.test(company.name)) ?? null,
+    [companies],
+  );
 
   const terminalRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
@@ -618,7 +712,9 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     if (!slug) return;
     setRunsLoading(true);
     try {
-      const res = await fetch(`/api/playwright/run?companySlug=${encodeURIComponent(slug)}`);
+      const qs = new URLSearchParams({ companySlug: slug });
+      if (activeProjectId) qs.set("projectId", activeProjectId);
+      const res = await fetch(`/api/playwright/run?${qs.toString()}`);
       if (res.ok) {
         const data = (await res.json()) as { runs: RunRecord[] };
         setRunHistory(data.runs ?? []);
@@ -628,11 +724,68 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     } finally {
       setRunsLoading(false);
     }
-  }, []);
+  }, [activeProjectId]);
 
   useEffect(() => {
     if (selectedCompany) void loadRuns(selectedCompany);
-  }, [selectedCompany, loadRuns]);
+  }, [selectedCompany, activeProjectId, loadRuns]);
+
+  useEffect(() => {
+    if (!selectedCompany) return;
+    let cancelled = false;
+    void fetch(`/api/test-cases?companySlug=${encodeURIComponent(selectedCompany)}&includeIntegrated=true`)
+      .then((r) => r.json())
+      .then((data: { items?: Array<{ testCase?: RepositoryTestCase }> }) => {
+        if (cancelled) return;
+        const items = Array.isArray(data.items)
+          ? data.items
+              .map((item) => item.testCase)
+              .filter((item): item is RepositoryTestCase => Boolean(item && item.id && item.title))
+          : [];
+        setRepositoryCases(items);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setRepositoryCases([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCompany]);
+
+  useEffect(() => {
+    if (!activeRunId) return;
+    if (runDetails[activeRunId] && runComparisons[activeRunId] !== undefined) return;
+    let cancelled = false;
+    const compareParam = compareToRunId ? `?compareTo=${encodeURIComponent(compareToRunId)}` : "";
+    void fetch(`/api/playwright/run/${activeRunId}${compareParam}`)
+      .then((r) => r.json())
+      .then((data: { results?: RunResultRecord[]; comparison?: RunComparison | null }) => {
+        if (cancelled) return;
+        setRunDetails((prev) => ({ ...prev, [activeRunId]: data.results ?? [] }));
+        setRunComparisons((prev) => ({ ...prev, [activeRunId]: data.comparison ?? null }));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setRunDetails((prev) => ({ ...prev, [activeRunId]: [] }));
+        setRunComparisons((prev) => ({ ...prev, [activeRunId]: null }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeRunId, runDetails, runComparisons, compareToRunId]);
+
+  useEffect(() => {
+    window.localStorage.setItem(RUN_STATUS_FILTER_STORAGE_KEY, runStatusFilter);
+  }, [runStatusFilter]);
+
+  useEffect(() => {
+    window.localStorage.setItem(RUN_SEARCH_QUERY_STORAGE_KEY, runSearchQuery);
+  }, [runSearchQuery]);
+
+  useEffect(() => {
+    window.localStorage.setItem(RUN_COMPARE_TO_STORAGE_KEY, compareToRunId);
+  }, [compareToRunId]);
 
   // Derived: active file object
   const activeFile = useMemo(() => {
@@ -646,6 +799,25 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       .map((id) => all.find((f) => f.id === id))
       .filter(Boolean) as ProjectFile[];
   }, [openFileIds, tree]);
+
+  const allFiles = useMemo(() => getAllFiles(tree), [tree]);
+  const specFiles = useMemo(
+    () => allFiles.filter((file) => /(^|\/)tests\/.+\.spec\.(ts|js)$/i.test(file.path)),
+    [allFiles],
+  );
+  const publishedSpecCount = useMemo(
+    () => specFiles.filter((file) => file.status === "published").length,
+    [specFiles],
+  );
+  const hasRunnableSpecs = specFiles.length > 0;
+  const selectedRepositoryCase = useMemo(
+    () => repositoryCases.find((item) => item.id === selectedRepositoryCaseId) ?? null,
+    [repositoryCases, selectedRepositoryCaseId],
+  );
+  const selectedTestProject = useMemo(
+    () => testProjects.find((project) => project.id === selectedTestProjectId) ?? null,
+    [testProjects, selectedTestProjectId],
+  );
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -729,13 +901,37 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     }
   }, [activeFileId, activeFile, addTerminalLine, selectedCompany]);
 
-  const handleRun = useCallback(async () => {
+  const handleRun = useCallback(async (mode?: "all" | "changed" | "failed") => {
     if (isRunning || !selectedCompany) return;
+    const effectiveMode = mode ?? runMode;
+    if (!hasRunnableSpecs && effectiveMode !== "failed") {
+      setRightTab("terminal");
+      addTerminalLine("error", "Nenhum arquivo de teste .spec.ts/.spec.js encontrado em tests/. Crie ou gere um spec antes de executar.");
+      return;
+    }
+
+    const sourceRunId =
+      effectiveMode === "failed"
+        ? runHistory.find((run) => run.status === "failed" || run.status === "error")?.id ?? null
+        : null;
+    if (effectiveMode === "failed" && !sourceRunId) {
+      setRightTab("runs");
+      addTerminalLine("warn", "Nenhuma execução com falha encontrada para reexecutar.");
+      return;
+    }
+
     setIsRunning(true);
     setRightTab("terminal");
     setTerminal([]);
 
     const scripts = getAllFiles(tree).map((f) => ({ path: f.path, content: f.content }));
+    const selectedBrowsers = Array.from(new Set(config.browsers));
+    if (!selectedBrowsers.length) {
+      setRightTab("config");
+      addTerminalLine("error", "Selecione ao menos um navegador para executar.");
+      setIsRunning(false);
+      return;
+    }
 
     try {
       // 1. Start the run — get back a runId
@@ -744,11 +940,16 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           companySlug: selectedCompany,
-          title: `Execução manual — ${new Date().toLocaleString("pt-BR")}`,
+          projectId: activeProjectId ?? undefined,
+          planId: selectedPlanId || undefined,
+          title: `${effectiveMode === "changed" ? "Execução changed specs" : effectiveMode === "failed" ? "Rerun failed" : "Execução manual"} — ${new Date().toLocaleString("pt-BR")}`,
+          runMode: effectiveMode,
+          sourceRunId: sourceRunId ?? undefined,
           scripts,
           config: {
             baseURL: config.baseURL,
             browser: config.browser,
+            browsers: selectedBrowsers,
             headless: config.headless,
             timeoutMs: config.timeout,
             workers: config.workers,
@@ -767,9 +968,12 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         return;
       }
 
-      const { runId } = (await startRes.json()) as { runId: string };
+      const { runId, selectedSpecs } = (await startRes.json()) as { runId: string; selectedSpecs?: string[] };
       setActiveRunId(runId);
       addTerminalLine("system", `► Run iniciada — ID: ${runId}`);
+      if (Array.isArray(selectedSpecs)) {
+        addTerminalLine("system", `Escopo: ${selectedSpecs.length} spec(s).`);
+      }
 
       // 2. Stream SSE output
       const evtSource = new EventSource(`/api/playwright/run/${runId}/events`);
@@ -789,6 +993,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         } else if (data.type === "done") {
           evtSource.close();
           setIsRunning(false);
+          setRightTab("runs");
           if (selectedCompany) void loadRuns(selectedCompany);
         }
       };
@@ -796,13 +1001,225 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       evtSource.onerror = () => {
         evtSource.close();
         setIsRunning(false);
+        setRightTab("runs");
         if (selectedCompany) void loadRuns(selectedCompany);
       };
     } catch (err) {
       addTerminalLine("error", `Erro: ${err instanceof Error ? err.message : String(err)}`);
       setIsRunning(false);
     }
-  }, [isRunning, selectedCompany, tree, config, addTerminalLine, loadRuns]);
+  }, [isRunning, selectedCompany, activeProjectId, selectedPlanId, runMode, runHistory, tree, config, addTerminalLine, loadRuns, hasRunnableSpecs]);
+
+  const openFloatingAssistant = useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(
+      new CustomEvent("assistant:open", {
+        detail: {
+          source: "playwright-studio",
+          agentMode: "playwright",
+          panelMode: "side",
+          initialMessage: "Ajude a automatizar o projeto Quality Control em produção controlada, com foco em estabilidade e cobertura crítica.",
+        },
+      }),
+    );
+  }, []);
+
+  const loadTestProjects = useCallback(async () => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch(`/api/test-projects?companySlug=${encodeURIComponent(selectedCompany)}&includeCases=true`);
+      if (!res.ok) return;
+      const data = (await res.json()) as { projects?: TestProjectOption[] };
+      const projects = Array.isArray(data.projects) ? data.projects : [];
+      setTestProjects(projects);
+      if (!projects.find((item) => item.id === selectedTestProjectId)) {
+        const qualityControl = projects.find((item) => /quality\s*control/i.test(item.name) || /quality\s*control/i.test(item.code ?? ""));
+        setSelectedTestProjectId(qualityControl?.id ?? projects[0]?.id ?? "");
+      }
+    } catch {
+      setTestProjects([]);
+    }
+  }, [selectedCompany, selectedTestProjectId]);
+
+  const loadPlans = useCallback(async () => {
+    if (!selectedCompany || !selectedTestProject) return;
+    try {
+      const qs = new URLSearchParams({
+        companySlug: selectedCompany,
+        applicationId: selectedTestProject.applicationId ?? "",
+        source: "manual",
+      });
+      if (activeProjectId) qs.set("projectId", activeProjectId);
+      if (selectedTestProject.code) qs.set("project", selectedTestProject.code);
+      const res = await fetch(`/api/test-plans?${qs.toString()}`);
+      if (!res.ok) return;
+      const data = (await res.json()) as { plans?: TestPlanOption[] };
+      const plans = Array.isArray(data.plans) ? data.plans : [];
+      setTestPlans(plans);
+      if (selectedPlanId && !plans.find((item) => item.id === selectedPlanId)) {
+        setSelectedPlanId("");
+      }
+    } catch {
+      setTestPlans([]);
+    }
+  }, [selectedCompany, selectedTestProject, activeProjectId, selectedPlanId]);
+
+  const handleCreateCasePlanAndRepository = useCallback(async () => {
+    if (!selectedCompany || !selectedTestProject) {
+      addTerminalLine("warn", "Selecione empresa e projeto de teste para continuar.");
+      setRightTab("config");
+      return;
+    }
+    if (!flowCaseTitle.trim()) {
+      addTerminalLine("warn", "Informe o título do caso de teste.");
+      setRightTab("config");
+      return;
+    }
+
+    setFlowBusy(true);
+    try {
+      addTerminalLine("system", "Criando caso de teste no projeto Quality Control...");
+      const caseRes = await fetch("/api/test-cases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companySlug: selectedCompany,
+          projectId: activeProjectId ?? undefined,
+          applicationId: selectedTestProject.applicationId ?? undefined,
+          testProjectCode: selectedTestProject.code ?? undefined,
+          source: "playwright",
+          type: "hybrid",
+          status: "active",
+          priority: "high",
+          automationStatus: "planned",
+          title: flowCaseTitle.trim(),
+          description: flowCaseDescription.trim() || undefined,
+          steps: [
+            {
+              order: 1,
+              action: "Executar cenário crítico no ambiente de produção controlada",
+              expectedResult: "Fluxo concluído sem falhas críticas e com evidências de execução",
+            },
+          ],
+        }),
+      });
+      if (!caseRes.ok) {
+        const err = (await caseRes.json().catch(() => ({ message: "Falha ao criar caso" }))) as { message?: string };
+        addTerminalLine("error", err.message ?? "Falha ao criar caso de teste");
+        return;
+      }
+      const caseData = (await caseRes.json()) as { testCase?: { id?: string } };
+      const createdCaseId = caseData.testCase?.id;
+      if (!createdCaseId) {
+        addTerminalLine("error", "Caso criado sem ID retornado.");
+        return;
+      }
+      addTerminalLine("success", `Caso criado: ${createdCaseId}`);
+
+      let targetPlanId = selectedPlanId;
+      if (!targetPlanId) {
+        addTerminalLine("system", "Criando plano de teste e vinculando caso...");
+        const planRes = await fetch("/api/test-plans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companySlug: selectedCompany,
+            applicationId: selectedTestProject.applicationId,
+            projectId: activeProjectId ?? undefined,
+            projectCode: selectedTestProject.code ?? undefined,
+            source: "manual",
+            title: `Plano Playwright ${selectedTestProject.name} — ${new Date().toLocaleDateString("pt-BR")}`,
+            description: "Plano criado automaticamente via Playwright Studio para execução em produção controlada.",
+            testCaseIds: [createdCaseId],
+          }),
+        });
+        if (!planRes.ok) {
+          const err = (await planRes.json().catch(() => ({ error: "Falha ao criar plano" }))) as { error?: string };
+          addTerminalLine("error", err.error ?? "Falha ao criar plano");
+          return;
+        }
+        const planData = (await planRes.json()) as { plan?: { id?: string } };
+        targetPlanId = planData.plan?.id ?? "";
+        setSelectedPlanId(targetPlanId);
+        addTerminalLine("success", `Plano criado: ${targetPlanId}`);
+      } else {
+        addTerminalLine("system", "Vinculando caso ao plano selecionado...");
+        const linkRes = await fetch(`/api/test-plans/${encodeURIComponent(targetPlanId)}/test-cases`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companySlug: selectedCompany,
+            testCaseIds: [createdCaseId],
+          }),
+        });
+        if (!linkRes.ok) {
+          const err = (await linkRes.json().catch(() => ({ message: "Falha ao vincular caso ao plano" }))) as { message?: string };
+          addTerminalLine("error", err.message ?? "Falha ao vincular caso ao plano");
+          return;
+        }
+        addTerminalLine("success", `Caso vinculado ao plano: ${targetPlanId}`);
+      }
+
+      const currentSpecFile = specFiles[0]?.path ?? "tests/generated.spec.ts";
+      addTerminalLine("system", "Salvando vínculo de automação com repositório...");
+      const repoRes = await fetch(`/api/test-cases/${encodeURIComponent(createdCaseId)}/automation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          repository: flowRepository.trim() || undefined,
+          branch: flowBranch.trim() || "main",
+          specFile: currentSpecFile,
+          testDescribe: flowCaseTitle.trim(),
+          testTitle: flowCaseTitle.trim(),
+          playwrightProject: "quality-control",
+          environment: "production_controlled",
+          command: "npx playwright test",
+          status: "active",
+        }),
+      });
+      if (!repoRes.ok) {
+        const err = (await repoRes.json().catch(() => ({ message: "Falha ao salvar envio ao repositório" }))) as { message?: string };
+        addTerminalLine("warn", err.message ?? "Falha ao salvar envio ao repositório");
+      } else {
+        addTerminalLine("success", `Envio ao repositório registrado (${flowRepository || "repositório padrão"}).`);
+      }
+
+      await loadPlans();
+    } finally {
+      setFlowBusy(false);
+    }
+  }, [
+    selectedCompany,
+    selectedTestProject,
+    flowCaseTitle,
+    flowCaseDescription,
+    selectedPlanId,
+    flowRepository,
+    flowBranch,
+    activeProjectId,
+    specFiles,
+    addTerminalLine,
+    setRightTab,
+    loadPlans,
+  ]);
+
+  useEffect(() => {
+    if (selectedCompany) void loadTestProjects();
+  }, [selectedCompany, loadTestProjects]);
+
+  useEffect(() => {
+    if (selectedCompany && selectedTestProject) void loadPlans();
+  }, [selectedCompany, selectedTestProject, loadPlans]);
+
+  useEffect(() => {
+    if (!selectedRepositoryCase) return;
+    if (flowCaseTitle === "Caso E2E Playwright - Quality Control") {
+      setFlowCaseTitle(selectedRepositoryCase.title);
+    }
+    if (flowCaseDescription === "Validar fluxo crítico do sistema em produção controlada.") {
+      setFlowCaseDescription(selectedRepositoryCase.description ?? flowCaseDescription);
+    }
+  }, [selectedRepositoryCase, flowCaseTitle, flowCaseDescription]);
 
   const handleCloseTab = useCallback(
     (fileId: string, e: React.MouseEvent) => {
@@ -1072,6 +1489,141 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   function renderConfig() {
     return (
       <div className="space-y-4 overflow-auto p-4 text-[13px]">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500">
+            Prontidão
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+            <div className="rounded bg-white px-2 py-1 dark:bg-zinc-900">
+              <span className="text-slate-500 dark:text-zinc-500">Specs</span>
+              <p className="font-semibold text-slate-700 dark:text-zinc-200">{specFiles.length}</p>
+            </div>
+            <div className="rounded bg-white px-2 py-1 dark:bg-zinc-900">
+              <span className="text-slate-500 dark:text-zinc-500">Publicados</span>
+              <p className="font-semibold text-slate-700 dark:text-zinc-200">{publishedSpecCount}</p>
+            </div>
+          </div>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setConfig((prev) => ({ ...prev, headless: false, workers: 1, retries: 0, screenshotOn: "only-on-failure", videoOn: "retain-on-failure" }))
+              }
+              className="rounded bg-white px-2 py-1 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+            >
+              Preset: Debug
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setConfig((prev) => ({ ...prev, headless: true, workers: Math.max(2, prev.workers), retries: Math.max(1, prev.retries), screenshotOn: "only-on-failure", videoOn: "retain-on-failure" }))
+              }
+              className="rounded bg-white px-2 py-1 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+            >
+              Preset: CI
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setConfig((prev) => ({ ...prev, headless: false, workers: 1, retries: Math.max(0, prev.retries), screenshotOn: "on", videoOn: "on" }))
+              }
+              className="rounded bg-white px-2 py-1 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+            >
+              Preset: Produção (abre navegador)
+            </button>
+            <button
+              type="button"
+              onClick={openFloatingAssistant}
+              className="rounded bg-white px-2 py-1 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+              title="Abrir assistente flutuante para automação"
+            >
+              Assistente flutuante
+            </button>
+          </div>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500">
+            Fluxo Produção Quality Control
+          </p>
+          <div className="mt-2 space-y-2">
+            <label className="block">
+              <span className="text-slate-600 dark:text-zinc-400">Projeto de teste</span>
+              <select
+                aria-label="Projeto de teste"
+                value={selectedTestProjectId}
+                onChange={(e) => setSelectedTestProjectId(e.target.value)}
+                className="mt-1 w-full rounded-lg bg-white px-2 py-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+              >
+                <option value="">Selecionar projeto...</option>
+                {testProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {(project.code ? `${project.code} - ` : "") + project.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-slate-600 dark:text-zinc-400">Plano vinculado na execução</span>
+              <select
+                aria-label="Plano de teste"
+                value={selectedPlanId}
+                onChange={(e) => setSelectedPlanId(e.target.value)}
+                className="mt-1 w-full rounded-lg bg-white px-2 py-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+              >
+                <option value="">Criar novo plano automaticamente</option>
+                {testPlans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-slate-600 dark:text-zinc-400">Título do caso</span>
+              <input
+                value={flowCaseTitle}
+                onChange={(e) => setFlowCaseTitle(e.target.value)}
+                className="mt-1 w-full rounded-lg bg-white px-2 py-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+              />
+            </label>
+            <label className="block">
+              <span className="text-slate-600 dark:text-zinc-400">Descrição do caso</span>
+              <textarea
+                value={flowCaseDescription}
+                onChange={(e) => setFlowCaseDescription(e.target.value)}
+                rows={2}
+                className="mt-1 w-full resize-none rounded-lg bg-white px-2 py-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block">
+                <span className="text-slate-600 dark:text-zinc-400">Repositório</span>
+                <input
+                  value={flowRepository}
+                  onChange={(e) => setFlowRepository(e.target.value)}
+                  className="mt-1 w-full rounded-lg bg-white px-2 py-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+                />
+              </label>
+              <label className="block">
+                <span className="text-slate-600 dark:text-zinc-400">Branch</span>
+                <input
+                  value={flowBranch}
+                  onChange={(e) => setFlowBranch(e.target.value)}
+                  className="mt-1 w-full rounded-lg bg-white px-2 py-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleCreateCasePlanAndRepository()}
+              disabled={flowBusy || !selectedCompany || !selectedTestProject}
+              className="w-full rounded-lg bg-[#ef0001] py-2 text-[12px] font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              title="Criar caso, vincular a plano e registrar envio ao repositório"
+            >
+              {flowBusy ? "Processando..." : "Criar caso + vincular plano + enviar ao repositório"}
+            </button>
+          </div>
+        </div>
         <div>
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500">
             Configuração de Execução
@@ -1095,6 +1647,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                   setConfig((prev) => ({
                     ...prev,
                     browser: e.target.value as PlaywrightConfig["browser"],
+                    browsers: [e.target.value as PlaywrightConfig["browser"]],
                   }))
                 }
                 className="mt-1 w-full rounded-lg bg-slate-50 px-3 py-2 text-slate-900 outline-none ring-1 ring-slate-300 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
@@ -1104,6 +1657,36 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 <option value="webkit">WebKit (Safari)</option>
               </select>
             </label>
+            <div className="rounded-lg bg-slate-50 p-3 ring-1 ring-slate-200 dark:bg-zinc-900/60 dark:ring-zinc-700">
+              <p className="mb-2 text-[11px] font-semibold text-slate-600 dark:text-zinc-300">Matriz de Navegadores (mesma run)</p>
+              <div className="flex flex-wrap gap-3 text-[12px] text-slate-700 dark:text-zinc-300">
+                {(["chromium", "firefox", "webkit"] as const).map((browser) => (
+                  <label key={browser} className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={config.browsers.includes(browser)}
+                      onChange={(e) => {
+                        setConfig((prev) => {
+                          const next = e.target.checked
+                            ? Array.from(new Set([...prev.browsers, browser]))
+                            : prev.browsers.filter((item) => item !== browser);
+                          return {
+                            ...prev,
+                            browsers: next,
+                            browser: (next[0] ?? prev.browser) as PlaywrightConfig["browser"],
+                          };
+                        });
+                      }}
+                      className="h-4 w-4 rounded accent-[#ef0001]"
+                    />
+                    <span>{browser}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="mt-2 text-[10px] text-slate-500 dark:text-zinc-500">
+                Dica: selecione os 3 para executar em lote como Playwright original.
+              </p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
                 <span className="text-slate-600 dark:text-zinc-400">Timeout (ms)</span>
@@ -1221,6 +1804,16 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 </option>
               ))}
             </select>
+            {griauleCompany && selectedCompany !== griauleCompany.slug && (
+              <button
+                type="button"
+                onClick={() => setSelectedCompany(griauleCompany.slug)}
+                className="mt-2 rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+                title="Selecionar empresa Griaule"
+              >
+                Rodar na Griaule
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -1231,10 +1824,27 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
 
   function renderTerminal() {
     return (
-      <div
-        ref={terminalRef}
-        className="h-full overflow-auto bg-[#1e1e1e] p-4 font-mono text-[12px]"
-      >
+      <div className="flex h-full flex-col bg-[#1e1e1e]">
+        <div className="flex items-center justify-end gap-2 border-b border-white/10 px-3 py-2 text-[11px]">
+          <button
+            type="button"
+            onClick={() => navigator.clipboard.writeText(terminal.map((line) => `[${line.ts}] ${line.text}`).join("\n"))}
+            className="rounded bg-white/10 px-2 py-1 text-zinc-300 hover:bg-white/20"
+          >
+            Copiar log
+          </button>
+          <button
+            type="button"
+            onClick={() => setTerminal([])}
+            className="rounded bg-white/10 px-2 py-1 text-zinc-300 hover:bg-white/20"
+          >
+            Limpar
+          </button>
+        </div>
+        <div
+          ref={terminalRef}
+          className="min-h-0 flex-1 overflow-auto p-4 font-mono text-[12px]"
+        >
         {terminal.length === 0 && (
           <p className="text-zinc-600">
             Terminal vazio. Execute um teste para ver os logs aqui.
@@ -1251,6 +1861,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             <span className="animate-pulse">▊</span>
           </div>
         )}
+        </div>
       </div>
     );
   }
@@ -1274,6 +1885,24 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   };
 
   function renderRuns() {
+    const normalizedQuery = runSearchQuery.trim().toLowerCase();
+    const filteredRuns = runHistory.filter((run) => {
+      if (runStatusFilter !== "all" && run.status !== runStatusFilter) return false;
+      if (!normalizedQuery) return true;
+
+      const titleMatch = (run.title ?? "").toLowerCase().includes(normalizedQuery);
+      if (titleMatch) return true;
+
+      const details = runDetails[run.id] ?? [];
+      return details.some((result) =>
+        [result.title, result.spec_file, result.status]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery),
+      );
+    });
+
     return (
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-zinc-800">
@@ -1289,6 +1918,75 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             <FiRefreshCw className={`h-3.5 w-3.5 ${runsLoading ? "animate-spin" : ""}`} />
           </button>
         </div>
+        <div className="grid grid-cols-1 gap-2 border-b border-slate-200 px-3 py-2 dark:border-zinc-800">
+          <input
+            aria-label="Buscar execução"
+            placeholder="Buscar por execução ou teste"
+            value={runSearchQuery}
+            onChange={(e) => setRunSearchQuery(e.target.value)}
+            className="h-8 rounded border border-slate-200 bg-white px-2 text-[11px] text-slate-700 outline-none ring-[#ef0001] focus:ring-1 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+          />
+          <select
+            aria-label="Filtrar status da execução"
+            value={runStatusFilter}
+            onChange={(e) =>
+              setRunStatusFilter(
+                e.target.value as "all" | "queued" | "running" | "passed" | "failed" | "error",
+              )
+            }
+            className="h-8 rounded border border-slate-200 bg-white px-2 text-[11px] text-slate-700 outline-none ring-[#ef0001] focus:ring-1 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+          >
+            <option value="all">Todos os status</option>
+            <option value="queued">Na fila</option>
+            <option value="running">Executando</option>
+            <option value="passed">Passou</option>
+            <option value="failed">Falhou</option>
+            <option value="error">Erro</option>
+          </select>
+          <select
+            aria-label="Comparar com execução"
+            value={compareToRunId}
+            onChange={(e) => {
+              setCompareToRunId(e.target.value);
+              if (activeRunId) {
+                setRunComparisons((prev) => {
+                  const next = { ...prev };
+                  delete next[activeRunId];
+                  return next;
+                });
+              }
+            }}
+            className="h-8 rounded border border-slate-200 bg-white px-2 text-[11px] text-slate-700 outline-none ring-[#ef0001] focus:ring-1 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+          >
+            <option value="">Sem comparação</option>
+            {runHistory.map((run) => (
+              <option key={run.id} value={run.id}>
+                {new Date(run.created_at).toLocaleString("pt-BR")} - {run.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        {activeRunId && runComparisons[activeRunId] && (
+          <div className="border-b border-slate-200 px-3 py-2 dark:border-zinc-800">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px] dark:border-zinc-700 dark:bg-zinc-900">
+              <p className="mb-1 font-semibold text-slate-600 dark:text-zinc-300">Impacto da regressão</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded bg-red-50 px-2 py-0.5 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                  {runComparisons[activeRunId]?.regressions ?? 0} regressões
+                </span>
+                <span className="rounded bg-emerald-50 px-2 py-0.5 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                  {runComparisons[activeRunId]?.improvements ?? 0} melhorias
+                </span>
+                <span className="rounded bg-zinc-100 px-2 py-0.5 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  {runComparisons[activeRunId]?.unchanged ?? 0} iguais
+                </span>
+                <span className="rounded bg-amber-50 px-2 py-0.5 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                  {runComparisons[activeRunId]?.newItems ?? 0} novos
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex-1 overflow-auto p-2 text-[12px]">
           {runsLoading && (
             <p className="p-3 text-zinc-500 dark:text-zinc-600">Carregando…</p>
@@ -1298,7 +1996,12 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               Nenhuma execução registrada.
             </p>
           )}
-          {runHistory.map((run) => (
+          {!runsLoading && runHistory.length > 0 && filteredRuns.length === 0 && (
+            <p className="p-3 text-zinc-500 dark:text-zinc-600">
+              Nenhuma execução encontrada para os filtros aplicados.
+            </p>
+          )}
+          {filteredRuns.map((run) => (
             <div
               key={run.id}
               onClick={() => setActiveRunId(run.id === activeRunId ? null : run.id)}
@@ -1317,6 +2020,9 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 </span>
               </div>
               <div className="mt-1 flex items-center gap-3 text-[10px] text-slate-400 dark:text-zinc-600">
+                {run.project_id && (
+                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">Projeto: {run.project_id}</span>
+                )}
                 <span>{run.browser}</span>
                 <span>{new Date(run.created_at).toLocaleString("pt-BR")}</span>
                 {run.finished_at && run.started_at && (
@@ -1328,6 +2034,57 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                   </span>
                 )}
               </div>
+              {activeRunId === run.id && (
+                <div className="mt-2 rounded border border-slate-200 bg-slate-50 p-2 text-[10px] dark:border-zinc-700 dark:bg-zinc-950">
+                  {(() => {
+                    const results = runDetails[run.id] ?? [];
+                    const comparison = runComparisons[run.id] ?? null;
+                    if (!results.length) {
+                      return <p className="text-slate-500 dark:text-zinc-500">Reporter: sem resultados detalhados ainda.</p>;
+                    }
+                    const passed = results.filter((r) => r.status === "passed").length;
+                    const failed = results.filter((r) => r.status === "failed").length;
+                    const flaky = results.filter((r) => r.status === "flaky").length;
+                    const skipped = results.filter((r) => r.status === "skipped").length;
+                    return (
+                      <div className="space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-slate-600 dark:text-zinc-300">
+                          <span>Reporter:</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">{passed} passed</span>
+                          <span className="text-red-600 dark:text-red-400">{failed} failed</span>
+                          <span className="text-amber-600 dark:text-amber-400">{flaky} flaky</span>
+                          <span className="text-zinc-500 dark:text-zinc-400">{skipped} skipped</span>
+                        </div>
+                        <div className="max-h-28 overflow-auto space-y-1">
+                          {comparison && (
+                            <div className="mb-1 flex flex-wrap items-center gap-2 text-[10px] font-semibold">
+                              <span className="text-slate-500 dark:text-zinc-400">Comparação:</span>
+                              <span className="text-red-600 dark:text-red-400">{comparison.regressions} regressões</span>
+                              <span className="text-emerald-600 dark:text-emerald-400">{comparison.improvements} melhorias</span>
+                              <span className="text-zinc-500 dark:text-zinc-400">{comparison.unchanged} iguais</span>
+                            </div>
+                          )}
+                          {results.slice(-12).map((result) => (
+                            <div
+                              key={result.id}
+                              className={`flex items-center justify-between gap-2 rounded px-2 py-1 text-[10px] ${(() => {
+                                const key = `${result.spec_file}::${result.title}`;
+                                const trend = comparison?.byKey?.[key];
+                                if (trend === "regression") return "bg-red-50 dark:bg-red-900/20";
+                                if (trend === "improvement") return "bg-emerald-50 dark:bg-emerald-900/20";
+                                return "bg-white dark:bg-zinc-900";
+                              })()}`}
+                            >
+                              <span className="truncate text-slate-700 dark:text-zinc-300" title={result.title}>{result.title}</span>
+                              <span className={`shrink-0 font-semibold ${RUN_STATUS_COLORS[result.status] ?? "text-zinc-400"}`}>{result.status}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -1372,6 +2129,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         body: JSON.stringify({
           companySlug: selectedCompany,
           testCaseSummary: generatorInput,
+          targetType: generatorTargetType,
+          repositoryCase: selectedRepositoryCase ?? undefined,
           baseURL: config.baseURL,
           browser: config.browser,
           targetFile: generatorTargetFile,
@@ -1385,7 +2144,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           name: generatorTargetFile.split("/").pop() ?? "generated.spec.ts",
           path: generatorTargetFile,
           content: data.code,
-          language: "typescript",
+          language: generatorTargetFile.endsWith(".json") ? "json" : "typescript",
           status: "draft",
           updatedAt: now(),
         };
@@ -1478,6 +2237,45 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         </div>
 
         <div className="flex flex-1 flex-col gap-3 overflow-auto p-3">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-zinc-700 dark:bg-zinc-800/50">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-zinc-400">
+              Caso do Repositório de Testes
+            </p>
+            <div className="flex gap-2">
+              <label htmlFor="repository-case-select" className="sr-only">
+                Selecionar caso do repositório de testes
+              </label>
+              <select
+                id="repository-case-select"
+                aria-label="Selecionar caso do repositório de testes"
+                title="Selecionar caso do repositório de testes"
+                value={selectedRepositoryCaseId}
+                onChange={(e) => setSelectedRepositoryCaseId(e.target.value)}
+                className="min-w-0 flex-1 rounded bg-white px-2 py-1 text-[11px] text-slate-700 ring-1 ring-slate-200 outline-none focus:ring-blue-500 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+              >
+                <option value="">Selecionar caso...</option>
+                {repositoryCases.slice(0, 200).map((tc) => (
+                  <option key={tc.id} value={tc.id}>
+                    {tc.key ? `${tc.key} - ` : ""}{tc.title}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!selectedRepositoryCase) return;
+                  const payload = `${selectedRepositoryCase.key ? `${selectedRepositoryCase.key} - ` : ""}${selectedRepositoryCase.title}\n${selectedRepositoryCase.description ?? ""}`.trim();
+                  setPlannerInput(payload);
+                  setGeneratorInput(payload);
+                }}
+                disabled={!selectedRepositoryCase}
+                className="rounded bg-white px-2 py-1 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 disabled:opacity-50 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
+              >
+                Usar
+              </button>
+            </div>
+          </div>
+
           {agentTab === "planner" && (
             <>
               <p className="text-[11px] text-slate-500 dark:text-zinc-500">
@@ -1507,6 +2305,32 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               <p className="text-[11px] text-slate-500 dark:text-zinc-500">
                 Descreva o teste e o agente gera o código Playwright completo.
               </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGeneratorTargetType("playwright");
+                    if (!generatorTargetFile.endsWith(".spec.ts")) {
+                      setGeneratorTargetFile("tests/generated.spec.ts");
+                    }
+                  }}
+                  className={`rounded px-2 py-1 text-[11px] font-semibold ${generatorTargetType === "playwright" ? "bg-[#ef0001] text-white" : "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300"}`}
+                >
+                  E2E Playwright
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGeneratorTargetType("api");
+                    if (!generatorTargetFile.endsWith(".json")) {
+                      setGeneratorTargetFile("api-flows/generated.flow.json");
+                    }
+                  }}
+                  className={`rounded px-2 py-1 text-[11px] font-semibold ${generatorTargetType === "api" ? "bg-[#ef0001] text-white" : "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300"}`}
+                >
+                  Fluxo API
+                </button>
+              </div>
               <textarea
                 value={generatorInput}
                 onChange={(e) => setGeneratorInput(e.target.value)}
@@ -1527,7 +2351,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 className="flex items-center justify-center gap-1.5 rounded-lg bg-[#ef0001] py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
               >
                 {agentLoading ? <FiRefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FiZap className="h-3.5 w-3.5" />}
-                Gerar código
+                {generatorTargetType === "api" ? "Gerar fluxo API" : "Gerar código E2E"}
               </button>
             </>
           )}
@@ -1733,13 +2557,47 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               )}
               <button
                 type="button"
-                onClick={handleRun}
-                disabled={isRunning}
+                onClick={() => void handleRun()}
+                disabled={isRunning || !hasRunnableSpecs}
                 className="flex items-center gap-1.5 rounded-lg bg-[#ef0001] px-3 py-1 text-[12px] font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                title={!hasRunnableSpecs ? "Crie um arquivo tests/*.spec.ts para habilitar a execução" : undefined}
               >
                 <FiPlay className="h-3.5 w-3.5" />
                 {isRunning ? "Executando..." : "Executar"}
               </button>
+              <select
+                value={runMode}
+                onChange={(e) => setRunMode(e.target.value as "all" | "changed" | "failed")}
+                className="h-7 rounded-lg bg-slate-100 px-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700"
+                title="Modo de execução"
+              >
+                <option value="all">Modo: all specs</option>
+                <option value="changed">Modo: changed specs</option>
+                <option value="failed">Modo: failed specs</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => void handleRun("changed")}
+                disabled={isRunning || !hasRunnableSpecs}
+                className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1 text-[12px] font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50 dark:bg-blue-900/20 dark:text-blue-300"
+                title="Executar somente specs alterados"
+              >
+                <FiZap className="h-3.5 w-3.5" /> Run changed specs
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleRun("failed")}
+                disabled={isRunning}
+                className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1 text-[12px] font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-50 dark:bg-amber-900/20 dark:text-amber-300"
+                title="Reexecutar apenas specs falhos da última run"
+              >
+                <FiRefreshCw className="h-3.5 w-3.5" /> Rerun failed
+              </button>
+              {activeProject && (
+                <span className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-600 dark:bg-zinc-800 dark:text-zinc-300" title="Projeto ativo para esta execução">
+                  Projeto ativo: {activeProject.name}
+                </span>
+              )}
             </div>
           </div>
         )}

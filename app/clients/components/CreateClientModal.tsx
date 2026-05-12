@@ -24,6 +24,7 @@ export type ClientFormValues = {
   companyUsername?: string;
   notes?: string;
   description?: string;
+  adminEmail?: string;
   active: boolean;
   integrationMode: ClientIntegrationMode;
   qaseToken?: string;
@@ -101,6 +102,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const [companyUsername, setCompanyUsername] = useState("");
   const [generatingUsername, setGeneratingUsername] = useState(false);
   const [active, setActive] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
   // integrationMode removed: Qase fields are always visible
   const [qaseToken, setQaseToken] = useState("");
   const [showQaseToken, setShowQaseToken] = useState(false);
@@ -736,6 +738,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
         description: description.trim() || undefined,
         active,
         integrationMode: selectedCodes.length || qaseToken.trim() ? "qase" : "manual",
+        adminEmail: adminEmail.trim() || undefined,
         qaseToken: qaseToken.trim() || undefined,
         qaseProjectCode: selectedCodes.length ? (selectedCodes[0] || "").trim().toUpperCase() : undefined,
         qaseProjectCodes: Array.isArray(selectedCodes) ? selectedCodes : [],
@@ -803,7 +806,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   if (!open) return null;
 
   const isViewMode = mode === 'view' && !isEditing;
-  const isEditMode = mode === 'edit' || (mode === 'view' && isEditing);
+  const isEditMode = mode === 'create' || mode === 'edit' || (mode === 'view' && isEditing);
   const modalTitle = mode === 'create' ? 'Cadastrar empresa' : isViewMode ? 'Empresa' : 'Editar empresa';
   const submitButtonText = mode === 'create' ? 'Salvar empresa' : mode === 'edit' ? 'Salvar mudanças' : 'Salvar';
 
@@ -865,6 +868,23 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               required
               disabled={isViewMode}
             />
+          </label>
+
+          <label className="block text-sm">
+            E-mail do administrador{mode === 'create' ? <span className="ml-1 text-(--tc-accent)">*</span> : null}
+            <input
+              type="email"
+              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              value={adminEmail}
+              onChange={(e) => setAdminEmail(e.target.value)}
+              placeholder="admin@empresa.com"
+              required={mode === 'create'}
+              disabled={isViewMode}
+              autoComplete="email"
+            />
+            {mode === 'create' && (
+              <span className="mt-1 block text-xs text-(--tc-text-muted)">Usado para envio das credenciais de acesso.</span>
+            )}
           </label>
 
           <label className="block text-sm">

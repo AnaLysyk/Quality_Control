@@ -208,7 +208,7 @@ export default function DashboardClient() {
               }
             }}
             className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1.5 text-xs font-semibold text-(--tc-text,#0b1a3c) shadow-sm transition hover:border-[rgba(1,24,72,0.3)] hover:text-(--tc-primary,#011848)"
-          >
+              🧠 Brain
             🧠 Perguntar IA
           </button>
         </div>

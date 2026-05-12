@@ -3,7 +3,9 @@
 import {
   normalizeTestPlanAutomationState,
   normalizeTestPlanCaseAutomation,
+  normalizeTestPlanSource,
   parseTestPlanCases,
+  type TestPlanSource,
   type TestPlanAutomationState,
   type TestPlanCase,
 } from "@/lib/testPlanCases";
@@ -21,6 +23,7 @@ export type ManualTestPlanRecord = {
   applicationSlug: string;
   projectCode?: string | null;
   projectId?: string | null;
+  source: TestPlanSource;
   title: string;
   description?: string | null;
   cases: TestPlanCase[];
@@ -33,6 +36,10 @@ function normalizeOptionalString(value: unknown) {
   if (typeof value !== "string") return null;
   const normalized = value.trim();
   return normalized || null;
+}
+
+function asRecord(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
 }
 
 function toStoredCaseLinks(value: unknown): TestPlanCase[] {
@@ -58,6 +65,8 @@ function rowToRecord(row: {
   createdAt: Date;
   updatedAt: Date;
 }): ManualTestPlanRecord {
+  const automation = normalizeTestPlanAutomationState(row.automation);
+  const automationRecord = asRecord(row.automation);
   return {
     id: row.id,
     companySlug: row.companySlug,
@@ -69,7 +78,11 @@ function rowToRecord(row: {
     title: row.title,
     description: row.description,
     cases: parseTestPlanCases(row.cases),
-    automation: normalizeTestPlanAutomationState(row.automation),
+    source: normalizeTestPlanSource(automation.source ?? automationRecord?.source),
+    automation: {
+      ...automation,
+      source: normalizeTestPlanSource(automation.source ?? automationRecord?.source),
+    },
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -108,6 +121,7 @@ export async function createManualTestPlan(
   input: Omit<ManualTestPlanRecord, "id" | "createdAt" | "updatedAt">,
 ) {
   const prisma = await getPrisma();
+  const automation = normalizeTestPlanAutomationState(input.automation);
   const row = await prisma.manualTestPlan.create({
     data: {
       id: `plan_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
@@ -117,10 +131,13 @@ export async function createManualTestPlan(
       applicationSlug: input.applicationSlug.trim().toLowerCase(),
       projectCode: normalizeOptionalString(input.projectCode),
       projectId: normalizeOptionalString(input.projectId),
+      automation: {
+        ...automation,
+        source: normalizeTestPlanSource(input.source),
+      } as object,
       title: input.title,
       description: normalizeOptionalString(input.description),
       cases: toStoredCaseLinks(input.cases) as object,
-      automation: (normalizeTestPlanAutomationState(input.automation) ?? {}) as object,
     },
   });
   return rowToRecord(row);
@@ -146,6 +163,14 @@ export async function updateManualTestPlan(
       ...(patch.applicationSlug !== undefined ? { applicationSlug: patch.applicationSlug.trim().toLowerCase() } : {}),
       ...(patch.projectCode !== undefined ? { projectCode: normalizeOptionalString(patch.projectCode) } : {}),
       ...(patch.projectId !== undefined ? { projectId: normalizeOptionalString(patch.projectId) } : {}),
+      ...(patch.source !== undefined
+        ? {
+            automation: {
+              ...normalizeTestPlanAutomationState(existing.automation),
+              source: normalizeTestPlanSource(patch.source),
+            } as object,
+          }
+        : {}),
       ...(patch.title !== undefined ? { title: patch.title } : {}),
       ...(patch.description !== undefined ? { description: normalizeOptionalString(patch.description) } : {}),
       ...(patch.cases !== undefined ? { cases: toStoredCaseLinks(patch.cases) as object } : {}),

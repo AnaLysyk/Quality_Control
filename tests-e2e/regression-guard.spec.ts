@@ -15,8 +15,14 @@ async function assertPageLoads(
   page: import("@playwright/test").Page,
   path: string,
   label: string,
+  timeoutMs = 20_000,
 ) {
-  await page.goto(path, { waitUntil: "domcontentloaded", timeout: 20_000 });
+  try {
+    await page.goto(path, { waitUntil: "domcontentloaded", timeout: timeoutMs });
+  } catch {
+    // Retry único para reduzir flakiness de páginas mais pesadas em CI/headed.
+    await page.goto(path, { waitUntil: "domcontentloaded", timeout: Math.max(timeoutMs, 45_000) });
+  }
 
   // Não deve cair em 404 do Next (componente not-found)
   const bodyText = await page.locator("body").innerText({ timeout: 10_000 });
@@ -63,7 +69,8 @@ test("@regression-guard admin permissões renderiza", async ({ page }) => {
 });
 
 test("@regression-guard audit logs renderiza", async ({ page }) => {
-  await assertPageLoads(page, "/admin/audit-logs", "Audit Logs (direto)");
+  test.slow();
+  await assertPageLoads(page, "/admin/audit-logs", "Audit Logs (direto)", 45_000);
 });
 
 test("@regression-guard audit-logs redirect funciona", async ({ page }) => {

@@ -14,6 +14,13 @@ export const maxDuration = 60;
 const GeneratorSchema = z.object({
   companySlug: z.string().trim().min(1),
   testCaseSummary: z.string().trim().min(1),
+  targetType: z.enum(["playwright", "api"]).default("playwright"),
+  repositoryCase: z.object({
+    key: z.string().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    steps: z.array(z.object({ action: z.string().optional(), expectedResult: z.string().optional() })).optional(),
+  }).optional(),
   /** Optional plan (from planner agent) to guide code generation */
   plan: z.string().optional(),
   baseURL: z.string().default("http://localhost:3000"),
@@ -31,7 +38,7 @@ export async function POST(request: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
-  const { companySlug, testCaseSummary, plan, baseURL, browser, targetFile } = parsed.data;
+  const { companySlug, testCaseSummary, targetType, repositoryCase, plan, baseURL, browser, targetFile } = parsed.data;
 
   const allowed = resolveAutomationAllowedCompanySlugs(user);
   const access = resolveAutomationAccess(user, allowed.length);
@@ -41,7 +48,18 @@ export async function POST(request: Request) {
   const apiKey = requireAiApiKey();
   const openai = createOpenAI({ apiKey });
 
-  const systemPrompt = `You are a senior QA automation engineer specializing in Playwright with TypeScript.
+  const systemPrompt = targetType === "api"
+    ? `You are a senior QA automation engineer specialized in API testing.
+Generate a JSON flow for API automation from the given test case.
+Output ONLY valid JSON (no markdown fences) in this shape:
+{
+  "name": "...",
+  "baseURL": "...",
+  "steps": [
+    { "name": "...", "method": "GET|POST|PUT|PATCH|DELETE", "path": "/...", "headers": {}, "body": {}, "assert": [{ "type": "status", "equals": 200 }] }
+  ]
+}`
+    : `You are a senior QA automation engineer specializing in Playwright with TypeScript.
 Generate a complete, ready-to-run Playwright spec file (.ts) for the described test case.
 Requirements:
 - Use @playwright/test imports only
@@ -52,15 +70,19 @@ Requirements:
 - Output ONLY the TypeScript code, no explanation, no markdown fences
 Write in the same language as the input for test.describe and test names.`;
 
+  const repoBlock = repositoryCase
+    ? `\n\nRepository case:\n${JSON.stringify(repositoryCase).slice(0, 3000)}`
+    : "";
+
   const userPrompt = plan
-    ? `File: ${targetFile}\nbaseURL: ${baseURL}\nbrowser: ${browser}\n\nTest case: ${testCaseSummary}\n\nTest plan to follow:\n${plan.slice(0, 3000)}`
-    : `File: ${targetFile}\nbaseURL: ${baseURL}\nbrowser: ${browser}\n\nTest case: ${testCaseSummary}`;
+    ? `Target type: ${targetType}\nFile: ${targetFile}\nbaseURL: ${baseURL}\nbrowser: ${browser}\n\nTest case: ${testCaseSummary}${repoBlock}\n\nTest plan to follow:\n${plan.slice(0, 3000)}`
+    : `Target type: ${targetType}\nFile: ${targetFile}\nbaseURL: ${baseURL}\nbrowser: ${browser}\n\nTest case: ${testCaseSummary}${repoBlock}`;
 
   await ensureAutomationTables();
   const { rows: tr } = await automationPool.query<{ id: string }>(
     `INSERT INTO playwright_agent_tasks (company_slug, agent_type, status, input_json, created_by)
      VALUES ($1,'generator','running',$2,$3) RETURNING id`,
-    [companySlug, JSON.stringify({ testCaseSummary, targetFile, baseURL }), user.id ?? user.email ?? null],
+    [companySlug, JSON.stringify({ testCaseSummary, targetFile, baseURL, targetType }), user.id ?? user.email ?? null],
   );
   const taskId = tr[0].id;
 

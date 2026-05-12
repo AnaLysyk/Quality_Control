@@ -266,7 +266,7 @@ export async function createManualTestCaseRecord(input: CreateTestCaseInput, act
   const testCase: TestCase = {
     id,
     key: generateReadableKey(allRecords.length),
-    source: "manual",
+    source: ensureAllowedEnum("INVALID_TEST_CASE_SOURCE", input.source, TEST_CASE_SOURCES, "manual")!,
     title,
     description: normalizeText(input.description) || undefined,
     objective: normalizeText(input.objective) || undefined,

@@ -27,6 +27,7 @@ export interface ScriptFile {
 export interface PlaywrightConfigOptions {
   baseURL: string;
   browser: string;
+  browsers?: string[];
   headless: boolean;
   timeoutMs: number;
   workers: number;
@@ -80,9 +81,18 @@ export async function cleanupWorkspace(companySlug: string, runId: string): Prom
 }
 
 function buildPlaywrightConfig(opts: PlaywrightConfigOptions): string {
-  const browser = ["chromium", "firefox", "webkit"].includes(opts.browser)
-    ? opts.browser
-    : "chromium";
+  const allowedBrowsers = ["chromium", "firefox", "webkit"] as const;
+  const normalized = Array.from(new Set((opts.browsers ?? [opts.browser]).filter((item) => allowedBrowsers.includes(item as (typeof allowedBrowsers)[number]))));
+  const browsers = normalized.length > 0 ? normalized : ["chromium"];
+  const projects = browsers
+    .map((browser) => {
+      const device = browser === "chromium" ? "Desktop Chrome" : browser === "firefox" ? "Desktop Firefox" : "Desktop Safari";
+      return `    {
+      name: ${JSON.stringify(browser)},
+      use: { ...devices[${JSON.stringify(device)}] },
+    },`;
+    })
+    .join("\n");
 
   return `import { defineConfig, devices } from '@playwright/test';
 
@@ -103,10 +113,7 @@ export default defineConfig({
     trace: ${JSON.stringify(opts.traceOn)},
   },
   projects: [
-    {
-      name: ${JSON.stringify(browser)},
-      use: { ...devices['Desktop ${browser === "chromium" ? "Chrome" : browser === "firefox" ? "Firefox" : "Safari"}'] },
-    },
+${projects}
   ],
 });
 `;

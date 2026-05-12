@@ -16,7 +16,7 @@ type ManualReleaseActionsProps = {
 
 type ResponsibleOption = { userId: string; label: string; name: string; email?: string | null };
 type ApplicationOption = { id: string; name: string; slug: string; companySlug?: string | null; qaseProjectCode?: string | null };
-type TestPlanSource = "manual" | "qase";
+type TestPlanSource = "manual" | "local" | "automation" | "qase";
 type TestPlanItem = { id: string; title: string; casesCount: number; source: TestPlanSource; projectCode?: string | null; cases?: { id: string; title?: string | null }[] };
 type ManualCaseItem = { id: string; title?: string; link?: string; status?: string; bug?: string | null; fromApi?: boolean };
 type ManualReleaseDetailsResponse = {
@@ -46,6 +46,10 @@ function normalizeKey(value: unknown) {
 
 function makePlanKey(source: TestPlanSource, id: string) {
   return `${source}:${id}`;
+}
+
+function normalizePlanSource(source: TestPlanSource | null | undefined) {
+  return source ?? "manual";
 }
 
 function buildQaseCaseLink(projectCode: string | null | undefined, caseId: string) {
@@ -214,7 +218,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
       const matchedApplication = applications.find((item) => normalizeKey(item.slug) === normalizeKey(releasePayload.app) || normalizeKey(item.name) === normalizeKey(releasePayload.app) || normalizeKey(item.qaseProjectCode) === normalizeKey(releasePayload.qaseProject)) ?? applications[0] ?? null;
       const nextApplicationId = matchedApplication?.id ?? "";
       const plans = companySlug && nextApplicationId ? await loadPlanOptions(companySlug, nextApplicationId) : [];
-      const requestedPlanKey = releasePayload.testPlanId?.trim() ? makePlanKey(releasePayload.testPlanSource === "qase" ? "qase" : "manual", releasePayload.testPlanId.trim()) : "";
+      const requestedPlanKey = releasePayload.testPlanId?.trim() ? makePlanKey(normalizePlanSource(releasePayload.testPlanSource), releasePayload.testPlanId.trim()) : "";
       const initialPlanKey = requestedPlanKey && plans.some((item) => makePlanKey(item.source, item.id) === requestedPlanKey) ? requestedPlanKey : "";
 
       setEditCompanySlug(companySlug);

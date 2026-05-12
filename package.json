@@ -35,7 +35,7 @@
     "test:e2e:dashboards": "cross-env E2E_USE_JSON=1 playwright test --project=quality-dashboards",
     "test:e2e:ai": "cross-env E2E_USE_JSON=1 playwright test --project=quality-ai",
     "test:e2e:visual": "cross-env E2E_USE_JSON=1 playwright test --project=quality-ui",
-    "test:e2e:prod": "playwright test -c playwright.prod.config.ts",
+    "test:e2e:prod": "playwright test -c playwright.prod.config.ts --headed",
     "test:api": "node scripts/run-newman.mjs",
     "biometrics:attach": "tsx scripts/biometrics/run-local-attach.ts",
     "env:check": "tsx scripts/env-check.ts",

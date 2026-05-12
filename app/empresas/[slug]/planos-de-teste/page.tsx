@@ -48,6 +48,8 @@ const COPY = {
     projectAll: "Todos",
     projectNone: "Sem Qase",
     manualLabel: "Manual:",
+    localLabel: "Local:",
+    automationLabel: "Automação:",
     integratedLabel: "Integrado:",
     loadingApps: "Carregando aplicações...",
     loadingPlans: "Carregando planos de teste...",
@@ -67,8 +69,12 @@ const COPY = {
     modalNewLabel: "Novo plano",
     modalQaseTitle: "Plano integrado Qase",
     modalManualTitle: "Plano manual",
+    modalLocalTitle: "Plano local",
+    modalAutomationTitle: "Plano automatizado",
     modalQaseDesc: "Visualize os casos vinculados, adicione novos IDs e expanda cada item para consultar os detalhes do Qase.",
     modalManualDesc: "Os casos manuais ficam visiveis no próprio plano, com título rápido e campos completos para detalhamento.",
+    modalLocalDesc: "O plano local fica no repositório da empresa e permite montar os casos sem depender do Qase.",
+    modalAutomationDesc: "O plano automatizado registra a origem de automação e mantém os casos preparados para execução integrada.",
     closeModalAria: "Fechar modal",
     titleLabel: "Título",
     titlePlaceholder: "Ex: Regressao sprint 32",
@@ -76,6 +82,8 @@ const COPY = {
     selectApp: "Selecione",
     sourceLabel: "Origem",
     sourceManual: "Manual local",
+    sourceLocal: "Local",
+    sourceAutomation: "Automatizado",
     sourceQase: "Qase",
     noQaseWarning: "A aplicação escolhida não possui projeto Qase vinculado. Para criar no Qase, selecione uma aplicação com codigo de projeto.",
     descLabel: "Descrição do plano",
@@ -136,6 +144,9 @@ const COPY = {
     saving: "Salvando...",
     savePlan: "Salvar plano",
     createPlan: "Criar plano",
+    newPlanQase: "Novo plano Qase",
+    newPlanLocal: "Novo plano local",
+    newPlanAutomation: "Novo plano automatizado",
     severityOptions: [
       { value: "", label: "Sem severidade" },
       { value: "low", label: "Baixa" },
@@ -184,6 +195,8 @@ const COPY = {
     projectAll: "All",
     projectNone: "No Qase",
     manualLabel: "Manual:",
+    localLabel: "Local:",
+    automationLabel: "Automation:",
     integratedLabel: "Integrated:",
     loadingApps: "Loading applications...",
     loadingPlans: "Loading test plans...",
@@ -203,8 +216,12 @@ const COPY = {
     modalNewLabel: "New plan",
     modalQaseTitle: "Qase integrated plan",
     modalManualTitle: "Manual plan",
+    modalLocalTitle: "Local plan",
+    modalAutomationTitle: "Automated plan",
     modalQaseDesc: "View linked cases, add new IDs and expand each item to check Qase details.",
     modalManualDesc: "Manual cases are visible in the plan itself, with a quick title and full fields for detailed description.",
+    modalLocalDesc: "The local plan stays in the company repository and lets you build cases without depending on Qase.",
+    modalAutomationDesc: "The automated plan records the automation origin and keeps cases ready for integrated execution.",
     closeModalAria: "Close modal",
     titleLabel: "Title",
     titlePlaceholder: "E.g.: Sprint 32 regression",
@@ -212,6 +229,8 @@ const COPY = {
     selectApp: "Select",
     sourceLabel: "Source",
     sourceManual: "Manual local",
+    sourceLocal: "Local",
+    sourceAutomation: "Automated",
     sourceQase: "Qase",
     noQaseWarning: "The selected application has no linked Qase project. To create in Qase, select an application with a project code.",
     descLabel: "Plan description",
@@ -272,6 +291,9 @@ const COPY = {
     saving: "Saving...",
     savePlan: "Save plan",
     createPlan: "Create plan",
+    newPlanQase: "New Qase plan",
+    newPlanLocal: "New local plan",
+    newPlanAutomation: "New automated plan",
     severityOptions: [
       { value: "", label: "No severity" },
       { value: "low", label: "Low" },
@@ -326,7 +348,7 @@ type TestPlanItem = {
   createdAt?: string | null;
   updatedAt?: string | null;
   projectCode?: string | null;
-  source: "manual" | "qase";
+  source: "manual" | "local" | "automation" | "qase";
   applicationId?: string | null;
   applicationName?: string | null;
   cases?: TestPlanCase[];
@@ -335,7 +357,7 @@ type TestPlanItem = {
 type PlanDraft = {
   id?: string;
   applicationId?: string;
-  source: "manual" | "qase";
+  source: "manual" | "local" | "automation" | "qase";
   title: string;
   description: string;
   cases: TestPlanCase[];
@@ -385,7 +407,7 @@ function hasLoadedCaseDetails(testCase: TestPlanCase) {
   );
 }
 
-function formatCaseTitle(testCase: TestPlanCase, source: "manual" | "qase", index: number, copy: CopyType) {
+function formatCaseTitle(testCase: TestPlanCase, source: "manual" | "local" | "automation" | "qase", index: number, copy: CopyType) {
   if (trimText(testCase.title)) return trimText(testCase.title) as string;
   return source === "qase" ? copy.caseQaseLabel(testCase.id) : copy.caseManualLabel(index + 1);
 }
@@ -409,7 +431,7 @@ function normalizeStepsForSave(steps?: TestPlanCaseStep[]) {
     .filter((step) => step.action || step.expectedResult || step.data);
 }
 
-function normalizeCasesForSave(source: "manual" | "qase", cases: TestPlanCase[]) {
+function normalizeCasesForSave(source: "manual" | "local" | "automation" | "qase", cases: TestPlanCase[]) {
   if (source === "qase") {
     const seen = new Set<string>();
     return cases
@@ -587,6 +609,8 @@ export default function TestPlansPage() {
       total: plans.length,
       qase: plans.filter((plan) => plan.source === "qase").length,
       manual: plans.filter((plan) => plan.source === "manual").length,
+      local: plans.filter((plan) => plan.source === "local").length,
+      automation: plans.filter((plan) => plan.source === "automation").length,
     }),
     [plans],
   );
@@ -638,7 +662,7 @@ export default function TestPlansPage() {
     setDraft(EMPTY_DRAFT);
   }
 
-  function openCreate(source: "manual" | "qase") {
+  function openCreate(source: "manual" | "local" | "automation" | "qase") {
     const nextApplicationId =
       source === "qase"
         ? (selectedApplication?.qaseProjectCode
@@ -656,7 +680,7 @@ export default function TestPlansPage() {
     }
 
     resetModalAuxState();
-    const initialCases = source === "manual" ? [createEmptyManualCase([])] : [];
+    const initialCases = source === "qase" ? [] : [createEmptyManualCase([])];
     setDraft({
       ...EMPTY_DRAFT,
       applicationId: nextApplicationId,
@@ -799,7 +823,7 @@ export default function TestPlansPage() {
         throw new Error(typeof payload?.error === "string" ? payload.error : copy.errSavePlanShort);
       }
 
-      if (draft.source === "manual") {
+      if (draft.source !== "qase") {
         const savedPlanId = String(payload?.plan?.id ?? draft.id ?? "").trim();
         if (!savedPlanId) {
           throw new Error(copy.errSavePlanShort);
@@ -1068,15 +1092,36 @@ export default function TestPlansPage() {
                 <FiRefreshCcw className="h-4 w-4" />
                 {copy.refresh}
               </button>
-              <button
-                type="button"
-                onClick={() => openCreate("manual")}
-                disabled={!canCreateManual}
-                data-testid="test-plan-new-button" className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
-              >
-                <FiPlus className="h-4 w-4" />
-                {copy.newPlan}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openCreate("qase")}
+                  disabled={!draftCanUseQase}
+                  data-testid="test-plan-new-button"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <FiPlus className="h-4 w-4" />
+                  {copy.newPlanQase}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openCreate("local")}
+                  disabled={!canCreateManual}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <FiPlus className="h-4 w-4" />
+                  {copy.newPlanLocal}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openCreate("automation")}
+                  disabled={!canCreateManual}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <FiPlus className="h-4 w-4" />
+                  {copy.newPlanAutomation}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1093,6 +1138,12 @@ export default function TestPlansPage() {
             </span>
             <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
               {copy.manualLabel} {totals.manual}
+            </span>
+            <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+              {copy.localLabel} {totals.local}
+            </span>
+            <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+              {copy.automationLabel} {totals.automation}
             </span>
             <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
               {copy.integratedLabel} {totals.qase}
@@ -1148,10 +1199,20 @@ export default function TestPlansPage() {
                             className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${
                               plan.source === "qase"
                                 ? "border border-emerald-600/30 bg-emerald-100 text-emerald-800"
-                                : "border border-slate-300 bg-slate-200 text-slate-800"
+                                : plan.source === "automation"
+                                  ? "border border-violet-300 bg-violet-100 text-violet-800"
+                                  : plan.source === "local"
+                                    ? "border border-sky-300 bg-sky-100 text-sky-800"
+                                    : "border border-slate-300 bg-slate-200 text-slate-800"
                             }`}
                           >
-                            {plan.source === "qase" ? copy.sourceQase : copy.sourceManual}
+                            {plan.source === "qase"
+                              ? copy.sourceQase
+                              : plan.source === "automation"
+                                ? copy.sourceAutomation
+                                : plan.source === "local"
+                                  ? copy.sourceLocal
+                                  : copy.sourceManual}
                           </span>
                           {plan.projectCode ? (
                             <span className="rounded-full border border-[#d7deea] bg-[#f5f8ff] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#55657f]">
@@ -1234,12 +1295,22 @@ export default function TestPlansPage() {
                     {draft.id ? copy.modalEditLabel : copy.modalNewLabel}
                   </p>
                   <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-white">
-                    {draft.source === "qase" ? copy.modalQaseTitle : copy.modalManualTitle}
+                    {draft.source === "qase"
+                      ? copy.modalQaseTitle
+                      : draft.source === "automation"
+                        ? copy.modalAutomationTitle
+                        : draft.source === "local"
+                          ? copy.modalLocalTitle
+                          : copy.modalManualTitle}
                   </h2>
                   <p className="mt-2 text-sm text-white/82">
                     {draft.source === "qase"
                       ? copy.modalQaseDesc
-                      : copy.modalManualDesc}
+                      : draft.source === "automation"
+                        ? copy.modalAutomationDesc
+                        : draft.source === "local"
+                          ? copy.modalLocalDesc
+                          : copy.modalManualDesc}
                   </p>
                 </div>
                 <button
@@ -1311,14 +1382,22 @@ export default function TestPlansPage() {
                   <select
                     value={draft.source}
                     onChange={(event) => {
-                      const nextSource =
-                        event.target.value === "qase" && draftCanUseQase ? "qase" : "manual";
+                      const nextValue = event.target.value as PlanDraft["source"];
+                      const nextSource = nextValue === "qase" && !draftCanUseQase ? "manual" : nextValue;
                       setDraft((current) => ({
                         ...current,
                         source: nextSource,
                         cases:
-                          nextSource === "manual"
+                          nextSource === "qase"
                             ? current.cases.map((testCase) => ({
+                                id: testCase.id,
+                                title: testCase.title ?? "",
+                                link:
+                                  draftApplication?.qaseProjectCode
+                                    ? buildQaseCaseLink(draftApplication.qaseProjectCode, testCase.id)
+                                    : null,
+                              }))
+                            : current.cases.map((testCase) => ({
                                 id: testCase.id,
                                 title: testCase.title ?? "",
                                 description: testCase.description ?? "",
@@ -1326,14 +1405,6 @@ export default function TestPlansPage() {
                                 postconditions: testCase.postconditions ?? "",
                                 severity: testCase.severity ?? "",
                                 steps: testCase.steps ?? [],
-                              }))
-                            : current.cases.map((testCase) => ({
-                                id: testCase.id,
-                                title: testCase.title ?? "",
-                                link:
-                                  draftApplication?.qaseProjectCode
-                                    ? buildQaseCaseLink(draftApplication.qaseProjectCode, testCase.id)
-                                    : null,
                               })),
                       }));
                     }}
@@ -1341,6 +1412,8 @@ export default function TestPlansPage() {
                     className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <option value="manual">{copy.sourceManual}</option>
+                    <option value="local">{copy.sourceLocal}</option>
+                    <option value="automation">{copy.sourceAutomation}</option>
                     {draftCanUseQase ? <option value="qase">{copy.sourceQase}</option> : null}
                   </select>
                 </label>
@@ -1382,7 +1455,7 @@ export default function TestPlansPage() {
                     </p>
                   </div>
 
-                  {draft.source === "manual" ? (
+                  {draft.source !== "qase" ? (
                     <button
                       type="button"
                       onClick={handleAddManualCase}

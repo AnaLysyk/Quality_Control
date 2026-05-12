@@ -1,14 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+export const dynamic = "force-dynamic";
 
 export default function SuportePage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace("/admin/chamados");
-  }, [router]);
-
-  return null;
+  redirect("/admin/chamados");
 }

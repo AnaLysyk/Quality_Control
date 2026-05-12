@@ -22,6 +22,7 @@ import {
   listManualTestPlans,
   updateManualTestPlan,
 } from "@/lib/testPlansStore";
+import { normalizeTestPlanSource, type TestPlanSource } from "@/lib/testPlanCases";
 
 type ApplicationItem = {
   id: string;
@@ -30,7 +31,7 @@ type ApplicationItem = {
   qaseProjectCode?: string | null;
 };
 
-type PlanSource = "manual" | "qase";
+type PlanSource = TestPlanSource;
 
 function normalizeProjectCode(value: unknown) {
   const normalized = String(value ?? "").trim().toUpperCase();
@@ -38,7 +39,7 @@ function normalizeProjectCode(value: unknown) {
 }
 
 function normalizeSource(value: unknown): PlanSource {
-  return String(value ?? "").trim().toLowerCase() === "qase" ? "qase" : "manual";
+  return normalizeTestPlanSource(value, "local");
 }
 
 function toResponsePlan(input: {
@@ -63,6 +64,7 @@ function toResponsePlan(input: {
     updatedAt: input.updatedAt ?? null,
     projectCode: input.projectCode ?? null,
     source: input.source,
+    type: input.source,
     applicationId: input.applicationId ?? null,
     applicationName: input.applicationName ?? null,
     cases: Array.isArray(input.cases) ? input.cases : undefined,
@@ -426,6 +428,7 @@ export async function POST(request: Request) {
     applicationSlug: selectedApplication.slug,
     projectCode: normalizeProjectCode(body.projectCode) || normalizeProjectCode(selectedApplication.qaseProjectCode),
     projectId: planProjectId,
+    source,
     title,
     description,
     cases: resolvedCaseRefs,
@@ -440,7 +443,7 @@ export async function POST(request: Request) {
       createdAt: created.createdAt,
       updatedAt: created.updatedAt,
       projectCode: created.projectCode,
-      source: "manual",
+      source: created.source,
       applicationId: created.applicationId,
       applicationName: created.applicationName,
       cases: await hydrateManualPlanCases(created.cases),
@@ -545,6 +548,7 @@ export async function PATCH(request: Request) {
           applicationSlug: selectedApplication.slug,
           projectCode:
             normalizeProjectCode(body.projectCode) || normalizeProjectCode(selectedApplication.qaseProjectCode),
+          source,
         }
       : {}),
   });
@@ -562,7 +566,7 @@ export async function PATCH(request: Request) {
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
       projectCode: updated.projectCode,
-      source: "manual",
+      source: updated.source,
       applicationId: updated.applicationId,
       applicationName: updated.applicationName,
       cases: await hydrateManualPlanCases(updated.cases),

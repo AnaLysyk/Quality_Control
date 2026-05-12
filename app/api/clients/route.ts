@@ -195,6 +195,7 @@ export async function POST(req: NextRequest) {
     active: input.active ?? true,
     created_at: new Date().toISOString(),
     created_by: admin.email || admin.id,
+    ...(input.admin_email ? { admin_email: input.admin_email } : {}),
   });
 
   console.error('[CLIENTS][POST] company stored:', JSON.stringify(company));

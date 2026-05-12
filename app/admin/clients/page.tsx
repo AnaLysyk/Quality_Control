@@ -1362,6 +1362,7 @@ export default function AdminConsolidatedPage() {
               integration_mode: data.integrationMode,
               qase_token: data.qaseToken || undefined,
               notifications_fanout_enabled: data.notificationsFanoutEnabled ?? true,
+              admin_email: data.adminEmail || undefined,
               qase_project_codes: normalizedCodes,
               qase_project_code: legacyProjectCode ?? null,
               integrations: (() => {

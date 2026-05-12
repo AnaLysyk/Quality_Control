@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   FiCheck,
   FiChevronDown,
@@ -244,12 +245,13 @@ function HistoryRow({
 }
 
 export default function Base64Studio() {
+  const searchParams = useSearchParams();
   const { activeClient } = useAutomationModuleContext();
   const companySlug = activeClient?.slug ?? "";
   const companyLabel = activeClient?.name ?? "Selecione uma empresa";
 
   // Source tab
-  const [tab, setTab] = useState<"upload" | "library">("upload");
+  const [tab, setTab] = useState<"upload" | "library">(() => (searchParams.get("tab") === "library" ? "library" : "upload"));
 
   // Library
   const [libraryAssets, setLibraryAssets] = useState<LibraryAsset[]>([]);

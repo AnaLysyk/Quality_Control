@@ -237,6 +237,8 @@ const EMPTY_FORM: FormState = {
 
 const SOURCE_LABEL: Record<string, string> = {
   manual: "Manual",
+  local: "Local",
+  automation: "Automação",
   integration: "Integração",
   qase: "Qase",
   import: "Importado",
@@ -668,7 +670,7 @@ export default function TestCaseRepositoryClient() {
       setForm((current) => ({
         ...current,
         type: "automated",
-        source: "manual",
+        source: "automation",
         automationStatus: "planned",
       }));
     }
@@ -1886,6 +1888,8 @@ export default function TestCaseRepositoryClient() {
               <Field label="Módulo" value={form.moduleId} onChange={(value) => setForm((current) => ({ ...current, moduleId: value }))} />
               <Select label="Origem" value={form.source} onChange={(value) => setForm((current) => ({ ...current, source: value }))} options={[
                 ["manual", SOURCE_LABEL.manual],
+                ["local", SOURCE_LABEL.local],
+                ["automation", SOURCE_LABEL.automation],
                 ["integration", SOURCE_LABEL.integration],
                 ["qase", SOURCE_LABEL.qase],
                 ["import", SOURCE_LABEL.import],

@@ -309,10 +309,10 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-arquivos", 
-        label: "Arquivos", 
+        label: "Biblioteca", 
         iconKey: "folder", 
         module: "automation", 
-        href: "/automacoes/arquivos",
+        href: "/automacoes/base64?tab=library",
         favoriteEnabled: true,
         group: "Workspace",
         testId: "nav-automation-arquivos",

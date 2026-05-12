@@ -3,6 +3,26 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
 import { checkPermission } from "@/lib/permissions/checkPermission";
 
+function durationSeconds(startedAt: Date | null | undefined, finishedAt: Date | null | undefined) {
+  if (!startedAt) return null;
+  const end = finishedAt ?? new Date();
+  const diff = Math.floor((end.getTime() - startedAt.getTime()) / 1000);
+  return diff >= 0 ? diff : null;
+}
+
+function normalizeRunStatus(value: unknown) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return undefined;
+  if (["not_started", "pending", "queued", "draft", "saved"].includes(normalized)) return "pending";
+  if (["in_progress", "running", "active", "em_andamento"].includes(normalized)) return "running";
+  if (["paused", "pausada"].includes(normalized)) return "paused";
+  if (["finalized", "finalizada", "completed", "passed", "passed_all", "done"].includes(normalized)) return "passed";
+  if (["canceled", "cancelled", "cancelada", "aborted"].includes(normalized)) return "canceled";
+  if (["blocked", "bloqueada"].includes(normalized)) return "blocked";
+  if (["failed", "fail", "erro", "error", "falha"].includes(normalized)) return "failed";
+  return normalized;
+}
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -31,7 +51,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   });
 
   if (!run) return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
-  return NextResponse.json(run);
+  return NextResponse.json({
+    ...run,
+    durationSeconds: durationSeconds(run.startedAt, run.finishedAt),
+  });
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -52,7 +75,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const patch: Record<string, unknown> = {};
   if (typeof body.title === "string") patch.title = body.title.trim() || existing.title;
-  if (typeof body.status === "string") patch.status = body.status;
+  const status = normalizeRunStatus(body.status);
+  if (status) patch.status = status;
   if (typeof body.passCount === "number") patch.passCount = body.passCount;
   if (typeof body.failCount === "number") patch.failCount = body.failCount;
   if (typeof body.skipCount === "number") patch.skipCount = body.skipCount;
@@ -77,5 +101,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     metadata: { companyId: run.companyId ?? null, projectId: run.projectId ?? null, status: run.status },
   });
 
-  return NextResponse.json(run);
+  return NextResponse.json({
+    ...run,
+    durationSeconds: durationSeconds(run.startedAt, run.finishedAt),
+  });
 }

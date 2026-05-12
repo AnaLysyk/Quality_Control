@@ -2,6 +2,26 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { emitBrainEvent } from "@/lib/brain/events";
 
+function durationSeconds(startedAt: Date | null | undefined, finishedAt: Date | null | undefined) {
+  if (!startedAt) return null;
+  const end = finishedAt ?? new Date();
+  const diff = Math.floor((end.getTime() - startedAt.getTime()) / 1000);
+  return diff >= 0 ? diff : null;
+}
+
+function normalizeRunStatus(value: unknown) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return undefined;
+  if (["not_started", "pending", "queued", "draft", "saved"].includes(normalized)) return "pending";
+  if (["in_progress", "running", "active", "em_andamento"].includes(normalized)) return "running";
+  if (["paused", "pausada"].includes(normalized)) return "paused";
+  if (["finalized", "finalizada", "completed", "passed", "passed_all", "done"].includes(normalized)) return "passed";
+  if (["canceled", "cancelled", "cancelada", "aborted"].includes(normalized)) return "canceled";
+  if (["blocked", "bloqueada"].includes(normalized)) return "blocked";
+  if (["failed", "fail", "erro", "error", "falha"].includes(normalized)) return "failed";
+  return normalized;
+}
+
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
   return prisma;
@@ -35,7 +55,13 @@ export async function GET(req: Request) {
     },
   });
 
-  return NextResponse.json({ runs, total: runs.length });
+  return NextResponse.json({
+    runs: runs.map((run) => ({
+      ...run,
+      durationSeconds: durationSeconds(run.startedAt, run.finishedAt),
+    })),
+    total: runs.length,
+  });
 }
 
 export async function POST(req: Request) {
@@ -50,6 +76,7 @@ export async function POST(req: Request) {
   const planId = String(body.planId ?? "").trim() || null;
   const title = String(body.title ?? "Execução manual").trim();
   const source = String(body.source ?? "manual").trim();
+  const status = normalizeRunStatus(body.status) ?? "pending";
 
   const prisma = await getPrisma();
   const run = await prisma.testRun.create({
@@ -59,7 +86,7 @@ export async function POST(req: Request) {
       planId,
       title,
       source,
-      status: "pending",
+      status,
       createdById: user.id,
     },
   });
@@ -75,7 +102,10 @@ export async function POST(req: Request) {
     data: { runId: run.id, title: run.title, source: run.source },
   });
 
-  return NextResponse.json(run, { status: 201 });
+  return NextResponse.json({
+    ...run,
+    durationSeconds: durationSeconds(run.startedAt, run.finishedAt),
+  }, { status: 201 });
 }
 
 export async function PATCH(req: Request) {
@@ -89,10 +119,7 @@ export async function PATCH(req: Request) {
   const existing = await prisma.testRun.findUnique({ where: { id: String(body.id) } });
   if (!existing) return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
 
-  const allowedStatuses = ["pending", "running", "passed", "failed", "error"];
-  const status = typeof body.status === "string" && allowedStatuses.includes(body.status)
-    ? body.status
-    : undefined;
+  const status = normalizeRunStatus(body.status);
 
   const run = await prisma.testRun.update({
     where: { id: String(body.id) },
@@ -127,5 +154,8 @@ export async function PATCH(req: Request) {
     });
   }
 
-  return NextResponse.json(run);
+  return NextResponse.json({
+    ...run,
+    durationSeconds: durationSeconds(run.startedAt, run.finishedAt),
+  });
 }

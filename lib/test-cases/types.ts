@@ -1,4 +1,4 @@
-export const TEST_CASE_SOURCES = ["manual", "integration", "qase", "playwright", "import"] as const;
+export const TEST_CASE_SOURCES = ["manual", "local", "automation", "qase", "integration", "playwright", "import"] as const;
 export const TEST_CASE_TYPES = ["manual", "automated", "hybrid"] as const;
 export const TEST_CASE_STATUSES = ["draft", "active", "review", "obsolete", "archived"] as const;
 export const TEST_CASE_PRIORITIES = ["low", "medium", "high", "critical"] as const;

@@ -118,6 +118,7 @@ export const ClientCreateRequestSchema = z
     status: z.enum(["active", "inactive", "archived"]).optional(),
     slug: OptionalStringSchema.optional(),
     active: z.boolean().optional(),
+    admin_email: z.string().email().optional(),
     cep: OptionalStringSchema.optional(),
     address_number: OptionalStringSchema.optional(),
     address_detail: OptionalStringSchema.optional(),

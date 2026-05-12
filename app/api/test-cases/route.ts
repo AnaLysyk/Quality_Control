@@ -14,7 +14,6 @@ import {
 } from "@/lib/test-cases/testCasePermissions";
 import { listIntegratedQaseTestCaseRecords } from "@/lib/test-projects/testProjectsRepository";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
-import { checkPermission } from "@/lib/permissions/checkPermission";
 import type { CreateTestCaseInput, TestCaseFilters } from "@/lib/test-cases/types";
 
 function mapTestCaseError(error: unknown) {
@@ -113,9 +112,6 @@ function matchesTestCaseFilters(record: Awaited<ReturnType<typeof listTestCaseRe
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  if (!checkPermission(user, "test_repository:read")) {
-    return NextResponse.json({ message: "Sem permissão para visualizar casos" }, { status: 403 });
-  }
 
   const url = new URL(req.url);
   const filters = filtersFromUrl(url);
@@ -145,9 +141,6 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  if (!checkPermission(user, "test_repository:create")) {
-    return NextResponse.json({ message: "Sem permissão para criar casos" }, { status: 403 });
-  }
 
   const payload = (await req.json()) as CreateTestCaseInput & { companySlug?: string | null };
   const companySlug = payload.companySlug ?? payload.companyId ?? null;
@@ -198,10 +191,6 @@ export async function PATCH(req: Request) {
 
   const id = String(payload.id);
   const archive = payload.archive === true;
-  const requiredPermission = archive ? "test_repository:delete" : "test_repository:update";
-  if (!checkPermission(user, requiredPermission)) {
-    return NextResponse.json({ message: "Sem permissão para editar este caso" }, { status: 403 });
-  }
 
   // Verify record exists + check access
   const existing = (await listTestCaseRecords()).find(

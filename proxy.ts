@@ -164,6 +164,27 @@ function debugCompanyRouteDecision(
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
+  if (pathname === "/audit-logs") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/audit-logs";
+    url.search = search;
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/defeitos") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/defeitos";
+    url.search = search;
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/suporte") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/chamados";
+    url.search = search;
+    return NextResponse.redirect(url);
+  }
+
   if (pathname === "/solicitacoes") {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/requests";

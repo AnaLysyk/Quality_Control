@@ -154,9 +154,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
+  const isGlobalAdmin =
+    authUser.isGlobalAdmin === true ||
+    (authUser as { is_global_admin?: boolean }).is_global_admin === true;
   if (
-    !hasPermissionAccess(authUser.permissions, "ai", "view") ||
-    !hasPermissionAccess(authUser.permissions, "ai", "use")
+    !isGlobalAdmin &&
+    (!hasPermissionAccess(authUser.permissions, "ai", "view") ||
+      !hasPermissionAccess(authUser.permissions, "ai", "use"))
   ) {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }

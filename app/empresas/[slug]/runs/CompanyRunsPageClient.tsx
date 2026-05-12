@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { CreateManualReleaseButton } from "@/components/CreateManualReleaseButton";
-import { RunDetailKanbanPanel } from "./RunDetailKanbanPanel";
 import { useI18n } from "@/hooks/useI18n";
 import { fetchApi } from "@/lib/api";
 import { formatRunTitle } from "@/lib/runPresentation";
@@ -87,7 +86,7 @@ type UnifiedRun = {
   runId: number | null;
   createdAt: string | null;
   statusLabel: string;
-  sourceType: "manual" | "integrated";
+  sourceType: "manual" | "integrated" | "qase" | "local" | "automation";
   sourceLabel: string;
   providerLabel: string | null;
   applicationLabel: string;
@@ -155,11 +154,13 @@ function formatDate(value: string | null, language: "pt-BR" | "en-US", t: (key: 
 function resolveStatusLabel(value: string | null, t: (key: string) => string) {
   const normalized = String(value ?? "").trim().toLowerCase();
   if (!normalized) return t("runsPage.noStatus");
+  if (["queued", "pending", "not_started", "draft", "saved"].includes(normalized)) return t("runsPage.statusPending");
+  if (["paused", "pausada"].includes(normalized)) return t("runsPage.statusPaused");
   if (["1", "done", "closed", "finalized", "finalizada"].includes(normalized)) return t("runsPage.statusCompleted");
   if (["0", "running", "in_progress", "em_andamento", "open", "active", "aberta"].includes(normalized)) return t("runsPage.statusInProgress");
   if (["blocked", "bloqueada"].includes(normalized)) return t("runsPage.statusBlocked");
+  if (["cancelled", "canceled", "cancelada", "aborted"].includes(normalized)) return t("runsPage.statusCancelled");
   if (["2", "abort", "aborted", "failed", "fail", "erro", "error", "falha", "violated"].includes(normalized)) return t("runsPage.statusAtRisk");
-  if (["draft", "saved", "pending", "pendente"].includes(normalized)) return t("runsPage.statusPending");
   return value ?? t("runsPage.noStatus");
 }
 
@@ -200,6 +201,19 @@ function normalizeManualRuns(data: unknown[], t: (key: string, params?: Record<s
     if (!slug) return accumulator;
 
     const testPlanSource = rec.testPlanSource === "qase" || rec.testPlanSource === "manual" ? rec.testPlanSource : null;
+    const rawSource = String(rec.source ?? rec.origin ?? rec.testPlanSource ?? "manual").trim().toLowerCase();
+    const sourceType: UnifiedRun["sourceType"] =
+      rawSource === "qase" || rawSource === "local" || rawSource === "automation"
+        ? rawSource
+        : "manual";
+    const sourceLabel =
+      sourceType === "qase"
+        ? "Qase"
+        : sourceType === "automation"
+          ? "Automação"
+          : sourceType === "local"
+            ? "Local"
+            : t("runsPage.manualSource");
     const testPlanId = typeof rec.testPlanId === "string" && rec.testPlanId.trim() ? rec.testPlanId.trim() : null;
     const testPlanName =
       typeof rec.testPlanName === "string" && rec.testPlanName.trim()
@@ -216,9 +230,9 @@ function normalizeManualRuns(data: unknown[], t: (key: string, params?: Record<s
       runId: normalizeNumericId(rec.runId ?? rec.run_id),
       createdAt: typeof rec.createdAt === "string" ? rec.createdAt : typeof rec.created_at === "string" ? rec.created_at : null,
       statusLabel: resolveStatusLabel(typeof rec.status === "string" ? rec.status : null, t),
-      sourceType: "manual",
-      sourceLabel: t("runsPage.manualSource"),
-      providerLabel: null,
+      sourceType,
+      sourceLabel,
+      providerLabel: sourceType === "qase" ? t("runsPage.providerQase") : sourceType === "automation" ? "Automação" : null,
       applicationLabel: String(rec.app ?? rec.qaseProject ?? t("runsPage.manualAppFallback")),
       projectCode: normalizeProjectCode(rec.qaseProject ?? rec.app),
       summary: t("runsPage.manualSummary", { pass: stats.pass, fail: stats.fail, blocked: stats.blocked, notRun: stats.notRun }),
@@ -302,6 +316,9 @@ function normalizeIntegratedRuns(data: unknown[]): IntegratedRun[] {
 function toUnifiedIntegratedRuns(data: IntegratedRun[], t: (key: string, params?: Record<string, string | number>) => string): UnifiedRun[] {
   return data.map((run) => {
     const stats = computeStats(run.manualSummary ?? run.metrics ?? run.stats);
+    const rawSource = String(run.source ?? "").trim().toLowerCase();
+    const sourceType: UnifiedRun["sourceType"] =
+      rawSource === "qase" || rawSource === "local" || rawSource === "automation" ? rawSource : "integrated";
     const providerLabel = resolveProvider(run, t);
     const applicationLabel = String(run.app ?? run.project ?? run.qaseProject ?? providerLabel ?? t("runsPage.integratedFallback")).trim() || t("runsPage.integratedFallback");
     const responsibleLabel =
@@ -319,9 +336,21 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], t: (key: string, params?
       runId: run.runId,
       createdAt: run.createdAt,
       statusLabel: resolveStatusLabel(run.statusText ?? run.status, t),
-      sourceType: "integrated",
-      sourceLabel: t("runsPage.integratedSource"),
-      providerLabel,
+      sourceType,
+      sourceLabel:
+        sourceType === "qase"
+          ? "Qase"
+          : sourceType === "automation"
+            ? "Automação"
+            : sourceType === "local"
+              ? "Local"
+              : t("runsPage.integratedSource"),
+      providerLabel:
+        sourceType === "qase"
+          ? t("runsPage.providerQase")
+          : sourceType === "automation"
+            ? "Automação"
+            : providerLabel,
       applicationLabel,
       projectCode: normalizeProjectCode(run.qaseProject ?? run.project ?? run.app),
       summary:
@@ -414,7 +443,7 @@ export default function CompanyRunsPageClient() {
   const [sortKey, setSortKey] = useState<RunSortKey>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedRun, setSelectedRun] = useState<UnifiedRun | null>(null);
-  const [detailTab, setDetailTab] = useState<"resumo" | "kanban" | "fluxo" | "detalhes" | "bruto">("resumo");
+  const [detailTab, setDetailTab] = useState<"resumo" | "fluxo" | "detalhes" | "bruto">("resumo");
   const [reloadNonce, setReloadNonce] = useState(0);
   const pageSize = 12;
 
@@ -898,7 +927,6 @@ export default function CompanyRunsPageClient() {
               <div className="flex flex-wrap gap-2">
                 {[
                   { key: "resumo", label: "Resumo" },
-                  { key: "kanban", label: activeRun.sourceType === "manual" ? "Kanban" : "Kanban integrado" },
                   { key: "fluxo", label: "Fluxo" },
                   { key: "detalhes", label: "Detalhes" },
                   { key: "bruto", label: "Bruto" },
@@ -971,22 +999,6 @@ export default function CompanyRunsPageClient() {
                     </div>
                   </div>
                 </div>
-              ) : null}
-
-              {detailTab === "kanban" ? (
-                <RunDetailKanbanPanel
-                  run={{
-                    slug: activeRun.slug,
-                    sourceType: activeRun.sourceType,
-                    applicationLabel: activeRun.applicationLabel,
-                    projectCode: activeRun.projectCode,
-                    runId: activeRun.runId,
-                    stats: activeRun.stats,
-                    raw: activeRun.raw,
-                  }}
-                  companySlug={companySlug}
-                  onRunUpdated={() => setReloadNonce((current) => current + 1)}
-                />
               ) : null}
 
               {detailTab === "fluxo" ? (

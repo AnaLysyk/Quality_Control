@@ -7,12 +7,15 @@ export default defineConfig({
   timeout: 90 * 1000,
   expect: { timeout: 10000 },
   retries: 0,
-  reporter: "list",
+  reporter: [
+    ["list"],
+    ["html", { open: "always" }],
+  ],
   workers: 1,
   use: {
     baseURL,
     trace: "on-first-retry",
-    headless: true,
+    headless: process.env.CI ? true : false,
   },
   projects: [
     {

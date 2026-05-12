@@ -1,8 +1,11 @@
 import "server-only";
 import { spawn } from "child_process";
 import EventEmitter from "events";
+import { createHash } from "crypto";
+import fs from "fs/promises";
+import path from "path";
 import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
-import { prepareWorkspace, cleanupWorkspace } from "./workspaceService";
+import { prepareWorkspace, cleanupWorkspace, getRunDir } from "./workspaceService";
 import type { PlaywrightConfigOptions, ScriptFile } from "./workspaceService";
 
 // ── In-memory SSE bus keyed by runId ────────────────────────────────────────
@@ -25,28 +28,47 @@ export interface StartRunOptions {
   planId?: string | null;
   title: string;
   scripts: ScriptFile[];
+  runMode?: "all" | "changed" | "failed";
+  selectedSpecs?: string[];
+  sourceRunId?: string | null;
   config: PlaywrightConfigOptions;
   createdBy?: string;
+}
+
+function resolvedBrowsers(config: PlaywrightConfigOptions): string[] {
+  const allowed = new Set(["chromium", "firefox", "webkit"]);
+  const list = Array.from(new Set((config.browsers ?? [config.browser]).filter((item) => allowed.has(item))));
+  return list.length ? list : ["chromium"];
+}
+
+function browserLabel(config: PlaywrightConfigOptions): string {
+  const list = resolvedBrowsers(config);
+  return list.length > 1 ? `matrix:${list.join("+")}` : list[0];
 }
 
 // ── DB helpers ───────────────────────────────────────────────────────────────
 
 async function createRunRecord(opts: {
   companySlug: string;
+  projectId?: string | null;
   title: string;
+  runMode: "all" | "changed" | "failed";
+  selectedSpecs: string[];
+  sourceRunId?: string | null;
   config: PlaywrightConfigOptions;
   createdBy?: string;
 }): Promise<string> {
   const { rows } = await automationPool.query<{ id: string }>(
     `INSERT INTO playwright_runs
-       (company_slug, title, browser, base_url, headless, timeout_ms, workers, retries,
-        screenshot_on, video_on, trace_on, status, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'queued',$12)
+       (company_slug, project_id, title, browser, base_url, headless, timeout_ms, workers, retries,
+        screenshot_on, video_on, trace_on, status, run_mode, selected_specs, source_run_id, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'queued',$13,$14,$15,$16)
      RETURNING id`,
     [
       opts.companySlug,
+      opts.projectId ?? null,
       opts.title,
-      opts.config.browser,
+      browserLabel(opts.config),
       opts.config.baseURL,
       opts.config.headless,
       opts.config.timeoutMs,
@@ -55,6 +77,9 @@ async function createRunRecord(opts: {
       opts.config.screenshotOn,
       opts.config.videoOn,
       opts.config.traceOn,
+      opts.runMode,
+      JSON.stringify(opts.selectedSpecs),
+      opts.sourceRunId ?? null,
       opts.createdBy ?? null,
     ],
   );
@@ -87,6 +112,83 @@ async function saveResult(runId: string, opts: {
      VALUES ($1,$2,$3,$4,$5,$6)`,
     [runId, opts.specFile, opts.title, opts.status, opts.durationMs, opts.errorMsg ?? null],
   );
+}
+
+type PlaywrightJsonResult = {
+  suites?: Array<{
+    title?: string;
+    specs?: Array<{
+      title?: string;
+      file?: string;
+      tests?: Array<{
+        results?: Array<{
+          status?: string;
+          duration?: number;
+          error?: { message?: string };
+        }>;
+      }>;
+    }>;
+    suites?: PlaywrightJsonResult["suites"];
+  }>;
+};
+
+async function replaceRunResultsFromJson(runId: string, workDir: string): Promise<void> {
+  const resultFile = path.join(workDir, "results.json");
+  const raw = await fs.readFile(resultFile, "utf8");
+  const parsed = JSON.parse(raw) as PlaywrightJsonResult;
+
+  const collected: Array<{ specFile: string; title: string; status: string; durationMs: number; errorMsg?: string }> = [];
+
+  function walkSuites(suites: PlaywrightJsonResult["suites"]) {
+    if (!suites) return;
+    for (const suite of suites) {
+      if (suite.specs) {
+        for (const spec of suite.specs) {
+          const first = spec.tests?.[0]?.results?.[0];
+          if (!first) continue;
+          collected.push({
+            specFile: spec.file ?? "",
+            title: spec.title ?? suite.title ?? "Teste",
+            status: first.status ?? "unknown",
+            durationMs: Number.isFinite(first.duration) ? Number(first.duration) : 0,
+            errorMsg: first.error?.message,
+          });
+        }
+      }
+      walkSuites(suite.suites);
+    }
+  }
+
+  walkSuites(parsed.suites);
+  await automationPool.query(`DELETE FROM playwright_run_results WHERE run_id = $1`, [runId]);
+  for (const row of collected) {
+    await saveResult(runId, row);
+  }
+}
+
+function isSpecPath(filePath: string): boolean {
+  return /(^|\/)tests\/.+\.spec\.(ts|js)$/i.test(filePath);
+}
+
+function hashContent(content: string): string {
+  return createHash("sha256").update(content).digest("hex");
+}
+
+async function upsertSpecSnapshots(
+  companySlug: string,
+  runId: string,
+  scripts: ScriptFile[],
+): Promise<void> {
+  const specScripts = scripts.filter((script) => isSpecPath(script.path));
+  for (const script of specScripts) {
+    await automationPool.query(
+      `INSERT INTO playwright_spec_snapshots (company_slug, spec_path, content_hash, last_run_id, updated_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       ON CONFLICT (company_slug, spec_path)
+       DO UPDATE SET content_hash = EXCLUDED.content_hash, last_run_id = EXCLUDED.last_run_id, updated_at = NOW()`,
+      [companySlug, script.path, hashContent(script.content), runId],
+    );
+  }
 }
 
 // ── Line parser — parses Playwright's list reporter output ──────────────────
@@ -136,9 +238,16 @@ function parseDuration(value: string, unit: string): number {
 export async function startPlaywrightRun(opts: StartRunOptions): Promise<string> {
   await ensureAutomationTables();
 
+  const runMode = opts.runMode ?? "all";
+  const selectedSpecs = Array.isArray(opts.selectedSpecs) ? opts.selectedSpecs : [];
+
   const runId = await createRunRecord({
     companySlug: opts.companySlug,
+    projectId: opts.projectId ?? null,
     title: opts.title,
+    runMode,
+    selectedSpecs,
+    sourceRunId: opts.sourceRunId,
     config: opts.config,
     createdBy: opts.createdBy,
   });
@@ -153,7 +262,7 @@ export async function startPlaywrightRun(opts: StartRunOptions): Promise<string>
         planId: opts.planId ?? null,
         title: opts.title,
         source: "playwright",
-        browser: opts.config.browser,
+        browser: browserLabel(opts.config),
         baseUrl: opts.config.baseURL,
         headless: opts.config.headless ?? true,
         status: "pending",
@@ -174,7 +283,7 @@ export async function startPlaywrightRun(opts: StartRunOptions): Promise<string>
       actorId: opts.createdBy ?? "system",
       companyId: opts.companySlug,
       projectId: opts.projectId ?? null,
-      data: { title: opts.title, browser: opts.config.browser },
+      data: { title: opts.title, browser: browserLabel(opts.config), browsers: resolvedBrowsers(opts.config) },
     });
   } catch { /* non-blocking */ }
 
@@ -205,13 +314,19 @@ async function executeRun(
       opts.config,
     );
     emit(`[system] Workspace: ${workDir}`);
-    emit(`[system] Iniciando Playwright (${opts.config.browser}, headless=${opts.config.headless})…`);
+    const runBrowsers = resolvedBrowsers(opts.config);
+    emit(`[system] Iniciando Playwright (${runBrowsers.join(", ")}, headless=${opts.config.headless})…`);
 
     await updateRunStatus(runId, "running");
 
+    const specArgs = (opts.selectedSpecs ?? []).filter(Boolean);
+    if (specArgs.length) {
+      emit(`[system] Escopo da run: ${specArgs.length} spec(s) selecionado(s).`);
+    }
+
     const child = spawn(
       "npx",
-      ["playwright", "test", "--reporter=list"],
+      ["playwright", "test", ...specArgs],
       {
         cwd: workDir,
         env: {
@@ -255,6 +370,19 @@ async function executeRun(
     });
 
     const finalStatus = exitCode === 0 ? "passed" : "failed";
+
+    try {
+      await replaceRunResultsFromJson(runId, getRunDir(opts.companySlug, runId));
+    } catch {
+      // Keep line-based fallback when JSON reporter is unavailable.
+    }
+
+    try {
+      await upsertSpecSnapshots(opts.companySlug, runId, opts.scripts);
+    } catch {
+      // Snapshot update is best-effort and should not break the run status.
+    }
+
     emit(`[system] Execução concluída — status=${finalStatus} (exit code ${exitCode})`);
     await updateRunStatus(runId, finalStatus, exitCode);
 

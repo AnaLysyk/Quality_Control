@@ -58,7 +58,7 @@ type ApplicationOption = {
   qaseProjectCode?: string | null;
 };
 
-type TestPlanSource = "manual" | "qase";
+type TestPlanSource = "manual" | "local" | "automation" | "qase";
 
 type TestPlanCaseStep = {
   id: string;

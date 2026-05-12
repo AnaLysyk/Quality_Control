@@ -258,6 +258,20 @@ async function executeRun(
     emit(`[system] Execução concluída — status=${finalStatus} (exit code ${exitCode})`);
     await updateRunStatus(runId, finalStatus, exitCode);
 
+    // Emit Brian event for run completion
+    try {
+      const { emitBrainEvent } = await import("@/lib/brain/events");
+      emitBrainEvent({
+        type: finalStatus === "passed" ? "test_run.finished" : "test_run.failed",
+        subject: runId,
+        source: "/api/playwright/run",
+        actorId: opts.createdBy ?? "system",
+        companyId: opts.companySlug,
+        projectId: opts.projectId ?? null,
+        data: { title: opts.title, exitCode, finalStatus },
+      });
+    } catch { /* non-blocking */ }
+
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     emit(`[error] ${msg}`);

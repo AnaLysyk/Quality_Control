@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { emitBrainEvent } from "@/lib/brain/events";
 
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
@@ -63,6 +64,17 @@ export async function POST(req: Request) {
     },
   });
 
+  emitBrainEvent({
+    type: "test_run.created",
+    subject: run.id,
+    source: "/api/test-runs",
+    actorId: user.id,
+    actorRole: user.role ?? "user",
+    companyId: companyId,
+    projectId: projectId,
+    data: { runId: run.id, title: run.title, source: run.source },
+  });
+
   return NextResponse.json(run, { status: 201 });
 }
 
@@ -94,6 +106,26 @@ export async function PATCH(req: Request) {
       ...(body.finishedAt ? { finishedAt: new Date(body.finishedAt as string) } : {}),
     },
   });
+
+  if (status === "passed" || status === "failed" || status === "error") {
+    emitBrainEvent({
+      type: status === "passed" ? "test_run.finished" : "test_run.failed",
+      subject: run.id,
+      source: "/api/test-runs",
+      actorId: user.id,
+      actorRole: user.role ?? "user",
+      companyId: run.companyId ?? null,
+      projectId: run.projectId ?? null,
+      data: {
+        runId: run.id,
+        title: run.title,
+        status: run.status,
+        passCount: run.passCount ?? 0,
+        failCount: run.failCount ?? 0,
+        totalCount: run.totalCount ?? 0,
+      },
+    });
+  }
 
   return NextResponse.json(run);
 }

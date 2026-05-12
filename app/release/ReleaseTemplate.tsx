@@ -4,7 +4,7 @@ import Image from "next/image";
 import { getRunDetailViewModel } from "@/lib/runDetailViewModel";
 import { RunHero } from "./components/RunHero";
 import { RunChartSection } from "./components/RunChartSection";
-import { RunKanbanSection } from "./components/RunKanbanSection";
+import { RunCaseListSection } from "./components/RunCaseListSection";
 
 const legendClassByLabel: Record<string, string> = {
   Pass: "bg-[#22c55e]",
@@ -41,8 +41,8 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
           </div>
         </div>
 
-        {/* ── Kanban — visual continuation ── */}
-        <RunKanbanSection vm={vm} />
+        {/* ── Case list — expandable ── */}
+        <RunCaseListSection vm={vm} />
       </div>
     </div>
   );

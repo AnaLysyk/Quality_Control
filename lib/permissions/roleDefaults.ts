@@ -19,6 +19,13 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     audit: [],
     settings: ["view", "edit"],
     ai: ["view", "use"],
+    // ── QA Platform modules ──────────────────────────────────────────────────
+    test_repository: ["read"],
+    test_plan: ["read"],
+    test_run: ["read"],
+    playwright: ["read"],
+    defect_tracking: ["read"],
+    release_management: ["read"],
   },
   [SYSTEM_ROLES.COMPANY_USER]: {
     dashboard: ["view"],
@@ -36,6 +43,13 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     audit: [],
     settings: ["view", "edit"],
     ai: ["view", "use"],
+    // ── QA Platform modules ──────────────────────────────────────────────────
+    test_repository: [],
+    test_plan: [],
+    test_run: [],
+    playwright: [],
+    defect_tracking: [],
+    release_management: [],
   },
   [SYSTEM_ROLES.TESTING_COMPANY_USER]: {
     dashboard: ["view"],
@@ -53,6 +67,13 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     audit: [],
     settings: ["view", "edit"],
     ai: ["view", "use"],
+    // ── QA Platform modules ──────────────────────────────────────────────────
+    test_repository: ["read", "create", "update"],
+    test_plan: ["read", "create", "update"],
+    test_run: ["read", "create", "update"],
+    playwright: ["read", "execute"],
+    defect_tracking: ["read", "create", "update"],
+    release_management: ["read"],
   },
   [SYSTEM_ROLES.LEADER_TC]: {
     dashboard: ["view"],
@@ -70,6 +91,13 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     audit: [],
     settings: ["view"],
     ai: ["view", "use"],
+    // ── QA Platform modules ──────────────────────────────────────────────────
+    test_repository: ["read", "create", "update", "delete", "import"],
+    test_plan: ["read", "create", "update", "delete"],
+    test_run: ["read", "create", "update", "delete"],
+    playwright: ["read", "execute"],
+    defect_tracking: ["read", "create", "update", "delete", "assign", "status"],
+    release_management: ["read", "create", "approve", "block"],
   },
   [SYSTEM_ROLES.TECHNICAL_SUPPORT]: {
     dashboard: ["view"],
@@ -87,6 +115,13 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     audit: ["view"],
     settings: ["view"],
     ai: ["view", "use"],
+    // ── QA Platform modules ──────────────────────────────────────────────────
+    test_repository: ["read", "create", "update"],
+    test_plan: ["read"],
+    test_run: ["read"],
+    playwright: ["read", "execute"],
+    defect_tracking: ["read", "create", "update", "assign", "status"],
+    release_management: ["read"],
   },
 };
 

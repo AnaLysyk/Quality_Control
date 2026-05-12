@@ -10,6 +10,7 @@ import {
   filterTestCasesByPermission,
 } from "@/lib/test-cases/testCasePermissions";
 import { listIntegratedQaseTestCaseRecords } from "@/lib/test-projects/testProjectsRepository";
+import { writeAuditLog } from "@/lib/audit/writeAuditLog";
 import type { CreateTestCaseInput, TestCaseFilters } from "@/lib/test-cases/types";
 
 function mapTestCaseError(error: unknown) {
@@ -159,6 +160,15 @@ export async function POST(req: Request) {
       },
       user.id,
     );
+    writeAuditLog({
+      actorUserId: user.id,
+      actorEmail: user.email,
+      action: "create",
+      entityType: "TestCase",
+      entityId: record.testCase.id,
+      entityLabel: record.testCase.title,
+      metadata: { companyId: companySlug, projectId: payload.projectId ?? null },
+    });
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
     const mapped = mapTestCaseError(error);

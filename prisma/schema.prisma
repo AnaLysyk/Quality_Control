@@ -336,17 +336,19 @@ model Company {
 // ─── Project ─────────────────────────────────────────────────────────────────
 
 model Project {
-  id          String   @id @default(cuid())
-  companyId   String
-  slug        String
-  name        String
-  description String?
-  status      String   @default("active")
-  color       String?
-  iconKey     String?
-  createdById String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String    @id @default(cuid())
+  companyId    String
+  slug         String
+  name         String
+  description  String?
+  status       String    @default("active")
+  color        String?
+  iconKey      String?
+  createdById  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  archivedAt   DateTime?
+  archivedById String?
 
   company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   testPlans TestPlan[]
@@ -617,6 +619,8 @@ model TestRun {
   createdById  String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  archivedAt   DateTime?
+  archivedById String?
 
   project  Project?          @relation(fields: [projectId], references: [id])
   plan     TestPlan?         @relation(fields: [planId], references: [id])
@@ -657,9 +661,11 @@ model TestPlan {
   title       String
   description String?
   status      String   @default("draft") // draft | active | archived
-  createdById String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  archivedAt   DateTime?
+  archivedById String?
 
   project Project?       @relation(fields: [projectId], references: [id])
   items   TestPlanItem[]
@@ -1156,12 +1162,14 @@ model Favorite {
 // ─── Test Case Repository ─────────────────────────────────────────────────────
 
 model StoredTestCase {
-  id        String   @id  // equals testCase.id
-  companyId String?
-  projectId String?
-  data      Json     // full TestCaseRecord serialized
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String    @id  // equals testCase.id
+  companyId    String?
+  projectId    String?
+  data         Json     // full TestCaseRecord serialized
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  archivedAt   DateTime?
+  archivedById String?
 
   @@index([companyId])
   @@index([projectId])

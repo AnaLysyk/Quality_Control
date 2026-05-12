@@ -439,7 +439,7 @@ export default function TestPlansPage() {
   const { user } = useAuthUser();
   const { slug } = useParams<{ slug: string }>();
   const { language } = useI18n();
-  const { selectedProject } = useProjectContext();
+  const { activeProject: selectedProject } = useProjectContext();
   const copy = (COPY[language] ?? COPY["pt-BR"]) as CopyType;
   const roleKey =
     (typeof user?.permissionRole === "string" && user.permissionRole.trim()) ||

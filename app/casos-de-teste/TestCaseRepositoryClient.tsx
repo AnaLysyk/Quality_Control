@@ -287,7 +287,7 @@ type DraftApprovalAction = "request_qa_review" | "approve_publish" | "approve_ex
 export default function TestCaseRepositoryClient() {
   const { user, normalizedUser } = useAuthUser();
   const { activeClientSlug } = useClientContext();
-  const { selectedProject } = useProjectContext();
+  const { activeProject: selectedProject } = useProjectContext();
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("all");
   const [status, setStatus] = useState("all");

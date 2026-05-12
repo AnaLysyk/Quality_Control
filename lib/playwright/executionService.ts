@@ -164,6 +164,20 @@ export async function startPlaywrightRun(opts: StartRunOptions): Promise<string>
     // Non-blocking: Prisma record failure should not abort the run
   }
 
+  // Emit Brian event
+  try {
+    const { emitBrainEvent } = await import("@/lib/brain/events");
+    emitBrainEvent({
+      type: "test_run.started",
+      subject: runId,
+      source: "/api/playwright/run",
+      actorId: opts.createdBy ?? "system",
+      companyId: opts.companySlug,
+      projectId: opts.projectId ?? null,
+      data: { title: opts.title, browser: opts.config.browser },
+    });
+  } catch { /* non-blocking */ }
+
   const emitter = new EventEmitter() as RunEmitter;
   emitter.setMaxListeners(50);
   emitter.finished = false;

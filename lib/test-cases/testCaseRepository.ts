@@ -304,6 +304,21 @@ export async function createManualTestCaseRecord(input: CreateTestCaseInput, act
   };
 
   await writeManualRecords([record, ...manualRecords.filter((item) => item.testCase.id !== id)]);
+
+  // Emit Brian event (fire-and-forget)
+  try {
+    const { emitBrainEvent } = await import("@/lib/brain/events");
+    emitBrainEvent({
+      type: "test_case.created",
+      subject: id,
+      source: "/api/test-cases",
+      actorId: actorId,
+      companyId: input.companyId ?? null,
+      projectId: input.projectId ?? null,
+      data: { title: testCase.title, key: testCase.key },
+    });
+  } catch { /* non-blocking */ }
+
   return record;
 }
 

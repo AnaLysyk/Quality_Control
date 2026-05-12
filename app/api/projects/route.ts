@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { getPrismaClient } from "@/lib/prismaClient";
 import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+async function getDb() {
+  const { prisma } = await import("@/lib/prismaClient");
+  return prisma;
+}
 
 // ── GET /api/projects?companySlug= ───────────────────────────────────────────
 
@@ -16,11 +20,11 @@ export async function GET(request: Request) {
   const companySlug = searchParams.get("companySlug")?.trim();
   if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
 
-  const prisma = getPrismaClient();
-  const company = await prisma.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
+  const db = await getDb();
+  const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ projects: [] });
 
-  const projects = await prisma.project.findMany({
+  const projects = await db.project.findMany({
     where: { companyId: company.id, status: "active" },
     orderBy: { name: "asc" },
     select: {
@@ -37,7 +41,7 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({
-    projects: projects.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() })),
+    projects: projects.map((p: typeof projects[number]) => ({ ...p, createdAt: p.createdAt.toISOString() })),
   });
 }
 
@@ -72,18 +76,18 @@ export async function POST(request: Request) {
 
   const { companySlug, slug, name, description, color, iconKey } = parsed.data;
 
-  const prisma = getPrismaClient();
-  const company = await prisma.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
+  const db = await getDb();
+  const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
 
   // Check uniqueness
-  const existing = await prisma.project.findUnique({
+  const existing = await db.project.findUnique({
     where: { companyId_slug: { companyId: company.id, slug } },
     select: { id: true },
   });
   if (existing) return NextResponse.json({ error: "Já existe um projeto com esse slug nessa empresa" }, { status: 409 });
 
-  const project = await prisma.project.create({
+  const project = await db.project.create({
     data: {
       companyId: company.id,
       slug,

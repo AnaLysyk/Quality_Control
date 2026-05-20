@@ -87,6 +87,11 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "quality-smoke",
+      testMatch: "smoke.spec.ts",
+      use: { ...devices["Desktop Chrome"] },
+    },
     ...(includeEdge
       ? [
           {

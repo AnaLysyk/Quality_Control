@@ -26,14 +26,18 @@ function cleanNext() {
   }
 
   for (const entry of fs.readdirSync(nextDir)) {
-    removePath(path.join(nextDir, entry));
+    const entryPath = path.join(nextDir, entry);
+    try {
+      removePath(entryPath);
+    } catch (error) {
+      console.warn(`Nao foi possivel remover ${entryPath}; seguindo com cache residual.`, error);
+    }
   }
 
   try {
     fs.rmdirSync(nextDir);
   } catch (error) {
-    console.error(`Falha ao limpar ${nextDir}:`, error);
-    process.exitCode = 1;
+    console.warn(`Nao foi possivel remover ${nextDir} completamente; seguindo com cache residual.`, error);
   }
 }
 

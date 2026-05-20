@@ -1,5 +1,45 @@
 # Copilot Instructions — painel-qa
 
+## Regras obrigatórias dos agentes
+
+Antes de qualquer implementação no Painel QA, leia e siga:
+
+- `docs/agents/QA_AGENTS.md`
+- `docs/architecture/QA_PLATFORM_CONTRACT.md`
+- `docs/product/QA_SCREEN_FLOW.md`
+- `docs/ops/CODE_CLEANUP_AUDIT.md`
+- `docs/ops/REORG_PLAN.md`
+
+Toda alteração deve passar mentalmente pelos agentes:
+
+1. Product Flow Guardian
+2. Code Cleanup Guardian
+3. RBAC Guardian
+4. Manual QA Flow Guardian
+5. Brian Guardian
+6. UI Screen Guardian
+7. Build Safety Guardian
+
+Regra principal:
+
+Primeiro analisar, depois implementar.
+
+Nenhum agente deve:
+
+- criar pasta nova sem justificar;
+- criar tela nova se já existir tela canônica;
+- criar endpoint novo se já existir rota canônica;
+- apagar arquivo sem inventário;
+- alterar schema sem plano de migration;
+- ignorar empresa, usuário, perfil ou permissão;
+- implementar Playwright ou automação avançada nesta fase;
+- misturar fluxo manual com automação sem decisão explícita;
+- expor dados no Brian ou Assistente sem RBAC.
+
+Fluxo funcional prioritário:
+
+Flow → Caso de Teste → Step → Data Element → Plano de Teste → Execução → Resultado → Defeito → Brian → Assistente
+
 Resumo prático para agentes:
 
 - Arquitetura: frontend Next.js (App Router) em `app/`; backend independente em `backend/`; utilitários em `lib/` e dados em `data/`.

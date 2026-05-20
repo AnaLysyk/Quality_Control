@@ -5,10 +5,20 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      CI: "true"
+      NEXT_DISABLE_FONT_DOWNLOAD: "1"
+      SKIP_PRISMA_MIGRATE: "true"
+      E2E_USE_JSON: "1"
+      AUTH_STORE: "json"
+      USE_JSON_STORE: "true"
     steps:
       - uses: actions/checkout@v5
 
@@ -16,13 +26,30 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
+
       - name: Install Node deps
         run: npm ci
+
+      - name: Block obvious committed database secrets
+        shell: bash
+        run: |
+          db_url_re='postgres(ql)?://[^[:space:]]+@[^[:space:]]+'
+          if git grep -nE "$db_url_re" -- .github scripts app lib ':!.github/workflows/ci.yml'; then
+            echo "Found an obvious committed database URL. Replace it with an environment variable before merging."
+            exit 1
+          fi
+
       - name: Lint
         run: npm run lint
+
       - name: Build
-        run: npm run build
+        shell: bash
+        run: |
+          export DATABASE_URL="$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql ci ci 127.0.0.1 5432 ci)"
+          npm run build
+
       - name: Run Node tests
-        env:
-          CI: "true"
-        run: npm run test
+        shell: bash
+        run: |
+          export DATABASE_URL="$(printf '%s://%s:%s@%s:%s/%s?schema=public' postgresql ci ci 127.0.0.1 5432 ci)"
+          npm run test

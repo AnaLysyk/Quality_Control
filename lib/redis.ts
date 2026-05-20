@@ -228,6 +228,11 @@ function canUsePersistentFallback() {
   return shouldUsePostgresPersistence();
 }
 
+function shouldUseMemoryFallback() {
+  const fallback = (process.env.REDIS_FALLBACK ?? process.env.REDIS_STORE ?? "").trim().toLowerCase();
+  return fallback === "memory" || fallback === "mock" || fallback === "in-memory";
+}
+
 export function getRedis() {
   if (redis) return redis;
 
@@ -236,7 +241,7 @@ export function getRedis() {
   const token = resolved?.token;
 
   if (!url || !token) {
-    if (canUsePersistentFallback()) {
+    if (canUsePersistentFallback() && !shouldUseMemoryFallback()) {
       postgresRedis = postgresRedis ?? new PostgresRedis();
       redis = postgresRedis;
       if (!warnedRedisMissing) {
@@ -267,7 +272,7 @@ export function getRedis() {
 export { redis };
 
 export function isRedisConfigured(): boolean {
-  return resolveRedisEnv() !== null || canUsePersistentFallback();
+  return resolveRedisEnv() !== null || (canUsePersistentFallback() && !shouldUseMemoryFallback());
 }
 
 export function assertRedisConfigured(feature = "This feature") {

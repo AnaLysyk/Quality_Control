@@ -1163,7 +1163,73 @@ export default function TestPlansPage() {
           </div>
         ) : null}
 
-        <section>
+        <section className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-4">
+            <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                Visão geral
+              </p>
+              <p className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">
+                {totals.total}
+              </p>
+              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                Planos no filtro atual
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                Casos vinculados
+              </p>
+              <p className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">
+                {totalTests}
+              </p>
+              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                Casos disponíveis nos planos
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                Execuções
+              </p>
+              <p className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">
+                —
+              </p>
+              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                Usar tela de Execuções
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                Defeitos / Brian
+              </p>
+              <p className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">
+                —
+              </p>
+              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                Mantido fora deste patch
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent,#ef0001)">
+                  Planos de Teste
+                </p>
+                <h2 className="mt-1 text-lg font-black text-(--tc-text,#0b1a3c)">
+                  Plano → Casos vinculados → Execução → Resultado
+                </h2>
+              </div>
+              <p className="text-sm text-(--tc-text-secondary,#4b5563)">
+                {filteredPlans.length} plano{filteredPlans.length === 1 ? "" : "s"} exibido{filteredPlans.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+
           {loadingApplications ? (
             <p className="text-sm text-(--tc-text-muted,#6b7280)">{copy.loadingApps}</p>
           ) : loadingPlans ? (

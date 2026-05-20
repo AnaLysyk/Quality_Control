@@ -3,7 +3,12 @@
 
 const { Client } = require('pg');
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://quality_control_db_gepu_user:IcFolaph4EJDkMRFjBR7ZjCL4yb9WlPj@dpg-d6r33ohj16oc73f058g0-a.oregon-postgres.render.com/quality_control_db_gepu?sslmode=require';
+const connectionString = process.env.DB_CHECK_DATABASE_URL?.trim();
+
+if (!connectionString) {
+  console.error('DB_CHECK_DATABASE_URL nao configurada. Configure a variavel para executar este diagnostico.');
+  process.exit(1);
+}
 
 const client = new Client({
   connectionString,

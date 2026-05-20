@@ -66,9 +66,35 @@ function removeStaleLocks() {
   }
 }
 
+function removePath(targetPath) {
+  try {
+    fs.rmSync(targetPath, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
+  } catch (error) {
+    console.warn(`[dev-start] Nao foi possivel limpar ${targetPath}; seguindo com cache residual.`, error);
+  }
+}
+
+function cleanDevOutput() {
+  for (const targetPath of [
+    path.join(root, ".next", "dev"),
+    path.join(root, ".next", "dev-runtime"),
+    path.join(root, ".next", "dev-turbo"),
+  ]) {
+    if (fs.existsSync(targetPath)) {
+      removePath(targetPath);
+    }
+  }
+}
+
 function run() {
   stopStaleRepoDevServers();
   removeStaleLocks();
+  cleanDevOutput();
 
   const bundlerFlag = process.argv.includes("--turbo") ? "--turbo" : "--webpack";
   const command = isWin ? process.execPath : nextBin;
@@ -80,7 +106,10 @@ function run() {
 
   const child = spawn(command, args, {
     cwd: root,
-    env: process.env,
+    env: {
+      ...process.env,
+      REDIS_FALLBACK: process.env.REDIS_FALLBACK || "memory",
+    },
     stdio: "inherit",
     shell: false,
   });

@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
+import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { listApplications } from "@/lib/applicationsStore";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { QaseError } from "@/lib/qaseSdk";
 import { listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
+import { canAccessTestCaseRecord } from "@/lib/test-cases/testCasePermissions";
 import {
   extractNumericCaseIds,
   parseTestPlanCases,
@@ -32,6 +37,50 @@ type ApplicationItem = {
 };
 
 type PlanSource = TestPlanSource;
+
+function normalizeCompanySlug(value: unknown) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function hasGlobalTestPlanWriteAccess(user: AuthUser) {
+  if (user.isGlobalAdmin) return true;
+  return [user.role, user.globalRole, user.permissionRole, user.companyRole]
+    .some((role) => normalizeLegacyRole(role) === SYSTEM_ROLES.LEADER_TC);
+}
+
+async function requireTestPlanCompanyAccess(request: Request, companySlug: string, mode: "read" | "write") {
+  const user = await authenticateRequest(request);
+  if (!user) {
+    return { response: NextResponse.json({ error: "Não autorizado" }, { status: 401 }) };
+  }
+  if (!companySlug) {
+    return { response: NextResponse.json({ error: "companySlug is required" }, { status: 400 }) };
+  }
+
+  const allowedSlugs = resolveNormalizedCompanySlugs(user);
+  if (mode === "read" && hasGlobalCompanyVisibility(user)) {
+    return { user };
+  }
+  if (mode === "write" && hasGlobalTestPlanWriteAccess(user)) {
+    return { user };
+  }
+  if (allowedSlugs.includes(companySlug)) {
+    return { user };
+  }
+
+  return { response: NextResponse.json({ error: "Acesso proibido" }, { status: 403 }) };
+}
+
+function assertCaseCanBeUsedInPlan(user: AuthUser, record: Awaited<ReturnType<typeof listTestCaseRecords>>[number], companySlug: string) {
+  if (!canAccessTestCaseRecord(user, record)) {
+    throw new Error("TEST_CASE_FORBIDDEN");
+  }
+
+  const caseCompanySlug = record.testCase.companyId?.trim().toLowerCase() || null;
+  if (caseCompanySlug && caseCompanySlug !== companySlug) {
+    throw new Error("TEST_CASE_FORBIDDEN");
+  }
+}
 
 function normalizeProjectCode(value: unknown) {
   const normalized = String(value ?? "").trim().toUpperCase();
@@ -88,7 +137,7 @@ function normalizeWarningList(values: Array<string | null | undefined>) {
   return unique.length ? unique.join(" ") : null;
 }
 
-async function resolveCentralTestPlanCases(caseRefs: TestPlanCase[]) {
+async function resolveCentralTestPlanCases(caseRefs: TestPlanCase[], user: AuthUser, companySlug: string) {
   if (!caseRefs.length) return [];
 
   const records = await listTestCaseRecords();
@@ -99,6 +148,7 @@ async function resolveCentralTestPlanCases(caseRefs: TestPlanCase[]) {
     if (!record) {
       throw new Error(`TEST_CASE_NOT_FOUND:${caseRef.id}`);
     }
+    assertCaseCanBeUsedInPlan(user, record, companySlug);
 
     return {
       id: record.testCase.id,
@@ -118,7 +168,7 @@ async function resolveCentralTestPlanCases(caseRefs: TestPlanCase[]) {
   });
 }
 
-async function hydrateManualPlanCases(caseRefs: TestPlanCase[]) {
+async function hydrateManualPlanCases(caseRefs: TestPlanCase[], user: AuthUser, companySlug: string) {
   if (!caseRefs.length) return [];
 
   const records = await listTestCaseRecords();
@@ -127,6 +177,14 @@ async function hydrateManualPlanCases(caseRefs: TestPlanCase[]) {
   return caseRefs.map((caseRef) => {
     const record = byId.get(caseRef.id);
     if (!record) {
+      return {
+        id: caseRef.id,
+        ...(caseRef.automation ? { automation: caseRef.automation } : {}),
+      };
+    }
+    try {
+      assertCaseCanBeUsedInPlan(user, record, companySlug);
+    } catch {
       return {
         id: caseRef.id,
         ...(caseRef.automation ? { automation: caseRef.automation } : {}),
@@ -152,11 +210,11 @@ async function hydrateManualPlanCases(caseRefs: TestPlanCase[]) {
   });
 }
 
-async function resolveCentralTestPlanCasesByIds(testCaseIds: string[]) {
+async function resolveCentralTestPlanCasesByIds(testCaseIds: string[], user: AuthUser, companySlug: string) {
   if (!testCaseIds.length) return [];
 
   const caseRefs = testCaseIds.map((id) => ({ id }));
-  return resolveCentralTestPlanCases(caseRefs);
+  return resolveCentralTestPlanCases(caseRefs, user, companySlug);
 }
 
 function resolveWarningFromQaseError(error: unknown) {
@@ -175,16 +233,16 @@ function resolveWarningFromQaseError(error: unknown) {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const companySlug = url.searchParams.get("companySlug")?.trim().toLowerCase() || "";
+  const companySlug = normalizeCompanySlug(url.searchParams.get("companySlug"));
   const applicationId = url.searchParams.get("applicationId")?.trim() || "";
   const projectId = url.searchParams.get("projectId")?.trim() || "";
   const requestedProjectCode = normalizeProjectCode(url.searchParams.get("project"));
   const planId = url.searchParams.get("planId")?.trim() || "";
   const source = normalizeSource(url.searchParams.get("source"));
 
-  if (!companySlug) {
-    return NextResponse.json({ error: "companySlug is required" }, { status: 400 });
-  }
+  const access = await requireTestPlanCompanyAccess(request, companySlug, "read");
+  if ("response" in access) return access.response;
+  const { user } = access;
 
   const { applications, selectedApplication } = await resolveApplication(companySlug, applicationId);
   const projectCode = requestedProjectCode || normalizeProjectCode(selectedApplication?.qaseProjectCode);
@@ -212,7 +270,7 @@ export async function GET(request: Request) {
           source: "manual",
           applicationId: plan.applicationId,
           applicationName: plan.applicationName,
-          cases: await hydrateManualPlanCases(plan.cases),
+          cases: await hydrateManualPlanCases(plan.cases, user, companySlug),
         }),
       });
     }
@@ -348,7 +406,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const companySlug = String(body.companySlug ?? "").trim().toLowerCase();
+  const companySlug = normalizeCompanySlug(body.companySlug);
   const applicationId = String(body.applicationId ?? "").trim();
   const planProjectId = String(body.projectId ?? "").trim() || null;
   const source = normalizeSource(body.source);
@@ -359,7 +417,11 @@ export async function POST(request: Request) {
     ? body.testCaseIds.map((item) => String(item ?? "").trim()).filter(Boolean)
     : [];
 
-  if (!companySlug || !applicationId || !title) {
+  const access = await requireTestPlanCompanyAccess(request, companySlug, "write");
+  if ("response" in access) return access.response;
+  const { user } = access;
+
+  if (!applicationId || !title) {
     return NextResponse.json({ error: "companySlug, applicationId and title are required" }, { status: 400 });
   }
 
@@ -368,14 +430,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Application not found" }, { status: 404 });
   }
 
-  let resolvedCaseRefs = testCaseIds.length ? await resolveCentralTestPlanCasesByIds(testCaseIds) : caseRefs;
+  let resolvedCaseRefs = caseRefs;
   try {
-    if (!testCaseIds.length) {
-      resolvedCaseRefs = await resolveCentralTestPlanCases(caseRefs);
+    if (testCaseIds.length) {
+      resolvedCaseRefs = await resolveCentralTestPlanCasesByIds(testCaseIds, user, companySlug);
+    } else {
+      resolvedCaseRefs = await resolveCentralTestPlanCases(caseRefs, user, companySlug);
     }
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("TEST_CASE_NOT_FOUND:")) {
       return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
+    }
+    if (error instanceof Error && error.message === "TEST_CASE_FORBIDDEN") {
+      return NextResponse.json({ error: "Sem permissão para vincular um ou mais casos" }, { status: 403 });
     }
     throw error;
   }
@@ -446,7 +513,7 @@ export async function POST(request: Request) {
       source: created.source,
       applicationId: created.applicationId,
       applicationName: created.applicationName,
-      cases: await hydrateManualPlanCases(created.cases),
+      cases: await hydrateManualPlanCases(created.cases, user, companySlug),
     }),
   }, { status: 201 });
 }
@@ -457,12 +524,16 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const companySlug = String(body.companySlug ?? "").trim().toLowerCase();
+  const companySlug = normalizeCompanySlug(body.companySlug);
   const applicationId = String(body.applicationId ?? "").trim();
   const planId = String(body.planId ?? "").trim();
   const source = normalizeSource(body.source);
 
-  if (!companySlug || !planId) {
+  const access = await requireTestPlanCompanyAccess(request, companySlug, "write");
+  if ("response" in access) return access.response;
+  const { user } = access;
+
+  if (!planId) {
     return NextResponse.json({ error: "companySlug and planId are required" }, { status: 400 });
   }
 
@@ -517,19 +588,25 @@ export async function PATCH(request: Request) {
   let resolvedCaseRefs = caseRefs;
   if (testCaseIds !== undefined) {
     try {
-      resolvedCaseRefs = await resolveCentralTestPlanCasesByIds(testCaseIds);
+      resolvedCaseRefs = await resolveCentralTestPlanCasesByIds(testCaseIds, user, companySlug);
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("TEST_CASE_NOT_FOUND:")) {
         return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
+      }
+      if (error instanceof Error && error.message === "TEST_CASE_FORBIDDEN") {
+        return NextResponse.json({ error: "Sem permissão para vincular um ou mais casos" }, { status: 403 });
       }
       throw error;
     }
   } else if (caseRefs !== undefined) {
     try {
-      resolvedCaseRefs = await resolveCentralTestPlanCases(caseRefs);
+      resolvedCaseRefs = await resolveCentralTestPlanCases(caseRefs, user, companySlug);
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("TEST_CASE_NOT_FOUND:")) {
         return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
+      }
+      if (error instanceof Error && error.message === "TEST_CASE_FORBIDDEN") {
+        return NextResponse.json({ error: "Sem permissão para vincular um ou mais casos" }, { status: 403 });
       }
       throw error;
     }
@@ -569,7 +646,7 @@ export async function PATCH(request: Request) {
       source: updated.source,
       applicationId: updated.applicationId,
       applicationName: updated.applicationName,
-      cases: await hydrateManualPlanCases(updated.cases),
+      cases: await hydrateManualPlanCases(updated.cases, user, companySlug),
     }),
   });
 }
@@ -580,12 +657,15 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const companySlug = String(body.companySlug ?? "").trim().toLowerCase();
+  const companySlug = normalizeCompanySlug(body.companySlug);
   const applicationId = String(body.applicationId ?? "").trim();
   const planId = String(body.planId ?? "").trim();
   const source = normalizeSource(body.source);
 
-  if (!companySlug || !planId) {
+  const access = await requireTestPlanCompanyAccess(request, companySlug, "write");
+  if ("response" in access) return access.response;
+
+  if (!planId) {
     return NextResponse.json({ error: "companySlug and planId are required" }, { status: 400 });
   }
 

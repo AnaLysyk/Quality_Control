@@ -1,13 +1,52 @@
 import { NextResponse } from "next/server";
-import { authenticateRequest } from "@/lib/jwtAuth";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
+import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { listTestCaseRecords } from "@/lib/test-cases/testCaseRepository";
 import { canAccessTestCaseRecord, canCreateTestCaseForCompany } from "@/lib/test-cases/testCasePermissions";
 import { getManualTestPlan, updateManualTestPlan } from "@/lib/testPlansStore";
+
+type TestCaseRecord = Awaited<ReturnType<typeof listTestCaseRecords>>[number];
 
 function normalizeIdList(value: unknown) {
   return Array.isArray(value)
     ? value.map((item) => String(item ?? "").trim()).filter(Boolean)
     : [];
+}
+
+function normalizeCompanySlug(value: unknown) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function hasGlobalTestPlanWriteAccess(user: AuthUser) {
+  if (user.isGlobalAdmin) return true;
+  return [user.role, user.globalRole, user.permissionRole, user.companyRole]
+    .some((role) => normalizeLegacyRole(role) === SYSTEM_ROLES.LEADER_TC);
+}
+
+async function requireTestPlanMutationAccess(request: Request, companySlug: string) {
+  const user = await authenticateRequest(request);
+  if (!user) {
+    return { response: NextResponse.json({ message: "Nao autorizado" }, { status: 401 }) };
+  }
+  if (!companySlug) {
+    return { response: NextResponse.json({ message: "companySlug e obrigatorio" }, { status: 400 }) };
+  }
+
+  const allowedSlugs = resolveNormalizedCompanySlugs(user);
+  if (hasGlobalTestPlanWriteAccess(user) || allowedSlugs.includes(companySlug)) {
+    return { user };
+  }
+
+  return { response: NextResponse.json({ message: "Acesso proibido" }, { status: 403 }) };
+}
+
+function canLinkCaseToPlanCompany(user: AuthUser, record: TestCaseRecord, companySlug: string) {
+  if (!canAccessTestCaseRecord(user, record)) return false;
+  if (!canCreateTestCaseForCompany(user, record.testCase.companyId)) return false;
+
+  const caseCompanySlug = record.testCase.companyId?.trim().toLowerCase() || null;
+  return !caseCompanySlug || caseCompanySlug === companySlug;
 }
 
 async function resolveCasesByIds(ids: string[]) {
@@ -26,30 +65,28 @@ async function resolveCasesByIds(ids: string[]) {
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
   const { id: planId } = await params;
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body) return NextResponse.json({ message: "Payload inválido" }, { status: 400 });
+  if (!body) return NextResponse.json({ message: "Payload invalido" }, { status: 400 });
 
-  const companySlug = String(body.companySlug ?? user.companySlug ?? "").trim().toLowerCase();
+  const companySlug = normalizeCompanySlug(body.companySlug);
   const testCaseIds = normalizeIdList(body.testCaseIds);
   if (!companySlug || !testCaseIds.length) {
-    return NextResponse.json({ message: "companySlug e testCaseIds são obrigatórios" }, { status: 400 });
+    return NextResponse.json({ message: "companySlug e testCaseIds sao obrigatorios" }, { status: 400 });
   }
 
+  const access = await requireTestPlanMutationAccess(request, companySlug);
+  if ("response" in access) return access.response;
+  const { user } = access;
+
   const plan = await getManualTestPlan({ companySlug, id: planId });
-  if (!plan) return NextResponse.json({ message: "Plano não encontrado" }, { status: 404 });
+  if (!plan) return NextResponse.json({ message: "Plano nao encontrado" }, { status: 404 });
 
   try {
     const records = await resolveCasesByIds(testCaseIds);
     for (const record of records) {
-      if (!canAccessTestCaseRecord(user, record)) {
-        return NextResponse.json({ message: "Sem permissão para vincular um ou mais casos" }, { status: 403 });
-      }
-      if (!canCreateTestCaseForCompany(user, record.testCase.companyId)) {
-        return NextResponse.json({ message: "Sem permissão para vincular um ou mais casos" }, { status: 403 });
+      if (!canLinkCaseToPlanCompany(user, record, companySlug)) {
+        return NextResponse.json({ message: "Sem permissao para vincular um ou mais casos" }, { status: 403 });
       }
     }
 
@@ -76,7 +113,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     ];
 
     const updated = await updateManualTestPlan(companySlug, planId, { cases: nextCases });
-    if (!updated) return NextResponse.json({ message: "Plano não encontrado" }, { status: 404 });
+    if (!updated) return NextResponse.json({ message: "Plano nao encontrado" }, { status: 404 });
 
     return NextResponse.json({
       ok: true,
@@ -85,32 +122,32 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("TEST_CASE_NOT_FOUND:")) {
-      return NextResponse.json({ message: "Um ou mais casos não foram encontrados no repositório central" }, { status: 400 });
+      return NextResponse.json({ message: "Um ou mais casos nao foram encontrados no repositorio central" }, { status: 400 });
     }
     throw error;
   }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-
   const { id: planId } = await params;
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body) return NextResponse.json({ message: "Payload inválido" }, { status: 400 });
+  if (!body) return NextResponse.json({ message: "Payload invalido" }, { status: 400 });
 
-  const companySlug = String(body.companySlug ?? user.companySlug ?? "").trim().toLowerCase();
+  const companySlug = normalizeCompanySlug(body.companySlug);
   const testCaseIds = new Set(normalizeIdList(body.testCaseIds));
   if (!companySlug || !testCaseIds.size) {
-    return NextResponse.json({ message: "companySlug e testCaseIds são obrigatórios" }, { status: 400 });
+    return NextResponse.json({ message: "companySlug e testCaseIds sao obrigatorios" }, { status: 400 });
   }
 
+  const access = await requireTestPlanMutationAccess(request, companySlug);
+  if ("response" in access) return access.response;
+
   const plan = await getManualTestPlan({ companySlug, id: planId });
-  if (!plan) return NextResponse.json({ message: "Plano não encontrado" }, { status: 404 });
+  if (!plan) return NextResponse.json({ message: "Plano nao encontrado" }, { status: 404 });
 
   const nextCases = plan.cases.filter((item) => !testCaseIds.has(item.id));
   const updated = await updateManualTestPlan(companySlug, planId, { cases: nextCases });
-  if (!updated) return NextResponse.json({ message: "Plano não encontrado" }, { status: 404 });
+  if (!updated) return NextResponse.json({ message: "Plano nao encontrado" }, { status: 404 });
 
   return NextResponse.json({
     ok: true,

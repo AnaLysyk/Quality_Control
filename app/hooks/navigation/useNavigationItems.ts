@@ -36,7 +36,7 @@ function resolveModuleItems(
 }
 
 export function useNavigationItems() {
-  const { user, loading } = usePermissionAccess();
+  const { user, loading, permissions } = usePermissionAccess();
   const { activeClientSlug } = useClientContext();
 
   const normalizedRole = useMemo<SystemRole | null>(() => {
@@ -116,13 +116,17 @@ export function useNavigationItems() {
     if (isClientProfile) {
       // Client profiles: home, quality, support, brain, documents only
       const CLIENT_MODULES = new Set(["home", "quality", "support", "brain", "documents"]);
-      filtered = NAV_CATALOG.filter((m) => CLIENT_MODULES.has(m.id));
+      filtered = buildNavigationForUser(
+        NAV_CATALOG.filter((m) => CLIENT_MODULES.has(m.id)),
+        effectiveRole ?? SYSTEM_ROLES.COMPANY_USER,
+        permissions,
+      );
     } else {
-      filtered = buildNavigationForUser(NAV_CATALOG, roleForFiltering);
+      filtered = buildNavigationForUser(NAV_CATALOG, roleForFiltering, permissions);
     }
 
     return filtered.map((mod) => resolveModuleItems(mod, companySlug, companyRouteInput));
-  }, [user, isClientProfile, roleForFiltering, companySlug, companyRouteInput]);
+  }, [user, isClientProfile, effectiveRole, roleForFiltering, permissions, companySlug, companyRouteInput]);
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }

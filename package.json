@@ -11,7 +11,7 @@
     "dev:webpack": "node scripts/dev-start.js --webpack",
     "dev:turbo": "next dev --turbo",
     "dev:ci": "cross-env NEXT_DISABLE_FONT_DOWNLOAD=1 next dev --webpack -p 3100 -H 127.0.0.1",
-    "dev:ci:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true});\" && npm run dev:ci",
+    "dev:ci:clean": "node scripts/clean-next.js && npm run dev:ci",
     "build": "node scripts/prisma-migrate-safe.js && next build",
     "start": "next start",
     "lint": "eslint --max-warnings 9999",

@@ -5,26 +5,34 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      CI: "true"
+      NEXT_DISABLE_FONT_DOWNLOAD: "1"
+      SKIP_PRISMA_MIGRATE: "true"
+      E2E_USE_JSON: "1"
+      AUTH_STORE: "json"
+      USE_JSON_STORE: "true"
     container:
       image: mcr.microsoft.com/playwright:v1.49.0-jammy
       options: --user 1001 --ipc=host --init
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
       - run: npm ci
-      - env:
-          CI: "true"
-        run: npm run test:e2e:smoke
+      - run: npm run test:e2e:smoke
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report-smoke
           path: playwright-report/

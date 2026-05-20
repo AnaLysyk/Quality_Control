@@ -1,9 +1,15 @@
-process.env.DATABASE_URL = "postgresql://quality_control_db_gepu_user:IcFolaph4EJDkMRFjBR7ZjCL4yb9WlPj@dpg-d6r33ohj16oc73f058g0-a.oregon-postgres.render.com/quality_control_db_gepu?sslmode=require";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+const databaseUrl = process.env.CHECK_THIAGO_DATABASE_URL?.trim();
+
+if (!databaseUrl) {
+  console.error("CHECK_THIAGO_DATABASE_URL nao configurada. Configure a variavel para executar este diagnostico.");
+  process.exit(1);
+}
+
 const prisma = new PrismaClient({
-  adapter: new PrismaPg(process.env.DATABASE_URL),
+  adapter: new PrismaPg(databaseUrl),
 });
 
 try {

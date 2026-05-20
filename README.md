@@ -25,9 +25,6 @@ Sugestao de galeria para vitrine:
 - Assistente IA
 - Brain
 
-Exemplos atuais no repositorio:
-- ![Brand sample](public/images/ana-lima.png)
-- ![Logo sample](public/images/tc.png)
 
 ## Module Outcomes
 

@@ -77,6 +77,22 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     return "/home";
   }, [isGlobalAdmin, companySlug, companyRouteInput]);
 
+  const visibleFavoriteHrefs = useMemo(() => {
+    const hrefs = new Set<string>();
+    for (const mod of modules) {
+      if (mod.href) hrefs.add(mod.href);
+      for (const item of mod.items) {
+        if (item.href) hrefs.add(item.href);
+      }
+    }
+    return hrefs;
+  }, [modules]);
+
+  const visibleFavorites = useMemo(
+    () => favorites.filter((favorite) => visibleFavoriteHrefs.has(favorite.href)),
+    [favorites, visibleFavoriteHrefs],
+  );
+
   const sidebarBody = (
     <aside
       className={`sidebar-theme text-white flex h-full flex-col border-r border-white/10 overflow-hidden bg-[linear-gradient(180deg,#011848_0%,#082457_42%,#3a1530_72%,#ef0001_100%)] backdrop-blur-xl transition-[width] duration-300 ease-in-out ${
@@ -101,11 +117,11 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Favorites */}
-        {favorites.length > 0 && (
+        {visibleFavorites.length > 0 && (
           <>
             <div className="pt-3">
               <SidebarFavorites
-                favorites={favorites}
+                favorites={visibleFavorites}
                 collapsed={collapsed}
                 onRemove={removeFavorite}
                 pathname={pathname}

@@ -14,6 +14,11 @@ export type NavModule =
   | "documents"
   | "users";
 
+export type NavPermissionRequirement = {
+  moduleId: string;
+  action: string;
+};
+
 export type NavItemDef = {
   id: string;
   label: string;
@@ -24,6 +29,7 @@ export type NavItemDef = {
   children?: NavItemDef[];
   allowedRoles?: SystemRole[];
   onlyRoles?: SystemRole[];
+  requiredPermission?: NavPermissionRequirement;
   favoriteEnabled?: boolean;
   action?: "navigate" | "focusSearch" | "openCreateModal";
   testId?: string;
@@ -38,6 +44,7 @@ export type NavModuleDef = {
   href?: string;
   items: NavItemDef[];
   allowedRoles?: SystemRole[];
+  requiredPermission?: NavPermissionRequirement;
   testId?: string;
 };
 

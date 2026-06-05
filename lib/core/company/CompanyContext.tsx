@@ -238,8 +238,8 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     const slug = (activeClientSlug ?? "").trim().toLowerCase();
-    if (slug) root.setAttribute("data-client", slug);
-    else root.removeAttribute("data-client");
+    if (slug) root.dataset.client = slug;
+    else delete root.dataset.client;
 
     const theme = slug ? CLIENT_THEME_MAP[slug] : undefined;
     root.style.setProperty("--tc-accent", theme?.accent ?? DEFAULT_THEME.accent);

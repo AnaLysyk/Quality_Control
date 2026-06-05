@@ -9,49 +9,68 @@ import {
   resolveReviewQueue,
 } from "@/lib/requestRouting";
 
-export async function POST(req: Request) {
-  const body = await req.json().catch(() => null);
-  const login = typeof body?.user === "string" ? body.user.trim().toLowerCase() : "";
-  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-  const rawProfileType = typeof body?.profile_type === "string" ? body.profile_type : "";
+type ResetRequestBody = {
+  login: string;
+  email: string;
+  rawProfileType: string;
+};
 
+type ResetUser = NonNullable<Awaited<ReturnType<typeof findLocalUserByEmailOrId>>>;
+type LocalCompany = Awaited<ReturnType<typeof listLocalCompanies>>[number];
+
+async function parseResetRequestBody(req: Request): Promise<ResetRequestBody> {
+  const body = await req.json().catch(() => null);
+  return {
+    login: typeof body?.user === "string" ? body.user.trim().toLowerCase() : "",
+    email: typeof body?.email === "string" ? body.email.trim().toLowerCase() : "",
+    rawProfileType: typeof body?.profile_type === "string" ? body.profile_type : "",
+  };
+}
+
+async function validateResetUser(login: string, email: string) {
   if (!login || !email) {
     return NextResponse.json({ error: "Usuário e email obrigatorios" }, { status: 400 });
   }
 
   const user = await findLocalUserByEmailOrId(login);
-  if (!user) {
+  if (!user || (user.email ?? "").toLowerCase() !== email) {
     return NextResponse.json({ error: "Usuário e email não conferem" }, { status: 400 });
   }
-  if ((user.email ?? "").toLowerCase() !== email) {
-    return NextResponse.json({ error: "Usuário e email não conferem" }, { status: 400 });
-  }
+  return user;
+}
 
-  const profileType =
-    normalizeRequestProfileType(rawProfileType) ??
-    deriveProfileTypeFromAccount({
-      role: user.role,
-      globalRole: user.globalRole ?? null,
-      isGlobalAdmin: user.is_global_admin === true,
-    });
-  const reviewQueue = resolveReviewQueue(profileType);
-
+async function resolvePreferredCompany(user: ResetUser): Promise<LocalCompany | null> {
   const [links, companies] = await Promise.all([
     listLocalLinksForUser(user.id),
     listLocalCompanies(),
   ]);
   const companyById = new Map(companies.map((company) => [company.id, company]));
-  const preferredCompany =
+  return (
     (user.default_company_slug
       ? companies.find((company) => company.slug === user.default_company_slug)
       : null) ??
-    (links.length > 0 ? companyById.get(links[0].companyId) ?? null : null);
+    (links.length > 0 ? companyById.get(links[0].companyId) ?? null : null)
+  );
+}
 
-  let requestRecord = null;
-  const preferredCompanyName =
-    preferredCompany?.name ?? preferredCompany?.company_name ?? undefined;
+function resolveProfileType(user: ResetUser, rawProfileType: string) {
+  return (
+    normalizeRequestProfileType(rawProfileType) ??
+    deriveProfileTypeFromAccount({
+      role: user.role,
+      globalRole: user.globalRole ?? null,
+      isGlobalAdmin: user.is_global_admin === true,
+    })
+  );
+}
+
+async function createPasswordResetRequest(user: ResetUser, login: string, rawProfileType: string, preferredCompany: LocalCompany | null) {
+  const profileType = resolveProfileType(user, rawProfileType);
+  const reviewQueue = resolveReviewQueue(profileType);
+  const preferredCompanyName = preferredCompany?.name ?? preferredCompany?.company_name ?? undefined;
+
   try {
-    requestRecord = await addRequest(
+    return await addRequest(
       {
         id: user.id,
         name: user.full_name?.trim() || user.name,
@@ -70,8 +89,25 @@ export async function POST(req: Request) {
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code !== "DUPLICATE") {
-      return NextResponse.json({ error: "Erro ao registrar solicitação" }, { status: 500 });
+      throw err;
     }
+    return null;
+  }
+}
+
+export async function POST(req: Request) {
+  const { login, email, rawProfileType } = await parseResetRequestBody(req);
+  const userOrResponse = await validateResetUser(login, email);
+  if (userOrResponse instanceof NextResponse) return userOrResponse;
+
+  const user = userOrResponse;
+  const preferredCompany = await resolvePreferredCompany(user);
+  const preferredCompanyName = preferredCompany?.name ?? preferredCompany?.company_name ?? undefined;
+  let requestRecord = null;
+  try {
+    requestRecord = await createPasswordResetRequest(user, login, rawProfileType, preferredCompany);
+  } catch {
+    return NextResponse.json({ error: "Erro ao registrar solicitação" }, { status: 500 });
   }
 
   if (requestRecord) {

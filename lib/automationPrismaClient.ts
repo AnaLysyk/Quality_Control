@@ -45,7 +45,7 @@ function recreateAutomationPrismaClient() {
   return client;
 }
 
-export let automationPrisma: PrismaClient =
+let currentAutomationPrisma: PrismaClient =
   globalForAutomationPrisma.automationPrisma ??
   (hasDatabaseUrl()
     ? createAutomationPrismaClient()
@@ -53,11 +53,25 @@ export let automationPrisma: PrismaClient =
       ? createUnavailablePrismaClient()
       : createAutomationPrismaClient());
 
+function createAutomationPrismaClientProxy(): PrismaClient {
+  return new Proxy({} as PrismaClient, {
+    get(_target, prop) {
+      const value = Reflect.get(currentAutomationPrisma as object, prop, currentAutomationPrisma);
+      return typeof value === "function" ? value.bind(currentAutomationPrisma) : value;
+    },
+    set(_target, prop, value) {
+      return Reflect.set(currentAutomationPrisma as object, prop, value, currentAutomationPrisma);
+    },
+  });
+}
+
+export const automationPrisma: PrismaClient = createAutomationPrismaClientProxy();
+
 if (process.env.NODE_ENV !== "production") {
-  globalForAutomationPrisma.automationPrisma = automationPrisma;
+  globalForAutomationPrisma.automationPrisma = currentAutomationPrisma;
 }
 
 export function reconnectAutomationPrisma() {
   console.info("[automation-prisma] Reconnecting after connection loss...");
-  automationPrisma = recreateAutomationPrismaClient();
+  currentAutomationPrisma = recreateAutomationPrismaClient();
 }

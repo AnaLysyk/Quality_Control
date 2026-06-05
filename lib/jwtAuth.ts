@@ -6,7 +6,6 @@ import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole, toLegacy
 import { hasForcedGlobalAccessForUser } from "@/lib/auth/specialAccess";
 import { resolveCapabilities } from "@/lib/permissions";
 import { resolvePermissionAccessForUser } from "@/lib/serverPermissionAccess";
-import { resolveVisibleCompanies } from "@/lib/companyVisibility";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 
 export type AuthUser = {
@@ -25,85 +24,136 @@ export type AuthUser = {
   permissionRole?: string | null;
 };
 
-export async function authenticateRequest(req: Request): Promise<AuthUser | null> {
-  if (process.env.PLAYWRIGHT_MOCK === "true") {
-    const cookieHeader = req.headers.get("cookie") ?? "";
-    const rawCookie = cookieHeader
-      .split(";")
-      .map((part) => part.trim())
-      .find((part) => part.startsWith("e2e_auth="));
-    if (rawCookie) {
-      const encoded = rawCookie.slice("e2e_auth=".length);
-      try {
-        const decoded = JSON.parse(Buffer.from(decodeURIComponent(encoded), "base64url").toString("utf8")) as {
-          id?: string;
-          email?: string;
-          role?: string;
-          permissionRole?: string;
-          companyRole?: string;
-          companySlug?: string;
-          companySlugs?: string[];
-          isGlobalAdmin?: boolean;
-        };
+type LocalJwtUser = NonNullable<Awaited<ReturnType<typeof findUserByEmailOrId>>>;
+type LocalJwtLink = Awaited<ReturnType<typeof listLocalLinksForUser>>[number];
+type LocalJwtCompany = Awaited<ReturnType<typeof listLocalCompanies>>[number];
+type PlaywrightDecodedAuth = {
+  id?: string;
+  email?: string;
+  role?: string;
+  permissionRole?: string;
+  companyRole?: string;
+  companySlug?: string;
+  companySlugs?: string[];
+  isGlobalAdmin?: boolean;
+};
 
-        const companySlugs = Array.isArray(decoded.companySlugs)
-          ? decoded.companySlugs.filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0)
-          : decoded.companySlug
-            ? [decoded.companySlug]
-            : [];
+function readE2eAuthCookie(req: Request) {
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  return cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith("e2e_auth="));
+}
 
-        return {
-          id: decoded.id ?? "e2e-mock-user",
-          email: decoded.email ?? "e2e@testingcompany.local",
-          user: decoded.email ?? null,
-          isGlobalAdmin: decoded.isGlobalAdmin === true,
-          role: decoded.role ?? decoded.permissionRole ?? null,
-          globalRole: decoded.isGlobalAdmin === true ? "global_admin" : null,
-          companyRole: decoded.companyRole ?? decoded.role ?? null,
-          capabilities: [],
-          companyId: decoded.companySlug ?? null,
-          companySlug: decoded.companySlug ?? null,
-          companySlugs,
-          permissions: {},
-          permissionRole: decoded.permissionRole ?? decoded.role ?? null,
-        };
-      } catch {
-        // Ignore malformed e2e cookie and continue normal auth flow.
-      }
-    }
+function normalizeDecodedCompanySlugs(decoded: PlaywrightDecodedAuth) {
+  if (Array.isArray(decoded.companySlugs)) {
+    return decoded.companySlugs.filter(
+      (slug): slug is string => typeof slug === "string" && slug.trim().length > 0,
+    );
   }
+  return decoded.companySlug ? [decoded.companySlug] : [];
+}
 
+function buildPlaywrightAuthUser(decoded: PlaywrightDecodedAuth): AuthUser {
+  return {
+    id: decoded.id ?? "e2e-mock-user",
+    email: decoded.email ?? "e2e@testingcompany.local",
+    user: decoded.email ?? null,
+    isGlobalAdmin: decoded.isGlobalAdmin === true,
+    role: decoded.role ?? decoded.permissionRole ?? null,
+    globalRole: decoded.isGlobalAdmin === true ? "global_admin" : null,
+    companyRole: decoded.companyRole ?? decoded.role ?? null,
+    capabilities: [],
+    companyId: decoded.companySlug ?? null,
+    companySlug: decoded.companySlug ?? null,
+    companySlugs: normalizeDecodedCompanySlugs(decoded),
+    permissions: {},
+    permissionRole: decoded.permissionRole ?? decoded.role ?? null,
+  };
+}
+
+function parsePlaywrightAuthUser(req: Request): AuthUser | null {
+  if (process.env.PLAYWRIGHT_MOCK !== "true") return null;
+
+  const rawCookie = readE2eAuthCookie(req);
+  if (!rawCookie) return null;
+
+  try {
+    const encoded = rawCookie.slice("e2e_auth=".length);
+    const decoded = JSON.parse(
+      Buffer.from(decodeURIComponent(encoded), "base64url").toString("utf8"),
+    ) as PlaywrightDecodedAuth;
+    return buildPlaywrightAuthUser(decoded);
+  } catch {
+    return null;
+  }
+}
+
+async function resolveAccessContextAuthUser(req: Request): Promise<AuthUser | null> {
   const access = await getAccessContext(req);
-  if (access) {
-    const permissionAccess = await resolvePermissionAccessForUser(access.userId);
-    return {
-      id: access.userId,
-      email: access.email,
-      user: access.user ?? null,
-      isGlobalAdmin: access.isGlobalAdmin,
-      role: access.role,
-      globalRole: access.globalRole ?? null,
-      companyRole: access.companyRole ?? null,
-      capabilities: access.capabilities ?? [],
-      companyId: access.companyId,
-      companySlug: access.companySlug,
-      companySlugs: access.companySlugs,
-      permissions: permissionAccess.permissions,
-      permissionRole: permissionAccess.roleKey,
-    };
-  }
+  if (!access) return null;
 
+  const permissionAccess = await resolvePermissionAccessForUser(access.userId);
+  return {
+    id: access.userId,
+    email: access.email,
+    user: access.user ?? null,
+    isGlobalAdmin: access.isGlobalAdmin,
+    role: access.role,
+    globalRole: access.globalRole ?? null,
+    companyRole: access.companyRole ?? null,
+    capabilities: access.capabilities ?? [],
+    companyId: access.companyId,
+    companySlug: access.companySlug,
+    companySlugs: access.companySlugs,
+    permissions: permissionAccess.permissions,
+    permissionRole: permissionAccess.roleKey,
+  };
+}
+
+function resolveRequestIdentifier(req: Request) {
   const headerAuth = req.headers.get("authorization");
-  let identifier: string | null = null;
   if (headerAuth?.toLowerCase().startsWith("bearer ")) {
-    identifier = headerAuth.slice("bearer ".length).trim();
+    return headerAuth.slice("bearer ".length).trim();
   }
-  if (!identifier) {
-    const url = new URL(req.url);
-    identifier = url.searchParams.get("user");
-  }
-  if (!identifier) return null;
 
+  const url = new URL(req.url);
+  return url.searchParams.get("user");
+}
+
+function localUserHasRole(user: LocalJwtUser, links: LocalJwtLink[], expectedRole: string) {
+  return (
+    normalizeLocalRole((user as { role?: string | null }).role ?? null) === expectedRole ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === expectedRole)
+  );
+}
+
+function isLocalGlobalAdmin(user: LocalJwtUser, hasForcedGlobalAccess: boolean) {
+  return (
+    hasForcedGlobalAccess ||
+    (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
+    (user as { globalRole?: string | null }).globalRole === "global_admin"
+  );
+}
+
+function resolveAllowedLocalCompanies(
+  companies: LocalJwtCompany[],
+  links: LocalJwtLink[],
+  hasFullCompanyAccess: boolean,
+) {
+  return hasFullCompanyAccess
+    ? companies
+    : companies.filter((company) => links.some((link) => link.companyId === company.id));
+}
+
+function extractCompanySlugs(companies: LocalJwtCompany[]) {
+  return companies
+    .map((company) => company.slug)
+    .filter((slug): slug is string => typeof slug === "string" && slug.length > 0);
+}
+
+async function resolveLocalAuthUser(identifier: string): Promise<AuthUser | null> {
   const user = await findUserByEmailOrId(identifier);
   if (!user) return null;
 
@@ -113,26 +163,15 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
     email: user.email,
     user: (user as { user?: string | null }).user ?? null,
   });
-  const isGlobalAdmin =
-    hasForcedGlobalAccess ||
-    (user as { is_global_admin?: boolean; globalRole?: string | null }).is_global_admin === true ||
-    (user as { globalRole?: string | null }).globalRole === "global_admin";
-  const hasTechnicalSupportRole =
-    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "technical_support" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
-  const hasLeaderTcRole =
-    normalizeLocalRole((user as { role?: string | null }).role ?? null) === "leader_tc" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const isGlobalAdmin = isLocalGlobalAdmin(user, hasForcedGlobalAccess);
+  const hasTechnicalSupportRole = localUserHasRole(user, links, "technical_support");
+  const hasLeaderTcRole = localUserHasRole(user, links, "leader_tc");
   const hasFullCompanyAccess = hasForcedGlobalAccess || isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
-  const allowedCompanies = hasFullCompanyAccess
-    ? companies
-    : companies.filter((company) => links.some((link) => link.companyId === company.id));
+  const allowedCompanies = resolveAllowedLocalCompanies(companies, links, hasFullCompanyAccess);
   if (!hasFullCompanyAccess && allowedCompanies.length === 0) return null;
   const primary = shouldBindCompanyContext ? allowedCompanies[0] ?? null : null;
-  const companySlugs = allowedCompanies
-    .map((company) => company.slug)
-    .filter((slug): slug is string => typeof slug === "string" && slug.length > 0);
+  const companySlugs = extractCompanySlugs(allowedCompanies);
   const primaryLink = primary ? links.find((link) => link.companyId === primary.id) ?? null : null;
   const rawRole = primaryLink?.role ?? (user as { role?: string | null }).role ?? null;
   const normalizedRole = normalizeLocalRole(rawRole);
@@ -159,4 +198,15 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
     permissions: permissionAccess.permissions,
     permissionRole: permissionAccess.roleKey,
   };
+}
+
+export async function authenticateRequest(req: Request): Promise<AuthUser | null> {
+  const mockUser = parsePlaywrightAuthUser(req);
+  if (mockUser) return mockUser;
+
+  const accessUser = await resolveAccessContextAuthUser(req);
+  if (accessUser) return accessUser;
+
+  const identifier = resolveRequestIdentifier(req);
+  return identifier ? resolveLocalAuthUser(identifier) : null;
 }

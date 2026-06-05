@@ -43,28 +43,48 @@ function compareResponsibleOptions(
   return left.label.localeCompare(right.label, "pt-BR", { sensitivity: "base" });
 }
 
-export async function listManualReleaseResponsibleOptions(
-  companySlug?: string | null,
-  extraUserIds: Array<string | null | undefined> = [],
-) {
-  const extraIds = new Set(
+function buildExtraUserIdSet(extraUserIds: Array<string | null | undefined>) {
+  return new Set(
     extraUserIds
       .map((value) => (typeof value === "string" ? value.trim() : ""))
       .filter(Boolean),
   );
-  const allowedIds = new Set(extraIds);
+}
 
-  if (typeof companySlug === "string" && companySlug.trim()) {
-    const company = await findLocalCompanyBySlug(companySlug.trim());
-    if (company?.id) {
-      const links = await listLocalLinksForCompany(company.id);
-      for (const link of links) {
-        if (typeof link.userId === "string" && link.userId.trim()) {
-          allowedIds.add(link.userId.trim());
-        }
-      }
+async function addCompanyResponsibleIds(
+  allowedIds: Set<string>,
+  companySlug?: string | null,
+) {
+  if (typeof companySlug !== "string" || !companySlug.trim()) return;
+
+  const company = await findLocalCompanyBySlug(companySlug.trim());
+  if (!company?.id) return;
+
+  const links = await listLocalLinksForCompany(company.id);
+  for (const link of links) {
+    if (typeof link.userId === "string" && link.userId.trim()) {
+      allowedIds.add(link.userId.trim());
     }
   }
+}
+
+function canListResponsibleUser(
+  user: LocalAuthUser,
+  userId: string,
+  extraIds: Set<string>,
+) {
+  const isInactive = user.active === false || String(user.status ?? "").toLowerCase() === "blocked";
+  return !isInactive || extraIds.has(userId);
+}
+
+export async function listManualReleaseResponsibleOptions(
+  companySlug?: string | null,
+  extraUserIds: Array<string | null | undefined> = [],
+) {
+  const extraIds = buildExtraUserIdSet(extraUserIds);
+  const allowedIds = new Set(extraIds);
+
+  await addCompanyResponsibleIds(allowedIds, companySlug);
 
   if (allowedIds.size === 0) return [];
 
@@ -75,8 +95,7 @@ export async function listManualReleaseResponsibleOptions(
   for (const userId of allowedIds) {
     const user = usersById.get(userId);
     if (!user) continue;
-    const isInactive = user.active === false || String(user.status ?? "").toLowerCase() === "blocked";
-    if (isInactive && !extraIds.has(userId)) continue;
+    if (!canListResponsibleUser(user, userId, extraIds)) continue;
     options.push(buildResponsibleOption(user));
   }
 

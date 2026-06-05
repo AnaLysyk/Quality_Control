@@ -17,32 +17,21 @@ export function resolveCompanyRouteAccessInput(input: {
   user?: Record<string, unknown> | null;
 }): CompanyRouteAccessInput {
   const user = (input?.user ?? {}) as Record<string, unknown>;
-
-  const clientSlug =
-    normalizeSlug(typeof user.clientSlug === "string" ? user.clientSlug : null)?.toLowerCase() ??
-    normalizeSlug(typeof user.client_slug === "string" ? user.client_slug : null)?.toLowerCase() ??
-    normalizeSlug(typeof user.companySlug === "string" ? user.companySlug : null)?.toLowerCase() ??
-    normalizeSlug(typeof user.company_slug === "string" ? user.company_slug : null)?.toLowerCase();
-
-  const defaultClientSlug =
-    normalizeSlug(typeof user.defaultClientSlug === "string" ? user.defaultClientSlug : null)?.toLowerCase() ??
-    normalizeSlug(typeof user.default_client_slug === "string" ? user.default_client_slug : null)?.toLowerCase() ??
-    null;
-
-  const companyCount =
-    typeof user.companyCount === "number"
-      ? user.companyCount
-      : clientSlug
-        ? 1
-        : 0;
+  const clientSlug = readLowerSlug(user, [
+    "clientSlug",
+    "client_slug",
+    "companySlug",
+    "company_slug",
+  ]);
+  const defaultClientSlug = readLowerSlug(user, ["defaultClientSlug", "default_client_slug"]);
 
   return {
     isGlobalAdmin: typeof user.isGlobalAdmin === "boolean" ? user.isGlobalAdmin : null,
-    permissionRole: typeof user.permissionRole === "string" ? user.permissionRole : null,
-    role: typeof user.role === "string" ? user.role : null,
-    companyRole: typeof user.companyRole === "string" ? user.companyRole : null,
-    userOrigin: typeof user.user_origin === "string" ? user.user_origin : typeof user.userOrigin === "string" ? user.userOrigin : null,
-    companyCount,
+    permissionRole: readString(user, "permissionRole"),
+    role: readString(user, "role"),
+    companyRole: readString(user, "companyRole"),
+    userOrigin: readString(user, "user_origin") ?? readString(user, "userOrigin"),
+    companyCount: resolveCompanyCount(user, clientSlug),
     clientSlug,
     defaultClientSlug,
     isInstitutionalCompany: typeof user.isInstitutionalCompany === "boolean" ? user.isInstitutionalCompany : undefined,
@@ -147,6 +136,23 @@ function normalizeSlug(value?: string | null) {
   return normalized || null;
 }
 
+function readString(record: Record<string, unknown>, key: string) {
+  const value = record[key];
+  return typeof value === "string" ? value : null;
+}
+
+function readLowerSlug(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const normalized = normalizeSlug(readString(record, key));
+    if (normalized) return normalized.toLowerCase();
+  }
+  return null;
+}
+
+function resolveCompanyCount(record: Record<string, unknown>, clientSlug?: string | null) {
+  return typeof record.companyCount === "number" ? record.companyCount : clientSlug ? 1 : 0;
+}
+
 function normalizeRoute(route?: string | null) {
   const value = (route ?? "").trim();
   if (!value) return "home";
@@ -163,41 +169,52 @@ function buildPathFromSegments(segments: string[], route?: string | null) {
   return encodePathSegments([...segments, ...routeSegments]);
 }
 
+function resolveLegacyRouteRoles(input: CompanyRouteAccessInput) {
+  return {
+    permissionRole: normalizeLegacyRole(input.permissionRole ?? null),
+    role: normalizeLegacyRole(input.role ?? null),
+    companyRole: normalizeLegacyRole(input.companyRole ?? null),
+  };
+}
+
+function hasLegacyRouteRole(
+  roles: ReturnType<typeof resolveLegacyRouteRoles>,
+  expectedRole: FixedProfileKind,
+) {
+  return Object.values(roles).includes(expectedRole);
+}
+
 function resolveProfileKind(input?: CompanyRouteAccessInput | null): FixedProfileKind | null {
   if (!input) return null;
 
-  const permissionRole = normalizeLegacyRole(input.permissionRole ?? null);
-  const role = normalizeLegacyRole(input.role ?? null);
-  const companyRole = normalizeLegacyRole(input.companyRole ?? null);
+  const roles = resolveLegacyRouteRoles(input);
   const origin = normalizeValue(input.userOrigin);
 
   // Internal profiles from testing_company always use long /empresas/ routes
   if (origin === "testing_company") return null;
 
-  if (input.isGlobalAdmin === true || permissionRole === SYSTEM_ROLES.LEADER_TC || role === SYSTEM_ROLES.LEADER_TC || companyRole === SYSTEM_ROLES.LEADER_TC) {
+  if (input.isGlobalAdmin === true || hasLegacyRouteRole(roles, SYSTEM_ROLES.LEADER_TC)) {
     return SYSTEM_ROLES.LEADER_TC;
   }
 
   // companyRole reflects the user's role for the active company in their session.
   // It must take priority over permissionRole (which is system-wide and can include
   // cross-company TS links) to avoid routing empresa accounts through /suporte/.
-  if (input.isInstitutionalCompany === true || companyRole === SYSTEM_ROLES.EMPRESA) {
+  if (input.isInstitutionalCompany === true || roles.companyRole === SYSTEM_ROLES.EMPRESA) {
     return SYSTEM_ROLES.EMPRESA;
   }
 
-  if (permissionRole === SYSTEM_ROLES.TECHNICAL_SUPPORT || role === SYSTEM_ROLES.TECHNICAL_SUPPORT || companyRole === SYSTEM_ROLES.TECHNICAL_SUPPORT) {
+  if (hasLegacyRouteRole(roles, SYSTEM_ROLES.TECHNICAL_SUPPORT)) {
     return SYSTEM_ROLES.TECHNICAL_SUPPORT;
   }
 
-  if (permissionRole === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.EMPRESA) {
+  if (roles.permissionRole === SYSTEM_ROLES.EMPRESA || roles.role === SYSTEM_ROLES.EMPRESA) {
     return SYSTEM_ROLES.EMPRESA;
   }
 
   if (
     origin === "client_company" ||
-    permissionRole === SYSTEM_ROLES.COMPANY_USER ||
-    role === SYSTEM_ROLES.COMPANY_USER ||
-    companyRole === SYSTEM_ROLES.COMPANY_USER
+    hasLegacyRouteRole(roles, SYSTEM_ROLES.COMPANY_USER)
   ) {
     return SYSTEM_ROLES.COMPANY_USER;
   }

@@ -203,7 +203,7 @@ function escapeRegex(value: string): string {
 
 type RedisClient = Redis | InMemoryRedis | PostgresRedis;
 
-let redis: RedisClient | null = null;
+let redisClient: RedisClient | null = null;
 let mockRedis: InMemoryRedis | null = null;
 let postgresRedis: PostgresRedis | null = null;
 let warnedRedisMissing = false;
@@ -234,7 +234,7 @@ function shouldUseMemoryFallback() {
 }
 
 export function getRedis() {
-  if (redis) return redis;
+  if (redisClient) return redisClient;
 
   const resolved = resolveRedisEnv();
   const url = resolved?.url;
@@ -243,33 +243,46 @@ export function getRedis() {
   if (!url || !token) {
     if (canUsePersistentFallback() && !shouldUseMemoryFallback()) {
       postgresRedis = postgresRedis ?? new PostgresRedis();
-      redis = postgresRedis;
+      redisClient = postgresRedis;
       if (!warnedRedisMissing) {
         warnedRedisMissing = true;
         console.warn(
           "[REDIS] Redis REST nao configurado; usando fallback persistente em PostgreSQL.",
         );
       }
-      return redis;
+      return redisClient;
     }
 
     mockRedis = mockRedis ?? new InMemoryRedis();
-    redis = mockRedis;
+    redisClient = mockRedis;
     if (!warnedRedisMissing) {
       warnedRedisMissing = true;
       console.warn(
         "[REDIS] UPSTASH_REDIS_REST_URL/TOKEN ou KV_REST_API_URL/TOKEN ausentes; usando fallback em memoria (nao persistente).",
       );
     }
-    return redis;
+    return redisClient;
   }
 
-  redis = new Redis({ url, token });
-  return redis;
+  redisClient = new Redis({ url, token });
+  return redisClient;
 }
 
-// For compatibility with old imports
-export { redis };
+function createRedisClientProxy(): RedisClient {
+  return new Proxy({} as RedisClient, {
+    get(_target, prop) {
+      const client = getRedis();
+      const value = Reflect.get(client as object, prop, client);
+      return typeof value === "function" ? value.bind(client) : value;
+    },
+    set(_target, prop, value) {
+      return Reflect.set(getRedis() as object, prop, value, getRedis());
+    },
+  });
+}
+
+// For compatibility with old imports.
+export const redis: RedisClient = createRedisClientProxy();
 
 export function isRedisConfigured(): boolean {
   return resolveRedisEnv() !== null || (canUsePersistentFallback() && !shouldUseMemoryFallback());

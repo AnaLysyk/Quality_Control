@@ -13,6 +13,14 @@ import { formatRunText, formatRunTitle } from "@/lib/runPresentation";
 import type { Release } from "@/types/release";
 
 type AnyRelease = (Release & { name?: string }) | (ReleaseEntry & { name?: string });
+type RunStats = { pass: number; fail: number; blocked: number; notRun: number };
+type ResolvedReleaseData = {
+  source: "MANUAL" | "API";
+  releaseData: AnyRelease;
+  manualRelease: Release | null;
+};
+
+const EMPTY_RUN_STATS: RunStats = { pass: 0, fail: 0, blocked: 0, notRun: 0 };
 
 function parseQaseRunSlug(value: string): { projectCode: string; runId: number } | null {
   const trimmed = (value ?? "").trim();
@@ -23,6 +31,97 @@ function parseQaseRunSlug(value: string): { projectCode: string; runId: number }
   const runId = Number(match[2]);
   if (!projectCode || !Number.isFinite(runId)) return null;
   return { projectCode, runId };
+}
+
+async function findManualRelease(normalizedSlug: string) {
+  try {
+    const manualReleases = await readManualReleaseStore();
+    return manualReleases.find((release) => release.slug === normalizedSlug) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function buildQaseFallbackRelease(slug: string, normalizedSlug: string): ReleaseEntry | null {
+  const parsed = parseQaseRunSlug(slug);
+  if (!parsed) return null;
+
+  return {
+    slug: normalizedSlug,
+    title: `Run ${parsed.runId}`,
+    summary: "Execução integrada via Qase.",
+    runId: parsed.runId,
+    project: parsed.projectCode.toLowerCase(),
+    app: parsed.projectCode.toLowerCase(),
+    qaseProject: parsed.projectCode,
+  };
+}
+
+async function resolveReleaseData(
+  slug: string,
+  normalizedSlug: string,
+): Promise<ResolvedReleaseData | null> {
+  const manualRelease = await findManualRelease(normalizedSlug);
+  if (manualRelease) {
+    return { source: "MANUAL", releaseData: manualRelease as AnyRelease, manualRelease };
+  }
+
+  const apiRelease = (await getReleaseBySlug(normalizedSlug)) ?? buildQaseFallbackRelease(slug, normalizedSlug);
+  return apiRelease
+    ? { source: "API", releaseData: apiRelease as AnyRelease, manualRelease: null }
+    : null;
+}
+
+function hasRunStats(stats: RunStats) {
+  return stats.pass + stats.fail + stats.blocked + stats.notRun > 0;
+}
+
+function getInitialRunStats(source: "MANUAL" | "API", manualRelease: Release | null) {
+  return source === "MANUAL" ? manualRelease?.stats ?? EMPTY_RUN_STATS : EMPTY_RUN_STATS;
+}
+
+async function hydrateApiRunStats(input: {
+  companySlug?: string;
+  normalizedSlug: string;
+  projectCode: string;
+  runId: number;
+  runIdValid: boolean;
+  source: "MANUAL" | "API";
+  stats: RunStats;
+}) {
+  if (input.source !== "API" || !input.runIdValid) {
+    return { stats: input.stats, hasData: hasRunStats(input.stats) };
+  }
+
+  try {
+    const qaseSlugKey = input.companySlug ?? input.normalizedSlug;
+    const run = await getRunDetails(input.projectCode, input.runId, qaseSlugKey);
+    return run
+      ? {
+          stats: { pass: run.pass, fail: run.fail, blocked: run.blocked, notRun: run.notRun },
+          hasData: run.hasData,
+        }
+      : { stats: input.stats, hasData: hasRunStats(input.stats) };
+  } catch {
+    return { stats: input.stats, hasData: hasRunStats(input.stats) };
+  }
+}
+
+function buildApiPersistEndpoint(input: {
+  companySlug?: string;
+  projectCode: string;
+  runId: number;
+  runIdValid: boolean;
+  source: "MANUAL" | "API";
+}) {
+  if (input.source !== "API" || !input.runIdValid) return undefined;
+
+  const query = new URLSearchParams({
+    project: input.projectCode,
+    runId: String(input.runId),
+  });
+  if (input.companySlug) query.set("slug", input.companySlug);
+  return `/api/kanban?${query.toString()}`;
 }
 
 export type RunDetailViewModel = {
@@ -62,41 +161,11 @@ export async function getRunDetailViewModel(
   companySlug?: string,
 ): Promise<RunDetailViewModel | null> {
   const normalizedSlug = slugifyRelease(slug);
-  let manualRelease: Release | null = null;
-  let apiRelease: ReleaseEntry | null = null;
+  const resolvedRelease = await resolveReleaseData(slug, normalizedSlug);
 
-  try {
-    const manualReleases = await readManualReleaseStore();
-    manualRelease = manualReleases.find((r) => r.slug === normalizedSlug) ?? null;
-  } catch {
-    manualRelease = null;
-  }
+  if (!resolvedRelease) return null;
 
-  if (!manualRelease) {
-    apiRelease = (await getReleaseBySlug(normalizedSlug)) ?? null;
-  }
-
-  const source: "MANUAL" | "API" = manualRelease ? "MANUAL" : "API";
-  let releaseData: AnyRelease | null =
-    (manualRelease as AnyRelease) || (apiRelease as AnyRelease);
-
-  if (!releaseData) {
-    const parsed = parseQaseRunSlug(slug);
-    if (parsed) {
-      apiRelease = {
-        slug: normalizedSlug,
-        title: `Run ${parsed.runId}`,
-        summary: "Execução integrada via Qase.",
-        runId: parsed.runId,
-        project: parsed.projectCode.toLowerCase(),
-        app: parsed.projectCode.toLowerCase(),
-        qaseProject: parsed.projectCode,
-      };
-      releaseData = apiRelease as AnyRelease;
-    }
-  }
-
-  if (!releaseData) return null;
+  const { source, releaseData, manualRelease } = resolvedRelease;
 
   const projectKey = (
     releaseData.app || (releaseData as ReleaseEntry).project || "smart"
@@ -107,27 +176,22 @@ export async function getRunDetailViewModel(
   const appMeta = getAppMeta(projectKey, projectCode);
   const appColorClass = getAppColorClass(projectKey);
 
-  let stats =
-    source === "MANUAL"
-      ? manualRelease?.stats ?? { pass: 0, fail: 0, blocked: 0, notRun: 0 }
-      : { pass: 0, fail: 0, blocked: 0, notRun: 0 };
-  let hasData = stats.pass + stats.fail + stats.blocked + stats.notRun > 0;
+  let stats = getInitialRunStats(source, manualRelease);
 
   const runId = Number((releaseData as ReleaseEntry).runId);
   const runIdValid = Number.isFinite(runId);
 
-  if (source === "API" && runIdValid) {
-    const qaseSlugKey = companySlug ?? normalizedSlug;
-    try {
-      const run = await getRunDetails(projectCode, runId, qaseSlugKey);
-      if (run) {
-        stats = { pass: run.pass, fail: run.fail, blocked: run.blocked, notRun: run.notRun };
-        hasData = run.hasData;
-      }
-    } catch {
-      /* ignore */
-    }
-  }
+  const hydratedRun = await hydrateApiRunStats({
+    companySlug,
+    normalizedSlug,
+    projectCode,
+    runId,
+    runIdValid,
+    source,
+    stats,
+  });
+  stats = hydratedRun.stats;
+  const hasData = hydratedRun.hasData;
 
   const editable = source === "MANUAL";
   const total = stats.pass + stats.fail + stats.blocked + stats.notRun;
@@ -145,12 +209,13 @@ export async function getRunDetailViewModel(
   });
 
   const canPersistApiLinks = source === "API" && Boolean(companySlug);
-  const apiPersistEndpoint =
-    source === "API" && runIdValid
-      ? `/api/kanban?project=${encodeURIComponent(projectCode)}&runId=${encodeURIComponent(
-          String(runId ?? 0),
-        )}${companySlug ? `&slug=${encodeURIComponent(companySlug)}` : ""}`
-      : undefined;
+  const apiPersistEndpoint = buildApiPersistEndpoint({
+    companySlug,
+    projectCode,
+    runId,
+    runIdValid,
+    source,
+  });
 
   const displayTitle = formatRunTitle(
     (releaseData as { name?: string }).name ??

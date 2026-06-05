@@ -42,7 +42,7 @@ function recreatePrismaClient() {
   return client;
 }
 
-export let prisma: PrismaClient =
+let currentPrisma: PrismaClient =
   globalForPrisma.prisma ??
   (hasDatabaseUrl()
     ? createPrismaClient()
@@ -50,8 +50,22 @@ export let prisma: PrismaClient =
       ? createUnavailablePrismaClient()
       : createPrismaClient());
 
+function createPrismaClientProxy(): PrismaClient {
+  return new Proxy({} as PrismaClient, {
+    get(_target, prop) {
+      const value = Reflect.get(currentPrisma as object, prop, currentPrisma);
+      return typeof value === "function" ? value.bind(currentPrisma) : value;
+    },
+    set(_target, prop, value) {
+      return Reflect.set(currentPrisma as object, prop, value, currentPrisma);
+    },
+  });
+}
+
+export const prisma: PrismaClient = createPrismaClientProxy();
+
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = currentPrisma;
 }
 
 /**
@@ -60,5 +74,5 @@ if (process.env.NODE_ENV !== "production") {
  */
 export function reconnectPrisma() {
   console.info("[prisma] Reconnecting after connection loss...");
-  prisma = recreatePrismaClient();
+  currentPrisma = recreatePrismaClient();
 }

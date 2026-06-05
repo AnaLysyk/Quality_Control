@@ -52,6 +52,27 @@ function pgRowToEntry(r: { id: string; companySlug: string; releaseSlug: string;
   };
 }
 
+function sortQualityGateHistory(
+  entries: QualityGateHistoryEntry[],
+): QualityGateHistoryEntry[] {
+  return [...entries].sort((a, b) =>
+    String(b.evaluated_at).localeCompare(String(a.evaluated_at)),
+  );
+}
+
+function filterQualityGateHistory(
+  entries: QualityGateHistoryEntry[],
+  companySlug?: string,
+  releaseSlug?: string,
+) {
+  return sortQualityGateHistory(
+    entries.filter((entry) => {
+      if (companySlug && entry.company_slug !== companySlug) return false;
+      return !(releaseSlug && entry.release_slug !== releaseSlug);
+    }),
+  );
+}
+
 export async function appendQualityGateHistory(entry: QualityGateHistoryEntry) {
   if (USE_MEMORY_ALERTS) {
     memoryStore = [...memoryStore, entry];
@@ -93,11 +114,7 @@ export async function readQualityGateHistory(
   releaseSlug?: string,
 ): Promise<QualityGateHistoryEntry[]> {
   if (USE_MEMORY_ALERTS) {
-    let arr = [...memoryStore];
-    if (companySlug) arr = arr.filter((i) => i.company_slug === companySlug);
-    if (releaseSlug) arr = arr.filter((i) => i.release_slug === releaseSlug);
-    arr.sort((a, b) => String(b.evaluated_at).localeCompare(String(a.evaluated_at)));
-    return arr;
+    return filterQualityGateHistory(memoryStore, companySlug, releaseSlug);
   }
 
   if (USE_POSTGRES) {
@@ -112,17 +129,14 @@ export async function readQualityGateHistory(
     return rows.map(pgRowToEntry);
   }
 
-  let arr: QualityGateHistoryEntry[] = [];
+  let entries: QualityGateHistoryEntry[] = [];
 
   if (USE_PERSISTENT_STORE) {
     const persisted = await readPersistentJson<QualityGateHistoryEntry[]>(STORE_KEY, []);
-    arr = Array.isArray(persisted) ? persisted : [];
+    entries = Array.isArray(persisted) ? persisted : [];
   } else {
-    arr = [...memoryStore];
+    entries = memoryStore;
   }
 
-  if (companySlug) arr = arr.filter((item) => item.company_slug === companySlug);
-  if (releaseSlug) arr = arr.filter((item) => item.release_slug === releaseSlug);
-  arr.sort((a, b) => String(b.evaluated_at).localeCompare(String(a.evaluated_at)));
-  return arr;
+  return filterQualityGateHistory(entries, companySlug, releaseSlug);
 }

@@ -5,6 +5,7 @@ import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "../../lib/core/a
 const uid = randomUUID().slice(0, 8);
 const COMPANY_NAME = `Empresa Integrações Teste ${uid}`;
 const COMPANY_SLUG = `empresa-integracoes-teste-${uid}`;
+const compareText = (left: string, right: string) => left.localeCompare(right);
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -34,8 +35,8 @@ describe("Company integrations persistence", () => {
     const dbRow = await prisma.company.findUnique({ where: { slug: COMPANY_SLUG }, include: { integrations: true } as any });
     expect(dbRow).not.toBeNull();
     const integrations = (dbRow?.integrations ?? []) as any[];
-    const types = integrations.map((i: any) => i.type).sort();
-    expect(types).toEqual(["JIRA", "QASE"].sort());
+    const types = integrations.map((i: any) => i.type).sort(compareText);
+    expect(types).toEqual(["JIRA", "QASE"].sort(compareText));
 
     const q = integrations.find((i: any) => i.type === "QASE");
     expect(q).toBeDefined();

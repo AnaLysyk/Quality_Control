@@ -36,8 +36,8 @@ export default function LoginClient() {
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
-    const previousRootAttr = html.getAttribute("data-login-route");
-    const previousBodyAttr = body.getAttribute("data-login-route");
+    const previousRootAttr = html.dataset.loginRoute;
+    const previousBodyAttr = body.dataset.loginRoute;
     const inlineTargets = [html, body];
     const inlineKeys = ["opacity", "filter", "backdrop-filter", "pointer-events"] as const;
     const previousInline = inlineTargets.map((target) => ({
@@ -49,8 +49,8 @@ export default function LoginClient() {
       })),
     }));
 
-    html.setAttribute("data-login-route", "true");
-    body.setAttribute("data-login-route", "true");
+    html.dataset.loginRoute = "true";
+    body.dataset.loginRoute = "true";
     for (const target of inlineTargets) {
       target.style.setProperty("opacity", "1", "important");
       target.style.setProperty("filter", "none", "important");
@@ -102,10 +102,10 @@ export default function LoginClient() {
     }
 
     return () => {
-      if (previousRootAttr === null) html.removeAttribute("data-login-route");
-      else html.setAttribute("data-login-route", previousRootAttr);
-      if (previousBodyAttr === null) body.removeAttribute("data-login-route");
-      else body.setAttribute("data-login-route", previousBodyAttr);
+      if (previousRootAttr === undefined) delete html.dataset.loginRoute;
+      else html.dataset.loginRoute = previousRootAttr;
+      if (previousBodyAttr === undefined) delete body.dataset.loginRoute;
+      else body.dataset.loginRoute = previousBodyAttr;
 
       for (const entry of previousInline) {
         for (const style of entry.styles) {

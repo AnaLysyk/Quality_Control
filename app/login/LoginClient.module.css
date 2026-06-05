@@ -33,7 +33,7 @@
 }
 
 /* High zoom accessibility: ensure min width and readable font */
-@media (max-width: 400px), (max-zoom: 2.5) {
+@media (max-width: 400px) {
   .loginContainer {
     min-width: 0;
     font-size: 1.25rem;

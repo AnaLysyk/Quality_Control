@@ -21,6 +21,25 @@ type ClientTheme = {
 
 const CLIENT_THEME_MAP_RAW = process.env.NEXT_PUBLIC_CLIENT_THEME_MAP || "";
 
+function normalizeClientThemeEntry(key: string, value: unknown): [string, ClientTheme] | null {
+  if (!key || !value || typeof value !== "object") return null;
+
+  const slug = key.trim().toLowerCase();
+  if (!slug) return null;
+
+  const record = value as Record<string, unknown>;
+  return [
+    slug,
+    {
+      accent: typeof record.accent === "string" ? record.accent : undefined,
+      accentHover: typeof record.accentHover === "string" ? record.accentHover : undefined,
+      accentActive: typeof record.accentActive === "string" ? record.accentActive : undefined,
+      accentSoft: typeof record.accentSoft === "string" ? record.accentSoft : undefined,
+      watermarkOpacity: typeof record.watermarkOpacity === "number" ? record.watermarkOpacity : undefined,
+    },
+  ];
+}
+
 function parseClientThemeMap(raw: string): Record<string, ClientTheme> {
   const trimmed = raw.trim();
   if (!trimmed) return {};
@@ -30,18 +49,8 @@ function parseClientThemeMap(raw: string): Record<string, ClientTheme> {
     const rec = parsed as Record<string, unknown>;
     const out: Record<string, ClientTheme> = {};
     for (const [k, v] of Object.entries(rec)) {
-      if (!k) continue;
-      if (!v || typeof v !== "object") continue;
-      const slug = k.trim().toLowerCase();
-      if (!slug) continue;
-      const vv = v as Record<string, unknown>;
-      out[slug] = {
-        accent: typeof vv.accent === "string" ? vv.accent : undefined,
-        accentHover: typeof vv.accentHover === "string" ? vv.accentHover : undefined,
-        accentActive: typeof vv.accentActive === "string" ? vv.accentActive : undefined,
-        accentSoft: typeof vv.accentSoft === "string" ? vv.accentSoft : undefined,
-        watermarkOpacity: typeof vv.watermarkOpacity === "number" ? vv.watermarkOpacity : undefined,
-      };
+      const entry = normalizeClientThemeEntry(k, v);
+      if (entry) out[entry[0]] = entry[1];
     }
     return out;
   } catch {
@@ -238,8 +247,8 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     const slug = (activeClientSlug ?? "").trim().toLowerCase();
-    if (slug) root.setAttribute("data-client", slug);
-    else root.removeAttribute("data-client");
+    if (slug) root.dataset.client = slug;
+    else delete root.dataset.client;
 
     const theme = slug ? CLIENT_THEME_MAP[slug] : undefined;
     root.style.setProperty("--tc-accent", theme?.accent ?? DEFAULT_THEME.accent);

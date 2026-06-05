@@ -60,26 +60,37 @@ const RESULT_CATEGORIES: Record<ResultFilter, ActionCategory[]> = {
   warning: ["delete"],
 };
 
+const CATEGORY_KEYWORDS: Array<{ category: ActionCategory; keywords: string[] }> = [
+  { category: "error", keywords: ["failure", "fail", "system.error", "denied", "error"] },
+  { category: "auth", keywords: ["login", "logout", "auth", "password"] },
+  { category: "export", keywords: ["export"] },
+  { category: "link", keywords: ["request.", "access_request", "link", "unlink", "membership"] },
+  { category: "integration", keywords: ["integration", "sync"] },
+  { category: "permission", keywords: ["permission", "role", "activated", "deactivated"] },
+];
+
+function hasAnyKeyword(value: string, keywords: string[]) {
+  return keywords.some((keyword) => value.includes(keyword));
+}
+
+function getTicketOrDefectCategory(value: string): ActionCategory | null {
+  if (!hasAnyKeyword(value, ["ticket", "defect"])) return null;
+  if (value.includes("create")) return "create";
+  if (hasAnyKeyword(value, ["delete", "closed"])) return "delete";
+  return "update";
+}
+
 function getCategory(action: string): ActionCategory {
   const value = action.toLowerCase();
-  if (value.includes("failure") || value.includes("fail") || value.includes("system.error") || value.includes("denied")) {
-    return "error";
-  }
-  if (value.includes("error")) return "error";
-  if (value.includes("login") || value.includes("logout") || value.includes("auth") || value.includes("password")) return "auth";
-  if (value.includes("export")) return "export";
-  if (value.includes("request.") || value.includes("access_request")) return "link";
-  if (value.includes("link") || value.includes("unlink") || value.includes("membership")) return "link";
-  if (value.includes("integration") || value.includes("sync")) return "integration";
-  if (value.includes("permission") || value.includes("role") || value.includes("activated") || value.includes("deactivated")) return "permission";
-  if (value.includes("ticket") || value.includes("defect")) {
-    if (value.includes("create")) return "create";
-    if (value.includes("delete") || value.includes("closed")) return "delete";
-    return "update";
-  }
+  const keywordMatch = CATEGORY_KEYWORDS.find((rule) => hasAnyKeyword(value, rule.keywords));
+  if (keywordMatch) return keywordMatch.category;
+
+  const ticketOrDefectCategory = getTicketOrDefectCategory(value);
+  if (ticketOrDefectCategory) return ticketOrDefectCategory;
+
   if (value.includes("create")) return "create";
-  if (value.includes("update") || value.includes("changed") || value.includes("logo") || value.includes("avatar") || value.includes("profile")) return "update";
-  if (value.includes("delete") || value.includes("removed")) return "delete";
+  if (hasAnyKeyword(value, ["update", "changed", "logo", "avatar", "profile"])) return "update";
+  if (hasAnyKeyword(value, ["delete", "removed"])) return "delete";
   return "default";
 }
 

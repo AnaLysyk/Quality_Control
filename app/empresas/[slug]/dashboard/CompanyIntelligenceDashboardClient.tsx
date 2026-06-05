@@ -1897,10 +1897,14 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     const applications = Array.from(appMap.values());
     const runs = enrichedRuns.map((run) => ({ key: run.slug, label: run.title }));
     const statuses = buildStatusOptions(enrichedRuns);
-    const environments = Array.from(new Set(enrichedRuns.flatMap((run) => run.environments))).sort();
+    const environments = Array.from(new Set(enrichedRuns.flatMap((run) => run.environments))).sort((left, right) =>
+      left.localeCompare(right, "pt-BR", { sensitivity: "base" }),
+    );
     const runResponsibles = enrichedRuns.flatMap((run) => parseCommaList(run.responsibleLabel));
     const memberNames = (props.companyMembers ?? []).map((m) => m.name);
-    const responsibles = Array.from(new Set([...runResponsibles, ...memberNames])).sort();
+    const responsibles = Array.from(new Set([...runResponsibles, ...memberNames])).sort((left, right) =>
+      left.localeCompare(right, "pt-BR", { sensitivity: "base" }),
+    );
     return { applications, runs, statuses, environments, responsibles };
   }, [enrichedRuns, props.companyMembers, props.applications]);
 
@@ -1945,14 +1949,14 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           .filter((run) => matchesDraftRun(run, "environmentFilter"))
           .flatMap((run) => run.environments),
       ),
-    ).sort();
+    ).sort((left, right) => left.localeCompare(right, "pt-BR", { sensitivity: "base" }));
     const responsibles = Array.from(
       new Set(
         enrichedRuns
           .filter((run) => matchesDraftRun(run, "responsibleFilter"))
           .flatMap((run) => parseCommaList(run.responsibleLabel)),
       ),
-    ).sort();
+    ).sort((left, right) => left.localeCompare(right, "pt-BR", { sensitivity: "base" }));
 
     return { applications, runs, statuses, environments, responsibles };
   }, [

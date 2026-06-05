@@ -726,17 +726,25 @@ export default function AdminConsolidatedPage() {
     }
   }, [router]);
 
+  const loadCurrentTab = useCallback(() => {
+    const loader = mainTab === "companies" ? loadCompanies : loadUsers;
+    loader().catch((error) => {
+      const message = error instanceof Error ? error.message : "Não foi possível carregar os dados.";
+      if (mainTab === "companies") {
+        setCompaniesMessage(message);
+      } else {
+        setUsersError(message);
+      }
+    });
+  }, [loadCompanies, loadUsers, mainTab]);
+
   // ========================================================================
   // INITIAL LOAD
   // ========================================================================
 
   useEffect(() => {
-    if (mainTab === "companies") {
-      void loadCompanies();
-    } else {
-      void loadUsers();
-    }
-  }, [mainTab, loadCompanies, loadUsers]);
+    loadCurrentTab();
+  }, [loadCurrentTab]);
 
   // ========================================================================
   // COMPANIES TAB COMPUTED VALUES

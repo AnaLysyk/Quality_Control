@@ -75,9 +75,13 @@ export function normalizeTaxId(value: string | null | undefined) {
   return (value ?? "").replace(/\D+/g, "");
 }
 
+function compareText(left: string, right: string) {
+  return left.localeCompare(right);
+}
+
 export function areProjectCodesEqual(left: string[] | null, right: string[] | null) {
-  const normalizedLeft = (left ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort();
-  const normalizedRight = (right ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort();
+  const normalizedLeft = (left ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort(compareText);
+  const normalizedRight = (right ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort(compareText);
   if (normalizedLeft.length !== normalizedRight.length) return false;
   return normalizedLeft.every((value, index) => value === normalizedRight[index]);
 }

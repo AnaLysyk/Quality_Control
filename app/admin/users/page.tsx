@@ -323,9 +323,18 @@ export default function AdminUsersPage() {
     }
   }, [router]);
 
-  useEffect(() => {
-    void load();
+  const loadUsersAndCompanies = useCallback(() => {
+    load().catch((err) => {
+      setUsers([]);
+      setCompanies([]);
+      setError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
+      setLoading(false);
+    });
   }, [load]);
+
+  useEffect(() => {
+    loadUsersAndCompanies();
+  }, [loadUsersAndCompanies]);
 
 
   const sortUsers = useCallback(

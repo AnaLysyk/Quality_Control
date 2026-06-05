@@ -178,6 +178,35 @@ function normalizeQaseCase(raw: unknown, projectCode: string): TestPlanCase | nu
   };
 }
 
+function normalizeAccessibleProject(entity: unknown): AccessibleProject | null {
+  if (!entity || typeof entity !== "object") return null;
+  const record = entity as Record<string, unknown>;
+  const code = normalizeString(record.code);
+  return code ? { code, title: normalizeString(record.title) } : null;
+}
+
+async function fetchAccessibleProjectsPage(
+  client: QaseClient,
+  limit: number,
+  offset: number,
+) {
+  const { data } = await client.getWithStatus<{ result?: { entities?: unknown[] } }>("/project", {
+    params: { limit, offset },
+    cache: "no-store",
+  });
+  return Array.isArray(data?.result?.entities) ? data.result.entities : [];
+}
+
+function addAccessibleProjects(
+  all: Map<string, AccessibleProject>,
+  entities: unknown[],
+) {
+  for (const entity of entities) {
+    const project = normalizeAccessibleProject(entity);
+    if (project) all.set(project.code, project);
+  }
+}
+
 async function listAccessibleProjects(client: QaseClient, token: string, baseUrl: string) {
   const cacheKey = `${baseUrl}:${token}`;
   const cache = getProjectsCache();
@@ -191,23 +220,10 @@ async function listAccessibleProjects(client: QaseClient, token: string, baseUrl
   let offset = 0;
 
   while (true) {
-    const { data } = await client.getWithStatus<{ result?: { entities?: unknown[] } }>("/project", {
-      params: { limit, offset },
-      cache: "no-store",
-    });
-    const entities = Array.isArray(data?.result?.entities) ? data.result.entities : [];
+    const entities = await fetchAccessibleProjectsPage(client, limit, offset);
     if (!entities.length) break;
 
-    for (const entity of entities) {
-      if (!entity || typeof entity !== "object") continue;
-      const record = entity as Record<string, unknown>;
-      const code = normalizeString(record.code);
-      if (!code) continue;
-      all.set(code, {
-        code,
-        title: normalizeString(record.title),
-      });
-    }
+    addAccessibleProjects(all, entities);
 
     if (entities.length < limit) break;
     offset += limit;

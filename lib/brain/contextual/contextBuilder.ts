@@ -21,10 +21,10 @@ export function buildBrianContextSummary(result: BrianProcessingResult) {
     "",
     topNeurons.length ? "Neurônios ativados:" : "",
     ...topNeurons,
-    evidenceLines.length ? "" : "",
+    "",
     evidenceLines.length ? "Evidências:" : "",
     ...evidenceLines,
-    result.warnings.length ? "" : "",
+    "",
     result.warnings.length ? "Avisos:" : "",
     ...result.warnings.map((warning) => `- ${warning}`),
   ].filter((line) => line !== "").join("\n");

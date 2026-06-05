@@ -15,6 +15,7 @@ const USE_MEMORY_ALERTS =
 
 const ALERTS_KEY = "qc:quality_alerts:v1";
 const USE_PERSISTENT_STORE = !USE_MEMORY_ALERTS && !USE_POSTGRES && canUsePersistentJsonStore();
+const ALERT_DEDUP_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 let memoryAlerts: QualityAlert[] = [];
 
@@ -159,6 +160,69 @@ async function safeFetch(input: RequestInfo, init?: RequestInit) {
   return fetch(input, init);
 }
 
+function isRecentDuplicateAlert(
+  now: string,
+  lastTimestamp: string | Date,
+  currentSeverity: QualityAlert["severity"],
+  lastSeverity: QualityAlert["severity"] | string,
+) {
+  return (
+    new Date(now).getTime() - new Date(lastTimestamp).getTime() < ALERT_DEDUP_WINDOW_MS &&
+    lastSeverity === currentSeverity
+  );
+}
+
+function resolveWebhookUrl(metadata?: Record<string, unknown>) {
+  return typeof metadata?.webhookUrl === "string" ? metadata.webhookUrl : null;
+}
+
+async function postQualityAlertWebhook(
+  webhookUrl: string | null,
+  alert: QualityAlert,
+) {
+  if (!webhookUrl) return;
+
+  try {
+    await safeFetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(alert),
+    });
+  } catch {
+    // Best-effort only.
+  }
+}
+
+async function sendPostgresQualityAlert(alert: QualityAlert) {
+  const prisma = await getPrisma();
+  const last = await prisma.qualityAlert.findFirst({
+    where: { companySlug: alert.companySlug, type: alert.type },
+    orderBy: { timestamp: "desc" },
+  });
+
+  if (
+    last &&
+    isRecentDuplicateAlert(alert.timestamp, last.timestamp, alert.severity, last.severity)
+  ) {
+    return false;
+  }
+
+  await prisma.qualityAlert.create({
+    data: {
+      companySlug: alert.companySlug,
+      type: alert.type,
+      severity: alert.severity,
+      message: alert.message,
+      metadata: alert.metadata
+        ? (alert.metadata as import("@prisma/client").Prisma.InputJsonValue)
+        : undefined,
+      timestamp: new Date(alert.timestamp),
+    },
+  });
+  await postQualityAlertWebhook(resolveWebhookUrl(alert.metadata), alert);
+  return true;
+}
+
 export async function sendQualityAlert({
   companySlug,
   type,
@@ -172,53 +236,21 @@ export async function sendQualityAlert({
     throw new Error(`Tipo de alerta invalido: ${type}`);
   }
 
+  const alert: QualityAlert = { companySlug, type, severity, message, metadata, timestamp: now };
+
   if (USE_POSTGRES && !USE_MEMORY_ALERTS) {
-    const prisma = await getPrisma();
-    // Dedup: check if same type+severity in last 24h
-    const last = await prisma.qualityAlert.findFirst({
-      where: { companySlug, type },
-      orderBy: { timestamp: "desc" },
-    });
-    if (last && new Date(now).getTime() - last.timestamp.getTime() < 24 * 60 * 60 * 1000 && last.severity === severity) {
-      return false;
-    }
-    await prisma.qualityAlert.create({
-      data: { companySlug, type, severity, message, metadata: metadata ? (metadata as import("@prisma/client").Prisma.InputJsonValue) : undefined, timestamp: new Date(now) },
-    });
-    const webhookUrl = metadata && typeof metadata.webhookUrl === "string" ? metadata.webhookUrl : null;
-    if (webhookUrl) {
-      try { await safeFetch(webhookUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companySlug, type, severity, message, metadata, timestamp: now }) }); } catch { /* best-effort */ }
-    }
-    return true;
+    return sendPostgresQualityAlert(alert);
   }
 
   const alerts = await readAlertsStore();
   const last = findLatestAlert(alerts, companySlug, type);
-  if (
-    last &&
-    new Date(now).getTime() - new Date(last.timestamp).getTime() < 24 * 60 * 60 * 1000 &&
-    last.severity === severity
-  ) {
+  if (last && isRecentDuplicateAlert(now, last.timestamp, severity, last.severity)) {
     return false;
   }
 
-  const alert: QualityAlert = { companySlug, type, severity, message, metadata, timestamp: now };
   alerts.push(alert);
   await writeAlertsStore(alerts);
-
-  const webhookUrl = metadata && typeof metadata.webhookUrl === "string" ? metadata.webhookUrl : null;
-  if (webhookUrl) {
-    try {
-      await safeFetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(alert),
-      });
-    } catch {
-      // Best-effort only.
-    }
-  }
-
+  await postQualityAlertWebhook(resolveWebhookUrl(metadata), alert);
   return true;
 }
 
@@ -276,4 +308,3 @@ export async function ensureSummaryAlerts(params: {
   }
   return results;
 }
-

@@ -495,7 +495,6 @@ export async function pgCreateLocalCompany(
   // re-fetch with integrations
   const full = await prisma.company.findUnique({ where: { id: company.id }, include: { integrations: true } });
   return toLocalCompany(full as PrismaCompany);
-  return toLocalCompany(company);
 }
 
 export async function pgUpdateLocalCompany(
@@ -517,7 +516,7 @@ export async function pgUpdateLocalCompany(
           : []
         : undefined;
 
-  const company = await prisma.company.update({
+  await prisma.company.update({
     where: { id },
     data: {
       ...(patch.name
@@ -582,7 +581,6 @@ export async function pgUpdateLocalCompany(
   }
   const full = await prisma.company.findUnique({ where: { id }, include: { integrations: true } });
   return full ? toLocalCompany(full as PrismaCompany) : null;
-  return toLocalCompany(company);
 }
 
 export async function pgDeleteLocalCompany(id: string): Promise<boolean> {

@@ -6,9 +6,7 @@ import {
   listLocalLinksForUser,
   normalizeLocalRole,
 } from "@/lib/auth/localStore";
-import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { resolveCapabilities } from "@/lib/permissions";
-import { resolveVisibleCompanies, resolveCompanyVisibilityMode } from "@/lib/companyVisibility";
 
 export type BuiltSessionPayload = {
   userId: string;
@@ -45,6 +43,77 @@ export type BuiltSession = {
   requestedCompanySlug: string | null;
 };
 
+type LocalSessionUser = NonNullable<Awaited<ReturnType<typeof getLocalUserById>>>;
+type LocalCompany = Awaited<ReturnType<typeof listLocalCompanies>>[number];
+type LocalCompanyLink = Awaited<ReturnType<typeof listLocalLinksForUser>>[number];
+
+function userHasRole(
+  user: LocalSessionUser,
+  links: LocalCompanyLink[],
+  expectedRole: string,
+) {
+  return (
+    normalizeLocalRole(user.role ?? null) === expectedRole ||
+    links.some((link) => normalizeLocalRole(link.role ?? null) === expectedRole)
+  );
+}
+
+function hasDirectCompanyRole(user: LocalSessionUser) {
+  const role = normalizeLocalRole(user.role ?? null);
+  return role === "empresa" || role === "company_user" || user.user_origin === "client_company";
+}
+
+function canAccessCompanyDirectly(user: LocalSessionUser, company: LocalCompany) {
+  return Boolean(user.default_company_slug && company.slug === user.default_company_slug);
+}
+
+function resolveAllowedSessionCompanies(input: {
+  companies: LocalCompany[];
+  hasFullCompanyAccess: boolean;
+  isDirectCompanyUser: boolean;
+  links: LocalCompanyLink[];
+  user: LocalSessionUser;
+}) {
+  if (input.hasFullCompanyAccess) return input.companies;
+
+  return input.companies.filter((company) => {
+    if (input.links.some((link) => link.companyId === company.id)) return true;
+    return input.isDirectCompanyUser && canAccessCompanyDirectly(input.user, company);
+  });
+}
+
+function resolveRequestedCompany(
+  allowedCompanies: LocalCompany[],
+  requestedSlug: string,
+  shouldBindCompanyContext: boolean,
+) {
+  if (!shouldBindCompanyContext || !requestedSlug || allowedCompanies.length === 0) return null;
+  return allowedCompanies.find((company) => company.slug === requestedSlug) ?? null;
+}
+
+function resolveActiveCompany(input: {
+  allowedCompanies: LocalCompany[];
+  requestedCompany: LocalCompany | null;
+  shouldBindCompanyContext: boolean;
+  user: LocalSessionUser;
+}) {
+  if (!input.shouldBindCompanyContext) return null;
+  return (
+    input.requestedCompany ??
+    input.allowedCompanies.find((company) => company.slug === input.user.default_company_slug) ??
+    input.allowedCompanies[0] ??
+    null
+  );
+}
+
+function resolveDisplayName(user: LocalSessionUser) {
+  return (
+    (typeof user.full_name === "string" ? user.full_name.trim() : "") ||
+    (typeof user.name === "string" ? user.name.trim() : "") ||
+    user.email
+  );
+}
+
 export async function buildLocalSessionForUser(
   userId: string,
   opts?: { requestedSlug?: string | null },
@@ -58,36 +127,30 @@ export async function buildLocalSessionForUser(
   ]);
 
   const isGlobalAdmin = user.globalRole === "global_admin" || user.is_global_admin === true;
-  const hasTechnicalSupportRole =
-    normalizeLocalRole(user.role ?? null) === "technical_support" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "technical_support");
-  const hasLeaderTcRole =
-    normalizeLocalRole(user.role ?? null) === "leader_tc" ||
-    links.some((link) => normalizeLocalRole(link.role ?? null) === "leader_tc");
+  const hasTechnicalSupportRole = userHasRole(user, links, "technical_support");
+  const hasLeaderTcRole = userHasRole(user, links, "leader_tc");
   const hasFullCompanyAccess = isGlobalAdmin || hasTechnicalSupportRole || hasLeaderTcRole;
   const shouldBindCompanyContext = !hasFullCompanyAccess;
-  const isDirectCompanyUser = normalizeLocalRole(user.role ?? null) === "empresa" || normalizeLocalRole(user.role ?? null) === "company_user" || user.user_origin === "client_company";
-  const allowedCompanies = hasFullCompanyAccess
-    ? companies
-    : companies.filter((company) => {
-        if (links.some((link) => link.companyId === company.id)) return true;
-        if (!isDirectCompanyUser) return false;
-        return Boolean(user.default_company_slug && company.slug === user.default_company_slug);
-      });
+  const allowedCompanies = resolveAllowedSessionCompanies({
+    companies,
+    hasFullCompanyAccess,
+    isDirectCompanyUser: hasDirectCompanyRole(user),
+    links,
+    user,
+  });
 
   const requestedSlug = typeof opts?.requestedSlug === "string" ? opts.requestedSlug.trim() : "";
-  const requestedCompany =
-    shouldBindCompanyContext && requestedSlug && allowedCompanies.length
-      ? allowedCompanies.find((company) => company.slug === requestedSlug) ?? null
-      : null;
-
-  const activeCompany =
-    shouldBindCompanyContext
-      ? requestedCompany ??
-        allowedCompanies.find((company) => company.slug === user.default_company_slug) ??
-        allowedCompanies[0] ??
-        null
-      : null;
+  const requestedCompany = resolveRequestedCompany(
+    allowedCompanies,
+    requestedSlug,
+    shouldBindCompanyContext,
+  );
+  const activeCompany = resolveActiveCompany({
+    allowedCompanies,
+    requestedCompany,
+    shouldBindCompanyContext,
+    user,
+  });
 
   const activeLink = activeCompany ? links.find((link) => link.companyId === activeCompany.id) ?? null : null;
   const companyRole = normalizeLocalRole(activeLink?.role ?? user.role ?? null);
@@ -100,15 +163,10 @@ export async function buildLocalSessionForUser(
 
   const effectiveRole = isGlobalAdmin ? "leader_tc" : companyRole;
 
-  const displayName =
-    (typeof user.full_name === "string" ? user.full_name.trim() : "") ||
-    (typeof user.name === "string" ? user.name.trim() : "") ||
-    user.email;
-
   const session: BuiltSessionPayload = {
     userId: user.id,
     email: user.email,
-    name: displayName,
+    name: resolveDisplayName(user),
     companyId: shouldBindCompanyContext ? activeCompany?.id ?? null : null,
     companySlug: shouldBindCompanyContext ? activeCompany?.slug ?? null : null,
     defaultCompanySlug: user.default_company_slug ?? null,

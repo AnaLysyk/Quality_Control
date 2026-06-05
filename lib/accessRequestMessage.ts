@@ -269,12 +269,10 @@ export function extractAdminNotes(message: string): string | null {
   return notes || null;
 }
 
-export function composeAccessRequestMessage(input: ComposeAccessRequestInput): string {
-  const reviewQueue = resolveReviewQueue(input.profileType);
-  const companyProfile = normalizeCompanyProfile(input.companyProfile);
+function buildAccessRequestPayload(input: ComposeAccessRequestInput) {
   const snapshot = buildSnapshot(input);
   const originalRequest = normalizeSnapshot(input.originalRequest ?? snapshot);
-  const payload = {
+  return {
     v: 1,
     kind: "access_request",
     email: input.email,
@@ -288,12 +286,12 @@ export function composeAccessRequestMessage(input: ComposeAccessRequestInput): s
     clientId: input.clientId,
     accessType: input.accessType,
     profileType: input.profileType,
-    reviewQueue,
+    reviewQueue: resolveReviewQueue(input.profileType),
     mappedAppRole: input.accessType,
     title: input.title || null,
     description: input.description || null,
     notes: input.notes || null,
-    companyProfile,
+    companyProfile: normalizeCompanyProfile(input.companyProfile),
     originalRequest,
     adjustmentRound: typeof input.adjustmentRound === "number" ? input.adjustmentRound : 0,
     adjustmentRequestedFields: normalizeAdjustmentFields(input.adjustmentRequestedFields),
@@ -301,14 +299,20 @@ export function composeAccessRequestMessage(input: ComposeAccessRequestInput): s
     lastAdjustmentAt: input.lastAdjustmentAt ?? null,
     lastAdjustmentDiff: Array.isArray(input.lastAdjustmentDiff) ? input.lastAdjustmentDiff : [],
   };
+}
 
+function buildAccessRequestMessageLines(
+  input: ComposeAccessRequestInput,
+  payload: ReturnType<typeof buildAccessRequestPayload>,
+) {
+  const companyProfile = payload.companyProfile;
   const lines = [
     `ACCESS_REQUEST_V1 ${JSON.stringify(payload)}`,
     "Solicitacao de acesso registrada",
     input.title ? `Titulo da solicitacao: ${input.title}` : "",
     input.description ? `Descricao detalhada: ${input.description}` : "",
     `Tipo de perfil: ${toRequestProfileTypeLabel(input.profileType)}`,
-    `Destino da fila: ${reviewQueue === "global_only" ? "Global" : "Admin e Global"}`,
+    `Destino da fila: ${payload.reviewQueue === "global_only" ? "Global" : "Admin e Global"}`,
     `Tipo de acesso interno: ${toAccessTypeLabel(input.accessType)}`,
     `Empresa: ${input.company}${input.clientId ? ` (id: ${input.clientId})` : ""}`,
     companyProfile?.companyName ? `Empresa solicitada: ${companyProfile.companyName}` : "",
@@ -327,6 +331,12 @@ export function composeAccessRequestMessage(input: ComposeAccessRequestInput): s
     `Email: ${input.email}`,
     input.notes ? `Observacoes: ${input.notes}` : "",
   ].filter(Boolean);
+  return lines;
+}
+
+export function composeAccessRequestMessage(input: ComposeAccessRequestInput): string {
+  const payload = buildAccessRequestPayload(input);
+  const lines = buildAccessRequestMessageLines(input, payload);
 
   if (input.adminNotes && input.adminNotes.trim()) {
     lines.push(`ADMIN_NOTES: ${input.adminNotes.trim()}`);

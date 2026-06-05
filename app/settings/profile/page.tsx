@@ -298,9 +298,13 @@ function normalizeComparableText(value?: string | null) {
   return (value ?? "").trim();
 }
 
+function compareText(left: string, right: string) {
+  return left.localeCompare(right);
+}
+
 function areStringListsEqual(left: string[] | null | undefined, right: string[] | null | undefined) {
-  const normalizedLeft = (left ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort();
-  const normalizedRight = (right ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort();
+  const normalizedLeft = (left ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort(compareText);
+  const normalizedRight = (right ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort(compareText);
   if (normalizedLeft.length !== normalizedRight.length) return false;
   return normalizedLeft.every((value, index) => value === normalizedRight[index]);
 }
@@ -810,7 +814,7 @@ export default function SettingsProfilePage() {
   const companyScopeKey = !loading && hasCompanyContext ? currentClientSlug ?? currentClientId ?? homeCompanyId : null;
   const uiRoleLabel = roleLabel(roleValue);
   const userStatusLabel = statusLabel(active, status, t);
-  const directDeleteModalTitle = isGlobalProfile ? t("settings.deleteProfile") : t("settings.deleteProfile");
+  const directDeleteModalTitle = t("settings.deleteProfile");
   const directDeleteModalDescription = t("settings.deleteProfileConfirm");
 
   const uniqueCompanies = useMemo(() => {

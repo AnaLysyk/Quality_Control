@@ -5,13 +5,76 @@ import { ReactNode, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthSkeleton } from "@/components/AuthSkeleton";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { buildCompanyPath, buildCompanyPathForAccess } from "@/lib/companyRoutes";
+import { buildCompanyPath } from "@/lib/companyRoutes";
 
 type RequireClientProps = {
   slug?: string; // slug da rota /empresas/[slug]
   children: ReactNode;
   fallback?: ReactNode;
 };
+
+type RequireClientAccessState =
+  | "allowed"
+  | "denied"
+  | "error"
+  | "expired"
+  | "loading"
+  | "slug-missing"
+  | "timeout";
+
+function readUserString(user: unknown, key: string) {
+  const value = (user as Record<string, unknown> | null | undefined)?.[key];
+  return typeof value === "string" ? value : null;
+}
+
+function normalizeRole(user: unknown, key: string) {
+  return readUserString(user, key)?.toLowerCase() ?? null;
+}
+
+function resolveRoleAccess(user: unknown, slug?: string) {
+  const role = normalizeRole(user, "role");
+  const permissionRole = normalizeRole(user, "permissionRole");
+  const isAdmin =
+    role === "leader_tc" ||
+    role === "technical_support" ||
+    permissionRole === "leader_tc" ||
+    permissionRole === "technical_support" ||
+    (user as { isGlobalAdmin?: boolean } | null | undefined)?.isGlobalAdmin === true;
+  const isTcUser = role === "testing_company_user" || permissionRole === "testing_company_user";
+  const linkedSlugs = (user as { clientSlugs?: unknown } | null | undefined)?.clientSlugs;
+  const isLinkedTcUser =
+    isTcUser &&
+    !!slug &&
+    Array.isArray(linkedSlugs) &&
+    linkedSlugs.some((value) => typeof value === "string" && value.toLowerCase() === slug.toLowerCase());
+  return { isAdmin, isLinkedTcUser };
+}
+
+function resolveNormalizedClientSlug(user: unknown) {
+  return readUserString(user, "clientSlug") ?? readUserString(user, "companySlug");
+}
+
+function resolveRequireClientAccessState(input: {
+  error: unknown;
+  isAdmin: boolean;
+  isLinkedTcUser: boolean;
+  loading: boolean;
+  normalizedClientSlug: string | null;
+  slug?: string;
+  timedOut: boolean;
+  user: unknown;
+}): RequireClientAccessState {
+  if (input.error) return "error";
+  if (input.loading && input.timedOut) return "timeout";
+  if (input.loading) return "loading";
+  if (!input.user) return "expired";
+  if (!input.slug) return "slug-missing";
+  if (input.isAdmin || input.isLinkedTcUser) return "allowed";
+  if (!input.normalizedClientSlug) return "denied";
+  return input.normalizedClientSlug.toLowerCase() === input.slug.toLowerCase()
+    ? "allowed"
+    : "denied";
+}
 
 export function RequireClient({ slug, children, fallback }: RequireClientProps) {
   const { user, loading, error, refreshUser } = useAuthUser();
@@ -34,39 +97,31 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
     return () => clearTimeout(handle);
   }, [loading]);
 
-  const role = typeof user?.role === "string" ? user.role.toLowerCase() : null;
-  const permissionRole = typeof user?.permissionRole === "string" ? user.permissionRole.toLowerCase() : null;
-  const isAdmin = role === "leader_tc" || role === "technical_support" || permissionRole === "leader_tc" || permissionRole === "technical_support" || user?.isGlobalAdmin === true;
-  // testing_company_user can be linked to multiple companies; allow access to any of their clientSlugs
-  const isTcUser = role === "testing_company_user" || permissionRole === "testing_company_user";
-  const linkedSlugs: string[] = Array.isArray(user?.clientSlugs) ? (user.clientSlugs as string[]) : [];
-  const isLinkedTcUser = isTcUser && !!slug && linkedSlugs.some((s) => s.toLowerCase() === slug.toLowerCase());
+  const { isAdmin, isLinkedTcUser } = resolveRoleAccess(user, slug);
   const loginHref =
     pathname.startsWith("/") && pathname !== "/login" ? `/login?next=${encodeURIComponent(pathname)}` : "/login";
 
-  const normalizedClientSlug = typeof user?.clientSlug === "string" ? user.clientSlug : typeof (user as { companySlug?: string | null } | null)?.companySlug === "string" ? (user as { companySlug?: string | null }).companySlug : null;
+  const normalizedClientSlug = resolveNormalizedClientSlug(user);
 
   const accessState = useMemo(() => {
-    if (error) return "error" as const;
-    if (loading && timedOut) return "timeout" as const;
-    if (loading) return "loading" as const;
-    if (!user) return "expired" as const;
-    if (!slug) return "slug-missing" as const;
-    if (isAdmin || isLinkedTcUser) return "allowed" as const;
-    if (!normalizedClientSlug) return "denied" as const;
-    if (slug && normalizedClientSlug.toLowerCase() !== slug.toLowerCase()) return "denied" as const;
-    return "allowed" as const;
+    return resolveRequireClientAccessState({
+      error,
+      isAdmin,
+      isLinkedTcUser,
+      loading,
+      normalizedClientSlug,
+      slug,
+      timedOut,
+      user,
+    });
   }, [error, isAdmin, isLinkedTcUser, loading, normalizedClientSlug, slug, timedOut, user]);
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
       router.replace(loginHref);
-      return;
     }
-    void isAdmin;
-    void isLinkedTcUser;
-  }, [isAdmin, loading, loginHref, router, slug, user]);
+  }, [loading, loginHref, router, user]);
 
   if (!mounted || accessState === "loading") {
     return (fallback as ReactNode) ?? <AuthSkeleton message="Validando acesso da empresa" />;

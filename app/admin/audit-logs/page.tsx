@@ -401,6 +401,93 @@ const DATE_PRESETS: { value: DatePreset; label: string }[] = [
 ];
 
 const PAGE_SIZES = [25, 50, 100];
+const EMPTY_AUDIT_SUMMARY: AuditSummary = {
+  total: 0,
+  errorCount: 0,
+  authCount: 0,
+  uniqueActors: 0,
+  lastEventAt: null,
+};
+
+type AuditLogFilters = {
+  action: string;
+  actor: string;
+  category: ActionCategory | "";
+  currentPage: number;
+  endDate: string;
+  entityType: string;
+  pageSize: number;
+  query: string;
+  result: ResultFilter;
+  startDate: string;
+};
+
+type NormalizedAuditLogsResponse = {
+  actionOptions: FacetCount[];
+  actorNames: Record<string, string>;
+  avatars: Record<string, string>;
+  categoryCounts: Partial<Record<ActionCategory, number>>;
+  entityTypeOptions: FacetCount[];
+  items: AuditLog[];
+  retentionDays: number | null;
+  summary: AuditSummary;
+  topActions: FacetCount[];
+  total: number;
+  trend: TrendPoint[];
+  warning: string | null;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function setOptionalSearchParam(url: URL, key: string, value: string) {
+  if (value) url.searchParams.set(key, value);
+}
+
+function buildAuditLogsUrl(filters: AuditLogFilters) {
+  const url = new URL("/api/admin/audit-logs", window.location.origin);
+  url.searchParams.set("limit", String(filters.pageSize));
+  url.searchParams.set("offset", String((filters.currentPage - 1) * filters.pageSize));
+  setOptionalSearchParam(url, "action", filters.action);
+  setOptionalSearchParam(url, "entityType", filters.entityType);
+  setOptionalSearchParam(url, "category", filters.category);
+  setOptionalSearchParam(url, "result", filters.result);
+  setOptionalSearchParam(url, "actor", filters.actor);
+  setOptionalSearchParam(url, "query", filters.query);
+  setOptionalSearchParam(url, "startDate", filters.startDate);
+  setOptionalSearchParam(url, "endDate", filters.endDate);
+  return url;
+}
+
+async function readAuditLogsJson(response: Response) {
+  return response.json().catch(() => ({}));
+}
+
+function getAuditLogsErrorMessage(json: unknown) {
+  return isRecord(json) && typeof json.error === "string"
+    ? json.error
+    : "Não foi possível carregar o histórico";
+}
+
+function normalizeAuditLogsResponse(json: AuditLogsResponse): NormalizedAuditLogsResponse {
+  return {
+    items: Array.isArray(json?.items) ? (json.items as AuditLog[]) : [],
+    avatars: isRecord(json?.avatars) ? (json.avatars as Record<string, string>) : {},
+    actorNames: isRecord(json?.actorNames) ? (json.actorNames as Record<string, string>) : {},
+    warning: typeof json?.warning === "string" ? json.warning : null,
+    retentionDays: typeof json?.retentionDays === "number" ? json.retentionDays : null,
+    total: typeof json?.total === "number" ? json.total : 0,
+    summary: json?.summary ?? EMPTY_AUDIT_SUMMARY,
+    trend: Array.isArray(json?.trend) ? json.trend : [],
+    topActions: Array.isArray(json?.topActions) ? json.topActions : [],
+    categoryCounts: isRecord(json?.categoryCounts)
+      ? (json.categoryCounts as Partial<Record<ActionCategory, number>>)
+      : {},
+    actionOptions: Array.isArray(json?.facets?.actions) ? json.facets.actions : [],
+    entityTypeOptions: Array.isArray(json?.facets?.entityTypes) ? json.facets.entityTypes : [],
+  };
+}
 
 export default function AdminAuditLogsPage() {
   const [items, setItems] = useState<AuditLog[]>([]);
@@ -457,43 +544,36 @@ export default function AdminAuditLogsPage() {
     setError(null);
     setWarning(null);
     try {
-      const url = new URL("/api/admin/audit-logs", window.location.origin);
-      url.searchParams.set("limit", String(pageSize));
-      url.searchParams.set("offset", String((currentPage - 1) * pageSize));
-      if (action) url.searchParams.set("action", action);
-      if (entityType) url.searchParams.set("entityType", entityType);
-      if (categoryFilter) url.searchParams.set("category", categoryFilter);
-      if (resultFilter) url.searchParams.set("result", resultFilter);
-      if (deferredActor) url.searchParams.set("actor", deferredActor);
-      if (deferredSearchQuery) url.searchParams.set("query", deferredSearchQuery);
-      if (startDate) url.searchParams.set("startDate", startDate);
-      if (endDate) url.searchParams.set("endDate", endDate);
+      const url = buildAuditLogsUrl({
+        action,
+        actor: deferredActor,
+        category: categoryFilter,
+        currentPage,
+        endDate,
+        entityType,
+        pageSize,
+        query: deferredSearchQuery,
+        result: resultFilter,
+        startDate,
+      });
       const res = await fetch(url.toString(), { credentials: "include", cache: "no-store" });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(typeof json?.error === "string" ? json.error : "Não foi possível carregar o histórico");
+        throw new Error(getAuditLogsErrorMessage(json));
       }
-      const json = (await res.json().catch(() => ({}))) as AuditLogsResponse;
-      setItems(Array.isArray(json?.items) ? (json.items as AuditLog[]) : []);
-      setAvatars(json?.avatars && typeof json.avatars === "object" ? (json.avatars as Record<string, string>) : {});
-      setActorNames(json?.actorNames && typeof json.actorNames === "object" ? (json.actorNames as Record<string, string>) : {});
-      setWarning(typeof json?.warning === "string" ? json.warning : null);
-      setRetentionDays(typeof json?.retentionDays === "number" ? json.retentionDays : null);
-      setTotal(typeof json?.total === "number" ? json.total : 0);
-      setSummary(
-        json?.summary ?? {
-          total: 0,
-          errorCount: 0,
-          authCount: 0,
-          uniqueActors: 0,
-          lastEventAt: null,
-        },
-      );
-      setTrend(Array.isArray(json?.trend) ? json.trend : []);
-      setTopActions(Array.isArray(json?.topActions) ? json.topActions : []);
-      setCategoryCounts(json?.categoryCounts && typeof json.categoryCounts === "object" ? json.categoryCounts : {});
-      setActionOptions(Array.isArray(json?.facets?.actions) ? json.facets.actions : []);
-      setEntityTypeOptions(Array.isArray(json?.facets?.entityTypes) ? json.facets.entityTypes : []);
+      const data = normalizeAuditLogsResponse((await readAuditLogsJson(res)) as AuditLogsResponse);
+      setItems(data.items);
+      setAvatars(data.avatars);
+      setActorNames(data.actorNames);
+      setWarning(data.warning);
+      setRetentionDays(data.retentionDays);
+      setTotal(data.total);
+      setSummary(data.summary);
+      setTrend(data.trend);
+      setTopActions(data.topActions);
+      setCategoryCounts(data.categoryCounts);
+      setActionOptions(data.actionOptions);
+      setEntityTypeOptions(data.entityTypeOptions);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao carregar histórico");
       setItems([]);
@@ -503,13 +583,7 @@ export default function AdminAuditLogsPage() {
       setCategoryCounts({});
       setActionOptions([]);
       setEntityTypeOptions([]);
-      setSummary({
-        total: 0,
-        errorCount: 0,
-        authCount: 0,
-        uniqueActors: 0,
-        lastEventAt: null,
-      });
+      setSummary(EMPTY_AUDIT_SUMMARY);
       setRetentionDays(null);
     } finally {
       setLoading(false);

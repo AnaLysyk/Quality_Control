@@ -23,7 +23,6 @@ jobs:
       E2E_USE_JSON: "1"
       AUTH_STORE: "json"
       USE_JSON_STORE: "true"
-      DATABASE_URL: "postgresql://ci:ci@127.0.0.1:5432/ci?schema=public"
 
     steps:
       - name: Checkout repository

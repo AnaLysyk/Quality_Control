@@ -310,6 +310,262 @@ const sectionCard =
 const sectionMuted =
   "rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
+type StatusFilter = "all" | "open" | "in_progress" | "closed" | "rejected";
+type StatusCounters = {
+  approved: number;
+  inProgress: number;
+  inReview: number;
+  open: number;
+  rejected: number;
+  total: number;
+};
+
+function resolveViewerProfileLabel(user: ReturnType<typeof useAuthUser>["user"]) {
+  const permissionRole = typeof user?.permissionRole === "string" ? user.permissionRole : null;
+  const role = typeof user?.role === "string" ? user.role : null;
+  const companyRole = typeof user?.companyRole === "string" ? user.companyRole : null;
+  const normalizedRole =
+    normalizeRequestProfileType(permissionRole) ??
+    normalizeRequestProfileType(role) ??
+    normalizeRequestProfileType(companyRole);
+
+  if (normalizedRole === "technical_support") return "Suporte técnico";
+  if (normalizedRole === "leader_tc") return "Lider TC";
+  if (normalizedRole === "empresa") return "Empresa";
+  if (normalizedRole === "company_user") return "Usuário da empresa";
+  return "Painel institucional";
+}
+
+function filterAccessRequestItems(
+  items: AccessRequestItem[],
+  searchTerm: string,
+  statusFilter: StatusFilter,
+) {
+  const query = searchTerm.trim().toLowerCase();
+  return items.filter((item) => {
+    if (statusFilter !== "all" && item.status !== statusFilter) return false;
+    if (!query) return true;
+    return [
+      item.fullName,
+      item.name,
+      item.email,
+      item.company,
+      item.accessType,
+      item.jobRole,
+      item.title,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
+  });
+}
+
+function calculateStatusCounters(items: AccessRequestItem[]): StatusCounters {
+  return items.reduce<StatusCounters>(
+    (acc, item) => {
+      acc.total += 1;
+      if (item.status === "open") {
+        acc.open += 1;
+        acc.inReview += 1;
+      }
+      if (item.status === "in_progress") {
+        acc.inProgress += 1;
+        acc.inReview += 1;
+      }
+      if (item.status === "closed") acc.approved += 1;
+      if (item.status === "rejected") acc.rejected += 1;
+      return acc;
+    },
+    { total: 0, open: 0, inReview: 0, inProgress: 0, approved: 0, rejected: 0 },
+  );
+}
+
+function getAdjustmentFieldOptions(
+  selected?: AccessRequestItem | null,
+  selectedOriginal?: AccessRequestSnapshot | null,
+) {
+  return selectedOriginal?.companyProfile || selected?.companyProfile
+    ? [...BASE_ADJUSTMENT_FIELD_OPTIONS, ...COMPANY_ADJUSTMENT_FIELD_OPTIONS]
+    : BASE_ADJUSTMENT_FIELD_OPTIONS;
+}
+
+function isAccessRequestDraftDirty(input: {
+  draft: Partial<AccessRequestItem> | null;
+  existingLogins: string[];
+  selected: AccessRequestItem | null;
+}) {
+  const { draft, existingLogins, selected } = input;
+  if (!selected || !draft) return false;
+  if (selected.requestKind === "password_reset" || draft.requestKind === "password_reset") return false;
+
+  const baselineUsername =
+    selected.username ??
+    buildUniqueUsername(selected.fullName || selected.name || selected.email, existingLogins, selected.username);
+
+  return (
+    (draft.accessType ?? "") !== (selected.accessType ?? "") ||
+    (draft.username ?? "") !== baselineUsername ||
+    (draft.clientId ?? "") !== (selected.clientId ?? "") ||
+    (draft.company ?? "") !== (selected.company ?? "") ||
+    (draft.fullName ?? "") !== (selected.fullName ?? "") ||
+    (draft.email ?? "") !== (selected.email ?? "") ||
+    (draft.phone ?? "") !== (selected.phone ?? "") ||
+    (draft.jobRole ?? "") !== (selected.jobRole ?? "") ||
+    (draft.title ?? "") !== (selected.title ?? "") ||
+    (draft.description ?? "") !== (selected.description ?? "") ||
+    (draft.adminNotes ?? "") !== (selected.adminNotes ?? "")
+  );
+}
+
+function hasMissingRequiredFields(
+  draft: Partial<AccessRequestItem> | null,
+  draftIsPasswordReset: boolean,
+) {
+  if (draftIsPasswordReset) return false;
+  return [
+    draft?.fullName,
+    draft?.username,
+    draft?.email,
+    draft?.phone,
+    draft?.jobRole,
+    draft?.title,
+    draft?.description,
+  ].some((value) => !String(value ?? "").trim()) || !draft?.passwordProvided;
+}
+
+function getEnvelopeRecord(raw: unknown) {
+  return (
+    unwrapEnvelopeData<Record<string, unknown>>(raw) ??
+    (raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {})
+  );
+}
+
+function getResponseErrorMessage(raw: unknown, response: Response, fallback: string) {
+  const msg = extractMessageFromJson(raw) || fallback;
+  const requestId = extractRequestIdFromJson(raw) || response.headers.get("x-request-id") || null;
+  return formatMessageWithRequestId(msg, requestId);
+}
+
+async function readJsonBody(response: Response) {
+  return response.json().catch(() => null);
+}
+
+function mapAccessRequestItem(r: RawSupportRequest): AccessRequestItem {
+  const parsedMsg = parseFromMessage(String(r.message ?? ""), String(r.email ?? ""));
+  return {
+    id: String(r.id),
+    createdAt: String(r.created_at),
+    status: String(r.status ?? "open"),
+    email: String(parsedMsg.email ?? r.email ?? ""),
+    name: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
+    fullName: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
+    username: typeof parsedMsg.username === "string" ? parsedMsg.username : null,
+    phone: String(parsedMsg.phone ?? ""),
+    jobRole: String(parsedMsg.jobRole ?? ""),
+    accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuário Testing Company",
+    clientId: parsedMsg.clientId ?? null,
+    company: String(parsedMsg.company ?? ""),
+    companyProfile: parsedMsg.companyProfile ?? null,
+    title: String(parsedMsg.title ?? ""),
+    description: String(parsedMsg.description ?? ""),
+    notes: String(parsedMsg.notes ?? ""),
+    passwordProvided: parsedMsg.passwordProvided === true,
+    originalRequest:
+      parsedMsg.originalRequest ??
+      ({
+        email: String(parsedMsg.email ?? r.email ?? ""),
+        name: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
+        fullName: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
+        username: typeof parsedMsg.username === "string" ? parsedMsg.username : null,
+        phone: String(parsedMsg.phone ?? ""),
+        passwordHash: null,
+        jobRole: String(parsedMsg.jobRole ?? ""),
+        company: String(parsedMsg.company ?? ""),
+        clientId: parsedMsg.clientId ?? null,
+        accessType: toInternalAccessType(normalizeRequestProfileType((parsedMsg.accessType as string) ?? "") ?? "testing_company_user"),
+        profileType: normalizeRequestProfileType((parsedMsg.accessType as string) ?? "") ?? "testing_company_user",
+        title: String(parsedMsg.title ?? ""),
+        description: String(parsedMsg.description ?? ""),
+        notes: String(parsedMsg.notes ?? ""),
+        companyProfile: parsedMsg.companyProfile ?? null,
+      } satisfies AccessRequestSnapshot),
+    adjustmentRound: parsedMsg.adjustmentRound ?? 0,
+    adjustmentRequestedFields: parsedMsg.adjustmentRequestedFields ?? [],
+    adjustmentHistory: parsedMsg.adjustmentHistory ?? [],
+    lastAdjustmentAt: typeof parsedMsg.lastAdjustmentAt === "string" ? parsedMsg.lastAdjustmentAt : null,
+    lastAdjustmentDiff: Array.isArray(parsedMsg.lastAdjustmentDiff) ? parsedMsg.lastAdjustmentDiff : [],
+    rawMessage: String(r.message ?? ""),
+    adminNotes: (r.admin_notes as string | null) ?? null,
+    requestKind: parsedMsg.requestKind ?? "access_request",
+    linkedRequestId: parsedMsg.linkedRequestId ?? null,
+  };
+}
+
+function mapClientOption(value: unknown): ClientOption | null {
+  const rec = (value ?? null) as Record<string, unknown> | null;
+  const id = typeof rec?.id === "string" ? rec.id : "";
+  const name =
+    (typeof rec?.name === "string" ? rec.name : "") ||
+    (typeof rec?.company_name === "string" ? String(rec.company_name) : "");
+  return id && name ? { id, name } : null;
+}
+
+function getClientOptions(raw: unknown) {
+  return getItemsFromEnvelope<unknown>(getEnvelopeRecord(raw))
+    .map(mapClientOption)
+    .filter((client): client is ClientOption => Boolean(client));
+}
+
+function getExistingLogins(raw: unknown) {
+  const userItems = getItemsFromEnvelope<UserLoginCandidate>(getEnvelopeRecord(raw));
+  return Array.from(
+    new Set(
+      userItems.flatMap((item) =>
+        [item.user, item.email]
+          .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+          .map((value) => value.trim().toLowerCase()),
+      ),
+    ),
+  );
+}
+
+async function loadAccessRequestsData() {
+  const [reqRes, clientsRes, usersRes] = await Promise.all([
+    fetchWithToken("/api/admin/access-requests"),
+    fetchWithToken("/api/clients"),
+    fetchWithToken("/api/admin/users"),
+  ]);
+
+  const reqRaw = await readJsonBody(reqRes);
+  if (!reqRes.ok) {
+    throw new Error(getResponseErrorMessage(reqRaw, reqRes, "Falha ao carregar solicitações"));
+  }
+
+  const clientsRaw = await readJsonBody(clientsRes);
+  const usersRaw = await readJsonBody(usersRes);
+
+  return {
+    clients: clientsRes.ok ? getClientOptions(clientsRaw) : [],
+    clientsError: clientsRes.ok ? null : getResponseErrorMessage(clientsRaw, clientsRes, "Falha ao carregar empresas"),
+    items: getItemsFromEnvelope<RawSupportRequest>(getEnvelopeRecord(reqRaw)).map(mapAccessRequestItem),
+    logins: getExistingLogins(usersRaw),
+  };
+}
+
+function getNextSelectedAccessRequestId(previousId: string | null, items: AccessRequestItem[]) {
+  return previousId && items.some((item) => item.id === previousId) ? previousId : items[0]?.id ?? null;
+}
+
+function debugLoadedAccessRequests(items: AccessRequestItem[]) {
+  try {
+    console.debug(
+      "[E2E][access-requests] carregou itens:",
+      items.length,
+      items.map((p) => ({ id: p.id, status: p.status })),
+    );
+  } catch {}
+}
+
 function AccessRequestsPage() {
   const { user } = useAuthUser();
   const [items, setItems] = useState<AccessRequestItem[]>([]);
@@ -329,23 +585,9 @@ function AccessRequestsPage() {
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress" | "closed" | "rejected">("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  const viewerProfileLabel = useMemo(() => {
-    const permissionRole = typeof user?.permissionRole === "string" ? user.permissionRole : null;
-    const role = typeof user?.role === "string" ? user.role : null;
-    const companyRole = typeof user?.companyRole === "string" ? user.companyRole : null;
-    const normalizedRole =
-      normalizeRequestProfileType(permissionRole) ??
-      normalizeRequestProfileType(role) ??
-      normalizeRequestProfileType(companyRole);
-
-    if (normalizedRole === "technical_support") return "Suporte técnico";
-    if (normalizedRole === "leader_tc") return "Lider TC";
-    if (normalizedRole === "empresa") return "Empresa";
-    if (normalizedRole === "company_user") return "Usuário da empresa";
-    return "Painel institucional";
-  }, [user?.companyRole, user?.permissionRole, user?.role]);
+  const viewerProfileLabel = useMemo(() => resolveViewerProfileLabel(user), [user]);
 
   // Track whether the user has modified the draft form since the last selection change.
   // Prevents React Strict Mode double-invoke of load() from resetting user edits.
@@ -356,87 +598,32 @@ function AccessRequestsPage() {
     [items, selectedId],
   );
 
-  const filteredItems = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-    return items.filter((item) => {
-      const matchesStatus = statusFilter === "all" ? true : item.status === statusFilter;
-      if (!matchesStatus) return false;
-      if (!query) return true;
-      const haystack = [
-        item.fullName,
-        item.name,
-        item.email,
-        item.company,
-        item.accessType,
-        item.jobRole,
-        item.title,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(query);
-    });
-  }, [items, searchTerm, statusFilter]);
-
-  const statusCounters = useMemo(
-    () => ({
-      total: items.length,
-      open: items.filter((item) => item.status === "open").length,
-      inReview: items.filter((item) => item.status === "open" || item.status === "in_progress").length,
-      inProgress: items.filter((item) => item.status === "in_progress").length,
-      approved: items.filter((item) => item.status === "closed").length,
-      rejected: items.filter((item) => item.status === "rejected").length,
-    }),
-    [items],
+  const filteredItems = useMemo(
+    () => filterAccessRequestItems(items, searchTerm, statusFilter),
+    [items, searchTerm, statusFilter],
   );
+
+  const statusCounters = useMemo(() => calculateStatusCounters(items), [items]);
 
   const selectedAdjustmentDiff = selected?.lastAdjustmentDiff ?? [];
   const selectedHasRequesterAdjustment = Boolean(selected?.lastAdjustmentAt && selectedAdjustmentDiff.length > 0);
   const selectedOriginal = selected?.originalRequest ?? null;
   const latestAdjustmentRound = selected?.adjustmentHistory?.[selected.adjustmentHistory.length - 1] ?? null;
-  const adjustmentFieldOptions = useMemo(() => {
-    if (!selectedOriginal?.companyProfile && !selected?.companyProfile) {
-      return BASE_ADJUSTMENT_FIELD_OPTIONS;
-    }
-    return [...BASE_ADJUSTMENT_FIELD_OPTIONS, ...COMPANY_ADJUSTMENT_FIELD_OPTIONS];
-  }, [selected?.companyProfile, selectedOriginal?.companyProfile]);
-  const dirty = useMemo(() => {
-    if (!selected || !draft) return false;
-    if (selected.requestKind === "password_reset" || draft.requestKind === "password_reset") return false;
-
-    const baselineUsername =
-      selected.username ??
-      buildUniqueUsername(selected.fullName || selected.name || selected.email, existingLogins, selected.username);
-
-    return (
-      (draft.accessType ?? "") !== (selected.accessType ?? "") ||
-      (draft.username ?? "") !== baselineUsername ||
-      (draft.clientId ?? "") !== (selected.clientId ?? "") ||
-      (draft.company ?? "") !== (selected.company ?? "") ||
-      (draft.fullName ?? "") !== (selected.fullName ?? "") ||
-      (draft.email ?? "") !== (selected.email ?? "") ||
-      (draft.phone ?? "") !== (selected.phone ?? "") ||
-      (draft.jobRole ?? "") !== (selected.jobRole ?? "") ||
-      (draft.title ?? "") !== (selected.title ?? "") ||
-      (draft.description ?? "") !== (selected.description ?? "") ||
-      (draft.adminNotes ?? "") !== (selected.adminNotes ?? "")
-    );
-  }, [draft, existingLogins, selected]);
+  const adjustmentFieldOptions = useMemo(
+    () => getAdjustmentFieldOptions(selected, selectedOriginal),
+    [selected, selectedOriginal],
+  );
+  const dirty = useMemo(
+    () => isAccessRequestDraftDirty({ draft, existingLogins, selected }),
+    [draft, existingLogins, selected],
+  );
   const draftIsPasswordReset = draft?.requestKind === "password_reset";
   const selectedIsPasswordReset = selected?.requestKind === "password_reset";
   const draftProfileType =
     normalizeRequestProfileType((draft?.accessType ?? "Usuário Testing Company") as string) ?? "company_user";
   const requiresCompany = requestProfileTypeNeedsCompany(draftProfileType);
   const commentsLocked = selected?.status === "closed" || selected?.status === "rejected";
-  const missingRequiredFields =
-    !draftIsPasswordReset &&
-    (!String(draft?.fullName ?? "").trim() ||
-      !String(draft?.username ?? "").trim() ||
-      !String(draft?.email ?? "").trim() ||
-      !String(draft?.phone ?? "").trim() ||
-      !String(draft?.jobRole ?? "").trim() ||
-      !String(draft?.title ?? "").trim() ||
-      !String(draft?.description ?? "").trim() ||
-      !draft?.passwordProvided);
+  const missingRequiredFields = hasMissingRequiredFields(draft, draftIsPasswordReset);
   const acceptDisabled = !selected || !draft || accepting || missingRequiredFields || (requiresCompany && !draft.clientId);
 
   const load = useCallback(async () => {
@@ -445,122 +632,16 @@ function AccessRequestsPage() {
     setSuccessMessage(null);
 
     try {
-      const [reqRes, clientsRes, usersRes] = await Promise.all([
-        fetchWithToken("/api/admin/access-requests"),
-        fetchWithToken("/api/clients"),
-        fetchWithToken("/api/admin/users"),
-      ]);
-
-      const reqRaw = await reqRes.json().catch(() => null);
-      if (!reqRes.ok) {
-        const msg = extractMessageFromJson(reqRaw) || "Falha ao carregar solicitações";
-        const requestId = extractRequestIdFromJson(reqRaw) || reqRes.headers.get("x-request-id") || null;
-        setError(formatMessageWithRequestId(msg, requestId));
-        setItems([]);
-        return;
-      }
-
-      const reqData = unwrapEnvelopeData<Record<string, unknown>>(reqRaw) ?? (reqRaw as Record<string, unknown> | null) ?? {};
-      const rawItems = getItemsFromEnvelope<RawSupportRequest>(reqData);
-
-      const parsed: AccessRequestItem[] = rawItems.map((r) => {
-        const parsedMsg = parseFromMessage(String(r.message ?? ""), String(r.email ?? ""));
-        return {
-          id: String(r.id),
-          createdAt: String(r.created_at),
-          status: String(r.status ?? "open"),
-          email: String(parsedMsg.email ?? r.email ?? ""),
-          name: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
-          fullName: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
-          username: typeof parsedMsg.username === "string" ? parsedMsg.username : null,
-          phone: String(parsedMsg.phone ?? ""),
-          jobRole: String(parsedMsg.jobRole ?? ""),
-          accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuário Testing Company",
-          clientId: parsedMsg.clientId ?? null,
-          company: String(parsedMsg.company ?? ""),
-          companyProfile: parsedMsg.companyProfile ?? null,
-          title: String(parsedMsg.title ?? ""),
-          description: String(parsedMsg.description ?? ""),
-          notes: String(parsedMsg.notes ?? ""),
-          passwordProvided: parsedMsg.passwordProvided === true,
-          originalRequest:
-            parsedMsg.originalRequest ??
-            ({
-              email: String(parsedMsg.email ?? r.email ?? ""),
-              name: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
-              fullName: String(parsedMsg.fullName ?? parsedMsg.name ?? ""),
-              username: typeof parsedMsg.username === "string" ? parsedMsg.username : null,
-              phone: String(parsedMsg.phone ?? ""),
-              passwordHash: null,
-              jobRole: String(parsedMsg.jobRole ?? ""),
-              company: String(parsedMsg.company ?? ""),
-              clientId: parsedMsg.clientId ?? null,
-              accessType: toInternalAccessType(normalizeRequestProfileType((parsedMsg.accessType as string) ?? "") ?? "testing_company_user"),
-              profileType: normalizeRequestProfileType((parsedMsg.accessType as string) ?? "") ?? "testing_company_user",
-              title: String(parsedMsg.title ?? ""),
-              description: String(parsedMsg.description ?? ""),
-              notes: String(parsedMsg.notes ?? ""),
-              companyProfile: parsedMsg.companyProfile ?? null,
-            } satisfies AccessRequestSnapshot),
-          adjustmentRound: parsedMsg.adjustmentRound ?? 0,
-          adjustmentRequestedFields: parsedMsg.adjustmentRequestedFields ?? [],
-          adjustmentHistory: parsedMsg.adjustmentHistory ?? [],
-          lastAdjustmentAt: typeof parsedMsg.lastAdjustmentAt === "string" ? parsedMsg.lastAdjustmentAt : null,
-          lastAdjustmentDiff: Array.isArray(parsedMsg.lastAdjustmentDiff) ? parsedMsg.lastAdjustmentDiff : [],
-          rawMessage: String(r.message ?? ""),
-          adminNotes: (r.admin_notes as string | null) ?? null,
-          requestKind: parsedMsg.requestKind ?? "access_request",
-          linkedRequestId: parsedMsg.linkedRequestId ?? null,
-        };
-      });
-
-
-      const cRaw = await clientsRes.json().catch(() => null);
-      if (!clientsRes.ok) {
-        const msg = extractMessageFromJson(cRaw) || "Falha ao carregar empresas";
-        const requestId = extractRequestIdFromJson(cRaw) || clientsRes.headers.get("x-request-id") || null;
-        setError(formatMessageWithRequestId(msg, requestId));
-        setClients([]);
-      }
-
-      const cData = unwrapEnvelopeData<Record<string, unknown>>(cRaw) ?? (cRaw as Record<string, unknown> | null) ?? {};
-      const cItems = getItemsFromEnvelope<unknown>(cData);
-      const mappedClients = cItems
-        .map((c) => {
-          const rec = (c ?? null) as Record<string, unknown> | null;
-          return {
-            id: typeof rec?.id === "string" ? rec.id : "",
-            name:
-              (typeof rec?.name === "string" ? rec.name : "") ||
-              (typeof rec?.company_name === "string" ? String(rec.company_name) : ""),
-          };
-        })
-        .filter((c) => c.id && c.name);
-
-      const uRaw = await usersRes.json().catch(() => null);
-      const uData = unwrapEnvelopeData<Record<string, unknown>>(uRaw) ?? (uRaw as Record<string, unknown> | null) ?? {};
-      const uItems = getItemsFromEnvelope<UserLoginCandidate>(uData);
-      const mappedLogins = Array.from(
-        new Set(
-          uItems.flatMap((item) => {
-            const values = [item.user, item.email];
-            return values
-              .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-              .map((value) => value.trim().toLowerCase());
-          }),
-        ),
-      );
-
-      setClients(mappedClients);
-      setExistingLogins(mappedLogins);
-      setItems(parsed);
-      // Log para debugar E2E: quantos itens e status carregados
-      try {
-        console.debug("[E2E][access-requests] carregou itens:", parsed.length, parsed.map((p) => ({ id: p.id, status: p.status })));
-      } catch {}
-      setSelectedId((prev) => (prev && parsed.some((p) => p.id === prev) ? prev : parsed[0]?.id ?? null));
+      const data = await loadAccessRequestsData();
+      if (data.clientsError) setError(data.clientsError);
+      setClients(data.clients);
+      setExistingLogins(data.logins);
+      setItems(data.items);
+      debugLoadedAccessRequests(data.items);
+      setSelectedId((prev) => getNextSelectedAccessRequestId(prev, data.items));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar");
+      setItems([]);
     } finally {
       setLoading(false);
     }

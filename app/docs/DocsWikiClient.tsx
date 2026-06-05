@@ -826,7 +826,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [basePath]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -894,7 +894,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
     setEditBlocks((prev) => {
       const arr = [...prev];
       const target = i + dir;
-      if (target < 0 || target >= arr.length) return arr;
+      if (target < 0 || target >= arr.length || i < 0 || i >= arr.length) return prev;
       [arr[i], arr[target]] = [arr[target], arr[i]];
       return arr;
     });

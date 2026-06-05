@@ -491,7 +491,7 @@ export default function AdminDefeitosPage() {
                         )}
                         {d.origin === "manual" && (
                           <span className="rounded-full border border-amber-400/60 bg-amber-50 px-2 py-0.5 text-amber-700">
-                            {isPt ? "Manual" : "Manual"}
+                            Manual
                           </span>
                         )}
                       </div>

@@ -17,13 +17,13 @@ const MODULE_PATTERNS: Array<{ pattern: RegExp; module: NavModule }> = [
   { pattern: /^\/admin\/(brain)/, module: "brain" },
   { pattern: /^\/admin\/(users\/permissions|integrations|settings)/, module: "admin" },
   { pattern: /^\/automacoes/, module: "automation" },
-  { pattern: /^\/chat|\/conversas/, module: "brain" },
+  { pattern: /^\/(?:chat|conversas)/, module: "brain" },
   { pattern: /^\/kanban/, module: "operations" },
   { pattern: /^\/runs/, module: "quality" },
-  { pattern: /^\/documentos|\/documentacao/, module: "documents" },
-  { pattern: /^\/chamados|\/meus-chamados/, module: "support" },
-  { pattern: /^\/integrations|\/settings/, module: "admin" },
-  { pattern: /^\/home|^\/$/, module: "home" },
+  { pattern: /^\/(?:documentos|documentacao)/, module: "documents" },
+  { pattern: /^\/(?:chamados|meus-chamados)/, module: "support" },
+  { pattern: /^\/(?:integrations|settings)/, module: "admin" },
+  { pattern: /^(?:\/home|\/$)/, module: "home" },
 ];
 
 const COMPANY_SEGMENT_MAP: Record<string, NavModule> = {

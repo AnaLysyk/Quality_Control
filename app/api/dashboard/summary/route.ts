@@ -12,7 +12,8 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
     const rate = await rateLimit(req, `dashboard-summary:${ip}`);
     if (rate.limited) return rate.response;
   const url = new URL(req.url);
-  const slug = url.searchParams.get("slug") || (context.params && (await context.params).slug) || null;
+  const params = await context.params;
+  const slug = url.searchParams.get("slug") || params.slug || null;
   if (!slug) {
     return NextResponse.json({ error: "Empresa não informada" }, { status: 400 });
   }

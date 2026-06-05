@@ -814,7 +814,7 @@ export default function SettingsProfilePage() {
   const companyScopeKey = !loading && hasCompanyContext ? currentClientSlug ?? currentClientId ?? homeCompanyId : null;
   const uiRoleLabel = roleLabel(roleValue);
   const userStatusLabel = statusLabel(active, status, t);
-  const directDeleteModalTitle = isGlobalProfile ? t("settings.deleteProfile") : t("settings.deleteProfile");
+  const directDeleteModalTitle = t("settings.deleteProfile");
   const directDeleteModalDescription = t("settings.deleteProfileConfirm");
 
   const uniqueCompanies = useMemo(() => {

@@ -68,7 +68,7 @@ type TestAssetsFixture = {
  *   await biometricPage.uploadFinger("right-index", pack.get("right_index").filePath);
  */
 export const test = base.extend<{ testAssets: TestAssetsFixture }>({
-  testAssets: async ({ request }, use) => {
+  testAssets: async ({ request }, provideFixture) => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "tc-assets-"));
 
     /**
@@ -226,7 +226,7 @@ export const test = base.extend<{ testAssets: TestAssetsFixture }>({
       return asset as ResolvedAsset & { filePath: string };
     }
 
-    await use({
+    await provideFixture({
       resolve,
       resolveAsBuffer,
       resolveAsBase64,

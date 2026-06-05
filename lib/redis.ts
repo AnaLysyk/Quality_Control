@@ -198,7 +198,7 @@ function patternToRegex(pattern: string): RegExp {
 }
 
 function escapeRegex(value: string): string {
-  return value.replace(/[-[\]{}()+?.,\\^$|#]/g, "\\$0");
+  return value.replace(/[-[\]{}()+?.,\\^$|#]/g, "\\$&");
 }
 
 type RedisClient = Redis | InMemoryRedis | PostgresRedis;

@@ -706,8 +706,6 @@ export async function getRelatedMemories(
       const ids = Array.isArray(m.relatedNodeIds) ? m.relatedNodeIds : [];
       return (ids as unknown[]).some((id) => allNodeIds.includes(String(id)));
     })
-
-    return memories
   } catch (error) {
     console.error('Error in getRelatedMemories:', error)
     throw error

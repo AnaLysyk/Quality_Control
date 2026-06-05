@@ -1510,9 +1510,9 @@ export default function CompanyDefectsPage() {
       ) {
         return copy.timeline.notice;
       }
-      return locale === "pt-BR" ? message : message;
+      return message;
     },
-    [copy.timeline.notice, locale],
+    [copy.timeline.notice],
   );
 
   const localizeClientError = useCallback(
@@ -1927,12 +1927,7 @@ export default function CompanyDefectsPage() {
       const projectCode = normalizeProjectCode(projectValue) || null;
       const key = `${normalizeText(name)}:${normalizeProjectKey(projectCode)}`;
       const current = catalog.get(key);
-      const nextSource =
-        !current || current.source === source
-          ? source
-          : current.source === "mixed" || source === "mixed"
-            ? "mixed"
-            : "mixed";
+      const nextSource = !current || current.source === source ? source : "mixed";
 
       catalog.set(key, {
         name,

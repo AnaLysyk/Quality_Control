@@ -67,7 +67,6 @@ function hasGlobalCompanyAccess(auth: Pick<AuthContext, "isGlobalAdmin" | "role"
 const STORE_PATH = path.join(getJsonStoreDir(), "company-documents-store.json");
 const HISTORY_PATH = path.join(getJsonStoreDir(), "company-documents-history.json");
 const LOCAL_UPLOAD_ROOT = path.join(getJsonStoreDir(), "company-documents-files");
-let memoryDocumentsStore: { items: CompanyDocumentItem[] } = { items: [] };
 let memoryHistoryStore: { items: DocumentHistoryEvent[] } = { items: [] };
 
 async function ensureStore() {
@@ -149,11 +148,11 @@ async function readStore(): Promise<{ items: CompanyDocumentItem[] }> {
   } catch {
     return { items: [] };
   }
-  return { items: (memoryDocumentsStore.items ?? []).map(normalizeDocumentItem) };
 }
 
 async function writeStore(next: { items: CompanyDocumentItem[] }) {
-  memoryDocumentsStore = { items: next.items ?? [] };
+  await ensureStore();
+  await fs.writeFile(STORE_PATH, JSON.stringify({ items: next.items ?? [] }, null, 2), "utf8");
 }
 
 async function readHistory(): Promise<{ items: DocumentHistoryEvent[] }> {

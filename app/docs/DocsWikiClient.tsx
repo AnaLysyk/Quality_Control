@@ -1347,7 +1347,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
 
       {deleteTarget !== null && (
         <DeleteModal
-          title={deleteTarget.type === "category" ? `"${deleteTarget.item.title}"` : `"${deleteTarget.item.title}"`}
+          title={`"${deleteTarget.item.title}"`}
           warning={deleteTarget.type === "category" ? "Todos os documentos desta categoria também serão deletados." : undefined}
           onConfirm={deleteTarget.type === "category"
             ? () => handleDeleteCategory(deleteTarget.item.id)

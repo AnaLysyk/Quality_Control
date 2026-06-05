@@ -49,7 +49,7 @@ function collectFlags(paths) {
     }
   }
 
-  return Array.from(flags).sort();
+  return Array.from(flags).sort((a, b) => a.localeCompare(b));
 }
 
 function collectHotspots(paths) {

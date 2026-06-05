@@ -617,7 +617,9 @@ export default function BrainGraphView() {
   );
 
   // Node types present for filter buttons
-  const nodeTypes = Array.from(new Set(nodes.map((n) => n.type))).sort();
+  const nodeTypes = Array.from(new Set(nodes.map((n) => n.type))).sort((left, right) =>
+    left.localeCompare(right),
+  );
 
   // Selected node context
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);

@@ -2,9 +2,11 @@ import { normalizeLegacyRole, SYSTEM_ROLES } from "../lib/auth/roles";
 import { ROLE_DEFAULTS } from "../lib/permissions/roleDefaults";
 import { canReviewAccessRequests, canReviewerAccessQueue } from "../lib/requestReviewAccess";
 
+const compareText = (left: string, right: string) => left.localeCompare(right);
+
 describe("system role contract", () => {
   it("exposes only the canonical profile roles", () => {
-    expect(Object.values(SYSTEM_ROLES).sort()).toEqual([
+    expect(Object.values(SYSTEM_ROLES).sort(compareText)).toEqual([
       "company_user",
       "empresa",
       "leader_tc",
@@ -14,7 +16,7 @@ describe("system role contract", () => {
   });
 
   it("keeps permission defaults keyed only by canonical roles", () => {
-    expect(Object.keys(ROLE_DEFAULTS).sort()).toEqual(Object.values(SYSTEM_ROLES).sort());
+    expect(Object.keys(ROLE_DEFAULTS).sort(compareText)).toEqual(Object.values(SYSTEM_ROLES).sort(compareText));
   });
 
   it("keeps access-request review capacity on leader TC, not support", () => {

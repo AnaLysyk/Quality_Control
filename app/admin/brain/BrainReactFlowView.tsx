@@ -204,7 +204,9 @@ export default function BrainReactFlowView() {
   );
 
   const typeOptions = useMemo(() => {
-    const types = Array.from(new Set(nodesApi.map((node) => node.type))).sort();
+    const types = Array.from(new Set(nodesApi.map((node) => node.type))).sort((left, right) =>
+      left.localeCompare(right),
+    );
     return ["all", ...types];
   }, [nodesApi]);
 

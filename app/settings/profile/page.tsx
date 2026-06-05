@@ -298,9 +298,13 @@ function normalizeComparableText(value?: string | null) {
   return (value ?? "").trim();
 }
 
+function compareText(left: string, right: string) {
+  return left.localeCompare(right);
+}
+
 function areStringListsEqual(left: string[] | null | undefined, right: string[] | null | undefined) {
-  const normalizedLeft = (left ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort();
-  const normalizedRight = (right ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort();
+  const normalizedLeft = (left ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort(compareText);
+  const normalizedRight = (right ?? []).map((item) => item.trim().toUpperCase()).filter(Boolean).sort(compareText);
   if (normalizedLeft.length !== normalizedRight.length) return false;
   return normalizedLeft.every((value, index) => value === normalizedRight[index]);
 }

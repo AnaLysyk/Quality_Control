@@ -9,6 +9,8 @@ import {
   processBrianImpulse,
 } from "@/lib/brain/contextual";
 
+const compareText = (left: string, right: string) => left.localeCompare(right);
+
 describe("Brian contextual foundation", () => {
   it("normalizes market/system aliases into canonical Brian contracts", () => {
     expect(normalizeImpulseType("bugCreated")).toBe("defect.created");
@@ -135,8 +137,12 @@ describe("Brian contextual foundation", () => {
     const second = processBrianImpulse(impulse, { applyRbac: false });
 
     expect(firstOutbox.idempotencyKey).toBe(secondOutbox.idempotencyKey);
-    expect(first.neurons.map((neuron) => neuron.id).sort()).toEqual(second.neurons.map((neuron) => neuron.id).sort());
-    expect(first.synapses.map((synapse) => synapse.id).sort()).toEqual(second.synapses.map((synapse) => synapse.id).sort());
+    expect(first.neurons.map((neuron) => neuron.id).sort(compareText)).toEqual(
+      second.neurons.map((neuron) => neuron.id).sort(compareText),
+    );
+    expect(first.synapses.map((synapse) => synapse.id).sort(compareText)).toEqual(
+      second.synapses.map((synapse) => synapse.id).sort(compareText),
+    );
   });
 
   it("requires policy-approved capabilities before sensitive Brian actions", () => {

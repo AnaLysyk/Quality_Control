@@ -332,6 +332,22 @@ export default function BrainReactFlowView() {
     ]);
   }, []);
 
+  const runCommand = useCallback(
+    (rawInput: string, confirmed = false) => {
+      submitCommand(rawInput, confirmed).catch((error) => {
+        setCommandLog((current) => [
+          ...current,
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            role: "system",
+            text: error instanceof Error ? error.message : "Falha ao executar comando.",
+          },
+        ]);
+      });
+    },
+    [submitCommand],
+  );
+
   const visibleNodesSorted = useMemo(
     () => [...filteredNodes].sort((a, b) => a.label.localeCompare(b.label)),
     [filteredNodes],
@@ -591,7 +607,7 @@ export default function BrainReactFlowView() {
                     onKeyDown={(event) => {
                       if (event.key === "Enter") {
                         event.preventDefault();
-                        void submitCommand(commandInput);
+                        runCommand(commandInput);
                         setCommandInput("");
                       }
                     }}
@@ -601,7 +617,7 @@ export default function BrainReactFlowView() {
                   <button
                     type="button"
                     onClick={() => {
-                      void submitCommand(commandInput);
+                      runCommand(commandInput);
                       setCommandInput("");
                     }}
                     className="rounded-lg bg-[#011848] px-3 text-xs font-semibold text-white"
@@ -612,7 +628,7 @@ export default function BrainReactFlowView() {
                 {awaitingConfirmation ? (
                   <button
                     type="button"
-                    onClick={() => void submitCommand(awaitingConfirmation.command, true)}
+                    onClick={() => runCommand(awaitingConfirmation.command, true)}
                     className="mt-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800"
                   >
                     Confirmar comando pendente

@@ -50,7 +50,7 @@ export async function GET(
     }
 
     // Construir contexto (valida permissões)
-    const context = await buildProfileRuntimeContext({
+    const context = buildProfileRuntimeContext({
       viewer,
       entityType: "user",
       entityId: userId,
@@ -127,7 +127,7 @@ export async function PATCH(
     }
 
     // Construir contexto (valida permissões)
-    const context = await buildProfileRuntimeContext({
+    const context = buildProfileRuntimeContext({
       viewer,
       entityType: "user",
       entityId: userId,

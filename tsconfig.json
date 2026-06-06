@@ -41,6 +41,15 @@
       "@/components/*": [
         "./app/components/*"
       ],
+      "@/features/*": [
+        "./src/features/*"
+      ],
+      "@/backend/*": [
+        "./src/backend/*"
+      ],
+      "@/shared/*": [
+        "./src/shared/*"
+      ],
       "@/design-system/*": [
         "./src/design-system/*"
       ],

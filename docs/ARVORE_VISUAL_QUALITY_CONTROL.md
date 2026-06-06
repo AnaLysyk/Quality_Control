@@ -30,6 +30,33 @@ Hoje a navegacao ja tem um centro importante:
 
 Essa e a base que deve guiar a reorganizacao. O `app/` continua sendo rota do Next.js.
 
+## Implementacao inicial
+
+A primeira camada organizada ja existe em:
+
+```text
+src/features/
+  menu-lateral/
+    catalogo/
+      menuLateral.catalog.ts        -> reexporta o NAV_CATALOG real
+    acessos/
+      filtrarMenuPorPerfil.ts       -> filtra catalogo por perfil/permissao
+      resolverPerfilVisual.ts       -> traduz usuario/perfil para leitura visual
+    hooks/
+      useMenuLateral.ts             -> ponto de entrada do hook do menu
+    componentes/
+      Sidebar.tsx                   -> ponto de entrada da sidebar atual
+      SidebarItem.tsx               -> ponto de entrada do item atual
+```
+
+O shell principal ja importa a Sidebar por essa feature:
+
+- `app/components/AppShell.tsx`
+
+A Sidebar atual tambem ja consome o hook organizado:
+
+- `app/components/Sidebar.tsx`
+
 ## Front-end visto pelo menu lateral
 
 Esta arvore representa o front-end do jeito que a pessoa ve o sistema: pelo menu lateral.

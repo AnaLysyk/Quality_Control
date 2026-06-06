@@ -18,8 +18,12 @@ jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock("../components/CreateSupportTicketButton", () => () => <div data-testid="create-ticket" />);
-jest.mock("../components/LanguageSelector", () => () => <div data-testid="lang-selector" />);
+jest.mock("../components/CreateSupportTicketButton", () => function CreateSupportTicketButtonMock() {
+  return <div data-testid="create-ticket" />;
+});
+jest.mock("../components/LanguageSelector", () => function LanguageSelectorMock() {
+  return <div data-testid="lang-selector" />;
+});
 
 describe("UserProfileMenu - Componente de Frontend e Fluxo Auth", () => {
   const mockReplace = jest.fn();

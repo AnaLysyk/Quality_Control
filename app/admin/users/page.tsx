@@ -14,10 +14,13 @@ import {
 } from "react-icons/fi";
 
 import Breadcrumb from "@/components/Breadcrumb";
+import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { fetchApi } from "@/lib/api";
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 import { UserDetailsModal } from "@/admin/users/components/UserDetailsModal";
+import { canAccess } from "@/lib/permissions/can-access";
 import {
   getFixedProfileLabel,
   getFixedProfileTone,
@@ -161,15 +164,18 @@ function UserCard({
   showCompanyField = true,
 }: {
   user: UserItem;
-  onSelect: (user: UserItem) => void;
+  onSelect?: (user: UserItem) => void;
   companyLabel?: string | null;
   showCompanyField?: boolean;
 }) {
   return (
     <button
       type="button"
-      onClick={() => onSelect(user)}
-      className="group w-full rounded-[22px] border border-(--tc-border,#d7deea) bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:border-(--tc-accent,#ef0001)/22 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5"
+      onClick={() => onSelect?.(user)}
+      disabled={!onSelect}
+      className={`group w-full rounded-[22px] border border-(--tc-border,#d7deea) bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition sm:px-5 sm:py-5 ${
+        onSelect ? "hover:border-(--tc-accent,#ef0001)/22 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]" : "cursor-default"
+      }`}
     >
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-5">
         <div className="flex min-w-0 items-start gap-3 sm:gap-4">
@@ -243,7 +249,7 @@ function CompanyUsersSection({
   onSelect,
 }: {
   company: CompanySection;
-  onSelect: (user: UserItem) => void;
+  onSelect?: (user: UserItem) => void;
 }) {
   return (
     <section className="rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-3.5 sm:p-4">
@@ -273,6 +279,15 @@ function CompanyUsersSection({
 export default function AdminUsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { accessContext, loading: accessLoading } = usePermissionAccess();
+  const userAccess = useMemo(
+    () => ({
+      canViewUsers: canAccess(accessContext, "users.view"),
+      canCreateUsers: canAccess(accessContext, "users.create"),
+      canEditUsers: canAccess(accessContext, "users.edit"),
+    }),
+    [accessContext],
+  );
   const [users, setUsers] = useState<UserItem[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -286,6 +301,8 @@ export default function AdminUsersPage() {
   const [createRolePreset, setCreateRolePreset] = useState<FixedProfileKind | null>(null);
 
   const load = useCallback(async () => {
+    if (!userAccess.canViewUsers) return;
+
     setLoading(true);
 
     setError(null);
@@ -321,7 +338,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, userAccess.canViewUsers]);
 
   const loadUsersAndCompanies = useCallback(() => {
     load().catch((err) => {
@@ -333,8 +350,12 @@ export default function AdminUsersPage() {
   }, [load]);
 
   useEffect(() => {
+    if (accessLoading || !userAccess.canViewUsers) {
+      setLoading(false);
+      return;
+    }
     loadUsersAndCompanies();
-  }, [loadUsersAndCompanies]);
+  }, [accessLoading, loadUsersAndCompanies, userAccess.canViewUsers]);
 
 
   const sortUsers = useCallback(
@@ -356,7 +377,7 @@ export default function AdminUsersPage() {
 
     setCreateRolePreset(normalizeFixedProfileKind(roleParam));
 
-    if (modalParam === "create" || searchParams.get("create") === "1") {
+    if (userAccess.canCreateUsers && (modalParam === "create" || searchParams.get("create") === "1")) {
       const token = searchParams.toString();
       if (openCreateTokenRef.current !== token) {
         openCreateTokenRef.current = token;
@@ -364,7 +385,7 @@ export default function AdminUsersPage() {
         window.history.replaceState({}, "", window.location.pathname);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, userAccess.canCreateUsers]);
 
   const searchedUsers = useMemo(() => {
     const term = normalize(search);
@@ -554,6 +575,21 @@ export default function AdminUsersPage() {
           : adminUsers.length;
   const hasSearch = !!search.trim();
 
+  if (accessLoading) {
+    return <AccessDeniedState state="loading" />;
+  }
+
+  if (!userAccess.canViewUsers) {
+    return (
+      <AccessDeniedState
+        moduleName="Usuários"
+        requiredPermission="users.view"
+        title="Acesso à gestão de usuários negado"
+        description="Seu perfil não possui permissão para consultar os usuários da plataforma."
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto flex w-full max-w-550 flex-col gap-4 px-0 py-0">
@@ -630,13 +666,15 @@ export default function AdminUsersPage() {
                   />
                 </label>
 
-                <button
-                  type="button"
-                  onClick={() => setOpenCreate(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-70"
-                >
-                  <FiUserPlus className="h-4 w-4" /> {createModalConfig.submitLabel}
-                </button>
+                {userAccess.canCreateUsers ? (
+                  <button
+                    type="button"
+                    onClick={() => setOpenCreate(true)}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-70"
+                  >
+                    <FiUserPlus className="h-4 w-4" /> {createModalConfig.submitLabel}
+                  </button>
+                ) : null}
               </div>
             </div>
 
@@ -713,7 +751,11 @@ export default function AdminUsersPage() {
                                 </div>
                               ) : (
                                 group.accountSections.map((company) => (
-                                  <CompanyUsersSection key={`company-account-${group.id}-${company.id}`} company={company} onSelect={setSelectedUser} />
+                                  <CompanyUsersSection
+                                    key={`company-account-${group.id}-${company.id}`}
+                                    company={company}
+                                    onSelect={userAccess.canEditUsers ? setSelectedUser : undefined}
+                                  />
                                 ))
                               )}
                             </section>
@@ -730,7 +772,11 @@ export default function AdminUsersPage() {
                                 </div>
                               ) : (
                                 group.sections.map((company) => (
-                                  <CompanyUsersSection key={`${group.id}-${company.id}`} company={company} onSelect={setSelectedUser} />
+                                  <CompanyUsersSection
+                                    key={`${group.id}-${company.id}`}
+                                    company={company}
+                                    onSelect={userAccess.canEditUsers ? setSelectedUser : undefined}
+                                  />
                                 ))
                               )}
                             </section>
@@ -777,7 +823,7 @@ export default function AdminUsersPage() {
                               <UserCard
                                 key={`${group.id}-${user.id}`}
                                 user={user}
-                                onSelect={setSelectedUser}
+                                onSelect={userAccess.canEditUsers ? setSelectedUser : undefined}
                                 companyLabel={user.company_names?.[0] || "Testing Company"}
                               />
                             ))}
@@ -821,7 +867,12 @@ export default function AdminUsersPage() {
                         >
                           <UserCardGrid>
                             {group.users.map((user) => (
-                              <UserCard key={`${group.id}-${user.id}`} user={user} onSelect={setSelectedUser} companyLabel={null} />
+                              <UserCard
+                                key={`${group.id}-${user.id}`}
+                                user={user}
+                                onSelect={userAccess.canEditUsers ? setSelectedUser : undefined}
+                                companyLabel={null}
+                              />
                             ))}
                           </UserCardGrid>
                         </UserStatusSection>
@@ -863,7 +914,12 @@ export default function AdminUsersPage() {
                         >
                           <UserCardGrid>
                             {group.users.map((user) => (
-                              <UserCard key={`${group.id}-${user.id}`} user={user} onSelect={setSelectedUser} companyLabel={null} />
+                              <UserCard
+                                key={`${group.id}-${user.id}`}
+                                user={user}
+                                onSelect={userAccess.canEditUsers ? setSelectedUser : undefined}
+                                companyLabel={null}
+                              />
                             ))}
                           </UserCardGrid>
                         </UserStatusSection>
@@ -877,40 +933,44 @@ export default function AdminUsersPage() {
         </section>
       </div>
 
-      <CreateUserModal
-        open={openCreate}
-        clientId={null}
-        clients={companies}
-        companyOptional={createModalConfig.companyOptional}
-        showCompanyField={createModalConfig.showCompanyField}
-        requireCompanySelection={createModalConfig.requireCompanySelection}
-        initialRole={createRolePreset ?? createModalConfig.initialRole}
-        lockRole={createModalConfig.lockRole}
-        allowedRoles={createModalConfig.allowedRoles}
-        title={createModalConfig.title}
-        subtitle={createModalConfig.subtitle}
-        submitLabel={createModalConfig.submitLabel}
-        onClose={() => setOpenCreate(false)}
-        onCreated={async () => {
-          setOpenCreate(false);
-          await load();
-        }}
-      />
+      {userAccess.canCreateUsers ? (
+        <CreateUserModal
+          open={openCreate}
+          clientId={null}
+          clients={companies}
+          companyOptional={createModalConfig.companyOptional}
+          showCompanyField={createModalConfig.showCompanyField}
+          requireCompanySelection={createModalConfig.requireCompanySelection}
+          initialRole={createRolePreset ?? createModalConfig.initialRole}
+          lockRole={createModalConfig.lockRole}
+          allowedRoles={createModalConfig.allowedRoles}
+          title={createModalConfig.title}
+          subtitle={createModalConfig.subtitle}
+          submitLabel={createModalConfig.submitLabel}
+          onClose={() => setOpenCreate(false)}
+          onCreated={async () => {
+            setOpenCreate(false);
+            await load();
+          }}
+        />
+      ) : null}
 
-      <UserDetailsModal
-        open={!!selectedModalUser}
-        user={selectedModalUser}
-        clients={companies}
-        onClose={() => setSelectedUser(null)}
-        onSaved={async () => {
-          setSelectedUser(null);
-          await load();
-        }}
-        onDeleted={async () => {
-          setSelectedUser(null);
-          await load();
-        }}
-      />
+      {userAccess.canEditUsers ? (
+        <UserDetailsModal
+          open={!!selectedModalUser}
+          user={selectedModalUser}
+          clients={companies}
+          onClose={() => setSelectedUser(null)}
+          onSaved={async () => {
+            setSelectedUser(null);
+            await load();
+          }}
+          onDeleted={async () => {
+            setSelectedUser(null);
+            await load();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

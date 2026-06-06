@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   FiAlertTriangle,
   FiCopy,
@@ -16,9 +15,10 @@ import {
   FiUsers,
   FiX,
 } from "react-icons/fi";
-import { useAuthUser } from "@/hooks/useAuthUser";
+import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { resolveAvatarEmoji } from "@/lib/avatarCatalog";
 import { editableProfileNeedsCompany, normalizeEditableProfileRole, type EditableProfileRole } from "@/lib/editableProfileRoles";
 import {
@@ -37,6 +37,7 @@ import {
   type PermissionMatrix,
   type PermissionOverride,
 } from "@/lib/permissionMatrix";
+import { canAccess } from "@/lib/permissions/can-access";
 import { useI18n } from "@/hooks/useI18n";
 
 type AdminUserItem = {
@@ -257,25 +258,6 @@ function isValidEmailAddress(value?: string | null) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(source);
 }
 
-function canManageInstitutionalProfiles(
-  user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
-) {
-  const resolvedRole =
-    normalizeEditableProfileRole(user?.role);
-  const resolvedPermissionRole =
-    normalizeEditableProfileRole(user?.permissionRole);
-  const resolvedCompanyRole =
-    normalizeEditableProfileRole(user?.companyRole);
-  return (
-    resolvedRole === "leader_tc" ||
-    resolvedPermissionRole === "leader_tc" ||
-    resolvedCompanyRole === "leader_tc" ||
-    resolvedRole === "technical_support" ||
-    resolvedPermissionRole === "technical_support" ||
-    resolvedCompanyRole === "technical_support"
-  );
-}
-
 function companyLabel(user: AdminUserItem, isPt = true) {
   if (Array.isArray(user.company_names) && user.company_names.length > 1) {
     return `${user.company_names[0]} +${user.company_names.length - 1}`;
@@ -481,7 +463,24 @@ function SurfaceModal(props: {
 export default function PermissionsPage() {
   const { language } = useI18n();
   const isPt = language === "pt-BR";
-  const { user: authUser, refreshUser } = useAuthUser();
+  const {
+    user: authUser,
+    accessContext,
+    refreshUser,
+    loading: authLoading,
+  } = usePermissionAccess();
+  const userAccess = useMemo(
+    () => ({
+      canViewPermissions: canAccess(accessContext, "permissions.view"),
+      canEditPermissions: canAccess(accessContext, "permissions.edit"),
+      canResetPermissions: canAccess(accessContext, "permissions.reset"),
+      canEditUsers: canAccess(accessContext, "users.edit"),
+      canManagePrivilegedProfiles:
+        canAccess(accessContext, "users.edit") &&
+        canAccess(accessContext, "permissions.edit"),
+    }),
+    [accessContext],
+  );
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -513,7 +512,7 @@ export default function PermissionsPage() {
   const userSearchInputRef = useRef<HTMLInputElement | null>(null);
   const modulesPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const canManageProfiles = useMemo(() => canManageInstitutionalProfiles(authUser), [authUser]);
+  const canManageProfiles = userAccess.canManagePrivilegedProfiles;
   const canCreateGlobal = useMemo(() => {
     const fullName = createGlobalDraft.fullName.trim();
     const user = createGlobalDraft.user.trim();
@@ -605,9 +604,14 @@ export default function PermissionsPage() {
   }
 
   useEffect(() => {
+    if (authLoading || !userAccess.canViewPermissions) {
+      setUsersLoading(false);
+      setCompaniesLoading(false);
+      return;
+    }
     void loadUsers();
     void loadCompanies();
-  }, []);
+  }, [authLoading, userAccess.canViewPermissions]);
 
   const filteredUsers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -678,9 +682,9 @@ export default function PermissionsPage() {
   }, [filteredUsers, selectedUserId]);
 
   useEffect(() => {
-    if (!selectedUserId) return;
+    if (!selectedUserId || !userAccess.canViewPermissions) return;
     void loadPermissions(selectedUserId);
-  }, [selectedUserId]);
+  }, [selectedUserId, userAccess.canViewPermissions]);
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
@@ -794,12 +798,13 @@ export default function PermissionsPage() {
     [companyDraft, originalCompanyId, originalRole, profileDraft],
   );
   const canEditProfileBase = useMemo(() => {
+    if (!userAccess.canEditUsers || !userAccess.canEditPermissions) return false;
     if (canManageProfiles) return true;
     return (
       profileDraft !== "leader_tc" &&
       profileDraft !== "technical_support"
     );
-  }, [canManageProfiles, profileDraft]);
+  }, [canManageProfiles, profileDraft, userAccess.canEditPermissions, userAccess.canEditUsers]);
 
   const hasDraftChanges = hasPermissionChanges || profileMetaChanged;
 
@@ -1071,7 +1076,7 @@ export default function PermissionsPage() {
   }
 
   async function handleSave() {
-    if (!selectedUserId || !selectedUser) return;
+    if (!userAccess.canEditPermissions || !selectedUserId || !selectedUser) return;
 
     if (roleNeedsCompany(profileDraft) && !companyDraft) {
       setPanelError(isPt ? "Selecione uma empresa para aplicar esse perfil." : "Select a company to apply this profile.");
@@ -1136,7 +1141,7 @@ export default function PermissionsPage() {
   }
 
   function handleResetDraft() {
-    if (!selectedUser) return;
+    if (!userAccess.canResetPermissions || !selectedUser) return;
     setPanelError(null);
     setMessage(null);
 
@@ -1152,8 +1157,28 @@ export default function PermissionsPage() {
   }
 
   function openRestoreModal() {
+    if (!userAccess.canResetPermissions) return;
     setPanelError(null);
     setRestoreModalOpen(true);
+  }
+
+  if (authLoading) {
+    return <AccessDeniedState state="loading" />;
+  }
+
+  if (!userAccess.canViewPermissions) {
+    return (
+      <AccessDeniedState
+        moduleName={isPt ? "Permissões" : "Permissions"}
+        requiredPermission="permissions.view"
+        title={isPt ? "Acesso à gestão de permissões negado" : "Permission management access denied"}
+        description={
+          isPt
+            ? "Seu perfil não possui permissão para consultar a matriz de acesso dos usuários."
+            : "Your profile cannot view the user access matrix."
+        }
+      />
+    );
   }
 
   return (
@@ -1178,6 +1203,11 @@ export default function PermissionsPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {!userAccess.canEditPermissions ? (
+                <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white">
+                  {isPt ? "Modo somente leitura" : "Read-only mode"}
+                </span>
+              ) : null}
               <button
                 type="button"
                 onClick={() => {
@@ -1461,14 +1491,16 @@ export default function PermissionsPage() {
                     >
                       {isPt ? "Permissões ativas" : "Active permissions"}: {totalActiveActions}
                     </button>
-                    <button
-                      type="button"
-                      onClick={openRestoreModal}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/10 px-3 py-1.5 font-medium text-white transition hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-                    >
-                      <FiRotateCcw size={14} />
-                      {isPt ? "Restaurar padrão" : "Restore default"}
-                    </button>
+                    {userAccess.canResetPermissions ? (
+                      <button
+                        type="button"
+                        onClick={openRestoreModal}
+                        className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/10 px-3 py-1.5 font-medium text-white transition hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                      >
+                        <FiRotateCcw size={14} />
+                        {isPt ? "Restaurar padrão" : "Restore default"}
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               </header>
@@ -1606,12 +1638,13 @@ export default function PermissionsPage() {
                                   <input
                                     type="checkbox"
                                     checked={checked}
+                                    disabled={!userAccess.canEditPermissions}
                                     onChange={(event) =>
                                       setDraftOverride((current) =>
                                         toggleOverride(roleDefaultsPreview, current, activeModule.id, action, event.target.checked),
                                       )
                                     }
-                                    className="h-4 w-4 rounded border-(--tc-border) self-end sm:self-auto accent-(--tc-accent)"
+                                    className="h-4 w-4 rounded border-(--tc-border) self-end accent-(--tc-accent) disabled:cursor-not-allowed disabled:opacity-50 sm:self-auto"
                                   />
                                 </label>
                               );
@@ -1638,15 +1671,17 @@ export default function PermissionsPage() {
                             ? "Sem alterações pendentes"
                             : "No pending changes"}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => void handleSave()}
-                        disabled={saving || panelLoading || !hasDraftChanges || (roleNeedsCompany(profileDraft) && !companyDraft)}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.18)] disabled:opacity-60 [background:linear-gradient(135deg,var(--tc-accent)_0%,var(--tc-accent-hover)_100%)]"
-                      >
-                        <FiSave size={16} />
-                        {saving ? (isPt ? "Salvando..." : "Saving...") : (isPt ? "Salvar alterações" : "Save changes")}
-                      </button>
+                      {userAccess.canEditPermissions ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleSave()}
+                          disabled={saving || panelLoading || !hasDraftChanges || (roleNeedsCompany(profileDraft) && !companyDraft)}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.18)] disabled:opacity-60 [background:linear-gradient(135deg,var(--tc-accent)_0%,var(--tc-accent-hover)_100%)]"
+                        >
+                          <FiSave size={16} />
+                          {saving ? (isPt ? "Salvando..." : "Saving...") : (isPt ? "Salvar alterações" : "Save changes")}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </section>

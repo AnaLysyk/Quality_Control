@@ -7,7 +7,7 @@ import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { NAV_CATALOG, type NavItemDef, type NavModuleDef } from "@/lib/navigation/navigationCatalog";
-import { buildNavigationForUser } from "@/lib/navigation/navigationPermissions";
+import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/navigationPermissions";
 import type { SystemRole } from "@/lib/auth/roles";
 
 function resolveItemHref(
@@ -15,10 +15,15 @@ function resolveItemHref(
   companySlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
 ): string | undefined {
-  if (item.companyRoute && companySlug) {
-    return buildCompanyPathForAccess(companySlug, item.companyRoute, companyRouteInput);
+  const mappedPath = getNavigationRoute(item)?.path;
+  if (mappedPath?.includes("/empresas/[slug]/")) {
+    if (!companySlug) return item.href;
+    const companyRoute = mappedPath.split("/empresas/[slug]/")[1]?.split("?")[0];
+    if (companyRoute) {
+      return buildCompanyPathForAccess(companySlug, companyRoute, companyRouteInput);
+    }
   }
-  return item.href;
+  return mappedPath ?? item.href;
 }
 
 function resolveModuleItems(
@@ -28,6 +33,7 @@ function resolveModuleItems(
 ): NavModuleDef {
   return {
     ...mod,
+    href: getNavigationRoute(mod)?.path ?? mod.href,
     items: mod.items.map((item) => ({
       ...item,
       href: resolveItemHref(item, companySlug, companyRouteInput),
@@ -36,7 +42,7 @@ function resolveModuleItems(
 }
 
 export function useNavigationItems() {
-  const { user, loading, permissions } = usePermissionAccess();
+  const { user, loading, permissions, accessContext } = usePermissionAccess();
   const { activeClientSlug } = useClientContext();
 
   const normalizedRole = useMemo<SystemRole | null>(() => {
@@ -120,13 +126,14 @@ export function useNavigationItems() {
         NAV_CATALOG.filter((m) => CLIENT_MODULES.has(m.id)),
         effectiveRole ?? SYSTEM_ROLES.COMPANY_USER,
         permissions,
+        accessContext,
       );
     } else {
-      filtered = buildNavigationForUser(NAV_CATALOG, roleForFiltering, permissions);
+      filtered = buildNavigationForUser(NAV_CATALOG, roleForFiltering, permissions, accessContext);
     }
 
     return filtered.map((mod) => resolveModuleItems(mod, companySlug, companyRouteInput));
-  }, [user, isClientProfile, effectiveRole, roleForFiltering, permissions, companySlug, companyRouteInput]);
+  }, [user, isClientProfile, effectiveRole, roleForFiltering, permissions, accessContext, companySlug, companyRouteInput]);
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }

@@ -47,6 +47,7 @@ export type MockAuthOptions = {
   clientSlug?: string;
   clientSlugs?: string[];
   isGlobalAdmin?: boolean;
+  permissions?: Record<string, string[]>;
   name?: string;
   email?: string;
 };
@@ -91,6 +92,7 @@ function buildMockMePayload(options: MockAuthOptions) {
     clientSlug: options.clientSlug ?? effectiveCompanySlug,
     clientSlugs: options.clientSlugs ?? companySlugs,
     isGlobalAdmin: options.isGlobalAdmin === true,
+    permissions: options.permissions,
     defaultClientSlug: options.clientSlug ?? effectiveCompanySlug,
   };
 
@@ -229,4 +231,3 @@ export async function mockAuth(context: BrowserContext, options: MockAuthOptions
     });
   });
 }
-

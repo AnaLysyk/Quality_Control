@@ -291,6 +291,7 @@ export type CreateTestCaseInput = {
   preconditions?: string;
   postconditions?: string;
   type?: TestCaseType;
+  source?: TestCaseSource;
   status?: TestCaseStatus;
   priority?: TestCasePriority;
   severity?: TestCasePriority;
@@ -312,3 +313,4 @@ export type CreateTestCaseInput = {
     notes?: string | null;
   }>;
 };
+

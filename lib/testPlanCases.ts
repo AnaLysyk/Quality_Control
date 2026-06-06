@@ -8,7 +8,7 @@ export type TestPlanCaseStep = {
 export type TestPlanAutomationState = {
   enabled: boolean;
   status: "not_started" | "draft" | "published";
-  source?: "qase" | "local" | "automation" | null;
+  source?: TestPlanSource | null;
   linkedAt: string | null;
   updatedAt: string | null;
   publishedAt: string | null;
@@ -24,7 +24,7 @@ export type TestPlanCaseAutomation = {
   publishedAt: string | null;
 };
 
-export type TestPlanSource = "qase" | "local" | "automation";
+export type TestPlanSource = "qase" | "local" | "automation" | "manual";
 
 export type TestPlanCase = {
   id: string;
@@ -232,7 +232,7 @@ export function normalizeTestPlanAutomationState(
   const status = ["draft", "published"].includes(String(record.status))
     ? (String(record.status) as "draft" | "published")
     : "not_started";
-  const source = ["qase", "local", "automation"].includes(String(record.source))
+  const source = ["qase", "local", "automation", "manual"].includes(String(record.source))
     ? (String(record.source) as TestPlanSource)
     : null;
 
@@ -248,14 +248,14 @@ export function normalizeTestPlanAutomationState(
 
 export function normalizeTestPlanSource(raw: unknown, fallback: TestPlanSource = "local"): TestPlanSource {
   const normalized = String(raw ?? "").trim().toLowerCase();
+
   if (normalized === "qase") return "qase";
+  if (normalized === "manual") return "manual";
   if (normalized === "automation" || normalized === "playwright") return "automation";
-  if (normalized === "local" || normalized === "manual" || normalized === "integration" || normalized === "import") {
-    return "local";
-  }
+  if (normalized === "local" || normalized === "integration" || normalized === "import") return "local";
+
   return fallback;
 }
-
 export function normalizeTestPlanCaseAutomation(
   raw: unknown,
   defaultEnabled = false,
@@ -307,3 +307,4 @@ export function isCaseEffectivelyEmpty(testCase: TestPlanCase) {
       ))
   );
 }
+

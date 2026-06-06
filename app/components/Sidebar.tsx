@@ -6,7 +6,7 @@ import { useClientContext } from "@/context/ClientContext";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { useSidebarState } from "@/hooks/navigation/useSidebarState";
-import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
+import { useMenuLateral } from "@/features/menu-lateral/hooks/useMenuLateral";
 import { useActiveNavigation } from "@/hooks/navigation/useActiveNavigation";
 import { useFavorites } from "@/hooks/navigation/useFavorites";
 import SidebarHeader from "./navigation/SidebarHeader";
@@ -27,7 +27,7 @@ type SidebarProps = {
 
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const { collapsed, toggleCollapsed, openSections, toggleSection, openSection } = useSidebarState();
-  const { modules, loading, companySlug } = useNavigationItems();
+  const { modules, loading, companySlug } = useMenuLateral();
   const { activeModuleId, isModuleActive, isItemActive } = useActiveNavigation(modules, pathname);
   const { favorites, removeFavorite } = useFavorites();
   const { user } = usePermissionAccess();

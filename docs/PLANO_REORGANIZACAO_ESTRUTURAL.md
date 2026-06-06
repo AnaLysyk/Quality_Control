@@ -6,6 +6,8 @@ Reorganizar o projeto para deixar o código mais fácil de entender, manter e te
 
 A estrutura deve seguir uma leitura por domínio/fluxo, parecida com um projeto de automação bem organizado: nomes claros, responsabilidades separadas e funções em locais previsíveis.
 
+Documento visual guia: [ARVORE_VISUAL_QUALITY_CONTROL.md](./ARVORE_VISUAL_QUALITY_CONTROL.md).
+
 ## Problema atual
 
 Hoje o projeto concentra muitas responsabilidades dentro de app/ e lib/.

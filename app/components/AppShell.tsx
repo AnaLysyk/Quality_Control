@@ -23,7 +23,7 @@ import {
 } from "@/lib/fixedProfilePresentation";
 import { AppShellCoverSlotProvider } from "./AppShellCoverSlotContext";
 import MainWrapper from "./MainWrapper";
-import Sidebar from "./Sidebar";
+import Sidebar from "@/features/menu-lateral/componentes/Sidebar";
 import {
   DeferredChatButton,
   DeferredNotesButton,

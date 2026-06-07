@@ -20,6 +20,24 @@ export async function GET(request: Request) {
   const companySlug = searchParams.get("companySlug")?.trim();
   if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
 
+
+  if (process.env.E2E_USE_JSON === "1") {
+    return NextResponse.json({
+      projects: [
+        {
+          id: "e2e-project-testing-company",
+          slug: "quality-control",
+          name: "Quality Control",
+          description: "Projeto mockado para execucao E2E sem banco.",
+          status: "active",
+          color: "#2563eb",
+          iconKey: "folder",
+          companyId: companySlug,
+          createdAt: new Date(0).toISOString(),
+        },
+      ],
+    });
+  }
   const db = await getDb();
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ projects: [] });

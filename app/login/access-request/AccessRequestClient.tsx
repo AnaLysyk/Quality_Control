@@ -786,6 +786,7 @@ export default function AccessRequestClient() {
               </p>
             </div>
             <button
+              data-testid="open-request-access-form-button"
               type="button"
               onClick={() => {
                 setIsRequestOpen(true);
@@ -1055,6 +1056,7 @@ export default function AccessRequestClient() {
                     <label className={labelClass}>
                       Usuário/login
                       <input
+                        data-testid="request-access-user-input"
                         type="text"
                         value={requestedUser}
                         onChange={(event) => setRequestedUser(event.target.value)}
@@ -1082,6 +1084,7 @@ export default function AccessRequestClient() {
                   <label className={labelClass}>
                     Telefone
                     <input
+                      data-testid="request-access-phone-input"
                       type="tel"
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
@@ -1114,6 +1117,7 @@ export default function AccessRequestClient() {
                 <label className={labelClass}>
                   Título da solicitação
                   <input
+                    data-testid="request-access-title-input"
                     type="text"
                     value={título}
                     onChange={(event) => setTitulo(event.target.value)}
@@ -1139,6 +1143,7 @@ export default function AccessRequestClient() {
                 <label className={labelClass}>
                   Senha escolhida para o novo acesso
                   <input
+                    data-testid="request-access-password-input"
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}

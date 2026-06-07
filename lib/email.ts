@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import { appendFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 
 export interface EmailOptions {
   to: string;
@@ -65,6 +67,24 @@ class EmailService {
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
+      if (String(process.env.EMAIL_CAPTURE_MODE || "").toLowerCase() === "file") {
+        const captureFile = process.env.EMAIL_CAPTURE_FILE || "test-results/emails/outbox.jsonl";
+        mkdirSync(dirname(captureFile), { recursive: true });
+        appendFileSync(
+          captureFile,
+          JSON.stringify({
+            at: new Date().toISOString(),
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+            text: options.text ?? null,
+          }) + "\n",
+          "utf8",
+        );
+        console.log("[EMAIL][CAPTURED]", options.to, options.subject);
+        return true;
+      }
+
       // Evita chamadas de rede em ambientes de dev/teste (a menos que FORCE_EMAIL_SEND=true).
       const forceEmail = String(process.env.FORCE_EMAIL_SEND || '').toLowerCase() === 'true';
       if (!forceEmail && (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test')) {
@@ -573,6 +593,9 @@ Equipe Testing Company
   .cred{background:#f0f4ff;border-left:4px solid #2563eb;padding:16px 20px;border-radius:4px;margin:20px 0}
   .cred p{margin:6px 0;font-family:monospace}
   .btn{display:inline-block;padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:16px}
+  .details{background:#f8fafc;border:1px solid #d8dfeb;border-radius:8px;padding:16px;margin:20px 0}
+  .details p{margin:6px 0}
+  .details strong{color:#011848}
   .footer{text-align:center;padding:20px;font-size:12px;color:#888}
 </style>
 </head>
@@ -603,6 +626,100 @@ Equipe Testing Company
     return this.sendEmail({
       to,
       subject: 'Acesso aprovado - Quality Control',
+      html,
+      text,
+    });
+  }
+
+  async sendAccessRequestReceivedEmail(
+    to: string,
+    data: {
+      name?: string | null;
+      accessKey?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      profileType?: string | null;
+      role?: string | null;
+      title?: string | null;
+      description?: string | null;
+      company?: string | null;
+    },
+  ): Promise<boolean> {
+    const baseUrl = this.resolvePublicBaseUrl();
+    const statusUrl = data.accessKey
+      ? `${baseUrl}/login/access-request/status?key=${data.accessKey}`
+      : `${baseUrl}/login/access-request/status`;
+    const greeting = data.name ? `Olá, ${data.name}!` : "Olá!";
+
+    const detailRows = [
+      ["Nome completo", data.name],
+      ["E-mail", data.email],
+      ["Telefone", data.phone],
+      ["Tipo de perfil", data.profileType],
+      ["Cargo/Função", data.role],
+      ["Empresa", data.company],
+      ["Título", data.title],
+      ["Descrição", data.description],
+      ["Status", "Em análise"],
+    ].filter(([, value]) => typeof value === "string" && value.trim().length > 0);
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Solicitação recebida - Quality Control</title>
+<style>
+  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f4f6fb}
+  .wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  .hdr{background:#011848;color:#fff;padding:28px 32px;text-align:center}
+  .hdr h1{margin:0;font-size:22px}
+  .body{padding:32px}
+  .badge{display:inline-block;background:#2563eb;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;margin-bottom:16px}
+  .details{background:#f8fafc;border:1px solid #d8dfeb;border-radius:8px;padding:16px;margin:20px 0}
+  .details p{margin:6px 0}
+  .details strong{color:#011848}
+  .btn{display:inline-block;padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:16px}
+  .key{font-family:monospace;background:#f0f4ff;padding:8px 14px;border-radius:4px;font-size:14px;display:inline-block;margin:8px 0}
+  .footer{text-align:center;padding:20px;font-size:12px;color:#888}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr"><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Solicitação de acesso recebida</p></div>
+  <div class="body">
+    <span class="badge">Em análise</span>
+    <h2 style="margin-top:0">${greeting}</h2>
+    <p>Recebemos sua solicitação de acesso e ela está em análise pela equipe responsável.</p>
+    <p>Você receberá uma atualização por e-mail quando a solicitação for aprovada, rejeitada ou precisar de ajuste.</p>
+
+    <div class="details">
+      <p><strong>Detalhes da solicitação</strong></p>
+      ${detailRows.map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`).join("")}
+    </div>
+
+    ${data.accessKey ? `<p class="key">Chave de acesso: <strong>${data.accessKey}</strong></p>` : ""}
+    <a href="${statusUrl}" class="btn">Consultar solicitação</a>
+  </div>
+  <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
+</div>
+</body>
+</html>`;
+
+    const text = `${greeting}
+
+Recebemos sua solicitação de acesso e ela está em análise.
+
+Detalhes da solicitação:
+${detailRows.map(([label, value]) => `- ${label}: ${value}`).join("\n")}
+
+Consulte sua solicitação em:
+${statusUrl}
+
+${data.accessKey ? `Chave de acesso: ${data.accessKey}` : ""}
+
+Você receberá uma atualização por e-mail quando a solicitação for aprovada, rejeitada ou precisar de ajuste.`;
+
+    return this.sendEmail({
+      to,
+      subject: "Solicitação de acesso recebida - Quality Control",
       html,
       text,
     });

@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -27,5 +27,6 @@ function toQueryString(params?: Record<string, string | string[] | undefined>) {
 
 export default async function SolicitacoesPage({ searchParams }: PageProps) {
   const resolved = searchParams ? await searchParams : undefined;
-  redirect(`/admin/requests${toQueryString(resolved)}`);
+  redirect(`/admin/access-requests${toQueryString(resolved)}`);
 }
+

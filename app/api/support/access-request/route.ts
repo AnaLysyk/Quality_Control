@@ -21,6 +21,7 @@ import {
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { rateLimit } from "@/lib/rateLimit";
+import { emailService } from "@/lib/email";
 
 type Payload = {
   email?: string;
@@ -276,6 +277,22 @@ export async function POST(req: Request) {
       }
     }
   }
+
+  void emailService.sendAccessRequestReceivedEmail(email, {
+    name: fullName,
+    accessKey: createdRequest?.id ?? null,
+    email,
+    phone,
+    profileType,
+    role,
+    title,
+    description,
+    company: resolvedCompanyName || null,
+  }).then((sent) => {
+    console.log("[ACCESS-REQUESTS][EMAIL][RECEIVED]", sent ? "sent" : "not_sent", email);
+  }).catch((error) => {
+    console.warn("[ACCESS-REQUESTS][EMAIL][RECEIVED] failed:", error);
+  });
 
   addAuditLogSafe({
     actorEmail: email,

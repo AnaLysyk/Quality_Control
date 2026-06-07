@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { WikiDoc } from "@/data/platformDocsStore";
 import type { RequestRecord } from "@/data/requestsStore";
@@ -235,9 +235,9 @@ function buildWikiDocNotificationDescription(input: {
   event: "created" | "published";
 }) {
   if (input.event === "created") {
-    return `${input.title} foi criado e publicado no repositório ${input.scopeLabel}.`;
+    return `${input.title} foi criado e publicado no repositÃ³rio ${input.scopeLabel}.`;
   }
-  return `${input.title} foi publicado no repositório ${input.scopeLabel}.`;
+  return `${input.title} foi publicado no repositÃ³rio ${input.scopeLabel}.`;
 }
 
 export async function notifyPlatformWikiDocPublished(input: {
@@ -407,7 +407,7 @@ export async function notifyProfileDeletionRequest(request: RequestRecord) {
     title: "Exclusao de perfil solicitada",
     description: `${userLabel} solicitou exclusao do proprio perfil.`,
     requestId: request.id,
-    link: "/admin/requests",
+    link: "/admin/access-requests",
     dedupeKey: `profile-deletion:reviewers:${request.id}`,
   });
 
@@ -571,8 +571,8 @@ export async function notifyIntegrationRunCreated(input: {
 
   await createNotificationsForUsers(recipients, {
     type: "RUN_CREATED",
-    title: "Nova run via integração",
-    description: `${runName} foi registrada via integração.`,
+    title: "Nova run via integraÃ§Ã£o",
+    description: `${runName} foi registrada via integraÃ§Ã£o.`,
     companySlug,
     link,
     dedupeKey: `run:${runSlug}:created`,
@@ -962,3 +962,4 @@ export async function notifyTicketUpdated(input: {
     dedupeKey: `suporte:${suporte.id}:updated:${Date.now()}`,
   });
 }
+

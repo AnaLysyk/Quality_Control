@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { AuthSkeleton } from "@/components/AuthSkeleton";
@@ -15,17 +15,19 @@ type RequireAccessRequestReviewerProps = {
 function isReviewerUser(
   user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
 ) {
-  // Allow any authenticated user that participates in the access-request flow.
-  // Global reviewers are resolved server-side from canonical roles and legacy aliases.
   if (!user) return false;
-  return Boolean(
-    normalizeLegacyRole(user.role) ||
-      normalizeLegacyRole(user.permissionRole) ||
-      normalizeLegacyRole(user.companyRole),
-  );
+
+  const roles = [
+    normalizeLegacyRole(user.role),
+    normalizeLegacyRole(user.permissionRole),
+    normalizeLegacyRole(user.companyRole),
+  ];
+
+  return roles.some((role) => role === "leader_tc" || role === "technical_support");
 }
 
 export function RequireAccessRequestReviewer({ children, fallback }: RequireAccessRequestReviewerProps) {
+  const [mounted, setMounted] = useState(false);
   const { user, loading } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname();
@@ -35,18 +37,22 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
   const nonGlobalRedirect = user?.isGlobalAdmin ? "/admin/dashboard" : clientSlug ? `/empresas/${encodeURIComponent(clientSlug)}/home` : "/empresas";
 
   useEffect(() => {
-    if (loading) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || loading) return;
     if (!user) {
       router.replace(`/login?next=${encodeURIComponent(pathname || "/")}`);
       return;
     }
-    // if user exists but is not part of known roles, redirect to their home
+    // usuÃ¡rio autenticado, mas sem permissÃ£o, permanece na pÃ¡gina com aviso de acesso restrito
     if (!allowed) {
-      router.replace(nonGlobalRedirect);
+      return;
     }
-  }, [allowed, loading, nonGlobalRedirect, pathname, router, user]);
+  }, [allowed, loading, mounted, nonGlobalRedirect, pathname, router, user]);
 
-  if (loading) return fallback ?? <AuthSkeleton message="Validando sessao..." />;
+  if (!mounted || loading) return fallback ?? <AuthSkeleton message="Validando sessao..." />;
   if (!user) return fallback ?? null;
   if (!allowed) return (
     <div className="p-8 text-center text-lg">
@@ -57,3 +63,5 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
 }
 
 export default RequireAccessRequestReviewer;
+
+

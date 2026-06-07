@@ -63,15 +63,79 @@ function mapStatusToLegacy(status: AccessRequestV2Status) {
   return "PENDING";
 }
 
+function shouldBlockDuplicateAccessRequests() {
+  return String(process.env.ACCESS_REQUEST_BLOCK_DUPLICATES || "false").toLowerCase() === "true";
+}
+
+function normalizeDuplicateValue(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function isActiveDuplicateStatus(status: AccessRequestV2Status) {
+  return status === "pending" || status === "under_review" || status === "needs_more_info";
+}
+
 export async function createAccessRequestFromPayload(payload: Record<string, unknown>, req: Request, authUser: AuthUser | null) {
   const requesterEmail = asEmail(payload.requesterEmail) || asEmail(payload.email);
   const requesterName = asText(payload.requesterName) || asText(payload.full_name) || asText(payload.name);
   const requestedCompanySlug = asText(payload.requestedCompanySlug, 120) || asText(payload.company, 120) || undefined;
   const requestedCompanyId = asText(payload.requestedCompanyId, 120) || asText(payload.client_id, 120) || undefined;
   const reason = asText(payload.reason, 2000) || asText(payload.description, 2000) || asText(payload.notes, 2000) || undefined;
+  const requestedUser =
+    asText(payload.user, 120) ||
+    asText(payload.requestedUser, 120) ||
+    asText(payload.targetUserId, 120) ||
+    undefined;
+  const phone = asText(payload.phone, 80) || undefined;
+  const title = asText(payload.title, 255) || undefined;
+  const companyLabel = requestedCompanySlug || requestedCompanyId || undefined;
 
   if (!requesterEmail) {
     return { status: 400 as const, body: { message: "E-mail é obrigatório" } };
+  }
+
+  if (shouldBlockDuplicateAccessRequests()) {
+    const normalizedEmail = normalizeDuplicateValue(requesterEmail);
+    const normalizedUser = normalizeDuplicateValue(requestedUser);
+
+    const duplicate = (await listAccessRequestsV2()).find((item) => {
+      if (!isActiveDuplicateStatus(item.status)) return false;
+
+      const sameEmail = normalizeDuplicateValue(item.requesterEmail) === normalizedEmail;
+      const sameUser =
+        normalizedUser.length > 0 &&
+        normalizeDuplicateValue(item.targetUserId) === normalizedUser;
+
+      return sameEmail || sameUser;
+    });
+
+    if (duplicate) {
+      const duplicatedByEmail = normalizeDuplicateValue(duplicate.requesterEmail) === normalizedEmail;
+      const duplicatedByUser =
+        normalizedUser.length > 0 &&
+        normalizeDuplicateValue(duplicate.targetUserId) === normalizedUser;
+
+      const duplicatedFields = [
+        duplicatedByEmail ? "e-mail" : null,
+        duplicatedByUser ? "usuário" : null,
+      ].filter(Boolean).join(" e ");
+
+      return {
+        status: 409 as const,
+        body: {
+          ok: false,
+          code: "DUPLICATE_ACCESS_REQUEST",
+          message: `Já existe uma solicitação de acesso aberta ou em análise para este ${duplicatedFields}. Consulte a solicitação existente antes de criar uma nova.`,
+          item: {
+            id: duplicate.id,
+            accessKey: duplicate.accessKey ?? null,
+            status: duplicate.status,
+            requesterEmail: duplicate.requesterEmail,
+            targetUserId: duplicate.targetUserId ?? null,
+          },
+        },
+      };
+    }
   }
 
   const created = await createAccessRequestV2({
@@ -82,9 +146,25 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     requestedRole: resolveRequestedRoleFromPayload(payload),
     requestedCompanySlug,
     requestedCompanyId,
-    targetUserId: asText(payload.targetUserId, 120) || undefined,
+    targetUserId: requestedUser,
     reason,
     priority: resolvePriorityFromPayload(payload),
+  });
+
+  void emailService.sendAccessRequestReceivedEmail(requesterEmail, {
+    name: requesterName || null,
+    accessKey: created.accessKey ?? created.id,
+    email: requesterEmail,
+    phone,
+    profileType: created.requestType,
+    role: created.requestedRole ?? null,
+    title: title ?? null,
+    description: reason ?? null,
+    company: companyLabel ?? null,
+  }).then((sent) => {
+    console.log("[ACCESS-REQUESTS][V2][EMAIL][RECEIVED]", sent ? "sent" : "not_sent", requesterEmail);
+  }).catch((error) => {
+    console.warn("[ACCESS-REQUESTS][V2][EMAIL][RECEIVED] failed:", error);
   });
 
   addAuditLogSafe({

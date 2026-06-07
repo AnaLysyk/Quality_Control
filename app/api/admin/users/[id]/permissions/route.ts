@@ -5,6 +5,8 @@ import { getAdminUserItem } from '@/lib/adminUsers';
 import { notifyUserAccessUpdated } from '@/lib/notificationService';
 import { requireGlobalAdminWithStatus } from '@/lib/rbac/requireGlobalAdmin';
 import { resolvePermissionAccessForUser } from '@/lib/serverPermissionAccess';
+import { getAccessContext } from '@/lib/auth/session';
+import { validarAcessoUsuariosNoServidor } from '@/lib/permissions/validarAcessoUsuariosNoServidor';
 
 export const revalidate = 0;
 
@@ -17,6 +19,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
       return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
+    }
+    const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
+    if (!access.canViewPermissions) {
+      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
     const p = await params;
     const userId = p.id;
@@ -39,6 +45,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
       return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
+    }
+    const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
+    if (!access.canEditPermissions) {
+      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
     const p = await params;
     const userId = p.id;
@@ -90,6 +100,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!admin) {
       return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
     }
+    const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
+    if (!access.canResetPermissions) {
+      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+    }
     const body = await req.json().catch(() => null);
     const restored = body?.reason === "restored";
     const p = await params;
@@ -130,4 +144,3 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Não foi possível restaurar permissões agora." }, { status: 500 });
   }
 }
-

@@ -1,4 +1,5 @@
-﻿import type { Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { mockAuth } from "../helpers/mockAuth";
 
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
@@ -22,14 +23,18 @@ function buildEmailCandidates(primary: string, type: "admin" | "company" | "user
   return Array.from(new Set([primary, ...defaultsByType].filter(Boolean)));
 }
 
-type MockRole = "admin" | "client" | "user";
+type MockRole = "admin" | "client" | "user" | "technical_support" | "leader_tc";
 
 let lastRole: MockRole | null = null;
 let lastClientSlug: string | null = null;
 
+function isAdminLikeRole(role?: string | null) {
+  return role === "admin" || role === "leader_tc" || role === "technical_support";
+}
+
 function resolveCredentials(inputEmail: string, inputPassword: string) {
   const email = inputEmail.toLowerCase();
-  if (lastRole === "admin" || email.includes("admin")) {
+  if (isAdminLikeRole(lastRole) || email.includes("admin")) {
     return { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, role: "admin" as const };
   }
   if (lastRole === "user" || email.includes("user")) {
@@ -48,6 +53,19 @@ function parseCookie(setCookie: string | string[] | undefined, name: string): st
 export async function setMockUser(page: Page, role: MockRole, clientSlug?: string | null) {
   lastRole = role;
   lastClientSlug = clientSlug ?? null;
+
+  if (role === "technical_support" || role === "leader_tc") {
+    await mockAuth(page.context(), {
+      role,
+      permissionRole: role,
+      companyRole: role,
+      companySlug: clientSlug ?? "testing-company",
+      companySlugs: [clientSlug ?? "testing-company"],
+      isGlobalAdmin: role === "leader_tc",
+    });
+    return;
+  }
+
   const creds = resolveCredentials(role === "admin" ? "admin" : "user", "");
   const emailCandidates = buildEmailCandidates(creds.email, role === "admin" ? "admin" : "user");
 
@@ -141,11 +159,10 @@ export async function login(page: Page, email: string, password: string) {
     await page.context().addCookies(cookies);
   }
 
-  const role = (lastRole ?? creds.role) === "admin" ? "admin" : "user";
+  const role = isAdminLikeRole(lastRole ?? creds.role) ? "admin" : "user";
   const companySlug = lastClientSlug || "DEMO";
   const defaultPath = role === "admin" ? "/admin/clients" : `/empresas/${companySlug}/dashboard`;
 
-  // Some pages can be heavy during long suites; fall back to a lighter route.
   const navigationTargets = [defaultPath, "/"];
   let lastNavigationError: unknown = null;
   for (const target of navigationTargets) {
@@ -164,4 +181,3 @@ export async function login(page: Page, email: string, password: string) {
     ? lastNavigationError
     : new Error("login navigation failed");
 }
-

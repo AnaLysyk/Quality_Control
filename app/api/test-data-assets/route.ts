@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate size if available
     let sizeBytes: number | null = null;
-    let checksum: string | null = null;
+    const checksum: string | null = null;
 
     if (encoding === "base64" && base64Value) {
       sizeBytes = Buffer.from(base64Value, "base64").length;

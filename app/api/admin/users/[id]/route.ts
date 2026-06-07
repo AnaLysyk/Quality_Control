@@ -21,6 +21,7 @@ import {
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 import { getAccessContext } from "@/lib/auth/session";
+import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { sanitizeUserProfileText } from "@/lib/userProfileData";
 
@@ -69,6 +70,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
   const access = await getAccessContext(req);
+  const userAccess = await validarAcessoUsuariosNoServidor(access);
+  if (!userAccess.canEditUsers) {
+    return NextResponse.json({ error: "Sem permissão para editar usuários" }, { status: 403 });
+  }
   const canManageProfiles = canManageInstitutionalProfiles(access);
 
   const { id } = await params;

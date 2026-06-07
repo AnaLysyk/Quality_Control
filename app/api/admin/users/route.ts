@@ -26,6 +26,7 @@ import {
   upsertLocalLink,
 } from "@/lib/auth/localStore";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { readSyncedUserProfileFields, sanitizeUserProfileText } from "@/lib/userProfileData";
 import { emailService } from "@/lib/email";
 
@@ -124,6 +125,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
   const access = await getAccessContext(req);
+  const userAccess = await validarAcessoUsuariosNoServidor(access);
+  if (!userAccess.canCreateUsers) {
+    return NextResponse.json({ error: "Sem permissão para criar usuários" }, { status: 403 });
+  }
   const canManageProfiles = canManageInstitutionalProfiles(access);
 
   const body = await req.json().catch(() => null);
@@ -278,6 +283,10 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
   const access = await getAccessContext(req);
+  const userAccess = await validarAcessoUsuariosNoServidor(access);
+  if (!userAccess.canEditUsers) {
+    return NextResponse.json({ error: "Sem permissão para editar usuários" }, { status: 403 });
+  }
   const canManageProfiles = canManageInstitutionalProfiles(access);
 
   const body = await req.json().catch(() => null);

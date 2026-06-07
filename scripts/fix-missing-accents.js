@@ -213,29 +213,20 @@ const WORDS = [
   ["Publico",      "Público"],
   ["documentacao", "documentação"],
   ["Documentacao", "Documentação"],
-  // -------- mojibake comum --------
-  ["n�o",          "não"],
-  ["N�o",          "Não"],
-  ["h�",           "há"],
-  ["H�",           "Há"],
-  ["usu�rio",      "usuário"],
-  ["Usu�rio",      "Usuário"],
-  ["est�",         "está"],
-  ["Est�",         "Está"],
 ];
 
 // Constrói regex para cada palavra (word boundary \b)
 const PAIRS = WORDS.map(([from, to]) => [new RegExp(`\\b${from}\\b`, "g"), to]);
 const RAW_PAIRS = [
   ["â€¦", "…"],
-  ["h�", "há"],
-  ["H�", "Há"],
-  ["est�", "está"],
-  ["Est�", "Está"],
-  ["n�o", "não"],
-  ["N�o", "Não"],
-  ["usu�rio", "usuário"],
-  ["Usu�rio", "Usuário"],
+  ["h\uFFFD", "há"],
+  ["H\uFFFD", "Há"],
+  ["est\uFFFD", "está"],
+  ["Est\uFFFD", "Está"],
+  ["n\uFFFDo", "não"],
+  ["N\uFFFDo", "Não"],
+  ["usu\uFFFDrio", "usuário"],
+  ["Usu\uFFFDrio", "Usuário"],
 ];
 
 /**

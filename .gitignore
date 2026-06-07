@@ -21,6 +21,8 @@
 
 # coverage
 /coverage
+/.scannerwork/
+/reports/
 
 # TypeScript
 *.tsbuildinfo
@@ -47,11 +49,11 @@ yarn-error.log*
 *.pem
 
 # local runtime artifacts
-.dev.pid
+*.pid
 __localstore_snapshot*
-.tmp/
-.tmp-tailwind*.css
-.pytest_cache/
+/.tmp/
+.tmp-*
+/.pytest_cache/
 
 # Playwright artifacts
 test-results/
@@ -92,10 +94,9 @@ node_modules/**/lint.log
 
 # Temporary files
 *.tmp
-.dev.pid
 
 # E2E next build output
 /.next-e2e/
 
 # tmp runtime files
-tmp/
+/tmp/

@@ -62,7 +62,10 @@
     "brain:maintenance": "tsx scripts/brain-maintenance.ts",
     "brain:reindex": "tsx scripts/sync-brain.ts",
     "brain:test": "jest --config jest.config.ts --runInBand __tests__/brain.test.ts",
-    "test:brain:contracts": "jest --config jest.config.ts --runInBand tests/brain-ingest-contract.test.ts tests/brain-commands-confirmation.test.ts"
+    "test:brain:contracts": "jest --config jest.config.ts --runInBand tests/brain-ingest-contract.test.ts tests/brain-commands-confirmation.test.ts",
+    "sonar:scan": "sonar-scanner",
+    "sonar:scan:debug": "sonar-scanner -X",
+    "sonar:issues": "node scripts/sonar-issues.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.61",

@@ -21,6 +21,7 @@ export type NavPermissionRequirement = {
 
 export type NavItemDef = {
   id: string;
+  routeId: string;
   label: string;
   iconKey: string;
   module: NavModule;
@@ -39,6 +40,7 @@ export type NavItemDef = {
 
 export type NavModuleDef = {
   id: NavModule;
+  routeId?: string;
   label: string;
   iconKey: string;
   href?: string;
@@ -69,6 +71,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
   {
     id: "home",
+    routeId: "home.principal",
     label: "Home",
     iconKey: "home",
     href: "/home",
@@ -89,6 +92,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "companies-listing", 
+        routeId: "empresas.listagem",
         label: "Listagem", 
         iconKey: "layout", 
         module: "companies", 
@@ -98,6 +102,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "companies-search", 
+        routeId: "empresas.buscar",
         label: "Buscar empresa", 
         iconKey: "search", 
         module: "companies", 
@@ -108,6 +113,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "companies-create", 
+        routeId: "empresas.criar",
         label: "Criar empresa", 
         iconKey: "plus-circle", 
         module: "companies", 
@@ -132,6 +138,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "ops-dashboard", 
+        routeId: "operacao.dashboard",
         label: "Dashboard", 
         iconKey: "compass", 
         module: "operations", 
@@ -142,6 +149,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "ops-metrics", 
+        routeId: "operacao.metricas",
         label: "Métricas", 
         iconKey: "bar-chart", 
         module: "operations", 
@@ -151,6 +159,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "ops-search", 
+        routeId: "operacao.busca",
         label: "Buscar", 
         iconKey: "search", 
         module: "operations", 
@@ -175,6 +184,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "quality-cases", 
+        routeId: "testes-manuais.casos",
         label: "Casos de Teste", 
         iconKey: "clipboard", 
         module: "quality", 
@@ -184,6 +194,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "quality-plans", 
+        routeId: "testes-manuais.planos",
         label: "Planos de Teste", 
         iconKey: "book", 
         module: "quality", 
@@ -193,6 +204,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "quality-runs", 
+        routeId: "testes-manuais.runs",
         label: "Runs", 
         iconKey: "play", 
         module: "quality", 
@@ -202,6 +214,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "quality-defects", 
+        routeId: "testes-manuais.defeitos",
         label: "Defeitos", 
         iconKey: "alert-circle", 
         module: "quality", 
@@ -226,6 +239,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "auto-playwright", 
+        routeId: "automacao.playwright",
         label: "Playwright", 
         iconKey: "zap", 
         module: "automation", 
@@ -236,6 +250,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-ui-studio", 
+        routeId: "automacao.studio",
         label: "UI Studio", 
         iconKey: "monitor", 
         module: "automation", 
@@ -246,6 +261,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-execucoes", 
+        routeId: "automacao.execucoes",
         label: "Execuções", 
         iconKey: "play", 
         module: "automation", 
@@ -256,6 +272,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-fluxos", 
+        routeId: "automacao.fluxos",
         label: "Fluxos automatizados", 
         iconKey: "git-branch", 
         module: "automation", 
@@ -266,6 +283,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-casos", 
+        routeId: "automacao.casos",
         label: "Casos automatizados", 
         iconKey: "clipboard", 
         module: "automation", 
@@ -276,6 +294,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-scripts", 
+        routeId: "automacao.scripts",
         label: "Scripts", 
         iconKey: "code", 
         module: "automation", 
@@ -286,6 +305,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-tools", 
+        routeId: "automacao.ferramentas",
         label: "Ferramentas", 
         iconKey: "tool", 
         module: "automation", 
@@ -296,6 +316,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-api-lab", 
+        routeId: "automacao.api-lab",
         label: "API Lab", 
         iconKey: "code", 
         module: "automation", 
@@ -306,6 +327,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-base64", 
+        routeId: "automacao.base64",
         label: "Base64 / Encoders", 
         iconKey: "hash", 
         module: "automation", 
@@ -316,6 +338,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-arquivos", 
+        routeId: "automacao.biblioteca",
         label: "Biblioteca", 
         iconKey: "folder", 
         module: "automation", 
@@ -326,6 +349,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "auto-logs", 
+        routeId: "automacao.logs",
         label: "Logs", 
         iconKey: "file-text", 
         module: "automation", 
@@ -349,6 +373,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       {
         id: "requests-list",
+        routeId: "solicitacoes.listagem",
         label: "Listagem",
         iconKey: "list",
         module: "requests",
@@ -358,6 +383,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       {
         id: "requests-search",
+        routeId: "solicitacoes.buscar",
         label: "Buscar solicitação",
         iconKey: "search",
         module: "requests",
@@ -381,6 +407,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "support-create", 
+        routeId: "suporte.criar",
         label: "Abrir chamado", 
         iconKey: "plus-circle", 
         module: "support", 
@@ -391,6 +418,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "support-kanban", 
+        routeId: "suporte.kanban",
         label: "Andamento dos chamados", 
         iconKey: "kanban", 
         module: "support", 
@@ -400,6 +428,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "support-chamados", 
+        routeId: "suporte.chamados",
         label: "Chamados", 
         iconKey: "inbox", 
         module: "support", 
@@ -410,6 +439,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "support-meus-chamados", 
+        routeId: "suporte.meus-chamados",
         label: "Meus chamados", 
         iconKey: "bookmark", 
         module: "support", 
@@ -432,6 +462,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "chat-list", 
+        routeId: "chat.principal",
         label: "Lista de conversas", 
         iconKey: "message-square", 
         module: "chat", 
@@ -441,6 +472,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "chat-search", 
+        routeId: "chat.buscar",
         label: "Buscar conversa", 
         iconKey: "search", 
         module: "chat", 
@@ -465,6 +497,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "brain-graph", 
+        routeId: "brain.grafo",
         label: "Gráfico do Brain", 
         iconKey: "network", 
         module: "brain", 
@@ -474,6 +507,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "brain-ask", 
+        routeId: "assistente.perguntar",
         label: "Perguntar ao assistente", 
         iconKey: "help-circle", 
         module: "brain", 
@@ -497,6 +531,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "docs-central", 
+        routeId: "documentos.central",
         label: "Central de documentos", 
         iconKey: "folder", 
         module: "documents", 
@@ -506,6 +541,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "docs-repository", 
+        routeId: "documentos.repositorio",
         label: "Repositório de documentos", 
         iconKey: "book", 
         module: "documents", 
@@ -533,6 +569,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       // --- Testing Company: apenas Líder TC cria outros usuários internos ---
       {
         id: "users-create-leader-tc",
+        routeId: "usuarios.criar-lider",
         label: "Criar Líder TC",
         iconKey: "shield",
         module: "users",
@@ -545,6 +582,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       {
         id: "users-create-support",
+        routeId: "usuarios.criar-suporte",
         label: "Criar Suporte Técnico",
         iconKey: "headphones",
         module: "users",
@@ -557,6 +595,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       {
         id: "users-create-user-tc",
+        routeId: "usuarios.criar-usuario-tc",
         label: "Criar Usuário TC",
         iconKey: "user",
         module: "users",
@@ -570,6 +609,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       // --- Empresas: Líder TC e Suporte podem criar usuários de empresas ---
       {
         id: "users-create-company-user",
+        routeId: "usuarios.criar-usuario-empresa",
         label: "Criar Usuário da Empresa",
         iconKey: "user-plus",
         module: "users",
@@ -582,6 +622,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       // --- Listagens ---
       {
         id: "users-list",
+        routeId: "usuarios.listagem",
         label: "Listagem usuários",
         iconKey: "users",
         module: "users",
@@ -592,6 +633,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       {
         id: "users-list-empresas",
+        routeId: "empresas.listagem",
         label: "Listagem empresas",
         iconKey: "list",
         module: "users",
@@ -615,6 +657,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "admin-permissions", 
+        routeId: "permissoes.atalho-admin",
         label: "Gestão de permissões", 
         iconKey: "lock", 
         module: "admin", 
@@ -624,12 +667,23 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
       { 
         id: "admin-audit-logs", 
+        routeId: "configuracoes.auditoria",
         label: "Audit Logs", 
         iconKey: "eye", 
         module: "admin", 
         href: "/audit-logs?source=admin",
         favoriteEnabled: true,
         testId: "nav-admin-audit-logs",
+      },
+      {
+        id: "admin-system-map",
+        routeId: "configuracoes.mapa-sistema",
+        label: "Mapa do Sistema",
+        iconKey: "map",
+        module: "admin",
+        href: "/admin/sistema/mapa",
+        favoriteEnabled: true,
+        testId: "nav-admin-system-map",
       },
     ],
   },

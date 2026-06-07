@@ -43,7 +43,7 @@ test.describe("Menu Reorganization", () => {
       for (const groupId of menuGroups) {
         const menuItem = page.getByTestId(groupId);
         // Note: May be hidden in collapsed state, so check if it exists in DOM
-        await expect(menuItem).toBeInTheDocument();
+        await expect(menuItem).toBeVisible();
       }
     });
 
@@ -62,7 +62,7 @@ test.describe("Menu Reorganization", () => {
 
       for (const groupId of visibleMenus) {
         const menuItem = page.getByTestId(groupId);
-        await expect(menuItem).toBeInTheDocument();
+        await expect(menuItem).toBeVisible();
       }
 
       // These should NOT be visible
@@ -89,8 +89,8 @@ test.describe("Menu Reorganization", () => {
       // Users and Admin menus should not exist
       const users = page.getByTestId("nav-users");
       const admin = page.getByTestId("nav-admin");
-      await expect(users).not.toBeInTheDocument();
-      await expect(admin).not.toBeInTheDocument();
+      await expect(users).toHaveCount(0);
+      await expect(admin).toHaveCount(0);
     });
 
     test("empresa should not see Empresas, Automação, Usuários, Admin", async ({
@@ -131,7 +131,7 @@ test.describe("Menu Reorganization", () => {
 
         for (const groupId of visibleMenus) {
           const menuItem = page.getByTestId(groupId);
-          await expect(menuItem).toBeInTheDocument();
+          await expect(menuItem).toBeVisible();
         }
 
         // Should NOT be visible

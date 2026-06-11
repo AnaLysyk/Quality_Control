@@ -101,3 +101,6 @@ node_modules/**/lint.log
 
 # tmp runtime files
 /tmp/
+
+.tmp
+

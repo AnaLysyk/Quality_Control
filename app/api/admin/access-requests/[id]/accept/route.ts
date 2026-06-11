@@ -340,6 +340,8 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
 
 async function ensureLocalUser(message: string, fallbackEmail: string) {
   const resolved = await resolveRequestedUser(message, fallbackEmail);
+  const parsed = parseAccessRequestMessage(message, fallbackEmail);
+
   const created = await createLocalUser({
     full_name: resolved.fullName,
     name: resolved.displayName,
@@ -349,6 +351,8 @@ async function ensureLocalUser(message: string, fallbackEmail: string) {
     role: resolved.role,
     globalRole: resolved.globalRole,
     is_global_admin: resolved.isGlobalAdmin,
+    phone: parsed.phone || null,
+    job_title: parsed.jobRole || null,
     ...resolveEditableProfileUserState(resolved.profileRole, resolved.linkCompanyId),
     active: true,
   });

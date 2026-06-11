@@ -94,6 +94,7 @@ node_modules/**/lint.log
 
 # Temporary files
 *.tmp
+/analise-fluxo-solicitacoes.txt
 
 # E2E next build output
 /.next-e2e/

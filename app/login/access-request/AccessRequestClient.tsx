@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -16,6 +16,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useI18n } from "@/hooks/useI18n";
 
 const ACCESS_OPTIONS = [
+  {
+    value: "empresa",
+    label: "Empresa",
+    hint: "Cadastro institucional de uma nova empresa.",
+  },
   {
     value: "testing_company_user",
     label: "Usuário TC",
@@ -167,6 +172,17 @@ function textOrFallback(value: string | null | undefined, fallback = "Não infor
   return value && value.trim() ? value : fallback;
 }
 
+function normalizeSuggestedUser(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "")
+    .replace(/\.{2,}/g, ".")
+    .slice(0, 40);
+}
+
 function adjustmentFieldLabel(field: AccessRequestAdjustmentField, fallback = "Campo") {
   return (
     [...BASE_ADJUSTMENT_FIELD_OPTIONS, ...COMPANY_ADJUSTMENT_FIELD_OPTIONS].find((option) => option.field === field)?.label ?? fallback
@@ -192,9 +208,13 @@ export default function AccessRequestClient() {
   const [companyOptions, setCompanyOptions] = useState<CompanyOption[]>([]);
   const [companiesLoading, setCompaniesLoading] = useState(false);
   const [companiesError, setCompaniesError] = useState<string | null>(null);
+  const [companyLookupLoading, setCompanyLookupLoading] = useState(false);
+  const [cepLookupLoading, setCepLookupLoading] = useState(false);
+  const [companyLookupMessage, setCompanyLookupMessage] = useState<string | null>(null);
 
   const [lookupName, setLookupName] = useState("");
   const [lookupEmail, setLookupEmail] = useState("");
+  const [lookupAccessKey, setLookupAccessKey] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [lookupItem, setLookupItem] = useState<LookupItem | null>(null);
@@ -205,6 +225,19 @@ export default function AccessRequestClient() {
   const [lookupSaving, setLookupSaving] = useState(false);
   const [isLookupOpen, setIsLookupOpen] = useState(false);
   const [isRequestOpen, setIsRequestOpen] = useState(false);
+
+  const generateRequestedUser = () => {
+    const source =
+      accessType === "empresa"
+        ? companyDraft.companyName || fullName || email
+        : fullName || companyDraft.companyName || email;
+
+    const suggested = normalizeSuggestedUser(source);
+
+    if (suggested) {
+      setRequestedUser(suggested);
+    }
+  };
   const lookupNameRef = useRef<HTMLInputElement>(null);
   const requestNameRef = useRef<HTMLInputElement>(null);
 
@@ -271,6 +304,121 @@ export default function AccessRequestClient() {
     };
   }, [isRequestOpen, t]);
 
+  const formatCompanyAddress = (parts: {
+    address?: string;
+    number?: string;
+    district?: string;
+    city?: string;
+    state?: string;
+  }) => {
+    return [
+      [parts.address, parts.number].filter(Boolean).join(", "),
+      parts.district,
+      [parts.city, parts.state].filter(Boolean).join("/")
+    ]
+      .filter(Boolean)
+      .join(" - ");
+  };
+
+  const handleLookupCompanyByCnpj = async () => {
+    const cnpj = companyDraft.companyTaxId.trim();
+
+    setCompanyLookupMessage(null);
+    setCompanyLookupLoading(true);
+
+    try {
+      const response = await fetch(`/api/public/company-lookup/cnpj?cnpj=${encodeURIComponent(cnpj)}`, {
+        cache: "no-store",
+      });
+
+      const json = await response.json().catch(() => null);
+
+      if (!response.ok || !json?.item) {
+        throw new Error(json?.message ?? "Não foi possível consultar o CNPJ.");
+      }
+
+      const item = json.item as {
+        companyName?: string;
+        fantasyName?: string;
+        cnpj?: string;
+        cep?: string;
+        address?: string;
+        number?: string;
+        district?: string;
+        city?: string;
+        state?: string;
+        phone?: string;
+      };
+
+      setCompanyDraft((current) => ({
+        ...current,
+        companyName: item.companyName || item.fantasyName || current.companyName,
+        companyTaxId: item.cnpj || current.companyTaxId,
+        companyZip: item.cep || current.companyZip,
+        companyAddress:
+          formatCompanyAddress({
+            address: item.address,
+            number: item.number,
+            district: item.district,
+            city: item.city,
+            state: item.state,
+          }) || current.companyAddress,
+        companyPhone: item.phone || current.companyPhone,
+      }));
+
+      setCompanyLookupMessage("Dados da empresa encontrados e preenchidos automaticamente.");
+    } catch (error) {
+      setCompanyLookupMessage(error instanceof Error ? error.message : "Não foi possível consultar o CNPJ.");
+    } finally {
+      setCompanyLookupLoading(false);
+    }
+  };
+
+  const handleLookupAddressByCep = async () => {
+    const cep = companyDraft.companyZip.trim();
+
+    setCompanyLookupMessage(null);
+    setCepLookupLoading(true);
+
+    try {
+      const response = await fetch(`/api/public/company-lookup/cep?cep=${encodeURIComponent(cep)}`, {
+        cache: "no-store",
+      });
+
+      const json = await response.json().catch(() => null);
+
+      if (!response.ok || !json?.item) {
+        throw new Error(json?.message ?? "Não foi possível consultar o CEP.");
+      }
+
+      const item = json.item as {
+        cep?: string;
+        address?: string;
+        district?: string;
+        city?: string;
+        state?: string;
+      };
+
+      setCompanyDraft((current) => ({
+        ...current,
+        companyZip: item.cep || current.companyZip,
+        companyAddress:
+          formatCompanyAddress({
+            address: item.address,
+            district: item.district,
+            city: item.city,
+            state: item.state,
+          }) || current.companyAddress,
+      }));
+
+      setCompanyLookupMessage("Endereço encontrado e preenchido automaticamente.");
+    } catch (error) {
+      setCompanyLookupMessage(error instanceof Error ? error.message : "Não foi possível consultar o CEP.");
+    } finally {
+      setCepLookupLoading(false);
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
@@ -280,7 +428,10 @@ export default function AccessRequestClient() {
     const normalizedFullName = fullName.trim();
     const normalizedRequestedUser = requestedUser.trim().toLowerCase();
     const normalizedPhone = phone.trim();
-    const normalizedRole = role.trim();
+    const normalizedRole =
+      accessType === "empresa" && !role.trim()
+        ? "Responsável pela empresa"
+        : role.trim();
     const normalizedPassword = password.trim();
     const normalizedTitle = título.trim();
     const normalizedDescription = descrição.trim();
@@ -327,7 +478,7 @@ export default function AccessRequestClient() {
     const requiresCompany = requestProfileTypeNeedsCompany(accessType);
     const selectedCompany = companyOptions.find((item) => item.id === normalizedClientId) ?? null;
     const normalizedCompany = selectedCompany?.name?.trim() ?? "";
-    const isCompanyProfile = accessType === "company_user";
+    const isCompanyProfile = accessType === "empresa";
 
     if (requiresCompany && !normalizedClientId) {
       setError(t("accessRequest.companyRequired"));
@@ -351,7 +502,7 @@ export default function AccessRequestClient() {
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          requestType: accessType,
+          requestType: accessType === "empresa" ? "company_creation" : accessType,
           requestedRole: accessType,
           requestedCompanyId: normalizedClientId || undefined,
           requestedCompanySlug: normalizedCompany || undefined,
@@ -361,9 +512,41 @@ export default function AccessRequestClient() {
           priority: "medium",
           full_name: normalizedFullName,
           name: normalizedFullName,
-          user: accessType === "technical_support" ? normalizedRequestedUser || undefined : undefined,
+          user: normalizedRequestedUser || undefined,
           email: normalizedEmail,
-          phone: normalizedPhone,
+          password: normalizedPassword,
+          senha: normalizedPassword,
+          plainPassword: normalizedPassword,
+          companyDetails: {
+            companyName: normalizedCompanyDraft.companyName,
+            fantasyName: normalizedCompanyDraft.fantasyName,
+            cnpj: normalizedCompanyDraft.companyTaxId || normalizedCompanyDraft.cnpj,
+            companyTaxId: normalizedCompanyDraft.companyTaxId,
+            cep: normalizedCompanyDraft.cep,
+            address: normalizedCompanyDraft.address,
+            number: normalizedCompanyDraft.number,
+            complement: normalizedCompanyDraft.complement,
+            district: normalizedCompanyDraft.district,
+            city: normalizedCompanyDraft.city,
+            state: normalizedCompanyDraft.state,
+            phone: normalizedCompanyDraft.phone,
+            email: normalizedCompanyDraft.email,
+            website: normalizedCompanyDraft.website,
+            linkedin: normalizedCompanyDraft.linkedin || normalizedCompanyDraft.linkedIn,
+            situation: normalizedCompanyDraft.situation,
+            openingDate: normalizedCompanyDraft.openingDate,
+            legalNature: normalizedCompanyDraft.legalNature,
+            mainActivity: normalizedCompanyDraft.mainActivity,
+            size: normalizedCompanyDraft.size,
+            shareCapital: normalizedCompanyDraft.shareCapital,
+          },
+          companyName: normalizedCompanyDraft.companyName,
+      cnpj: normalizedCompanyDraft.cnpj,
+      cep: normalizedCompanyDraft.cep,
+      address: normalizedCompanyDraft.address,
+      companyPhone: normalizedCompanyDraft.phone,
+      companyEmail: normalizedCompanyDraft.email,
+      phone: normalizedPhone,
           company: normalizedCompany,
           client_id: normalizedClientId,
           role: normalizedRole,
@@ -432,29 +615,41 @@ export default function AccessRequestClient() {
 
     const normalizedEmail = lookupEmail.trim().toLowerCase();
     const normalizedName = lookupName.trim();
+    const normalizedAccessKey = lookupAccessKey.trim();
 
-    if (!normalizedName || !normalizedEmail) {
-      setLookupError(t("accessRequest.lookupNameEmailRequired"));
+    if (!normalizedName || !normalizedEmail || !normalizedAccessKey) {
+      setLookupError("Informe nome, e-mail e código de acesso para consultar sua solicitação.");
       return;
     }
 
     setLookupLoading(true);
     try {
       const res = await fetch(
-        `/api/support/access-request/lookup?name=${encodeURIComponent(normalizedName)}&email=${encodeURIComponent(
-          normalizedEmail,
-        )}`,
+        `/api/access-requests/by-key/${encodeURIComponent(normalizedAccessKey)}`,
         { cache: "no-store" },
       );
       const json = (await res.json().catch(() => null)) as {
         item?: LookupItem;
         comments?: AccessRequestComment[];
         error?: string;
+        message?: string;
       };
-      if (!res.ok) {
-        setLookupError(json?.error || t("accessRequest.lookupNotFound"));
+
+      if (!res.ok || !json?.item) {
+        setLookupError(json?.message || json?.error || t("accessRequest.lookupNotFound"));
         return;
       }
+
+      const itemName = String(json.item.requesterName ?? json.item.fullName ?? json.item.name ?? "").trim().toLowerCase();
+      const itemEmail = String(json.item.requesterEmail ?? json.item.email ?? "").trim().toLowerCase();
+
+      if (!itemEmail.includes(normalizedEmail) || !itemName.includes(normalizedName.toLowerCase())) {
+        setLookupError("Os dados informados não conferem com o código de acesso.");
+        return;
+      }
+
+      router.push(`/login/access-request/status?key=${encodeURIComponent(normalizedAccessKey)}`);
+      return;
       setLookupItem(json.item ?? null);
       setLookupDraft(
         json.item
@@ -580,10 +775,8 @@ export default function AccessRequestClient() {
   const selectedAccessOption = ACCESS_OPTIONS.find((option) => option.value === accessType) ?? ACCESS_OPTIONS[0];
   const selectedLookupAccessOption =
     ACCESS_OPTIONS.find((option) => option.value === (lookupDraft?.accessType ?? "testing_company_user")) ?? ACCESS_OPTIONS[0];
-  const isCompanyAccessRequest = accessType === "company_user";
-  const isTechnicalSupportRequest = accessType === "technical_support";
-  const isLookupCompanyAccessRequest = lookupDraft?.accessType === "company_user";
-  const isLookupTechnicalSupportRequest = lookupDraft?.accessType === "technical_support";
+  const isCompanyAccessRequest = accessType === "empresa";
+  const isLookupCompanyAccessRequest = lookupDraft?.accessType === "empresa";
 
   const isLookupFieldEditable = (field: AccessRequestAdjustmentField) => {
     if (!canEditLookup) return false;
@@ -648,7 +841,7 @@ export default function AccessRequestClient() {
 
     const requiresCompany = requestProfileTypeNeedsCompany(lookupDraft.accessType);
     const selectedCompany = companyOptions.find((item) => item.id === normalizedClientId) ?? null;
-    const isCompanyProfile = lookupDraft.accessType === "company_user";
+    const isCompanyProfile = lookupDraft.accessType === "empresa";
     if (requiresCompany && !normalizedClientId) {
       setLookupError(t("accessRequest.lookupCompanyRequired"));
       return;
@@ -786,10 +979,10 @@ export default function AccessRequestClient() {
               </p>
             </div>
             <button
-              data-testid="open-request-access-form-button"
-              type="button"
-              onClick={() => {
-                setIsRequestOpen(true);
+                data-testid="open-request-access-form-button"
+                type="button"
+                onClick={() => {
+                  setIsRequestOpen(true);
                 setIsLookupOpen(false);
                 setError(null);
                 setSuccess(null);
@@ -942,57 +1135,93 @@ export default function AccessRequestClient() {
                       </p>
                     </div>
 
+                    {companyLookupMessage ? (
+                      <div
+                        data-testid="request-access-company-lookup-message"
+                        className="rounded-xl border border-[#011848]/10 bg-white px-4 py-3 text-xs font-semibold text-[#011848]"
+                      >
+                        {companyLookupMessage}
+                      </div>
+                    ) : null}
+
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className={labelClass}>
                         Nome / razão social
                         <input
-                          type="text"
-                          value={companyDraft.companyName}
-                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyName: event.target.value }))}
-                          required
-                          className={inputBase}
-                          placeholder="Ex.: Testing Company LTDA"
-                        />
+                            data-testid="request-access-company-name-input"
+                            type="text"
+                            value={companyDraft.companyName}
+                            onChange={(event) => setCompanyDraft((current) => ({ ...current, companyName: event.target.value }))}
+                            required
+                            className={inputBase}
+                            placeholder="Ex.: Testing Company LTDA"
+                          />
                       </label>
                       <label className={labelClass}>
                         CNPJ
-                        <input
-                          type="text"
-                          value={companyDraft.companyTaxId}
-                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyTaxId: event.target.value }))}
-                          className={inputBase}
-                          placeholder="00.000.000/0000-00"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            data-testid="request-access-company-cnpj-input"
+                            type="text"
+                            value={companyDraft.companyTaxId}
+                            onChange={(event) => setCompanyDraft((current) => ({ ...current, companyTaxId: event.target.value }))}
+                            className={inputBase}
+                            placeholder="00.000.000/0000-00"
+                          />
+                          <button
+                            data-testid="request-access-company-cnpj-lookup-button"
+                            type="button"
+                            onClick={handleLookupCompanyByCnpj}
+                            disabled={companyLookupLoading}
+                            className="shrink-0 rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {companyLookupLoading ? "Buscando..." : "Buscar"}
+                          </button>
+                        </div>
                       </label>
                       <label className={labelClass}>
                         CEP
-                        <input
-                          type="text"
-                          value={companyDraft.companyZip}
-                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyZip: event.target.value }))}
-                          className={inputBase}
-                          placeholder="00000-000"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            data-testid="request-access-company-cep-input"
+                            type="text"
+                            value={companyDraft.companyZip}
+                            onChange={(event) => setCompanyDraft((current) => ({ ...current, companyZip: event.target.value }))}
+                            className={inputBase}
+                            placeholder="00000-000"
+                          />
+                          <button
+                            data-testid="request-access-company-cep-lookup-button"
+                            type="button"
+                            onClick={handleLookupAddressByCep}
+                            disabled={cepLookupLoading}
+                            className="shrink-0 rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-semibold text-[#011848] shadow-sm transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {cepLookupLoading ? "Buscando..." : "Buscar"}
+                          </button>
+                        </div>
                       </label>
                       <label className={labelClass}>
                         Telefone da empresa
                         <input
-                          type="tel"
-                          value={companyDraft.companyPhone}
-                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyPhone: event.target.value }))}
-                          className={inputBase}
-                          placeholder="+55 11 4000-0000"
-                        />
+                            data-testid="request-access-company-phone-input"
+                            type="tel"
+                            value={companyDraft.companyPhone}
+                            onChange={(event) => setCompanyDraft((current) => ({ ...current, companyPhone: event.target.value }))}
+                            className={inputBase}
+                            placeholder="+55 11 4000-0000"
+                          />
                       </label>
                       <label className={labelClass + " sm:col-span-2"}>
                         Endereço
                         <input
-                          type="text"
-                          value={companyDraft.companyAddress}
-                          onChange={(event) => setCompanyDraft((current) => ({ ...current, companyAddress: event.target.value }))}
-                          className={inputBase}
-                          placeholder="Rua, número, bairro, cidade"
-                        />
+                            data-testid="request-access-company-address-input"
+                            type="text"
+                            value={companyDraft.companyAddress}
+                            onChange={(event) => setCompanyDraft((current) => ({ ...current, companyAddress: event.target.value }))}
+                            className={inputBase}
+                            placeholder="Rua, número, bairro, cidade"
+                          />
                       </label>
                       <label className={labelClass}>
                         Website
@@ -1052,23 +1281,34 @@ export default function AccessRequestClient() {
                       placeholder="Ana Souza"
                     />
                   </label>
-                  {isTechnicalSupportRequest ? (
-                    <label className={labelClass}>
-                      Usuário/login
+
+                  <label className={labelClass}>
+                    Usuário/login
+                    <div className="flex gap-2">
                       <input
-                        data-testid="request-access-user-input"
                         type="text"
                         value={requestedUser}
                         onChange={(event) => setRequestedUser(event.target.value)}
-                        required
                         className={inputBase}
-                        placeholder="login.global"
+                        placeholder={
+                          isCompanyAccessRequest
+                            ? "Gerado pelo nome da empresa"
+                            : "Gerado pelo nome do solicitante"
+                        }
                       />
-                      <p className="text-xs font-medium text-[#64748b]">
-                        Obrigatório para o perfil Suporte Técnico.
-                      </p>
-                    </label>
-                  ) : null}
+                      <button
+                        type="button"
+                        onClick={generateRequestedUser}
+                        className="shrink-0 rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm font-semibold text-[#011848] transition hover:bg-[#011848]/5 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/40"
+                      >
+                        Gerar
+                      </button>
+                    </div>
+                    <p className="text-xs font-medium text-[#64748b]">
+                      Se ficar vazio, o sistema gera automaticamente. Se preencher, será usado esse login, respeitando unicidade.
+                    </p>
+                  </label>
+
                   <label className={labelClass}>
                     E-mail profissional
                     <input
@@ -1078,13 +1318,13 @@ export default function AccessRequestClient() {
                       onChange={(event) => setEmail(event.target.value)}
                       required
                       className={inputBase}
-                      placeholder="você@empresa.com"
+                      placeholder="voce@empresa.com"
                     />
                   </label>
+
                   <label className={labelClass}>
                     Telefone
                     <input
-                      data-testid="request-access-phone-input"
                       type="tel"
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
@@ -1194,7 +1434,7 @@ export default function AccessRequestClient() {
                   {t("accessRequest.lookupTitle")}
                 </h3>
                 <p className="text-sm text-[#475569]">
-                  {t("accessRequest.lookupNameEmailRequired")}
+                  Informe seu nome, e-mail e o código recebido por e-mail para consultar a solicitação.
                 </p>
               </div>
               <button
@@ -1238,6 +1478,22 @@ export default function AccessRequestClient() {
                       className={inputBase}
                       placeholder="você@empresa.com"
                     />
+                  </label>
+
+                  <label className={labelClass + " sm:col-span-2"}>
+                    Código de acesso
+                    <input
+                      data-testid="request-access-lookup-code-input"
+                      type="text"
+                      value={lookupAccessKey}
+                      onChange={(event) => setLookupAccessKey(event.target.value)}
+                      required
+                      className={inputBase}
+                      placeholder="Cole aqui o código recebido por e-mail"
+                    />
+                    <p className="text-xs font-medium text-[#64748b]">
+                      Esse código aparece no e-mail de confirmação da solicitação.
+                    </p>
                   </label>
                 </div>
 
@@ -1752,23 +2008,22 @@ export default function AccessRequestClient() {
                             />
                             {requestedLookupFields.has("fullName") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
                           </label>
-                          {isLookupTechnicalSupportRequest ? (
-                            <label className={labelClass}>
-                              Usuário/login
-                              <input
-                                type="text"
-                                value={lookupDraft.user}
-                                onChange={(event) =>
-                                  setLookupDraft((current) => (current ? { ...current, user: event.target.value } : current))
-                                }
-                                className={lookupFieldClass("username")}
-                                placeholder="login.global"
-                                readOnly={!isLookupFieldEditable("username")}
-                                disabled={!isLookupFieldEditable("username")}
-                              />
-                              {requestedLookupFields.has("username") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
-                            </label>
-                          ) : null}
+                          <label className={labelClass}>
+                            Usuário/login
+                            <input
+                              type="text"
+                              value={lookupDraft.user}
+                              onChange={(event) =>
+                                setLookupDraft((current) => (current ? { ...current, user: event.target.value } : current))
+                              }
+                              className={lookupFieldClass("username")}
+                              placeholder="login.global"
+                              readOnly={!isLookupFieldEditable("username")}
+                              disabled={!isLookupFieldEditable("username")}
+                            />
+                            {requestedLookupFields.has("username") ? <p className="text-xs font-semibold text-rose-600">Corrija este campo.</p> : null}
+                          </label>
+
                           <label className={labelClass}>
                             E-mail profissional
                             <input

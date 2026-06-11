@@ -29,8 +29,141 @@ function asText(value: unknown, max = 255) {
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
 
+function readTextFromPayload(payload: Record<string, unknown>, keys: string[], max = 255) {
+  for (const key of keys) {
+    const value = asText(payload[key], max);
+    if (value) return value;
+  }
+
+  return "";
+}
+
+function readRecordFromPayload(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return value as Record<string, unknown>;
+}
+
+function buildCompanyDetailsForEmail(payload: Record<string, unknown>) {
+  const companyDetails = readRecordFromPayload(payload.companyDetails);
+
+  const details: Record<string, unknown> = {
+    ...companyDetails,
+
+    companyName:
+      readTextFromPayload(companyDetails, ["companyName", "company_name", "razaoSocial", "razao_social"], 255) ||
+      readTextFromPayload(payload, ["companyName", "company_name", "razaoSocial", "razao_social", "company_name"], 255),
+
+    fantasyName:
+      readTextFromPayload(companyDetails, ["fantasyName", "nomeFantasia", "nome_fantasia"], 255) ||
+      readTextFromPayload(payload, ["fantasyName", "nomeFantasia", "nome_fantasia"], 255),
+
+    cnpj:
+      readTextFromPayload(companyDetails, ["cnpj", "companyTaxId", "company_tax_id"], 40) ||
+      readTextFromPayload(payload, ["cnpj", "companyTaxId", "company_tax_id"], 40),
+
+    cep:
+      readTextFromPayload(companyDetails, ["cep", "companyCep", "company_cep"], 40) ||
+      readTextFromPayload(payload, ["cep", "companyCep", "company_cep"], 40),
+
+    address:
+      readTextFromPayload(companyDetails, ["address", "endereco", "companyAddress", "company_address"], 255) ||
+      readTextFromPayload(payload, ["address", "endereco", "companyAddress", "company_address"], 255),
+
+    number:
+      readTextFromPayload(companyDetails, ["number", "numero", "companyNumber", "company_number"], 40) ||
+      readTextFromPayload(payload, ["number", "numero", "companyNumber", "company_number"], 40),
+
+    complement:
+      readTextFromPayload(companyDetails, ["complement", "complemento"], 255) ||
+      readTextFromPayload(payload, ["complement", "complemento"], 255),
+
+    district:
+      readTextFromPayload(companyDetails, ["district", "bairro"], 120) ||
+      readTextFromPayload(payload, ["district", "bairro"], 120),
+
+    city:
+      readTextFromPayload(companyDetails, ["city", "cidade", "municipio"], 120) ||
+      readTextFromPayload(payload, ["city", "cidade", "municipio"], 120),
+
+    state:
+      readTextFromPayload(companyDetails, ["state", "uf"], 40) ||
+      readTextFromPayload(payload, ["state", "uf"], 40),
+
+    phone:
+      readTextFromPayload(companyDetails, ["phone", "companyPhone", "phoneCompany", "company_phone"], 80) ||
+      readTextFromPayload(payload, ["companyPhone", "phoneCompany", "company_phone"], 80),
+
+    email:
+      readTextFromPayload(companyDetails, ["email", "companyEmail", "emailCompany", "company_email"], 255) ||
+      readTextFromPayload(payload, ["companyEmail", "emailCompany", "company_email"], 255),
+
+    website:
+      readTextFromPayload(companyDetails, ["website", "site", "companyWebsite", "company_website"], 255) ||
+      readTextFromPayload(payload, ["website", "site", "companyWebsite", "company_website"], 255),
+
+    linkedin:
+      readTextFromPayload(companyDetails, ["linkedin", "linkedIn", "companyLinkedin", "companyLinkedIn"], 255) ||
+      readTextFromPayload(payload, ["linkedin", "linkedIn", "companyLinkedin", "companyLinkedIn"], 255),
+  };
+
+  return Object.fromEntries(
+    Object.entries(details).filter(([, value]) => {
+      if (value === null || value === undefined || value === "") return false;
+      if (typeof value === "object") return false;
+      return true;
+    }),
+  );
+}
+
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return value as Record<string, unknown>;
+}
+
+
 function asEmail(value: unknown) {
   return asText(value, 255).toLowerCase();
+}
+
+function pickFirstText(payload: Record<string, unknown>, keys: string[], max = 255) {
+  for (const key of keys) {
+    const value = asText(payload[key], max);
+    if (value) return value;
+  }
+
+  return "";
+}
+
+function buildSafeAccessRequestDetails(payload: Record<string, unknown>) {
+  const blocked = new Set([
+    "password",
+    "senha",
+    "userPassword",
+    "accessPassword",
+    "requestPassword",
+    "requestedPassword",
+    "confirmPassword",
+    "passwordConfirmation",
+    "captcha",
+    "token",
+    "accessKey",
+  ]);
+
+  return Object.fromEntries(
+    Object.entries(payload).filter(([key, value]) => {
+      if (blocked.has(key)) return false;
+      if (value === null || value === undefined || value === "") return false;
+      if (typeof value === "object") return false;
+      return true;
+    }),
+  );
 }
 
 function resolveRequestTypeFromPayload(payload: Record<string, unknown>) {
@@ -81,6 +214,17 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
   const requestedCompanySlug = asText(payload.requestedCompanySlug, 120) || asText(payload.company, 120) || undefined;
   const requestedCompanyId = asText(payload.requestedCompanyId, 120) || asText(payload.client_id, 120) || undefined;
   const reason = asText(payload.reason, 2000) || asText(payload.description, 2000) || asText(payload.notes, 2000) || undefined;
+  const requestedPassword = readTextFromPayload(payload, [
+    "password",
+    "senha",
+    "plainPassword",
+    "userPassword",
+    "accessPassword",
+    "requestPassword",
+    "requestedPassword",
+  ], 255);
+  const requestedPasswordHash = requestedPassword ? hashPasswordSha256(requestedPassword) : undefined;
+  const companyDetailsPayload = asRecord(payload.companyDetails);
   const requestedUser =
     asText(payload.user, 120) ||
     asText(payload.requestedUser, 120) ||
@@ -151,11 +295,94 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     priority: resolvePriorityFromPayload(payload),
   });
 
+  const companyEmailDetails = {
+    ...companyDetailsPayload,
+    companyName:
+      pickFirstText(companyDetailsPayload, ["companyName", "company_name", "razaoSocial", "razao_social", "company"], 255) ||
+      pickFirstText(payload, ["companyName", "company_name", "razaoSocial", "razao_social", "company"], 255),
+    fantasyName:
+      pickFirstText(companyDetailsPayload, ["fantasyName", "nomeFantasia", "nome_fantasia"], 255) ||
+      pickFirstText(payload, ["fantasyName", "nomeFantasia", "nome_fantasia"], 255),
+    cnpj:
+      pickFirstText(companyDetailsPayload, ["cnpj", "companyTaxId", "company_tax_id", "companyCnpj", "company_cnpj"], 40) ||
+      pickFirstText(payload, ["cnpj", "companyTaxId", "company_tax_id", "companyCnpj", "company_cnpj"], 40),
+    cep:
+      pickFirstText(companyDetailsPayload, ["cep", "companyCep", "company_cep"], 40) ||
+      pickFirstText(payload, ["cep", "companyCep", "company_cep"], 40),
+    address:
+      pickFirstText(companyDetailsPayload, ["address", "endereco", "companyAddress", "company_address"], 255) ||
+      pickFirstText(payload, ["address", "endereco", "companyAddress", "company_address"], 255),
+    number:
+      pickFirstText(companyDetailsPayload, ["number", "numero", "companyNumber", "company_number"], 40) ||
+      pickFirstText(payload, ["number", "numero", "companyNumber", "company_number"], 40),
+    complement:
+      pickFirstText(companyDetailsPayload, ["complement", "complemento"], 255) ||
+      pickFirstText(payload, ["complement", "complemento"], 255),
+    district:
+      pickFirstText(companyDetailsPayload, ["district", "bairro"], 120) ||
+      pickFirstText(payload, ["district", "bairro"], 120),
+    city:
+      pickFirstText(companyDetailsPayload, ["city", "cidade", "municipio"], 120) ||
+      pickFirstText(payload, ["city", "cidade", "municipio"], 120),
+    state:
+      pickFirstText(companyDetailsPayload, ["state", "uf"], 40) ||
+      pickFirstText(payload, ["state", "uf"], 40),
+    phone:
+      pickFirstText(companyDetailsPayload, ["phone", "companyPhone", "phoneCompany", "company_phone"], 80) ||
+      pickFirstText(payload, ["companyPhone", "phoneCompany", "company_phone"], 80),
+    email:
+      pickFirstText(companyDetailsPayload, ["email", "companyEmail", "emailCompany", "company_email"], 255) ||
+      pickFirstText(payload, ["companyEmail", "emailCompany", "company_email"], 255),
+    website:
+      pickFirstText(companyDetailsPayload, ["website", "site", "companyWebsite", "company_website"], 255) ||
+      pickFirstText(payload, ["website", "site", "companyWebsite", "company_website"], 255),
+    linkedin:
+      pickFirstText(companyDetailsPayload, ["linkedin", "linkedIn", "companyLinkedin", "companyLinkedIn"], 255) ||
+      pickFirstText(payload, ["linkedin", "linkedIn", "companyLinkedin", "companyLinkedIn"], 255),
+    situation:
+      pickFirstText(companyDetailsPayload, ["situation", "situacao", "descricao_situacao_cadastral"], 120) ||
+      pickFirstText(payload, ["situation", "situacao", "descricao_situacao_cadastral"], 120),
+    openingDate:
+      pickFirstText(companyDetailsPayload, ["openingDate", "dataAbertura", "data_inicio_atividade"], 80) ||
+      pickFirstText(payload, ["openingDate", "dataAbertura", "data_inicio_atividade"], 80),
+    legalNature:
+      pickFirstText(companyDetailsPayload, ["legalNature", "naturezaJuridica", "natureza_juridica"], 255) ||
+      pickFirstText(payload, ["legalNature", "naturezaJuridica", "natureza_juridica"], 255),
+    mainActivity:
+      pickFirstText(companyDetailsPayload, ["mainActivity", "atividadePrincipal", "cnae_fiscal_descricao"], 255) ||
+      pickFirstText(payload, ["mainActivity", "atividadePrincipal", "cnae_fiscal_descricao"], 255),
+    size:
+      pickFirstText(companyDetailsPayload, ["size", "porte"], 80) ||
+      pickFirstText(payload, ["size", "porte"], 80),
+    shareCapital:
+      pickFirstText(companyDetailsPayload, ["shareCapital", "capitalSocial", "capital_social"], 80) ||
+      pickFirstText(payload, ["shareCapital", "capitalSocial", "capital_social"], 80),
+  };
+
+  const passwordForReceivedEmail = readTextFromPayload(payload, [
+    "password",
+    "senha",
+    "plainPassword",
+    "userPassword",
+    "accessPassword",
+    "requestPassword",
+    "requestedPassword",
+  ], 255);
+
+  const companyDetailsForReceivedEmail = buildCompanyDetailsForEmail(payload);
+
+  console.log("[ACCESS-REQUESTS][V2][EMAIL][PAYLOAD]", {
+    hasPassword: Boolean(passwordForReceivedEmail),
+    companyDetailKeys: Object.keys(companyDetailsForReceivedEmail),
+  });
+
   void emailService.sendAccessRequestReceivedEmail(requesterEmail, {
     name: requesterName || null,
     accessKey: created.accessKey ?? created.id,
     email: requesterEmail,
     phone,
+    password: passwordForReceivedEmail || requestedPassword || null,
+    companyDetails: companyDetailsForReceivedEmail,
     profileType: created.requestType,
     role: created.requestedRole ?? null,
     title: title ?? null,
@@ -268,9 +495,9 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
   if (!targetIdentifier) return "target-missing" as const;
 
   const existingUser = await findLocalUserByEmailOrId(targetIdentifier);
-  // Gera sempre senha temporária ao aprovar, para enviar por e-mail
-  const tempPassword = randomBytes(10).toString("hex");
-  const tempPasswordHash = hashPasswordSha256(tempPassword);
+  const passwordFromRequest = Boolean(request.requestedPasswordHash);
+  const fallbackPassword = randomBytes(10).toString("hex");
+  const passwordHash = request.requestedPasswordHash ?? hashPasswordSha256(fallbackPassword);
 
   const targetUser =
     existingUser ??
@@ -278,7 +505,7 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
       name: request.requesterName || request.requesterEmail,
       full_name: request.requesterName || request.requesterEmail,
       email: request.requesterEmail,
-      password_hash: tempPasswordHash,
+      password_hash: passwordHash,
       role: request.requestedRole,
       status: "invited",
       active: true,
@@ -289,7 +516,7 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     role: request.requestedRole,
     status: "active",
     active: true,
-    password_hash: tempPasswordHash,
+    password_hash: passwordHash,
   });
 
   if (request.requestedCompanySlug) {
@@ -319,7 +546,12 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     },
   });
 
-  return { userId: targetUser.id, tempPassword, login: targetUser.email ?? request.requesterEmail };
+  return {
+    userId: targetUser.id,
+    login: targetUser.email ?? request.requesterEmail,
+    tempPassword: passwordFromRequest ? null : fallbackPassword,
+    passwordFromRequest,
+  };
 }
 
 export async function transitionAccessRequest(
@@ -343,7 +575,7 @@ export async function transitionAccessRequest(
   if (action === "request-info") nextStatus = "needs_more_info";
 
   // Para approve: valida e captura credenciais em uma única chamada
-  let approvalCredentials: { userId: string; tempPassword: string; login: string } | null = null;
+  let approvalCredentials: { userId: string; tempPassword: string | null; login: string; passwordFromRequest: boolean } | null = null;
   if (action === "approve") {
     const result = await applyApprovalEffects(request, reviewer);
     if (result === "self-approval") return result;
@@ -394,6 +626,7 @@ export async function transitionAccessRequest(
         name: recipientName,
         login: approvalCredentials.login,
         tempPassword: approvalCredentials.tempPassword,
+        passwordFromRequest: approvalCredentials.passwordFromRequest,
         profileType: request.requestedRole,
         companySlug: request.requestedCompanySlug,
       })

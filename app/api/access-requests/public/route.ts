@@ -7,6 +7,7 @@ const GENERIC_MESSAGE = "Sua solicitação foi recebida. Se os dados informados 
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+
   const requesterEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const limiter = await rateLimit(req, `access-request-public:${requesterEmail || "anonymous"}`, 10, 60 * 10);
   if (limiter.limited) {

@@ -33,6 +33,7 @@ type V2Meta = {
   requestedCompanySlug?: string;
   requestedCompanyId?: string;
   targetUserId?: string;
+  requestedPasswordHash?: string;
   reason?: string;
   reviewedBy?: string;
   reviewedAt?: string;
@@ -65,6 +66,7 @@ function parseV2Message(message: string): V2Meta | null {
       requestedCompanySlug: parsed.requestedCompanySlug,
       requestedCompanyId: parsed.requestedCompanyId,
       targetUserId: parsed.targetUserId,
+      requestedPasswordHash: parsed.requestedPasswordHash,
       reason: parsed.reason,
       reviewedBy: parsed.reviewedBy,
       reviewedAt: parsed.reviewedAt,
@@ -112,6 +114,7 @@ function mapPrismaRowToV2(row: {
   let reviewedAt: string | undefined;
   let reviewComment: string | undefined;
   let targetUserId: string | undefined;
+  let requestedPasswordHash: string | undefined;
   let requestedCompanySlug: string | undefined;
   let accessKey: string | undefined;
   let adjustmentFields: string[] | undefined;
@@ -126,6 +129,7 @@ function mapPrismaRowToV2(row: {
       reviewedAt = meta.reviewedAt;
       reviewComment = meta.reviewComment;
       targetUserId = meta.targetUserId;
+      requestedPasswordHash = meta.requestedPasswordHash;
       requestedCompanySlug = meta.requestedCompanySlug;
       accessKey = meta.accessKey;
       adjustmentFields = meta.adjustmentFields;
@@ -143,6 +147,7 @@ function mapPrismaRowToV2(row: {
     requestedCompanySlug,
     requestedCompanyId: row.clientId ?? undefined,
     targetUserId,
+    requestedPasswordHash,
     status,
     reason: row.description ?? undefined,
     priority,
@@ -192,6 +197,7 @@ export async function listAccessRequestsV2(filters?: {
           requestedCompanySlug: meta.requestedCompanySlug,
           requestedCompanyId: meta.requestedCompanyId,
           targetUserId: meta.targetUserId,
+          requestedPasswordHash: meta.requestedPasswordHash,
           status: meta.status,
           reason: meta.reason,
           priority: meta.priority,
@@ -266,6 +272,7 @@ export async function createAccessRequestV2(input: {
   requestedCompanySlug?: string;
   requestedCompanyId?: string;
   targetUserId?: string;
+  requestedPasswordHash?: string;
   reason?: string;
   priority?: AccessRequestV2Priority;
 }) {
@@ -281,6 +288,7 @@ export async function createAccessRequestV2(input: {
     requestedCompanySlug: input.requestedCompanySlug,
     requestedCompanyId: input.requestedCompanyId,
     targetUserId: input.targetUserId,
+    requestedPasswordHash: input.requestedPasswordHash,
     status: "pending",
     reason: input.reason,
     priority: normalizeAccessRequestV2Priority(input.priority),
@@ -300,6 +308,7 @@ export async function createAccessRequestV2(input: {
       requestedCompanySlug: request.requestedCompanySlug,
       requestedCompanyId: request.requestedCompanyId,
       targetUserId: request.targetUserId,
+      requestedPasswordHash: request.requestedPasswordHash,
       reason: request.reason,
       accessKey: request.accessKey,
       createdAt: request.createdAt,
@@ -335,6 +344,7 @@ export async function createAccessRequestV2(input: {
     requestedCompanySlug: request.requestedCompanySlug,
     requestedCompanyId: request.requestedCompanyId,
     targetUserId: request.targetUserId,
+    requestedPasswordHash: request.requestedPasswordHash,
     reason: request.reason,
     accessKey: request.accessKey,
     createdAt: request.createdAt,
@@ -356,7 +366,7 @@ export async function createAccessRequestV2(input: {
 
 export async function updateAccessRequestV2(
   id: string,
-  patch: Partial<Pick<AccessRequestV2, "status" | "priority" | "reviewedBy" | "reviewedAt" | "reviewComment" | "reason" | "adjustmentFields">>,
+  patch: Partial<Pick<AccessRequestV2, "status" | "priority" | "reviewedBy" | "reviewedAt" | "reviewComment" | "reason" | "adjustmentFields" | "requestedPasswordHash">>,
 ) {
   const current = await getAccessRequestV2ById(id);
   if (!current) return null;
@@ -369,6 +379,7 @@ export async function updateAccessRequestV2(
     ...(patch.reviewedAt !== undefined ? { reviewedAt: patch.reviewedAt } : {}),
     ...(patch.reviewComment !== undefined ? { reviewComment: patch.reviewComment } : {}),
     ...(patch.reason !== undefined ? { reason: patch.reason } : {}),
+    ...(patch.requestedPasswordHash !== undefined ? { requestedPasswordHash: patch.requestedPasswordHash } : {}),
     ...(patch.adjustmentFields !== undefined ? { adjustmentFields: patch.adjustmentFields } : {}),
     updatedAt: new Date().toISOString(),
   };
@@ -385,6 +396,7 @@ export async function updateAccessRequestV2(
       requestedCompanySlug: next.requestedCompanySlug,
       requestedCompanyId: next.requestedCompanyId,
       targetUserId: next.targetUserId,
+      requestedPasswordHash: next.requestedPasswordHash,
       reason: next.reason,
       reviewedBy: next.reviewedBy,
       reviewedAt: next.reviewedAt,
@@ -418,6 +430,7 @@ export async function updateAccessRequestV2(
     requestedCompanySlug: next.requestedCompanySlug,
     requestedCompanyId: next.requestedCompanyId,
     targetUserId: next.targetUserId,
+    requestedPasswordHash: next.requestedPasswordHash,
     reason: next.reason,
     reviewedBy: next.reviewedBy,
     reviewedAt: next.reviewedAt,

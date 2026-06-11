@@ -41,6 +41,11 @@ export type AccessRequestV2 = {
   requestedCompanySlug?: string;
   requestedCompanyId?: string;
   targetUserId?: string;
+  /**
+   * Hash da senha escolhida pelo usuário no formulário público.
+   * Nunca armazenar senha em texto puro.
+   */
+  requestedPasswordHash?: string;
   status: AccessRequestV2Status;
   reason?: string;
   priority: AccessRequestV2Priority;

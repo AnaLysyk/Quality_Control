@@ -6,6 +6,7 @@ import {
   normalizeAccessType,
   parseAccessRequestMessage,
 } from "@/lib/accessRequestMessage";
+import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { prisma } from "@/lib/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
@@ -30,6 +31,7 @@ type AccessRequestBody = {
   description?: string;
   notes?: string;
   admin_notes?: string | null;
+  password?: string | null;
 };
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -60,6 +62,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const accessType = normalizeAccessType(body.access_type) ?? toInternalAccessType(profileType);
   const notes = typeof body.notes === "string" ? body.notes.trim() : "";
   const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes.trim() : null;
+  const password = typeof body.password === "string" ? body.password.trim() : "";
+  const passwordHash = password ? hashPasswordSha256(password) : null;
 
   const { id } = await context.params;
   if (shouldUseJsonStore()) {
@@ -82,7 +86,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       fullName: fullName || parsed.fullName || name || parsed.name,
       username: username ?? parsed.username,
       phone: phone || parsed.phone,
-      passwordHash: parsed.passwordHash,
+      passwordHash: passwordHash ?? parsed.passwordHash,
       role: role || parsed.jobRole,
       company: company || parsed.company || "(não informado)",
       clientId: clientId ?? parsed.clientId,
@@ -141,7 +145,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       fullName: fullName || parsed.fullName || name || parsed.name,
       username: username ?? parsed.username,
       phone: phone || parsed.phone,
-      passwordHash: parsed.passwordHash,
+      passwordHash: passwordHash ?? parsed.passwordHash,
       role: role || parsed.jobRole,
       company: company || parsed.company || "(não informado)",
       clientId: clientId ?? parsed.clientId,
@@ -197,7 +201,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       fullName: fullName || parsed.fullName || name || parsed.name,
       username: username ?? parsed.username,
       phone: phone || parsed.phone,
-      passwordHash: parsed.passwordHash,
+      passwordHash: passwordHash ?? parsed.passwordHash,
       role: role || parsed.jobRole,
       company: company || parsed.company || "(não informado)",
       clientId: clientId ?? parsed.clientId,

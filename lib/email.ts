@@ -65,6 +65,16 @@ class EmailService {
     return raw.replace(/\/+$/, "");
   }
 
+  private resolveEmailLogoUrl() {
+    const configured =
+      process.env.EMAIL_LOGO_URL ||
+      process.env.NEXT_PUBLIC_EMAIL_LOGO_URL ||
+      "";
+    if (configured.trim()) return configured.trim();
+
+    return `${this.resolvePublicBaseUrl()}/logo-tc.png`;
+  }
+
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       if (String(process.env.EMAIL_CAPTURE_MODE || "").toLowerCase() === "file") {
@@ -461,7 +471,7 @@ class EmailService {
             <div class="email-body">
               <!-- HEADER -->
               <div class="header">
-                <div class="header-logo">🏢 Testing Company</div>
+                <div class="header-logo"><img src="${this.resolveEmailLogoUrl()}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
                 <div class="header-subtitle">Quality Control • Bem-vindo à plataforma</div>
               </div>
 
@@ -564,162 +574,516 @@ Equipe Testing Company
     });
   }
 
-  async sendAccessApprovedEmail(
+  async sendAccessRequestReceivedEmail(
     to: string,
     data: {
       name?: string | null;
-      login: string;
-      tempPassword: string;
+      accessKey: string;
+      email: string;
+      phone?: string | null;
+      password?: string | null;
       profileType?: string | null;
-      companySlug?: string | null;
+      companyName?: string | null;
+      title?: string | null;
+      description?: string | null;
+      status?: string | null;
+      companyDetails?: Record<string, unknown> | null;
     },
   ): Promise<boolean> {
-    const loginUrl = `${this.resolvePublicBaseUrl()}/login`;
-    const greeting = data.name ? `Olá, ${data.name}!` : 'Olá!';
-    const profileLabel = data.profileType ? ` (${data.profileType})` : '';
-    const companyLine = data.companySlug ? `<p><strong>Empresa:</strong> ${data.companySlug}</p>` : '';
-    const companyText = data.companySlug ? `Empresa: ${data.companySlug}\n` : '';
+    const statusUrl = `${this.resolvePublicBaseUrl()}/login/access-request/status?key=${data.accessKey}`;
+    const greeting = data.name ? `Olá, ${data.name}!` : "Olá!";
+    const profileLabels: Record<string, string> = {
+      company_user: "Usuário da empresa",
+      testing_company_user: "Usuário Testing Company",
+      leader_tc: "Líder TC",
+      technical_support: "Suporte técnico",
+      company_access: "Empresa",
+    };
+
+    const profileKey = String(data.profileType ?? "").trim();
+    const profileLabel = profileLabels[profileKey] ?? (profileKey ? profileKey.replaceAll("_", " ") : "Perfil solicitado");
+
+    const formatValue = (value: unknown) => {
+      if (value === null || value === undefined || value === "") return "";
+      if (Array.isArray(value)) return value.filter(Boolean).join(", ");
+      if (typeof value === "object") return JSON.stringify(value);
+      return String(value);
+    };
+
+    const labelMap: Record<string, string> = {
+      companyName: "Razão social",
+      fantasyName: "Nome fantasia",
+      cnpj: "CNPJ",
+      companyTaxId: "CNPJ duplicado",
+      cep: "CEP",
+      address: "Endereço",
+      number: "Número",
+      complement: "Complemento",
+      district: "Bairro",
+      city: "Cidade",
+      state: "Estado",
+      phone: "Telefone da empresa",
+      email: "E-mail da empresa",
+      website: "Website",
+      site: "Website",
+      linkedin: "LinkedIn",
+      linkedIn: "LinkedIn",
+      situation: "Situação cadastral",
+      openingDate: "Data de abertura",
+      legalNature: "Natureza jurídica",
+      mainActivity: "Atividade principal",
+      size: "Porte",
+      shareCapital: "Capital social",
+    };
+
+    const hiddenKeys = new Set(["password", "senha", "plainPassword", "confirmPassword", "captcha", "token", "accessKey"]);
+
+    const hasCnpj = Boolean(formatValue((data.companyDetails ?? {}).cnpj));
+
+    const companyRows = Object.entries(data.companyDetails ?? {})
+      .filter(([key, value]) => {
+        if (hiddenKeys.has(key)) return false;
+        if (hasCnpj && (key === "companyTaxId" || key === "company_tax_id")) return false;
+        return Boolean(formatValue(value));
+      })
+      .map(([key, value]) => {
+        const label = labelMap[key] ?? key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+        return `<tr><td class="label">${label}</td><td class="value">${formatValue(value)}</td></tr>`;
+      })
+      .join("");
+
+    const companySection = companyRows
+      ? `<div class="section-title">Dados da empresa</div><div class="info"><table>${companyRows}</table></div>`
+      : "";
 
     const html = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Acesso Aprovado - Quality Control</title>
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f4f6fb}
-  .wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-  .hdr{background:#011848;color:#fff;padding:28px 32px;text-align:center}
-  .hdr h1{margin:0;font-size:22px}
-  .body{padding:32px}
-  .badge{display:inline-block;background:#10b981;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;margin-bottom:16px}
-  .cred{background:#f0f4ff;border-left:4px solid #2563eb;padding:16px 20px;border-radius:4px;margin:20px 0}
-  .cred p{margin:6px 0;font-family:monospace}
-  .btn{display:inline-block;padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:16px}
-  .details{background:#f8fafc;border:1px solid #d8dfeb;border-radius:8px;padding:16px;margin:20px 0}
-  .details p{margin:6px 0}
-  .details strong{color:#011848}
-  .footer{text-align:center;padding:20px;font-size:12px;color:#888}
-</style>
+<head>
+  <meta charset="utf-8">
+  <title>Solicitação de acesso recebida - Quality Control</title>
+  <style>
+    body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb}
+    .page{width:100%;padding:48px 12px;background:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%)}
+    .card{max-width:820px;margin:0 auto;background:#fff;border:1px solid rgba(1,24,72,.12);border-radius:28px;overflow:hidden;box-shadow:0 26px 76px rgba(1,24,72,.26)}
+    .header{background:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:48px 46px;text-align:center}
+    .brand{display:inline-block;margin:0 auto 16px;padding:9px 18px;border:1px solid rgba(255,255,255,.36);border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:900;letter-spacing:.2px}
+    .header h1{margin:0;font-size:30px;line-height:1.15;letter-spacing:-.4px}
+    .header p{margin:10px 0 0;font-size:15px;opacity:.94}
+    .content{padding:46px 50px 38px}
+    .badge{display:inline-block;padding:9px 15px;border-radius:999px;background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;font-size:13px;font-weight:900;margin-bottom:20px}
+    h2{margin:0 0 14px;color:#011848;font-size:24px;line-height:1.3}
+    p{margin:0 0 18px;color:#475569;font-size:14px;line-height:1.78}
+    .section-title{margin:28px 0 10px;color:#011848;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
+    .info{margin:0 0 20px;border:1px solid #d8dfeb;border-radius:18px;overflow:hidden;background:#f8fafc}
+    .info table{width:100%;border-collapse:collapse}
+    .info td{padding:15px 18px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
+    .info tr:last-child td{border-bottom:0}
+    .label{width:34%;color:#64748b;font-weight:900}
+    .value{color:#011848;font-weight:900;word-break:break-word}
+    .box{margin:24px 0;padding:18px 20px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:16px;color:#27457d;font-size:13px;line-height:1.7}
+    .buttonWrap{text-align:center;margin:32px 0 12px}
+    .button{display:inline-block;padding:17px 40px;border-radius:15px;background:linear-gradient(135deg,#011848 0%,#ef0001 100%);color:#fff!important;text-decoration:none;font-weight:900;font-size:15px;box-shadow:0 16px 30px rgba(239,0,1,.30)}
+    .footer{padding:22px 30px 30px;text-align:center;color:#64748b;font-size:12px;background:#fff}
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hdr"><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Solicitação de acesso aprovada</p></div>
-  <div class="body">
-    <span class="badge">✓ Acesso aprovado</span>
-    <h2 style="margin-top:0">${greeting}</h2>
-    <p>Sua solicitação de acesso foi <strong>aprovada</strong>. Aqui estão suas credenciais de acesso:</p>
-    <div class="cred">
-      <p><strong>Login:</strong> ${data.login}</p>
-      <p><strong>Senha temporária:</strong> ${data.tempPassword}</p>
-      ${companyLine}
-      <p><strong>Perfil:</strong>${profileLabel || ' padrão'}</p>
+  <div class="page">
+    <div class="card">
+      <div class="header">
+        <div class="brand"><img src="${this.resolveEmailLogoUrl()}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
+        <h1>Quality Control</h1>
+        <p>Solicitação de acesso recebida</p>
+      </div>
+      <div class="content">
+        <span class="badge">Em análise</span>
+        <h2>${greeting}</h2>
+        <p>Recebemos sua solicitação de acesso. Ela está em análise pela equipe responsável. Você receberá uma atualização quando for aprovada, recusada ou quando precisar de ajuste.</p>
+
+        <div class="section-title">Dados de acesso cadastrados</div>
+        <div class="info">
+          <table>
+            <tr><td class="label">Usuário / login</td><td class="value">${data.email}</td></tr>
+            <tr><td class="label">Senha cadastrada</td><td class="value">${data.password ?? "Senha não recebida no payload"}</td></tr>
+            <tr><td class="label">Perfil solicitado</td><td class="value">${profileLabel}</td></tr>
+            <tr><td class="label">Código de consulta</td><td class="value">${data.accessKey}</td></tr>
+          </table>
+        </div>
+
+        <div class="section-title">Dados do solicitante</div>
+        <div class="info">
+          <table>
+            <tr><td class="label">Nome</td><td class="value">${data.name ?? "-"}</td></tr>
+            <tr><td class="label">E-mail</td><td class="value">${data.email}</td></tr>
+            <tr><td class="label">Telefone</td><td class="value">${data.phone ?? "-"}</td></tr>
+          </table>
+        </div>
+
+        ${companySection}
+
+        <div class="box">Guarde este código. Ele será usado junto com seu nome e e-mail para consultar o andamento da solicitação. Depois da aprovação, o acesso será feito com o usuário e senha cadastrados neste formulário.</div>
+
+        <div class="buttonWrap">
+          <a href="${statusUrl}" class="button">Consultar solicitação</a>
+        </div>
+
+        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Link direto: ${statusUrl}</p>
+      </div>
+      <div class="footer">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</div>
     </div>
-    <p>Acesse o sistema clicando no botão abaixo:</p>
-    <a href="${loginUrl}" class="btn">Acessar o sistema</a>
-    <p style="margin-top:24px;font-size:13px;color:#666"><em>Por segurança, recomendamos trocar sua senha após o primeiro acesso em <strong>Meu Perfil → Alterar Senha</strong>. Não compartilhe suas credenciais.</em></p>
   </div>
-  <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
-</div>
 </body>
 </html>`;
 
-    const text = `${greeting}\n\nSua solicitação de acesso foi aprovada!\n\nCredenciais de acesso:\nLogin: ${data.login}\nSenha temporária: ${data.tempPassword}\n${companyText}Perfil:${profileLabel || ' padrão'}\n\nAcesse em: ${loginUrl}\n\nTroque sua senha após o primeiro acesso.`;
+    const companyText = Object.entries(data.companyDetails ?? {})
+      .filter(([key, value]) => {
+        if (hiddenKeys.has(key)) return false;
+        if (hasCnpj && (key === "companyTaxId" || key === "company_tax_id")) return false;
+        return Boolean(formatValue(value));
+      })
+      .map(([key, value]) => `${labelMap[key] ?? key}: ${formatValue(value)}`)
+      .join("\n");
+
+    const text = `${greeting}
+
+Recebemos sua solicitação de acesso.
+
+DADOS DE ACESSO
+Usuário / login: ${data.email}
+Senha cadastrada: ${data.password ?? "Senha não recebida no payload"}
+Perfil solicitado: ${profileLabel}
+Código de consulta: ${data.accessKey}
+
+DADOS DO SOLICITANTE
+Nome: ${data.name ?? "-"}
+E-mail: ${data.email}
+Telefone: ${data.phone ?? "-"}
+
+${companyText ? `DADOS DA EMPRESA
+${companyText}
+` : ""}
+
+Consulte sua solicitação em:
+${statusUrl}
+
+Guarde este código para acompanhar sua solicitação.`;
 
     return this.sendEmail({
       to,
-      subject: 'Acesso aprovado - Quality Control',
+      subject: "Solicitação de acesso recebida - Quality Control",
       html,
       text,
     });
   }
 
-  async sendAccessRequestReceivedEmail(
+  async sendAccessApprovedEmail(
     to: string,
     data: {
       name?: string | null;
-      accessKey?: string | null;
-      email?: string | null;
-      phone?: string | null;
+      login: string;
+      tempPassword?: string | null;
+      passwordFromRequest?: boolean;
       profileType?: string | null;
-      role?: string | null;
-      title?: string | null;
-      description?: string | null;
-      company?: string | null;
+      companySlug?: string | null;
     },
   ): Promise<boolean> {
-    const baseUrl = this.resolvePublicBaseUrl();
-    const statusUrl = data.accessKey
-      ? `${baseUrl}/login/access-request/status?key=${data.accessKey}`
-      : `${baseUrl}/login/access-request/status`;
+    const loginUrl = `${this.resolvePublicBaseUrl()}/login`;
     const greeting = data.name ? `Olá, ${data.name}!` : "Olá!";
+    const normalizedRole = String(data.profileType ?? "").trim().toLowerCase();
 
-    const detailRows = [
-      ["Nome completo", data.name],
-      ["E-mail", data.email],
-      ["Telefone", data.phone],
-      ["Tipo de perfil", data.profileType],
-      ["Cargo/Função", data.role],
-      ["Empresa", data.company],
-      ["Título", data.title],
-      ["Descrição", data.description],
-      ["Status", "Em análise"],
-    ].filter(([, value]) => typeof value === "string" && value.trim().length > 0);
+    const roleContent: Record<string, {
+      label: string;
+      subject: string;
+      title: string;
+      intro: string;
+      accessContext: string;
+      permissionsTitle: string;
+      permissions: string[];
+      nextSteps: string[];
+      badge: string;
+    }> = {
+      empresa: {
+        label: "Empresa",
+        subject: "Empresa aprovada",
+        title: "Bem-vindo(a) à Quality Control",
+        intro: "Sua empresa foi aprovada na plataforma Quality Control.",
+        accessContext: "Este acesso permite administrar a empresa dentro da plataforma e organizar os usuários vinculados a ela.",
+        permissionsTitle: "Com este perfil de empresa, você pode:",
+        permissions: [
+          "Cadastrar usuários da própria empresa",
+          "Gerenciar acessos dos colaboradores vinculados",
+          "Acompanhar recursos e informações disponíveis para a empresa",
+          "Permitir que a equipe da empresa utilize a plataforma conforme as permissões configuradas",
+        ],
+        nextSteps: [
+          "Acesse a plataforma com o login informado",
+          "Confira os dados da empresa",
+          "Cadastre os usuários da própria empresa",
+          "Oriente os colaboradores sobre o acesso à plataforma",
+        ],
+        badge: "Empresa aprovada",
+      },
+      company_access: {
+        label: "Empresa",
+        subject: "Empresa aprovada",
+        title: "Bem-vindo(a) à Quality Control",
+        intro: "Sua empresa foi aprovada na plataforma Quality Control.",
+        accessContext: "Este acesso permite administrar a empresa dentro da plataforma e organizar os usuários vinculados a ela.",
+        permissionsTitle: "Com este perfil de empresa, você pode:",
+        permissions: [
+          "Cadastrar usuários da própria empresa",
+          "Gerenciar acessos dos colaboradores vinculados",
+          "Acompanhar recursos e informações disponíveis para a empresa",
+          "Permitir que a equipe da empresa utilize a plataforma conforme as permissões configuradas",
+        ],
+        nextSteps: [
+          "Acesse a plataforma com o login informado",
+          "Confira os dados da empresa",
+          "Cadastre os usuários da própria empresa",
+          "Oriente os colaboradores sobre o acesso à plataforma",
+        ],
+        badge: "Empresa aprovada",
+      },
+      company_user: {
+        label: "Usuário da empresa",
+        subject: "Acesso de usuário da empresa aprovado",
+        title: "Seu acesso de usuário da empresa foi aprovado",
+        intro: "Seu usuário foi aprovado para acessar a Quality Control vinculado à empresa.",
+        accessContext: "Este acesso permite utilizar a plataforma dentro do contexto da empresa à qual seu usuário está vinculado.",
+        permissionsTitle: "Com este perfil, você pode:",
+        permissions: [
+          "Acessar a plataforma com vínculo empresarial",
+          "Utilizar os recursos liberados para sua empresa",
+          "Acompanhar informações conforme suas permissões",
+          "Solicitar suporte quando necessário",
+        ],
+        nextSteps: [
+          "Acesse a plataforma com seu login",
+          "Use a senha cadastrada na solicitação",
+          "Confira seu perfil",
+          "Troque a senha em Meu Perfil, caso queira",
+        ],
+        badge: "Usuário da empresa aprovado",
+      },
+      testing_company_user: {
+        label: "Usuário Testing Company",
+        subject: "Acesso Testing Company aprovado",
+        title: "Seu acesso Testing Company foi aprovado",
+        intro: "Seu acesso interno foi aprovado e vinculado automaticamente ao ambiente da Testing Company.",
+        accessContext: "Este perfil é voltado para usuários internos da Testing Company, conforme as permissões liberadas para sua função.",
+        permissionsTitle: "Com este perfil, você pode:",
+        permissions: [
+          "Acessar recursos internos da Testing Company",
+          "Atuar nos fluxos liberados para seu perfil",
+          "Acompanhar atividades e informações da plataforma",
+          "Utilizar o ambiente conforme suas permissões internas",
+        ],
+        nextSteps: [
+          "Acesse a plataforma",
+          "Confirme seus dados no perfil",
+          "Utilize os recursos liberados para seu perfil",
+          "Troque a senha em Meu Perfil, caso queira",
+        ],
+        badge: "Usuário TC aprovado",
+      },
+      leader_tc: {
+        label: "Líder TC",
+        subject: "Acesso de liderança aprovado",
+        title: "Seu acesso de liderança foi aprovado",
+        intro: "Seu perfil de Líder TC foi aprovado na plataforma Quality Control.",
+        accessContext: "Este perfil possui permissões de acompanhamento e administração dos fluxos liberados para liderança.",
+        permissionsTitle: "Com este perfil, você pode:",
+        permissions: [
+          "Acompanhar solicitações de acesso",
+          "Aprovar, recusar ou solicitar ajustes quando permitido",
+          "Gerenciar fluxos vinculados à operação",
+          "Acessar recursos administrativos liberados para liderança",
+        ],
+        nextSteps: [
+          "Acesse a plataforma",
+          "Confira as solicitações pendentes",
+          "Revise os fluxos liberados para liderança",
+          "Troque a senha em Meu Perfil, caso queira",
+        ],
+        badge: "Líder TC aprovado",
+      },
+      technical_support: {
+        label: "Suporte técnico",
+        subject: "Acesso de suporte técnico aprovado",
+        title: "Seu acesso de suporte técnico foi aprovado",
+        intro: "Seu perfil de suporte técnico foi aprovado na plataforma Quality Control.",
+        accessContext: "Este perfil permite atuar nos fluxos operacionais e de suporte conforme as permissões liberadas.",
+        permissionsTitle: "Com este perfil, você pode:",
+        permissions: [
+          "Acompanhar solicitações e atendimentos",
+          "Apoiar usuários e empresas vinculadas",
+          "Atuar em revisões permitidas para suporte técnico",
+          "Utilizar recursos técnicos liberados para seu perfil",
+        ],
+        nextSteps: [
+          "Acesse a plataforma",
+          "Confira as filas e solicitações disponíveis",
+          "Atue apenas nos fluxos liberados para suporte técnico",
+          "Troque a senha em Meu Perfil, caso queira",
+        ],
+        badge: "Suporte técnico aprovado",
+      },
+    };
+
+    const contentByRole =
+      roleContent[normalizedRole] ??
+      {
+        label: data.profileType ?? "Perfil aprovado",
+        subject: "Acesso aprovado",
+        title: "Seu acesso foi aprovado",
+        intro: "Sua solicitação foi aprovada na plataforma Quality Control.",
+        accessContext: "Este acesso permite utilizar a plataforma conforme as permissões vinculadas ao seu perfil.",
+        permissionsTitle: "Com este perfil, você pode:",
+        permissions: [
+          "Acessar a plataforma",
+          "Utilizar os recursos disponíveis para seu perfil",
+          "Acompanhar informações conforme suas permissões",
+        ],
+        nextSteps: [
+          "Acesse a plataforma",
+          "Confira seus dados",
+          "Troque a senha em Meu Perfil, caso queira",
+        ],
+        badge: "Acesso aprovado",
+      };
+
+    const companyLine = data.companySlug
+      ? `<tr><td class="label">Empresa vinculada</td><td class="value">${data.companySlug}</td></tr>`
+      : "";
+
+    const passwordLabel = data.passwordFromRequest
+      ? "Use a senha cadastrada no momento da solicitação"
+      : data.tempPassword
+        ? data.tempPassword
+        : "Use a senha definida no cadastro";
+
+    const permissionsHtml = contentByRole.permissions.map((item) => `<li>${item}</li>`).join("");
+    const nextStepsHtml = contentByRole.nextSteps.map((item) => `<li>${item}</li>`).join("");
 
     const html = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Solicitação recebida - Quality Control</title>
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f4f6fb}
-  .wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-  .hdr{background:#011848;color:#fff;padding:28px 32px;text-align:center}
-  .hdr h1{margin:0;font-size:22px}
-  .body{padding:32px}
-  .badge{display:inline-block;background:#2563eb;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;margin-bottom:16px}
-  .details{background:#f8fafc;border:1px solid #d8dfeb;border-radius:8px;padding:16px;margin:20px 0}
-  .details p{margin:6px 0}
-  .details strong{color:#011848}
-  .btn{display:inline-block;padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:16px}
-  .key{font-family:monospace;background:#f0f4ff;padding:8px 14px;border-radius:4px;font-size:14px;display:inline-block;margin:8px 0}
-  .footer{text-align:center;padding:20px;font-size:12px;color:#888}
-</style>
+<head>
+  <meta charset="utf-8">
+  <title>${contentByRole.subject} - Quality Control</title>
+  <style>
+    body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb}
+    .page{width:100%;padding:42px 12px;background:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%)}
+    .card{max-width:780px;margin:0 auto;background:rgba(255,255,255,.98);border:1px solid rgba(1,24,72,.14);border-radius:26px;overflow:hidden;box-shadow:0 24px 70px rgba(1,24,72,.25)}
+    .header{background:linear-gradient(135deg,#011848 0%,#142b63 48%,#ef0001 100%);color:#fff;padding:44px 42px;text-align:center}
+    .brand{display:inline-block;margin:0 auto 14px;padding:8px 18px;border:1px solid rgba(255,255,255,.34);border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:800;letter-spacing:.2px}
+    .header h1{margin:0;font-size:28px;line-height:1.2}
+    .header p{margin:10px 0 0;font-size:15px;opacity:.94}
+    .content{padding:42px 46px 36px}
+    .badge{display:inline-block;padding:8px 14px;border-radius:999px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;font-size:13px;font-weight:800;margin-bottom:18px}
+    h2{margin:0 0 12px;color:#011848;font-size:23px;line-height:1.3}
+    p{margin:0 0 16px;color:#475569;font-size:14px;line-height:1.75}
+    .info{margin:24px 0;border:1px solid #d8dfeb;border-radius:18px;overflow:hidden;background:#f8fafc}
+    .info table{width:100%;border-collapse:collapse}
+    .info td{padding:15px 18px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
+    .info tr:last-child td{border-bottom:0}
+    .label{width:34%;color:#64748b;font-weight:800}
+    .value{color:#011848;font-weight:800;word-break:break-word}
+    .box{margin:22px 0;padding:18px 20px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:16px;color:#27457d;font-size:13px;line-height:1.65}
+    .box strong{color:#011848}
+    .list{margin:10px 0 0;padding-left:20px;color:#27457d}
+    .list li{margin:7px 0}
+    .buttonWrap{text-align:center;margin:32px 0 12px}
+    .button{display:inline-block;padding:16px 38px;border-radius:14px;background:linear-gradient(135deg,#011848 0%,#ef0001 100%);color:#fff!important;text-decoration:none;font-weight:900;font-size:15px;box-shadow:0 14px 28px rgba(239,0,1,.28)}
+    .footer{padding:20px 28px 28px;text-align:center;color:#64748b;font-size:12px;background:#fff}
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hdr"><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Solicitação de acesso recebida</p></div>
-  <div class="body">
-    <span class="badge">Em análise</span>
-    <h2 style="margin-top:0">${greeting}</h2>
-    <p>Recebemos sua solicitação de acesso e ela está em análise pela equipe responsável.</p>
-    <p>Você receberá uma atualização por e-mail quando a solicitação for aprovada, rejeitada ou precisar de ajuste.</p>
+  <div class="page">
+    <div class="card">
+      <div class="header">
+        <div class="brand"><img src="${this.resolveEmailLogoUrl()}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
+        <h1>Quality Control</h1>
+        <p>${contentByRole.title}</p>
+      </div>
 
-    <div class="details">
-      <p><strong>Detalhes da solicitação</strong></p>
-      ${detailRows.map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`).join("")}
+      <div class="content">
+        <span class="badge">✓ ${contentByRole.badge}</span>
+
+        <h2>${greeting}</h2>
+
+        <p>${contentByRole.intro}</p>
+        <p>${contentByRole.accessContext}</p>
+
+        <div class="info">
+          <table>
+            <tr><td class="label">Login cadastrado</td><td class="value">${data.login}</td></tr>
+            <tr><td class="label">Senha</td><td class="value">${passwordLabel}</td></tr>
+            <tr><td class="label">Perfil aprovado</td><td class="value">${contentByRole.label}</td></tr>
+            ${companyLine}
+          </table>
+        </div>
+
+        <div class="box">
+          <strong>${contentByRole.permissionsTitle}</strong>
+          <ul class="list">${permissionsHtml}</ul>
+        </div>
+
+        <div class="box">
+          <strong>Próximos passos:</strong>
+          <ul class="list">${nextStepsHtml}</ul>
+        </div>
+
+        <div class="box">
+          A senha deste acesso é a senha definida no momento da solicitação.
+          Depois do primeiro acesso, você pode trocar a senha em
+          <strong>Meu Perfil → Alterar Senha</strong>, caso queira.
+        </div>
+
+        <div class="buttonWrap">
+          <a href="${loginUrl}" class="button">Acessar o sistema</a>
+        </div>
+
+        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">
+          Link direto: ${loginUrl}
+        </p>
+      </div>
+
+      <div class="footer">
+        E-mail automático. Não responda.<br>
+        © ${new Date().getFullYear()} Testing Company • Quality Control.
+      </div>
     </div>
-
-    ${data.accessKey ? `<p class="key">Chave de acesso: <strong>${data.accessKey}</strong></p>` : ""}
-    <a href="${statusUrl}" class="btn">Consultar solicitação</a>
   </div>
-  <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
-</div>
 </body>
 </html>`;
 
+    const permissionsText = contentByRole.permissions.map((item) => `- ${item}`).join("\n");
+    const nextStepsText = contentByRole.nextSteps.map((item) => `- ${item}`).join("\n");
+
     const text = `${greeting}
 
-Recebemos sua solicitação de acesso e ela está em análise.
+${contentByRole.title}
 
-Detalhes da solicitação:
-${detailRows.map(([label, value]) => `- ${label}: ${value}`).join("\n")}
+${contentByRole.intro}
+${contentByRole.accessContext}
 
-Consulte sua solicitação em:
-${statusUrl}
+Login cadastrado: ${data.login}
+Senha: ${passwordLabel}
+Perfil aprovado: ${contentByRole.label}
+${data.companySlug ? `Empresa vinculada: ${data.companySlug}` : ""}
 
-${data.accessKey ? `Chave de acesso: ${data.accessKey}` : ""}
+${contentByRole.permissionsTitle}
+${permissionsText}
 
-Você receberá uma atualização por e-mail quando a solicitação for aprovada, rejeitada ou precisar de ajuste.`;
+Próximos passos:
+${nextStepsText}
+
+Acesse em: ${loginUrl}
+
+Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Senha, caso queira.`;
 
     return this.sendEmail({
       to,
-      subject: "Solicitação de acesso recebida - Quality Control",
+      subject: `${contentByRole.subject} - Quality Control`,
       html,
       text,
     });

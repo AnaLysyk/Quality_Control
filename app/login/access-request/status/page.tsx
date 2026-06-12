@@ -148,7 +148,7 @@ function Logo() {
           fill
           sizes="40px"
           priority
-          className="object-contain"
+          className="animate-spin-slower pointer-events-none select-none object-contain object-center motion-reduce:animate-none"
         />
       </div>
     </div>

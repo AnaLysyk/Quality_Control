@@ -680,6 +680,7 @@ Equipe Testing Company
     table{border-spacing:0}
     .card{width:600px;max-width:600px;margin:0 auto;background:#fff;border:1px solid rgba(1,24,72,.12);border-radius:20px;overflow:hidden;box-shadow:0 18px 46px rgba(1,24,72,.20)}
     .header{background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:10px 20px;text-align:center}
+    .email-logo-spin{animation:emailLogoSpin 18s linear infinite}
     .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
     .header p{margin:3px 0 0;font-size:12px;line-height:16px;opacity:.92}
     .content{padding:22px 28px 26px;word-wrap:break-word}
@@ -695,6 +696,13 @@ Equipe Testing Company
     .value{color:#011848;font-weight:900;word-break:break-word;overflow-wrap:anywhere}
     .box{margin:18px 0;padding:14px 16px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:12px;color:#27457d;font-size:13px;line-height:1.6}
     .footer{padding:16px 24px 20px;text-align:center;color:#64748b;font-size:12px;background:#fff}
+    @keyframes emailLogoSpin{
+      from{transform:rotate(0deg)}
+      to{transform:rotate(360deg)}
+    }
+    @media (prefers-reduced-motion:reduce){
+      .email-logo-spin{animation:none!important}
+    }
     @media only screen and (max-width:620px){
       .card{width:100%!important}
       .content{padding:20px 16px 24px!important}
@@ -703,6 +711,11 @@ Equipe Testing Company
       .value{padding-top:0!important}
     }
   </style>
+  <!--[if mso]>
+  <style>
+    .email-logo-spin{animation:none!important;transform:none!important}
+  </style>
+  <![endif]-->
 </head>
 <body style="width:100%!important;margin:0;padding:0;background-color:#f4f6fb;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f6fb" style="width:100%;border-collapse:collapse;background-color:#f4f6fb;background-image:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%);">
@@ -711,7 +724,7 @@ Equipe Testing Company
         <table role="presentation" class="card" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border:1px solid #d8dfeb;border-collapse:separate;border-spacing:0;background-color:#ffffff;border-radius:20px;overflow:hidden;">
           <tr>
             <td class="header" align="center" bgcolor="#011848" style="padding:10px 20px;background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);border-radius:20px 20px 0 0;color:#ffffff;text-align:center;">
-              <img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 4px;border:0;outline:none;text-decoration:none;">
+              <img class="email-logo-spin" src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 4px;border:0;outline:none;text-decoration:none;">
               <h1 style="margin:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:25px;letter-spacing:-.2px;">Quality Control</h1>
               <p style="margin:3px 0 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;">Solicitação de acesso recebida</p>
             </td>

@@ -16,9 +16,14 @@ function resolveAppVersion(): string {
 }
 
 const APP_VERSION = resolveAppVersion();
+const DEPLOYMENT_ID =
+  process.env.NEXT_DEPLOYMENT_ID?.trim() ||
+  process.env.RENDER_GIT_COMMIT?.trim() ||
+  APP_VERSION;
 
 const nextConfig = {
   distDir,
+  deploymentId: DEPLOYMENT_ID,
   poweredByHeader: false,
   reactStrictMode: true,
   // Ignore TS errors in Next.js auto-generated route types (Next.js 16 bug with nested dynamic segments)

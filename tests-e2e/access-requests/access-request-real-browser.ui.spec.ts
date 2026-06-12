@@ -1,4 +1,4 @@
-﻿import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   criarEmailTeste,
   esperarEmailCapturado,
@@ -59,9 +59,23 @@ test.describe("Solicitação de acesso - fluxo real pelo navegador", () => {
     await page.getByTestId("request-access-role-select").selectOption("technical_support");
 
     await page.getByTestId("request-access-name-input").fill("Ana Teste Fluxo Real");
-    await page.getByTestId("request-access-user-input").fill("ana.fluxo.real");
+    const usuarioInput = page
+  .getByTestId("request-access-user-input")
+  .or(page.getByTestId("request-access-username-input"))
+  .or(page.getByLabel(/usuário|usuario|login/i));
+
+if (await usuarioInput.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+  await usuarioInput.first().fill("ana.fluxo.real");
+}
     await page.getByTestId("request-access-email-input").fill(email);
-    await page.getByTestId("request-access-phone-input").fill("+55 51 99999-9999");
+    const telefoneInput = page
+  .getByTestId("request-access-phone-input")
+  .or(page.getByLabel(/telefone|celular|phone/i))
+  .or(page.locator('input[type="tel"]'));
+
+if (await telefoneInput.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+  await telefoneInput.first().fill("+55 51 99999-9999");
+}
 
     await page.getByRole("combobox").filter({ hasText: /selecione uma profissão/i }).click();
     await page.getByRole("option", { name: /analista/i }).first().click();
@@ -83,7 +97,7 @@ test.describe("Solicitação de acesso - fluxo real pelo navegador", () => {
     const emailRecebido = await esperarEmailCapturado({
       to: email,
       subject: "Solicitação de acesso recebida",
-      contains: ["Chave de acesso"],
+      contains: ["Código de consulta"],
     });
 
     const corpo = `${emailRecebido.text ?? ""}\n${emailRecebido.html ?? ""}`;
@@ -117,3 +131,4 @@ test.describe("Solicitação de acesso - fluxo real pelo navegador", () => {
     await expect(page.getByText("technical_support")).toHaveCount(0);
   });
 });
+

@@ -55,37 +55,51 @@ const STATUS = {
   pending: {
     label: "Aguardando análise",
     text: "Sua solicitação foi recebida e aguarda análise. As atualizações serão enviadas por e-mail.",
-    tone: "border-amber-200 bg-amber-50 text-amber-800",
+    tone: "border-amber-300 bg-amber-50/95 text-amber-950",
+    accent: "bg-amber-500",
+    iconTone: "border-amber-300 bg-amber-100",
   },
   under_review: {
     label: "Em análise",
     text: "Sua correção foi recebida e voltou para análise. As atualizações serão enviadas por e-mail.",
-    tone: "border-blue-200 bg-blue-50 text-blue-800",
+    tone: "border-blue-300 bg-blue-50/95 text-blue-950",
+    accent: "bg-blue-600",
+    iconTone: "border-blue-300 bg-blue-100",
   },
   needs_more_info: {
     label: "Ajuste necessário",
     text: "Corrija somente os campos destacados e reenvie para análise.",
-    tone: "border-red-200 bg-red-50 text-red-800",
+    tone: "border-orange-300 bg-orange-50/95 text-orange-950",
+    accent: "bg-orange-600",
+    iconTone: "border-orange-300 bg-orange-100",
   },
   approved: {
     label: "Aprovado",
     text: "Sua solicitação foi aprovada. As instruções de acesso foram enviadas por e-mail.",
-    tone: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    tone: "border-emerald-300 bg-emerald-50/95 text-emerald-950",
+    accent: "bg-emerald-600",
+    iconTone: "border-emerald-300 bg-emerald-100",
   },
   rejected: {
     label: "Rejeitado",
     text: "Sua solicitação foi rejeitada. Consulte o motivo informado pela equipe.",
-    tone: "border-red-300 bg-red-50 text-red-800",
+    tone: "border-red-300 bg-red-50/95 text-red-950",
+    accent: "bg-red-600",
+    iconTone: "border-red-300 bg-red-100",
   },
   cancelled: {
     label: "Cancelado",
     text: "Esta solicitação foi cancelada.",
-    tone: "border-slate-200 bg-slate-100 text-slate-700",
+    tone: "border-slate-300 bg-slate-100/95 text-slate-900",
+    accent: "bg-slate-600",
+    iconTone: "border-slate-300 bg-slate-200",
   },
   expired: {
     label: "Expirado",
     text: "Esta solicitação expirou.",
-    tone: "border-slate-200 bg-slate-100 text-slate-700",
+    tone: "border-slate-300 bg-slate-100/95 text-slate-900",
+    accent: "bg-slate-600",
+    iconTone: "border-slate-300 bg-slate-200",
   },
 } as const;
 
@@ -167,6 +181,72 @@ function AnimatedBackground() {
       <div className="absolute bottom-2 left-1/2 h-20 w-20 -translate-x-1/2 rounded-full bg-[#011848] opacity-10 blur animate-bounce delay-200 motion-reduce:animate-none" />
       <div className="absolute left-2 top-1/2 h-14 w-14 rounded-full bg-[#ef0001] opacity-10 blur animate-pulse delay-800 motion-reduce:animate-none" />
       <div className="absolute right-2 top-1/2 h-14 w-14 rounded-full bg-[#011848] opacity-10 blur animate-ping delay-600 motion-reduce:animate-none" />
+    </div>
+  );
+}
+
+function FloatingNotice({
+  type,
+  message,
+  onClose,
+}: {
+  type: "error" | "success";
+  message: string;
+  onClose: () => void;
+}) {
+  const isError = type === "error";
+
+  return (
+    <div className="pointer-events-none fixed inset-x-4 top-4 z-[70] flex justify-center sm:inset-x-auto sm:right-5 sm:justify-end">
+      <div
+        className={`pointer-events-auto relative w-full max-w-sm overflow-hidden rounded-2xl border bg-white shadow-[0_20px_60px_rgba(1,24,72,0.28)] ${requestStyles.toast} ${
+          isError ? "border-red-300" : "border-emerald-300"
+        }`}
+        role={isError ? "alert" : "status"}
+        aria-live={isError ? "assertive" : "polite"}
+        data-testid={`access-request-notice-${type}`}
+      >
+        <div className="flex items-start gap-3 p-4 pr-12">
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+              isError ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
+            }`}
+            aria-hidden="true"
+          >
+            {isError ? (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M12 8v5" strokeLinecap="round" />
+                <path d="M12 17h.01" strokeLinecap="round" />
+                <path d="M10.3 3.8 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.8a2 2 0 0 0-3.4 0Z" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="m5 12.5 4.2 4.2L19 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </span>
+          <div className="min-w-0 pt-0.5">
+            <p className={`text-sm font-black ${isError ? "text-red-900" : "text-emerald-900"}`}>
+              {isError ? "Atenção" : "Tudo certo"}
+            </p>
+            <p className="mt-1 break-words text-sm font-semibold leading-5 text-slate-700">{message}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#011848]/20"
+          aria-label="Fechar aviso"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <path d="m7 7 10 10M17 7 7 17" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div
+          className={`absolute inset-x-0 bottom-0 h-1 ${isError ? "bg-red-600" : "bg-emerald-600"} ${requestStyles.toastProgress}`}
+          aria-hidden="true"
+        />
+      </div>
     </div>
   );
 }
@@ -287,6 +367,17 @@ function StatusContent() {
     };
   }, [busy, cancelOpen]);
 
+  useEffect(() => {
+    if (!item || (!error && !feedback)) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setError(null);
+      setFeedback(null);
+    }, 5000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [error, feedback, item]);
+
   const status = item ? STATUS[item.status as keyof typeof STATUS] ?? STATUS.pending : STATUS.pending;
   const finalStatus = item ? ["approved", "rejected", "cancelled", "expired"].includes(item.status) : false;
   const latestRound = item?.adjustmentHistory?.at(-1);
@@ -332,6 +423,7 @@ function StatusContent() {
     if (!item || !reply.trim()) return;
     setBusy(true);
     setError(null);
+    setFeedback(null);
     try {
       const response = await fetch("/api/support/access-request/comments", {
         method: "POST",
@@ -358,6 +450,7 @@ function StatusContent() {
   async function cancelRequest() {
     setBusy(true);
     setError(null);
+    setFeedback(null);
     try {
       const response = await fetch(
         `/api/access-requests/by-key/${encodeURIComponent(accessKey)}/cancel`,
@@ -413,13 +506,32 @@ function StatusContent() {
           <p className="mx-auto mt-2 max-w-lg text-sm font-medium text-[#64748b]">Consulte os dados, acompanhe a análise e fale com a equipe responsável.</p>
         </header>
 
-        <section className={`mt-7 rounded-2xl border p-5 ${status.tone}`}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em]" data-testid="access-request-status-label">{status.label}</p>
-              <p className="mt-2 text-sm font-semibold" data-testid="access-request-status-message">{status.text}</p>
+        <section
+          className={`relative mt-7 overflow-hidden rounded-2xl border p-5 shadow-[0_12px_30px_rgba(1,24,72,0.08)] ${status.tone}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            className={`pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full opacity-10 blur-2xl ${status.accent} ${requestStyles.statusPulse}`}
+            aria-hidden="true"
+          />
+          <div className="relative flex flex-wrap items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-4">
+              <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border ${status.iconTone}`}>
+                <span
+                  className={`h-4 w-4 rounded-full shadow-[0_0_0_5px_rgba(255,255,255,0.65)] ${status.accent} ${requestStyles.statusPulse}`}
+                  aria-hidden="true"
+                />
+              </span>
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.2em]" data-testid="access-request-status-label">{status.label}</p>
+                <p className="mt-1.5 text-sm font-semibold leading-6" data-testid="access-request-status-message">{status.text}</p>
+              </div>
             </div>
-            <span className="rounded-full border border-current px-4 py-2 text-xs font-black" data-testid="access-request-status-badge">{status.label}</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-current bg-white/65 px-4 py-2 text-xs font-black shadow-sm" data-testid="access-request-status-badge">
+              <span className={`h-2 w-2 rounded-full ${status.accent} ${requestStyles.statusPulse}`} aria-hidden="true" />
+              {status.label}
+            </span>
           </div>
         </section>
 
@@ -570,11 +682,20 @@ function StatusContent() {
           </section>
         )}
 
-        {(error || feedback) && <p className={`mt-5 rounded-xl border p-4 text-sm font-semibold ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? feedback}</p>}
-
         <button onClick={() => router.push("/login")} className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-[#011848] bg-[#011848] px-5 py-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(1,24,72,0.16)] transition hover:-translate-y-0.5 hover:bg-[#142b63] focus:outline-none focus:ring-4 focus:ring-[#011848]/15">Voltar ao login</button>
         </div>
       </section>
+
+      {(error || feedback) && (
+        <FloatingNotice
+          type={error ? "error" : "success"}
+          message={error ?? feedback ?? ""}
+          onClose={() => {
+            setError(null);
+            setFeedback(null);
+          }}
+        />
+      )}
 
       {cancelOpen && (
         <div

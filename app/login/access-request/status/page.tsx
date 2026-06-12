@@ -140,13 +140,13 @@ function dateTime(value?: string) {
 
 function Logo() {
   return (
-    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-[#011848] via-[#142b63] to-[#ef0001] shadow-[0_14px_32px_rgba(1,24,72,0.24)] ring-4 ring-white">
-      <div className="relative h-10 w-10">
+    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg">
+      <div className="relative h-12 w-12">
         <Image
           src="/images/tc.png"
           alt="Logo Quality Control"
           fill
-          sizes="40px"
+          sizes="48px"
           priority
           className="animate-spin-slower pointer-events-none select-none object-contain object-center motion-reduce:animate-none"
         />
@@ -489,7 +489,17 @@ function StatusContent() {
             <div className="h-1.5 bg-linear-to-r from-[#011848] via-[#142b63] to-[#ef0001]" />
             <div className="p-5">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#011848] text-sm font-black text-white shadow-md">QC</div>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-md">
+                  <div className="relative h-7 w-7">
+                    <Image
+                      src="/images/tc.png"
+                      alt=""
+                      fill
+                      sizes="28px"
+                      className="animate-spin-slower pointer-events-none select-none object-contain object-center motion-reduce:animate-none"
+                    />
+                  </div>
+                </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">Canal da solicitação</p>
                   <h2 className="mt-1 text-lg font-black text-[#011848]">Fale com a equipe</h2>

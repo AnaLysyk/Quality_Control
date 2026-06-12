@@ -202,7 +202,7 @@ function FloatingNotice({
         className={`pointer-events-auto relative w-full max-w-sm overflow-hidden rounded-2xl border bg-white shadow-[0_20px_60px_rgba(1,24,72,0.28)] ${requestStyles.toast} ${
           isError ? "border-red-300" : "border-emerald-300"
         }`}
-        role={isError ? "alert" : "status"}
+        role="status"
         aria-live={isError ? "assertive" : "polite"}
         data-testid={`access-request-notice-${type}`}
       >

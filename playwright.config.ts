@@ -1,8 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const runHeaded = process.env.PLAYWRIGHT_HEADED === "1" || process.env.PLAYWRIGHT_HEADED === "true";
+const runRealEmailTests =
+  process.env.PLAYWRIGHT_REAL_EMAIL === "1" || process.env.PLAYWRIGHT_REAL_EMAIL === "true";
+const emailCaptureFile = resolve("test-results/emails/outbox.jsonl");
 
 function loadDotenv(path: string): Record<string, string> {
   try {
@@ -26,6 +30,12 @@ const envOverrides = {
   PLAYWRIGHT_MOCK: "true",
   JWT_SECRET: "quality-control-e2e-secret",
   E2E_USE_JSON: process.env.E2E_USE_JSON || "1",
+  ACCESS_REQUEST_EMAIL_BYPASS: runRealEmailTests ? "false" : "true",
+  ACCESS_REQUEST_BLOCK_DUPLICATES: "true",
+  EMAIL_CAPTURE_MODE: runRealEmailTests ? "off" : "file",
+  EMAIL_CAPTURE_FILE: emailCaptureFile,
+  FORCE_EMAIL_SEND: runRealEmailTests ? "true" : "false",
+  E2E_SEND_REAL_EMAIL: runRealEmailTests ? "true" : "false",
 };
 Object.assign(process.env, envOverrides);
 
@@ -80,6 +90,12 @@ export default defineConfig({
           HOSTNAME: "127.0.0.1",
           NEXT_PUBLIC_SITE_URL: baseURL,
           NEXT_PUBLIC_BASE_URL: baseURL,
+          ACCESS_REQUEST_EMAIL_BYPASS: envOverrides.ACCESS_REQUEST_EMAIL_BYPASS,
+          ACCESS_REQUEST_BLOCK_DUPLICATES: envOverrides.ACCESS_REQUEST_BLOCK_DUPLICATES,
+          EMAIL_CAPTURE_MODE: envOverrides.EMAIL_CAPTURE_MODE,
+          EMAIL_CAPTURE_FILE: envOverrides.EMAIL_CAPTURE_FILE,
+          FORCE_EMAIL_SEND: envOverrides.FORCE_EMAIL_SEND,
+          E2E_SEND_REAL_EMAIL: envOverrides.E2E_SEND_REAL_EMAIL,
         },
       },
   projects: [

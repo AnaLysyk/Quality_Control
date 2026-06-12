@@ -1,12 +1,13 @@
 import type { AccessType } from "@/lib/accessRequestMessage";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+import {
+  accessRequestProfileLabel,
+  accessRequestProfileNeedsCompany,
+  normalizeAccessRequestProfileType,
+  type AccessRequestProfileType,
+} from "@/lib/accessRequestsV2/domain";
 
-export type RequestProfileType =
-  | "empresa"
-  | "testing_company_user"
-  | "company_user"
-  | "leader_tc"
-  | "technical_support";
+export type RequestProfileType = AccessRequestProfileType;
 
 export type RequestProfileTypeLabel =
   | "Empresa"
@@ -22,14 +23,12 @@ function normalizeText(value: string) {
 }
 
 export function toRequestProfileTypeLabel(profileType: RequestProfileType): RequestProfileTypeLabel {
-  if (profileType === "empresa") return "Empresa";
-  if (profileType === "testing_company_user") return "Usuario TC";
-  if (profileType === "company_user") return "Usuario da empresa";
-  if (profileType === "leader_tc") return "Lider TC";
-  return "Suporte Tecnico";
+  return accessRequestProfileLabel(profileType) as RequestProfileTypeLabel;
 }
 
 export function normalizeRequestProfileType(value: string | null | undefined): RequestProfileType | null {
+  const direct = normalizeAccessRequestProfileType(value);
+  if (direct) return direct;
   if (!value) return null;
   const normalized = normalizeText(value);
 
@@ -95,8 +94,7 @@ export function toInternalAccessType(profileType: RequestProfileType): AccessTyp
 }
 
 export function requestProfileTypeNeedsCompany(profileType: RequestProfileType) {
-  // Usuário da empresa e Usuário TC sempre precisam estar vinculados a uma empresa existente.
-  return profileType === "company_user" || profileType === "testing_company_user";
+  return accessRequestProfileNeedsCompany(profileType);
 }
 
 export const requiresCompanyForProfileType = requestProfileTypeNeedsCompany;

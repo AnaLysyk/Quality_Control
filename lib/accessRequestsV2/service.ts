@@ -1,16 +1,41 @@
-import { randomBytes, randomUUID } from "crypto";
-
-import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
+import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { addAuditLogSafe, listAuditLogs } from "@/data/auditLogRepository";
-import { createLocalUser, findLocalCompanyBySlug, findLocalUserByEmailOrId, upsertLocalLink, updateLocalUser } from "@/lib/auth/localStore";
+import {
+  createLocalCompany,
+  createLocalUser,
+  findLocalCompanyById,
+  findLocalCompanyBySlug,
+  findLocalUserByEmailOrId,
+  listLocalLinksForUser,
+  listLocalCompanies,
+  removeLocalLink,
+  upsertLocalLink,
+  updateLocalUser,
+} from "@/lib/auth/localStore";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { emailService } from "@/lib/email";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { shouldUseJsonStore } from "@/lib/storeMode";
+import { composeAccessRequestMessage } from "@/lib/accessRequestMessage";
+import { normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
+import { toInternalAccessType } from "@/lib/requestRouting";
+import {
+  resolveEditableProfileUserState,
+  toStoredEditableUserRole,
+} from "@/lib/editableProfileRoles";
 import {
   canApproveRequestedRole,
   canReviewAccessRequests,
   canViewAccessRequest,
+  canTransitionAccessRequest,
+  ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS,
+  accessRequestProfileNeedsCompany,
+  accessRequestProfileUsesAutomaticCompany,
+  isAccessRequestFinalStatus,
+  normalizeAccessRequestAdjustmentFields,
+  normalizeAccessRequestProfileType,
+  type AccessRequestAdjustmentEntry,
+  type AccessRequestAdjustmentField,
   type AccessRequestV2,
   type AccessRequestV2Priority,
   type AccessRequestV2Status,
@@ -20,7 +45,7 @@ import {
   normalizeAccessRequestV2Status,
   normalizeAccessRequestV2Type,
 } from "./domain";
-import { createAccessRequestV2, getAccessRequestV2ById, listAccessRequestsV2, updateAccessRequestV2 } from "./repository";
+import { createAccessRequestV2, getAccessRequestV2ById, getAccessRequestV2ByKey, listAccessRequestsV2, updateAccessRequestV2 } from "./repository";
 
 function asText(value: unknown, max = 255) {
   if (typeof value !== "string") return "";
@@ -107,6 +132,14 @@ function buildCompanyDetailsForEmail(payload: Record<string, unknown>) {
     linkedin:
       readTextFromPayload(companyDetails, ["linkedin", "linkedIn", "companyLinkedin", "companyLinkedIn"], 255) ||
       readTextFromPayload(payload, ["linkedin", "linkedIn", "companyLinkedin", "companyLinkedIn"], 255),
+
+    description:
+      readTextFromPayload(companyDetails, ["description", "companyDescription", "company_description"], 1000) ||
+      readTextFromPayload(payload, ["companyDescription", "company_description"], 1000),
+
+    notes:
+      readTextFromPayload(companyDetails, ["notes", "companyNotes", "company_notes"], 1000) ||
+      readTextFromPayload(payload, ["companyNotes", "company_notes"], 1000),
   };
 
   return Object.fromEntries(
@@ -118,27 +151,24 @@ function buildCompanyDetailsForEmail(payload: Record<string, unknown>) {
   );
 }
 
-
-function asRecord(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return {};
-  }
-
-  return value as Record<string, unknown>;
+function buildRequestDetails(payload: Record<string, unknown>) {
+  const company = buildCompanyDetailsForEmail(payload);
+  return {
+    username:
+      readTextFromPayload(payload, ["user", "username", "requestedUser"], 120) || undefined,
+    phone: readTextFromPayload(payload, ["phone", "telefone"], 80) || undefined,
+    jobRole: readTextFromPayload(payload, ["role", "jobRole", "cargo"], 255) || undefined,
+    title: readTextFromPayload(payload, ["title", "titulo"], 255) || undefined,
+    description:
+      readTextFromPayload(payload, ["description", "reason", "descricao"], 2000) || undefined,
+    notes: readTextFromPayload(payload, ["notes", "observacoes"], 2000) || undefined,
+    company: Object.keys(company).length ? company : undefined,
+  };
 }
 
 
 function asEmail(value: unknown) {
   return asText(value, 255).toLowerCase();
-}
-
-function pickFirstText(payload: Record<string, unknown>, keys: string[], max = 255) {
-  for (const key of keys) {
-    const value = asText(payload[key], max);
-    if (value) return value;
-  }
-
-  return "";
 }
 
 function buildSafeAccessRequestDetails(payload: Record<string, unknown>) {
@@ -224,7 +254,6 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     "requestedPassword",
   ], 255);
   const requestedPasswordHash = requestedPassword ? hashPasswordSha256(requestedPassword) : undefined;
-  const companyDetailsPayload = asRecord(payload.companyDetails);
   const requestedUser =
     asText(payload.user, 120) ||
     asText(payload.requestedUser, 120) ||
@@ -233,9 +262,23 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
   const phone = asText(payload.phone, 80) || undefined;
   const title = asText(payload.title, 255) || undefined;
   const companyLabel = requestedCompanySlug || requestedCompanyId || undefined;
+  const requestedRole = normalizeAccessRequestProfileType(resolveRequestedRoleFromPayload(payload));
+  const details = buildRequestDetails(payload);
 
   if (!requesterEmail) {
     return { status: 400 as const, body: { message: "E-mail é obrigatório" } };
+  }
+  if (!requestedRole) {
+    return { status: 400 as const, body: { message: "Perfil solicitado invalido" } };
+  }
+  if (!requesterName || !phone || !title || !reason || !requestedPasswordHash) {
+    return { status: 400 as const, body: { message: "Preencha todos os campos obrigatorios" } };
+  }
+  if (accessRequestProfileNeedsCompany(requestedRole) && !requestedCompanyId) {
+    return { status: 400 as const, body: { message: "Selecione uma empresa cadastrada" } };
+  }
+  if (requestedRole === "empresa" && !details.company?.companyName) {
+    return { status: 400 as const, body: { message: "Informe os dados da empresa" } };
   }
 
   if (shouldBlockDuplicateAccessRequests()) {
@@ -287,109 +330,31 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     requesterEmail,
     requesterName: requesterName || undefined,
     requestType: resolveRequestTypeFromPayload(payload),
-    requestedRole: resolveRequestedRoleFromPayload(payload),
-    requestedCompanySlug,
-    requestedCompanyId,
+    requestedRole,
+    requestedCompanySlug:
+      accessRequestProfileUsesAutomaticCompany(requestedRole) ? undefined : requestedCompanySlug,
+    requestedCompanyId:
+      accessRequestProfileUsesAutomaticCompany(requestedRole) ? undefined : requestedCompanyId,
     targetUserId: requestedUser,
+    requestedPasswordHash,
     reason,
     priority: resolvePriorityFromPayload(payload),
+    details,
   });
-
-  const companyEmailDetails = {
-    ...companyDetailsPayload,
-    companyName:
-      pickFirstText(companyDetailsPayload, ["companyName", "company_name", "razaoSocial", "razao_social", "company"], 255) ||
-      pickFirstText(payload, ["companyName", "company_name", "razaoSocial", "razao_social", "company"], 255),
-    fantasyName:
-      pickFirstText(companyDetailsPayload, ["fantasyName", "nomeFantasia", "nome_fantasia"], 255) ||
-      pickFirstText(payload, ["fantasyName", "nomeFantasia", "nome_fantasia"], 255),
-    cnpj:
-      pickFirstText(companyDetailsPayload, ["cnpj", "companyTaxId", "company_tax_id", "companyCnpj", "company_cnpj"], 40) ||
-      pickFirstText(payload, ["cnpj", "companyTaxId", "company_tax_id", "companyCnpj", "company_cnpj"], 40),
-    cep:
-      pickFirstText(companyDetailsPayload, ["cep", "companyCep", "company_cep"], 40) ||
-      pickFirstText(payload, ["cep", "companyCep", "company_cep"], 40),
-    address:
-      pickFirstText(companyDetailsPayload, ["address", "endereco", "companyAddress", "company_address"], 255) ||
-      pickFirstText(payload, ["address", "endereco", "companyAddress", "company_address"], 255),
-    number:
-      pickFirstText(companyDetailsPayload, ["number", "numero", "companyNumber", "company_number"], 40) ||
-      pickFirstText(payload, ["number", "numero", "companyNumber", "company_number"], 40),
-    complement:
-      pickFirstText(companyDetailsPayload, ["complement", "complemento"], 255) ||
-      pickFirstText(payload, ["complement", "complemento"], 255),
-    district:
-      pickFirstText(companyDetailsPayload, ["district", "bairro"], 120) ||
-      pickFirstText(payload, ["district", "bairro"], 120),
-    city:
-      pickFirstText(companyDetailsPayload, ["city", "cidade", "municipio"], 120) ||
-      pickFirstText(payload, ["city", "cidade", "municipio"], 120),
-    state:
-      pickFirstText(companyDetailsPayload, ["state", "uf"], 40) ||
-      pickFirstText(payload, ["state", "uf"], 40),
-    phone:
-      pickFirstText(companyDetailsPayload, ["phone", "companyPhone", "phoneCompany", "company_phone"], 80) ||
-      pickFirstText(payload, ["companyPhone", "phoneCompany", "company_phone"], 80),
-    email:
-      pickFirstText(companyDetailsPayload, ["email", "companyEmail", "emailCompany", "company_email"], 255) ||
-      pickFirstText(payload, ["companyEmail", "emailCompany", "company_email"], 255),
-    website:
-      pickFirstText(companyDetailsPayload, ["website", "site", "companyWebsite", "company_website"], 255) ||
-      pickFirstText(payload, ["website", "site", "companyWebsite", "company_website"], 255),
-    linkedin:
-      pickFirstText(companyDetailsPayload, ["linkedin", "linkedIn", "companyLinkedin", "companyLinkedIn"], 255) ||
-      pickFirstText(payload, ["linkedin", "linkedIn", "companyLinkedin", "companyLinkedIn"], 255),
-    situation:
-      pickFirstText(companyDetailsPayload, ["situation", "situacao", "descricao_situacao_cadastral"], 120) ||
-      pickFirstText(payload, ["situation", "situacao", "descricao_situacao_cadastral"], 120),
-    openingDate:
-      pickFirstText(companyDetailsPayload, ["openingDate", "dataAbertura", "data_inicio_atividade"], 80) ||
-      pickFirstText(payload, ["openingDate", "dataAbertura", "data_inicio_atividade"], 80),
-    legalNature:
-      pickFirstText(companyDetailsPayload, ["legalNature", "naturezaJuridica", "natureza_juridica"], 255) ||
-      pickFirstText(payload, ["legalNature", "naturezaJuridica", "natureza_juridica"], 255),
-    mainActivity:
-      pickFirstText(companyDetailsPayload, ["mainActivity", "atividadePrincipal", "cnae_fiscal_descricao"], 255) ||
-      pickFirstText(payload, ["mainActivity", "atividadePrincipal", "cnae_fiscal_descricao"], 255),
-    size:
-      pickFirstText(companyDetailsPayload, ["size", "porte"], 80) ||
-      pickFirstText(payload, ["size", "porte"], 80),
-    shareCapital:
-      pickFirstText(companyDetailsPayload, ["shareCapital", "capitalSocial", "capital_social"], 80) ||
-      pickFirstText(payload, ["shareCapital", "capitalSocial", "capital_social"], 80),
-  };
-
-  const passwordForReceivedEmail = readTextFromPayload(payload, [
-    "password",
-    "senha",
-    "plainPassword",
-    "userPassword",
-    "accessPassword",
-    "requestPassword",
-    "requestedPassword",
-  ], 255);
 
   const companyDetailsForReceivedEmail = buildCompanyDetailsForEmail(payload);
-
-  console.log("[ACCESS-REQUESTS][V2][EMAIL][PAYLOAD]", {
-    hasPassword: Boolean(passwordForReceivedEmail),
-    companyDetailKeys: Object.keys(companyDetailsForReceivedEmail),
-  });
 
   void emailService.sendAccessRequestReceivedEmail(requesterEmail, {
     name: requesterName || null,
     accessKey: created.accessKey ?? created.id,
     email: requesterEmail,
     phone,
-    password: passwordForReceivedEmail || requestedPassword || null,
+    passwordDefined: Boolean(requestedPasswordHash),
     companyDetails: companyDetailsForReceivedEmail,
-    profileType: created.requestType,
-    role: created.requestedRole ?? null,
+    profileType: created.requestedRole,
     title: title ?? null,
     description: reason ?? null,
-    company: companyLabel ?? null,
-  }).then((sent) => {
-    console.log("[ACCESS-REQUESTS][V2][EMAIL][RECEIVED]", sent ? "sent" : "not_sent", requesterEmail);
+    companyName: companyLabel ?? null,
   }).catch((error) => {
     console.warn("[ACCESS-REQUESTS][V2][EMAIL][RECEIVED] failed:", error);
   });
@@ -441,45 +406,152 @@ export async function getAccessRequestForUser(id: string, user: AuthUser) {
   return request;
 }
 
-export async function patchAccessRequestForReviewer(
+export async function updateAccessRequestDetailsForReviewer(
   id: string,
-  patch: { status?: string | null; priority?: string | null; reviewComment?: string | null },
+  payload: Record<string, unknown>,
   reviewer: AuthUser,
 ) {
   if (!canReviewAccessRequests(reviewer)) return "forbidden" as const;
+  const request = await getAccessRequestV2ById(id);
+  if (!request) return null;
+  if (isAccessRequestFinalStatus(request.status)) return "final" as const;
 
-  const current = await getAccessRequestV2ById(id);
-  if (!current) return null;
+  const profile =
+    normalizeAccessRequestProfileType(readTextFromPayload(payload, ["access_type", "profile_type"])) ??
+    normalizeAccessRequestProfileType(request.requestedRole);
+  if (!profile) return "invalid-profile" as const;
 
-  const nextStatus = normalizeAccessRequestV2Status(patch.status ?? null) ?? current.status;
-  const nextPriority = normalizeAccessRequestV2Priority(patch.priority ?? null) ?? current.priority;
-  const reviewComment = asText(patch.reviewComment, 2000) || undefined;
+  const details = {
+    ...(request.details ?? {}),
+    username:
+      readTextFromPayload(payload, ["user", "username"], 120) ||
+      request.details?.username,
+    phone: readTextFromPayload(payload, ["phone"], 80) || request.details?.phone,
+    jobRole: readTextFromPayload(payload, ["role", "jobRole"], 255) || request.details?.jobRole,
+    title: readTextFromPayload(payload, ["title"], 255) || request.details?.title,
+    description:
+      readTextFromPayload(payload, ["description"], 2000) ||
+      request.details?.description,
+    notes: readTextFromPayload(payload, ["notes"], 2000) || request.details?.notes,
+    company: request.details?.company,
+  };
 
-  if (nextStatus === "rejected" && !reviewComment) {
-    return "reject-comment-required" as const;
+  const companyId =
+    readTextFromPayload(payload, ["client_id", "requestedCompanyId"], 120) ||
+    request.requestedCompanyId;
+  const companySlug =
+    readTextFromPayload(payload, ["company", "requestedCompanySlug"], 255) ||
+    request.requestedCompanySlug;
+
+  if (accessRequestProfileNeedsCompany(profile)) {
+    const company = await findCompanyByIdSlugOrName(companyId, companySlug);
+    if (!company) return "company-missing" as const;
   }
 
-  const updated = await updateAccessRequestV2(id, {
-    status: nextStatus,
-    priority: nextPriority,
-    reviewComment,
-    reviewedBy: reviewer.id,
-    reviewedAt: new Date().toISOString(),
+  const password = readTextFromPayload(payload, ["password"], 255);
+  return updateAccessRequestV2(id, {
+    requesterName:
+      readTextFromPayload(payload, ["full_name", "name"], 255) ||
+      request.requesterName,
+    requesterEmail:
+      asEmail(payload.email) ||
+      request.requesterEmail,
+    requestedRole: profile,
+    requestedCompanyId:
+      accessRequestProfileUsesAutomaticCompany(profile) ? undefined : companyId,
+    requestedCompanySlug:
+      accessRequestProfileUsesAutomaticCompany(profile) ? undefined : companySlug,
+    requestedPasswordHash: password ? hashPasswordSha256(password) : request.requestedPasswordHash,
+    reason: details.description ?? request.reason,
+    details,
   });
+}
 
-  if (!updated) return null;
+function normalizeCompanyIdentity(value?: string | null) {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-  addAuditLogSafe({
-    actorUserId: reviewer.id,
-    actorEmail: reviewer.email,
-    action: nextStatus === "approved" ? "access_request.accepted" : nextStatus === "rejected" ? "access_request.rejected" : "access_request.updated",
-    entityType: "access_request",
-    entityId: updated.id,
-    entityLabel: `${updated.requesterName ?? "Solicitante"} (${updated.requesterEmail})`,
-    metadata: { nextStatus, nextPriority, reviewComment: reviewComment ?? null },
-  });
+async function findCompanyByIdSlugOrName(id?: string, slugOrName?: string) {
+  if (id) {
+    const byId = await findLocalCompanyById(id);
+    if (byId) return byId;
+  }
+  if (slugOrName) {
+    const bySlug = await findLocalCompanyBySlug(slugOrName);
+    if (bySlug) return bySlug;
+  }
+  const target = normalizeCompanyIdentity(slugOrName);
+  if (!target) return null;
+  const companies = await listLocalCompanies();
+  return (
+    companies.find(
+      (company) =>
+        normalizeCompanyIdentity(company.slug) === target ||
+        normalizeCompanyIdentity(company.name ?? company.company_name) === target,
+    ) ?? null
+  );
+}
 
-  return updated;
+async function resolveApprovalCompany(request: AccessRequestV2) {
+  const profile = normalizeAccessRequestProfileType(request.requestedRole);
+  if (!profile) return { error: "invalid-profile" as const };
+
+  if (accessRequestProfileUsesAutomaticCompany(profile)) {
+    const companies = await listLocalCompanies();
+    const company =
+      companies.find((item) => {
+        const identity = normalizeCompanyIdentity(item.slug || item.name || item.company_name);
+        return identity === "testing-company" || identity === "testing-company-e2e";
+      }) ?? null;
+    return company
+      ? { company, profile }
+      : { error: "testing-company-missing" as const };
+  }
+
+  if (accessRequestProfileNeedsCompany(profile)) {
+    const company = await findCompanyByIdSlugOrName(
+      request.requestedCompanyId,
+      request.requestedCompanySlug,
+    );
+    return company ? { company, profile } : { error: "company-missing" as const };
+  }
+
+  if (profile === "empresa") {
+    const companyName = request.details?.company?.companyName?.trim();
+    if (!companyName) return { error: "company-name-missing" as const };
+
+    const existing = await findCompanyByIdSlugOrName(
+      request.requestedCompanyId,
+      request.requestedCompanySlug || companyName,
+    );
+    if (existing) return { company: existing, profile };
+
+    const details = request.details?.company;
+    const company = await createLocalCompany({
+      name: companyName,
+      company_name: companyName,
+      tax_id: details?.cnpj ?? null,
+      cep: details?.cep ?? null,
+      address: details?.address ?? null,
+      phone: details?.phone ?? request.details?.phone ?? null,
+      website: details?.website ?? null,
+      linkedin_url: details?.linkedin ?? null,
+      short_description: details?.description ?? null,
+      description: details?.description ?? null,
+      notes: details?.notes ?? null,
+      active: true,
+      status: "active",
+    });
+    return { company, profile };
+  }
+
+  return { company: null, profile };
 }
 
 async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser) {
@@ -491,13 +563,21 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     return "self-approval" as const;
   }
 
-  const targetIdentifier = request.targetUserId || request.requesterUserId || request.requesterEmail;
+  if (!request.requestedPasswordHash) return "missing-password" as const;
+
+  const companyResult = await resolveApprovalCompany(request);
+  if ("error" in companyResult) return companyResult.error;
+
+  const targetIdentifier = request.requesterEmail;
   if (!targetIdentifier) return "target-missing" as const;
 
   const existingUser = await findLocalUserByEmailOrId(targetIdentifier);
-  const passwordFromRequest = Boolean(request.requestedPasswordHash);
-  const fallbackPassword = randomBytes(10).toString("hex");
-  const passwordHash = request.requestedPasswordHash ?? hashPasswordSha256(fallbackPassword);
+  const profile = companyResult.profile;
+  const company = companyResult.company;
+  const isLeader = profile === "leader_tc";
+  const username = request.details?.username || request.requesterEmail.split("@")[0];
+  const storedRole = toStoredEditableUserRole(profile);
+  const profileState = resolveEditableProfileUserState(profile, company?.id ?? null);
 
   const targetUser =
     existingUser ??
@@ -505,29 +585,49 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
       name: request.requesterName || request.requesterEmail,
       full_name: request.requesterName || request.requesterEmail,
       email: request.requesterEmail,
-      password_hash: passwordHash,
-      role: request.requestedRole,
+      user: username,
+      password_hash: request.requestedPasswordHash,
+      role: storedRole,
+      globalRole: isLeader ? "global_admin" : null,
+      is_global_admin: isLeader,
       status: "invited",
       active: true,
-      user_origin: "testing_company",
+      phone: request.details?.phone ?? null,
+      job_title: request.details?.jobRole ?? null,
+      ...profileState,
+      default_company_slug: company?.slug ?? null,
     }));
 
+  const existingLinks = await listLocalLinksForUser(targetUser.id);
+  await Promise.all(
+    existingLinks
+      .filter((link) => !company || link.companyId !== company.id)
+      .map((link) => removeLocalLink(targetUser.id, link.companyId)),
+  );
+
   await updateLocalUser(targetUser.id, {
-    role: request.requestedRole,
+    name: request.requesterName || request.requesterEmail,
+    full_name: request.requesterName || request.requesterEmail,
+    email: request.requesterEmail,
+    user: username,
+    role: storedRole,
+    globalRole: isLeader ? "global_admin" : null,
+    is_global_admin: isLeader,
     status: "active",
     active: true,
-    password_hash: passwordHash,
+    phone: request.details?.phone ?? null,
+    job_title: request.details?.jobRole ?? null,
+    ...profileState,
+    default_company_slug: company?.slug ?? null,
+    password_hash: request.requestedPasswordHash,
   });
 
-  if (request.requestedCompanySlug) {
-    const company = await findLocalCompanyBySlug(request.requestedCompanySlug);
-    if (company) {
-      await upsertLocalLink({
-        userId: targetUser.id,
-        companyId: company.id,
-        role: request.requestedRole,
-      });
-    }
+  if (company) {
+    await upsertLocalLink({
+      userId: targetUser.id,
+      companyId: company.id,
+      role: storedRole,
+    });
   }
 
   addAuditLogSafe({
@@ -540,17 +640,18 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     metadata: {
       source: "access_request_approval",
       requestId: request.id,
-      requestedRole: request.requestedRole,
-      requestedCompanySlug: request.requestedCompanySlug ?? null,
+      requestedRole: profile,
+      requestedCompanySlug: company?.slug ?? null,
       forceRefreshMe: true,
     },
   });
 
   return {
     userId: targetUser.id,
-    login: targetUser.email ?? request.requesterEmail,
-    tempPassword: passwordFromRequest ? null : fallbackPassword,
-    passwordFromRequest,
+    login: username,
+    tempPassword: null,
+    passwordFromRequest: true,
+    companySlug: company?.slug ?? null,
   };
 }
 
@@ -558,7 +659,11 @@ export async function transitionAccessRequest(
   id: string,
   action: "start-review" | "approve" | "reject" | "request-info",
   reviewer: AuthUser,
-  options?: { comment?: string | null; adjustmentFields?: string[] },
+  options?: {
+    comment?: string | null;
+    adjustmentFields?: string[];
+    fieldComments?: Record<string, string>;
+  },
 ) {
   const request = await getAccessRequestV2ById(id);
   if (!request) return null;
@@ -567,30 +672,81 @@ export async function transitionAccessRequest(
   const comment = asText(options?.comment, 2000) || undefined;
 
   if (action === "reject" && !comment) return "reject-comment-required" as const;
+  const adjustmentFields = normalizeAccessRequestAdjustmentFields(options?.adjustmentFields);
+  if (action === "request-info" && (!comment || adjustmentFields.length === 0)) {
+    return "adjustment-details-required" as const;
+  }
 
   let nextStatus: AccessRequestV2Status = request.status;
   if (action === "start-review") nextStatus = "under_review";
   if (action === "approve") nextStatus = "approved";
   if (action === "reject") nextStatus = "rejected";
   if (action === "request-info") nextStatus = "needs_more_info";
+  if (!canTransitionAccessRequest(request.status, nextStatus)) {
+    return "invalid-transition" as const;
+  }
 
-  // Para approve: valida e captura credenciais em uma única chamada
-  let approvalCredentials: { userId: string; tempPassword: string | null; login: string; passwordFromRequest: boolean } | null = null;
+  // Para approve: valida e captura credenciais em uma Ãºnica chamada
+  let approvalCredentials: {
+    userId: string;
+    tempPassword: string | null;
+    login: string;
+    passwordFromRequest: boolean;
+    companySlug: string | null;
+  } | null = null;
   if (action === "approve") {
     const result = await applyApprovalEffects(request, reviewer);
     if (result === "self-approval") return result;
     if (result === "scope-denied") return result;
     if (result === "target-missing") return null;
+    if (
+      result === "missing-password" ||
+      result === "testing-company-missing" ||
+      result === "company-missing" ||
+      result === "company-name-missing" ||
+      result === "invalid-profile"
+    ) {
+      return result;
+    }
     if (typeof result === "object") {
       approvalCredentials = result;
     }
   }
 
+  const now = new Date().toISOString();
+  const fieldComments = Object.fromEntries(
+    adjustmentFields
+      .map((field) => [field, asText(options?.fieldComments?.[field], 1000)])
+      .filter((entry) => entry[1]),
+  );
+  const nextHistory =
+    action === "request-info"
+      ? [
+          ...(request.adjustmentHistory ?? []),
+          {
+            round: (request.adjustmentHistory?.length ?? 0) + 1,
+            requestedAt: now,
+            requestedFields: adjustmentFields,
+            requestMessage: comment,
+            fieldComments,
+          },
+        ]
+      : request.adjustmentHistory;
+
   const updated = await updateAccessRequestV2(id, {
-    ...(action === "request-info" && options?.adjustmentFields ? { adjustmentFields: options.adjustmentFields } : {}),
+    ...(action === "request-info" ? { adjustmentFields, adjustmentHistory: nextHistory } : {}),
+    ...(action === "approve" || action === "reject" ? { adjustmentFields: [] } : {}),
+    ...(action === "approve" && approvalCredentials
+      ? {
+          details: {
+            ...(request.details ?? {}),
+            username: approvalCredentials.login,
+          },
+        }
+      : {}),
     status: nextStatus,
     reviewedBy: reviewer.id,
-    reviewedAt: new Date().toISOString(),
+    reviewedAt: now,
     reviewComment: comment,
   });
   if (!updated) return null;
@@ -616,41 +772,358 @@ export async function transitionAccessRequest(
     metadata: { action, nextStatus, comment: comment ?? null },
   });
 
-  // Enviar e-mails conforme ação
+  // Enviar e-mails conforme aÃ§Ã£o
   const recipientEmail = request.requesterEmail;
   const recipientName = request.requesterName || null;
 
   if (action === "approve" && approvalCredentials) {
-    emailService
-      .sendAccessApprovedEmail(recipientEmail, {
-        name: recipientName,
-        login: approvalCredentials.login,
-        tempPassword: approvalCredentials.tempPassword,
-        passwordFromRequest: approvalCredentials.passwordFromRequest,
-        profileType: request.requestedRole,
-        companySlug: request.requestedCompanySlug,
-      })
-      .catch((err: unknown) => console.error("[email] sendAccessApprovedEmail falhou:", err));
+    await emailService.sendAccessApprovedEmail(recipientEmail, {
+      name: recipientName,
+      login: approvalCredentials.login,
+      tempPassword: approvalCredentials.tempPassword,
+      passwordFromRequest: approvalCredentials.passwordFromRequest,
+      profileType: request.requestedRole,
+      companySlug: approvalCredentials.companySlug,
+    });
   } else if (action === "reject") {
-    emailService
-      .sendAccessRejectedEmail(recipientEmail, {
-        name: recipientName,
-        comment,
-        accessKey: request.accessKey,
-      })
-      .catch((err: unknown) => console.error("[email] sendAccessRejectedEmail falhou:", err));
+    await emailService.sendAccessRejectedEmail(recipientEmail, {
+      name: recipientName,
+      comment,
+      accessKey: request.accessKey,
+    });
   } else if (action === "request-info" && request.accessKey) {
-    emailService
-      .sendAccessAdjustmentEmail(recipientEmail, {
-        name: recipientName,
-        adjustmentFields: options?.adjustmentFields,
-        comment,
-        accessKey: request.accessKey,
+    const fieldCommentLines = adjustmentFields
+      .map((field) => {
+        const fieldComment = fieldComments[field];
+        return fieldComment
+          ? `${ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS[field]}: ${fieldComment}`
+          : "";
       })
-      .catch((err: unknown) => console.error("[email] sendAccessAdjustmentEmail falhou:", err));
+      .filter(Boolean);
+    await emailService.sendAccessAdjustmentEmail(recipientEmail, {
+      name: recipientName,
+      adjustmentFields: adjustmentFields.map(
+        (field) => ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS[field],
+      ),
+      comment: [comment, ...fieldCommentLines].filter(Boolean).join("\n"),
+      accessKey: request.accessKey,
+    });
   }
 
   return updated;
+}
+
+function publicFieldValue(request: AccessRequestV2, field: AccessRequestAdjustmentField) {
+  const company = request.details?.company;
+  const values: Record<AccessRequestAdjustmentField, string> = {
+    profileType: request.requestedRole ?? "",
+    company: request.requestedCompanySlug ?? "",
+    companyName: company?.companyName ?? "",
+    companyTaxId: company?.cnpj ?? "",
+    companyZip: company?.cep ?? "",
+    companyAddress: company?.address ?? "",
+    companyPhone: company?.phone ?? "",
+    companyWebsite: company?.website ?? "",
+    companyLinkedin: company?.linkedin ?? "",
+    companyDescription: company?.description ?? "",
+    companyNotes: company?.notes ?? "",
+    fullName: request.requesterName ?? "",
+    username: request.details?.username ?? "",
+    email: request.requesterEmail,
+    phone: request.details?.phone ?? "",
+    jobRole: request.details?.jobRole ?? "",
+    title: request.details?.title ?? "",
+    description: request.details?.description ?? request.reason ?? "",
+    notes: request.details?.notes ?? "",
+    password: request.requestedPasswordHash ? "Definida" : "Nao definida",
+  };
+  return values[field];
+}
+
+function readPublicAdjustmentValue(
+  payload: Record<string, unknown>,
+  field: AccessRequestAdjustmentField,
+) {
+  const aliases: Record<AccessRequestAdjustmentField, string[]> = {
+    profileType: ["profileType", "profile_type", "requestedRole"],
+    company: ["company", "companyName", "requestedCompanySlug"],
+    companyName: ["companyName", "company_name"],
+    companyTaxId: ["companyTaxId", "company_tax_id", "cnpj"],
+    companyZip: ["companyZip", "company_zip", "cep"],
+    companyAddress: ["companyAddress", "company_address", "address"],
+    companyPhone: ["companyPhone", "company_phone"],
+    companyWebsite: ["companyWebsite", "company_website", "website"],
+    companyLinkedin: ["companyLinkedin", "company_linkedin", "linkedin"],
+    companyDescription: ["companyDescription", "company_description"],
+    companyNotes: ["companyNotes", "company_notes"],
+    fullName: ["fullName", "full_name", "name"],
+    username: ["username", "user"],
+    email: ["email", "requesterEmail"],
+    phone: ["phone"],
+    jobRole: ["jobRole", "role"],
+    title: ["title"],
+    description: ["description", "reason"],
+    notes: ["notes"],
+    password: ["password"],
+  };
+  return readTextFromPayload(payload, aliases[field], field === "description" || field === "notes" ? 2000 : 255);
+}
+
+export async function updateAccessRequestByKey(
+  accessKey: string,
+  payload: Record<string, unknown>,
+) {
+  const request = await getAccessRequestV2ByKey(accessKey);
+  if (!request) return null;
+  if (request.status !== "needs_more_info") return "not-adjustable" as const;
+
+  const allowedFields = normalizeAccessRequestAdjustmentFields(request.adjustmentFields);
+  if (!allowedFields.length) return "no-adjustment-fields" as const;
+
+  const details = {
+    ...(request.details ?? {}),
+    company: { ...(request.details?.company ?? {}) },
+  };
+  const patch: Parameters<typeof updateAccessRequestV2>[1] = {};
+  const diff: AccessRequestAdjustmentEntry[] = [];
+
+  for (const field of allowedFields) {
+    const nextRaw = readPublicAdjustmentValue(payload, field);
+    if (!nextRaw) return { error: "required-field" as const, field };
+
+    const previous = publicFieldValue(request, field);
+    let next = nextRaw;
+
+    if (field === "password") {
+      if (nextRaw.length < 8) return { error: "invalid-password" as const, field };
+      patch.requestedPasswordHash = hashPasswordSha256(nextRaw);
+      next = "Definida";
+    } else if (field === "fullName") {
+      patch.requesterName = nextRaw;
+    } else if (field === "email") {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextRaw)) {
+        return { error: "invalid-email" as const, field };
+      }
+      patch.requesterEmail = nextRaw.toLowerCase();
+      next = nextRaw.toLowerCase();
+    } else if (field === "profileType") {
+      const profile = normalizeAccessRequestProfileType(nextRaw);
+      if (!profile) return { error: "invalid-profile" as const, field };
+      patch.requestedRole = profile;
+      next = profile;
+    } else if (field === "company") {
+      const companyId = asText(payload.companyId, 120) || asText(payload.client_id, 120);
+      const company = await findCompanyByIdSlugOrName(companyId, nextRaw);
+      if (!company) return { error: "invalid-company" as const, field };
+      patch.requestedCompanyId = company.id;
+      patch.requestedCompanySlug = company.name ?? company.company_name ?? company.slug;
+      next = patch.requestedCompanySlug ?? nextRaw;
+    } else if (field === "username") {
+      details.username = nextRaw.toLowerCase();
+      next = nextRaw.toLowerCase();
+    } else if (field === "phone") {
+      details.phone = nextRaw;
+    } else if (field === "jobRole") {
+      details.jobRole = nextRaw;
+    } else if (field === "title") {
+      details.title = nextRaw;
+    } else if (field === "description") {
+      details.description = nextRaw;
+      patch.reason = nextRaw;
+    } else if (field === "notes") {
+      details.notes = nextRaw;
+    } else if (field === "companyName") {
+      details.company.companyName = nextRaw;
+    } else if (field === "companyTaxId") {
+      details.company.cnpj = nextRaw;
+    } else if (field === "companyZip") {
+      details.company.cep = nextRaw;
+    } else if (field === "companyAddress") {
+      details.company.address = nextRaw;
+    } else if (field === "companyPhone") {
+      details.company.phone = nextRaw;
+    } else if (field === "companyWebsite") {
+      details.company.website = nextRaw;
+    } else if (field === "companyLinkedin") {
+      details.company.linkedin = nextRaw;
+    } else if (field === "companyDescription") {
+      details.company.description = nextRaw;
+    } else if (field === "companyNotes") {
+      details.company.notes = nextRaw;
+    }
+
+    if (previous !== next) {
+      diff.push({
+        field,
+        label: ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS[field],
+        previous: previous || "Nao informado",
+        next: next || "Nao informado",
+      });
+    }
+  }
+
+  const now = new Date().toISOString();
+  const nextProfile =
+    normalizeAccessRequestProfileType(patch.requestedRole ?? request.requestedRole) ??
+    normalizeAccessRequestProfileType(request.requestedRole);
+  const nextCompanyId =
+    patch.requestedCompanyId ?? request.requestedCompanyId;
+  const nextCompanyName = details.company.companyName?.trim();
+
+  if (nextProfile && accessRequestProfileNeedsCompany(nextProfile) && !nextCompanyId) {
+    return { error: "invalid-company" as const, field: "company" as const };
+  }
+  if (nextProfile === "empresa" && !nextCompanyName) {
+    return { error: "required-field" as const, field: "companyName" as const };
+  }
+  if (
+    nextProfile &&
+    (accessRequestProfileUsesAutomaticCompany(nextProfile) ||
+      nextProfile === "leader_tc" ||
+      nextProfile === "technical_support")
+  ) {
+    patch.requestedCompanyId = null;
+    patch.requestedCompanySlug = null;
+  }
+
+  const history = [...(request.adjustmentHistory ?? [])];
+  const currentRound = history.at(-1);
+  if (currentRound) {
+    history[history.length - 1] = {
+      ...currentRound,
+      requesterReturnedAt: now,
+      requesterDiff: diff,
+    };
+  }
+
+  const updated = await updateAccessRequestV2(request.id, {
+    ...patch,
+    details,
+    status: "under_review",
+    adjustmentFields: [],
+    adjustmentHistory: history,
+    lastAdjustmentAt: now,
+    lastAdjustmentDiff: diff,
+    reviewComment: "Correcao reenviada pelo solicitante.",
+  });
+
+  await createAccessRequestComment({
+    requestId: request.id,
+    authorRole: "requester",
+    authorName: updated?.requesterName ?? request.requesterName ?? request.requesterEmail,
+    authorEmail: updated?.requesterEmail ?? request.requesterEmail,
+    body: diff.length
+      ? `Correcao reenviada:\n${diff.map((entry) => `- ${entry.label}`).join("\n")}`
+      : "Correcao reenviada sem alteracao de valor.",
+  });
+
+  return updated;
+}
+
+export async function addPublicAccessRequestComment(input: {
+  accessKey: string;
+  name: string;
+  email: string;
+  comment: string;
+}) {
+  const request = await getAccessRequestV2ByKey(input.accessKey);
+  if (!request) return null;
+  if (isAccessRequestFinalStatus(request.status)) return "final" as const;
+  if (
+    normalizeDuplicateValue(request.requesterEmail) !== normalizeDuplicateValue(input.email) ||
+    normalizeDuplicateValue(request.requesterName) !== normalizeDuplicateValue(input.name)
+  ) {
+    return "forbidden" as const;
+  }
+  return createAccessRequestComment({
+    requestId: request.id,
+    authorRole: "requester",
+    authorName: request.requesterName ?? input.name,
+    authorEmail: request.requesterEmail,
+    body: asText(input.comment, 2000),
+  });
+}
+
+export async function getPublicAccessRequestByKey(accessKey: string) {
+  const request = await getAccessRequestV2ByKey(accessKey);
+  if (!request) return null;
+  const comments = await listAccessRequestComments(request.id);
+  return { request, comments };
+}
+
+export async function cancelAccessRequestByKey(accessKey: string) {
+  const request = await getAccessRequestV2ByKey(accessKey);
+  if (!request) return null;
+  if (!canTransitionAccessRequest(request.status, "cancelled")) {
+    return "invalid-transition" as const;
+  }
+
+  const updated = await updateAccessRequestV2(request.id, {
+    status: "cancelled",
+    reviewComment: "Solicitação cancelada pelo solicitante.",
+    adjustmentFields: [],
+  });
+  if (!updated) return null;
+
+  await createAccessRequestComment({
+    requestId: request.id,
+    authorRole: "requester",
+    authorName: request.requesterName ?? request.requesterEmail,
+    authorEmail: request.requesterEmail,
+    body: "Solicitação cancelada pelo solicitante.",
+  });
+
+  addAuditLogSafe({
+    actorEmail: request.requesterEmail,
+    action: "access_request.updated",
+    entityType: "access_request",
+    entityId: request.id,
+    entityLabel: request.requesterEmail,
+    metadata: { event: "cancelled_by_requester" },
+  });
+
+  return updated;
+}
+
+export async function resendAccessRequestCode(input: { name: string; email: string }) {
+  const name = normalizeAccessRequestLookup(input.name);
+  const email = normalizeAccessRequestLookup(input.email);
+  if (!name || !email) return false;
+
+  const request = (await listAccessRequestsV2()).find(
+    (item) =>
+      Boolean(item.accessKey) &&
+      normalizeAccessRequestLookup(item.requesterName) === name &&
+      normalizeAccessRequestLookup(item.requesterEmail) === email,
+  );
+  if (!request?.accessKey) return false;
+
+  const sent = await emailService.sendAccessRequestReceivedEmail(request.requesterEmail, {
+    name: request.requesterName,
+    accessKey: request.accessKey,
+    email: request.requesterEmail,
+    phone: request.details?.phone,
+    passwordDefined: Boolean(request.requestedPasswordHash),
+    profileType: request.requestedRole,
+    companyName: request.requestedCompanySlug ?? request.details?.company?.companyName,
+    title: request.details?.title,
+    description: request.details?.description ?? request.reason,
+    status: request.status,
+    companyDetails: request.details?.company,
+  });
+
+  if (sent) {
+    addAuditLogSafe({
+      actorEmail: request.requesterEmail,
+      action: "access_request.updated",
+      entityType: "access_request",
+      entityId: request.id,
+      entityLabel: request.requesterEmail,
+      metadata: { event: "code_resent", status: request.status },
+    });
+  }
+
+  return sent;
 }
 
 export async function getAccessRequestAudit(id: string, user: AuthUser) {
@@ -700,5 +1173,76 @@ export function mapV2ToLegacyAdminRequest(request: AccessRequestV2) {
     },
     createdAt: request.createdAt,
     reviewNote: request.reviewComment,
+  };
+}
+
+export function mapV2ToLegacySupportRow(request: AccessRequestV2) {
+  const profile =
+    normalizeAccessRequestProfileType(request.requestedRole) ?? "testing_company_user";
+  const company = request.details?.company;
+  const message = composeAccessRequestMessage({
+    email: request.requesterEmail,
+    name: request.requesterName ?? request.requesterEmail,
+    fullName: request.requesterName ?? request.requesterEmail,
+    username: request.details?.username ?? null,
+    phone: request.details?.phone ?? "",
+    passwordHash: request.requestedPasswordHash ?? null,
+    role: request.details?.jobRole ?? "",
+    company:
+      request.requestedCompanySlug ??
+      company?.companyName ??
+      "(nao informado)",
+    clientId: request.requestedCompanyId ?? null,
+    accessType: toInternalAccessType(profile),
+    profileType: profile,
+    title: request.details?.title ?? "",
+    description: request.details?.description ?? request.reason ?? "",
+    notes: request.details?.notes ?? "",
+    companyProfile: company
+      ? {
+          companyName: company.companyName ?? "",
+          companyTaxId: company.cnpj ?? "",
+          companyZip: company.cep ?? "",
+          companyAddress: company.address ?? "",
+          companyPhone: company.phone ?? "",
+          companyWebsite: company.website ?? "",
+          companyLinkedin: company.linkedin ?? "",
+          companyDescription: company.description ?? "",
+          companyNotes: company.notes ?? "",
+        }
+      : null,
+    adjustmentRound: request.adjustmentHistory?.length ?? 0,
+    adjustmentRequestedFields: request.adjustmentFields ?? [],
+    adjustmentHistory: (request.adjustmentHistory ?? []).map((round) => ({
+      round: round.round,
+      requestedAt: round.requestedAt,
+      requestedFields: round.requestedFields,
+      requestMessage: round.requestMessage ?? null,
+      requesterReturnedAt: round.requesterReturnedAt ?? null,
+      requesterDiff: round.requesterDiff ?? [],
+    })),
+    lastAdjustmentAt: request.lastAdjustmentAt ?? null,
+    lastAdjustmentDiff: request.lastAdjustmentDiff ?? [],
+    adminNotes: request.reviewComment ?? null,
+  });
+
+  const status =
+    request.status === "approved"
+      ? "closed"
+      : request.status === "rejected" ||
+          request.status === "cancelled" ||
+          request.status === "expired"
+        ? "rejected"
+        : request.status === "under_review" || request.status === "needs_more_info"
+          ? "in_progress"
+          : "open";
+
+  return {
+    id: request.id,
+    email: request.requesterEmail,
+    message,
+    status,
+    created_at: request.createdAt,
+    admin_notes: request.reviewComment ?? null,
   };
 }

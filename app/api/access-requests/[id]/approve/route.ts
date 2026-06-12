@@ -14,6 +14,12 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (result === "forbidden") return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   if (result === "self-approval") return NextResponse.json({ message: "Autoaprovação não é permitida" }, { status: 403 });
   if (result === "scope-denied") return NextResponse.json({ message: "Sem escopo para aprovar este perfil" }, { status: 403 });
+  if (result === "missing-password") return NextResponse.json({ message: "Senha não definida na solicitação" }, { status: 400 });
+  if (result === "testing-company-missing") return NextResponse.json({ message: "Testing Company não encontrada" }, { status: 409 });
+  if (result === "company-missing") return NextResponse.json({ message: "Empresa obrigatória não encontrada" }, { status: 400 });
+  if (result === "company-name-missing") return NextResponse.json({ message: "Nome da empresa obrigatório" }, { status: 400 });
+  if (result === "invalid-profile") return NextResponse.json({ message: "Perfil solicitado inválido" }, { status: 400 });
+  if (result === "invalid-transition") return NextResponse.json({ message: "Transição de status inválida" }, { status: 409 });
   if (!result) return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
 
   return NextResponse.json({ item: result, forceRefreshMe: true }, { status: 200 });

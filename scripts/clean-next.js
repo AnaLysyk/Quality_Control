@@ -12,32 +12,33 @@ function removePath(target) {
 
 function cleanNext() {
   const root = path.resolve(__dirname, "..");
-  const nextDir = path.join(root, ".next");
+  const cacheDirs = [".next", ".next-e2e", ".next-runtime", ".next-dev-runtime"];
 
-  if (!fs.existsSync(nextDir)) {
-    return;
-  }
+  for (const cacheDir of cacheDirs) {
+    const target = path.resolve(root, cacheDir);
+    if (path.dirname(target) !== root || !fs.existsSync(target)) continue;
 
-  try {
-    removePath(nextDir);
-    return;
-  } catch {
-    // Fall through to a more defensive cleanup for Windows file-handle races.
-  }
-
-  for (const entry of fs.readdirSync(nextDir)) {
-    const entryPath = path.join(nextDir, entry);
     try {
-      removePath(entryPath);
-    } catch (error) {
-      console.warn(`Nao foi possivel remover ${entryPath}; seguindo com cache residual.`, error);
+      removePath(target);
+      continue;
+    } catch {
+      // Fall through to a more defensive cleanup for Windows file-handle races.
     }
-  }
 
-  try {
-    fs.rmdirSync(nextDir);
-  } catch (error) {
-    console.warn(`Nao foi possivel remover ${nextDir} completamente; seguindo com cache residual.`, error);
+    for (const entry of fs.readdirSync(target)) {
+      const entryPath = path.join(target, entry);
+      try {
+        removePath(entryPath);
+      } catch (error) {
+        console.warn(`Nao foi possivel remover ${entryPath}; seguindo com cache residual.`, error);
+      }
+    }
+
+    try {
+      fs.rmdirSync(target);
+    } catch (error) {
+      console.warn(`Nao foi possivel remover ${target} completamente; seguindo com cache residual.`, error);
+    }
   }
 }
 

@@ -16,6 +16,8 @@ import {
   toInternalAccessType,
 } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
+import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
+import { updateAccessRequestDetailsForReviewer } from "@/lib/accessRequestsV2/service";
 
 type AccessRequestBody = {
   email?: string;
@@ -66,6 +68,36 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const passwordHash = password ? hashPasswordSha256(password) : null;
 
   const { id } = await context.params;
+  const v2Request = await getAccessRequestV2ById(id);
+  if (v2Request?.accessKey) {
+    const result = await updateAccessRequestDetailsForReviewer(
+      id,
+      body as Record<string, unknown>,
+      {
+        id: admin.id || admin.email,
+        email: admin.email,
+        role: admin.role,
+        globalRole: admin.globalRole,
+        companyRole: admin.role,
+        permissionRole: admin.role,
+        isGlobalAdmin: Boolean(admin.isGlobalAdmin),
+      },
+    );
+    if (result === "forbidden") {
+      return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    }
+    if (result === "final") {
+      return NextResponse.json({ error: "Solicitacao finalizada" }, { status: 409 });
+    }
+    if (result === "invalid-profile" || result === "company-missing") {
+      return NextResponse.json({ error: "Perfil ou empresa invalida" }, { status: 400 });
+    }
+    if (!result) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, item: result });
+  }
+
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {

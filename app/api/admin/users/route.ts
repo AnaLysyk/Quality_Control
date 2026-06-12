@@ -9,6 +9,7 @@ import { getAccessContext } from "@/lib/auth/session";
 import { getAdminUserItem, listAdminUserItems } from "@/lib/adminUsers";
 import {
   editableProfileNeedsCompany,
+  editableProfileUsesAutomaticCompany,
   isGlobalPrivilegeProfileRole,
   resolveEditableProfileUserState,
   resolveEditableProfileRole,
@@ -159,10 +160,20 @@ export async function POST(req: NextRequest) {
     ? body.capabilities.filter((item: unknown) => typeof item === "string")
     : null;
 
-  console.debug(`[ADMIN-USERS][POST] admin=${admin?.email ?? "-"} name=${name} email=${email} clientId=${clientId} role=${rawRole}`);
+  if (editableProfileUsesAutomaticCompany(profileRole) && !clientId) {
+    const testingCompany =
+      (await findLocalCompanyBySlug("testing-company")) ??
+      (await findLocalCompanyBySlug("testing-company-e2e"));
+    clientId = testingCompany?.id ?? null;
+    if (!clientId) {
+      return NextResponse.json(
+        { error: "Testing Company não encontrada para vínculo automático" },
+        { status: 409 },
+      );
+    }
+  }
 
   if (!name || !email) {
-    console.error(`[ADMIN-USERS][POST] missing-fields admin=${admin?.email ?? "-"} name='${name}' email='${email}'`);
     return NextResponse.json({ error: "Nome e e-mail sao obrigatorios" }, { status: 400 });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -178,7 +189,6 @@ export async function POST(req: NextRequest) {
     }
   }
   if (editableProfileNeedsCompany(profileRole) && !clientId) {
-    console.error(`[ADMIN-USERS][POST] missing-client admin=${admin?.email ?? "-"} clientId=${clientId}`);
     return NextResponse.json({ error: "Empresa obrigatória para este perfil" }, { status: 400 });
   }
   if (wantsGlobalAdmin && (!password || password.trim().length < 8)) {
@@ -193,11 +203,9 @@ export async function POST(req: NextRequest) {
   );
 
   if (users.some((user) => normalizeLogin(user.email) === email)) {
-    console.error(`[ADMIN-USERS][POST] duplicate-email admin=${admin?.email ?? "-"} email=${email}`);
     return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
   }
   if (users.some((user) => normalizeLogin(user.user ?? user.email) === login)) {
-    console.error(`[ADMIN-USERS][POST] duplicate-user admin=${admin?.email ?? "-"} login=${login}`);
     return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
   }
 
@@ -226,7 +234,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
-    console.error(`[ADMIN-USERS][POST] createLocalUser error admin=${admin?.email ?? "-"} code=${code} err=${String(err)}`);
     if (code === "DUPLICATE_EMAIL") {
       return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
@@ -254,10 +261,8 @@ export async function POST(req: NextRequest) {
     entityType: "user",
     entityId: user.id,
     entityLabel: user.user ?? user.email,
-    metadata: { companyId: clientId, role, _payload: body },
+    metadata: { companyId: clientId, role, profileRole },
   });
-
-  console.error(`[ADMIN-USERS][POST] created admin=${admin?.email ?? "-"} user=${user?.email ?? user?.id}`);
 
   brainOnUserCreated({
     id: user.id,

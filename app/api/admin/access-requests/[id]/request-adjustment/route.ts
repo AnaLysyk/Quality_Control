@@ -12,10 +12,13 @@ import { prisma } from "@/lib/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
 import { shouldUseJsonStore } from "@/lib/storeMode";
+import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
+import { transitionAccessRequest } from "@/lib/accessRequestsV2/service";
 
 type AdjustmentBody = {
   comment?: string | null;
   fields?: AccessRequestAdjustmentField[];
+  fieldComments?: Record<string, string>;
 };
 
 function isFinalStatus(status: string | null | undefined) {
@@ -41,6 +44,41 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   }
 
   const { id } = await context.params;
+
+  const v2Request = await getAccessRequestV2ById(id);
+  if (v2Request?.accessKey) {
+    const result = await transitionAccessRequest(
+      id,
+      "request-info",
+      {
+        id: admin.id || admin.email,
+        email: admin.email,
+        role: admin.role,
+        globalRole: admin.globalRole,
+        companyRole: admin.role,
+        permissionRole: admin.role,
+        isGlobalAdmin: Boolean(admin.isGlobalAdmin),
+      },
+      {
+        comment,
+        adjustmentFields: fields,
+        fieldComments: body?.fieldComments,
+      },
+    );
+    if (result === "adjustment-details-required") {
+      return NextResponse.json({ error: "Informe comentario e campos para ajuste" }, { status: 400 });
+    }
+    if (result === "invalid-transition") {
+      return NextResponse.json({ error: "Solicitacao finalizada nao aceita ajustes" }, { status: 409 });
+    }
+    if (typeof result === "string") {
+      return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    }
+    if (!result) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, item: { id: result.id, status: "in_progress" } });
+  }
 
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);

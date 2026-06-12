@@ -14,24 +14,18 @@ async function abrirFormularioSolicitacao(page: Page) {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(3000);
 
-  for (let tentativa = 1; tentativa <= 6; tentativa++) {
+  for (let attemptsRemaining = 6; attemptsRemaining > 0; attemptsRemaining -= 1) {
     const jaAberto = await formulario.isVisible().catch(() => false);
 
     if (jaAberto) {
       return;
     }
 
-    console.log(`[REAL FRONT] Tentando abrir formulário: tentativa ${tentativa}`);
-
     await botaoAbrir.scrollIntoViewIfNeeded();
     await botaoAbrir.click({ force: true });
 
     await page.waitForTimeout(1500);
   }
-
-  const textoTela = await page.locator("body").innerText().catch(() => "");
-  console.log("[REAL FRONT] Formulário não abriu. Texto visível da tela:");
-  console.log(textoTela);
 
   await page.screenshot({
     path: "test-results/access-request-form-nao-abriu.png",
@@ -90,7 +84,7 @@ if (await telefoneInput.first().isVisible({ timeout: 3000 }).catch(() => false))
 
     await page.getByTestId("request-access-submit-button").click();
 
-    await expect(page.getByText("Request submitted successfully")).toBeVisible({
+    await expect(page.getByText("Solicitação enviada com sucesso")).toBeVisible({
       timeout: 90000,
     });
 
@@ -107,8 +101,6 @@ if (await telefoneInput.first().isVisible({ timeout: 3000 }).catch(() => false))
       corpo.match(/key=([A-Za-z0-9_-]+)/i)?.[1];
 
     expect(chave, "Chave/accessKey deve existir no e-mail capturado").toBeTruthy();
-
-    console.log("[REAL FRONT] CHAVE CAPTURADA:", chave);
 
     await page.goto(`/login/access-request/status?key=${chave}`, {
       waitUntil: "domcontentloaded",

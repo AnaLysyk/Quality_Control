@@ -1,6 +1,7 @@
 ﻿import { test, expect } from "../fixtures/test";
 import {
   buildPublicAccessRequestPayload,
+  criarSolicitacaoPublicaViaApi,
 } from "../../support/functions/access-requests/access-requests-public.api";
 import {
   criarEmailTeste,
@@ -75,5 +76,32 @@ test.describe("Solicitações de acesso - ciclo de e-mail UI", () => {
     expect(duplicateBody?.message).toContain("Já existe uma solicitação de acesso aberta ou em análise");
 
     expect(listarEmailsCapturados()).toHaveLength(totalAntes);
+  });
+
+  test("deve solicitar reenvio do código por nome e e-mail", async ({ page, request }) => {
+    const email = criarEmailTeste("ui-reenvio");
+    const payload = buildPublicAccessRequestPayload(email);
+    const created = await criarSolicitacaoPublicaViaApi(request, payload);
+
+    await page.goto("/login/access-request", { waitUntil: "domcontentloaded" });
+    const openLookupButton = page.getByTestId("open-access-request-lookup-button");
+    await expect(openLookupButton).toBeVisible();
+    await page.waitForTimeout(1500);
+    await openLookupButton.click();
+    await expect(page.getByTestId("access-request-lookup-form")).toBeVisible();
+    await page.getByTestId("request-access-lookup-name-input").fill(payload.full_name);
+    await page.getByTestId("request-access-lookup-email-input").fill(email);
+    await page.getByTestId("request-access-lookup-resend-button").click();
+
+    await expect(page.getByTestId("request-access-lookup-resend-notice")).toContainText(
+      /código será reenviado/i,
+      { timeout: 30000 },
+    );
+    await expect.poll(() => listarEmailsCapturados().length).toBe(2);
+
+    const resentEmail = listarEmailsCapturados().at(-1);
+    expect(`${resentEmail?.text ?? ""}\n${resentEmail?.html ?? ""}`).toContain(
+      created.accessKey,
+    );
   });
 });

@@ -15,6 +15,8 @@
     "build": "node scripts/prisma-migrate-safe.js && next build",
     "start": "next start",
     "lint": "eslint --max-warnings 9999",
+    "typecheck": "node scripts/clean-next.js && tsc --noEmit",
+    "email:preview:access-requests": "tsx scripts/test-access-request-email-preview.ts",
     "test": "jest --config jest.config.ts --passWithNoTests --testMatch \"**/tests/**/*.test.ts?(x)\"",
     "test:coverage": "jest --config jest.config.ts --coverage --coverageReporters=lcov --coverageReporters=text --passWithNoTests --testMatch \"**/tests/**/*.test.ts?(x)\"",
     "test:biometrics": "jest --config jest.config.ts --runInBand tests/biometrics-fingerprint-processor.test.ts",

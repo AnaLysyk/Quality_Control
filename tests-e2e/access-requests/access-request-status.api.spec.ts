@@ -73,4 +73,58 @@ test.describe("Solicitações de acesso - consulta/status API", () => {
     expect(item.adjustmentFields).toEqual(expect.arrayContaining(["phone", "description"]));
     expect(item.reviewComment).toContain("Corrigir");
   });
+
+  test("deve aceitar somente os campos solicitados e registrar o retorno para análise", async ({
+    request,
+  }) => {
+    const email = criarEmailTeste("status-ajuste-parcial");
+    const payload = buildPublicAccessRequestPayload(email);
+    const created = await criarSolicitacaoPublicaViaApi(request, payload);
+
+    await solicitarAjusteViaApiV2(request, created.id);
+
+    const patchResponse = await request.patch(
+      `/api/access-requests/by-key/${encodeURIComponent(created.accessKey)}`,
+      {
+        data: {
+          phone: "+55 11 98888-7777",
+          description: "Descrição corrigida e reenviada para nova análise.",
+          email: "alteracao-nao-autorizada@example.com",
+        },
+      },
+    );
+    const patchBody = await patchResponse.json().catch(() => null);
+
+    expect(patchResponse.status(), JSON.stringify(patchBody)).toBe(200);
+    expect(patchBody?.item?.status).toBe("under_review");
+
+    const updated = await consultarSolicitacaoPorAccessKey(request, created.accessKey);
+
+    expect(updated.status).toBe("under_review");
+    expect(updated.requesterEmail).toBe(email);
+    expect(updated.details?.phone).toBe("+55 11 98888-7777");
+    expect(updated.details?.description).toBe(
+      "Descrição corrigida e reenviada para nova análise.",
+    );
+    expect(updated.adjustmentFields).toEqual([]);
+    expect(updated.lastAdjustmentDiff).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ field: "phone" }),
+        expect.objectContaining({ field: "description" }),
+      ]),
+    );
+    expect(updated.adjustmentHistory?.at(-1)?.requesterReturnedAt).toBeTruthy();
+
+    const repeatedPatch = await request.patch(
+      `/api/access-requests/by-key/${encodeURIComponent(created.accessKey)}`,
+      {
+        data: {
+          phone: "+55 11 97777-6666",
+          description: "Nova tentativa indevida.",
+        },
+      },
+    );
+
+    expect(repeatedPatch.status()).toBe(409);
+  });
 });

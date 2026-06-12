@@ -51,4 +51,38 @@ test.describe("Solicitações de acesso - ciclo de e-mail API", () => {
 
     expect(listarEmailsCapturados()).toHaveLength(totalAntes);
   });
+
+  test("deve reenviar o mesmo código somente por e-mail e responder de forma neutra", async ({
+    request,
+  }) => {
+    const email = criarEmailTeste("api-reenvio");
+    const payload = buildPublicAccessRequestPayload(email);
+    const created = await criarSolicitacaoPublicaViaApi(request, payload);
+
+    const resendResponse = await request.post("/api/support/access-request/lookup", {
+      data: { name: payload.full_name, email },
+    });
+    const resendBody = await resendResponse.json();
+
+    expect(resendResponse.status()).toBe(200);
+    expect(resendBody.ok).toBeTruthy();
+    expect(resendBody.accessKey).toBeUndefined();
+
+    await expect.poll(() => listarEmailsCapturados().length).toBe(2);
+    const resentEmail = listarEmailsCapturados().at(-1);
+    const resentContent = `${resentEmail?.text ?? ""}\n${resentEmail?.html ?? ""}`;
+
+    expect(resentContent).toContain(created.accessKey);
+
+    const totalBeforeUnknown = listarEmailsCapturados().length;
+    const unknownResponse = await request.post("/api/support/access-request/lookup", {
+      data: { name: "Pessoa inexistente", email: criarEmailTeste("desconhecido") },
+    });
+    const unknownBody = await unknownResponse.json();
+
+    expect(unknownResponse.status()).toBe(200);
+    expect(unknownBody.ok).toBeTruthy();
+    expect(unknownBody.accessKey).toBeUndefined();
+    expect(listarEmailsCapturados()).toHaveLength(totalBeforeUnknown);
+  });
 });

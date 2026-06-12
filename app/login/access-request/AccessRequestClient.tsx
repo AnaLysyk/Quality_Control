@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import loginStyles from "../LoginClient.module.css";
 import styles from "./AccessRequestClient.module.css";
 import type {
@@ -14,6 +15,7 @@ import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, type Reque
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/hooks/useI18n";
+import { normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
 
 const ACCESS_OPTIONS = [
   {
@@ -69,6 +71,8 @@ type LookupItem = {
   updatedAt?: string | null;
   email: string;
   name: string;
+  requesterEmail?: string | null;
+  requesterName?: string | null;
   fullName?: string | null;
   username?: string | null;
   phone?: string | null;
@@ -191,6 +195,7 @@ function adjustmentFieldLabel(field: AccessRequestAdjustmentField, fallback = "C
 
 export default function AccessRequestClient() {
   const { t, language } = useI18n();
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [requestedUser, setRequestedUser] = useState("");
   const [email, setEmail] = useState("");
@@ -216,7 +221,9 @@ export default function AccessRequestClient() {
   const [lookupEmail, setLookupEmail] = useState("");
   const [lookupAccessKey, setLookupAccessKey] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupResending, setLookupResending] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupNotice, setLookupNotice] = useState<string | null>(null);
   const [lookupItem, setLookupItem] = useState<LookupItem | null>(null);
   const [lookupDraft, setLookupDraft] = useState<LookupDraft | null>(null);
   const [lookupComments, setLookupComments] = useState<AccessRequestComment[]>([]);
@@ -515,45 +522,28 @@ export default function AccessRequestClient() {
           user: normalizedRequestedUser || undefined,
           email: normalizedEmail,
           password: normalizedPassword,
-          senha: normalizedPassword,
-          plainPassword: normalizedPassword,
           companyDetails: {
             companyName: normalizedCompanyDraft.companyName,
-            fantasyName: normalizedCompanyDraft.fantasyName,
-            cnpj: normalizedCompanyDraft.companyTaxId || normalizedCompanyDraft.cnpj,
+            cnpj: normalizedCompanyDraft.companyTaxId,
             companyTaxId: normalizedCompanyDraft.companyTaxId,
-            cep: normalizedCompanyDraft.cep,
-            address: normalizedCompanyDraft.address,
-            number: normalizedCompanyDraft.number,
-            complement: normalizedCompanyDraft.complement,
-            district: normalizedCompanyDraft.district,
-            city: normalizedCompanyDraft.city,
-            state: normalizedCompanyDraft.state,
-            phone: normalizedCompanyDraft.phone,
-            email: normalizedCompanyDraft.email,
-            website: normalizedCompanyDraft.website,
-            linkedin: normalizedCompanyDraft.linkedin || normalizedCompanyDraft.linkedIn,
-            situation: normalizedCompanyDraft.situation,
-            openingDate: normalizedCompanyDraft.openingDate,
-            legalNature: normalizedCompanyDraft.legalNature,
-            mainActivity: normalizedCompanyDraft.mainActivity,
-            size: normalizedCompanyDraft.size,
-            shareCapital: normalizedCompanyDraft.shareCapital,
+            cep: normalizedCompanyDraft.companyZip,
+            address: normalizedCompanyDraft.companyAddress,
+            phone: normalizedCompanyDraft.companyPhone,
+            website: normalizedCompanyDraft.companyWebsite,
+            linkedin: normalizedCompanyDraft.companyLinkedin,
           },
           companyName: normalizedCompanyDraft.companyName,
-      cnpj: normalizedCompanyDraft.cnpj,
-      cep: normalizedCompanyDraft.cep,
-      address: normalizedCompanyDraft.address,
-      companyPhone: normalizedCompanyDraft.phone,
-      companyEmail: normalizedCompanyDraft.email,
-      phone: normalizedPhone,
+          cnpj: normalizedCompanyDraft.companyTaxId,
+          cep: normalizedCompanyDraft.companyZip,
+          address: normalizedCompanyDraft.companyAddress,
+          companyPhone: normalizedCompanyDraft.companyPhone,
+          phone: normalizedPhone,
           company: normalizedCompany,
           client_id: normalizedClientId,
           role: normalizedRole,
           profile_type: accessType,
           title: normalizedTitle,
           description: normalizedDescription,
-          password: normalizedPassword,
           company_name: isCompanyProfile ? normalizedCompanyDraft.companyName : undefined,
           company_tax_id: isCompanyProfile ? normalizedCompanyDraft.companyTaxId : undefined,
           company_zip: isCompanyProfile ? normalizedCompanyDraft.companyZip : undefined,
@@ -608,6 +598,7 @@ export default function AccessRequestClient() {
   const handleLookup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLookupError(null);
+    setLookupNotice(null);
     setLookupItem(null);
     setLookupDraft(null);
     setLookupComments([]);
@@ -640,43 +631,63 @@ export default function AccessRequestClient() {
         return;
       }
 
-      const itemName = String(json.item.requesterName ?? json.item.fullName ?? json.item.name ?? "").trim().toLowerCase();
-      const itemEmail = String(json.item.requesterEmail ?? json.item.email ?? "").trim().toLowerCase();
+      const itemName = normalizeAccessRequestLookup(
+        String(json.item.requesterName ?? json.item.fullName ?? json.item.name ?? ""),
+      );
+      const itemEmail = normalizeAccessRequestLookup(
+        String(json.item.requesterEmail ?? json.item.email ?? ""),
+      );
 
-      if (!itemEmail.includes(normalizedEmail) || !itemName.includes(normalizedName.toLowerCase())) {
+      if (
+        itemEmail !== normalizeAccessRequestLookup(normalizedEmail) ||
+        itemName !== normalizeAccessRequestLookup(normalizedName)
+      ) {
         setLookupError("Os dados informados não conferem com o código de acesso.");
         return;
       }
 
       router.push(`/login/access-request/status?key=${encodeURIComponent(normalizedAccessKey)}`);
-      return;
-      setLookupItem(json.item ?? null);
-      setLookupDraft(
-        json.item
-          ? {
-              fullName: json.item.fullName?.trim() || json.item.name?.trim() || "",
-              name: json.item.fullName?.trim() || json.item.name?.trim() || "",
-              user: json.item.username?.trim() || "",
-              email: json.item.email?.trim() || "",
-              phone: json.item.phone?.trim() || "",
-              company: json.item.company?.trim() || "",
-              clientId: json.item.clientId?.trim() || "",
-              role: json.item.jobRole?.trim() || "",
-              accessType:
-                normalizeRequestProfileType(json.item.profileType ?? json.item.accessType ?? "") ?? "testing_company_user",
-              title: json.item.title?.trim() || "",
-              description: json.item.description?.trim() || "",
-              notes: json.item.notes?.trim() || "",
-              password: "",
-              companyProfile: json.item.companyProfile ?? emptyCompanyRequestDraft(),
-            }
-          : null,
-      );
-      setLookupComments(Array.isArray(json.comments) ? json.comments : []);
     } catch (err) {
       setLookupError(err instanceof Error ? err.message : t("accessRequest.lookupError"));
     } finally {
       setLookupLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    const normalizedName = lookupName.trim();
+    const normalizedEmail = lookupEmail.trim().toLowerCase();
+    setLookupError(null);
+    setLookupNotice(null);
+
+    if (!normalizedName || !normalizedEmail) {
+      setLookupError("Informe nome e e-mail para reenviar o código.");
+      return;
+    }
+
+    setLookupResending(true);
+    try {
+      const response = await fetch("/api/support/access-request/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: normalizedName, email: normalizedEmail }),
+      });
+      const body = (await response.json().catch(() => null)) as {
+        error?: string;
+        message?: string;
+      } | null;
+      if (!response.ok) {
+        setLookupError(body?.error || "Não foi possível solicitar o reenvio do código.");
+        return;
+      }
+      setLookupNotice(
+        body?.message ||
+          "Se os dados conferirem com uma solicitação, o código será reenviado para o e-mail informado.",
+      );
+    } catch {
+      setLookupError("Não foi possível solicitar o reenvio do código.");
+    } finally {
+      setLookupResending(false);
     }
   };
 
@@ -954,6 +965,7 @@ export default function AccessRequestClient() {
               </p>
             </div>
             <button
+              data-testid="open-access-request-lookup-button"
               type="button"
               onClick={() => {
                 setIsLookupOpen(true);
@@ -1286,6 +1298,7 @@ export default function AccessRequestClient() {
                     Usuário/login
                     <div className="flex gap-2">
                       <input
+                        data-testid="request-access-user-input"
                         type="text"
                         value={requestedUser}
                         onChange={(event) => setRequestedUser(event.target.value)}
@@ -1325,6 +1338,7 @@ export default function AccessRequestClient() {
                   <label className={labelClass}>
                     Telefone
                     <input
+                      data-testid="request-access-phone-input"
                       type="tel"
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
@@ -1339,7 +1353,10 @@ export default function AccessRequestClient() {
                   {isCompanyAccessRequest ? "Cargo do responsável" : "Cargo ou função"}
                   <div>
                     <Select value={role || EMPTY_JOB_TITLE} onValueChange={(value) => setRole(value === EMPTY_JOB_TITLE ? "" : value)}>
-                      <SelectTrigger className="h-12.5 rounded-xl border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40">
+                      <SelectTrigger
+                        data-testid="request-access-job-title-select"
+                        className="h-12.5 rounded-xl border-[#011848]/15 bg-white px-4 py-3 text-sm text-[#011848] focus-visible:ring-[#ef0001]/40"
+                      >
                         <SelectValue placeholder="Selecione uma profissão" />
                       </SelectTrigger>
                       <SelectContent className="max-h-80">
@@ -1448,10 +1465,18 @@ export default function AccessRequestClient() {
             </div>
 
             <div className="mt-5 min-h-0 flex-1 overflow-y-auto pr-1">
-              <form className="space-y-4" onSubmit={handleLookup}>
+              <form className="space-y-4" onSubmit={handleLookup} data-testid="access-request-lookup-form">
                 {lookupError && (
                   <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                     {lookupError}
+                  </div>
+                )}
+                {lookupNotice && (
+                  <div
+                    data-testid="request-access-lookup-resend-notice"
+                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+                  >
+                    {lookupNotice}
                   </div>
                 )}
 
@@ -1459,6 +1484,7 @@ export default function AccessRequestClient() {
                   <label className={labelClass}>
                     Nome completo
                     <input
+                      data-testid="request-access-lookup-name-input"
                       ref={lookupNameRef}
                       type="text"
                       value={lookupName}
@@ -1471,6 +1497,7 @@ export default function AccessRequestClient() {
                   <label className={labelClass}>
                     E-mail
                     <input
+                      data-testid="request-access-lookup-email-input"
                       type="email"
                       value={lookupEmail}
                       onChange={(event) => setLookupEmail(event.target.value)}
@@ -1498,12 +1525,22 @@ export default function AccessRequestClient() {
                 </div>
 
                 <button
+                  data-testid="request-access-lookup-submit-button"
                   type="submit"
                   title={t("accessRequest.lookupTitle")}
                   disabled={lookupLoading}
                   className="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-3 text-sm font-semibold text-white transition hover:from-[#011848]/90 hover:to-[#ef0001]/90 focus:outline-none focus:ring-2 focus:ring-[#ef0001]/60 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {lookupLoading ? t("accessRequest.lookupLoading") : t("accessRequest.lookupTitle")}
+                </button>
+                <button
+                  data-testid="request-access-lookup-resend-button"
+                  type="button"
+                  onClick={() => void handleResendCode()}
+                  disabled={lookupResending}
+                  className="flex w-full items-center justify-center rounded-xl border border-[#011848]/15 bg-white px-4 py-3 text-sm font-semibold text-[#011848] transition hover:bg-[#011848]/5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {lookupResending ? "Reenviando..." : "Reenviar código"}
                 </button>
               </form>
 

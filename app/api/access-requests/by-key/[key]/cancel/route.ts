@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAccessRequestV2ByKey, updateAccessRequestV2 } from "@/lib/accessRequestsV2/repository";
+import { cancelAccessRequestByKey } from "@/lib/accessRequestsV2/service";
 
 export async function POST(_req: Request, context: { params: Promise<{ key: string }> }) {
   const { key } = await context.params;
@@ -9,23 +9,15 @@ export async function POST(_req: Request, context: { params: Promise<{ key: stri
     return NextResponse.json({ message: "Chave inválida" }, { status: 400 });
   }
 
-  const request = await getAccessRequestV2ByKey(key);
-
-  if (!request) {
+  const result = await cancelAccessRequestByKey(key);
+  if (!result) {
     return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
   }
-
-  if (["approved", "rejected", "cancelled", "expired"].includes(request.status)) {
+  if (result === "invalid-transition") {
     return NextResponse.json(
       { message: "Esta solicitação não pode mais ser cancelada." },
       { status: 409 },
     );
   }
-
-  const updated = await updateAccessRequestV2(request.id, {
-    status: "cancelled",
-    reviewComment: "Solicitação cancelada pelo solicitante.",
-  });
-
-  return NextResponse.json({ item: updated });
+  return NextResponse.json({ item: result });
 }

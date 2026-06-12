@@ -17,7 +17,7 @@ const profiles = [
   {
     label: "Usuário TC",
     value: "testing_company_user",
-    needsExistingCompany: true,
+    needsExistingCompany: false,
   },
   {
     label: "Líder TC",
@@ -112,11 +112,6 @@ test.describe("Solicitação pública de acesso com envio real de e-mail", () =>
       const unique = Date.now();
       const requestEmail = buildUniqueEmail(profile.value, unique);
 
-      console.log("[ACCESS REQUEST EXPECTED EMAIL]", {
-        profile: profile.label,
-        email: requestEmail,
-      });
-
       await openRequestForm(page);
 
       await page.getByTestId("request-access-role-select").selectOption(profile.value);
@@ -172,11 +167,6 @@ test.describe("Solicitação pública de acesso com envio real de e-mail", () =>
 
       const submitResponse = await submitResponsePromise;
       const responseText = await submitResponse.text().catch(() => "");
-
-      console.log("[ACCESS REQUEST PUBLIC RESPONSE]", {
-        status: submitResponse.status(),
-        body: responseText,
-      });
 
       expect(submitResponse.status(), responseText).toBe(201);
 

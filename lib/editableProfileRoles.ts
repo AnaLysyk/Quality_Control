@@ -34,6 +34,10 @@ export function editableProfileNeedsCompany(role: EditableProfileRole) {
   );
 }
 
+export function editableProfileUsesAutomaticCompany(role: EditableProfileRole) {
+  return role === SYSTEM_ROLES.TESTING_COMPANY_USER;
+}
+
 export function resolveEditableProfileUserState(role: EditableProfileRole, companyId?: string | null) {
   const normalizedCompanyId = companyId?.trim() || null;
 
@@ -44,6 +48,16 @@ export function resolveEditableProfileUserState(role: EditableProfileRole, compa
       user_origin: "client_company" as const,
       user_scope: "company_only" as const,
       allow_multi_company_link: false,
+    };
+  }
+
+  if (role === SYSTEM_ROLES.TESTING_COMPANY_USER) {
+    return {
+      created_by_company_id: null,
+      home_company_id: normalizedCompanyId,
+      user_origin: "testing_company" as const,
+      user_scope: "shared" as const,
+      allow_multi_company_link: true,
     };
   }
 

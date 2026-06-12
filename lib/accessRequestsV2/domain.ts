@@ -13,6 +13,133 @@ export const ACCESS_REQUEST_V2_STATUSES = [
 
 export type AccessRequestV2Status = (typeof ACCESS_REQUEST_V2_STATUSES)[number];
 
+export const ACCESS_REQUEST_PROFILE_TYPES = [
+  SYSTEM_ROLES.EMPRESA,
+  SYSTEM_ROLES.COMPANY_USER,
+  SYSTEM_ROLES.TESTING_COMPANY_USER,
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+] as const;
+
+export type AccessRequestProfileType = (typeof ACCESS_REQUEST_PROFILE_TYPES)[number];
+
+export const ACCESS_REQUEST_PROFILE_LABELS: Record<AccessRequestProfileType, string> = {
+  [SYSTEM_ROLES.EMPRESA]: "Empresa",
+  [SYSTEM_ROLES.COMPANY_USER]: "Usuario da empresa",
+  [SYSTEM_ROLES.TESTING_COMPANY_USER]: "Usuario TC",
+  [SYSTEM_ROLES.LEADER_TC]: "Lider TC",
+  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: "Suporte Tecnico",
+};
+
+export const ACCESS_REQUEST_ADJUSTMENT_FIELDS = [
+  "profileType",
+  "company",
+  "companyName",
+  "companyTaxId",
+  "companyZip",
+  "companyAddress",
+  "companyPhone",
+  "companyWebsite",
+  "companyLinkedin",
+  "companyDescription",
+  "companyNotes",
+  "fullName",
+  "username",
+  "email",
+  "phone",
+  "jobRole",
+  "title",
+  "description",
+  "notes",
+  "password",
+] as const;
+
+export type AccessRequestAdjustmentField = (typeof ACCESS_REQUEST_ADJUSTMENT_FIELDS)[number];
+
+export const ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS: Record<AccessRequestAdjustmentField, string> = {
+  profileType: "Tipo de perfil",
+  company: "Empresa",
+  companyName: "Razao social",
+  companyTaxId: "CNPJ",
+  companyZip: "CEP",
+  companyAddress: "Endereco",
+  companyPhone: "Telefone da empresa",
+  companyWebsite: "Website",
+  companyLinkedin: "LinkedIn",
+  companyDescription: "Descricao da empresa",
+  companyNotes: "Observacoes da empresa",
+  fullName: "Nome completo",
+  username: "Usuario/login",
+  email: "E-mail",
+  phone: "Telefone",
+  jobRole: "Cargo",
+  title: "Titulo",
+  description: "Descricao",
+  notes: "Observacoes",
+  password: "Senha",
+};
+
+export const ACCESS_REQUEST_REJECTION_REASONS = [
+  { value: "invalid_data", label: "Dados inválidos ou inconsistentes" },
+  { value: "duplicate_request", label: "Solicitação duplicada" },
+  { value: "profile_not_allowed", label: "Perfil solicitado não autorizado" },
+  { value: "company_not_found", label: "Empresa não encontrada ou não elegível" },
+  { value: "insufficient_information", label: "Informações insuficientes" },
+  { value: "other", label: "Outro motivo" },
+] as const;
+
+export type AccessRequestCompanyDetails = {
+  companyName?: string;
+  fantasyName?: string;
+  cnpj?: string;
+  cep?: string;
+  address?: string;
+  number?: string;
+  complement?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  linkedin?: string;
+  description?: string;
+  notes?: string;
+  situation?: string;
+  openingDate?: string;
+  legalNature?: string;
+  mainActivity?: string;
+  size?: string;
+  shareCapital?: string;
+};
+
+export type AccessRequestV2Details = {
+  username?: string;
+  phone?: string;
+  jobRole?: string;
+  title?: string;
+  description?: string;
+  notes?: string;
+  company?: AccessRequestCompanyDetails;
+};
+
+export type AccessRequestAdjustmentEntry = {
+  field: AccessRequestAdjustmentField;
+  label: string;
+  previous: string;
+  next: string;
+};
+
+export type AccessRequestAdjustmentRound = {
+  round: number;
+  requestedAt: string;
+  requestedFields: AccessRequestAdjustmentField[];
+  requestMessage?: string;
+  fieldComments?: Partial<Record<AccessRequestAdjustmentField, string>>;
+  requesterReturnedAt?: string;
+  requesterDiff?: AccessRequestAdjustmentEntry[];
+};
+
 export const ACCESS_REQUEST_V2_TYPES = [
   "company_access",
   "company_user",
@@ -53,7 +180,11 @@ export type AccessRequestV2 = {
   reviewedAt?: string;
   reviewComment?: string;
   /** Campos que precisam de ajuste (preenchido em needs_more_info) */
-  adjustmentFields?: string[];
+  adjustmentFields?: AccessRequestAdjustmentField[];
+  details?: AccessRequestV2Details;
+  adjustmentHistory?: AccessRequestAdjustmentRound[];
+  lastAdjustmentAt?: string;
+  lastAdjustmentDiff?: AccessRequestAdjustmentEntry[];
   createdAt: string;
   updatedAt: string;
 };
@@ -83,6 +214,64 @@ export function normalizeAccessRequestV2Status(input?: string | null): AccessReq
   if (value === "in_progress") return "under_review";
   if (value === "closed") return "approved";
   return null;
+}
+
+export function isAccessRequestFinalStatus(status: AccessRequestV2Status) {
+  return status === "approved" || status === "rejected" || status === "cancelled" || status === "expired";
+}
+
+export function canTransitionAccessRequest(
+  current: AccessRequestV2Status,
+  next: AccessRequestV2Status,
+) {
+  if (current === next) return true;
+  if (isAccessRequestFinalStatus(current)) return false;
+
+  const allowed: Record<AccessRequestV2Status, AccessRequestV2Status[]> = {
+    pending: ["under_review", "needs_more_info", "approved", "rejected", "cancelled", "expired"],
+    under_review: ["needs_more_info", "approved", "rejected", "cancelled", "expired"],
+    needs_more_info: ["under_review", "rejected", "cancelled", "expired"],
+    approved: [],
+    rejected: [],
+    cancelled: [],
+    expired: [],
+  };
+
+  return allowed[current].includes(next);
+}
+
+export function normalizeAccessRequestProfileType(
+  input?: string | null,
+): AccessRequestProfileType | null {
+  const normalized = normalizeLegacyRole(input);
+  return normalized && ACCESS_REQUEST_PROFILE_TYPES.includes(normalized as AccessRequestProfileType)
+    ? (normalized as AccessRequestProfileType)
+    : null;
+}
+
+export function accessRequestProfileNeedsCompany(profileType: AccessRequestProfileType) {
+  return profileType === SYSTEM_ROLES.COMPANY_USER;
+}
+
+export function accessRequestProfileUsesAutomaticCompany(profileType: AccessRequestProfileType) {
+  return profileType === SYSTEM_ROLES.TESTING_COMPANY_USER;
+}
+
+export function accessRequestProfileLabel(profileType: AccessRequestProfileType) {
+  return ACCESS_REQUEST_PROFILE_LABELS[profileType];
+}
+
+export function normalizeAccessRequestAdjustmentFields(input: unknown) {
+  if (!Array.isArray(input)) return [];
+  return Array.from(
+    new Set(
+      input.filter(
+        (value): value is AccessRequestAdjustmentField =>
+          typeof value === "string" &&
+          ACCESS_REQUEST_ADJUSTMENT_FIELDS.includes(value as AccessRequestAdjustmentField),
+      ),
+    ),
+  );
 }
 
 export function normalizeAccessRequestV2Type(input?: string | null): AccessRequestV2Type | null {

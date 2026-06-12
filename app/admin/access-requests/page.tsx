@@ -26,6 +26,7 @@ import {
   type RequestProfileTypeLabel,
 } from "@/lib/requestRouting";
 import { parsePasswordResetAccessRequestMessage } from "@/lib/passwordResetAccessQueue";
+import { ACCESS_REQUEST_REJECTION_REASONS } from "@/lib/accessRequestsV2/domain";
 
 type ClientOption = { id: string; name: string };
 
@@ -556,16 +557,6 @@ function getNextSelectedAccessRequestId(previousId: string | null, items: Access
   return previousId && items.some((item) => item.id === previousId) ? previousId : items[0]?.id ?? null;
 }
 
-function debugLoadedAccessRequests(items: AccessRequestItem[]) {
-  try {
-    console.debug(
-      "[E2E][access-requests] carregou itens:",
-      items.length,
-      items.map((p) => ({ id: p.id, status: p.status })),
-    );
-  } catch {}
-}
-
 function AccessRequestsPage() {
   const { user } = useAuthUser();
   const [items, setItems] = useState<AccessRequestItem[]>([]);
@@ -581,7 +572,9 @@ function AccessRequestsPage() {
   const [requestingAdjustment, setRequestingAdjustment] = useState(false);
   const [comments, setComments] = useState<AccessRequestComment[]>([]);
   const [commentDraft, setCommentDraft] = useState("");
+  const [rejectionReasonDraft, setRejectionReasonDraft] = useState("");
   const [adjustmentFieldsDraft, setAdjustmentFieldsDraft] = useState<AccessRequestAdjustmentField[]>([]);
+  const [adjustmentFieldComments, setAdjustmentFieldComments] = useState<Record<string, string>>({});
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -637,7 +630,6 @@ function AccessRequestsPage() {
       setClients(data.clients);
       setExistingLogins(data.logins);
       setItems(data.items);
-      debugLoadedAccessRequests(data.items);
       setSelectedId((prev) => getNextSelectedAccessRequestId(prev, data.items));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar");
@@ -713,6 +705,7 @@ function AccessRequestsPage() {
 
   useEffect(() => {
     setAdjustmentFieldsDraft(selected?.adjustmentRequestedFields ?? []);
+    setAdjustmentFieldComments({});
   }, [selected]);
 
   async function copy(text: string) {
@@ -783,7 +776,11 @@ function AccessRequestsPage() {
       const res = await fetchWithToken(`/api/admin/access-requests/${selected.id}/request-adjustment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment: body, fields: adjustmentFieldsDraft }),
+        body: JSON.stringify({
+          comment: body,
+          fields: adjustmentFieldsDraft,
+          fieldComments: adjustmentFieldComments,
+        }),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
@@ -792,6 +789,7 @@ function AccessRequestsPage() {
       }
       setCommentDraft("");
       setAdjustmentFieldsDraft([]);
+      setAdjustmentFieldComments({});
       draftTouchedRef.current = false;
       setSuccessMessage("Solicitação enviada para ajuste.");
       await load();
@@ -825,10 +823,6 @@ function AccessRequestsPage() {
       });
 
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      // Log de resposta para diagnóstico E2E
-      try {
-        console.debug("[E2E][access-requests][accept] res.ok=", res.ok, "status=", res.status, "body=", json);
-      } catch {}
       if (!res.ok) {
         setError((json.error as string) || (json.message as string) || "Falha ao aceitar");
         return;
@@ -847,6 +841,16 @@ function AccessRequestsPage() {
 
   async function rejectRequest() {
     if (!selected || !draft) return;
+    const rejectionReason = ACCESS_REQUEST_REJECTION_REASONS.find(
+      (item) => item.value === rejectionReasonDraft,
+    );
+    if (!rejectionReason) {
+      setError("Selecione o motivo da rejeição.");
+      return;
+    }
+    const rejectionText = [rejectionReason.label, commentDraft.trim()]
+      .filter(Boolean)
+      .join("\n");
 
     setAccepting(true);
     setError(null);
@@ -856,15 +860,12 @@ function AccessRequestsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          reason: commentDraft.trim(),
-          comment: commentDraft.trim(),
+          reason: rejectionText,
+          comment: rejectionText,
         }),
       });
 
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      try {
-        console.debug("[E2E][access-requests][reject] res.ok=", res.ok, "status=", res.status, "body=", json);
-      } catch {}
       if (!res.ok) {
         setError((json.error as string) || (json.message as string) || "Falha ao recusar");
         return;
@@ -873,6 +874,7 @@ function AccessRequestsPage() {
       // Reset before reload só the [selected] effect can set draft from fresh data.
       draftTouchedRef.current = false;
       setCommentDraft("");
+      setRejectionReasonDraft("");
       setSuccessMessage("Solicitação recusada.");
       await load();
       await loadComments(selected.id);
@@ -1493,9 +1495,6 @@ function AccessRequestsPage() {
                               const id = e.target.value || null;
                               const match = clients.find((c) => c.id === id);
                               setDraft((d) => (d ? { ...d, clientId: id, company: match?.name ?? d.company ?? "" } : d));
-                              try {
-                                console.debug("[E2E][access-requests] select empresa -> id=", id, "match=", match?.name);
-                              } catch {}
                             }}
                             aria-label="Empresa"
                             title="Empresa"
@@ -1753,6 +1752,30 @@ function AccessRequestsPage() {
                           );
                         })}
                       </div>
+                      {adjustmentFieldsDraft.length > 0 ? (
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          {adjustmentFieldsDraft.map((field) => {
+                            const option = adjustmentFieldOptions.find((item) => item.field === field);
+                            return (
+                              <label key={`adjustment-comment-${field}`} className="text-xs font-semibold text-(--tc-text-secondary)">
+                                Observacao para {option?.label ?? field}
+                                <input
+                                  type="text"
+                                  value={adjustmentFieldComments[field] ?? ""}
+                                  onChange={(event) =>
+                                    setAdjustmentFieldComments((current) => ({
+                                      ...current,
+                                      [field]: event.target.value,
+                                    }))
+                                  }
+                                  className="mt-2 w-full rounded-xl border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text-primary)"
+                                  data-testid={`access-request-adjustment-comment-${field}`}
+                                />
+                              </label>
+                            );
+                          })}
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
 
@@ -1769,6 +1792,21 @@ function AccessRequestsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-3">
+                    <select
+                      value={rejectionReasonDraft}
+                      onChange={(event) => setRejectionReasonDraft(event.target.value)}
+                      disabled={commentsLocked}
+                      className="min-h-10 rounded-full border border-rose-300 bg-white px-4 text-xs font-semibold text-rose-700 disabled:opacity-60"
+                      data-testid="access-request-rejection-reason"
+                      aria-label="Motivo da rejeição"
+                    >
+                      <option value="">Motivo da rejeição</option>
+                      {ACCESS_REQUEST_REJECTION_REASONS.map((reason) => (
+                        <option key={reason.value} value={reason.value}>
+                          {reason.label}
+                        </option>
+                      ))}
+                    </select>
                     <button
                       type="button"
                       onClick={saveChanges}
@@ -1791,7 +1829,7 @@ function AccessRequestsPage() {
                       type="button"
                       onClick={rejectRequest}
                       aria-label="Recusar solicitação"
-                      disabled={accepting || !commentDraft.trim()}
+                      disabled={accepting || !rejectionReasonDraft || commentsLocked}
                       className="rounded-full border border-rose-400 bg-rose-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-rose-700 transition hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {accepting ? "Processando..." : "Recusar"}

@@ -4,7 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { readApiError } from "@/lib/apiEnvelope";
-import { editableProfileNeedsCompany, normalizeEditableProfileRole } from "@/lib/editableProfileRoles";
+import {
+  editableProfileNeedsCompany,
+  editableProfileUsesAutomaticCompany,
+  normalizeEditableProfileRole,
+} from "@/lib/editableProfileRoles";
 import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -47,7 +51,7 @@ type Props = {
   allowedRoles?: FixedProfileKind[];
 };
 
-const ROLE_OPTIONS = [
+const ROLE_OPTIONS: Array<{ value: FixedProfileKind; label: string }> = [
   { value: "empresa", label: "Admin da empresa" },
   { value: "company_user", label: "Usuário da empresa" },
   { value: "testing_company_user", label: "Usuário TC" },
@@ -81,6 +85,7 @@ export function CreateUserModal({
   title = "Criar usuário",
   subtitle = "Um convite será enviado por email.",
   submitLabel = "Criar usuário",
+  allowedRoles,
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -112,11 +117,19 @@ export function CreateUserModal({
   const isCreateMode = effectiveMode === "create";
 
   const normalizedRole = useMemo(() => normalizeEditableProfileRole(role), [role]);
-  const roleOptions = useMemo(() => ROLE_OPTIONS, []);
+  const roleOptions = useMemo(
+    () =>
+      allowedRoles?.length
+        ? ROLE_OPTIONS.filter((option) => allowedRoles.includes(option.value))
+        : ROLE_OPTIONS,
+    [allowedRoles],
+  );
   const requiresClient = useMemo(
     () =>
       showCompanyField &&
-      (requireCompanySelection || editableProfileNeedsCompany(normalizedRole)),
+      (requireCompanySelection ||
+        (editableProfileNeedsCompany(normalizedRole) &&
+          !editableProfileUsesAutomaticCompany(normalizedRole))),
     [showCompanyField, requireCompanySelection, normalizedRole],
   );
   const requiresPassword = useMemo(
@@ -282,10 +295,6 @@ export function CreateUserModal({
         }
         if (!res.ok) {
           const err = await readApiError(res, "Erro ao salvar usuário");
-          try {
-            const bodyText = await res.text().catch(() => "");
-            console.error(`[ADMIN-USERS-CLIENT][CREATE] non-ok status=${res.status} body=${bodyText}`);
-          } catch {}
           setError(err.message);
           toast.error(err.displayMessage);
           return;
@@ -300,7 +309,6 @@ export function CreateUserModal({
         const okMsg = "Usuário criado. Convite enviado.";
         setMessage(okMsg);
         toast.success(okMsg);
-        console.error(`[ADMIN-USERS-CLIENT][CREATE] success name=${name} email=${email} clientId=${localClientId}`);
         resetForm();
         onClose();
         try {
@@ -412,7 +420,7 @@ export function CreateUserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-3 py-4 overflow-y-auto" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-3 py-4 overflow-y-auto" role="dialog" aria-modal="true" data-testid="create-user-modal">
       <div className="my-auto w-full max-w-4xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl">
         <div className="flex items-start justify-between mb-4">
           <div>
@@ -429,7 +437,7 @@ export function CreateUserModal({
           <p className="text-sm text-red-600 mb-3">Selecione uma empresa para criar usuário.</p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3" data-testid="create-user-form">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {showCompanyField ? (
               <label className="block text-sm sm:col-span-2">
@@ -439,6 +447,7 @@ export function CreateUserModal({
                   value={localClientId ?? ""}
                   onChange={(e) => setLocalClientId(e.target.value || null)}
                   aria-label="Empresa vinculada ao usuário"
+                  data-testid="create-user-company"
                   disabled={isViewMode}
                 >
                   <option value="">{requiresClient ? "Selecione" : "Opcional"}</option>
@@ -456,6 +465,7 @@ export function CreateUserModal({
                   className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  data-testid="create-user-name"
                   placeholder="Nome do usuário"
                   required
                   disabled={isViewMode}
@@ -468,6 +478,7 @@ export function CreateUserModal({
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                     value={login}
                     onChange={(e) => setLogin(e.target.value)}
+                    data-testid="create-user-login"
                     placeholder="Se deixar em branco, o sistema gera"
                     disabled={isViewMode}
                   />
@@ -491,6 +502,7 @@ export function CreateUserModal({
                     className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    data-testid="create-user-password"
                     placeholder="Mínimo 8 caracteres"
                     required
                     disabled={isViewMode}
@@ -505,6 +517,7 @@ export function CreateUserModal({
                   className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  data-testid="create-user-email"
                   placeholder="email@empresa.com"
                   required
                   disabled={isViewMode}
@@ -516,6 +529,7 @@ export function CreateUserModal({
                   className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  data-testid="create-user-phone"
                   placeholder="+55 11 99999-9999"
                   disabled={isViewMode}
                 />
@@ -551,6 +565,7 @@ export function CreateUserModal({
                     className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                     value={role}
                     onChange={(e) => setRole(normalizeEditableProfileRole(e.target.value))}
+                    data-testid="create-user-role"
                     disabled={isViewMode}
                   >
                     {roleOptions.map((opt) => (
@@ -650,6 +665,7 @@ export function CreateUserModal({
               ) : (
                 <button
                   type="submit"
+                  data-testid="create-user-submit"
                   className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                   disabled={!canSubmit || loading}
                 >

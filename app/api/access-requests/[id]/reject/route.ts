@@ -13,6 +13,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
   if (result === "forbidden") return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   if (result === "reject-comment-required") return NextResponse.json({ message: "Comentário é obrigatório para rejeitar" }, { status: 400 });
+  if (result === "invalid-transition") return NextResponse.json({ message: "Transição de status inválida" }, { status: 409 });
   if (!result) return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
 
   return NextResponse.json({ item: result }, { status: 200 });

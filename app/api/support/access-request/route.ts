@@ -134,22 +134,6 @@ export async function POST(req: Request) {
 
     resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || "Empresa";
     resolvedCompanySlug = resolvedCompanySlug ?? selectedCompany.slug ?? null;
-  } else if (profileType === "company_user") {
-    const guessCompany = company || companyProfile.companyName || "";
-    if (guessCompany) {
-      const selectedCompany = await findLocalCompanyBySlug(guessCompany).catch(() => null);
-      if (selectedCompany?.id) {
-        resolvedClientId = selectedCompany.id;
-        resolvedCompanySlug = selectedCompany.slug ?? null;
-        resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || resolvedCompanyName;
-      }
-    }
-
-    if (!resolvedClientId && !companyProfile.companyName) {
-      return NextResponse.json({ message: "Informe o nome ou razao social da empresa" }, { status: 400 });
-    }
-
-    resolvedCompanyName = resolvedCompanyName || companyProfile.companyName;
   } else if (profileType === "empresa") {
     const guessCompany = company || companyProfile.companyName || "";
     if (guessCompany) {
@@ -284,10 +268,9 @@ export async function POST(req: Request) {
     email,
     phone,
     profileType,
-    role,
     title,
     description,
-    company: resolvedCompanyName || null,
+    companyName: resolvedCompanyName || null,
   }).then((sent) => {
     console.log("[ACCESS-REQUESTS][EMAIL][RECEIVED]", sent ? "sent" : "not_sent", email);
   }).catch((error) => {

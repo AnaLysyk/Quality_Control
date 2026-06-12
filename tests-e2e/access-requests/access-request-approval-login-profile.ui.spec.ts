@@ -11,6 +11,7 @@ const profiles = [
     value: "company_user",
     expectedRole: "company_user",
     needsCompany: true,
+    expectsPrimaryClient: true,
     expectedGlobalAdmin: false,
   },
   {
@@ -18,6 +19,7 @@ const profiles = [
     value: "testing_company_user",
     expectedRole: "testing_company_user",
     needsCompany: true,
+    expectsPrimaryClient: false,
     expectedGlobalAdmin: false,
   },
   {
@@ -25,6 +27,7 @@ const profiles = [
     value: "leader_tc",
     expectedRole: "leader_tc",
     needsCompany: false,
+    expectsPrimaryClient: false,
     expectedGlobalAdmin: true,
   },
   {
@@ -32,6 +35,7 @@ const profiles = [
     value: "technical_support",
     expectedRole: "technical_support",
     needsCompany: false,
+    expectsPrimaryClient: false,
     expectedGlobalAdmin: false,
   },
 ];
@@ -97,8 +101,10 @@ async function createPublicAccessRequest(
   expect(json.item?.requesterEmail).toBe(email);
   expect(json.item?.requestType).toBe(profile.value);
 
-  if (profile.needsCompany) {
+  if (profile.expectsPrimaryClient) {
     expect(json.item?.requestedCompanyId).toBe("cmp_e2e_testing_company");
+  } else if (profile.value === "testing_company_user") {
+    expect(json.item?.requestedCompanyId).toBeUndefined();
   }
 
   return {
@@ -260,23 +266,14 @@ test.describe("Solicitação pública de acesso - aprovação, login e perfil", 
       expect(me.user?.jobTitle ?? me.user?.job_title).toBe("Analista de QA");
 
       if (profile.needsCompany) {
-        expect(me.user?.clientId).toBe("cmp_e2e_testing_company");
         expect(me.companies?.some((company) => company.id === "cmp_e2e_testing_company")).toBeTruthy();
+        if (profile.expectsPrimaryClient) {
+          expect(me.user?.clientId).toBe("cmp_e2e_testing_company");
+        }
       } else {
         expect(me.user?.clientId).toBeFalsy();
       }
 
-      console.log("[APPROVED USER PROFILE]", {
-        profile: profile.label,
-        email: createdRequest.email,
-        username,
-        role: me.user?.role,
-        globalRole: me.user?.globalRole,
-        companyRole: me.user?.companyRole,
-        clientId: me.user?.clientId,
-        phone: me.user?.phone,
-        jobTitle: me.user?.jobTitle ?? me.user?.job_title,
-      });
     });
   }
 });

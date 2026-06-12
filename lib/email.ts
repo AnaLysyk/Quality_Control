@@ -2,6 +2,15 @@ import nodemailer from 'nodemailer';
 import { appendFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 
+function escapeHtml(value: unknown) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 export interface EmailOptions {
   to: string;
   subject: string;
@@ -72,12 +81,15 @@ class EmailService {
       "";
     if (configured.trim()) return configured.trim();
 
-    return `${this.resolvePublicBaseUrl()}/logo-tc.png`;
+    return `${this.resolvePublicBaseUrl()}/images/tc.png`;
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      if (String(process.env.EMAIL_CAPTURE_MODE || "").toLowerCase() === "file") {
+      const captureEnabled =
+        String(process.env.EMAIL_CAPTURE_MODE || "").toLowerCase() === "file" ||
+        String(process.env.ACCESS_REQUEST_EMAIL_BYPASS || "").toLowerCase() === "true";
+      if (captureEnabled && process.env.NODE_ENV !== "production") {
         const captureFile = process.env.EMAIL_CAPTURE_FILE || "test-results/emails/outbox.jsonl";
         mkdirSync(dirname(captureFile), { recursive: true });
         appendFileSync(
@@ -91,7 +103,6 @@ class EmailService {
           }) + "\n",
           "utf8",
         );
-        console.log("[EMAIL][CAPTURED]", options.to, options.subject);
         return true;
       }
 
@@ -581,7 +592,7 @@ Equipe Testing Company
       accessKey: string;
       email: string;
       phone?: string | null;
-      password?: string | null;
+      passwordDefined?: boolean;
       profileType?: string | null;
       companyName?: string | null;
       title?: string | null;
@@ -591,8 +602,10 @@ Equipe Testing Company
     },
   ): Promise<boolean> {
     const statusUrl = `${this.resolvePublicBaseUrl()}/login/access-request/status?key=${data.accessKey}`;
-    const greeting = data.name ? `Olá, ${data.name}!` : "Olá!";
+    const greetingText = data.name ? `Olá, ${data.name}!` : "Olá!";
+    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : "Olá!";
     const profileLabels: Record<string, string> = {
+      empresa: "Empresa",
       company_user: "Usuário da empresa",
       testing_company_user: "Usuário Testing Company",
       leader_tc: "Líder TC",
@@ -648,7 +661,7 @@ Equipe Testing Company
       })
       .map(([key, value]) => {
         const label = labelMap[key] ?? key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
-        return `<tr><td class="label">${label}</td><td class="value">${formatValue(value)}</td></tr>`;
+        return `<tr><td class="label">${escapeHtml(label)}</td><td class="value">${escapeHtml(formatValue(value))}</td></tr>`;
       })
       .join("");
 
@@ -690,7 +703,7 @@ Equipe Testing Company
   <div class="page">
     <div class="card">
       <div class="header">
-        <div class="brand"><img src="${this.resolveEmailLogoUrl()}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
+        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
         <h1>Quality Control</h1>
         <p>Solicitação de acesso recebida</p>
       </div>
@@ -702,19 +715,28 @@ Equipe Testing Company
         <div class="section-title">Dados de acesso cadastrados</div>
         <div class="info">
           <table>
-            <tr><td class="label">Usuário / login</td><td class="value">${data.email}</td></tr>
-            <tr><td class="label">Senha cadastrada</td><td class="value">${data.password ?? "Senha não recebida no payload"}</td></tr>
-            <tr><td class="label">Perfil solicitado</td><td class="value">${profileLabel}</td></tr>
-            <tr><td class="label">Código de consulta</td><td class="value">${data.accessKey}</td></tr>
+            <tr><td class="label">Usuário / login</td><td class="value">${escapeHtml(data.email)}</td></tr>
+            <tr><td class="label">Senha cadastrada</td><td class="value">${data.passwordDefined ? "Definida com segurança no formulário" : "Não definida"}</td></tr>
+            <tr><td class="label">Perfil solicitado</td><td class="value">${escapeHtml(profileLabel)}</td></tr>
+            <tr><td class="label">Código de consulta</td><td class="value">${escapeHtml(data.accessKey)}</td></tr>
           </table>
         </div>
 
         <div class="section-title">Dados do solicitante</div>
         <div class="info">
           <table>
-            <tr><td class="label">Nome</td><td class="value">${data.name ?? "-"}</td></tr>
-            <tr><td class="label">E-mail</td><td class="value">${data.email}</td></tr>
-            <tr><td class="label">Telefone</td><td class="value">${data.phone ?? "-"}</td></tr>
+            <tr><td class="label">Nome</td><td class="value">${escapeHtml(data.name ?? "-")}</td></tr>
+            <tr><td class="label">E-mail</td><td class="value">${escapeHtml(data.email)}</td></tr>
+            <tr><td class="label">Telefone</td><td class="value">${escapeHtml(data.phone ?? "-")}</td></tr>
+          </table>
+        </div>
+
+        <div class="section-title">Dados da solicitação</div>
+        <div class="info">
+          <table>
+            <tr><td class="label">Título</td><td class="value">${escapeHtml(data.title ?? "-")}</td></tr>
+            <tr><td class="label">Descrição</td><td class="value">${escapeHtml(data.description ?? "-")}</td></tr>
+            <tr><td class="label">Status</td><td class="value">${escapeHtml(data.status ?? "Em análise")}</td></tr>
           </table>
         </div>
 
@@ -723,10 +745,10 @@ Equipe Testing Company
         <div class="box">Guarde este código. Ele será usado junto com seu nome e e-mail para consultar o andamento da solicitação. Depois da aprovação, o acesso será feito com o usuário e senha cadastrados neste formulário.</div>
 
         <div class="buttonWrap">
-          <a href="${statusUrl}" class="button">Consultar solicitação</a>
+          <a href="${escapeHtml(statusUrl)}" class="button">Consultar solicitação</a>
         </div>
 
-        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Link direto: ${statusUrl}</p>
+        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Link direto: ${escapeHtml(statusUrl)}</p>
       </div>
       <div class="footer">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</div>
     </div>
@@ -743,13 +765,13 @@ Equipe Testing Company
       .map(([key, value]) => `${labelMap[key] ?? key}: ${formatValue(value)}`)
       .join("\n");
 
-    const text = `${greeting}
+    const text = `${greetingText}
 
 Recebemos sua solicitação de acesso.
 
 DADOS DE ACESSO
 Usuário / login: ${data.email}
-Senha cadastrada: ${data.password ?? "Senha não recebida no payload"}
+Senha cadastrada: ${data.passwordDefined ? "Definida com segurança no formulário" : "Não definida"}
 Perfil solicitado: ${profileLabel}
 Código de consulta: ${data.accessKey}
 
@@ -757,6 +779,11 @@ DADOS DO SOLICITANTE
 Nome: ${data.name ?? "-"}
 E-mail: ${data.email}
 Telefone: ${data.phone ?? "-"}
+
+DADOS DA SOLICITAÇÃO
+Título: ${data.title ?? "-"}
+Descrição: ${data.description ?? "-"}
+Status: ${data.status ?? "Em análise"}
 
 ${companyText ? `DADOS DA EMPRESA
 ${companyText}
@@ -787,7 +814,8 @@ Guarde este código para acompanhar sua solicitação.`;
     },
   ): Promise<boolean> {
     const loginUrl = `${this.resolvePublicBaseUrl()}/login`;
-    const greeting = data.name ? `Olá, ${data.name}!` : "Olá!";
+    const greetingText = data.name ? `Olá, ${data.name}!` : "Olá!";
+    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : "Olá!";
     const normalizedRole = String(data.profileType ?? "").trim().toLowerCase();
 
     const roleContent: Record<string, {
@@ -932,7 +960,7 @@ Guarde este código para acompanhar sua solicitação.`;
     const contentByRole =
       roleContent[normalizedRole] ??
       {
-        label: data.profileType ?? "Perfil aprovado",
+        label: escapeHtml(data.profileType ?? "Perfil aprovado"),
         subject: "Acesso aprovado",
         title: "Seu acesso foi aprovado",
         intro: "Sua solicitação foi aprovada na plataforma Quality Control.",
@@ -952,13 +980,13 @@ Guarde este código para acompanhar sua solicitação.`;
       };
 
     const companyLine = data.companySlug
-      ? `<tr><td class="label">Empresa vinculada</td><td class="value">${data.companySlug}</td></tr>`
+      ? `<tr><td class="label">Empresa vinculada</td><td class="value">${escapeHtml(data.companySlug)}</td></tr>`
       : "";
 
     const passwordLabel = data.passwordFromRequest
       ? "Use a senha cadastrada no momento da solicitação"
       : data.tempPassword
-        ? data.tempPassword
+        ? escapeHtml(data.tempPassword)
         : "Use a senha definida no cadastro";
 
     const permissionsHtml = contentByRole.permissions.map((item) => `<li>${item}</li>`).join("");
@@ -1000,7 +1028,7 @@ Guarde este código para acompanhar sua solicitação.`;
   <div class="page">
     <div class="card">
       <div class="header">
-        <div class="brand"><img src="${this.resolveEmailLogoUrl()}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
+        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
         <h1>Quality Control</h1>
         <p>${contentByRole.title}</p>
       </div>
@@ -1015,7 +1043,7 @@ Guarde este código para acompanhar sua solicitação.`;
 
         <div class="info">
           <table>
-            <tr><td class="label">Login cadastrado</td><td class="value">${data.login}</td></tr>
+            <tr><td class="label">Login cadastrado</td><td class="value">${escapeHtml(data.login)}</td></tr>
             <tr><td class="label">Senha</td><td class="value">${passwordLabel}</td></tr>
             <tr><td class="label">Perfil aprovado</td><td class="value">${contentByRole.label}</td></tr>
             ${companyLine}
@@ -1039,11 +1067,11 @@ Guarde este código para acompanhar sua solicitação.`;
         </div>
 
         <div class="buttonWrap">
-          <a href="${loginUrl}" class="button">Acessar o sistema</a>
+          <a href="${escapeHtml(loginUrl)}" class="button">Acessar o sistema</a>
         </div>
 
         <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">
-          Link direto: ${loginUrl}
+          Link direto: ${escapeHtml(loginUrl)}
         </p>
       </div>
 
@@ -1059,7 +1087,7 @@ Guarde este código para acompanhar sua solicitação.`;
     const permissionsText = contentByRole.permissions.map((item) => `- ${item}`).join("\n");
     const nextStepsText = contentByRole.nextSteps.map((item) => `- ${item}`).join("\n");
 
-    const text = `${greeting}
+    const text = `${greetingText}
 
 ${contentByRole.title}
 
@@ -1097,9 +1125,12 @@ Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Sen
       accessKey?: string | null;
     },
   ): Promise<boolean> {
-    const greeting = data.name ? `Olá, ${data.name}!` : 'Olá!';
+    const statusUrl = data.accessKey
+      ? `${this.resolvePublicBaseUrl()}/login/access-request/status?key=${data.accessKey}`
+      : null;
+    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : 'Olá!';
     const commentBlock = data.comment
-      ? `<div style="background:#fff4f4;border-left:4px solid #ef4444;padding:14px 18px;border-radius:4px;margin:16px 0"><p style="margin:0;color:#444"><strong>Motivo:</strong> ${data.comment}</p></div>`
+      ? `<div style="background:#fff4f4;border-left:4px solid #ef4444;padding:14px 18px;border-radius:4px;margin:16px 0"><p style="margin:0;color:#444"><strong>Motivo:</strong> ${escapeHtml(data.comment)}</p></div>`
       : '';
     const commentText = data.comment ? `\nMotivo informado:\n${data.comment}\n` : '';
 
@@ -1118,12 +1149,13 @@ Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Sen
 </head>
 <body>
 <div class="wrap">
-  <div class="hdr"><h1>Quality Control</h1></div>
+  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1></div>
   <div class="body">
     <span class="badge">✕ Solicitação rejeitada</span>
     <h2 style="margin-top:0">${greeting}</h2>
     <p>Infelizmente sua solicitação de acesso foi <strong>rejeitada</strong>.</p>
     ${commentBlock}
+    ${statusUrl ? `<p><a href="${escapeHtml(statusUrl)}">Consultar solicitação</a></p>` : ""}
     <p>Se tiver dúvidas, entre em contato com a equipe de suporte.</p>
   </div>
   <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
@@ -1131,7 +1163,7 @@ Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Sen
 </body>
 </html>`;
 
-    const text = `${greeting}\n\nSua solicitação de acesso foi rejeitada.${commentText}\n\nPara dúvidas, entre em contato com o suporte.`;
+    const text = `${data.name ? `Olá, ${data.name}!` : "Olá!"}\n\nSua solicitação de acesso foi rejeitada.${commentText}${statusUrl ? `\nConsulte em: ${statusUrl}\n` : ""}\nPara dúvidas, entre em contato com o suporte.`;
 
     return this.sendEmail({
       to,
@@ -1152,17 +1184,18 @@ Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Sen
   ): Promise<boolean> {
     const baseUrl = this.resolvePublicBaseUrl();
     const statusUrl = `${baseUrl}/login/access-request/status?key=${data.accessKey}`;
-    const greeting = data.name ? `Olá, ${data.name}!` : 'Olá!';
+    const greetingText = data.name ? `Olá, ${data.name}!` : "Olá!";
+    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : 'Olá!';
 
     const fieldsHtml = data.adjustmentFields && data.adjustmentFields.length > 0
-      ? `<ul style="margin:8px 0 16px;padding-left:20px">${data.adjustmentFields.map((f) => `<li>${f}</li>`).join('')}</ul>`
+      ? `<ul style="margin:8px 0 16px;padding-left:20px">${data.adjustmentFields.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}</ul>`
       : '';
     const fieldsText = data.adjustmentFields && data.adjustmentFields.length > 0
       ? `\nCampos que precisam de ajuste:\n${data.adjustmentFields.map((f) => `- ${f}`).join('\n')}\n`
       : '';
 
     const commentBlock = data.comment
-      ? `<div style="background:#fffbea;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:4px;margin:16px 0"><p style="margin:0;color:#444"><strong>Observação do revisor:</strong> ${data.comment}</p></div>`
+      ? `<div style="background:#fffbea;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:4px;margin:16px 0"><p style="margin:0;color:#444;white-space:pre-wrap"><strong>Observação do revisor:</strong> ${escapeHtml(data.comment)}</p></div>`
       : '';
     const commentText = data.comment ? `\nObservação do revisor:\n${data.comment}\n` : '';
 
@@ -1183,7 +1216,7 @@ Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Sen
 </head>
 <body>
 <div class="wrap">
-  <div class="hdr"><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Ajuste necessário na solicitação</p></div>
+  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Ajuste necessário na solicitação</p></div>
   <div class="body">
     <span class="badge">⚠ Ajuste necessário</span>
     <h2 style="margin-top:0">${greeting}</h2>
@@ -1191,16 +1224,16 @@ Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Sen
     ${fieldsHtml ? `<p><strong>Campos que precisam de revisão:</strong></p>${fieldsHtml}` : ''}
     ${commentBlock}
     <p>Use o link abaixo para acessar e corrigir sua solicitação:</p>
-    <p class="key">Chave de acesso: <strong>${data.accessKey}</strong></p>
-    <a href="${statusUrl}" class="btn">Abrir minha solicitação</a>
-    <p style="margin-top:24px;font-size:12px;color:#888">Ou copie o link: ${statusUrl}</p>
+    <p class="key">Chave de acesso: <strong>${escapeHtml(data.accessKey)}</strong></p>
+    <a href="${escapeHtml(statusUrl)}" class="btn">Abrir minha solicitação</a>
+    <p style="margin-top:24px;font-size:12px;color:#888">Ou copie o link: ${escapeHtml(statusUrl)}</p>
   </div>
   <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
 </div>
 </body>
 </html>`;
 
-    const text = `${greeting}\n\nSua solicitação de acesso precisa de ajustes.${fieldsText}${commentText}\nAcesse sua solicitação em:\n${statusUrl}\n\nChave de acesso: ${data.accessKey}`;
+    const text = `${greetingText}\n\nSua solicitação de acesso precisa de ajustes.${fieldsText}${commentText}\nAcesse sua solicitação em:\n${statusUrl}\n\nChave de acesso: ${data.accessKey}`;
 
     return this.sendEmail({
       to,

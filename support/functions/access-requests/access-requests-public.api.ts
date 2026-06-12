@@ -1,5 +1,7 @@
 ﻿import { expect, type APIRequestContext } from "@playwright/test";
 
+import { esperarEmailCapturado } from "./access-requests.email";
+
 export type PublicAccessRequestPayload = {
   requestType: string;
   requestedRole: string;
@@ -55,8 +57,20 @@ export async function criarSolicitacaoPublicaViaApi(
   expect(response.status(), JSON.stringify(body)).toBe(201);
   expect(body?.item?.id).toBeTruthy();
   expect(body?.item?.requesterEmail).toBe(payload.email);
+  expect(body?.item?.accessKey).toBeUndefined();
 
-  return body.item;
+  const captured = await esperarEmailCapturado({
+    to: payload.email,
+    subject: /Solicita.*acesso recebida - Quality Control/i,
+  });
+  const emailContent = `${captured.html}\n${captured.text ?? ""}`;
+  const accessKey =
+    emailContent.match(/status\?key=([a-f0-9]+)/i)?.[1] ??
+    emailContent.match(/C[oó]digo de consulta:\s*([a-f0-9]+)/i)?.[1] ??
+    "";
+  expect(accessKey, "O código deve existir somente no e-mail capturado").toBeTruthy();
+
+  return { ...body.item, accessKey };
 }
 
 export async function tentarCriarSolicitacaoPublicaDuplicadaViaApi(

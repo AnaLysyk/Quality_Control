@@ -21,6 +21,8 @@ import { notifyAccessRequestAccepted } from "@/lib/notificationService";
 import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
+import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
+import { transitionAccessRequest } from "@/lib/accessRequestsV2/service";
 import { reviewPasswordResetRequest } from "@/lib/passwordResetReview";
 
 type AcceptBody = {
@@ -430,6 +432,51 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
                   ? "in_progress"
                   : "open",
           requestId: passwordResetRequestId,
+        },
+      });
+    }
+
+    const v2Request = await getAccessRequestV2ById(id);
+    if (v2Request?.accessKey) {
+      const result = await transitionAccessRequest(
+        id,
+        "approve",
+        {
+          id: admin.id || admin.email,
+          email: admin.email,
+          role: admin.role,
+          globalRole: admin.globalRole,
+          companyRole: admin.role,
+          permissionRole: admin.role,
+          isGlobalAdmin: Boolean(admin.isGlobalAdmin),
+        },
+        { comment },
+      );
+
+      const errors: Record<string, [number, string]> = {
+        forbidden: [403, "Sem permissao"],
+        "self-approval": [403, "Autoaprovacao nao e permitida"],
+        "scope-denied": [403, "Sem escopo para aprovar este perfil"],
+        "missing-password": [400, "A solicitacao precisa ter uma senha definida"],
+        "testing-company-missing": [409, "Empresa Testing Company nao encontrada"],
+        "company-missing": [400, "Empresa obrigatoria para este perfil"],
+        "company-name-missing": [400, "Nome da empresa obrigatorio"],
+        "invalid-profile": [400, "Perfil solicitado invalido"],
+        "invalid-transition": [409, "A solicitacao nao pode mais ser aprovada"],
+      };
+      if (typeof result === "string") {
+        const [errorStatus, error] = errors[result] ?? [400, result];
+        return NextResponse.json({ error }, { status: errorStatus });
+      }
+      if (!result) {
+        return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+      }
+      return NextResponse.json({
+        ok: true,
+        item: {
+          id: result.id,
+          status: "closed",
+          username: result.details?.username ?? result.requesterEmail,
         },
       });
     }

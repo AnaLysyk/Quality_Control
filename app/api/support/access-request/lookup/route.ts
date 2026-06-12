@@ -6,6 +6,8 @@ import { listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { extractAdminNotes, parseAccessRequestMessage } from "@/lib/accessRequestMessage";
 import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { resendAccessRequestCode } from "@/lib/accessRequestsV2/service";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,6 +30,35 @@ function normalizeOptionalDate(value?: Date | string | null) {
   if (!value) return null;
   if (typeof value === "string") return value;
   return value.toISOString();
+}
+
+export async function POST(req: Request) {
+  const body = (await req.json().catch(() => null)) as {
+    name?: string;
+    email?: string;
+  } | null;
+  const name = normalizeAccessRequestLookup(body?.name);
+  const email = normalizeAccessRequestLookup(body?.email);
+  if (!name || !email) {
+    return NextResponse.json(
+      { error: "Informe nome e e-mail." },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
+  }
+
+  const limiter = await rateLimit(req, `access-request-code-resend:${email}`, 4, 60 * 10);
+  if (!limiter.limited) {
+    await resendAccessRequestCode({ name, email });
+  }
+
+  return NextResponse.json(
+    {
+      ok: true,
+      message:
+        "Se os dados conferirem com uma solicitação, o código será reenviado para o e-mail informado.",
+    },
+    { headers: NO_STORE_HEADERS },
+  );
 }
 
 export async function GET(req: Request) {

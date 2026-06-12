@@ -12,9 +12,14 @@ import { prisma } from "@/lib/prismaClient";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import {
   type AccessRequestV2,
+  type AccessRequestAdjustmentEntry,
+  type AccessRequestAdjustmentField,
+  type AccessRequestAdjustmentRound,
   type AccessRequestV2Priority,
+  type AccessRequestV2Details,
   type AccessRequestV2Status,
   type AccessRequestV2Type,
+  normalizeAccessRequestAdjustmentFields,
   normalizeAccessRequestV2Priority,
   normalizeAccessRequestV2Status,
   normalizeAccessRequestV2Type,
@@ -41,7 +46,11 @@ type V2Meta = {
   /** Chave pública opaca para consulta sem login */
   accessKey?: string;
   /** Campos sinalizados para ajuste pelo revisor */
-  adjustmentFields?: string[];
+  adjustmentFields?: AccessRequestAdjustmentField[];
+  details?: AccessRequestV2Details;
+  adjustmentHistory?: AccessRequestAdjustmentRound[];
+  lastAdjustmentAt?: string;
+  lastAdjustmentDiff?: AccessRequestAdjustmentEntry[];
   createdAt: string;
   updatedAt: string;
 };
@@ -72,7 +81,11 @@ function parseV2Message(message: string): V2Meta | null {
       reviewedAt: parsed.reviewedAt,
       reviewComment: parsed.reviewComment,
       accessKey: parsed.accessKey,
-      adjustmentFields: Array.isArray(parsed.adjustmentFields) ? parsed.adjustmentFields : undefined,
+      adjustmentFields: normalizeAccessRequestAdjustmentFields(parsed.adjustmentFields),
+      details: parsed.details,
+      adjustmentHistory: Array.isArray(parsed.adjustmentHistory) ? parsed.adjustmentHistory : [],
+      lastAdjustmentAt: parsed.lastAdjustmentAt,
+      lastAdjustmentDiff: Array.isArray(parsed.lastAdjustmentDiff) ? parsed.lastAdjustmentDiff : [],
       createdAt: parsed.createdAt ?? new Date().toISOString(),
       updatedAt: parsed.updatedAt ?? new Date().toISOString(),
     };
@@ -117,7 +130,11 @@ function mapPrismaRowToV2(row: {
   let requestedPasswordHash: string | undefined;
   let requestedCompanySlug: string | undefined;
   let accessKey: string | undefined;
-  let adjustmentFields: string[] | undefined;
+  let adjustmentFields: AccessRequestAdjustmentField[] | undefined;
+  let details: AccessRequestV2Details | undefined;
+  let adjustmentHistory: AccessRequestAdjustmentRound[] | undefined;
+  let lastAdjustmentAt: string | undefined;
+  let lastAdjustmentDiff: AccessRequestAdjustmentEntry[] | undefined;
 
   if (row.adminNotes?.startsWith(V2_PREFIX)) {
     const meta = parseV2Message(row.adminNotes);
@@ -133,6 +150,10 @@ function mapPrismaRowToV2(row: {
       requestedCompanySlug = meta.requestedCompanySlug;
       accessKey = meta.accessKey;
       adjustmentFields = meta.adjustmentFields;
+      details = meta.details;
+      adjustmentHistory = meta.adjustmentHistory;
+      lastAdjustmentAt = meta.lastAdjustmentAt;
+      lastAdjustmentDiff = meta.lastAdjustmentDiff;
     }
   }
 
@@ -154,7 +175,11 @@ function mapPrismaRowToV2(row: {
     reviewedBy,
     reviewedAt,
     reviewComment,
-    adjustmentFields,
+    adjustmentFields: normalizeAccessRequestAdjustmentFields(adjustmentFields),
+    details,
+    adjustmentHistory,
+    lastAdjustmentAt,
+    lastAdjustmentDiff,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -205,6 +230,10 @@ export async function listAccessRequestsV2(filters?: {
           reviewedAt: meta.reviewedAt,
           reviewComment: meta.reviewComment,
           adjustmentFields: meta.adjustmentFields,
+          details: meta.details,
+          adjustmentHistory: meta.adjustmentHistory,
+          lastAdjustmentAt: meta.lastAdjustmentAt,
+          lastAdjustmentDiff: meta.lastAdjustmentDiff,
           createdAt: meta.createdAt,
           updatedAt: meta.updatedAt,
         } as AccessRequestV2;
@@ -222,6 +251,48 @@ export async function listAccessRequestsV2(filters?: {
         status: normalizeAccessRequestV2Status(record.status) ?? "pending",
         reason: parsedLegacy.description || undefined,
         priority: "medium",
+        details: {
+          username: parsedLegacy.username ?? undefined,
+          phone: parsedLegacy.phone || undefined,
+          jobRole: parsedLegacy.jobRole || undefined,
+          title: parsedLegacy.title || undefined,
+          description: parsedLegacy.description || undefined,
+          notes: parsedLegacy.notes || undefined,
+          company: parsedLegacy.companyProfile
+            ? {
+                companyName: parsedLegacy.companyProfile.companyName || undefined,
+                cnpj: parsedLegacy.companyProfile.companyTaxId || undefined,
+                cep: parsedLegacy.companyProfile.companyZip || undefined,
+                address: parsedLegacy.companyProfile.companyAddress || undefined,
+                phone: parsedLegacy.companyProfile.companyPhone || undefined,
+                website: parsedLegacy.companyProfile.companyWebsite || undefined,
+                linkedin: parsedLegacy.companyProfile.companyLinkedin || undefined,
+                description: parsedLegacy.companyProfile.companyDescription || undefined,
+                notes: parsedLegacy.companyProfile.companyNotes || undefined,
+              }
+            : undefined,
+        },
+        adjustmentFields: normalizeAccessRequestAdjustmentFields(parsedLegacy.adjustmentRequestedFields),
+        adjustmentHistory: parsedLegacy.adjustmentHistory.map((round) => ({
+          round: round.round,
+          requestedAt: round.requestedAt,
+          requestedFields: normalizeAccessRequestAdjustmentFields(round.requestedFields),
+          requestMessage: round.requestMessage ?? undefined,
+          requesterReturnedAt: round.requesterReturnedAt ?? undefined,
+          requesterDiff: round.requesterDiff?.map((entry) => ({
+            field: entry.field as AccessRequestAdjustmentField,
+            label: entry.label,
+            previous: entry.previous,
+            next: entry.next,
+          })),
+        })),
+        lastAdjustmentAt: parsedLegacy.lastAdjustmentAt ?? undefined,
+        lastAdjustmentDiff: parsedLegacy.lastAdjustmentDiff.map((entry) => ({
+          field: entry.field as AccessRequestAdjustmentField,
+          label: entry.label,
+          previous: entry.previous,
+          next: entry.next,
+        })),
         createdAt: record.created_at,
         updatedAt: record.updated_at ?? record.created_at,
       } as AccessRequestV2;
@@ -273,6 +344,7 @@ export async function createAccessRequestV2(input: {
   requestedCompanyId?: string;
   targetUserId?: string;
   requestedPasswordHash?: string;
+  details?: AccessRequestV2Details;
   reason?: string;
   priority?: AccessRequestV2Priority;
 }) {
@@ -291,6 +363,7 @@ export async function createAccessRequestV2(input: {
     requestedPasswordHash: input.requestedPasswordHash,
     status: "pending",
     reason: input.reason,
+    details: input.details,
     priority: normalizeAccessRequestV2Priority(input.priority),
     createdAt: now,
     updatedAt: now,
@@ -310,6 +383,9 @@ export async function createAccessRequestV2(input: {
       targetUserId: request.targetUserId,
       requestedPasswordHash: request.requestedPasswordHash,
       reason: request.reason,
+      details: request.details,
+      adjustmentHistory: [],
+      lastAdjustmentDiff: [],
       accessKey: request.accessKey,
       createdAt: request.createdAt,
       updatedAt: request.updatedAt,
@@ -346,6 +422,9 @@ export async function createAccessRequestV2(input: {
     targetUserId: request.targetUserId,
     requestedPasswordHash: request.requestedPasswordHash,
     reason: request.reason,
+    details: request.details,
+    adjustmentHistory: [],
+    lastAdjustmentDiff: [],
     accessKey: request.accessKey,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
@@ -366,7 +445,10 @@ export async function createAccessRequestV2(input: {
 
 export async function updateAccessRequestV2(
   id: string,
-  patch: Partial<Pick<AccessRequestV2, "status" | "priority" | "reviewedBy" | "reviewedAt" | "reviewComment" | "reason" | "adjustmentFields" | "requestedPasswordHash">>,
+  patch: Partial<Pick<AccessRequestV2, "status" | "priority" | "reviewedBy" | "reviewedAt" | "reviewComment" | "reason" | "adjustmentFields" | "requestedPasswordHash" | "requesterName" | "requesterEmail" | "requestedRole" | "details" | "adjustmentHistory" | "lastAdjustmentAt" | "lastAdjustmentDiff">> & {
+    requestedCompanySlug?: string | null;
+    requestedCompanyId?: string | null;
+  },
 ) {
   const current = await getAccessRequestV2ById(id);
   if (!current) return null;
@@ -381,6 +463,15 @@ export async function updateAccessRequestV2(
     ...(patch.reason !== undefined ? { reason: patch.reason } : {}),
     ...(patch.requestedPasswordHash !== undefined ? { requestedPasswordHash: patch.requestedPasswordHash } : {}),
     ...(patch.adjustmentFields !== undefined ? { adjustmentFields: patch.adjustmentFields } : {}),
+    ...(patch.requesterName !== undefined ? { requesterName: patch.requesterName } : {}),
+    ...(patch.requesterEmail !== undefined ? { requesterEmail: patch.requesterEmail } : {}),
+    ...(patch.requestedRole !== undefined ? { requestedRole: patch.requestedRole } : {}),
+    ...(patch.requestedCompanySlug !== undefined ? { requestedCompanySlug: patch.requestedCompanySlug ?? undefined } : {}),
+    ...(patch.requestedCompanyId !== undefined ? { requestedCompanyId: patch.requestedCompanyId ?? undefined } : {}),
+    ...(patch.details !== undefined ? { details: patch.details } : {}),
+    ...(patch.adjustmentHistory !== undefined ? { adjustmentHistory: patch.adjustmentHistory } : {}),
+    ...(patch.lastAdjustmentAt !== undefined ? { lastAdjustmentAt: patch.lastAdjustmentAt } : {}),
+    ...(patch.lastAdjustmentDiff !== undefined ? { lastAdjustmentDiff: patch.lastAdjustmentDiff } : {}),
     updatedAt: new Date().toISOString(),
   };
 
@@ -403,6 +494,10 @@ export async function updateAccessRequestV2(
       reviewComment: next.reviewComment,
       accessKey: next.accessKey,
       adjustmentFields: next.adjustmentFields,
+      details: next.details,
+      adjustmentHistory: next.adjustmentHistory,
+      lastAdjustmentAt: next.lastAdjustmentAt,
+      lastAdjustmentDiff: next.lastAdjustmentDiff,
       createdAt: next.createdAt,
       updatedAt: next.updatedAt,
     };
@@ -411,6 +506,11 @@ export async function updateAccessRequestV2(
       where: { id },
       data: {
         status: next.status,
+        email: next.requesterEmail,
+        name: next.requesterName ?? null,
+        profileType: next.requestedRole ?? null,
+        company: next.requestedCompanySlug ?? null,
+        clientId: next.requestedCompanyId ?? null,
         description: next.reason ?? null,
         adminNotes: stringifyV2Message(meta),
       },
@@ -437,11 +537,16 @@ export async function updateAccessRequestV2(
     reviewComment: next.reviewComment,
     accessKey: next.accessKey,
     adjustmentFields: next.adjustmentFields,
+    details: next.details,
+    adjustmentHistory: next.adjustmentHistory,
+    lastAdjustmentAt: next.lastAdjustmentAt,
+    lastAdjustmentDiff: next.lastAdjustmentDiff,
     createdAt: next.createdAt,
     updatedAt: next.updatedAt,
   };
 
   await updateAccessRequest(id, {
+    email: next.requesterEmail,
     status: toLegacyAccessRequestStatus(next.status),
     message: stringifyV2Message(meta),
   });

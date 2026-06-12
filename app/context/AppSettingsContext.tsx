@@ -137,8 +137,8 @@ function languageToLocale(language: Language): "pt" | "en" {
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuthUser();
   const { locale, setLocale } = useLanguage();
-  const [settings, setSettings] = useState<AppSettings>(() => readInitialSettings());
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => resolveThemePreference(readInitialSettings().theme));
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
   const [loading, setLoading] = useState(true);
   // Guard to prevent infinite sync loops between LanguageContext and AppSettings
   const syncingRef = useRef(false);

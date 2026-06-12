@@ -1,181 +1,47 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
-import { shouldUseJsonStore } from "@/lib/storeMode";
-import { getAccessRequestById, listAccessRequests } from "@/data/accessRequestsStore";
-import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
-import { notifyAccessRequestComment } from "@/lib/notificationService";
-import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
-import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
 
-type SupportRequestRow = {
-  id: string;
-  email: string;
-  message: string;
-  status: string;
-  created_at: Date | string;
-  user_id?: string | null;
-};
+import { addPublicAccessRequestComment } from "@/lib/accessRequestsV2/service";
 
-function sanitizeBody(value: unknown, max = 2000) {
+function text(value: unknown, max: number) {
   if (typeof value !== "string") return "";
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
-}
-
-async function findRequestById(id: string): Promise<SupportRequestRow | null> {
-  if (shouldUseJsonStore()) {
-    const item = await getAccessRequestById(id);
-    if (!item) return null;
-    return {
-      id: item.id,
-      email: item.email,
-      message: item.message,
-      status: item.status,
-      created_at: item.created_at,
-      user_id: item.user_id ?? null,
-    };
-  }
-  try {
-    const item = await prisma.supportRequest.findUnique({ where: { id } });
-    if (!item) return null;
-    return {
-      id: item.id,
-      email: item.email,
-      message: item.message,
-      status: item.status,
-      created_at: item.created_at,
-      user_id: (item as { user_id?: string | null }).user_id ?? null,
-    };
-  } catch (error) {
-    console.error("Erro ao buscar support_request, fallback JSON:", error);
-    const item = await getAccessRequestById(id);
-    if (!item) return null;
-    return {
-      id: item.id,
-      email: item.email,
-      message: item.message,
-      status: item.status,
-      created_at: item.created_at,
-      user_id: item.user_id ?? null,
-    };
-  }
-}
-
-async function findRequestByLookup(email: string, name: string): Promise<SupportRequestRow | null> {
-  const normalizedEmail = normalizeAccessRequestLookup(email);
-  const normalizedName = normalizeAccessRequestLookup(name);
-  if (!normalizedEmail || !normalizedName) return null;
-
-  let items: SupportRequestRow[] = [];
-  if (shouldUseJsonStore()) {
-    const list = await listAccessRequests();
-    items = list.map((item) => ({
-      id: item.id,
-      email: item.email,
-      message: item.message,
-      status: item.status,
-      created_at: item.created_at,
-      user_id: item.user_id ?? null,
-    }));
-  } else {
-    try {
-      const list = (await prisma.supportRequest.findMany({
-        where: {
-          OR: [
-            { email: email.trim().toLowerCase() },
-            { message: { contains: email.trim().toLowerCase(), mode: "insensitive" } },
-          ],
-        },
-        orderBy: { created_at: "desc" },
-      })) as SupportRequestRow[];
-      items = list.map((item: SupportRequestRow) => ({
-        id: item.id,
-        email: item.email,
-        message: item.message,
-        status: item.status,
-        created_at: item.created_at,
-        user_id: (item as { user_id?: string | null }).user_id ?? null,
-      }));
-    } catch (error) {
-      console.error("Erro ao consultar support_request, fallback JSON:", error);
-      const list = await listAccessRequests();
-      items = list.map((item) => ({
-        id: item.id,
-        email: item.email,
-        message: item.message,
-        status: item.status,
-        created_at: item.created_at,
-        user_id: item.user_id ?? null,
-      }));
-    }
-  }
-
-  const match = items.find((item) => {
-    const parsed = parseAccessRequestMessage(String(item.message ?? ""), String(item.email ?? ""));
-    return matchesAccessRequestLookup({
-      lookupEmail: normalizedEmail,
-      lookupName: normalizedName,
-      parsed,
-      storedEmail: item.email,
-    });
-  });
-  return match ?? null;
+  return value.trim().slice(0, max);
 }
 
 export async function POST(req: Request) {
-  const body = (await req.json().catch(() => null)) as {
-    requestId?: string;
-    name?: string;
-    email?: string;
-    comment?: string;
-    body?: string;
-  } | null;
-
+  const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) {
     return NextResponse.json({ error: "Payload invalido." }, { status: 400 });
   }
 
-  const requestId = typeof body.requestId === "string" ? body.requestId.trim() : "";
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-  const comment = sanitizeBody(body.comment ?? body.body ?? "");
+  const accessKey = text(body.accessKey, 160);
+  const name = text(body.name, 255);
+  const email = text(body.email, 255).toLowerCase();
+  const comment = text(body.comment ?? body.body, 2000);
 
-  if (!name || !email || !comment) {
-    return NextResponse.json({ error: "Informe nome, e-mail e comentário." }, { status: 400 });
+  if (!accessKey || !name || !email || !comment) {
+    return NextResponse.json(
+      { error: "Informe chave, nome, e-mail e comentario." },
+      { status: 400 },
+    );
   }
 
-  const request = requestId ? await findRequestById(requestId) : await findRequestByLookup(email, name);
-  if (!request) {
-    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
-  }
-
-  const parsed = parseAccessRequestMessage(String(request.message ?? ""), String(request.email ?? ""));
-  if (!matchesAccessRequestLookup({ lookupEmail: email, lookupName: name, parsed, storedEmail: request.email })) {
-    return NextResponse.json({ error: "Dados não conferem com a solicitação." }, { status: 403 });
-  }
-  if (request.status === "rejected" || request.status === "closed") {
-    return NextResponse.json({ error: "Esta solicitação já foi finalizada e não aceita novos comentários." }, { status: 409 });
-  }
-
-  const authorName = parsed.fullName || parsed.name || name;
-
-  const record = await createAccessRequestComment({
-    requestId: request.id,
-    authorRole: "requester",
-    authorName,
-    authorEmail: email,
-    body: comment,
+  const result = await addPublicAccessRequestComment({
+    accessKey,
+    name,
+    email,
+    comment,
   });
 
-  await notifyAccessRequestComment({
-    requestId: request.id,
-    commentId: record.id,
-    authorName,
-    body: comment,
-    reviewQueue: parsed.reviewQueue,
-    clientId: parsed.clientId,
-  });
+  if (!result) return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
+  if (result === "forbidden") {
+    return NextResponse.json({ error: "Dados nao conferem com a solicitacao." }, { status: 403 });
+  }
+  if (result === "final") {
+    return NextResponse.json(
+      { error: "Solicitacao finalizada nao aceita comentarios." },
+      { status: 409 },
+    );
+  }
 
-  return NextResponse.json({ item: record }, { status: 200 });
+  return NextResponse.json({ item: result });
 }

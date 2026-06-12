@@ -1,4 +1,4 @@
-﻿import { test, expect } from "../fixtures/test";
+import { test, expect } from "../fixtures/test";
 import {
   buildPublicAccessRequestPayload,
   criarSolicitacaoPublicaViaApi,
@@ -52,7 +52,7 @@ test.describe("Solicitações de acesso - consulta/status UI", () => {
 
     await abrirStatusPorLink(page, created.accessKey);
 
-    await expect(page.getByTestId("access-request-status-badge")).toContainText(/Em análise/i);
+    await expect(page.getByTestId("access-request-status-badge")).toContainText(/Aguardando análise|Em análise/i);
     await expect(page.getByTestId("access-request-created-at")).not.toHaveText("-");
     await expect(page.getByTestId("access-request-updated-at")).not.toHaveText("-");
     await expect(page.getByTestId("access-request-status-message")).toContainText(/e-mail/i);
@@ -66,7 +66,7 @@ test.describe("Solicitações de acesso - consulta/status UI", () => {
 
     await abrirStatusPorLink(page, created.accessKey);
 
-    await expect(page.getByTestId("access-request-status-form")).toBeVisible();
+    await expect(page.getByTestId("access-request-status-result")).toBeVisible();
     await expect(page.getByTestId("access-request-requester-email")).toContainText(email);
   });
 
@@ -92,9 +92,9 @@ test.describe("Solicitações de acesso - consulta/status UI", () => {
 
     await abrirStatusPorLink(page, created.accessKey);
 
-    await expect(page.getByTestId("access-request-status-badge")).toContainText(/Recusado/i);
-    await expect(page.getByTestId("access-request-status-message")).toContainText(/recusada/i);
-    await expect(page.getByTestId("access-request-review-comment")).toContainText(/Recusado/i);
+    await expect(page.getByTestId("access-request-status-badge")).toContainText(/Rejeitado|Recusado/i);
+    await expect(page.getByTestId("access-request-status-message")).toContainText(/rejeitada|recusada/i);
+    await expect(page.getByTestId("access-request-review-comment")).toContainText(/Rejeitado|Recusado/i);
   });
 
   test("deve mostrar campos de correção quando houver ajuste", async ({ page, request }) => {
@@ -107,8 +107,8 @@ test.describe("Solicitações de acesso - consulta/status UI", () => {
     await abrirStatusPorLink(page, created.accessKey);
 
     await expect(page.getByTestId("access-request-status-badge")).toContainText(/Ajuste necessário/i);
-    await expect(page.getByTestId("access-request-status-message")).toContainText(/correção/i);
-    await expect(page.getByTestId("access-request-adjustment-fields")).toContainText("phone");
-    await expect(page.getByTestId("access-request-adjustment-fields")).toContainText("description");
+    await expect(page.getByTestId("access-request-status-message")).toContainText(/Corrija|correção/i);
+    await expect(page.getByTestId("access-request-adjustment-fields")).toContainText("Telefone");
+    await expect(page.getByTestId("access-request-adjustment-fields")).toContainText("Descrição");
   });
 });

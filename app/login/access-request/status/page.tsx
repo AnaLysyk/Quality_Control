@@ -3,7 +3,16 @@
 import Image from "next/image";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
 import styles from "../../LoginClient.module.css";
+
+type Comment = {
+  id: string;
+  authorRole: string;
+  authorName: string;
+  body: string;
+  createdAt: string;
+};
 
 type RequestPublic = {
   id: string;
@@ -11,66 +20,77 @@ type RequestPublic = {
   requestType: string;
   requestedRole?: string;
   requestedCompanySlug?: string;
+  requestedCompanyId?: string;
   requesterName?: string;
   requesterEmail: string;
   reason?: string;
   reviewComment?: string;
   adjustmentFields: string[];
-  priority: string;
+  adjustmentHistory: Array<{
+    round: number;
+    requestedAt: string;
+    requestedFields: string[];
+    requestMessage?: string;
+    fieldComments?: Record<string, string>;
+    requesterReturnedAt?: string;
+  }>;
+  lastAdjustmentAt?: string;
+  details: {
+    username?: string;
+    phone?: string;
+    jobRole?: string;
+    title?: string;
+    description?: string;
+    notes?: string;
+    company?: Record<string, string>;
+  };
   createdAt: string;
   updatedAt: string;
 };
 
-const STATUS_LABELS: Record<string, { label: string; badge: string; text: string }> = {
+type CompanyOption = { id: string; name: string };
+
+const STATUS = {
   pending: {
     label: "Aguardando análise",
-    badge: "border-amber-200 bg-amber-50 text-amber-700",
-    text: "Sua solicitação foi recebida com sucesso e está aguardando análise.",
+    text: "Sua solicitação foi recebida e aguarda análise. As atualizações serão enviadas por e-mail.",
+    tone: "border-amber-200 bg-amber-50 text-amber-800",
   },
   under_review: {
     label: "Em análise",
-    badge: "border-blue-200 bg-blue-50 text-blue-700",
-    text: "Sua solicitação está em análise pela equipe responsável.",
+    text: "Sua correção foi recebida e voltou para análise. As atualizações serão enviadas por e-mail.",
+    tone: "border-blue-200 bg-blue-50 text-blue-800",
   },
   needs_more_info: {
     label: "Ajuste necessário",
-    badge: "border-red-200 bg-red-50 text-red-700",
-    text: "A equipe solicitou ajustes. Corrija os campos destacados em vermelho.",
+    text: "Corrija somente os campos destacados e reenvie para análise.",
+    tone: "border-red-200 bg-red-50 text-red-800",
   },
   approved: {
     label: "Aprovado",
-    badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    text: "Sua solicitação foi aprovada. Verifique seu e-mail para acessar o sistema.",
+    text: "Sua solicitação foi aprovada. As instruções de acesso foram enviadas por e-mail.",
+    tone: "border-emerald-200 bg-emerald-50 text-emerald-800",
   },
   rejected: {
     label: "Rejeitado",
-    badge: "border-rose-200 bg-rose-50 text-rose-700",
-    text: "Sua solicitação foi rejeitada. Confira o comentário da equipe.",
+    text: "Sua solicitação foi rejeitada. Consulte o motivo informado pela equipe.",
+    tone: "border-red-300 bg-red-50 text-red-800",
   },
   cancelled: {
     label: "Cancelado",
-    badge: "border-slate-200 bg-slate-100 text-slate-600",
     text: "Esta solicitação foi cancelada.",
+    tone: "border-slate-200 bg-slate-100 text-slate-700",
   },
   expired: {
     label: "Expirado",
-    badge: "border-slate-200 bg-slate-100 text-slate-600",
     text: "Esta solicitação expirou.",
+    tone: "border-slate-200 bg-slate-100 text-slate-700",
   },
-};
+} as const;
 
 const FIELD_LABELS: Record<string, string> = {
-  profileType: "Perfil",
+  profileType: "Tipo de perfil",
   company: "Empresa",
-  fullName: "Nome completo",
-  username: "Usuário/login",
-  email: "E-mail",
-  phone: "Telefone",
-  jobRole: "Cargo",
-  title: "Título",
-  description: "Descrição",
-  notes: "Observações",
-  password: "Senha",
   companyName: "Razão social",
   companyTaxId: "CNPJ",
   companyZip: "CEP",
@@ -80,126 +100,93 @@ const FIELD_LABELS: Record<string, string> = {
   companyLinkedin: "LinkedIn",
   companyDescription: "Descrição da empresa",
   companyNotes: "Observações da empresa",
+  fullName: "Nome completo",
+  username: "Usuário/login",
+  email: "E-mail",
+  phone: "Telefone",
+  jobRole: "Cargo",
+  title: "Título",
+  description: "Descrição",
+  notes: "Observações",
+  password: "Nova senha",
 };
 
-function fieldLabel(field: string) {
-  return FIELD_LABELS[field] ?? field;
+function profileLabel(role?: string) {
+  if (role === "empresa") return "Empresa";
+  if (role === "company_user") return "Usuário da empresa";
+  if (role === "testing_company_user") return "Usuário Testing Company";
+  if (role === "leader_tc") return "Líder TC";
+  if (role === "technical_support") return "Suporte técnico";
+  return role || "Perfil solicitado";
 }
 
-function profileLabel(item: RequestPublic) {
-  if (item.requestType === "company_creation" || item.requestedRole === "empresa") {
-    return "Empresa";
-  }
-
-  if (item.requestedRole === "company_user") return "Usuário da empresa";
-  if (item.requestedRole === "testing_company_user") return "Usuário TC";
-  if (item.requestedRole === "leader_tc") return "Líder TC";
-  if (item.requestedRole === "technical_support") return "Suporte Técnico";
-
-  return item.requestedRole ?? item.requestType;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_LABELS[status] ?? {
-    label: status,
-    badge: "border-slate-200 bg-slate-100 text-slate-600",
-    text: "",
-  };
-
-  return (
-    <span className={`rounded-full border px-4 py-2 text-xs font-bold ${cfg.badge}`}>
-      {cfg.label}
-    </span>
-  );
+function dateTime(value?: string) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("pt-BR");
 }
 
 function Logo() {
   return (
-    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg sm:h-24 sm:w-24">
-      <div className="relative h-12 w-12 sm:h-16 sm:w-16">
+    <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg">
+      <div className="relative h-12 w-12">
         <Image
           src="/images/tc.png"
           alt="Logo Quality Control"
           fill
-          sizes="(min-width: 640px) 64px, 48px"
+          sizes="48px"
           priority
-          className="animate-spin-slower select-none object-contain object-center pointer-events-none"
+          className="object-contain"
         />
       </div>
     </div>
   );
 }
 
-function InfoCard({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value?: string | null;
-  highlight?: boolean;
-}) {
-  if (!value) return null;
-
+function Info({ label, value, testId }: { label: string; value?: string; testId?: string }) {
   return (
-    <div
-      className={`rounded-2xl border p-4 ${
-        highlight
-          ? "border-red-300 bg-red-50 shadow-sm ring-2 ring-red-100"
-          : "border-[#011848]/10 bg-white/90"
-      }`}
-    >
-      <p
-        className={`text-[11px] font-bold uppercase tracking-[0.18em] ${
-          highlight ? "text-red-600" : "text-[#64748b]"
-        }`}
-      >
-        {label}
+    <div className="rounded-2xl border border-[#011848]/10 bg-white p-4">
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#64748b]">{label}</p>
+      <p className="mt-2 break-words text-sm font-semibold text-[#011848]" data-testid={testId}>
+        {value || "-"}
       </p>
-      <p className="mt-2 break-words text-sm font-semibold text-[#011848]">{value}</p>
     </div>
   );
 }
 
-function AccessRequestStatusContent() {
+function StatusContent() {
   const params = useSearchParams();
   const router = useRouter();
-  const key = params.get("key") ?? "";
-
+  const accessKey = params.get("key") ?? "";
   const [item, setItem] = useState<RequestPublic | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [reply, setReply] = useState("");
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const load = async () => {
-    if (!key) {
+    if (!accessKey) {
       setError("Chave de acesso não informada.");
       setLoading(false);
       return;
     }
-
     setLoading(true);
-    setError(null);
-
     try {
-      const res = await fetch(`/api/access-requests/by-key/${encodeURIComponent(key)}`, {
+      const response = await fetch(`/api/access-requests/by-key/${encodeURIComponent(accessKey)}`, {
         cache: "no-store",
       });
-
-      const data = (await res.json().catch(() => null)) as {
-        item?: RequestPublic;
-        message?: string;
-      } | null;
-
-      if (!res.ok || !data?.item) {
-        throw new Error(data?.message ?? "Solicitação não encontrada.");
+      const body = await response.json().catch(() => null);
+      if (!response.ok || !body?.item) {
+        throw new Error(body?.message || "Solicitação não encontrada.");
       }
-
-      setItem(data.item);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar solicitação.");
+      setItem(body.item);
+      setComments(Array.isArray(body.comments) ? body.comments : []);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Falha ao consultar solicitação.");
     } finally {
       setLoading(false);
     }
@@ -207,275 +194,282 @@ function AccessRequestStatusContent() {
 
   useEffect(() => {
     void load();
-  }, [key]);
+  }, [accessKey]);
 
-  const requestedFields = useMemo(
-    () => new Set(item?.adjustmentFields ?? []),
-    [item?.adjustmentFields],
+  useEffect(() => {
+    if (!item || item.status !== "needs_more_info") return;
+    const company = item.details?.company ?? {};
+    const values: Record<string, string> = {
+      profileType: item.requestedRole ?? "",
+      company: item.requestedCompanySlug ?? "",
+      companyId: item.requestedCompanyId ?? "",
+      companyName: company.companyName ?? "",
+      companyTaxId: company.cnpj ?? "",
+      companyZip: company.cep ?? "",
+      companyAddress: company.address ?? "",
+      companyPhone: company.phone ?? "",
+      companyWebsite: company.website ?? "",
+      companyLinkedin: company.linkedin ?? "",
+      companyDescription: company.description ?? "",
+      companyNotes: company.notes ?? "",
+      fullName: item.requesterName ?? "",
+      username: item.details.username ?? "",
+      email: item.requesterEmail,
+      phone: item.details.phone ?? "",
+      jobRole: item.details.jobRole ?? "",
+      title: item.details.title ?? "",
+      description: item.details.description ?? item.reason ?? "",
+      notes: item.details.notes ?? "",
+      password: "",
+    };
+    setDraft(values);
+    if (item.adjustmentFields.includes("company")) {
+      void fetch("/api/public/clients", { cache: "no-store" })
+        .then((response) => response.json())
+        .then((body) => {
+          const list = Array.isArray(body?.items) ? body.items : [];
+          setCompanies(
+            list
+              .map((company: Record<string, unknown>) => ({
+                id: String(company.id ?? ""),
+                name: String(company.name ?? company.company_name ?? ""),
+              }))
+              .filter((company: CompanyOption) => company.id && company.name),
+          );
+        })
+        .catch(() => setCompanies([]));
+    }
+  }, [item]);
+
+  const status = item ? STATUS[item.status as keyof typeof STATUS] ?? STATUS.pending : STATUS.pending;
+  const finalStatus = item ? ["approved", "rejected", "cancelled", "expired"].includes(item.status) : false;
+  const latestRound = item?.adjustmentHistory?.at(-1);
+
+  const details = useMemo(
+    () => [
+      ["Nome", item?.requesterName],
+      ["E-mail", item?.requesterEmail],
+      ["Perfil", profileLabel(item?.requestedRole)],
+      ["Empresa", item?.requestedCompanySlug],
+      ["Usuário/login", item?.details?.username],
+      ["Telefone", item?.details?.phone],
+      ["Cargo", item?.details?.jobRole],
+      ["Título", item?.details?.title],
+      ["Descrição", item?.details?.description ?? item?.reason],
+    ] as Array<[string, string | undefined]>,
+    [item],
   );
 
-  const statusInfo = item ? STATUS_LABELS[item.status] ?? STATUS_LABELS.pending : STATUS_LABELS.pending;
-  const needsAdjustment = item?.status === "needs_more_info";
-  const canInteract = Boolean(item && !["approved", "rejected", "cancelled", "expired"].includes(item.status));
-
-  const submitReply = async () => {
-    if (!item || !reply.trim()) return;
-
+  async function submitAdjustment() {
+    if (!item) return;
     setBusy(true);
-    setFeedback(null);
     setError(null);
-
+    setFeedback(null);
     try {
-      const res = await fetch("/api/support/access-request/comments", {
+      const response = await fetch(`/api/access-requests/by-key/${encodeURIComponent(accessKey)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.message || "Não foi possível reenviar a correção.");
+      setFeedback("Correção reenviada. A solicitação voltou para análise.");
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Falha ao reenviar correção.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitReply() {
+    if (!item || !reply.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/support/access-request/comments", {
         method: "POST",
-        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          requestId: item.id,
-          name: item.requesterName ?? "",
+          accessKey,
+          name: item.requesterName,
           email: item.requesterEmail,
           comment: reply.trim(),
         }),
       });
-
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-
-      if (!res.ok) {
-        throw new Error(data?.error ?? "Não foi possível enviar a resposta.");
-      }
-
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.error || "Não foi possível enviar o comentário.");
       setReply("");
-      setFeedback("Resposta enviada para a equipe.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao enviar resposta.");
+      setFeedback("Comentário enviado para a equipe.");
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Falha ao enviar comentário.");
     } finally {
       setBusy(false);
     }
-  };
+  }
 
-  const cancelRequest = async () => {
-    if (!item) return;
-
-    const confirmed = window.confirm("Deseja cancelar esta solicitação?");
-    if (!confirmed) return;
-
+  async function cancelRequest() {
+    if (!window.confirm("Deseja cancelar esta solicitação?")) return;
     setBusy(true);
-    setFeedback(null);
-    setError(null);
-
     try {
-      const res = await fetch(`/api/access-requests/by-key/${encodeURIComponent(key)}/cancel`, {
-        method: "POST",
-        cache: "no-store",
-      });
-
-      const data = (await res.json().catch(() => null)) as { message?: string } | null;
-
-      if (!res.ok) {
-        throw new Error(data?.message ?? "Não foi possível cancelar a solicitação.");
-      }
-
+      const response = await fetch(
+        `/api/access-requests/by-key/${encodeURIComponent(accessKey)}/cancel`,
+        { method: "POST" },
+      );
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.message || "Não foi possível cancelar.");
       setFeedback("Solicitação cancelada.");
       await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao cancelar solicitação.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Falha ao cancelar.");
     } finally {
       setBusy(false);
     }
-  };
+  }
+
+  const shellClass = `${styles.loginContainer} ${styles.loginFixedTheme} min-h-svh bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-10`;
 
   if (loading) {
-    return (
-      <main
-        className={
-          styles.loginContainer +
-          " " +
-          styles.loginFixedTheme +
-          " min-h-svh flex items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-10"
-        }
-      >
-        <p className="rounded-2xl bg-white/90 px-5 py-3 text-sm font-semibold text-[#011848] shadow-xl">
-          Carregando solicitação...
-        </p>
-      </main>
-    );
+    return <main className={`${shellClass} flex items-center justify-center`}><p className="rounded-2xl bg-white px-5 py-3 font-semibold">Carregando solicitação...</p></main>;
   }
-
-  if (error && !item) {
+  if (!item) {
     return (
-      <main
-        className={
-          styles.loginContainer +
-          " " +
-          styles.loginFixedTheme +
-          " min-h-svh flex items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-10"
-        }
-      >
-        <section className="w-full max-w-md rounded-2xl border border-white/60 bg-white/90 p-8 text-center shadow-2xl backdrop-blur-sm">
+      <main className={`${shellClass} flex items-center justify-center`}>
+        <section className="w-full max-w-md rounded-3xl bg-white/95 p-8 text-center shadow-2xl">
           <Logo />
-          <p className="font-semibold text-red-600">{error}</p>
-          <button
-            onClick={() => router.push("/login")}
-            className="mt-6 w-full rounded-xl bg-[#011848] px-5 py-3 text-sm font-bold text-white"
-          >
-            Voltar ao login
-          </button>
+          <p className="font-semibold text-red-700" data-testid="access-request-status-error">{error}</p>
+          <button className="mt-6 w-full rounded-xl bg-[#011848] px-5 py-3 font-bold text-white" onClick={() => router.push("/login")}>Voltar ao login</button>
         </section>
       </main>
     );
   }
-
-  if (!item) return null;
 
   return (
-    <main
-      className={
-        styles.loginContainer +
-        " " +
-        styles.loginFixedTheme +
-        " min-h-svh flex items-start justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] relative isolate overflow-x-hidden overflow-y-auto px-4 py-10 sm:px-6 md:px-10"
-      }
-    >
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-6 left-6 w-32 h-32 bg-[#011848] rounded-full opacity-20 blur-2xl animate-ping"></div>
-        <div className="absolute bottom-6 right-6 w-28 h-28 bg-[#ef0001] rounded-full opacity-20 blur-2xl animate-pulse"></div>
-        <div className="absolute top-1/6 right-1/5 w-20 h-20 bg-[#ef0001] rounded-full opacity-10 blur-lg animate-bounce delay-1000"></div>
-        <div className="absolute bottom-1/6 left-1/5 w-24 h-24 bg-[#011848] rounded-full opacity-10 blur-lg animate-pulse delay-700"></div>
-      </div>
-
-      <section className="relative z-10 w-full max-w-2xl rounded-2xl border border-white/60 bg-white/90 p-5 shadow-2xl backdrop-blur-sm sm:p-8">
+    <main className={shellClass}>
+      <section className="relative z-10 mx-auto w-full max-w-3xl rounded-3xl border border-white/60 bg-white/95 p-5 shadow-2xl sm:p-8" data-testid="access-request-status-result">
         <header className="text-center">
           <Logo />
-
-          <p className="mt-2 text-[11px] font-black uppercase tracking-[0.45em] text-[#ef0001]">
-            Quality Control
-          </p>
-
-          <h1 className="mt-3 text-2xl font-black text-[#011848]">
-            Acompanhamento da solicitação
-          </h1>
-
-          <p className="mt-2 text-sm text-[#475569]">
-            Consulte aqui o andamento do seu pedido de acesso.
-          </p>
+          <p className="text-[11px] font-black uppercase tracking-[0.45em] text-[#ef0001]">Quality Control</p>
+          <h1 className="mt-3 text-2xl font-black text-[#011848]">Acompanhamento da solicitação</h1>
         </header>
 
-        <section className="mt-8 rounded-2xl border border-[#011848]/10 bg-white/90 p-5 shadow-sm">
-          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-[#ef0001]">
-            {needsAdjustment ? "Dados solicitados para alteração" : "Dados da solicitação"}
-          </p>
-
-          <h2 className="mt-1 text-lg font-black text-[#011848]">
-            {needsAdjustment ? "Corrija os campos destacados em vermelho" : "Resumo do pedido enviado"}
-          </h2>
-
-          {needsAdjustment && item.adjustmentFields.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {item.adjustmentFields.map((field) => (
-                <span
-                  key={field}
-                  className="rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs font-bold text-red-700"
-                >
-                  {fieldLabel(field)}
-                </span>
-              ))}
+        <section className={`mt-7 rounded-2xl border p-5 ${status.tone}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em]" data-testid="access-request-status-label">{status.label}</p>
+              <p className="mt-2 text-sm font-semibold" data-testid="access-request-status-message">{status.text}</p>
             </div>
-          )}
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <InfoCard label="Nome" value={item.requesterName} highlight={requestedFields.has("fullName")} />
-            <InfoCard label="E-mail informado" value={item.requesterEmail} highlight={requestedFields.has("email")} />
-            <InfoCard label="Tipo de solicitante" value={profileLabel(item)} highlight={requestedFields.has("profileType")} />
-            <InfoCard label="Empresa" value={item.requestedCompanySlug} highlight={requestedFields.has("company")} />
-            <InfoCard label="Descrição" value={item.reason} highlight={requestedFields.has("description")} />
-            <InfoCard label="Solicitação criada em" value={new Date(item.createdAt).toLocaleDateString("pt-BR")} />
+            <span className="rounded-full border border-current px-4 py-2 text-xs font-black" data-testid="access-request-status-badge">{status.label}</span>
           </div>
         </section>
 
-        <section className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.28em] text-[#ef0001]">
-                Situação atual
-              </p>
-              <p className="mt-2 text-sm font-semibold text-[#011848]">{statusInfo.text}</p>
-            </div>
-            <StatusBadge status={item.status} />
+        <section className="mt-5 rounded-2xl border border-[#011848]/10 bg-[#f8fafc] p-5">
+          <h2 className="text-lg font-black text-[#011848]">Dados da solicitação</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {details.map(([label, value]) => (
+              <Info
+                key={label}
+                label={label}
+                value={value}
+                testId={
+                  label === "E-mail"
+                    ? "access-request-status-email"
+                    : label === "Perfil"
+                      ? "access-request-status-profile"
+                      : undefined
+                }
+              />
+            ))}
+            <Info label="Criada em" value={dateTime(item.createdAt)} testId="access-request-created-at" />
+            <Info label="Atualizada em" value={dateTime(item.updatedAt)} testId="access-request-updated-at" />
           </div>
+          <span className="sr-only" data-testid="access-request-requester-email">{item.requesterEmail}</span>
         </section>
 
         {item.reviewComment && (
-          <section className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5">
-            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-red-700">
-              Comentário da equipe
-            </p>
-            <p className="mt-3 text-sm font-semibold text-[#011848]">{item.reviewComment}</p>
+          <section className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5" data-testid="access-request-review-comment">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Comentário da equipe</p>
+            <p className="mt-3 whitespace-pre-wrap text-sm font-semibold text-[#011848]">{item.reviewComment}</p>
+            <p className="mt-3 text-xs text-red-700">{dateTime(item.updatedAt)}</p>
           </section>
         )}
 
-        {canInteract && (
-          <section className="mt-5 rounded-2xl border border-[#011848]/10 bg-white/90 p-5 shadow-sm">
-            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-[#011848]">
-              Responder equipe
-            </p>
+        {item.status === "needs_more_info" && (
+          <section className="mt-5 rounded-2xl border border-red-200 bg-white p-5" data-testid="access-request-status-form">
+            <h2 className="text-lg font-black text-[#011848]">Correção solicitada</h2>
+            <div className="mt-3 flex flex-wrap gap-2" data-testid="access-request-adjustment-fields">
+              {item.adjustmentFields.map((field) => (
+                <span key={field} className="rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs font-bold text-red-700">{FIELD_LABELS[field] ?? field}</span>
+              ))}
+            </div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {item.adjustmentFields.map((field) => (
+                <label key={field} className="text-sm font-bold text-[#011848]">
+                  {FIELD_LABELS[field] ?? field}
+                  {field === "company" ? (
+                    <select
+                      className="mt-2 w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3"
+                      value={draft.companyId ?? ""}
+                      onChange={(event) => {
+                        const company = companies.find((option) => option.id === event.target.value);
+                        setDraft((current) => ({ ...current, companyId: event.target.value, company: company?.name ?? "" }));
+                      }}
+                      data-testid={`access-request-adjust-${field}`}
+                    >
+                      <option value="">Selecione uma empresa</option>
+                      {companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
+                    </select>
+                  ) : field === "profileType" ? (
+                    <select className="mt-2 w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3" value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`}>
+                      <option value="empresa">Empresa</option>
+                      <option value="company_user">Usuário da empresa</option>
+                      <option value="testing_company_user">Usuário TC</option>
+                      <option value="leader_tc">Líder TC</option>
+                      <option value="technical_support">Suporte técnico</option>
+                    </select>
+                  ) : field === "description" || field === "notes" || field.includes("Description") || field.includes("Notes") ? (
+                    <textarea className="mt-2 min-h-28 w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3" value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`} />
+                  ) : (
+                    <input type={field === "password" ? "password" : field === "email" ? "email" : "text"} className="mt-2 w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3" value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`} />
+                  )}
+                  {latestRound?.fieldComments?.[field] && <span className="mt-1 block text-xs font-medium text-red-700">{latestRound.fieldComments[field]}</span>}
+                </label>
+              ))}
+            </div>
+            <button type="button" disabled={busy} onClick={submitAdjustment} className="mt-5 w-full rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-5 py-3 font-black text-white disabled:opacity-50" data-testid="access-request-adjust-submit">
+              {busy ? "Enviando..." : "Reenviar correção"}
+            </button>
+          </section>
+        )}
 
-            <textarea
-              value={reply}
-              onChange={(event) => setReply(event.target.value)}
-              rows={4}
-              placeholder="Escreva uma resposta ou observação para a equipe..."
-              className="mt-3 w-full rounded-xl border border-[#011848]/20 bg-white px-4 py-3 text-sm text-[#011848] outline-none focus:border-[#ef0001] focus:ring-2 focus:ring-[#ef0001]/20"
-            />
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {needsAdjustment && (
-                <a
-                  href={`/login/solicitar-acesso?key=${encodeURIComponent(key)}`}
-                  className="rounded-xl bg-[#ef0001] px-5 py-3 text-center text-sm font-black text-white shadow-lg shadow-red-200"
-                >
-                  Corrigir campos
-                </a>
-              )}
-
-              <button
-                type="button"
-                onClick={submitReply}
-                disabled={busy || !reply.trim()}
-                className="rounded-xl bg-[#011848] px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Enviar resposta
-              </button>
-
-              <button
-                type="button"
-                onClick={cancelRequest}
-                disabled={busy}
-                className="rounded-xl border border-red-200 bg-white px-5 py-3 text-sm font-black text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancelar solicitação
-              </button>
+        {comments.length > 0 && (
+          <section className="mt-5 rounded-2xl border border-[#011848]/10 bg-white p-5">
+            <h2 className="text-lg font-black text-[#011848]">Histórico de mensagens</h2>
+            <div className="mt-4 space-y-3">
+              {comments.map((comment) => (
+                <div key={comment.id} className="rounded-xl bg-[#f8fafc] p-4">
+                  <div className="flex justify-between gap-3 text-xs font-bold text-[#64748b]"><span>{comment.authorName}</span><span>{dateTime(comment.createdAt)}</span></div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-[#011848]">{comment.body}</p>
+                </div>
+              ))}
             </div>
           </section>
         )}
 
-        {(feedback || error) && (
-          <div
-            className={`mt-5 rounded-2xl border p-4 text-sm font-semibold ${
-              error
-                ? "border-red-200 bg-red-50 text-red-700"
-                : "border-emerald-200 bg-emerald-50 text-emerald-700"
-            }`}
-          >
-            {error ?? feedback}
-          </div>
+        {!finalStatus && (
+          <section className="mt-5 rounded-2xl border border-[#011848]/10 bg-white p-5">
+            <textarea value={reply} onChange={(event) => setReply(event.target.value)} rows={3} placeholder="Escreva uma observação para a equipe..." className="w-full rounded-xl border border-[#011848]/20 px-4 py-3" />
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <button type="button" disabled={busy || !reply.trim()} onClick={submitReply} className="rounded-xl bg-[#011848] px-5 py-3 font-bold text-white disabled:opacity-50">Enviar comentário</button>
+              <button type="button" disabled={busy} onClick={cancelRequest} className="rounded-xl border border-red-200 px-5 py-3 font-bold text-red-700 disabled:opacity-50">Cancelar solicitação</button>
+            </div>
+          </section>
         )}
 
-        <button
-          onClick={() => router.push("/login")}
-          className="mt-6 w-full rounded-xl bg-[#011848] px-5 py-3 text-sm font-black text-white"
-        >
-          Voltar ao login
-        </button>
+        {(error || feedback) && <p className={`mt-5 rounded-xl border p-4 text-sm font-semibold ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? feedback}</p>}
+
+        <button onClick={() => router.push("/login")} className="mt-6 w-full rounded-xl bg-[#011848] px-5 py-3 font-black text-white">Voltar ao login</button>
       </section>
     </main>
   );
@@ -483,23 +477,8 @@ function AccessRequestStatusContent() {
 
 export default function AccessRequestStatusPage() {
   return (
-    <Suspense
-      fallback={
-        <main
-          className={
-            styles.loginContainer +
-            " " +
-            styles.loginFixedTheme +
-            " min-h-svh flex items-center justify-center bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-10"
-          }
-        >
-          <p className="rounded-2xl bg-white/90 px-5 py-3 text-sm font-semibold text-[#011848] shadow-xl">
-            Carregando...
-          </p>
-        </main>
-      }
-    >
-      <AccessRequestStatusContent />
+    <Suspense fallback={<div className="min-h-svh bg-[#f4f6fb]" />}>
+      <StatusContent />
     </Suspense>
   );
 }

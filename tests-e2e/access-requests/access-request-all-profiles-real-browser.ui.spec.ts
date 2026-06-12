@@ -15,18 +15,25 @@ type PerfilSolicitacao = {
 
 const perfis: PerfilSolicitacao[] = [
   {
+    value: "empresa",
+    labelTelaStatus: "Empresa",
+    precisaUsuario: false,
+    precisaEmpresaCadastrada: false,
+    precisaDadosEmpresa: true,
+  },
+  {
     value: "testing_company_user",
     labelTelaStatus: "Usuário Testing Company",
     precisaUsuario: false,
-    precisaEmpresaCadastrada: true,
+    precisaEmpresaCadastrada: false,
     precisaDadosEmpresa: false,
   },
   {
     value: "company_user",
     labelTelaStatus: "Usuário da empresa",
     precisaUsuario: false,
-    precisaEmpresaCadastrada: false,
-    precisaDadosEmpresa: true,
+    precisaEmpresaCadastrada: true,
+    precisaDadosEmpresa: false,
   },
   {
     value: "leader_tc",
@@ -145,7 +152,7 @@ async function capturarChaveDoEmail(email: string) {
         return (
           to.includes(email.toLowerCase()) &&
           subject.includes("Solicitação de acesso recebida") &&
-          body.includes("Chave de acesso")
+          (body.includes("Código de consulta") || body.includes("status?key="))
         );
       }) ?? null;
 
@@ -158,10 +165,8 @@ async function capturarChaveDoEmail(email: string) {
 
   const corpo = `${emailRecebido?.text ?? ""}\n${emailRecebido?.html ?? ""}`;
 
-  console.log("[REAL FRONT] EMAIL CAPTURADO:", corpo);
-
   const chave =
-    corpo.match(/Chave de acesso:?\s*([A-Za-z0-9_-]{8,})/i)?.[1] ??
+    corpo.match(/(?:Chave de acesso|Código de consulta):?\s*([A-Za-z0-9_-]{8,})/i)?.[1] ??
     corpo.match(/status\?key=([A-Za-z0-9_-]+)/i)?.[1] ??
     corpo.match(/key=([A-Za-z0-9_-]+)/i)?.[1];
 
@@ -179,10 +184,8 @@ async function abrirFormularioSolicitacao(page: Page) {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(2000);
 
-  for (let tentativa = 1; tentativa <= 6; tentativa++) {
+  for (let attemptsRemaining = 6; attemptsRemaining > 0; attemptsRemaining -= 1) {
     if (await formulario.isVisible().catch(() => false)) return;
-
-    console.log(`[REAL FRONT] Tentando abrir formulário: tentativa ${tentativa}`);
 
     await botaoAbrir.scrollIntoViewIfNeeded();
     await botaoAbrir.click({ force: true });
@@ -273,7 +276,7 @@ async function preencherFormulario(page: Page, perfil: PerfilSolicitacao, email:
 }
 
 test.describe("Solicitação de acesso - todos os perfis", () => {
-  test.setTimeout(300000);
+  test.setTimeout(120000);
 
   for (const perfil of perfis) {
     test(`deve solicitar acesso para o perfil ${perfil.labelTelaStatus}`, async ({ page }) => {
@@ -294,12 +297,14 @@ test.describe("Solicitação de acesso - todos os perfis", () => {
       await expect(page.getByTestId("request-access-submit-button")).toBeEnabled({
         timeout: 30000,
       });
+      await page.screenshot({
+        path: `test-results/access-requests/form-${perfil.value}.png`,
+        fullPage: true,
+      });
 
       await page.getByTestId("request-access-submit-button").click();
 
       const chave = await capturarChaveDoEmail(email);
-
-      console.log(`[REAL FRONT] Perfil ${perfil.value} criado com chave: ${chave}`);
 
       await page.goto(`/login/access-request/status?key=${chave}`, {
         waitUntil: "domcontentloaded",
@@ -316,9 +321,15 @@ test.describe("Solicitação de acesso - todos os perfis", () => {
       await expect(page.getByText("Dados da solicitação")).toBeVisible();
       await expect(page.getByText(`Ana Teste ${perfil.labelTelaStatus}`)).toBeVisible();
       await expect(page.getByTestId("access-request-status-email")).toContainText(email);
-      await expect(page.getByText(perfil.labelTelaStatus, { exact: true })).toBeVisible();
+      await expect(page.getByTestId("access-request-status-profile")).toContainText(
+        perfil.labelTelaStatus,
+      );
 
       await expect(page.getByText("medium")).toHaveCount(0);
+      await page.screenshot({
+        path: `test-results/access-requests/status-${perfil.value}.png`,
+        fullPage: true,
+      });
     });
   }
 });

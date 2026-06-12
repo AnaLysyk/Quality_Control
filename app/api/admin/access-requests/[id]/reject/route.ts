@@ -11,6 +11,8 @@ import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequests
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
 import { reviewPasswordResetRequest } from "@/lib/passwordResetReview";
+import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
+import { transitionAccessRequest } from "@/lib/accessRequestsV2/service";
 
 function applyAdminNotes(message: string, notes: string | null) {
   if (!notes || !notes.trim()) return message;
@@ -60,6 +62,37 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     });
   }
 
+  const v2Request = await getAccessRequestV2ById(id);
+  if (v2Request?.accessKey) {
+    const result = await transitionAccessRequest(
+      id,
+      "reject",
+      {
+        id: admin.id || admin.email,
+        email: admin.email,
+        role: admin.role,
+        globalRole: admin.globalRole,
+        companyRole: admin.role,
+        permissionRole: admin.role,
+        isGlobalAdmin: Boolean(admin.isGlobalAdmin),
+      },
+      { comment: reason || comment },
+    );
+    if (result === "reject-comment-required") {
+      return NextResponse.json({ error: "Informe o motivo da rejeicao" }, { status: 400 });
+    }
+    if (result === "invalid-transition") {
+      return NextResponse.json({ error: "Solicitacao finalizada" }, { status: 409 });
+    }
+    if (typeof result === "string") {
+      return NextResponse.json({ error: "Sem permissao" }, { status: 403 });
+    }
+    if (!result) {
+      return NextResponse.json({ error: "Solicitacao nao encontrada" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, item: { id: result.id, status: "rejected" } });
+  }
+
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {
@@ -68,7 +101,6 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
       return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
-    console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
     const updatedMessage = applyAdminNotes(existing.message, reason || null);
     const updated = await updateAccessRequest(id, { status: "rejected", message: updatedMessage });
     await createAccessRequestComment({
@@ -120,7 +152,6 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
       return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
-    console.debug(`[ACCESS-REQUESTS][REJECT] admin=${admin?.email ?? "-"} id=${id} comment=${Boolean(comment)} reason=${Boolean(reason)}`);
 
     const updated = await prisma.supportRequest.update({
       where: { id },

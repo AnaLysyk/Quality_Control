@@ -85,6 +85,8 @@ const nextConfig = {
       const ignored = new Set<string>([
         ...(Array.isArray(config.watchOptions?.ignored) ? config.watchOptions.ignored : []),
         "**/data/**",
+        "**/test-results/**",
+        "**/.tmp/**",
       ]);
       config.watchOptions = { ...(config.watchOptions ?? {}), ignored: Array.from(ignored) };
     }

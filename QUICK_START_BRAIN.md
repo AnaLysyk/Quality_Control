@@ -16,7 +16,7 @@ Um **cérebro funcional** que:
 ```
 1. schema-brain.prisma        → Final do seu schema.prisma
 2. lib-brain.ts               → lib/brain.ts
-3. scripts-sync-brain.ts      → scripts/sync-brain.ts
+3. scripts-sync-brain.ts      → support/functions/banco-de-dados/brain/sync-brain.ts
 4. __tests__-brain.test.ts    → __tests__/brain.test.ts
 ```
 
@@ -45,7 +45,7 @@ npx prisma generate
 ### 4. Popular brain
 ```bash
 # Adicione ao package.json:
-# "sync:brain": "ts-node scripts/sync-brain.ts"
+# "sync:brain": "tsx support/functions/banco-de-dados/brain/sync-brain.ts"
 
 npm run sync:brain
 ```
@@ -168,7 +168,7 @@ npx prisma migrate dev
 
 **Sync muito lento?**
 ```bash
-node --max-old-space-size=4096 -r ts-node/register scripts/sync-brain.ts
+node --max-old-space-size=4096 --import tsx support/functions/banco-de-dados/brain/sync-brain.ts
 ```
 
 ---

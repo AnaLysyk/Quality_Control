@@ -138,9 +138,11 @@ const PRIMARY_BUTTON_CLASS =
 const DANGER_BUTTON_CLASS =
   "inline-flex min-h-12 items-center justify-center rounded-xl border border-[#ef0001]/35 bg-white px-5 py-3 text-sm font-black text-[#d50000] transition hover:border-[#ef0001] hover:bg-red-50 focus:outline-none focus:ring-4 focus:ring-[#ef0001]/10 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400";
 
-function profileLabel(role?: string) {
+function profileLabel(role?: string, companyName?: string) {
   if (role === "empresa") return "Empresa";
-  if (role === "company_user") return "Usuário da empresa";
+  if (role === "company_user") {
+    return companyName ? `Acesso vinculado à ${companyName}` : "Acesso vinculado à empresa";
+  }
   if (role === "testing_company_user") return "Usuário Testing Company";
   if (role === "leader_tc") return "Líder TC";
   if (role === "technical_support") return "Suporte técnico";
@@ -383,17 +385,26 @@ function StatusContent() {
   const latestRound = item?.adjustmentHistory?.at(-1);
 
   const details = useMemo(
-    () => [
-      ["Nome", item?.requesterName],
+    () => {
+      const isCompanyUser = item?.requestedRole === "company_user";
+      const companyName = item?.requestedCompanySlug;
+      const personAndCompany =
+        isCompanyUser && item?.requesterName && companyName
+          ? `${item.requesterName} / ${companyName.toLocaleUpperCase("pt-BR")}`
+          : item?.requesterName;
+
+      return [
+      [isCompanyUser ? "Pessoa / empresa" : "Nome", personAndCompany],
       ["E-mail", item?.requesterEmail],
-      ["Perfil", profileLabel(item?.requestedRole)],
-      ["Empresa", item?.requestedCompanySlug],
+      [isCompanyUser ? "Tipo de acesso" : "Perfil", profileLabel(item?.requestedRole, companyName)],
+      [isCompanyUser ? "Empresa vinculada" : "Empresa", companyName],
       ["Usuário/login", item?.details?.username],
       ["Telefone", item?.details?.phone],
       ["Cargo", item?.details?.jobRole],
       ["Título", item?.details?.title],
       ["Descrição", item?.details?.description ?? item?.reason],
-    ] as Array<[string, string | undefined]>,
+      ] as Array<[string, string | undefined]>;
+    },
     [item],
   );
 
@@ -555,7 +566,7 @@ function StatusContent() {
                 testId={
                   label === "E-mail"
                     ? "access-request-status-email"
-                    : label === "Perfil"
+                    : label === "Perfil" || label === "Tipo de acesso"
                       ? "access-request-status-profile"
                       : undefined
                 }
@@ -607,7 +618,7 @@ function StatusContent() {
                   ) : field === "profileType" ? (
                     <select className={ADJUSTMENT_CONTROL_CLASS} value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`}>
                       <option value="empresa">Empresa</option>
-                      <option value="company_user">Usuário da empresa</option>
+                      <option value="company_user">Acesso vinculado à empresa</option>
                       <option value="testing_company_user">Usuário TC</option>
                       <option value="leader_tc">Líder TC</option>
                       <option value="technical_support">Suporte técnico</option>

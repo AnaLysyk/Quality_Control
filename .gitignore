@@ -104,3 +104,13 @@ node_modules/**/lint.log
 
 .tmp
 
+
+# Resultados e temporários de testes
+support/results/
+__localstore_snapshot.tmp
+
+# Backups locais de ambiente
+.env*.backup*
+.env.local.backup*
+.tmp/
+.tmp/

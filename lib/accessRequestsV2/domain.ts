@@ -74,7 +74,7 @@ export const ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS: Record<AccessRequestAdjustm
   phone: "Telefone",
   jobRole: "Cargo",
   title: "Titulo",
-  description: "Descricao",
+  description: "Descrição",
   notes: "Observacoes",
   password: "Senha",
 };

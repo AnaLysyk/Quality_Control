@@ -344,7 +344,7 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
 
   const companyDetailsForReceivedEmail = buildCompanyDetailsForEmail(payload);
 
-  void emailService.sendAccessRequestReceivedEmail(requesterEmail, {
+  const receivedEmailSent = await emailService.sendAccessRequestReceivedEmail(requesterEmail, {
     name: requesterName || null,
     accessKey: created.accessKey ?? created.id,
     email: requesterEmail,
@@ -355,9 +355,10 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     title: title ?? null,
     description: reason ?? null,
     companyName: companyLabel ?? null,
-  }).catch((error) => {
-    console.warn("[ACCESS-REQUESTS][V2][EMAIL][RECEIVED] failed:", error);
   });
+  if (!receivedEmailSent) {
+    console.warn("[ACCESS-REQUESTS][V2][EMAIL][RECEIVED] not_sent:", requesterEmail);
+  }
 
   addAuditLogSafe({
     actorUserId: authUser?.id ?? null,
@@ -652,6 +653,7 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     tempPassword: null,
     passwordFromRequest: true,
     companySlug: company?.slug ?? null,
+    companyName: company?.name ?? company?.company_name ?? company?.slug ?? null,
   };
 }
 
@@ -693,6 +695,7 @@ export async function transitionAccessRequest(
     login: string;
     passwordFromRequest: boolean;
     companySlug: string | null;
+    companyName: string | null;
   } | null = null;
   if (action === "approve") {
     const result = await applyApprovalEffects(request, reviewer);
@@ -784,6 +787,7 @@ export async function transitionAccessRequest(
       passwordFromRequest: approvalCredentials.passwordFromRequest,
       profileType: request.requestedRole,
       companySlug: approvalCredentials.companySlug,
+      companyName: approvalCredentials.companyName,
     });
   } else if (action === "reject") {
     await emailService.sendAccessRejectedEmail(recipientEmail, {

@@ -13,7 +13,7 @@ O projeto continua com uma estrutura simples. Cada arquivo deve deixar claro se 
 - `public/`: arquivos estáticos públicos.
 - `tests/`: testes Jest.
 - `tests-e2e/`: testes Playwright.
-- `scripts/`: comandos de manutenção, migração e diagnóstico.
+- `support/functions/`: funções de UI, API, banco de dados e infraestrutura.
 - `docs/`: documentação técnica.
 
 Pastas internas em `lib/` devem surgir apenas quando houver código real. Não serão criadas árvores vazias para antecipar uma arquitetura.

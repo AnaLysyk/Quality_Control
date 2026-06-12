@@ -15,7 +15,7 @@
 | `demo/.env` com chave de API exposta | **RISCO DE SEGURANÇA** |
 | `debug/` com artefatos descartáveis | Lixo no repo |
 | 7+ markdowns temporários na raiz | Ruído |
-| Scripts diagnósticos one-shot em `scripts/` | Difícil saber quais são úteis |
+| Funções diagnósticas one-shot sem categoria | Difícil saber quais são úteis |
 
 ---
 
@@ -143,16 +143,16 @@ README-TESTING-METRIC.md       → docs/
 PRS_MIGRATION_INSTRUCTIONS.md  → docs/
 ```
 
-### 3.4 Limpar `scripts/` diagnósticos descartáveis
+### 3.4 Organizar funções diagnósticas descartáveis
 
 Candidatos a deletar:
 ```
-scripts/check-thiago.mjs
-scripts/dump-bytes.js
-scripts/check-mobile-menu-browser-login.mjs
-scripts/debug-login-dom.mjs
-scripts/inspect-login-headers.mjs
-scripts/diagnose-browser-login.mjs
+support/functions/interface/diagnosticos/check-thiago.mjs
+support/functions/infraestrutura/manutencao/dump-bytes.js
+support/functions/interface/diagnosticos/check-mobile-menu-browser-login.mjs
+support/functions/interface/diagnosticos/debug-login-dom.mjs
+support/functions/api/diagnosticos/inspecionar-cabecalhos-login.mjs
+support/functions/interface/diagnosticos/diagnose-browser-login.mjs
 ```
 
 ### 3.5 Outros arquivos de raiz descartáveis
@@ -211,9 +211,8 @@ painel-qa/
 ├── data/                   ← JSON persistence files (runtime data, not source code)
 ├── packages/contracts/     ← Zod schemas compartilhados
 ├── prisma/                 ← Schema + migrations
-├── scripts/                ← Build, seed, ops scripts (limpo)
-├── tests/                  ← Jest unit tests
-├── tests-e2e/              ← Playwright E2E tests
+├── support/functions/      ← Funções de UI, API, banco e infraestrutura
+├── testes/                 ← Testes UI, API e banco
 ├── docs/                   ← Developer documentation
 ├── public/                 ← Static assets
 ├── README.md

@@ -640,7 +640,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     if (payload.message) setInput("");
 
     // Usa endpoint unificado para garantir memória persistente de todas as conversas.
-    const apiRoute = "/api/assistant/ask";
+    const apiRoute = "/api/assistente/ask";
 
     try {
       const response = await fetchApi(apiRoute, {

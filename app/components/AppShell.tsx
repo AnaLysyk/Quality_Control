@@ -109,14 +109,14 @@ const APP_SHELL_COPY = {
       admin: "Testing Company Admin",
       company: "Empresa {name}",
       companyProfile: "Perfil empresa • {name}",
-      companyUser: "Usuário da empresa • {name}",
+      companyUser: "Vinculado a {name}",
       leader: "Lider TC • Testing Company",
       support: "Suporte técnico • Testing Company",
       tcUser: "Usuário TC • Testing Company",
     },
     profiles: {
       empresa: "Empresa",
-      company_user: "Usuário da empresa",
+      company_user: "Acesso empresarial",
       testing_company_user: "Usuário TC",
       leader_tc: "Lider TC",
       technical_support: "Suporte técnico",
@@ -172,14 +172,14 @@ const APP_SHELL_COPY = {
       admin: "Testing Company Admin",
       company: "Company {name}",
       companyProfile: "Company profile • {name}",
-      companyUser: "Company user • {name}",
+      companyUser: "Linked to {name}",
       leader: "TC lead • Testing Company",
       support: "Technical support • Testing Company",
       tcUser: "TC user • Testing Company",
     },
     profiles: {
       empresa: "Company",
-      company_user: "Company user",
+      company_user: "Company access",
       testing_company_user: "TC user",
       leader_tc: "TC lead",
       technical_support: "Technical support",
@@ -547,7 +547,7 @@ export default function AppShell({ children }: AppShellProps) {
     });
     const isCompanyScopedProfilePage =
       pathname.startsWith("/settings/profile") &&
-      (resolvedViewerProfile === "empresa" || resolvedViewerProfile === "company_user");
+      resolvedViewerProfile === "empresa";
     const viewerProfile: ViewerProfileKind =
       (isCompanyRoute || isCompanyScopedProfilePage) && (resolvedViewerProfile === "empresa" || resolvedViewerProfile === "company_user")
         ? "empresa"

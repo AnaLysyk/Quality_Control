@@ -64,7 +64,7 @@ Prompt exemplo:
 - Seed oficial dos agentes: `tests-e2e/seed.spec.ts`
 - Projetos segmentados: `playwright.projects.ts`
 - Config principal: `playwright.config.ts`
-- Autenticação mock para E2E: `tests-e2e/helpers/mockAuth.ts`
+- Autenticação mock para E2E: `tests-e2e/helpers/simularAutenticacao.ts`
 
 ## Comandos úteis
 

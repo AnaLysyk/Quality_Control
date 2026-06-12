@@ -16,7 +16,7 @@ projeto/
 │   ├── prisma.ts              ← Seu arquivo existente
 │   └── [outros]
 │
-├── scripts/
+├── support/functions/banco-de-dados/brain/
 │   ├── sync-brain.ts          ← COPIAR scripts-sync-brain.ts
 │   └── [outros scripts]
 │
@@ -48,7 +48,7 @@ Modelos Prisma para BrainNode, BrainEdge, BrainMemory, BrainAuditLog. Copie para
 Funções principais para manipulação do grafo. Copie para lib/brain.ts.
 
 ### 3. scripts-sync-brain.ts
-Script de sincronização. Copie para scripts/sync-brain.ts.
+Script de sincronização. Copie para support/functions/banco-de-dados/brain/sync-brain.ts.
 
 ### 4. __tests__-brain.test.ts
 Testes completos. Copie para __tests__/brain.test.ts.
@@ -73,7 +73,7 @@ npx prisma migrate dev --name add_brain_models
 npx prisma generate
 
 ### 4. Popular brain
-Adicione ao package.json: "sync:brain": "ts-node scripts/sync-brain.ts"
+Adicione ao package.json: "sync:brain": "tsx support/functions/banco-de-dados/brain/sync-brain.ts"
 
 npm run sync:brain
 

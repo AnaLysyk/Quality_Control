@@ -43,7 +43,7 @@ Manter principalmente:
 
 ```json
 {
-  "dev": "node scripts/dev-start.js --webpack",
+  "dev": "node support/functions/infraestrutura/desenvolvimento/iniciar-servidor-desenvolvimento.js --webpack",
   "dev:ci": "cross-env NEXT_DISABLE_FONT_DOWNLOAD=1 next dev --webpack -p 3100 -H 127.0.0.1",
   "test:e2e": "cross-env E2E_USE_JSON=1 playwright test",
   "test:e2e:smoke": "cross-env E2E_USE_JSON=1 playwright test --project=quality-smoke",

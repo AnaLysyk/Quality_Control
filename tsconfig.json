@@ -87,6 +87,12 @@
     "node_modules",
     "backend",
     "tests",
-    "tests-e2e"
+    "tests-e2e",
+    "testes",
+    "testes/**/*",
+    "support",
+    "support/**/*",
+    "playwright-report",
+    "test-results"
   ]
 }

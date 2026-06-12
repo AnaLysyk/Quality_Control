@@ -15,7 +15,7 @@ Validar que os pontos de entrada "Casos" no módulo de automações direcionam p
 **File:** `tests-e2e/navigation/sidebar-casos-central.spec.ts`
 
 **Steps:**
-  1. Setup: usar `test` de tests-e2e/fixtures/test.ts e autenticar usuário com acesso ao módulo usando mockAuth de tests-e2e/helpers/mockAuth.ts; abrir /automacoes/ui-studio (ou outra tela que renderize a sidebar do módulo).
+  1. Setup: usar `test` de tests-e2e/fixtures/test.ts e autenticar usuário com acesso ao módulo usando simularAutenticacao de tests-e2e/helpers/simularAutenticacao.ts; abrir /automacoes/ui-studio (ou outra tela que renderize a sidebar do módulo).
     - expect: Sessão autenticada com sucesso.
     - expect: Sidebar do módulo de automações visível na tela.
     - expect: Link de texto "Casos" disponível na navegação lateral.
@@ -35,7 +35,7 @@ Validar que os pontos de entrada "Casos" no módulo de automações direcionam p
 **File:** `tests-e2e/navigation/ui-studio-casos-shortcut-central.spec.ts`
 
 **Steps:**
-  1. Setup: usar `test` de tests-e2e/fixtures/test.ts e autenticar com mockAuth; abrir /automacoes/ui-studio em estado limpo.
+  1. Setup: usar `test` de tests-e2e/fixtures/test.ts e autenticar com simularAutenticacao; abrir /automacoes/ui-studio em estado limpo.
     - expect: Página do UI Studio carregada com sucesso.
     - expect: Grupo de atalhos superior visível contendo "Casos", "Fluxo" e "Script".
   2. Ação: clicar no atalho "Casos" do UI Studio.

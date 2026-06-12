@@ -21,7 +21,7 @@ import { useI18n } from "@/hooks/useI18n";
 import { useAppSettings, type Language, type Theme } from "@/context/AppSettingsContext";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { fetchApi } from "@/lib/api";
-import { isCompanyProfileContext, isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
+import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { hasPermissionAccess, normalizePermissionMatrix, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
@@ -810,8 +810,16 @@ export default function SettingsProfilePage() {
   const isAdminProfile = normalizedRole === "admin";
   const canDeleteDirectly = isGlobalProfile || isAdminProfile;
   const institutionalCompanyContext = isInstitutionalCompanyAccount(user ?? null);
-  const hasCompanyContext = institutionalCompanyContext || isCompanyProfileContext(user ?? null);
+  const hasCompanyContext = institutionalCompanyContext;
   const companyScopeKey = !loading && hasCompanyContext ? currentClientSlug ?? currentClientId ?? homeCompanyId : null;
+  const fixedProfileKind = resolveFixedProfileKind({
+    permissionRole: user?.permissionRole ?? null,
+    role: user?.role ?? null,
+    companyRole: user?.companyRole ?? null,
+    userOrigin: user?.userOrigin ?? user?.user_origin ?? null,
+    companyCount: Array.isArray(user?.clientSlugs) ? user.clientSlugs.length : 0,
+    clientSlug: user?.clientSlug ?? null,
+  });
   const uiRoleLabel = roleLabel(roleValue);
   const userStatusLabel = statusLabel(active, status, t);
   const directDeleteModalTitle = t("settings.deleteProfile");
@@ -934,6 +942,16 @@ export default function SettingsProfilePage() {
   } = useSWRCompanyUsers(shouldFetchCompanyUsers, companyScopeKey);
   const companyDisplayName = (companyProfile?.company_name || companyProfile?.name || "Empresa").trim();
   const companyProfileBreadcrumbName = companyDisplayName || currentClientSlug || "Empresa";
+  const linkedCompanyDisplayName =
+    uniqueCompanies.find(
+      (company) =>
+        company.client_id === currentClientId ||
+        company.client_slug === currentClientSlug,
+    )?.client_name ?? companyDisplayName;
+  const displayedUiRoleLabel =
+    fixedProfileKind === "company_user"
+      ? `Vinculado a ${linkedCompanyDisplayName}`
+      : uiRoleLabel;
   const companySavedLogoUrl = companyProfile?.logo_url || null;
   const companyLogoPreviewUrl = companyLogoPreviewObjectUrl || companyLogoUrl.trim() || companySavedLogoUrl;
   const companySavedQaseProjectCodes = Array.isArray(companyProfile?.qase_project_codes) ? companyProfile.qase_project_codes : [];
@@ -2939,7 +2957,7 @@ export default function SettingsProfilePage() {
                       @{heroUsername}
                     </span>
                     <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/92">
-                      {uiRoleLabel}
+                      {displayedUiRoleLabel}
                     </span>
                     <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/92">
                       {userStatusLabel}
@@ -2979,6 +2997,7 @@ export default function SettingsProfilePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Nome completo">
                 <input
+                  data-testid="profile-full-name-input"
                   className={`form-control-user ${inputClass}`}
                   value={profileFullName}
                   onChange={(event) => setProfileFullName(event.target.value)}
@@ -2992,6 +3011,7 @@ export default function SettingsProfilePage() {
               <Field label="Usuário (login)">
                 <div className="space-y-2">
                   <input
+                    data-testid="profile-username-input"
                     className={`form-control-user ${inputClass}`}
                     value={profileUsername}
                     onChange={(event) => setProfileUsername(event.target.value)}
@@ -3014,6 +3034,7 @@ export default function SettingsProfilePage() {
 
               <Field label="E-mail">
                 <input
+                  data-testid="profile-email-input"
                   type="email"
                   className={`form-control-user ${inputClass}`}
                   value={profileEmail}
@@ -3027,6 +3048,7 @@ export default function SettingsProfilePage() {
 
               <Field label="Telefone">
                 <input
+                  data-testid="profile-phone-input"
                   className={`form-control-user ${inputClass}`}
                   value={profilePhone}
                   onChange={(event) => setProfilePhone(event.target.value)}
@@ -3048,6 +3070,7 @@ export default function SettingsProfilePage() {
                         size={16}
                       />
                       <input
+                        data-testid="profile-job-title-input"
                         role="combobox"
                         aria-autocomplete="list"
                         aria-expanded={Boolean(jobTitleMenuOpen)}

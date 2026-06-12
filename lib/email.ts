@@ -143,70 +143,78 @@ class EmailService {
 
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
     const resetUrl = `${this.resolvePublicBaseUrl()}/login/reset-password?token=${resetToken}`;
+    const safeResetUrl = escapeHtml(resetUrl);
+    const logoUrl = escapeHtml(this.resolveEmailLogoUrl());
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Redefinir Senha - Quality Control</title>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #2563eb; color: white; padding: 20px; text-align: center; }
-            .content { padding: 30px 20px; background: #f8f9fa; }
-            .button { display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-            .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Quality Control</h1>
-              <p>Redefinicao de senha</p>
-            </div>
-            <div class="content">
-              <h2>Ola!</h2>
-              <p>Recebemos uma solicitacao para redefinir sua senha. Clique no botao abaixo para criar uma nova senha:</p>
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redefinir senha - Quality Control</title>
+</head>
+<body style="width:100%!important;margin:0;padding:0;background-color:#f4f6fb;font-family:Arial,Helvetica,sans-serif;color:#011848;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f6fb" style="width:100%;border-collapse:collapse;background-color:#f4f6fb;">
+    <tr>
+      <td align="center" style="padding:20px 8px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:100%;max-width:600px;border:1px solid #d8dfeb;border-collapse:separate;border-spacing:0;background-color:#ffffff;border-radius:18px;overflow:hidden;">
+          <tr>
+            <td align="center" bgcolor="#011848" style="padding:14px 20px;background-color:#011848;border-top:4px solid #ef0001;color:#ffffff;text-align:center;">
+              <img src="${logoUrl}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 5px;border:0;outline:none;text-decoration:none;">
+              <div style="color:#ffffff;font-size:22px;font-weight:900;line-height:26px;">Quality Control</div>
+              <div style="margin-top:3px;color:#ffffff;font-size:12px;line-height:16px;">Segurança da sua conta</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:26px 28px 28px;color:#011848;font-family:Arial,Helvetica,sans-serif;">
+              <div style="display:inline-block;margin-bottom:12px;padding:6px 11px;border:1px solid #bfdbfe;border-radius:999px;background-color:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:900;">Redefinição de senha</div>
+              <h1 style="margin:0 0 10px;color:#011848;font-size:22px;line-height:28px;">Crie uma nova senha</h1>
+              <p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:22px;">Recebemos uma solicitação para redefinir a senha da sua conta no Quality Control.</p>
+              <p style="margin:0 0 18px;color:#475569;font-size:14px;line-height:22px;">Use o botão abaixo para escolher uma nova senha. O link é individual e válido por 15 minutos.</p>
 
-              <a href="${resetUrl}" class="button">Redefinir Senha</a>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto;border-collapse:separate;">
+                <tr>
+                  <td align="center" bgcolor="#ef0001" style="background-color:#ef0001;border-radius:9px;mso-padding-alt:11px 22px;">
+                    <a href="${safeResetUrl}" style="display:inline-block;padding:11px 22px;color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;line-height:18px;text-align:center;text-decoration:none;">Redefinir senha</a>
+                  </td>
+                </tr>
+              </table>
 
-              <p><strong>Link direto:</strong> ${resetUrl}</p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f0f4ff" style="width:100%;margin:18px 0;border:1px solid #d8dfeb;border-collapse:separate;border-left:5px solid #011848;border-radius:12px;background-color:#f0f4ff;">
+                <tr>
+                  <td style="padding:13px 15px;color:#27457d;font-size:13px;line-height:20px;">Se você não solicitou esta alteração, ignore este e-mail. Sua senha atual continuará válida.</td>
+                </tr>
+              </table>
 
-              <p><em>Este link e valido por 15 minutos.</em></p>
+              <p style="margin:0;color:#64748b;font-size:11px;line-height:17px;word-break:break-all;">Link direto: <a href="${safeResetUrl}" style="color:#27457d;text-decoration:underline;">${safeResetUrl}</a></p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" bgcolor="#ffffff" style="padding:16px 24px 20px;border-top:1px solid #e5eaf3;background-color:#ffffff;color:#64748b;font-size:12px;line-height:18px;text-align:center;">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Testing Company • Quality Control.</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
-              <p>Se voce nao solicitou esta redefinicao, ignore este email. Sua senha permanecera a mesma.</p>
-            </div>
-            <div class="footer">
-              <p>Este e um email automatico. Por favor, nao responda.</p>
-              <p>&copy; 2026 Quality Control. Todos os direitos reservados.</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    const text = `Quality Control - Redefinição de senha
 
-    const text = `
-      Quality Control - Redefinicao de senha
+Recebemos uma solicitação para redefinir a senha da sua conta.
 
-      Ola!
+Crie uma nova senha pelo link:
+${resetUrl}
 
-      Recebemos uma solicitacao para redefinir sua senha.
+Este link é individual e válido por 15 minutos.
 
-      Clique no link abaixo para criar uma nova senha:
-      ${resetUrl}
+Se você não solicitou esta alteração, ignore este e-mail. Sua senha atual continuará válida.
 
-      Este link e valido por 15 minutos.
-
-      Se voce nao solicitou esta redefinicao, ignore este email.
-
-      Atenciosamente,
-      Equipe Quality Control
-    `;
+Equipe Quality Control`;
 
     return this.sendEmail({
       to: email,
-      subject: 'Redefinir Senha - Quality Control',
+      subject: 'Redefinir senha - Quality Control',
       html,
       text,
     });
@@ -602,18 +610,30 @@ Equipe Testing Company
     },
   ): Promise<boolean> {
     const statusUrl = `${this.resolvePublicBaseUrl()}/login/access-request/status?key=${data.accessKey}`;
-    const greetingText = data.name ? `Olá, ${data.name}!` : "Olá!";
-    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : "Olá!";
+    const profileKey = String(data.profileType ?? "").trim();
+    const companyName = String(data.companyName ?? "").trim();
+    const isCompanyUser = profileKey === "company_user";
+    const companyDisplayName = companyName ? companyName.toLocaleUpperCase("pt-BR") : "";
+    const identityText =
+      isCompanyUser && data.name && companyDisplayName
+        ? `${data.name} / ${companyDisplayName}`
+        : data.name ?? "";
+    const greetingText = identityText ? `Olá, ${identityText}!` : "Olá!";
+    const greeting =
+      isCompanyUser && data.name && companyDisplayName
+        ? `Olá, ${escapeHtml(data.name)} <span style="font-size:13px;font-weight:800;color:#64748b;">/ ${escapeHtml(companyDisplayName)}</span>!`
+        : data.name
+          ? `Olá, ${escapeHtml(data.name)}!`
+          : "Olá!";
     const profileLabels: Record<string, string> = {
       empresa: "Empresa",
-      company_user: "Usuário da empresa",
+      company_user: companyName ? `Acesso vinculado à ${companyName}` : "Acesso vinculado à empresa",
       testing_company_user: "Usuário Testing Company",
       leader_tc: "Líder TC",
       technical_support: "Suporte técnico",
       company_access: "Empresa",
     };
 
-    const profileKey = String(data.profileType ?? "").trim();
     const profileLabel = profileLabels[profileKey] ?? (profileKey ? profileKey.replaceAll("_", " ") : "Perfil solicitado");
 
     const formatValue = (value: unknown) => {
@@ -664,6 +684,10 @@ Equipe Testing Company
         return `<tr><td class="label">${escapeHtml(label)}</td><td class="value">${escapeHtml(formatValue(value))}</td></tr>`;
       })
       .join("");
+
+    const companyUserSection = isCompanyUser && companyName
+      ? `<div class="section-title">Vínculo empresarial</div><div class="info"><table><tr><td class="label">Pessoa / empresa</td><td class="value">${escapeHtml(data.name ?? "-")} <span style="font-size:11px;color:#64748b;">/ ${escapeHtml(companyDisplayName)}</span></td></tr><tr><td class="label">Empresa vinculada</td><td class="value">${escapeHtml(companyName)}</td></tr></table></div>`
+      : "";
 
     const companySection = companyRows
       ? `<div class="section-title">Dados da empresa</div><div class="info"><table>${companyRows}</table></div>`
@@ -740,7 +764,7 @@ Equipe Testing Company
           <table>
             <tr><td class="label">Usuário / login</td><td class="value">${escapeHtml(data.email)}</td></tr>
             <tr><td class="label">Senha cadastrada</td><td class="value">${data.passwordDefined ? "Definida com segurança no formulário" : "Não definida"}</td></tr>
-            <tr><td class="label">Perfil solicitado</td><td class="value">${escapeHtml(profileLabel)}</td></tr>
+            <tr><td class="label">${isCompanyUser ? "Tipo de acesso" : "Perfil solicitado"}</td><td class="value">${escapeHtml(profileLabel)}</td></tr>
             <tr><td class="label">Código de consulta</td><td class="value">${escapeHtml(data.accessKey)}</td></tr>
           </table>
         </div>
@@ -748,7 +772,7 @@ Equipe Testing Company
         <div class="section-title">Dados do solicitante</div>
         <div class="info">
           <table>
-            <tr><td class="label">Nome</td><td class="value">${escapeHtml(data.name ?? "-")}</td></tr>
+            <tr><td class="label">${isCompanyUser ? "Pessoa / empresa" : "Nome"}</td><td class="value">${isCompanyUser && companyDisplayName ? `${escapeHtml(data.name ?? "-")} <span style="font-size:11px;color:#64748b;">/ ${escapeHtml(companyDisplayName)}</span>` : escapeHtml(data.name ?? "-")}</td></tr>
             <tr><td class="label">E-mail</td><td class="value">${escapeHtml(data.email)}</td></tr>
             <tr><td class="label">Telefone</td><td class="value">${escapeHtml(data.phone ?? "-")}</td></tr>
           </table>
@@ -763,6 +787,7 @@ Equipe Testing Company
           </table>
         </div>
 
+        ${companyUserSection}
         ${companySection}
 
         <div class="box">Guarde este código. Ele será usado junto com seu nome e e-mail para consultar o andamento da solicitação. Depois da aprovação, o acesso será feito com o usuário e senha cadastrados neste formulário.</div>
@@ -804,11 +829,11 @@ Recebemos sua solicitação de acesso.
 DADOS DE ACESSO
 Usuário / login: ${data.email}
 Senha cadastrada: ${data.passwordDefined ? "Definida com segurança no formulário" : "Não definida"}
-Perfil solicitado: ${profileLabel}
+${isCompanyUser ? "Tipo de acesso" : "Perfil solicitado"}: ${profileLabel}
 Código de consulta: ${data.accessKey}
 
 DADOS DO SOLICITANTE
-Nome: ${data.name ?? "-"}
+${isCompanyUser ? "Pessoa / empresa" : "Nome"}: ${identityText || "-"}
 E-mail: ${data.email}
 Telefone: ${data.phone ?? "-"}
 
@@ -817,6 +842,9 @@ Título: ${data.title ?? "-"}
 Descrição: ${data.description ?? "-"}
 Status: ${data.status ?? "Em análise"}
 
+${isCompanyUser && companyName ? `EMPRESA VINCULADA
+${companyName}
+` : ""}
 ${companyText ? `DADOS DA EMPRESA
 ${companyText}
 ` : ""}
@@ -843,6 +871,7 @@ Guarde este código para acompanhar sua solicitação.`;
       passwordFromRequest?: boolean;
       profileType?: string | null;
       companySlug?: string | null;
+      companyName?: string | null;
     },
   ): Promise<boolean> {
     const loginUrl = `${this.resolvePublicBaseUrl()}/login`;
@@ -904,11 +933,11 @@ Guarde este código para acompanhar sua solicitação.`;
         badge: "Empresa aprovada",
       },
       company_user: {
-        label: "Usuário da empresa",
-        subject: "Acesso de usuário da empresa aprovado",
-        title: "Seu acesso de usuário da empresa foi aprovado",
-        intro: "Seu usuário foi aprovado para acessar a Quality Control vinculado à empresa.",
-        accessContext: "Este acesso permite utilizar a plataforma dentro do contexto da empresa à qual seu usuário está vinculado.",
+        label: "Acesso vinculado à empresa",
+        subject: "Acesso empresarial aprovado",
+        title: "Seu acesso empresarial foi aprovado",
+        intro: "Seu acesso foi aprovado para utilizar a Quality Control no contexto da empresa vinculada.",
+        accessContext: "Você poderá utilizar a plataforma conforme as permissões definidas para seu vínculo empresarial.",
         permissionsTitle: "Com este perfil, você pode:",
         permissions: [
           "Acessar a plataforma com vínculo empresarial",
@@ -922,7 +951,7 @@ Guarde este código para acompanhar sua solicitação.`;
           "Confira seu perfil",
           "Troque a senha em Meu Perfil, caso queira",
         ],
-        badge: "Usuário da empresa aprovado",
+        badge: "Acesso empresarial aprovado",
       },
       testing_company_user: {
         label: "Usuário Testing Company",
@@ -1011,8 +1040,24 @@ Guarde este código para acompanhar sua solicitação.`;
         badge: "Acesso aprovado",
       };
 
-    const companyLine = data.companySlug
-      ? `<tr><td class="label">Empresa vinculada</td><td class="value">${escapeHtml(data.companySlug)}</td></tr>`
+    const linkedCompanyName = String(data.companyName ?? data.companySlug ?? "").trim();
+    const linkedCompanyDisplayName = linkedCompanyName.toLocaleUpperCase("pt-BR");
+    const isCompanyUser = normalizedRole === "company_user";
+    const approvedProfileLabel =
+      isCompanyUser && linkedCompanyName
+        ? `Acesso vinculado à ${linkedCompanyName}`
+        : contentByRole.label;
+    const approvedGreeting =
+      isCompanyUser && data.name && linkedCompanyDisplayName
+        ? `Olá, ${escapeHtml(data.name)} <span style="font-size:13px;font-weight:800;color:#64748b;">/ ${escapeHtml(linkedCompanyDisplayName)}</span>!`
+        : greeting;
+    const approvedGreetingText =
+      isCompanyUser && data.name && linkedCompanyDisplayName
+        ? `Olá, ${data.name} / ${linkedCompanyDisplayName}!`
+        : greetingText;
+
+    const companyLine = linkedCompanyName
+      ? `<tr><td class="label">Empresa vinculada</td><td class="value">${escapeHtml(linkedCompanyName)}</td></tr>`
       : "";
 
     const passwordLabel = data.passwordFromRequest
@@ -1068,7 +1113,7 @@ Guarde este código para acompanhar sua solicitação.`;
       <div class="content">
         <span class="badge">✓ ${contentByRole.badge}</span>
 
-        <h2>${greeting}</h2>
+        <h2>${approvedGreeting}</h2>
 
         <p>${contentByRole.intro}</p>
         <p>${contentByRole.accessContext}</p>
@@ -1077,7 +1122,7 @@ Guarde este código para acompanhar sua solicitação.`;
           <table>
             <tr><td class="label">Login cadastrado</td><td class="value">${escapeHtml(data.login)}</td></tr>
             <tr><td class="label">Senha</td><td class="value">${passwordLabel}</td></tr>
-            <tr><td class="label">Perfil aprovado</td><td class="value">${contentByRole.label}</td></tr>
+            <tr><td class="label">${isCompanyUser ? "Tipo de acesso" : "Perfil aprovado"}</td><td class="value">${escapeHtml(approvedProfileLabel)}</td></tr>
             ${companyLine}
           </table>
         </div>
@@ -1119,7 +1164,7 @@ Guarde este código para acompanhar sua solicitação.`;
     const permissionsText = contentByRole.permissions.map((item) => `- ${item}`).join("\n");
     const nextStepsText = contentByRole.nextSteps.map((item) => `- ${item}`).join("\n");
 
-    const text = `${greetingText}
+    const text = `${approvedGreetingText}
 
 ${contentByRole.title}
 
@@ -1128,8 +1173,8 @@ ${contentByRole.accessContext}
 
 Login cadastrado: ${data.login}
 Senha: ${passwordLabel}
-Perfil aprovado: ${contentByRole.label}
-${data.companySlug ? `Empresa vinculada: ${data.companySlug}` : ""}
+${isCompanyUser ? "Tipo de acesso" : "Perfil aprovado"}: ${approvedProfileLabel}
+${linkedCompanyName ? `Empresa vinculada: ${linkedCompanyName}` : ""}
 
 ${contentByRole.permissionsTitle}
 ${permissionsText}

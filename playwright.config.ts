@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -7,6 +8,9 @@ const runHeaded = process.env.PLAYWRIGHT_HEADED === "1" || process.env.PLAYWRIGH
 const runRealEmailTests =
   process.env.PLAYWRIGHT_REAL_EMAIL === "1" || process.env.PLAYWRIGHT_REAL_EMAIL === "true";
 const emailCaptureFile = resolve("test-results/emails/outbox.jsonl");
+const e2eAuthDataDir = resolve("test-results/e2e-auth");
+const e2eProfilePassword =
+  process.env.E2E_PROFILE_PASSWORD || randomBytes(24).toString("base64url");
 
 function loadDotenv(path: string): Record<string, string> {
   try {
@@ -36,6 +40,8 @@ const envOverrides = {
   EMAIL_CAPTURE_FILE: emailCaptureFile,
   FORCE_EMAIL_SEND: runRealEmailTests ? "true" : "false",
   E2E_SEND_REAL_EMAIL: runRealEmailTests ? "true" : "false",
+  E2E_PROFILE_PASSWORD: e2eProfilePassword,
+  LOCAL_AUTH_DATA_DIR: e2eAuthDataDir,
 };
 Object.assign(process.env, envOverrides);
 
@@ -51,8 +57,10 @@ if (envOverrides.E2E_USE_JSON === "1" || envOverrides.E2E_USE_JSON === "true") {
 const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING === "1" || process.env.PLAYWRIGHT_USE_EXISTING === "true";
 const includeEdge = process.env.PLAYWRIGHT_INCLUDE_EDGE === "1" || process.env.PLAYWRIGHT_INCLUDE_EDGE === "true";
 export default defineConfig({
-  testDir: "./tests-e2e",
-  globalSetup: "./tests-e2e/global-setup.ts",
+  testDir: "testes",
+  testMatch: ["**/*.spec.ts"],
+  testIgnore: ["**/support/**", "**/*.test.ts", "**/*.test.tsx"],
+  globalSetup: "./support/functions/banco-de-dados/ambiente/preparar-ambiente-testes.ts",
   timeout: 60 * 1000,
   expect: { timeout: 5000 },
   retries: 0,
@@ -68,7 +76,7 @@ export default defineConfig({
     ? undefined
     : {
       command:
-        "npm run dev:ci:clean",
+        "npx tsx support/functions/banco-de-dados/solicitar-acesso/criar-usuarios-teste.ts && npm run dev:ci:clean",
         url: baseURL,
         reuseExistingServer: true,
         timeout: 300 * 1000,
@@ -96,6 +104,8 @@ export default defineConfig({
           EMAIL_CAPTURE_FILE: envOverrides.EMAIL_CAPTURE_FILE,
           FORCE_EMAIL_SEND: envOverrides.FORCE_EMAIL_SEND,
           E2E_SEND_REAL_EMAIL: envOverrides.E2E_SEND_REAL_EMAIL,
+          E2E_PROFILE_PASSWORD: envOverrides.E2E_PROFILE_PASSWORD,
+          LOCAL_AUTH_DATA_DIR: envOverrides.LOCAL_AUTH_DATA_DIR,
         },
       },
   projects: [
@@ -105,7 +115,6 @@ export default defineConfig({
     },
     {
       name: "quality-smoke",
-      testMatch: "smoke.spec.ts",
       use: { ...devices["Desktop Chrome"] },
     },
     ...(includeEdge

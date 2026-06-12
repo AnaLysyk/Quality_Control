@@ -11,7 +11,7 @@
 | Automação | `app/automacoes/`, APIs de automação e Playwright | `lib/automations/`, `lib/playwright/`, conteúdo legado em `data/` |
 | Dashboards | dashboards gerais, operacionais e de empresa | `lib/dashboard/` e APIs de métricas |
 | Documentos | `app/documentos/`, `app/docs/` e documentos de empresa | stores distribuídos em `lib/` e `data/` |
-| Chat e assistente | `app/chat/`, `app/conversas/`, APIs do assistente | `lib/chatStore.ts`, `lib/chatContacts.ts`, `lib/assistant/` |
+| Chat e assistente | `app/chat/`, `app/conversas/`, APIs do assistente | `lib/chatStore.ts`, `lib/chatContacts.ts`, `lib/assistente/` |
 | Brain | `app/brain/`, `app/admin/brain/`, `app/api/brain/` | `lib/brain/`, `lib/brain.ts` e scripts |
 | Integrações | APIs administrativas, empresas e automações | Jira, Qase, S3, Redis, e-mail e BrasilAPI em `lib/` e `app/api/` |
 

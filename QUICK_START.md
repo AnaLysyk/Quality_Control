@@ -13,7 +13,7 @@ generate
 npx prisma generate
 
 ### 4. Popular brain
-Adicione ao package.json: "sync:brain": "ts-node scripts/sync-brain.ts"
+Adicione ao package.json: "sync:brain": "tsx support/functions/banco-de-dados/brain/sync-brain.ts"
 
 npm run sync:brain
 

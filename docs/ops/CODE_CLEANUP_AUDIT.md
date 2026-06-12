@@ -111,7 +111,7 @@ Inventário inicial. Nada abaixo autoriza remoção imediata.
 | `data/backups/` | backups locais citados no plano antigo | não existe | `Test-Path data/backups = False`; `.gitignore` contém `data/backups/` | nenhum agora | manter ignorado | `git status --ignored data/backups` se reaparecer | resolvido no workspace |
 | `data/versions/` | versões locais citadas no plano antigo | não existe | `Test-Path data/versions = False`; `.gitignore` contém `data/versions/` | nenhum agora | manter ignorado | `git status --ignored data/versions` se reaparecer | resolvido no workspace |
 | `demo/` | possível demo local e risco histórico de `.env` | não existe | `Test-Path demo = False`; `.gitignore` contém `demo/`; `REORG_PLAN.md` registra risco histórico | segurança histórica | confirmar revogação fora do repo; manter ignorado | `git status --ignored demo` se reaparecer | resolvido localmente |
-| `debug/` | artefatos temporários citados no plano antigo | não existe | `Test-Path debug = False`; `.gitignore` contém `debug/`; `scripts/diagnose-browser-login.mjs` escreve em `debug/diagnose-browser-login` | baixo no workspace atual | manter ignorado; não criar em commit | `git status --ignored debug` se reaparecer | resolvido no workspace |
+| `debug/` | artefatos temporários citados no plano antigo | não existe | `Test-Path debug = False`; `.gitignore` contém `debug/`; `support/functions/interface/diagnosticos/diagnose-browser-login.mjs` escreve em `debug/diagnose-browser-login` | baixo no workspace atual | manter ignorado; não criar em commit | `git status --ignored debug` se reaparecer | resolvido no workspace |
 | scripts diagnósticos | scripts one-shot ou manutenção antiga | sim | existem `check-thiago.mjs`, `dump-bytes.js`, `check-mobile-menu-browser-login.mjs`, `debug-login-dom.mjs`, `inspect-login-headers.mjs`, `diagnose-browser-login.mjs`; `package.json` só referencia `clean:logs` | baixo/médio | analisar mais antes de remover | `rg -n "check-thiago|dump-bytes|check-mobile-menu-browser-login|debug-login-dom|inspect-login-headers|diagnose-browser-login" package.json app lib tests tests-e2e` | pendente |
 | markdowns temporários da raiz | documentação raiz | sim | raiz tem `ARCHITECTURE.md`, `INSTALLATION_GUIDE.md`, `INSTALL_BRAIN.md`, `QUICK_START.md`, `QUICK_START_BRAIN.md`, `README.md`, `README.tech.md`, `README_FASE1.md`; todos aparecem em `git ls-files *.md` | médio | manter por ora; classificar depois | `git ls-files *.md` | pendente |
 | logs e artefatos runtime na raiz | arquivos locais ignorados | sim, mas ignorados | `build-output.log`, `debug.log`, `dev*.log`, `e2e-run.log`, `*.tmp`, `_test_pg*.js`; `.gitignore` cobre logs/tmp | baixo para commit | não adicionar; limpar só se solicitado | `git status --ignored --short` | local ignorado |
@@ -157,16 +157,16 @@ Nada será removido agora.
 
 | Caminho | O que parece ser | Usado? | Evidência | Risco de remover | Ação recomendada | Comando de validação | Status |
 |---|---|---|---|---|---|---|---|
-| `scripts/check-thiago.mjs` | diagnóstico direto em banco de produção | não referenciado por script npm | `rg` só encontrou o próprio arquivo e `REORG_PLAN.md`; continha credencial de banco hardcoded, removida do código em patch de segurança | crítico por segurança; médio para remoção sem confirmar histórico | não executar; rotacionar/revogar credencial fora do repo; usar somente `CHECK_THIAGO_DATABASE_URL` se o diagnóstico ainda for necessário | `rg -n "postgresql://|token|secret|password|key" scripts/check-thiago.mjs` | segredo removido do código; rotação pendente |
-| `scripts/dump-bytes.js` | utilitário genérico para inspecionar bytes de arquivo | não referenciado por script npm | `rg` só encontrou o próprio arquivo e `REORG_PLAN.md`; não toca app nem banco | baixo | candidato a manter ou arquivar em utilitário dev; não remover sem decisão | `rg -n "dump-bytes" package.json app lib tests tests-e2e scripts docs/ops/REORG_PLAN.md` | analisar mais |
-| `scripts/check-mobile-menu-browser-login.mjs` | diagnóstico Playwright manual de login/menu mobile | não referenciado por script npm | usa Playwright, credenciais demo e portas locais; citado como candidato no `REORG_PLAN.md` | baixo/médio; pode ajudar debug manual, mas contém credenciais demo | arquivar/remover depois de confirmar que testes E2E cobrem o caso | `rg -n "check-mobile-menu-browser-login" package.json app lib tests tests-e2e scripts docs/ops/REORG_PLAN.md` | analisar mais |
-| `scripts/debug-login-dom.mjs` | captura HTML de debug do login/admin home | não referenciado por script npm | escreve `debug-admin-home.html`; citado como candidato no `REORG_PLAN.md` | baixo; risco de gerar artefato local | candidato a remover depois de confirmar sem uso | `rg -n "debug-login-dom" package.json app lib tests tests-e2e scripts docs/ops/REORG_PLAN.md` | analisar mais |
-| `scripts/inspect-login-headers.mjs` | diagnóstico de headers/cookies de login | não referenciado por script npm | usa fetch local e credencial demo; citado como candidato no `REORG_PLAN.md` | baixo/médio; pode expor headers em log | candidato a remover ou substituir por teste seguro | `rg -n "inspect-login-headers" package.json app lib tests tests-e2e scripts docs/ops/REORG_PLAN.md` | analisar mais |
-| `scripts/diagnose-browser-login.mjs` | diagnóstico Playwright com logs de console/rede | não referenciado por script npm | escreve em `debug/diagnose-browser-login`; `debug/` está no `.gitignore`; citado no `REORG_PLAN.md` | baixo/médio; gera artefatos sensíveis de rede | candidato a remover ou documentar como ferramenta local ignorada | `rg -n "diagnose-browser-login" package.json app lib tests tests-e2e scripts docs/ops/REORG_PLAN.md` | analisar mais |
+| `support/functions/interface/diagnosticos/check-thiago.mjs` | diagnóstico direto em banco de produção | função isolada de diagnóstico | continha credencial de banco hardcoded, removida do código em patch de segurança | crítico por segurança | não executar; usar somente `CHECK_THIAGO_DATABASE_URL` se o diagnóstico ainda for necessário | `rg -n "postgresql://|token|secret|password|key" support/functions/interface/diagnosticos/check-thiago.mjs` | organizado; rotação pendente |
+| `support/functions/infraestrutura/manutencao/dump-bytes.js` | utilitário genérico para inspecionar bytes de arquivo | organizado como função de infraestrutura | não toca app nem banco | baixo | manter como utilitário de manutenção | `rg -n "dump-bytes" support/functions docs/ops/REORG_PLAN.md` | organizado |
+| `support/functions/interface/diagnosticos/check-mobile-menu-browser-login.mjs` | diagnóstico Playwright manual de login/menu mobile | função de diagnóstico de UI | usa Playwright, credenciais demo e portas locais | baixo/médio | executar apenas localmente | `rg -n "check-mobile-menu-browser-login" support/functions testes docs/ops/REORG_PLAN.md` | organizado |
+| `support/functions/interface/diagnosticos/debug-login-dom.mjs` | captura HTML de debug do login/admin home | função de diagnóstico de UI | escreve `debug-admin-home.html` | baixo | executar apenas localmente | `rg -n "debug-login-dom" support/functions testes docs/ops/REORG_PLAN.md` | organizado |
+| `support/functions/api/diagnosticos/inspecionar-cabecalhos-login.mjs` | diagnóstico de headers/cookies de login | organizado como função de diagnóstico de API | usa fetch local e pode expor headers em log | baixo/médio | executar apenas localmente com credenciais de teste | `rg -n "inspect-login-headers" support/functions docs/ops/REORG_PLAN.md` | organizado |
+| `support/functions/interface/diagnosticos/diagnose-browser-login.mjs` | diagnóstico Playwright com logs de console/rede | função de diagnóstico de UI | escreve em `debug/diagnose-browser-login`; `debug/` está no `.gitignore` | baixo/médio | executar apenas localmente | `rg -n "diagnose-browser-login" support/functions testes docs/ops/REORG_PLAN.md` | organizado |
 
 Bloqueio imediato:
 
-- Não executar `scripts/check-thiago.mjs`.
+- Não executar `support/functions/interface/diagnosticos/check-thiago.mjs`.
 - Não commitar credenciais ou saídas desses diagnósticos.
 - Rotacionar qualquer credencial exposta antes de qualquer limpeza que possa mascarar o problema.
 
@@ -221,7 +221,7 @@ Nada será consolidado agora.
 ### Próximo menor patch seguro recomendado
 
 1. Não alterar código funcional ainda.
-2. Tratar segurança dos scripts: bloquear execução de `scripts/check-thiago.mjs`, rotacionar credencial exposta e só então decidir remoção.
+2. Tratar segurança das funções diagnósticas: bloquear execução de `support/functions/interface/diagnosticos/check-thiago.mjs` e rotacionar a credencial exposta.
 3. Fazer análise RBAC focada em:
    - `app/api/test-plans/route.ts`
    - `app/api/test-plans/cases/route.ts`
@@ -239,7 +239,7 @@ Data da rodada: 2026-05-19.
 
 Escopo permitido:
 
-- `scripts/check-thiago.mjs`
+- `support/functions/interface/diagnosticos/check-thiago.mjs`
 - `docs/ops/CODE_CLEANUP_AUDIT.md`
 
 Resumo dos agentes:
@@ -254,7 +254,7 @@ Resumo dos agentes:
 
 Decisão:
 
-- `scripts/check-thiago.mjs` não foi executado.
+- `support/functions/interface/diagnosticos/check-thiago.mjs` não foi executado.
 - O segredo hardcoded foi removido do código.
 - O script agora exige `CHECK_THIAGO_DATABASE_URL`.
 - Se `CHECK_THIAGO_DATABASE_URL` não existir, o script encerra com mensagem segura e sem expor valor sensível.
@@ -264,8 +264,8 @@ Decisão:
 Validação estática:
 
 ```bash
-rg -n "postgresql://|token|secret|password|key" scripts/check-thiago.mjs
-rg -n "CHECK_THIAGO_DATABASE_URL" scripts/check-thiago.mjs
+rg -n "postgresql://|token|secret|password|key" support/functions/interface/diagnosticos/check-thiago.mjs
+rg -n "CHECK_THIAGO_DATABASE_URL" support/functions/interface/diagnosticos/check-thiago.mjs
 ```
 
 Status:
@@ -526,9 +526,9 @@ rg -n "postgresql://|DATABASE_URL=.*://|token|secret|password" .github scripts a
 
 Bloqueio encontrado:
 
-- A checagem de alto sinal confirmou URL de banco hardcoded em `scripts/test-db-connection.js`.
+- A checagem de alto sinal confirmou URL de banco hardcoded em `support/functions/api/diagnosticos/testar-conexao-banco.js`.
 - A varredura ampla tambem retorna muitos falsos positivos por nomes de campos, placeholders, textos de UI e usos de `secrets.*` em workflows.
-- Nada em `scripts/` foi alterado nesta rodada porque o escopo do #32 permite apenas workflow e documentacao operacional.
+- Nenhuma função executável foi alterada nessa rodada porque o escopo do #32 permitia apenas workflow e documentação operacional.
 
 Retomada apos #34:
 
@@ -542,7 +542,7 @@ rg -n "postgres(ql)?://[^[:space:]]+@[^[:space:]]+" .github scripts app lib --gl
 
 Status:
 
-- Workflow minimo: ajustado e revalidado apos remocao do segredo em `scripts/test-db-connection.js`.
+- Workflow mínimo: ajustado e revalidado após remoção do segredo em `support/functions/api/diagnosticos/testar-conexao-banco.js`.
 - #32: pode ser fechado pelos criterios locais de CI/CD minimo.
 - Front/#33: liberado para iniciar inventario, desde que a credencial exposta seja revogada/rotacionada fora do repositorio antes de qualquer merge.
 
@@ -554,7 +554,7 @@ Data da rodada: 2026-05-19.
 
 Escopo permitido:
 
-- `scripts/test-db-connection.js`
+- `support/functions/api/diagnosticos/testar-conexao-banco.js`
 - `docs/ops/CODE_CLEANUP_AUDIT.md`
 
 Resumo dos agentes:
@@ -569,7 +569,7 @@ Resumo dos agentes:
 
 Decisao:
 
-- `scripts/test-db-connection.js` nao foi executado.
+- `support/functions/api/diagnosticos/testar-conexao-banco.js` não foi executado.
 - A URL hardcoded de banco foi removida do codigo.
 - O script agora exige `DB_CHECK_DATABASE_URL`.
 - Se `DB_CHECK_DATABASE_URL` nao existir, o script encerra com mensagem segura e sem expor valor sensivel.
@@ -579,7 +579,7 @@ Decisao:
 Validacao:
 
 ```bash
-rg -n "postgres(ql)?://|DATABASE_URL=.*://|token|secret|password" scripts/test-db-connection.js
+rg -n "postgres(ql)?://|DATABASE_URL=.*://|token|secret|password" support/functions/api/diagnosticos/testar-conexao-banco.js
 rg -n "test-db-connection" package.json scripts docs app lib
 npm run build
 npm run test
@@ -588,7 +588,7 @@ git diff --check
 
 Status:
 
-- `scripts/test-db-connection.js`: segredo removido do codigo.
+- `support/functions/api/diagnosticos/testar-conexao-banco.js`: segredo removido do código.
 - #34: pode ser fechado pelos criterios locais de seguranca/build/test.
 - #32: pode voltar a rodar.
 - Front/#33: ainda bloqueado ate #32 fechar.
@@ -651,8 +651,8 @@ Arquivos alterados acumulados no workspace:
 - `app/api/test-plans/route.ts`
 - `app/api/test-plans/cases/route.ts`
 - `app/empresas/[slug]/planos-de-teste/page.tsx`
-- `scripts/check-thiago.mjs`
-- `scripts/test-db-connection.js`
+- `support/functions/interface/diagnosticos/check-thiago.mjs`
+- `support/functions/api/diagnosticos/testar-conexao-banco.js`
 - `docs/agents/QA_AGENTS.md`
 - `docs/architecture/QA_PLATFORM_CONTRACT.md`
 - `docs/ops/CODE_CLEANUP_AUDIT.md`

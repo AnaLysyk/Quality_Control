@@ -14,11 +14,11 @@ const config: JestConfigWithTsJest = {
     "^@/shared/(.*)$": "<rootDir>/src/shared/$1",
     "^@/design-system/(.*)$": "<rootDir>/src/design-system/$1",
     "^@/(.*)$": "<rootDir>/app/$1",
-    "^server-only$": "<rootDir>/tests/mocks/server-only.js",
-    "\\.(css|less|sass|scss)$": "<rootDir>/tests/mocks/styleMock.js",
+    "^server-only$": "<rootDir>/support/functions/interface/dados-falsos/simular-server-only.js",
+    "\\.(css|less|sass|scss)$": "<rootDir>/support/functions/interface/dados-falsos/simular-estilos.js",
   },
   reporters: ["default"],
-  setupFiles: ["<rootDir>/tests/setup-env.js"],
+  setupFiles: ["<rootDir>/support/functions/banco-de-dados/ambiente/configurar-variaveis-testes.js"],
   testTimeout: 10000,
   // setupFiles removido pois o arquivo não existe mais
   transform: {
@@ -28,8 +28,8 @@ const config: JestConfigWithTsJest = {
       },
     ],
   },
-  testMatch: ["**/tests/**/*.test.ts?(x)"],
-  testPathIgnorePatterns: ["/node_modules/", "/tests/integration/"],
+  testMatch: ["**/testes/**/*.test.ts?(x)"],
+  testPathIgnorePatterns: ["/node_modules/", "/testes/api/integracao/"],
 };
 
 export default config;

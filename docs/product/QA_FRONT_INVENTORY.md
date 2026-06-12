@@ -362,7 +362,7 @@ APIs consumidas:
 
 - `/api/chat/contacts`
 - `/api/chat/messages`
-- `/api/assistant/ask`
+- `/api/assistente/ask`
 
 Lacunas de UX:
 

@@ -482,7 +482,7 @@ class EmailService {
             <div class="email-body">
               <!-- HEADER -->
               <div class="header">
-                <div class="header-logo"><img src="${this.resolveEmailLogoUrl()}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
+                <div class="header-logo"><img src="${this.resolveEmailLogoUrl()}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:90px;height:auto;border:0;" /></div>
                 <div class="header-subtitle">Quality Control • Bem-vindo à plataforma</div>
               </div>
 
@@ -673,41 +673,51 @@ Equipe Testing Company
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Solicitação de acesso recebida - Quality Control</title>
   <style>
-    body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb}
-    .page{width:100%;padding:48px 12px;background:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%)}
-    .card{max-width:820px;margin:0 auto;background:#fff;border:1px solid rgba(1,24,72,.12);border-radius:28px;overflow:hidden;box-shadow:0 26px 76px rgba(1,24,72,.26)}
-    .header{background:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:48px 46px;text-align:center}
-    .brand{display:inline-block;margin:0 auto 16px;padding:9px 18px;border:1px solid rgba(255,255,255,.36);border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:900;letter-spacing:.2px}
-    .header h1{margin:0;font-size:30px;line-height:1.15;letter-spacing:-.4px}
-    .header p{margin:10px 0 0;font-size:15px;opacity:.94}
-    .content{padding:46px 50px 38px}
-    .badge{display:inline-block;padding:9px 15px;border-radius:999px;background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;font-size:13px;font-weight:900;margin-bottom:20px}
-    h2{margin:0 0 14px;color:#011848;font-size:24px;line-height:1.3}
-    p{margin:0 0 18px;color:#475569;font-size:14px;line-height:1.78}
-    .section-title{margin:28px 0 10px;color:#011848;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
-    .info{margin:0 0 20px;border:1px solid #d8dfeb;border-radius:18px;overflow:hidden;background:#f8fafc}
-    .info table{width:100%;border-collapse:collapse}
-    .info td{padding:15px 18px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
+    body{width:100%!important;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+    table{border-spacing:0}
+    .card{width:600px;max-width:600px;margin:0 auto;background:#fff;border:1px solid rgba(1,24,72,.12);border-radius:20px;overflow:hidden;box-shadow:0 18px 46px rgba(1,24,72,.20)}
+    .header{background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:10px 20px;text-align:center}
+    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
+    .header p{margin:3px 0 0;font-size:12px;line-height:16px;opacity:.92}
+    .content{padding:22px 28px 26px;word-wrap:break-word}
+    .badge{display:inline-block;padding:7px 12px;border-radius:999px;background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;font-size:12px;font-weight:900;margin-bottom:12px}
+    h2{margin:0 0 10px;color:#011848;font-size:22px;line-height:1.3}
+    p{margin:0 0 14px;color:#475569;font-size:14px;line-height:1.65}
+    .section-title{margin:20px 0 8px;color:#011848;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
+    .info{margin:0 0 16px;border:1px solid #d8dfeb;border-radius:14px;overflow:hidden;background:#f8fafc}
+    .info table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .info td{padding:11px 14px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
     .info tr:last-child td{border-bottom:0}
     .label{width:34%;color:#64748b;font-weight:900}
-    .value{color:#011848;font-weight:900;word-break:break-word}
-    .box{margin:24px 0;padding:18px 20px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:16px;color:#27457d;font-size:13px;line-height:1.7}
-    .buttonWrap{text-align:center;margin:32px 0 12px}
-    .button{display:inline-block;padding:17px 40px;border-radius:15px;background:linear-gradient(135deg,#011848 0%,#ef0001 100%);color:#fff!important;text-decoration:none;font-weight:900;font-size:15px;box-shadow:0 16px 30px rgba(239,0,1,.30)}
-    .footer{padding:22px 30px 30px;text-align:center;color:#64748b;font-size:12px;background:#fff}
+    .value{color:#011848;font-weight:900;word-break:break-word;overflow-wrap:anywhere}
+    .box{margin:18px 0;padding:14px 16px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:12px;color:#27457d;font-size:13px;line-height:1.6}
+    .footer{padding:16px 24px 20px;text-align:center;color:#64748b;font-size:12px;background:#fff}
+    @media only screen and (max-width:620px){
+      .card{width:100%!important}
+      .content{padding:20px 16px 24px!important}
+      .label,.value{display:block!important;width:auto!important}
+      .label{padding-bottom:3px!important;border-bottom:0!important}
+      .value{padding-top:0!important}
+    }
   </style>
 </head>
-<body>
-  <div class="page">
-    <div class="card">
-      <div class="header">
-        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
-        <h1>Quality Control</h1>
-        <p>Solicitação de acesso recebida</p>
-      </div>
-      <div class="content">
+<body style="width:100%!important;margin:0;padding:0;background-color:#f4f6fb;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f6fb" style="width:100%;border-collapse:collapse;background-color:#f4f6fb;background-image:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%);">
+    <tr>
+      <td align="center" style="padding:16px 8px;">
+        <table role="presentation" class="card" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border:1px solid #d8dfeb;border-collapse:separate;border-spacing:0;background-color:#ffffff;border-radius:20px;overflow:hidden;">
+          <tr>
+            <td class="header" align="center" bgcolor="#011848" style="padding:10px 20px;background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);border-radius:20px 20px 0 0;color:#ffffff;text-align:center;">
+              <img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 4px;border:0;outline:none;text-decoration:none;">
+              <h1 style="margin:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:25px;letter-spacing:-.2px;">Quality Control</h1>
+              <p style="margin:3px 0 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;">Solicitação de acesso recebida</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="content" style="padding:22px 28px 26px;color:#011848;font-family:Arial,Helvetica,sans-serif;word-wrap:break-word;">
         <span class="badge">Em análise</span>
         <h2>${greeting}</h2>
         <p>Recebemos sua solicitação de acesso. Ela está em análise pela equipe responsável. Você receberá uma atualização quando for aprovada, recusada ou quando precisar de ajuste.</p>
@@ -744,15 +754,24 @@ Equipe Testing Company
 
         <div class="box">Guarde este código. Ele será usado junto com seu nome e e-mail para consultar o andamento da solicitação. Depois da aprovação, o acesso será feito com o usuário e senha cadastrados neste formulário.</div>
 
-        <div class="buttonWrap">
-          <a href="${escapeHtml(statusUrl)}" class="button">Consultar solicitação</a>
-        </div>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto 10px;border-collapse:separate;">
+                <tr>
+                  <td align="center" bgcolor="#ef0001" style="background-color:#ef0001;border-radius:9px;mso-padding-alt:11px 20px;">
+                    <a href="${escapeHtml(statusUrl)}" style="display:inline-block;padding:11px 20px;color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;line-height:18px;text-align:center;text-decoration:none;">Consultar solicitação</a>
+                  </td>
+                </tr>
+              </table>
 
-        <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Link direto: ${escapeHtml(statusUrl)}</p>
-      </div>
-      <div class="footer">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</div>
-    </div>
-  </div>
+              <p style="margin:0;text-align:center;font-size:11px;line-height:17px;color:#64748b;word-break:break-all;">Link direto: <a href="${escapeHtml(statusUrl)}" style="color:#27457d;text-decoration:underline;">${escapeHtml(statusUrl)}</a></p>
+            </td>
+          </tr>
+          <tr>
+            <td class="footer" align="center" bgcolor="#ffffff" style="padding:16px 24px 20px;border-top:1px solid #e5eaf3;background-color:#ffffff;color:#64748b;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;text-align:center;">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 
@@ -986,7 +1005,7 @@ Guarde este código para acompanhar sua solicitação.`;
     const passwordLabel = data.passwordFromRequest
       ? "Use a senha cadastrada no momento da solicitação"
       : data.tempPassword
-        ? escapeHtml(data.tempPassword)
+        ? "Senha temporária definida com segurança"
         : "Use a senha definida no cadastro";
 
     const permissionsHtml = contentByRole.permissions.map((item) => `<li>${item}</li>`).join("");
@@ -1001,10 +1020,10 @@ Guarde este código para acompanhar sua solicitação.`;
     body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb}
     .page{width:100%;padding:42px 12px;background:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%)}
     .card{max-width:780px;margin:0 auto;background:rgba(255,255,255,.98);border:1px solid rgba(1,24,72,.14);border-radius:26px;overflow:hidden;box-shadow:0 24px 70px rgba(1,24,72,.25)}
-    .header{background:linear-gradient(135deg,#011848 0%,#142b63 48%,#ef0001 100%);color:#fff;padding:44px 42px;text-align:center}
-    .brand{display:inline-block;margin:0 auto 14px;padding:8px 18px;border:1px solid rgba(255,255,255,.34);border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:800;letter-spacing:.2px}
-    .header h1{margin:0;font-size:28px;line-height:1.2}
-    .header p{margin:10px 0 0;font-size:15px;opacity:.94}
+    .header{background:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:24px 24px;text-align:center}
+    .brand{display:inline-block;margin:0 auto 10px;padding:0;border:0;background:transparent}
+    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
+    .header p{margin:6px 0 0;font-size:12px;opacity:.92}
     .content{padding:42px 46px 36px}
     .badge{display:inline-block;padding:8px 14px;border-radius:999px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;font-size:13px;font-weight:800;margin-bottom:18px}
     h2{margin:0 0 12px;color:#011848;font-size:23px;line-height:1.3}
@@ -1028,7 +1047,7 @@ Guarde este código para acompanhar sua solicitação.`;
   <div class="page">
     <div class="card">
       <div class="header">
-        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:150px;height:auto;border:0;" /></div>
+        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:90px;height:auto;border:0;" /></div>
         <h1>Quality Control</h1>
         <p>${contentByRole.title}</p>
       </div>

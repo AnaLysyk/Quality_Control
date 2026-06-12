@@ -5,6 +5,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import styles from "../../LoginClient.module.css";
+import requestStyles from "../AccessRequestClient.module.css";
 
 type Comment = {
   id: string;
@@ -155,6 +156,21 @@ function Logo() {
   );
 }
 
+function AnimatedBackground() {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+      <div className="absolute left-6 top-6 h-32 w-32 rounded-full bg-[#011848] opacity-20 blur-2xl animate-ping motion-reduce:animate-none" />
+      <div className="absolute bottom-6 right-6 h-28 w-28 rounded-full bg-[#ef0001] opacity-20 blur-2xl animate-pulse motion-reduce:animate-none" />
+      <div className="absolute right-1/5 top-1/6 h-20 w-20 rounded-full bg-[#ef0001] opacity-10 blur-lg animate-bounce delay-1000 motion-reduce:animate-none" />
+      <div className="absolute bottom-1/6 left-1/5 h-24 w-24 rounded-full bg-[#011848] opacity-10 blur-lg animate-pulse delay-700 motion-reduce:animate-none" />
+      <div className="absolute left-44 top-10 h-16 w-16 rounded-full bg-[#ef0001] opacity-10 blur animate-pulse delay-500 motion-reduce:animate-none" />
+      <div className="absolute bottom-2 left-1/2 h-20 w-20 -translate-x-1/2 rounded-full bg-[#011848] opacity-10 blur animate-bounce delay-200 motion-reduce:animate-none" />
+      <div className="absolute left-2 top-1/2 h-14 w-14 rounded-full bg-[#ef0001] opacity-10 blur animate-pulse delay-800 motion-reduce:animate-none" />
+      <div className="absolute right-2 top-1/2 h-14 w-14 rounded-full bg-[#011848] opacity-10 blur animate-ping delay-600 motion-reduce:animate-none" />
+    </div>
+  );
+}
+
 function Info({ label, value, testId }: { label: string; value?: string; testId?: string }) {
   return (
     <div className="rounded-2xl border border-[#011848]/10 bg-white p-4 shadow-[0_5px_16px_rgba(1,24,72,0.04)]">
@@ -177,6 +193,7 @@ function StatusContent() {
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -253,6 +270,23 @@ function StatusContent() {
     }
   }, [item]);
 
+  useEffect(() => {
+    if (!cancelOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !busy) setCancelOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [busy, cancelOpen]);
+
   const status = item ? STATUS[item.status as keyof typeof STATUS] ?? STATUS.pending : STATUS.pending;
   const finalStatus = item ? ["approved", "rejected", "cancelled", "expired"].includes(item.status) : false;
   const latestRound = item?.adjustmentHistory?.at(-1);
@@ -322,8 +356,8 @@ function StatusContent() {
   }
 
   async function cancelRequest() {
-    if (!window.confirm("Deseja cancelar esta solicitação?")) return;
     setBusy(true);
+    setError(null);
     try {
       const response = await fetch(
         `/api/access-requests/by-key/${encodeURIComponent(accessKey)}/cancel`,
@@ -331,24 +365,32 @@ function StatusContent() {
       );
       const body = await response.json().catch(() => null);
       if (!response.ok) throw new Error(body?.message || "Não foi possível cancelar.");
+      setCancelOpen(false);
       setFeedback("Solicitação cancelada.");
       await load();
     } catch (caught) {
+      setCancelOpen(false);
       setError(caught instanceof Error ? caught.message : "Falha ao cancelar.");
     } finally {
       setBusy(false);
     }
   }
 
-  const shellClass = `${styles.loginContainer} ${styles.loginFixedTheme} min-h-svh overflow-x-hidden bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-10`;
+  const shellClass = `${styles.loginContainer} ${styles.loginFixedTheme} relative isolate min-h-svh overflow-x-hidden bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-10`;
 
   if (loading) {
-    return <main className={`${shellClass} flex items-center justify-center`}><p className="rounded-2xl bg-white px-5 py-3 font-semibold">Carregando solicitação...</p></main>;
+    return (
+      <main className={`${shellClass} flex items-center justify-center`}>
+        <AnimatedBackground />
+        <p className="relative z-10 rounded-2xl bg-white px-5 py-3 font-semibold shadow-xl">Carregando solicitação...</p>
+      </main>
+    );
   }
   if (!item) {
     return (
       <main className={`${shellClass} flex items-center justify-center`}>
-        <section className="w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white/95 p-8 text-center shadow-2xl">
+        <AnimatedBackground />
+        <section className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white/95 p-8 text-center shadow-2xl">
           <Logo />
           <p className="mb-3 text-[10px] font-black uppercase tracking-[0.35em] text-[#ef0001]">Quality Control</p>
           <p className="font-semibold text-red-700" data-testid="access-request-status-error">{error}</p>
@@ -360,6 +402,7 @@ function StatusContent() {
 
   return (
     <main className={shellClass}>
+      <AnimatedBackground />
       <section className="relative z-10 mx-auto w-full max-w-3xl overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-[0_28px_80px_rgba(1,24,72,0.28)]" data-testid="access-request-status-result">
         <div className="h-2 bg-linear-to-r from-[#011848] via-[#142b63] to-[#ef0001]" />
         <div className="p-5 sm:p-8">
@@ -521,7 +564,7 @@ function StatusContent() {
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <button type="button" disabled={busy || !reply.trim()} onClick={submitReply} className={PRIMARY_BUTTON_CLASS}>Enviar comentário</button>
-                <button type="button" disabled={busy} onClick={cancelRequest} className={DANGER_BUTTON_CLASS}>Cancelar solicitação</button>
+                <button type="button" disabled={busy} onClick={() => setCancelOpen(true)} className={DANGER_BUTTON_CLASS} data-testid="access-request-cancel-open">Cancelar solicitação</button>
               </div>
             </div>
           </section>
@@ -532,6 +575,79 @@ function StatusContent() {
         <button onClick={() => router.push("/login")} className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-[#011848] bg-[#011848] px-5 py-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(1,24,72,0.16)] transition hover:-translate-y-0.5 hover:bg-[#142b63] focus:outline-none focus:ring-4 focus:ring-[#011848]/15">Voltar ao login</button>
         </div>
       </section>
+
+      {cancelOpen && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-[#011848]/70 px-4 py-6 backdrop-blur-md ${requestStyles.modalOverlay}`}
+          onClick={() => {
+            if (!busy) setCancelOpen(false);
+          }}
+          role="presentation"
+          data-testid="access-request-cancel-modal-overlay"
+        >
+          <section
+            className={`w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white shadow-[0_28px_80px_rgba(1,24,72,0.4)] ${requestStyles.modalPanel}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="access-request-cancel-title"
+            aria-describedby="access-request-cancel-description"
+            onClick={(event) => event.stopPropagation()}
+            data-testid="access-request-cancel-modal"
+          >
+            <div className="h-2 bg-linear-to-r from-[#011848] via-[#142b63] to-[#ef0001]" />
+            <div className="p-6 sm:p-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg">
+                  <div className="relative h-8 w-8">
+                    <Image
+                      src="/images/tc.png"
+                      alt=""
+                      fill
+                      sizes="32px"
+                      className="animate-spin-slower pointer-events-none select-none object-contain object-center motion-reduce:animate-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#ef0001]">Confirmação</p>
+                  <h2 id="access-request-cancel-title" className="mt-1 text-xl font-black text-[#011848]">
+                    Cancelar solicitação?
+                  </h2>
+                  <p id="access-request-cancel-description" className="mt-2 text-sm font-medium leading-6 text-[#64748b]">
+                    Esta ação encerra o acompanhamento desta solicitação. Confirme somente se não deseja mais continuar com o pedido.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-800">
+                A equipe não continuará a análise depois do cancelamento.
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  autoFocus
+                  disabled={busy}
+                  onClick={() => setCancelOpen(false)}
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#011848]/15 bg-[#f8fafc] px-5 py-3 text-sm font-black text-[#011848] transition hover:border-[#011848]/30 hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#011848]/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  data-testid="access-request-cancel-keep"
+                >
+                  Manter solicitação
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={cancelRequest}
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#ef0001] px-5 py-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(239,0,1,0.2)] transition hover:-translate-y-0.5 hover:bg-[#d50000] focus:outline-none focus:ring-4 focus:ring-[#ef0001]/20 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                  data-testid="access-request-cancel-confirm"
+                >
+                  {busy ? "Cancelando..." : "Confirmar cancelamento"}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

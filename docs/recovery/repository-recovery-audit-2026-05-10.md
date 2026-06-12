@@ -33,7 +33,7 @@ Commits recentes com impacto provavel:
 - `ai_applying/**`, `UTF8`, relatorios temporarios de deploy e artefatos `__pycache__`: limpeza de subprojeto/debug legado. Sem evidencia de uso atual.
 - `app/release/*/page.tsx` de releases estaticas: removidas em favor de rota dinamica e estrutura atual de releases.
 - `app/middleware.ts` antigo e `app/components/RequireGlobalDeveloper.tsx`: remocoes sensiveis a auth/RBAC. Nao restaurar sem auditoria especifica de seguranca.
-- `tmp/biometric-source/**` e `tmp/profiles-multiple-enrolls/**`: fixtures/artefatos temporarios, nao componentes da plataforma.
+- `tmp/modulo-biometria/**` e `tmp/profiles-multiple-enrolls/**`: fixtures/artefatos temporarios, nao componentes da plataforma.
 
 ### Candidatos a recuperacao documental
 

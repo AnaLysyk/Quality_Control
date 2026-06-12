@@ -313,7 +313,7 @@ function classifyCodeArtifact(projectPath: string) {
   const basename = path.posix.basename(normalized);
   const stem = stripExtension(basename);
 
-  if (normalized.startsWith("lib/assistant/tools/") && !["index", "types", "ticketHelpers"].includes(stem)) {
+  if (normalized.startsWith("lib/assistente/tools/") && !["index", "types", "ticketHelpers"].includes(stem)) {
     return { type: "AssistantTool", labelPrefix: "Ferramenta" };
   }
   if (normalized.startsWith("app/hooks/") || /^use[A-Z]/.test(stem)) return { type: "Hook", labelPrefix: "Hook" };

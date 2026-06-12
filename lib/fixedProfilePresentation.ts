@@ -22,9 +22,9 @@ const FIXED_PROFILE_META: Record<FixedProfileKind, FixedProfileMeta> = {
     toneClass: "border-rose-200 bg-rose-50 text-rose-700",
   },
   company_user: {
-    label: "Usuario da empresa",
-    shortLabel: "Usuario da empresa",
-    hint: "Usuario vinculado ao contexto da empresa.",
+    label: "Acesso empresarial",
+    shortLabel: "Acesso empresarial",
+    hint: "Pessoa vinculada ao contexto da empresa.",
     toneClass: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700",
   },
   testing_company_user: {

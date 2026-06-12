@@ -30,7 +30,7 @@
 │ 3. scripts-sync-brain.ts (16 KB)                                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ O QUÊ:  Script de sincronização inicial                                    │
-│ PARA:   Copiar para scripts/sync-brain.ts                                  │
+│ PARA:   Copiar para support/functions/banco-de-dados/brain/sync-brain.ts               │
 │ TEMPO:  1 minuto                                                            │
 │ CONTÉM: Criação de 1200+ nós, 3400+ arestas                                │
 │ EXECUTA: npm run sync:brain (adicionar ao package.json)                    │
@@ -101,7 +101,7 @@ Total: ~40 minutos até estar 100% funcional
 
 [ ] Copiar schema-brain.prisma → prisma/schema.prisma (final)
 [ ] Copiar lib-brain.ts → lib/brain.ts
-[ ] Copiar scripts-sync-brain.ts → scripts/sync-brain.ts
+[ ] Copiar scripts-sync-brain.ts → support/functions/banco-de-dados/brain/sync-brain.ts
 [ ] Copiar __tests__-brain.test.ts → __tests__/brain.test.ts
 
 ═══════════════════════════════════════════════════════════════════════════════

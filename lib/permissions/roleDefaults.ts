@@ -109,7 +109,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     support: ["view", "create", "assign", "status", "comment", "modal", "floating"],
     users: ["view"],
     permissions: ["view"],
-    access_requests: ["view"],
+    access_requests: ["view", "comment", "approve", "reject"],
     notes: ["view", "create"],
     notifications: ["view"],
     audit: ["view"],

@@ -10,7 +10,7 @@ prisma/       schema e migrações
 public/       arquivos públicos
 tests/        testes Jest
 tests-e2e/    testes Playwright
-scripts/      automações e manutenção
+support/functions/  funções de UI, API, banco de dados e infraestrutura
 docs/         documentação
 ```
 
@@ -38,7 +38,7 @@ Não serão criadas pastas vazias como `lib/modules`, `lib/server` ou `lib/integ
 | `playwright-report/` | relatório gerado | ignorado; pode ser apagado |
 | `prisma/` | banco oficial | manter |
 | `public/` | estáticos oficiais | manter |
-| `scripts/` | automações oficiais | manter |
+| `support/functions/` | automações e funções oficiais organizadas por área | manter |
 | `specs/` | planos de teste em Markdown | manter por enquanto; avaliar futura união com `docs/` |
 | `src/` | área pequena já existente | manter sem expandir; contém design system e menu lateral |
 | `test-results/` | resultado gerado | ignorado; pode ser apagado |
@@ -53,7 +53,7 @@ Não serão criadas pastas vazias como `lib/modules`, `lib/server` ou `lib/integ
 | --- | --- | --- |
 | Configuração oficial | `.env.example`, `.gitattributes`, `.gitignore`, `.hintrc`, `.npmrc`, `Dockerfile`, `eslint.config.mjs`, `jest.config.ts`, `next.config.ts`, `package.json`, `package-lock.json`, `playwright*.ts`, `postcss.config.mjs`, `prisma.config.ts`, `proxy.ts`, `render.yaml`, `seccomp_profile.json`, `sonar-project.properties`, `tailwind.config.ts`, `tsconfig.json` | manter |
 | Documentação atual | `README*.md`, `ARCHITECTURE.md`, `INSTALL*.md`, `QUICK_START*.md` | manter; consolidar somente quando o conteúdo for revisado |
-| Diagnóstico legado | `_test_pg.js`, `_test_pg2.js` | avaliar migração para `scripts/diagnostics/` ou remoção após confirmar uso |
+| Diagnóstico legado | `support/functions/banco-de-dados/diagnosticos/test-pg.js`, `test-pg2.js` | manter isolado em diagnósticos de banco |
 | Inventário legado | `estrutura-repo.txt` | candidato a remoção; a documentação em `docs/` passa a ser a referência |
 | Ambiente local | `.env`, `.env.local` | ignorados; nunca versionar segredos |
 | Gerados/temporários | `.dev.pid`, `.tmp-*`, `__localstore_snapshot.tmp`, `next-env.d.ts`, `tsconfig.tsbuildinfo`, `*.log` | ignorados; podem ser recriados ou apagados |

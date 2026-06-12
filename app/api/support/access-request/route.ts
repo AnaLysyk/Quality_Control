@@ -262,7 +262,7 @@ export async function POST(req: Request) {
     }
   }
 
-  void emailService.sendAccessRequestReceivedEmail(email, {
+  const receivedEmailSent = await emailService.sendAccessRequestReceivedEmail(email, {
     name: fullName,
     accessKey: createdRequest?.id ?? null,
     email,
@@ -271,11 +271,8 @@ export async function POST(req: Request) {
     title,
     description,
     companyName: resolvedCompanyName || null,
-  }).then((sent) => {
-    console.log("[ACCESS-REQUESTS][EMAIL][RECEIVED]", sent ? "sent" : "not_sent", email);
-  }).catch((error) => {
-    console.warn("[ACCESS-REQUESTS][EMAIL][RECEIVED] failed:", error);
   });
+  console.log("[ACCESS-REQUESTS][EMAIL][RECEIVED]", receivedEmailSent ? "sent" : "not_sent", email);
 
   addAuditLogSafe({
     actorEmail: email,

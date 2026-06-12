@@ -2,6 +2,7 @@ import "server-only";
 
 import { upsertNode, connectNodes, addMemory } from "@/lib/brain";
 import { prisma } from "@/lib/prismaClient";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 
 /**
  * Auto-sync helpers — chamados após operações de negócio para
@@ -20,6 +21,8 @@ export async function brainOnTicketCreated(ticket: {
   status?: string;
   priority?: string;
 }) {
+  if (shouldUseJsonStore()) return;
+
   try {
     const node = await upsertNode({
       type: "Ticket",
@@ -69,6 +72,8 @@ export async function brainOnTicketUpdated(ticket: {
   priority?: string;
   assignedToUserId?: string | null;
 }) {
+  if (shouldUseJsonStore()) return;
+
   try {
     await upsertNode({
       type: "Ticket",
@@ -106,6 +111,8 @@ export async function brainOnDefectCreated(defect: {
   severity?: string;
   status?: string;
 }) {
+  if (shouldUseJsonStore()) return;
+
   try {
     const node = await upsertNode({
       type: "Defect",
@@ -152,6 +159,8 @@ export async function brainOnUserCreated(user: {
   email?: string;
   role?: string;
 }) {
+  if (shouldUseJsonStore()) return;
+
   try {
     await upsertNode({
       type: "User",
@@ -174,6 +183,8 @@ export async function brainOnCompanyCreated(company: {
   description?: string | null;
   status?: string;
 }) {
+  if (shouldUseJsonStore()) return;
+
   try {
     await upsertNode({
       type: "Company",
@@ -195,6 +206,8 @@ export async function brainOnReleaseCreated(release: {
   companyId?: string | null;
   status?: string;
 }) {
+  if (shouldUseJsonStore()) return;
+
   try {
     const node = await upsertNode({
       type: "Release",

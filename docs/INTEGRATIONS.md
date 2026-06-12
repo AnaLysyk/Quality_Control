@@ -19,9 +19,9 @@ Local/manual testing:
 2. You can run the migration script to convert legacy `qase_*/jira_*` fields into `company_integrations` rows (recommended before enabling the workflow):
 
 ```bash
-npx tsx scripts/migrate-legacy-integrations.ts --dry-run
+npx tsx support/functions/banco-de-dados/migracoes/integracoes/migrar-integracoes-legadas.ts --dry-run
 # Inspect output, then run without --dry-run to apply
-npx tsx scripts/migrate-legacy-integrations.ts
+npx tsx support/functions/banco-de-dados/migracoes/integracoes/migrar-integracoes-legadas.ts
 ```
 
 3. To manually trigger a sync for a company (local or remote), POST to the endpoint with a bearer token:

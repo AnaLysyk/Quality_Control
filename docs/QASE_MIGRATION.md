@@ -23,7 +23,7 @@ npx prisma generate
 ```
 
 2. Backfill (preparar e executar em staging antes de prod):
-- Há scripts de backfill em `scripts/backfill/` e `scripts/migrate-legacy-integrations.ts`.
+- As funções de migração ficam em `support/functions/banco-de-dados/migracoes/integracoes/`.
 - Rodar com `--dry-run` (quando disponível) e revisar logs, depois rodar sem `--dry-run`.
 
 3. Rotação de tokens (crítico):

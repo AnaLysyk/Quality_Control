@@ -30,8 +30,8 @@ const ACCESS_OPTIONS = [
   },
   {
     value: "company_user",
-    label: "Usuário da empresa",
-    hint: "Usuário vinculado ao contexto da empresa.",
+    label: "Acesso vinculado à empresa",
+    hint: "Para uma pessoa que acessará a plataforma no contexto da empresa selecionada.",
   },
   {
     value: "leader_tc",

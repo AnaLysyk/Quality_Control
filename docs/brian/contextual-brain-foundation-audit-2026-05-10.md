@@ -28,7 +28,7 @@ O repositório já tem uma base relevante para evoluir o Brian sem recriar a UI:
 | Releases/runs/testes | `Release`, `ReleaseManual`, `TestRun`, `StoredTestCase`, `app/api/test-cases/**` | regressão, execução, aprovação, bloqueio |
 | Automação | `app/api/automations/**`, `AutomationDocument`, `AutomationAssetUsage` | geração/execução de automação |
 | Auditoria | `AuditLog`, `BrainAuditLog`, `AssistantAuditLog`, `data/auditLogRepository.ts` | proveniência, histórico e evidência |
-| Chat/assistente | `lib/assistant/**`, `lib/brain/internalEngine.ts`, `app/components/Chat.tsx` | contexto operacional e respostas GraphRAG futuras |
+| Chat/assistente | `lib/assistente/**`, `lib/brain/internalEngine.ts`, `app/components/Chat.tsx` | contexto operacional e respostas GraphRAG futuras |
 
 ## Eventos capturáveis agora
 

@@ -1,0 +1,78 @@
+﻿import { test, expect, type APIRequestContext } from "@playwright/test";
+
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
+const adminPassword = process.env.E2E_ADMIN_PASSWORD || "Griaule@123";
+const userPassword = process.env.E2E_USER_PASSWORD || "Griaule@123";
+const adminUser = {
+  email: "admin@demo.test",
+  password: "Demo@123",
+  role: "admin",
+};
+const normalUser = {
+  email: "user@demo.test",
+  password: "Demo@123",
+  role: "user",
+};
+
+function extrairCookie(setCookie: string | string[] | undefined, name: string): string | null {
+  if (!setCookie) return null;
+  const raw = Array.isArray(setCookie) ? setCookie.join(";") : setCookie;
+  const match = raw.match(new RegExp(`${name}=([^;]+)`));
+  return match?.[1] ?? null;
+}
+
+async function login(request: APIRequestContext, email: string, password: string) {
+  const response = await request.post(`${baseURL}/api/auth/login`, {
+    data: { user: email, password },
+  });
+  if (!response.ok()) {
+    const text = await response.text();
+    throw new Error(`login failed: ${response.status()} ${response.statusText()} ${text}`);
+  }
+  const headers = response.headers();
+  const sessionId = extrairCookie(headers["set-cookie"], "session_id");
+  const authToken = extrairCookie(headers["set-cookie"], "auth_token");
+  expect(sessionId, "missing session_id cookie").toBeTruthy();
+  return {
+    sessionId: sessionId as string,
+    authToken,
+  };
+}
+
+test("auth: login admin and resolve /api/me from UserCompany", async ({ request }) => {
+  const { sessionId, authToken } = await login(request, adminUser.email, adminUser.password);
+  const headers: Record<string, string> = { cookie: `session_id=${sessionId}` };
+  if (authToken) headers.authorization = `Bearer ${authToken}`;
+
+  const me = await request.get(`${baseURL}/api/me`, { headers });
+  expect(me.ok()).toBeTruthy();
+  const body = await me.json();
+
+  expect(body.user.email).toBe(adminUser.email);
+  expect(body.user.role).toBe(adminUser.role);
+  expect(body.user.clientSlug).toBe("DEMO");
+  expect(Array.isArray(body.companies)).toBeTruthy();
+  expect(body.companies.find((company: { slug: string }) => company.slug === "DEMO")).toBeTruthy();
+});
+
+test("auth: login user and resolve /api/me role= user", async ({ request }) => {
+  const { sessionId, authToken } = await login(request, normalUser.email, normalUser.password);
+  const headers: Record<string, string> = { cookie: `session_id=${sessionId}` };
+  if (authToken) headers.authorization = `Bearer ${authToken}`;
+
+  const me = await request.get(`${baseURL}/api/me`, { headers });
+  expect(me.ok()).toBeTruthy();
+  const body = await me.json();
+
+  expect(body.user.email).toBe(normalUser.email);
+  expect(body.user.role).toBe(normalUser.role);
+  expect(body.user.clientSlug).toBe("DEMO");
+});
+
+test("auth: /api/me without session returns 401", async ({ request }) => {
+  const me = await request.get(`${baseURL}/api/me`);
+  const bodyText = await me.text();
+  expect(me.status(), bodyText).toBe(401);
+  const body = JSON.parse(bodyText);
+  expect(body.error?.code).toBe("NO_SESSION");
+});

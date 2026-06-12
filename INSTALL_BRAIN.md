@@ -39,7 +39,7 @@ cp lib-brain.ts ./lib/brain.ts
 **C. Script de Sincronização**
 ```bash
 mkdir -p scripts
-cp scripts-sync-brain.ts ./scripts/sync-brain.ts
+cp scripts-sync-brain.ts ./support/functions/banco-de-dados/brain/sincronizar-brain.ts
 ```
 
 **D. Testes**
@@ -82,7 +82,7 @@ npx prisma generate
 
 ```bash
 # Opção A: Via Node direto
-node -r ts-node/register scripts/sync-brain.ts
+npx tsx support/functions/banco-de-dados/brain/sincronizar-brain.ts
 
 # Opção B: Via npm script (adicione ao package.json)
 npm run sync:brain
@@ -92,7 +92,7 @@ npm run sync:brain
 ```json
 {
   "scripts": {
-    "sync:brain": "ts-node scripts/sync-brain.ts",
+    "sync:brain": "tsx support/functions/banco-de-dados/brain/sincronizar-brain.ts",
     "test:brain": "jest __tests__/brain.test.ts --runInBand"
   }
 }
@@ -254,7 +254,7 @@ export default async function handler(req, res) {
 ### Memória do script crescendo
 → Adicione `--max-old-space-size=4096` ao Node:
 ```bash
-node --max-old-space-size=4096 -r ts-node/register scripts/sync-brain.ts
+node --max-old-space-size=4096 --import tsx support/functions/banco-de-dados/brain/sincronizar-brain.ts
 ```
 
 ---

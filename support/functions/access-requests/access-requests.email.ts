@@ -1,4 +1,4 @@
-﻿import { existsSync, mkdirSync, readFileSync, rmSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "fs";
 import path from "path";
 import { expect } from "@playwright/test";
 
@@ -17,7 +17,7 @@ export function criarEmailTeste(prefix = "access-request") {
 }
 
 export function emailCaptureFile() {
-  return process.env.EMAIL_CAPTURE_FILE || path.join("test-results", "emails", "access-request-outbox.jsonl");
+  return process.env.EMAIL_CAPTURE_FILE || path.join("test-results", "emails", "outbox.jsonl");
 }
 
 export function limparEmailsCapturados() {

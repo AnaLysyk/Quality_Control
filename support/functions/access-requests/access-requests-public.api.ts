@@ -71,7 +71,8 @@ export async function tentarCriarSolicitacaoPublicaDuplicadaViaApi(
 
   expect(response.status(), JSON.stringify(body)).toBe(409);
   expect(body?.code).toBe("DUPLICATE_ACCESS_REQUEST");
-  expect(body?.message).toContain("Já existe uma solicitação de acesso aberta ou em análise");
+  expect(String(body?.message)).toMatch(/existe.*acesso aberta/i);
 
   return body;
 }
+

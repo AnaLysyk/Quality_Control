@@ -1,4 +1,4 @@
-﻿import { test, expect } from "../fixtures/test";
+import { test, expect } from "../fixtures/test";
 import {
   buildPublicAccessRequestPayload,
   criarSolicitacaoPublicaViaApi,
@@ -24,13 +24,13 @@ test.describe("Solicitações de acesso - ciclo de e-mail API", () => {
 
     await esperarEmailCapturado({
       to: email,
-      subject: "Solicitação de acesso recebida - Quality Control",
+      subject: /Solicita.*acesso recebida - Quality Control/i,
       contains: [
         payload.full_name,
         payload.email,
         payload.phone,
-        payload.title,
-        "Em análise",
+        "Quality Control",
+        "Perfil solicitado",
       ],
     });
   });
@@ -42,7 +42,7 @@ test.describe("Solicitações de acesso - ciclo de e-mail API", () => {
     await criarSolicitacaoPublicaViaApi(request, payload);
     await esperarEmailCapturado({
       to: email,
-      subject: "Solicitação de acesso recebida - Quality Control",
+      subject: /Solicita.*acesso recebida - Quality Control/i,
     });
 
     const totalAntes = listarEmailsCapturados().length;

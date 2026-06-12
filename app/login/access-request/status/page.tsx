@@ -111,6 +111,18 @@ const FIELD_LABELS: Record<string, string> = {
   password: "Nova senha",
 };
 
+const FORM_CONTROL_CLASS =
+  "mt-2 w-full appearance-none rounded-xl border border-[#011848]/15 bg-[#f8fafc] px-4 py-3 text-sm font-semibold text-[#011848] shadow-[inset_0_1px_2px_rgba(1,24,72,0.04)] outline-none transition placeholder:text-[#64748b]/70 hover:border-[#011848]/30 focus:border-[#ef0001] focus:bg-white focus:ring-4 focus:ring-[#ef0001]/10 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500";
+
+const ADJUSTMENT_CONTROL_CLASS =
+  "mt-2 w-full appearance-none rounded-xl border border-red-200 bg-red-50/60 px-4 py-3 text-sm font-semibold text-[#011848] shadow-[inset_0_1px_2px_rgba(1,24,72,0.04)] outline-none transition placeholder:text-[#64748b]/70 hover:border-red-300 focus:border-[#ef0001] focus:bg-white focus:ring-4 focus:ring-[#ef0001]/10 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500";
+
+const PRIMARY_BUTTON_CLASS =
+  "inline-flex min-h-12 items-center justify-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-5 py-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(1,24,72,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(1,24,72,0.24)] focus:outline-none focus:ring-4 focus:ring-[#ef0001]/20 disabled:cursor-not-allowed disabled:from-[#8793aa] disabled:to-[#a3adc0] disabled:shadow-none disabled:hover:translate-y-0";
+
+const DANGER_BUTTON_CLASS =
+  "inline-flex min-h-12 items-center justify-center rounded-xl border border-[#ef0001]/35 bg-white px-5 py-3 text-sm font-black text-[#d50000] transition hover:border-[#ef0001] hover:bg-red-50 focus:outline-none focus:ring-4 focus:ring-[#ef0001]/10 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400";
+
 function profileLabel(role?: string) {
   if (role === "empresa") return "Empresa";
   if (role === "company_user") return "Usuário da empresa";
@@ -128,13 +140,13 @@ function dateTime(value?: string) {
 
 function Logo() {
   return (
-    <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-r from-[#011848] to-[#ef0001] shadow-lg">
-      <div className="relative h-12 w-12">
+    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-[#011848] via-[#142b63] to-[#ef0001] shadow-[0_14px_32px_rgba(1,24,72,0.24)] ring-4 ring-white">
+      <div className="relative h-10 w-10">
         <Image
           src="/images/tc.png"
           alt="Logo Quality Control"
           fill
-          sizes="48px"
+          sizes="40px"
           priority
           className="object-contain"
         />
@@ -145,9 +157,9 @@ function Logo() {
 
 function Info({ label, value, testId }: { label: string; value?: string; testId?: string }) {
   return (
-    <div className="rounded-2xl border border-[#011848]/10 bg-white p-4">
-      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#64748b]">{label}</p>
-      <p className="mt-2 break-words text-sm font-semibold text-[#011848]" data-testid={testId}>
+    <div className="rounded-2xl border border-[#011848]/10 bg-white p-4 shadow-[0_5px_16px_rgba(1,24,72,0.04)]">
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#64748b]">{label}</p>
+      <p className="mt-2 break-words text-sm font-bold text-[#011848]" data-testid={testId}>
         {value || "-"}
       </p>
     </div>
@@ -328,7 +340,7 @@ function StatusContent() {
     }
   }
 
-  const shellClass = `${styles.loginContainer} ${styles.loginFixedTheme} min-h-svh bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-10`;
+  const shellClass = `${styles.loginContainer} ${styles.loginFixedTheme} min-h-svh overflow-x-hidden bg-linear-to-br from-[#011848] via-[#f4f6fb] to-[#ef0001] px-4 py-10`;
 
   if (loading) {
     return <main className={`${shellClass} flex items-center justify-center`}><p className="rounded-2xl bg-white px-5 py-3 font-semibold">Carregando solicitação...</p></main>;
@@ -336,10 +348,11 @@ function StatusContent() {
   if (!item) {
     return (
       <main className={`${shellClass} flex items-center justify-center`}>
-        <section className="w-full max-w-md rounded-3xl bg-white/95 p-8 text-center shadow-2xl">
+        <section className="w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white/95 p-8 text-center shadow-2xl">
           <Logo />
+          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.35em] text-[#ef0001]">Quality Control</p>
           <p className="font-semibold text-red-700" data-testid="access-request-status-error">{error}</p>
-          <button className="mt-6 w-full rounded-xl bg-[#011848] px-5 py-3 font-bold text-white" onClick={() => router.push("/login")}>Voltar ao login</button>
+          <button className={`${PRIMARY_BUTTON_CLASS} mt-6 w-full`} onClick={() => router.push("/login")}>Voltar ao login</button>
         </section>
       </main>
     );
@@ -347,11 +360,14 @@ function StatusContent() {
 
   return (
     <main className={shellClass}>
-      <section className="relative z-10 mx-auto w-full max-w-3xl rounded-3xl border border-white/60 bg-white/95 p-5 shadow-2xl sm:p-8" data-testid="access-request-status-result">
+      <section className="relative z-10 mx-auto w-full max-w-3xl overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-[0_28px_80px_rgba(1,24,72,0.28)]" data-testid="access-request-status-result">
+        <div className="h-2 bg-linear-to-r from-[#011848] via-[#142b63] to-[#ef0001]" />
+        <div className="p-5 sm:p-8">
         <header className="text-center">
           <Logo />
-          <p className="text-[11px] font-black uppercase tracking-[0.45em] text-[#ef0001]">Quality Control</p>
-          <h1 className="mt-3 text-2xl font-black text-[#011848]">Acompanhamento da solicitação</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#ef0001]">Quality Control</p>
+          <h1 className="mt-2 text-2xl font-black text-[#011848] sm:text-3xl">Acompanhamento da solicitação</h1>
+          <p className="mx-auto mt-2 max-w-lg text-sm font-medium text-[#64748b]">Consulte os dados, acompanhe a análise e fale com a equipe responsável.</p>
         </header>
 
         <section className={`mt-7 rounded-2xl border p-5 ${status.tone}`}>
@@ -364,8 +380,14 @@ function StatusContent() {
           </div>
         </section>
 
-        <section className="mt-5 rounded-2xl border border-[#011848]/10 bg-[#f8fafc] p-5">
-          <h2 className="text-lg font-black text-[#011848]">Dados da solicitação</h2>
+        <section className="mt-5 rounded-2xl border border-[#011848]/10 bg-[#f8fafc] p-5 shadow-[0_10px_30px_rgba(1,24,72,0.04)]">
+          <div className="flex items-center gap-3">
+            <span className="h-7 w-1.5 rounded-full bg-linear-to-b from-[#011848] to-[#ef0001]" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">Cadastro</p>
+              <h2 className="text-lg font-black text-[#011848]">Dados da solicitação</h2>
+            </div>
+          </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {details.map(([label, value]) => (
               <Info
@@ -396,8 +418,12 @@ function StatusContent() {
         )}
 
         {item.status === "needs_more_info" && (
-          <section className="mt-5 rounded-2xl border border-red-200 bg-white p-5" data-testid="access-request-status-form">
-            <h2 className="text-lg font-black text-[#011848]">Correção solicitada</h2>
+          <section className="mt-5 overflow-hidden rounded-2xl border border-red-200 bg-white shadow-[0_12px_32px_rgba(239,0,1,0.08)]" data-testid="access-request-status-form">
+            <div className="h-1.5 bg-linear-to-r from-[#011848] to-[#ef0001]" />
+            <div className="p-5">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">Ação necessária</p>
+            <h2 className="mt-1 text-lg font-black text-[#011848]">Correção solicitada</h2>
+            <p className="mt-1 text-sm font-medium text-[#64748b]">Atualize somente os campos indicados pela equipe.</p>
             <div className="mt-3 flex flex-wrap gap-2" data-testid="access-request-adjustment-fields">
               {item.adjustmentFields.map((field) => (
                 <span key={field} className="rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs font-bold text-red-700">{FIELD_LABELS[field] ?? field}</span>
@@ -409,7 +435,7 @@ function StatusContent() {
                   {FIELD_LABELS[field] ?? field}
                   {field === "company" ? (
                     <select
-                      className="mt-2 w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3"
+                      className={ADJUSTMENT_CONTROL_CLASS}
                       value={draft.companyId ?? ""}
                       onChange={(event) => {
                         const company = companies.find((option) => option.id === event.target.value);
@@ -421,7 +447,7 @@ function StatusContent() {
                       {companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
                     </select>
                   ) : field === "profileType" ? (
-                    <select className="mt-2 w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3" value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`}>
+                    <select className={ADJUSTMENT_CONTROL_CLASS} value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`}>
                       <option value="empresa">Empresa</option>
                       <option value="company_user">Usuário da empresa</option>
                       <option value="testing_company_user">Usuário TC</option>
@@ -429,17 +455,18 @@ function StatusContent() {
                       <option value="technical_support">Suporte técnico</option>
                     </select>
                   ) : field === "description" || field === "notes" || field.includes("Description") || field.includes("Notes") ? (
-                    <textarea className="mt-2 min-h-28 w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3" value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`} />
+                    <textarea className={`${ADJUSTMENT_CONTROL_CLASS} min-h-28 resize-y`} value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`} />
                   ) : (
-                    <input type={field === "password" ? "password" : field === "email" ? "email" : "text"} className="mt-2 w-full rounded-xl border border-red-300 bg-red-50 px-4 py-3" value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`} />
+                    <input type={field === "password" ? "password" : field === "email" ? "email" : "text"} className={ADJUSTMENT_CONTROL_CLASS} value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`} />
                   )}
                   {latestRound?.fieldComments?.[field] && <span className="mt-1 block text-xs font-medium text-red-700">{latestRound.fieldComments[field]}</span>}
                 </label>
               ))}
             </div>
-            <button type="button" disabled={busy} onClick={submitAdjustment} className="mt-5 w-full rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-5 py-3 font-black text-white disabled:opacity-50" data-testid="access-request-adjust-submit">
+            <button type="button" disabled={busy} onClick={submitAdjustment} className={`${PRIMARY_BUTTON_CLASS} mt-5 w-full`} data-testid="access-request-adjust-submit">
               {busy ? "Enviando..." : "Reenviar correção"}
             </button>
+            </div>
           </section>
         )}
 
@@ -458,18 +485,42 @@ function StatusContent() {
         )}
 
         {!finalStatus && (
-          <section className="mt-5 rounded-2xl border border-[#011848]/10 bg-white p-5">
-            <textarea value={reply} onChange={(event) => setReply(event.target.value)} rows={3} placeholder="Escreva uma observação para a equipe..." className="w-full rounded-xl border border-[#011848]/20 px-4 py-3" />
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <button type="button" disabled={busy || !reply.trim()} onClick={submitReply} className="rounded-xl bg-[#011848] px-5 py-3 font-bold text-white disabled:opacity-50">Enviar comentário</button>
-              <button type="button" disabled={busy} onClick={cancelRequest} className="rounded-xl border border-red-200 px-5 py-3 font-bold text-red-700 disabled:opacity-50">Cancelar solicitação</button>
+          <section className="mt-5 overflow-hidden rounded-2xl border border-[#011848]/10 bg-white shadow-[0_12px_32px_rgba(1,24,72,0.07)]">
+            <div className="h-1.5 bg-linear-to-r from-[#011848] via-[#142b63] to-[#ef0001]" />
+            <div className="p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#011848] text-sm font-black text-white shadow-md">QC</div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">Canal da solicitação</p>
+                  <h2 className="mt-1 text-lg font-black text-[#011848]">Fale com a equipe</h2>
+                  <p className="mt-1 text-sm font-medium text-[#64748b]">Envie informações complementares sobre esta solicitação.</p>
+                </div>
+              </div>
+
+              <label htmlFor="access-request-reply" className="mt-5 block text-sm font-black text-[#011848]">
+                Comentário
+                <textarea
+                  id="access-request-reply"
+                  value={reply}
+                  onChange={(event) => setReply(event.target.value)}
+                  rows={4}
+                  placeholder="Escreva uma observação para a equipe..."
+                  className={`${FORM_CONTROL_CLASS} min-h-32 resize-y`}
+                />
+              </label>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <button type="button" disabled={busy || !reply.trim()} onClick={submitReply} className={PRIMARY_BUTTON_CLASS}>Enviar comentário</button>
+                <button type="button" disabled={busy} onClick={cancelRequest} className={DANGER_BUTTON_CLASS}>Cancelar solicitação</button>
+              </div>
             </div>
           </section>
         )}
 
         {(error || feedback) && <p className={`mt-5 rounded-xl border p-4 text-sm font-semibold ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? feedback}</p>}
 
-        <button onClick={() => router.push("/login")} className="mt-6 w-full rounded-xl bg-[#011848] px-5 py-3 font-black text-white">Voltar ao login</button>
+        <button onClick={() => router.push("/login")} className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-[#011848] bg-[#011848] px-5 py-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(1,24,72,0.16)] transition hover:-translate-y-0.5 hover:bg-[#142b63] focus:outline-none focus:ring-4 focus:ring-[#011848]/15">Voltar ao login</button>
+        </div>
       </section>
     </main>
   );

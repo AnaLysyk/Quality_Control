@@ -475,7 +475,10 @@ function StatusContent() {
     return (
       <main className={`${shellClass} flex items-center justify-center`}>
         <AnimatedBackground />
-        <p className="relative z-10 rounded-2xl bg-white px-5 py-3 font-semibold shadow-xl">Carregando solicitação...</p>
+        <p className="relative z-10 inline-flex items-center gap-3 rounded-2xl border border-[#011848]/10 bg-white px-5 py-3 font-bold text-[#011848] shadow-xl">
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#ef0001] motion-reduce:animate-none" aria-hidden="true" />
+          Carregando solicitação...
+        </p>
       </main>
     );
   }

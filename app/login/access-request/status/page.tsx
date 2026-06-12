@@ -197,7 +197,7 @@ function FloatingNotice({
   const isError = type === "error";
 
   return (
-    <div className="pointer-events-none fixed inset-x-4 top-4 z-[70] flex justify-center sm:inset-x-auto sm:right-5 sm:justify-end">
+    <div className="pointer-events-none fixed inset-x-4 top-4 z-70 flex justify-center sm:inset-x-auto sm:right-5 sm:justify-end">
       <div
         className={`pointer-events-auto relative w-full max-w-sm overflow-hidden rounded-2xl border bg-white shadow-[0_20px_60px_rgba(1,24,72,0.28)] ${requestStyles.toast} ${
           isError ? "border-red-300" : "border-emerald-300"
@@ -229,7 +229,7 @@ function FloatingNotice({
             <p className={`text-sm font-black ${isError ? "text-red-900" : "text-emerald-900"}`}>
               {isError ? "Atenção" : "Tudo certo"}
             </p>
-            <p className="mt-1 break-words text-sm font-semibold leading-5 text-slate-700">{message}</p>
+            <p className="mt-1 wrap-break-word text-sm font-semibold leading-5 text-slate-700">{message}</p>
           </div>
         </div>
         <button
@@ -255,7 +255,7 @@ function Info({ label, value, testId }: { label: string; value?: string; testId?
   return (
     <div className="rounded-2xl border border-[#011848]/10 bg-white p-4 shadow-[0_5px_16px_rgba(1,24,72,0.04)]">
       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#64748b]">{label}</p>
-      <p className="mt-2 break-words text-sm font-bold text-[#011848]" data-testid={testId}>
+      <p className="mt-2 wrap-break-word text-sm font-bold text-[#011848]" data-testid={testId}>
         {value || "-"}
       </p>
     </div>

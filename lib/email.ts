@@ -599,6 +599,8 @@ Equipe Testing Company
       name?: string | null;
       accessKey: string;
       email: string;
+      username?: string | null;
+      user?: string | null;
       phone?: string | null;
       passwordDefined?: boolean;
       profileType?: string | null;
@@ -610,6 +612,7 @@ Equipe Testing Company
     },
   ): Promise<boolean> {
     const statusUrl = `${this.resolvePublicBaseUrl()}/login/access-request/status?key=${data.accessKey}`;
+    const accessUsername = (data.username ?? data.user ?? data.email ?? "").trim();
     const profileKey = String(data.profileType ?? "").trim();
     const companyName = String(data.companyName ?? "").trim();
     const isCompanyUser = profileKey === "company_user";
@@ -762,7 +765,7 @@ Equipe Testing Company
         <div class="section-title">Dados de acesso cadastrados</div>
         <div class="info">
           <table>
-            <tr><td class="label">Usuário / login</td><td class="value">${escapeHtml(data.email)}</td></tr>
+            <tr><td class="label">Usuário / login</td><td class="value">${escapeHtml(accessUsername || data.email)}</td></tr>
             <tr><td class="label">Senha cadastrada</td><td class="value">${data.passwordDefined ? "Definida com segurança no formulário" : "Não definida"}</td></tr>
             <tr><td class="label">${isCompanyUser ? "Tipo de acesso" : "Perfil solicitado"}</td><td class="value">${escapeHtml(profileLabel)}</td></tr>
             <tr><td class="label">Código de consulta</td><td class="value">${escapeHtml(data.accessKey)}</td></tr>
@@ -827,7 +830,7 @@ Equipe Testing Company
 Recebemos sua solicitação de acesso.
 
 DADOS DE ACESSO
-Usuário / login: ${data.email}
+Usuário / login: ${accessUsername || data.email}
 Senha cadastrada: ${data.passwordDefined ? "Definida com segurança no formulário" : "Não definida"}
 ${isCompanyUser ? "Tipo de acesso" : "Perfil solicitado"}: ${profileLabel}
 Código de consulta: ${data.accessKey}

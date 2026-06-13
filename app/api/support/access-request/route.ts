@@ -266,6 +266,7 @@ export async function POST(req: Request) {
     name: fullName,
     accessKey: createdRequest?.id ?? null,
     email,
+    username: username || null,
     phone,
     profileType,
     title,

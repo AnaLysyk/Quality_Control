@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
-import { appendFileSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
+import { dirname, join } from 'path';
 
 function escapeHtml(value: unknown) {
   return String(value ?? "")
@@ -84,6 +84,31 @@ class EmailService {
     return `${this.resolvePublicBaseUrl()}/images/tc.png`;
   }
 
+
+  private resolveEmailLogoSrc() {
+    const configured =
+      process.env.EMAIL_LOGO_URL ||
+      process.env.NEXT_PUBLIC_EMAIL_LOGO_URL ||
+      "";
+
+    if (configured.trim()) return configured.trim();
+
+    if (process.env.NODE_ENV !== "production") {
+      const localLogoPath = join(process.cwd(), "public", "images", "tc.png");
+
+      try {
+        if (existsSync(localLogoPath)) {
+          const base64Logo = readFileSync(localLogoPath).toString("base64");
+          return `data:image/png;base64,${base64Logo}`;
+        }
+      } catch {
+        // Fallback para URL pública caso não consiga ler o arquivo local.
+      }
+    }
+
+    return this.resolveEmailLogoUrl();
+  }
+
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       const captureEnabled =
@@ -144,7 +169,7 @@ class EmailService {
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
     const resetUrl = `${this.resolvePublicBaseUrl()}/login/reset-password?token=${resetToken}`;
     const safeResetUrl = escapeHtml(resetUrl);
-    const logoUrl = escapeHtml(this.resolveEmailLogoUrl());
+    const logoUrl = escapeHtml(this.resolveEmailLogoSrc());
 
     const html = `<!DOCTYPE html>
 <html>
@@ -490,7 +515,7 @@ Equipe Quality Control`;
             <div class="email-body">
               <!-- HEADER -->
               <div class="header">
-                <div class="header-logo"><img src="${this.resolveEmailLogoUrl()}" alt="" style="display:block;margin:0 auto 10px;max-width:90px;height:auto;border:0;" /></div>
+                <div class="header-logo"><img src="${this.resolveEmailLogoSrc()}" alt="" style="display:block;margin:0 auto 10px;max-width:90px;height:auto;border:0;" /></div>
                 <div class="header-subtitle">Quality Control • Bem-vindo à plataforma</div>
               </div>
 
@@ -751,7 +776,7 @@ Equipe Testing Company
         <table role="presentation" class="card" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border:1px solid #d8dfeb;border-collapse:separate;border-spacing:0;background-color:#ffffff;border-radius:20px;overflow:hidden;">
           <tr>
             <td class="header" align="center" bgcolor="#011848" style="padding:10px 20px;background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);border-radius:20px 20px 0 0;color:#ffffff;text-align:center;">
-              <img class="email-logo-spin" src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 4px;border:0;outline:none;text-decoration:none;">
+              <img class="email-logo-spin" src="${escapeHtml(this.resolveEmailLogoSrc())}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 4px;border:0;outline:none;text-decoration:none;">
               <h1 style="margin:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:25px;letter-spacing:-.2px;">Quality Control</h1>
               <p style="margin:3px 0 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;">Solicitação de acesso recebida</p>
             </td>
@@ -1090,7 +1115,7 @@ Guarde este código para acompanhar o andamento da sua solicitação.`;
   <div class="page">
     <div class="card">
       <div class="header">
-        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" width="74" height="74" style="display:block;width:74px;height:74px;object-fit:cover;border-radius:999px;border:0;outline:none;text-decoration:none;" /></div>
+        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoSrc())}" alt="" width="74" height="74" style="display:block;width:74px;height:74px;object-fit:cover;border-radius:999px;border:0;outline:none;text-decoration:none;" /></div>
         <h1>Quality Control</h1>
         <p style="color:#ffffff!important;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35);">${contentByRole.title}</p>
       </div>
@@ -1179,7 +1204,7 @@ Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha t
     });
   }
 
-  async sendAccessRejectedEmail(
+﻿  async sendAccessRejectedEmail(
     to: string,
     data: {
       name?: string | null;
@@ -1190,46 +1215,92 @@ Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha t
     const statusUrl = data.accessKey
       ? `${this.resolvePublicBaseUrl()}/login/access-request/status?key=${data.accessKey}`
       : null;
-    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : 'Olá!';
-    const commentBlock = data.comment
-      ? `<div style="background:#fff4f4;border-left:4px solid #ef4444;padding:14px 18px;border-radius:4px;margin:16px 0"><p style="margin:0;color:#444"><strong>Motivo:</strong> ${escapeHtml(data.comment)}</p></div>`
-      : '';
-    const commentText = data.comment ? `\nMotivo informado:\n${data.comment}\n` : '';
+
+    const greetingText = data.name ? `Olá, ${data.name}!` : "Olá!";
+    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : "Olá!";
+    const logoSrc = escapeHtml(this.resolveEmailLogoSrc());
+    const comment = data.comment || "Recusado por dados incompatíveis.";
+
+    const statusButton = statusUrl
+      ? `<div class="buttonWrap"><a href="${escapeHtml(statusUrl)}" class="button">Consultar solicitação</a></div>
+         <p style="text-align:center;font-size:12px;color:#64748b;margin-top:18px;">Link direto: ${escapeHtml(statusUrl)}</p>`
+      : "";
 
     const html = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Acesso Rejeitado - Quality Control</title>
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f4f6fb}
-  .wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-  .hdr{background:#011848;color:#fff;padding:28px 32px;text-align:center}
-  .hdr h1{margin:0;font-size:22px}
-  .body{padding:32px}
-  .badge{display:inline-block;background:#ef4444;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;margin-bottom:16px}
-  .footer{text-align:center;padding:20px;font-size:12px;color:#888}
-</style>
+<head>
+  <meta charset="utf-8">
+  <title>Solicitação de acesso rejeitada - Quality Control</title>
+  <style>
+    body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb}
+    .page{width:100%;padding:42px 12px;background:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%)}
+    .card{max-width:780px;margin:0 auto;background:rgba(255,255,255,.98);border:1px solid rgba(1,24,72,.14);border-radius:26px;overflow:hidden;box-shadow:0 24px 70px rgba(1,24,72,.25)}
+    .header{background:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:24px 24px;text-align:center}
+    .brand{display:inline-flex;align-items:center;justify-content:center;margin:0 auto 12px;width:74px;height:74px;border-radius:999px;background:#ffffff;padding:0;box-shadow:0 10px 24px rgba(0,0,0,.22);overflow:hidden;border:1px solid rgba(255,255,255,.85)}
+    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
+    .header p{margin:8px 0 0;font-size:13px;color:#ffffff;opacity:1;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+    .content{padding:42px 46px 36px}
+    .badge{display:inline-block;padding:8px 14px;border-radius:999px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;font-size:13px;font-weight:800;margin-bottom:18px}
+    h2{margin:0 0 12px;color:#011848;font-size:23px;line-height:1.3}
+    p{margin:0 0 16px;color:#475569;font-size:14px;line-height:1.75}
+    .reasonBox{margin:24px 0;padding:18px 20px;background:#fff1f2;border:1px solid #fecdd3;border-left:5px solid #ef4444;border-radius:16px;color:#7f1d1d;font-size:14px;line-height:1.65}
+    .reasonBox strong{color:#7f1d1d}
+    .box{margin:22px 0;padding:18px 20px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:16px;color:#27457d;font-size:13px;line-height:1.65}
+    .buttonWrap{text-align:center;margin:32px 0 12px}
+    .button{display:inline-block;padding:16px 38px;border-radius:14px;background:linear-gradient(135deg,#011848 0%,#ef0001 100%);color:#fff!important;text-decoration:none;font-weight:900;font-size:15px;box-shadow:0 14px 28px rgba(239,0,1,.28)}
+    .footer{padding:20px 28px 28px;text-align:center;color:#64748b;font-size:12px;background:#fff}
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1></div>
-  <div class="body">
-    <span class="badge">✕ Solicitação rejeitada</span>
-    <h2 style="margin-top:0">${greeting}</h2>
-    <p>Infelizmente sua solicitação de acesso foi <strong>rejeitada</strong>.</p>
-    ${commentBlock}
-    ${statusUrl ? `<p><a href="${escapeHtml(statusUrl)}">Consultar solicitação</a></p>` : ""}
-    <p>Se tiver dúvidas, entre em contato com a equipe de suporte.</p>
+  <div class="page">
+    <div class="card">
+      <div class="header">
+        <div class="brand">
+          <img src="${logoSrc}" alt="" width="74" height="74" style="display:block;width:74px;height:74px;object-fit:cover;border-radius:999px;border:0;outline:none;text-decoration:none;" />
+        </div>
+        <h1>Quality Control</h1>
+        <p style="color:#ffffff!important;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35);">Solicitação de acesso rejeitada</p>
+      </div>
+
+      <div class="content">
+        <span class="badge">✕ Solicitação rejeitada</span>
+
+        <h2>${greeting}</h2>
+
+        <p>Infelizmente sua solicitação de acesso foi <strong>rejeitada</strong>.</p>
+
+        <div class="reasonBox">
+          <strong>Motivo informado:</strong> ${escapeHtml(comment)}
+        </div>
+
+        ${statusButton}
+
+        <div class="box">
+          Se tiver dúvidas, entre em contato com a equipe de suporte.
+        </div>
+      </div>
+
+      <div class="footer">
+        E-mail automático. Não responda.<br>
+        © ${new Date().getFullYear()} Quality Control.
+      </div>
+    </div>
   </div>
-  <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
-</div>
 </body>
 </html>`;
 
-    const text = `${data.name ? `Olá, ${data.name}!` : "Olá!"}\n\nSua solicitação de acesso foi rejeitada.${commentText}${statusUrl ? `\nConsulte em: ${statusUrl}\n` : ""}\nPara dúvidas, entre em contato com o suporte.`;
+    const text = `${greetingText}
+
+Sua solicitação de acesso foi rejeitada.
+
+Motivo informado:
+${comment}
+${statusUrl ? `\nConsulte em: ${statusUrl}\n` : ""}
+Para dúvidas, entre em contato com o suporte.`;
 
     return this.sendEmail({
       to,
-      subject: 'Solicitação de acesso rejeitada - Quality Control',
+      subject: "Solicitação de acesso rejeitada - Quality Control",
       html,
       text,
     });
@@ -1278,7 +1349,7 @@ Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha t
 </head>
 <body>
 <div class="wrap">
-  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Ajuste necessário na solicitação</p></div>
+  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoSrc())}" alt="" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Ajuste necessário na solicitação</p></div>
   <div class="body">
     <span class="badge">⚠ Ajuste necessário</span>
     <h2 style="margin-top:0">${greeting}</h2>

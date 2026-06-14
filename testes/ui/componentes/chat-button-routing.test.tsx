@@ -1,9 +1,13 @@
 /** @jest-environment jsdom */
 
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import ChatButton from "@/components/ChatButton";
 
-const fetchApiMock = jest.fn();
+import ChatButton from "../../../app/components/ChatButton";
+
+const fetchApiMock = jest.fn<
+  (input: string, init?: RequestInit) => Promise<Response>
+>();
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/admin/dashboard",
@@ -31,7 +35,7 @@ jest.mock("@/hooks/usePermissionAccess", () => ({
 }));
 
 jest.mock("@/lib/api", () => ({
-  fetchApi: (...args: unknown[]) => fetchApiMock(...args),
+  fetchApi: (input: string, init?: RequestInit) => fetchApiMock(input, init),
 }));
 
 describe("ChatButton API routing", () => {
@@ -40,12 +44,14 @@ describe("ChatButton API routing", () => {
     fetchApiMock.mockResolvedValue({
       ok: true,
       json: async () => ({ reply: "ok", tool: "use_brain", actions: [], context: null }),
-    });
+    } as Response);
 
-    (global as unknown as { fetch: jest.Mock }).fetch = jest.fn().mockResolvedValue({
+    const fetchMock = jest.fn<typeof fetch>();
+    fetchMock.mockResolvedValue({
       ok: true,
       json: async () => ({ ok: true }),
-    });
+    } as Response);
+    globalThis.fetch = fetchMock;
 
     localStorage.clear();
   });

@@ -1,5 +1,5 @@
-﻿import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { test, expect } from "@playwright/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("rbac - runs API", () => {
   test("user nao consegue criar run via API", async ({ page, context }) => {

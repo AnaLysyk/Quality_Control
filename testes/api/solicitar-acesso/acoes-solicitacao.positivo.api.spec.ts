@@ -1,22 +1,26 @@
-﻿import { expect, test } from "../../../support/fixtures/test";
-import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticar-revisor";
+/**
+ * Rodar:
+ * npx playwright test testes/api/solicitar-acesso/acoes-solicitacao.positivo.api.spec.ts --project=chromium
+ */
+import { expect, test } from "../../../support/fixtures/test";
+import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/autenticar-revisor";
 import {
   montarPayloadSolicitacaoPublica,
   criarSolicitacaoPublicaViaApi,
-} from "../../../support/functions/api/solicitar-acesso/criar-solicitacao-publica";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/criar-solicitacao-publica";
 import {
   criarEmailTeste,
   esperarEmailCapturado,
   limparEmailsCapturados,
-} from "../../../support/functions/api/solicitar-acesso/capturar-emails";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/capturar-emails";
 import { perfisAutorizadosSolicitacoes } from "../../../support/functions/banco-de-dados/solicitar-acesso/definir-perfis-teste";
 import {
   aprovarSolicitacaoViaApiV2,
   consultarSolicitacaoPorChaveAcesso,
   recusarSolicitacaoViaApiV2,
   solicitarAjusteViaApiV2,
-} from "../../../support/functions/api/solicitar-acesso/consultar-status";
-import { validarSolicitacaoNaFila } from "../../../support/functions/api/solicitar-acesso/validar-fila-solicitacoes";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/consultar-status";
+import { validarSolicitacaoNaFila } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/validar-fila-solicitacoes";
 
 test.describe("Solicitacoes de acesso - ciclos por perfil revisor", () => {
   test.beforeEach(() => {

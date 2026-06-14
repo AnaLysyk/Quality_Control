@@ -1,24 +1,28 @@
+/**
+ * Rodar:
+ * npx playwright test testes/api/solicitar-acesso/emails-galeria-visual-perfis.api.spec.ts --project=chromium
+ */
 import { test, expect, type APIRequestContext } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticar-revisor";
+import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/autenticar-revisor";
 import {
   criarSolicitacaoPublicaViaApi,
   montarPayloadSolicitacaoPublica,
-} from "../../../support/functions/api/solicitar-acesso/criar-solicitacao-publica";
-import type { PerfilSolicitacaoAcessoPublica } from "../../../support/functions/api/solicitar-acesso/criar-solicitacao-publica";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/criar-solicitacao-publica";
+import type { PerfilSolicitacaoAcessoPublica } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/criar-solicitacao-publica";
 import {
   criarEmailTeste,
   esperarEmailCapturado,
   limparEmailsCapturados,
-} from "../../../support/functions/api/solicitar-acesso/capturar-emails";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/capturar-emails";
 import {
   aprovarSolicitacaoViaApiV2,
   consultarSolicitacaoPorChaveAcesso,
   recusarSolicitacaoViaApiV2,
-} from "../../../support/functions/api/solicitar-acesso/consultar-status";
-import { validarSolicitacaoNaFila } from "../../../support/functions/api/solicitar-acesso/validar-fila-solicitacoes";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/consultar-status";
+import { validarSolicitacaoNaFila } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/validar-fila-solicitacoes";
 import { perfisAutorizadosSolicitacoes } from "../../../support/functions/banco-de-dados/solicitar-acesso/definir-perfis-teste";
 
 type PerfilVisual = {

@@ -1,5 +1,5 @@
 import { test, expect } from "../../../support/fixtures/test";
-import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/interface/apoio/autenticar-usuario-teste";
+import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
 test("perfil suporte tecnico autentica via mock e acessa area global", async ({ page }) => {
   await configurarUsuarioSimulado(page, "technical_support");

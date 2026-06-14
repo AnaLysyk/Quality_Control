@@ -1,7 +1,7 @@
-﻿import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { test, expect } from "@playwright/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { criarDadosDashboardMttr } from "../../../support/functions/banco-de-dados/geradores-dados/criar-dados-mttr-meta";
-import { validarDashboardAtualPronto } from "../../../support/functions/interface/apoio/operar-dashboard-e-defeitos";
+import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
 test("dashboard exibe MTTR mÃ©dio", async ({ page, context }) => {
   await simularAutenticacao(context, {

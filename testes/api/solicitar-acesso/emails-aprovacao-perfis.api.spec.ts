@@ -1,20 +1,24 @@
-﻿import { test, expect, APIRequestContext } from "@playwright/test";
-import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticar-revisor";
+/**
+ * Rodar:
+ * npx playwright test testes/api/solicitar-acesso/emails-aprovacao-perfis.api.spec.ts --project=chromium
+ */
+import { test, expect, APIRequestContext } from "@playwright/test";
+import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/autenticar-revisor";
 import {
   criarSolicitacaoPublicaViaApi,
   montarPayloadSolicitacaoPublica,
   PerfilSolicitacaoAcessoPublica,
-} from "../../../support/functions/api/solicitar-acesso/criar-solicitacao-publica";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/criar-solicitacao-publica";
 import {
   criarEmailTeste,
   esperarEmailCapturado,
   limparEmailsCapturados,
-} from "../../../support/functions/api/solicitar-acesso/capturar-emails";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/capturar-emails";
 import { perfisAutorizadosSolicitacoes } from "../../../support/functions/banco-de-dados/solicitar-acesso/definir-perfis-teste";
 import {
   aprovarSolicitacaoViaApiV2,
   consultarSolicitacaoPorChaveAcesso,
-} from "../../../support/functions/api/solicitar-acesso/consultar-status";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/consultar-status";
 
 type PerfilEmailAprovado = {
   role: PerfilSolicitacaoAcessoPublica;

@@ -1,4 +1,8 @@
-﻿import { expect, test } from "@playwright/test";
+/**
+ * Rodar:
+ * npx playwright test testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts --project=chromium
+ */
+import { expect, test } from "@playwright/test";
 import {
   aprovarSolicitacaoDeAcesso,
   criarSolicitacaoPublicaParaAprovacao,

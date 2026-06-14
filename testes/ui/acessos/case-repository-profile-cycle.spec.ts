@@ -1,5 +1,7 @@
-import { expect, test, type BrowserContext, type Page } from "../../../support/fixtures/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import type { BrowserContext, Page } from "@playwright/test";
+
+import { expect, test } from "../../../support/fixtures/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 type ProfileScenario = {
   key: string;

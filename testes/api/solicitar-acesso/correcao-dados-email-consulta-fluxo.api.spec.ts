@@ -1,9 +1,13 @@
-﻿import { test, expect, type APIRequestContext } from "@playwright/test";
+/**
+ * Rodar:
+ * npx playwright test testes/api/solicitar-acesso/correcao-dados-email-consulta-fluxo.api.spec.ts --project=chromium
+ */
+import { test, expect, type APIRequestContext } from "@playwright/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticar-revisor";
-import { montarPayloadSolicitacaoPublica } from "../../../support/functions/api/solicitar-acesso/criar-solicitacao-publica";
+import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/autenticar-revisor";
+import { montarPayloadSolicitacaoPublica } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/criar-solicitacao-publica";
 
 type JsonObject = Record<string, unknown>;
 

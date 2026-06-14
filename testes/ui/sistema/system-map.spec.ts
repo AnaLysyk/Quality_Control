@@ -1,5 +1,5 @@
 import { expect, test } from "../../../support/fixtures/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
 
 const TOTAL_ROUTES = SYSTEM_ROUTES.length;

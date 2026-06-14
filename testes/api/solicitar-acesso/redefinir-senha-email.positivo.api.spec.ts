@@ -1,8 +1,12 @@
-﻿import { expect, test } from "../../../support/fixtures/test";
+/**
+ * Rodar:
+ * npx playwright test testes/api/solicitar-acesso/redefinir-senha-email.positivo.api.spec.ts --project=chromium
+ */
+import { expect, test } from "../../../support/fixtures/test";
 import {
   esperarEmailCapturado,
   limparEmailsCapturados,
-} from "../../../support/functions/api/solicitar-acesso/capturar-emails";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/capturar-emails";
 
 const RESET_EMAIL = "e2e-password-reset@testingcompany.local";
 const RESET_LOGIN = "e2e.password.reset";
@@ -36,6 +40,7 @@ test.describe("Redefinição de senha - identidade e fluxo real", () => {
         "Segurança da sua conta",
         "Redefinir senha",
         "15 minutos",
+        "data:image/png;base64,",
         "#011848",
         "#ef0001",
       ],

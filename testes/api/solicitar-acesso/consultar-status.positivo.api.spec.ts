@@ -1,17 +1,21 @@
-﻿import { test, expect } from "../../../support/fixtures/test";
+/**
+ * Rodar:
+ * npx playwright test testes/api/solicitar-acesso/consultar-status.positivo.api.spec.ts --project=chromium
+ */
+import { test, expect } from "../../../support/fixtures/test";
 import {
   montarPayloadSolicitacaoPublica,
   criarSolicitacaoPublicaViaApi,
-} from "../../../support/functions/api/solicitar-acesso/criar-solicitacao-publica";
-import { criarEmailTeste, limparEmailsCapturados } from "../../../support/functions/api/solicitar-acesso/capturar-emails";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/criar-solicitacao-publica";
+import { criarEmailTeste, limparEmailsCapturados } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/capturar-emails";
 import {
   aprovarSolicitacaoViaApiV2,
   consultarSolicitacaoComTokenInvalido,
   consultarSolicitacaoPorChaveAcesso,
   recusarSolicitacaoViaApiV2,
   solicitarAjusteViaApiV2,
-} from "../../../support/functions/api/solicitar-acesso/consultar-status";
-import { autenticarSolicitacaoAcessoViaApi } from "../../../support/functions/api/solicitar-acesso/autenticar-revisor";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/consultar-status";
+import { autenticarSolicitacaoAcessoViaApi } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/autenticar-revisor";
 
 test.describe("Solicitações de acesso - consulta/status API", () => {
   test.beforeEach(() => {

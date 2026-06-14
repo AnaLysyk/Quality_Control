@@ -1,0 +1,94 @@
+﻿import { expect, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test";
+
+import {
+  perfisAutorizadosSolicitacoes,
+  perfisNegadosSolicitacoes,
+} from "../../../../banco-de-dados/solicitar-acesso/definir-perfis-teste";
+
+export type PerfilTesteSolicitacaoAcesso =
+  | (typeof perfisAutorizadosSolicitacoes)[number]["role"]
+  | (typeof perfisNegadosSolicitacoes)[number]["role"];
+
+const profiles = [...perfisAutorizadosSolicitacoes, ...perfisNegadosSolicitacoes];
+
+function getProfile(role: PerfilTesteSolicitacaoAcesso) {
+  const profile = profiles.find((item) => item.role === role);
+  if (!profile) throw new Error(`Perfil E2E nao configurado: ${role}`);
+  return profile;
+}
+
+export function obterSenhaTesteSolicitacaoAcesso() {
+  const password = process.env.E2E_PROFILE_PASSWORD;
+  if (!password) throw new Error("E2E_PROFILE_PASSWORD nao configurada.");
+  return password;
+}
+
+export async function autenticarSolicitacaoAcessoViaApi(
+  request: APIRequestContext,
+  role: PerfilTesteSolicitacaoAcesso,
+) {
+  const profile = getProfile(role);
+  const response = await request.post("/api/auth/login", {
+    data: {
+      user: profile.email,
+      password: obterSenhaTesteSolicitacaoAcesso(),
+    },
+  });
+  const text = await response.text();
+
+  expect(response.status(), text).toBe(200);
+
+  const meResponse = await request.get("/api/me");
+  const me = await meResponse.json().catch(() => null);
+
+  expect(meResponse.status(), JSON.stringify(me)).toBe(200);
+  expect(me?.user?.role).toBe(role);
+  expect(me?.user?.email).toBe(profile.email);
+
+  return profile;
+}
+
+export async function autenticarContextoSolicitacaoAcesso(
+  context: BrowserContext,
+  role: PerfilTesteSolicitacaoAcesso,
+) {
+  return autenticarSolicitacaoAcessoViaApi(context.request, role);
+}
+
+export async function autenticarSolicitacaoAcessoNaInterface(page: Page, role: PerfilTesteSolicitacaoAcesso) {
+  const profile = getProfile(role);
+
+  await page.context().clearCookies();
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
+  const form = page.locator("form").first();
+  await expect
+    .poll(
+      () =>
+        form.evaluate((element) => {
+          const propsKey = Object.keys(element).find((key) =>
+            key.startsWith("__reactProps$"),
+          );
+          const props = propsKey
+            ? (element as unknown as Record<string, Record<string, unknown>>)[propsKey]
+            : null;
+          return typeof props?.onSubmit === "function";
+        }),
+      {
+        message: "Esperando o formulario de login concluir a hidratacao.",
+        timeout: 30000,
+      },
+    )
+    .toBe(true);
+
+  await page.getByLabel(/Usuário/i).fill(profile.email);
+  await page
+    .getByLabel("Senha", { exact: true })
+    .fill(obterSenhaTesteSolicitacaoAcesso());
+
+  await expect(page.getByLabel(/Usuário/i)).toHaveValue(profile.email);
+  await expect(page.getByLabel("Senha", { exact: true })).toHaveValue(
+    obterSenhaTesteSolicitacaoAcesso(),
+  );
+
+  return autenticarSolicitacaoAcessoViaApi(page.request, role);
+}

@@ -7,7 +7,7 @@
  * @tag @regression-guard
  */
 import { test, expect } from "../../../support/fixtures/test";
-import { configurarUsuarioSimulado } from "../../../support/functions/interface/apoio/autenticar-usuario-teste";
+import { configurarUsuarioSimulado } from "../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 

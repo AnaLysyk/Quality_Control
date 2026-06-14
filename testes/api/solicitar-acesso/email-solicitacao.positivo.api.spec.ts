@@ -1,15 +1,19 @@
-﻿import { test, expect } from "../../../support/fixtures/test";
+/**
+ * Rodar:
+ * npx playwright test testes/api/solicitar-acesso/email-solicitacao.positivo.api.spec.ts --project=chromium
+ */
+import { test, expect } from "../../../support/fixtures/test";
 import {
   montarPayloadSolicitacaoPublica,
   criarSolicitacaoPublicaViaApi,
   tentarCriarSolicitacaoPublicaDuplicadaViaApi,
-} from "../../../support/functions/api/solicitar-acesso/criar-solicitacao-publica";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/criar-solicitacao-publica";
 import {
   criarEmailTeste,
   esperarEmailCapturado,
   limparEmailsCapturados,
   listarEmailsCapturados,
-} from "../../../support/functions/api/solicitar-acesso/capturar-emails";
+} from "../../../support/functions/api/login/solicitar-acesso/compartilhado/capturar-emails";
 
 test.describe("Solicitações de acesso - ciclo de e-mail API", () => {
   test.beforeEach(() => {

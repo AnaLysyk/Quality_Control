@@ -1,6 +1,10 @@
-﻿import { expect, test } from "../../../support/fixtures/test";
-import { validarApiSolicitacoesAcessivel } from "../../../support/functions/api/solicitar-acesso/executar-acoes-administrativas";
-import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticar-revisor";
+/**
+ * Rodar:
+ * npx playwright test testes/api/solicitar-acesso/listar-solicitacoes.positivo.api.spec.ts --project=chromium
+ */
+import { expect, test } from "../../../support/fixtures/test";
+import { validarApiSolicitacoesAcessivel } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/executar-acoes-administrativas";
+import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/autenticar-revisor";
 import {
   perfisAutorizadosSolicitacoes,
   perfisNegadosSolicitacoes,

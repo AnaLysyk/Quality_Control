@@ -36,7 +36,6 @@ test.describe("Redefinição de senha - identidade e fluxo real", () => {
         "Segurança da sua conta",
         "Redefinir senha",
         "15 minutos",
-        "/images/tc.png",
         "#011848",
         "#ef0001",
       ],

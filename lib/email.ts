@@ -190,7 +190,7 @@ class EmailService {
             </td>
           </tr>
           <tr>
-            <td align="center" bgcolor="#ffffff" style="padding:16px 24px 20px;border-top:1px solid #e5eaf3;background-color:#ffffff;color:#64748b;font-size:12px;line-height:18px;text-align:center;">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Testing Company • Quality Control.</td>
+            <td align="center" bgcolor="#ffffff" style="padding:16px 24px 20px;border-top:1px solid #e5eaf3;background-color:#ffffff;color:#64748b;font-size:12px;line-height:18px;text-align:center;">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</td>
           </tr>
         </table>
       </td>
@@ -490,7 +490,7 @@ Equipe Quality Control`;
             <div class="email-body">
               <!-- HEADER -->
               <div class="header">
-                <div class="header-logo"><img src="${this.resolveEmailLogoUrl()}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:90px;height:auto;border:0;" /></div>
+                <div class="header-logo"><img src="${this.resolveEmailLogoUrl()}" alt="" style="display:block;margin:0 auto 10px;max-width:90px;height:auto;border:0;" /></div>
                 <div class="header-subtitle">Quality Control • Bem-vindo à plataforma</div>
               </div>
 
@@ -556,7 +556,7 @@ Equipe Quality Control`;
 
               <!-- FOOTER -->
               <div class="footer">
-                <p><strong>Testing Company</strong> • Quality Control Platform</p>
+                <p><strong></strong> • Quality Control Platform</p>
                 <p>Este é um email automático. Por favor, não responda.</p>
                 <p>&copy; 2026 Testing Company. Todos os direitos reservados.</p>
               </div>
@@ -765,7 +765,7 @@ Equipe Testing Company
         <div class="section-title">Dados de acesso cadastrados</div>
         <div class="info">
           <table>
-            <tr><td class="label">Usuário / login</td><td class="value">${escapeHtml(accessUsername || data.email)}</td></tr>
+            <tr><td class="label">Usuário</td><td class="value">${escapeHtml(accessUsername || data.email)}</td></tr>
             <tr><td class="label">Senha cadastrada</td><td class="value">${data.passwordDefined ? "Definida com segurança no formulário" : "Não definida"}</td></tr>
             <tr><td class="label">${isCompanyUser ? "Tipo de acesso" : "Perfil solicitado"}</td><td class="value">${escapeHtml(profileLabel)}</td></tr>
             <tr><td class="label">Código de consulta</td><td class="value">${escapeHtml(data.accessKey)}</td></tr>
@@ -793,7 +793,7 @@ Equipe Testing Company
         ${companyUserSection}
         ${companySection}
 
-        <div class="box">Guarde este código. Ele será usado junto com seu nome e e-mail para consultar o andamento da solicitação. Depois da aprovação, o acesso será feito com o usuário e senha cadastrados neste formulário.</div>
+        <div class="box">Guarde este código. Ele será usado junto com seu nome e e-mail para consultar o andamento da solicitação.</div>
 
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto 10px;border-collapse:separate;">
                 <tr>
@@ -830,7 +830,7 @@ Equipe Testing Company
 Recebemos sua solicitação de acesso.
 
 DADOS DE ACESSO
-Usuário / login: ${accessUsername || data.email}
+Usuário: ${accessUsername || data.email}
 Senha cadastrada: ${data.passwordDefined ? "Definida com segurança no formulário" : "Não definida"}
 ${isCompanyUser ? "Tipo de acesso" : "Perfil solicitado"}: ${profileLabel}
 Código de consulta: ${data.accessKey}
@@ -855,7 +855,7 @@ ${companyText}
 Consulte sua solicitação em:
 ${statusUrl}
 
-Guarde este código para acompanhar sua solicitação.`;
+Guarde este código para acompanhar o andamento da sua solicitação.`;
 
     return this.sendEmail({
       to,
@@ -895,52 +895,31 @@ Guarde este código para acompanhar sua solicitação.`;
     }> = {
       empresa: {
         label: "Empresa",
-        subject: "Empresa aprovada",
-        title: "Bem-vindo(a) à Quality Control",
-        intro: "Sua empresa foi aprovada na plataforma Quality Control.",
-        accessContext: "Este acesso permite administrar a empresa dentro da plataforma e organizar os usuários vinculados a ela.",
-        permissionsTitle: "Com este perfil de empresa, você pode:",
+        subject: "Solicitação de acesso empresarial aprovada",
+        title: "Solicitação de acesso empresarial aprovada",
+        intro: "O acesso empresarial foi aprovado na plataforma Quality Control.",
+        accessContext: "Este acesso permite administrar os dados da empresa e acompanhar os recursos liberados conforme as permissões configuradas.",
+        permissionsTitle: "Com este acesso, você pode:",
         permissions: [
-          "Cadastrar usuários da própria empresa",
-          "Gerenciar acessos dos colaboradores vinculados",
-          "Acompanhar recursos e informações disponíveis para a empresa",
-          "Permitir que a equipe da empresa utilize a plataforma conforme as permissões configuradas",
+          "Acessar a plataforma com o login informado",
+          "Conferir os dados da empresa",
+          "Gerenciar usuários vinculados quando permitido",
+          "Acompanhar informações e solicitações da empresa",
         ],
         nextSteps: [
-          "Acesse a plataforma com o login informado",
-          "Confira os dados da empresa",
-          "Cadastre os usuários da própria empresa",
-          "Oriente os colaboradores sobre o acesso à plataforma",
-        ],
-        badge: "Empresa aprovada",
-      },
-      company_access: {
-        label: "Empresa",
-        subject: "Empresa aprovada",
-        title: "Bem-vindo(a) à Quality Control",
-        intro: "Sua empresa foi aprovada na plataforma Quality Control.",
-        accessContext: "Este acesso permite administrar a empresa dentro da plataforma e organizar os usuários vinculados a ela.",
-        permissionsTitle: "Com este perfil de empresa, você pode:",
-        permissions: [
-          "Cadastrar usuários da própria empresa",
-          "Gerenciar acessos dos colaboradores vinculados",
-          "Acompanhar recursos e informações disponíveis para a empresa",
-          "Permitir que a equipe da empresa utilize a plataforma conforme as permissões configuradas",
-        ],
-        nextSteps: [
-          "Acesse a plataforma com o login informado",
-          "Confira os dados da empresa",
-          "Cadastre os usuários da própria empresa",
-          "Oriente os colaboradores sobre o acesso à plataforma",
+          "Acesse a plataforma",
+          "Confira os dados empresariais",
+          "Oriente os usuários vinculados sobre o acesso",
+          "Altere sua senha após o primeiro acesso",
         ],
         badge: "Empresa aprovada",
       },
       company_user: {
-        label: "Acesso vinculado à empresa",
-        subject: "Acesso empresarial aprovado",
-        title: "Seu acesso empresarial foi aprovado",
-        intro: "Seu acesso foi aprovado para utilizar a Quality Control no contexto da empresa vinculada.",
-        accessContext: "Você poderá utilizar a plataforma conforme as permissões definidas para seu vínculo empresarial.",
+        label: "Usuário da empresa",
+        subject: "Solicitação de acesso como usuário da empresa aprovada",
+        title: "Solicitação de acesso como usuário da empresa aprovada",
+        intro: "Seu acesso como usuário da empresa foi aprovado na plataforma Quality Control.",
+        accessContext: "Este perfil permite utilizar a plataforma conforme o vínculo empresarial e as permissões liberadas para seu usuário.",
         permissionsTitle: "Com este perfil, você pode:",
         permissions: [
           "Acessar a plataforma com vínculo empresarial",
@@ -949,39 +928,39 @@ Guarde este código para acompanhar sua solicitação.`;
           "Solicitar suporte quando necessário",
         ],
         nextSteps: [
-          "Acesse a plataforma com seu login",
-          "Use a senha cadastrada na solicitação",
-          "Confira seu perfil",
-          "Troque a senha em Meu Perfil, caso queira",
+          "Acesse a plataforma",
+          "Confira seu vínculo empresarial",
+          "Utilize apenas os recursos liberados para sua empresa",
+          "Altere sua senha após o primeiro acesso",
         ],
-        badge: "Acesso empresarial aprovado",
+        badge: "Usuário da empresa aprovado",
       },
       testing_company_user: {
-        label: "Usuário Testing Company",
-        subject: "Acesso Testing Company aprovado",
-        title: "Seu acesso Testing Company foi aprovado",
-        intro: "Seu acesso interno foi aprovado e vinculado automaticamente ao ambiente da Testing Company.",
-        accessContext: "Este perfil é voltado para usuários internos da Testing Company, conforme as permissões liberadas para sua função.",
+        label: "Usuário TC",
+        subject: "Solicitação de acesso como usuário TC aprovada",
+        title: "Solicitação de acesso como usuário TC aprovada",
+        intro: "Seu acesso como usuário TC foi aprovado na plataforma Quality Control.",
+        accessContext: "Este perfil é voltado para usuários internos, conforme as permissões liberadas para sua função.",
         permissionsTitle: "Com este perfil, você pode:",
         permissions: [
-          "Acessar recursos internos da Testing Company",
-          "Atuar nos fluxos liberados para seu perfil",
+          "Acessar os recursos internos liberados para seu perfil",
+          "Atuar nos fluxos permitidos",
           "Acompanhar atividades e informações da plataforma",
-          "Utilizar o ambiente conforme suas permissões internas",
+          "Utilizar o ambiente conforme suas permissões",
         ],
         nextSteps: [
           "Acesse a plataforma",
           "Confirme seus dados no perfil",
           "Utilize os recursos liberados para seu perfil",
-          "Troque a senha em Meu Perfil, caso queira",
+          "Altere sua senha após o primeiro acesso",
         ],
         badge: "Usuário TC aprovado",
       },
       leader_tc: {
         label: "Líder TC",
-        subject: "Acesso de liderança aprovado",
-        title: "Seu acesso de liderança foi aprovado",
-        intro: "Seu perfil de Líder TC foi aprovado na plataforma Quality Control.",
+        subject: "Solicitação de acesso como líder TC aprovada",
+        title: "Solicitação de acesso como líder TC aprovada",
+        intro: "Seu acesso como líder TC foi aprovado na plataforma Quality Control.",
         accessContext: "Este perfil possui permissões de acompanhamento e administração dos fluxos liberados para liderança.",
         permissionsTitle: "Com este perfil, você pode:",
         permissions: [
@@ -994,15 +973,15 @@ Guarde este código para acompanhar sua solicitação.`;
           "Acesse a plataforma",
           "Confira as solicitações pendentes",
           "Revise os fluxos liberados para liderança",
-          "Troque a senha em Meu Perfil, caso queira",
+          "Altere sua senha após o primeiro acesso",
         ],
         badge: "Líder TC aprovado",
       },
       technical_support: {
         label: "Suporte técnico",
-        subject: "Acesso de suporte técnico aprovado",
-        title: "Seu acesso de suporte técnico foi aprovado",
-        intro: "Seu perfil de suporte técnico foi aprovado na plataforma Quality Control.",
+        subject: "Solicitação de acesso como suporte técnico aprovada",
+        title: "Solicitação de acesso como suporte técnico aprovada",
+        intro: "Seu acesso como suporte técnico foi aprovado na plataforma Quality Control.",
         accessContext: "Este perfil permite atuar nos fluxos operacionais e de suporte conforme as permissões liberadas.",
         permissionsTitle: "Com este perfil, você pode:",
         permissions: [
@@ -1015,7 +994,7 @@ Guarde este código para acompanhar sua solicitação.`;
           "Acesse a plataforma",
           "Confira as filas e solicitações disponíveis",
           "Atue apenas nos fluxos liberados para suporte técnico",
-          "Troque a senha em Meu Perfil, caso queira",
+          "Altere sua senha após o primeiro acesso",
         ],
         badge: "Suporte técnico aprovado",
       },
@@ -1026,7 +1005,7 @@ Guarde este código para acompanhar sua solicitação.`;
       {
         label: escapeHtml(data.profileType ?? "Perfil aprovado"),
         subject: "Acesso aprovado",
-        title: "Seu acesso foi aprovado",
+        title: "Solicitação de acesso aprovada",
         intro: "Sua solicitação foi aprovada na plataforma Quality Control.",
         accessContext: "Este acesso permite utilizar a plataforma conforme as permissões vinculadas ao seu perfil.",
         permissionsTitle: "Com este perfil, você pode:",
@@ -1038,14 +1017,18 @@ Guarde este código para acompanhar sua solicitação.`;
         nextSteps: [
           "Acesse a plataforma",
           "Confira seus dados",
-          "Troque a senha em Meu Perfil, caso queira",
+          "Altere sua senha após o primeiro acesso",
         ],
         badge: "Acesso aprovado",
       };
 
     const linkedCompanyName = String(data.companyName ?? data.companySlug ?? "").trim();
-    const linkedCompanyDisplayName = linkedCompanyName.toLocaleUpperCase("pt-BR");
-    const isCompanyUser = normalizedRole === "company_user";
+    const linkedCompanyDisplayName = linkedCompanyName;
+    const isCompanyUser = normalizedRole === "empresa" || normalizedRole === "company_user";
+    const shouldShowCompanyLine =
+      Boolean(linkedCompanyName) &&
+      (normalizedRole === "empresa" || normalizedRole === "company_user");
+
     const approvedProfileLabel =
       isCompanyUser && linkedCompanyName
         ? `Acesso vinculado à ${linkedCompanyName}`
@@ -1058,15 +1041,14 @@ Guarde este código para acompanhar sua solicitação.`;
       isCompanyUser && data.name && linkedCompanyDisplayName
         ? `Olá, ${data.name} / ${linkedCompanyDisplayName}!`
         : greetingText;
-
-    const companyLine = linkedCompanyName
+    const companyLine = shouldShowCompanyLine
       ? `<tr><td class="label">Empresa vinculada</td><td class="value">${escapeHtml(linkedCompanyName)}</td></tr>`
       : "";
-
-    const passwordLabel = data.passwordFromRequest
-      ? "Use a senha cadastrada no momento da solicitação"
-      : data.tempPassword
-        ? "Senha temporária definida com segurança"
+    const companyTextLine = shouldShowCompanyLine ? `Empresa vinculada: ${linkedCompanyName}` : "";
+    const passwordLabel = data.tempPassword
+      ? escapeHtml(data.tempPassword)
+      : data.passwordFromRequest
+        ? "Senha cadastrada no formulário de solicitação"
         : "Use a senha definida no cadastro";
 
     const permissionsHtml = contentByRole.permissions.map((item) => `<li>${item}</li>`).join("");
@@ -1082,9 +1064,9 @@ Guarde este código para acompanhar sua solicitação.`;
     .page{width:100%;padding:42px 12px;background:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%)}
     .card{max-width:780px;margin:0 auto;background:rgba(255,255,255,.98);border:1px solid rgba(1,24,72,.14);border-radius:26px;overflow:hidden;box-shadow:0 24px 70px rgba(1,24,72,.25)}
     .header{background:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:24px 24px;text-align:center}
-    .brand{display:inline-block;margin:0 auto 10px;padding:0;border:0;background:transparent}
+    .brand{display:inline-flex;align-items:center;justify-content:center;margin:0 auto 12px;width:74px;height:74px;border-radius:999px;background:#ffffff;padding:0;box-shadow:0 10px 24px rgba(0,0,0,.22);overflow:hidden;border:1px solid rgba(255,255,255,.85)}
     .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
-    .header p{margin:6px 0 0;font-size:12px;opacity:.92}
+    .header p{margin:8px 0 0;font-size:13px;color:#ffffff;opacity:1;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35)}
     .content{padding:42px 46px 36px}
     .badge{display:inline-block;padding:8px 14px;border-radius:999px;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;font-size:13px;font-weight:800;margin-bottom:18px}
     h2{margin:0 0 12px;color:#011848;font-size:23px;line-height:1.3}
@@ -1108,9 +1090,9 @@ Guarde este código para acompanhar sua solicitação.`;
   <div class="page">
     <div class="card">
       <div class="header">
-        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:90px;height:auto;border:0;" /></div>
+        <div class="brand"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" width="74" height="74" style="display:block;width:74px;height:74px;object-fit:cover;border-radius:999px;border:0;outline:none;text-decoration:none;" /></div>
         <h1>Quality Control</h1>
-        <p>${contentByRole.title}</p>
+        <p style="color:#ffffff!important;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.35);">${contentByRole.title}</p>
       </div>
 
       <div class="content">
@@ -1124,7 +1106,7 @@ Guarde este código para acompanhar sua solicitação.`;
         <div class="info">
           <table>
             <tr><td class="label">Login cadastrado</td><td class="value">${escapeHtml(data.login)}</td></tr>
-            <tr><td class="label">Senha</td><td class="value">${passwordLabel}</td></tr>
+            <tr><td class="label">Senha cadastrada</td><td class="value">${passwordLabel}</td></tr>
             <tr><td class="label">${isCompanyUser ? "Tipo de acesso" : "Perfil aprovado"}</td><td class="value">${escapeHtml(approvedProfileLabel)}</td></tr>
             ${companyLine}
           </table>
@@ -1141,9 +1123,9 @@ Guarde este código para acompanhar sua solicitação.`;
         </div>
 
         <div class="box">
-          A senha deste acesso é a senha definida no momento da solicitação.
-          Depois do primeiro acesso, você pode trocar a senha em
-          <strong>Meu Perfil → Alterar Senha</strong>, caso queira.
+          A senha deste acesso é a senha cadastrada no formulário de solicitação e será tratada como temporária.
+          Após o primeiro acesso, é necessário alterar a senha em
+          <strong>Meu Perfil → Alterar Senha</strong>. A senha temporária ficará válida por 10 dias após a aprovação. Após esse prazo, utilize a opção <strong>“Esqueci minha senha”</strong> para recuperar o acesso.
         </div>
 
         <div class="buttonWrap">
@@ -1157,7 +1139,7 @@ Guarde este código para acompanhar sua solicitação.`;
 
       <div class="footer">
         E-mail automático. Não responda.<br>
-        © ${new Date().getFullYear()} Testing Company • Quality Control.
+        © ${new Date().getFullYear()} Quality Control.
       </div>
     </div>
   </div>
@@ -1175,9 +1157,9 @@ ${contentByRole.intro}
 ${contentByRole.accessContext}
 
 Login cadastrado: ${data.login}
-Senha: ${passwordLabel}
+Senha cadastrada: ${passwordLabel}
 ${isCompanyUser ? "Tipo de acesso" : "Perfil aprovado"}: ${approvedProfileLabel}
-${linkedCompanyName ? `Empresa vinculada: ${linkedCompanyName}` : ""}
+${companyTextLine}
 
 ${contentByRole.permissionsTitle}
 ${permissionsText}
@@ -1187,7 +1169,7 @@ ${nextStepsText}
 
 Acesse em: ${loginUrl}
 
-Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Senha, caso queira.`;
+Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha temporária ficará válida por 10 dias após a aprovação. Após esse prazo, utilize a opção “Esqueci minha senha” para recuperar o acesso.`;
 
     return this.sendEmail({
       to,
@@ -1229,7 +1211,7 @@ Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Sen
 </head>
 <body>
 <div class="wrap">
-  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1></div>
+  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1></div>
   <div class="body">
     <span class="badge">✕ Solicitação rejeitada</span>
     <h2 style="margin-top:0">${greeting}</h2>
@@ -1296,7 +1278,7 @@ Depois do primeiro acesso, você pode trocar a senha em Meu Perfil > Alterar Sen
 </head>
 <body>
 <div class="wrap">
-  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="Testing Company" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Ajuste necessário na solicitação</p></div>
+  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoUrl())}" alt="" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Ajuste necessário na solicitação</p></div>
   <div class="body">
     <span class="badge">⚠ Ajuste necessário</span>
     <h2 style="margin-top:0">${greeting}</h2>

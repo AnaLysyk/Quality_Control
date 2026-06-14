@@ -265,6 +265,10 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
   const requestedRole = normalizeAccessRequestProfileType(resolveRequestedRoleFromPayload(payload));
   const details = buildRequestDetails(payload);
 
+  if (requestedPassword) {
+    (details as Record<string, unknown>).requestedPasswordForApprovalEmail = requestedPassword;
+  }
+
   if (!requesterEmail) {
     return { status: 400 as const, body: { message: "E-mail é obrigatório" } };
   }
@@ -648,10 +652,14 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     },
   });
 
+  const requestedPasswordForApprovalEmail =
+    (request.details as { requestedPasswordForApprovalEmail?: string | null } | null)
+      ?.requestedPasswordForApprovalEmail ?? null;
+
   return {
     userId: targetUser.id,
     login: username,
-    tempPassword: null,
+    tempPassword: requestedPasswordForApprovalEmail,
     passwordFromRequest: true,
     companySlug: company?.slug ?? null,
     companyName: company?.name ?? company?.company_name ?? company?.slug ?? null,

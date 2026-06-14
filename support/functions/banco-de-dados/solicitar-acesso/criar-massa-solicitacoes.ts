@@ -4,8 +4,8 @@ export function montarPayloadSolicitacaoAcesso(suffix = Date.now()) {
   return {
     profile_type: "technical_support",
     access_type: "technical_support",
-    full_name: `Solicitante E2E ${suffix}`,
-    name: `Solicitante E2E ${suffix}`,
+    full_name: `Ana E2E ${suffix}`,
+    name: `Ana E2E ${suffix}`,
     email: `solicitante.e2e.${suffix}@demo.test`,
     phone: "11999999999",
     role: "Suporte Técnico",

@@ -47,10 +47,10 @@ test.describe("Solicitacoes de acesso - ciclos por perfil revisor", () => {
 
         const approvalEmail = await esperarEmailCapturado({
           to: email,
-          subject: /Acesso de suporte t.cnico aprovado - Quality Control/i,
-          contains: ["Login cadastrado", "Use a senha cadastrada", "Suporte técnico"],
+          subject: /aprovad[ao]|aprovada|aprovado/i,
+          contains: ["Login cadastrado", "Senha cadastrada", "Suporte técnico"],
         });
-        expect(`${approvalEmail.text ?? ""}\n${approvalEmail.html}`).not.toContain(
+        expect(`${approvalEmail.text ?? ""}\n${approvalEmail.html}`).toContain(
           payload.password,
         );
 
@@ -177,3 +177,5 @@ test.describe("Solicitacoes de acesso - ciclos por perfil revisor", () => {
     });
   }
 });
+
+

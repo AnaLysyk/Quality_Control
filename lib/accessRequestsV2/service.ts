@@ -265,6 +265,10 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
   const requestedRole = normalizeAccessRequestProfileType(resolveRequestedRoleFromPayload(payload));
   const details = buildRequestDetails(payload);
 
+  if (requestedPassword) {
+    (details as Record<string, unknown>).requestedPasswordForApprovalEmail = requestedPassword;
+  }
+
   if (!requesterEmail) {
     return { status: 400 as const, body: { message: "E-mail é obrigatório" } };
   }
@@ -348,6 +352,7 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     name: requesterName || null,
     accessKey: created.accessKey ?? created.id,
     email: requesterEmail,
+    username: requestedUser || null,
     phone,
     passwordDefined: Boolean(requestedPasswordHash),
     companyDetails: companyDetailsForReceivedEmail,
@@ -647,10 +652,14 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
     },
   });
 
+  const requestedPasswordForApprovalEmail =
+    (request.details as { requestedPasswordForApprovalEmail?: string | null } | null)
+      ?.requestedPasswordForApprovalEmail ?? null;
+
   return {
     userId: targetUser.id,
     login: username,
-    tempPassword: null,
+    tempPassword: requestedPasswordForApprovalEmail,
     passwordFromRequest: true,
     companySlug: company?.slug ?? null,
     companyName: company?.name ?? company?.company_name ?? company?.slug ?? null,
@@ -1106,6 +1115,7 @@ export async function resendAccessRequestCode(input: { name: string; email: stri
     name: request.requesterName,
     accessKey: request.accessKey,
     email: request.requesterEmail,
+    username: (request as { username?: string | null; targetUserId?: string | null }).username ?? (request as { targetUserId?: string | null }).targetUserId ?? null,
     phone: request.details?.phone,
     passwordDefined: Boolean(request.requestedPasswordHash),
     profileType: request.requestedRole,

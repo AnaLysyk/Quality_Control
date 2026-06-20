@@ -26,27 +26,92 @@ export type DadosSolicitacaoAcessoPublica = {
   priority: string;
 };
 
-export function montarPayloadSolicitacaoPublica(email: string): DadosSolicitacaoAcessoPublica {
-  const suffix = Date.now();
+export type PerfilSolicitacaoAcessoPublica =
+  | "empresa"
+  | "company_user"
+  | "testing_company_user"
+  | "leader_tc"
+  | "technical_support";
 
-  return {
-    requestType: "technical_support",
-    requestedRole: "technical_support",
-    requesterName: `Solicitante E2E ${suffix}`,
+export type OpcoesSolicitacaoAcessoPublica = {
+  requestedRole?: PerfilSolicitacaoAcessoPublica;
+  requestedCompanyId?: string;
+  requestedCompanySlug?: string;
+};
+
+export function montarPayloadSolicitacaoPublica(
+  email: string,
+  opcoes: OpcoesSolicitacaoAcessoPublica = {},
+): DadosSolicitacaoAcessoPublica {
+  const suffix = Date.now();
+  const requestedRole = opcoes.requestedRole ?? "technical_support";
+
+  const tituloPorPerfil: Record<PerfilSolicitacaoAcessoPublica, string> = {
+    empresa: "Solicitação de acesso empresarial",
+    company_user: "Solicitação de acesso como usuário da empresa",
+    testing_company_user: "Solicitação de acesso como usuário TC",
+    leader_tc: "Solicitação de acesso como líder TC",
+    technical_support: "Solicitação de acesso como suporte técnico",
+  };
+
+  const descricaoPorPerfil: Record<PerfilSolicitacaoAcessoPublica, string> = {
+    empresa: "Solicitação criada para validar o ciclo de aprovação de acesso empresarial.",
+    company_user: "Solicitação criada para validar o ciclo de aprovação de usuário vinculado à empresa.",
+    testing_company_user: "Solicitação criada para validar o ciclo de aprovação de usuário TC.",
+    leader_tc: "Solicitação criada para validar o ciclo de aprovação de líder TC.",
+    technical_support: "Solicitação criada para validar o ciclo de aprovação de suporte técnico.",
+  };
+
+  const payload: DadosSolicitacaoAcessoPublica = {
+    requestType: requestedRole,
+    requestedRole,
+    requesterName: `Ana E2E ${suffix}`,
     requesterEmail: email,
     email,
-    full_name: `Solicitante E2E ${suffix}`,
-    name: `Solicitante E2E ${suffix}`,
+    full_name: `Ana E2E ${suffix}`,
+    name: `Ana E2E ${suffix}`,
     user: `qa.e2e.${suffix}`,
     phone: "51999999999",
     role: "Analista de QA",
-    profile_type: "technical_support",
-    title: "Solicitação de acesso para validação",
-    description: "Solicitação criada para validar o ciclo de acesso e comunicação.",
+    profile_type: requestedRole,
+    title: tituloPorPerfil[requestedRole],
+    description: descricaoPorPerfil[requestedRole],
     password: obterSenhaTesteSolicitacaoAcesso(),
-    reason: "Solicitação criada para validar o ciclo de acesso e comunicação.",
+    reason: descricaoPorPerfil[requestedRole],
     priority: "medium",
   };
+
+  if (requestedRole === "empresa") {
+    Object.assign(payload, {
+      companyName: "NEXT COMPANY TECNOLOGIA LTDA",
+      company_name: "NEXT COMPANY TECNOLOGIA LTDA",
+      fantasyName: "Next Company",
+      fantasy_name: "Next Company",
+      cnpj: "19131243000197",
+      companyDocument: "19131243000197",
+      company_document: "19131243000197",
+      taxId: "19131243000197",
+      tax_id: "19131243000197",
+      cep: "01001-000",
+      address: "Praça da Sé",
+      number: "100",
+      city: "São Paulo",
+      state: "SP",
+      company: "NEXT COMPANY TECNOLOGIA LTDA",
+    });
+  }
+
+  if (opcoes.requestedCompanyId) {
+    payload.requestedCompanyId = opcoes.requestedCompanyId;
+    payload.client_id = opcoes.requestedCompanyId;
+  }
+
+  if (opcoes.requestedCompanySlug) {
+    payload.requestedCompanySlug = opcoes.requestedCompanySlug;
+    payload.company = opcoes.requestedCompanySlug;
+  }
+
+  return payload;
 }
 
 export async function criarSolicitacaoPublicaViaApi(

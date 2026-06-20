@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium
  */
@@ -6,15 +6,15 @@ import { test, expect } from "../../../../../support/fixtures/test";
 import {
   montarPayloadSolicitacaoPublica,
   criarSolicitacaoPublicaViaApi,
-} from "../../../../../support/functions/api/login/solicitar-acesso/compartilhado/criar-solicitacao-publica";
-import { criarEmailTeste, limparEmailsCapturados } from "../../../../../support/functions/api/login/solicitar-acesso/compartilhado/capturar-emails";
+} from "../../../../../support/functions/api/solicitar-acesso/formulario/criar-solicitacao-publica";
+import { criarEmailTeste, limparEmailsCapturados } from "../../../../../support/functions/api/solicitar-acesso/emails/capturar-emails";
 import {
   aprovarSolicitacaoViaApiV2,
   recusarSolicitacaoViaApiV2,
   solicitarAjusteViaApiV2,
-} from "../../../../../support/functions/api/login/solicitar-acesso/compartilhado/consultar-status";
-import { autenticarSolicitacaoAcessoViaApi } from "../../../../../support/functions/api/login/solicitar-acesso/compartilhado/autenticar-revisor";
-import { abrirStatusPorLink } from "../../../../../support/functions/ui/login/solicitar-acesso/compartilhado/abrir-consulta-status";
+} from "../../../../../support/functions/api/solicitar-acesso/consulta/consultar-status";
+import { autenticarSolicitacaoAcessoViaApi } from "../../../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
+import { abrirStatusPorLink } from "../../../../../support/functions/ui/login/solicitar-acesso/consulta/abrir-consulta-status";
 
 test.describe("Solicitações de acesso - consulta/status UI", () => {
   test.beforeEach(() => {
@@ -91,3 +91,4 @@ test.describe("Solicitações de acesso - consulta/status UI", () => {
     await expect(page.getByTestId("access-request-adjustment-fields")).toContainText("Descrição");
   });
 });
+

@@ -57,6 +57,7 @@ export async function POST(req: Request) {
       message: GENERIC_MESSAGE,
       item: {
         id: item.id,
+        accessKey: item.accessKey,
         status: item.status,
         requestType: item.requestType,
         requestedRole: item.requestedRole,

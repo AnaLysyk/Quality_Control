@@ -1001,6 +1001,7 @@ function AccessRequestsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar nome, email ou empresa"
+                data-testid="access-requests-search-input"
                 className="w-full rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) py-3 pl-10 pr-4 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]"
               />
             </div>
@@ -1032,7 +1033,7 @@ function AccessRequestsPage() {
             </div>
             </div>
 
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 pr-3 [scrollbar-width:none] sm:p-5 sm:pr-4 [&::-webkit-scrollbar]:hidden">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 pr-3 [scrollbar-width:none] sm:p-5 sm:pr-4 [&::-webkit-scrollbar]:hidden" data-testid="access-requests-list">
               {loading ? (
                 <div className={`${sectionMuted} text-sm text-(--tc-text-muted)`}>Carregando solicitações...</div>
               ) : filteredItems.length === 0 ? (
@@ -1045,6 +1046,7 @@ function AccessRequestsPage() {
                   return (
                     <div
                       key={it.id}
+                      data-testid="access-request-row"
                       className={`rounded-[26px] border p-4 sm:p-5 transition focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.22)] ${
                         selectedRow
                           ? `border-transparent text-white shadow-[0_20px_44px_rgba(1,24,72,0.18)] ${styles.rowSelected}`

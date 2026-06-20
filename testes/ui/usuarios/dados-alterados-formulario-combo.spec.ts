@@ -1,8 +1,44 @@
-import { test, expect, type APIRequestContext } from "@playwright/test";
+﻿import { test, expect, type APIRequestContext } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/login/solicitar-acesso/compartilhado/autenticar-revisor";
+import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
+
+type JsonObject = Record<string, unknown>;
+
+type ValidacaoCampo = {
+  campo: string;
+  esperado: unknown;
+  atual: unknown;
+  status: "OK" | "FALHOU";
+};
+
+const outputDir = resolve("test-results/dados-alterados/formulario-combo");
+
+function asObject(value: unknown): JsonObject {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as JsonObject)
+    : {};
+}
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function salvarJson(nome: string, conteudo: unknown) {
+  mkdirSync(outputDir, { recursive: true });
+  writeFileSync(resolve(outputDir, nome), JSON.stringify(conteudo, null, 2), "utf8");
+}
+
+function escapeimport { test, expect, type APIRequestContext } from "@playwright/test";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
 
 type JsonObject = Record<string, unknown>;
 
@@ -485,5 +521,6 @@ test.describe("Dados Alterados - formulário assistido", () => {
     }
   });
 });
+
 
 

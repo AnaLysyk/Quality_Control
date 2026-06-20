@@ -3,6 +3,8 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getAccessContext } from "@/lib/auth/session";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const headerStore = await headers();
@@ -27,7 +29,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const isAdmin =
     access.isGlobalAdmin === true ||
     access.role === "leader_tc" ||
-    access.role === "technical_support";
+    access.role === "technical_support" ||
+    hasPermissionAccess(resolveRoleDefaults(access.role), "access_requests", "view");
   if (!isAdmin) {
     const fallbackCompany = access.companySlug ?? access.companySlugs[0] ?? null;
     redirect(fallbackCompany ? `/empresas/${encodeURIComponent(fallbackCompany)}/home` : "/empresas");

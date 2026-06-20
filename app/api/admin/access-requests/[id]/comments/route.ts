@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prismaClient";
-import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
-import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
-import { shouldUseJsonStore } from "@/lib/storeMode";
+
 import { getAccessRequestById } from "@/data/accessRequestsStore";
-import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
+import {
+  createAccessRequestComment,
+  listAccessRequestComments,
+} from "@/data/accessRequestCommentsStore";
+import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
 import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
+import { prisma } from "@/lib/prismaClient";
+import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
+import {
+  canReviewerAccessQueue,
+  resolveAccessRequestQueue,
+} from "@/lib/requestReviewAccess";
+import { shouldUseJsonStore } from "@/lib/storeMode";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,25 +28,46 @@ function sanitizeBody(value: unknown, max = 2000) {
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
 
-async function getRequestForReview(id: string): Promise<{ email: string; message: string; status: string } | null> {
+async function getRequestForReview(
+  id: string,
+): Promise<{ email: string; message: string; status: string } | null> {
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
-    return existing ? { email: existing.email, message: existing.message, status: existing.status } : null;
+    return existing
+      ? { email: existing.email, message: existing.message, status: existing.status }
+      : null;
   }
+
   try {
     const existing = await prisma.supportRequest.findUnique({ where: { id } });
-    return existing ? { email: existing.email, message: existing.message, status: existing.status } : null;
+    return existing
+      ? { email: existing.email, message: existing.message, status: existing.status }
+      : null;
   } catch (error) {
     console.error("Erro ao validar support_request, fallback JSON:", error);
     const existing = await getAccessRequestById(id);
-    return existing ? { email: existing.email, message: existing.message, status: existing.status } : null;
+    return existing
+      ? { email: existing.email, message: existing.message, status: existing.status }
+      : null;
   }
+}
+
+function isFinalV2Status(status: string | null | undefined) {
+  return (
+    status === "approved" ||
+    status === "rejected" ||
+    status === "cancelled" ||
+    status === "expired"
+  );
 }
 
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status, headers: NO_STORE_HEADERS });
+    return NextResponse.json(
+      { error: status === 401 ? "Nao autenticado" : "Sem permissao" },
+      { status, headers: NO_STORE_HEADERS },
+    );
   }
 
   const { id } = await context.params;
@@ -46,48 +75,104 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     return NextResponse.json({ items: [] }, { status: 200, headers: NO_STORE_HEADERS });
   }
 
+  const v2Request = await getAccessRequestV2ById(id);
+  if (v2Request?.accessKey) {
+    const comments = await listAccessRequestComments(id).catch((error) => {
+      console.error("Falha ao carregar comentarios V2 (access-requests):", error);
+      return [];
+    });
+    return NextResponse.json({ items: comments }, { status: 200, headers: NO_STORE_HEADERS });
+  }
+
   const request = await getRequestForReview(id);
   if (!request) {
-    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
+    return NextResponse.json(
+      { error: "Solicitacao nao encontrada." },
+      { status: 404, headers: NO_STORE_HEADERS },
+    );
   }
   if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(request.message, request.email))) {
-    return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403, headers: NO_STORE_HEADERS });
+    return NextResponse.json(
+      { error: "Sem permissao para esta solicitacao" },
+      { status: 403, headers: NO_STORE_HEADERS },
+    );
   }
-  try {
-    const comments = await listAccessRequestComments(id);
-    return NextResponse.json({ items: comments }, { status: 200, headers: NO_STORE_HEADERS });
-  } catch (error) {
-    console.error("Falha ao carregar comentários (access-requests):", error);
-    return NextResponse.json({ items: [], error: "Falha ao carregar comentários" }, { status: 200, headers: NO_STORE_HEADERS });
-  }
+
+  const comments = await listAccessRequestComments(id).catch((error) => {
+    console.error("Falha ao carregar comentarios (access-requests):", error);
+    return [];
+  });
+  return NextResponse.json({ items: comments }, { status: 200, headers: NO_STORE_HEADERS });
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json(
+      { error: status === 401 ? "Nao autenticado" : "Sem permissao" },
+      { status },
+    );
   }
 
   const { id } = await context.params;
   if (extractPasswordResetRequestId(id)) {
-    return NextResponse.json({ error: "Comentarios nao sao suportados para reset de senha nesta fila." }, { status: 409 });
+    return NextResponse.json(
+      { error: "Comentarios nao sao suportados para reset de senha nesta fila." },
+      { status: 409 },
+    );
   }
 
-  const body = (await req.json().catch(() => null)) as { body?: string; comment?: string } | null;
+  const body = (await req.json().catch(() => null)) as
+    | { body?: string; comment?: string }
+    | null;
   const comment = sanitizeBody(body?.comment ?? body?.body ?? "");
   if (!comment) {
-    return NextResponse.json({ error: "Comentário obrigatório." }, { status: 400 });
+    return NextResponse.json({ error: "Comentario obrigatorio." }, { status: 400 });
+  }
+
+  const v2Request = await getAccessRequestV2ById(id);
+  if (v2Request?.accessKey) {
+    if (isFinalV2Status(v2Request.status)) {
+      return NextResponse.json(
+        { error: "Esta solicitacao ja foi finalizada e nao aceita novos comentarios." },
+        { status: 409 },
+      );
+    }
+
+    const record = await createAccessRequestComment({
+      requestId: id,
+      authorRole: "leader_tc",
+      authorName: admin.email || "Admin",
+      authorEmail: admin.email || null,
+      authorId: admin.id || null,
+      body: comment,
+    });
+
+    notifyAccessRequestComment({
+      requestId: id,
+      commentId: record.id,
+      authorName: admin.email || "Admin",
+      body: comment,
+    }).catch((err) => console.error("Falha ao notificar comentario V2:", err));
+
+    return NextResponse.json({ item: record }, { status: 200 });
   }
 
   const request = await getRequestForReview(id);
   if (!request) {
-    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404 });
+    return NextResponse.json({ error: "Solicitacao nao encontrada." }, { status: 404 });
   }
   if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(request.message, request.email))) {
-    return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
+    return NextResponse.json(
+      { error: "Sem permissao para esta solicitacao" },
+      { status: 403 },
+    );
   }
   if (request.status === "rejected" || request.status === "closed") {
-    return NextResponse.json({ error: "Esta solicitação já foi finalizada e não aceita novos comentários." }, { status: 409 });
+    return NextResponse.json(
+      { error: "Esta solicitacao ja foi finalizada e nao aceita novos comentarios." },
+      { status: 409 },
+    );
   }
 
   const record = await createAccessRequestComment({

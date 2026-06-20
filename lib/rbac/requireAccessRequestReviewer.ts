@@ -7,7 +7,10 @@ import { readSessionUser, type AdminSession } from "@/lib/rbac/requireGlobalAdmi
 
 function canReviewAccessRequests(role?: string | null) {
   const normalizedRole = normalizeLegacyRole(role);
-  return normalizedRole === SYSTEM_ROLES.LEADER_TC || hasPermissionAccess(resolveRoleDefaults(normalizedRole), "access_requests", "view");
+  return (
+    normalizedRole === SYSTEM_ROLES.LEADER_TC ||
+    hasPermissionAccess(resolveRoleDefaults(normalizedRole), "access_requests", "view")
+  );
 }
 
 export async function requireAccessRequestReviewer(
@@ -30,6 +33,9 @@ export async function requireAccessRequestReviewer(
     email: session.email ?? "",
     token: opts?.token ?? "",
     role,
+    companyId: session.companyId ?? null,
+    companySlug: session.companySlug ?? null,
+    companyRole: session.companyRole ?? null,
     isGlobalAdmin,
     globalRole: session.globalRole ?? null,
     isGlobalReviewer,

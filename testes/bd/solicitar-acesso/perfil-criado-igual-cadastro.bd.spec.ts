@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts --project=chromium
  */
@@ -12,7 +12,7 @@ import {
   loginComoUsuarioCriado,
   perfisAprovacaoSolicitacao,
   validarPaginaPerfilUsuarioCriado,
-} from "../../../support/functions/banco-de-dados/solicitar-acesso/validar-aprovacao-login-perfil";
+} from "../../../support/functions/banco-de-dados/solicitar-acesso/validacoes/validar-aprovacao-login-perfil";
 
 test.describe("Solicitação pública de acesso - aprovação, login e perfil", () => {
   test.setTimeout(120_000);
@@ -79,3 +79,4 @@ test.describe("Solicitação pública de acesso - aprovação, login e perfil", 
     });
   }
 });
+

@@ -1,5 +1,5 @@
-﻿import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { test, expect } from "@playwright/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test("admin consegue exportar release", async ({ page, context }) => {
   await simularAutenticacao(context, {

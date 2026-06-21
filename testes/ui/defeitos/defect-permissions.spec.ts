@@ -1,5 +1,5 @@
-﻿import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { test, expect } from "@playwright/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("defeitos - permissÃµes", () => {
   test("user nÃ£o vÃª botÃ£o de ediÃ§Ã£o de defeito manual", async ({ page, context }) => {

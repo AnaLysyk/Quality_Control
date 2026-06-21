@@ -19,7 +19,11 @@ export type RequestProfileTypeLabel =
 export type ReviewQueue = "admin_and_global" | "global_only";
 
 function normalizeText(value: string) {
-  return value.trim().toLowerCase();
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 export function toRequestProfileTypeLabel(profileType: RequestProfileType): RequestProfileTypeLabel {

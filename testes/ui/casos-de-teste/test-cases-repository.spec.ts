@@ -1,5 +1,5 @@
 import { expect, test } from "../../../support/fixtures/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("Repositorio central de casos de teste", () => {
   test("@case=TC-CASES-001 abre o repositorio central e mostra a tela unica", async ({

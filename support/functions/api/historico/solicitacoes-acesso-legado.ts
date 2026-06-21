@@ -2,7 +2,7 @@
 import {
   autenticarUsuario,
   configurarUsuarioSimulado,
-} from "../../interface/apoio/autenticar-usuario-teste";
+} from "../../ui/apoio/autenticar-usuario-teste";
 
 type AccessType = "user" | "company";
 

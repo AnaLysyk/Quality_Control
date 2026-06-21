@@ -1,5 +1,5 @@
-﻿import { expect, test } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { expect, test } from "@playwright/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("happy path mocks", () => {
   test("admin Ã© redirecionado para /admin", async ({ page, context }) => {

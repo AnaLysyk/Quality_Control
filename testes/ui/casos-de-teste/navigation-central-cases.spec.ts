@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../../../support/fixtures/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 const COMPANY_SLUG = "testing-company";
 

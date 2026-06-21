@@ -1,5 +1,5 @@
 import { expect, test } from "../../../support/fixtures/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 async function authenticateAdmin(context: Parameters<typeof simularAutenticacao>[0]) {
   let lastError: unknown = null;

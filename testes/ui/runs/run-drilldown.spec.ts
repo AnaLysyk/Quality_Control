@@ -1,5 +1,5 @@
-﻿import { test, expect } from '@playwright/test';
-import { simularAutenticacao } from '../../../support/functions/interface/apoio/simular-autenticacao';
+import { test, expect } from '@playwright/test';
+import { simularAutenticacao } from '../../../support/functions/ui/apoio/simular-autenticacao';
 
 // Bloco 14: Drill-down de Run para Defeitos
 // Este teste valida que o usuÃ¡rio pode clicar em uma run na tabela de qualidade e ver a lista de defeitos filtrada por run, com indicador de filtro ativo.

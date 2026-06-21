@@ -1,6 +1,6 @@
 import { test, expect } from "../../../support/fixtures/test";
 import { ClientListResponseSchema } from "../../../packages/contracts/src/client";
-import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/interface/apoio/autenticar-usuario-teste";
+import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
 test("@smoke login and load clientes", async ({ page }) => {
   await configurarUsuarioSimulado(page, "admin");

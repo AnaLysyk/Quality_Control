@@ -103,13 +103,11 @@ function logAuthStoreFallback(scope: string, message: string) {
 }
 
 function shouldForceLocalAuthStore() {
+  const e2eDatabase = String(process.env.E2E_USE_DATABASE || "").toLowerCase();
+  if (e2eDatabase === "1" || e2eDatabase === "true") return false;
+
   const e2eJson = String(process.env.E2E_USE_JSON || "").toLowerCase();
-  return (
-    e2eJson === "1" ||
-    e2eJson === "true" ||
-    process.env.NODE_ENV === "test" ||
-    process.env.PLAYWRIGHT === "1"
-  );
+  return e2eJson === "1" || e2eJson === "true";
 }
 
 function shouldUsePostgresAuthStore() {
@@ -672,11 +670,13 @@ export async function findLocalUserByEmailOrId(identifier: string): Promise<Loca
       const pgUser = await (await pg()).pgFindLocalUserByEmailOrId(identifier);
       if (pgUser) return pgUser;
 
+      const e2eDatabase = String(process.env.E2E_USE_DATABASE || "").toLowerCase();
+
       const forceLocalFallback =
-        process.env.E2E_USE_JSON === "1" ||
-        process.env.E2E_USE_JSON === "true" ||
-        process.env.NODE_ENV === "test" ||
-        process.env.PLAYWRIGHT === "1";
+        e2eDatabase !== "1" &&
+        e2eDatabase !== "true" &&
+        (process.env.E2E_USE_JSON === "1" ||
+          process.env.E2E_USE_JSON === "true");
 
       if (!forceLocalFallback) return null;
     } catch (error) {

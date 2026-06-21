@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+﻿# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
 /node_modules
@@ -105,7 +105,7 @@ node_modules/**/lint.log
 .tmp
 
 
-# Resultados e tempor�rios de testes
+# Resultados e temporários de testes
 support/results/
 __localstore_snapshot.tmp
 
@@ -114,3 +114,7 @@ __localstore_snapshot.tmp
 .env.local.backup*
 .tmp/
 .tmp/
+
+.next/
+.next-stable-e2e/
+.next-stable-e2e-webpack/

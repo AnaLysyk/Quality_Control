@@ -1,12 +1,12 @@
-import { hasAdminClientToolAccess } from "../../../lib/adminClientAccess";
+﻿import { hasAdminClientToolAccess } from "../../../lib/adminClientAccess";
 
-describe("adminClientAccess - Controle Rígido de Ferramentas de Cliente Admin", () => {
+describe("adminClientAccess - Controle RÃ­gido de Ferramentas de Cliente Admin", () => {
   describe("hasAdminClientToolAccess", () => {
     
     it("deve autorizar imediatamente se flags booleanas diretas de global admin estiverem disparadas", () => {
       expect(hasAdminClientToolAccess({ isGlobalAdmin: true })).toBe(true);
       expect(hasAdminClientToolAccess({ is_global_admin: true })).toBe(true);
-      // Mesmo com roles negados explícitos, a flag deve ter prioridade (bypass)
+      // Mesmo com roles negados explÃ­citos, a flag deve ter prioridade (bypass)
       expect(hasAdminClientToolAccess({ isGlobalAdmin: true, role: "user" })).toBe(true);
     });
 
@@ -32,7 +32,7 @@ describe("adminClientAccess - Controle Rígido de Ferramentas de Cliente Admin",
       });
     });
 
-    it("deve BLOQUEAR estritamente usuários comuns, empresas e QAs (bypass failure)", () => {
+    it("deve BLOQUEAR estritamente usuÃ¡rios comuns, empresas e QAs (bypass failure)", () => {
       const invalidAliases = ["user", "viewer", "testing_company_user", "company_user", "client_user", "company_viewer", "empresa", "company_admin"];
       const props = ["permissionRole", "role", "companyRole", "globalRole"] as const;
 
@@ -43,7 +43,7 @@ describe("adminClientAccess - Controle Rígido de Ferramentas de Cliente Admin",
         });
       });
       
-      // Múltiplos atributos não devem empilhar e causar grant de excessão
+      // MÃºltiplos atributos nÃ£o devem empilhar e causar grant de excessÃ£o
       expect(hasAdminClientToolAccess({ role: "user", companyRole: "empresa", permissionRole: "viewer" })).toBe(false);
     });
 
@@ -58,4 +58,5 @@ describe("adminClientAccess - Controle Rígido de Ferramentas de Cliente Admin",
     });
   });
 });
+
 

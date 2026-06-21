@@ -23,6 +23,7 @@ export function canManageAllTickets(user: AuthUser | null) {
 }
 
 export function canAccessGlobalTicketWorkspace(user: AuthUser | null) {
+  if (!user) return false;
   return canAccessGlobalSupportScope(user);
 }
 

@@ -16,6 +16,9 @@ type AdminSession = {
   email: string;
   token: string;
   role?: string | null;
+  companyId?: string | null;
+  companySlug?: string | null;
+  companyRole?: string | null;
   isGlobalAdmin?: boolean;
   globalRole?: string | null;
   isGlobalReviewer?: boolean;
@@ -26,6 +29,8 @@ type SessionUser = {
   id?: string;
   email?: string;
   role?: string;
+  companyId?: string | null;
+  companySlug?: string | null;
   companyRole?: string | null;
   isGlobalAdmin?: boolean;
   globalRole?: string | null;
@@ -116,6 +121,9 @@ export async function readSessionUser(req: Request): Promise<SessionUser | null>
         sub?: string;
         email?: string;
         role?: string;
+        companyId?: string | null;
+        companySlug?: string | null;
+        companyRole?: string | null;
         isGlobalAdmin?: boolean;
         globalRole?: string | null;
       };
@@ -123,6 +131,9 @@ export async function readSessionUser(req: Request): Promise<SessionUser | null>
         userId: typeof payload.sub === "string" ? payload.sub : undefined,
         email: typeof payload.email === "string" ? payload.email : undefined,
         role: typeof payload.role === "string" ? payload.role : undefined,
+        companyId: typeof payload.companyId === "string" ? payload.companyId : null,
+        companySlug: typeof payload.companySlug === "string" ? payload.companySlug : null,
+        companyRole: typeof payload.companyRole === "string" ? payload.companyRole : null,
         isGlobalAdmin: payload.isGlobalAdmin === true,
         globalRole: typeof payload.globalRole === "string" ? payload.globalRole : null,
       };
@@ -173,6 +184,9 @@ export async function requireGlobalAdmin(
     email: session.email ?? "",
     token: opts?.token ?? "",
     role,
+    companyId: session.companyId ?? null,
+    companySlug: session.companySlug ?? null,
+    companyRole: session.companyRole ?? null,
     isGlobalAdmin,
     globalRole: session.globalRole ?? null,
   };
@@ -204,6 +218,9 @@ export async function requireTechnicalSupport(
     email: session.email ?? "",
     token: opts?.token ?? "",
     role: session.role ?? null,
+    companyId: session.companyId ?? null,
+    companySlug: session.companySlug ?? null,
+    companyRole: session.companyRole ?? null,
     isGlobalAdmin: session.isGlobalAdmin === true,
     globalRole: session.globalRole ?? null,
   };

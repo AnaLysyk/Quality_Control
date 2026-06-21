@@ -2,7 +2,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticar-revisor";
+import { autenticarContextoSolicitacaoAcesso } from "../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
 
 type JsonObject = Record<string, unknown>;
 
@@ -311,3 +311,4 @@ test.describe("Dados Alterados - combo de campos do usuário", () => {
     }
   });
 });
+

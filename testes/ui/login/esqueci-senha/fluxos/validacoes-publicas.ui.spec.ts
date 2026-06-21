@@ -2,7 +2,7 @@ import { expect, test } from "../../../../../support/fixtures/test";
 import {
   validarRespostaGenericaEsqueciSenha,
   validarTokenInvalidoEsqueciSenha,
-} from "../../../../../support/functions/interface/acessos/esqueci-senha-por-perfil";
+} from "../../../../../support/functions/ui/login/esqueci-senha/compartilhado/esqueci-senha-por-perfil";
 
 test.describe("Esqueci senha - validacoes publicas", () => {
   test("tela publica abre sem login", async ({ page }) => {

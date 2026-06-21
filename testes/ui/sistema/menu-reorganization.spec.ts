@@ -1,5 +1,5 @@
-﻿import { expect, test } from "../../../support/fixtures/test";
-import { simularAutenticacao, type OpcoesAutenticacaoSimulada } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { expect, test } from "../../../support/fixtures/test";
+import { simularAutenticacao, type OpcoesAutenticacaoSimulada } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 type MenuProfileCase = {
   title: string;

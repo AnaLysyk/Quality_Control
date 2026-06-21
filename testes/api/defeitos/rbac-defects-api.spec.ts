@@ -1,6 +1,6 @@
-﻿import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
-import { criarDefeitoManual } from "../../../support/functions/interface/apoio/operar-dashboard-e-defeitos";
+import { test, expect } from "@playwright/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
+import { criarDefeitoManual } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
 test.describe("rbac - api defeitos manuais", () => {
   test("company nÃ£o consegue deletar defeito manual via API (403)", async ({ page, context }) => {

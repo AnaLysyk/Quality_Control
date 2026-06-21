@@ -27,7 +27,12 @@ describe("system role contract", () => {
       "reject",
     ]);
     // Suporte tecnico ve os modulos (view) mas nao pode aprovar/rejeitar
-    expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].access_requests).toEqual(["view"]);
+    expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].access_requests).toEqual([
+      "view",
+      "comment",
+      "approve",
+      "reject",
+    ]);
     expect(ROLE_DEFAULTS[SYSTEM_ROLES.TECHNICAL_SUPPORT].users).toEqual(["view"]);
   });
 

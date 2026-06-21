@@ -2,7 +2,7 @@ import { test } from "../../../../../support/fixtures/test";
 import {
   executarRecuperacaoSenhaPorPerfil,
   perfisEsqueciSenha,
-} from "../../../../../support/functions/interface/acessos/esqueci-senha-por-perfil";
+} from "../../../../../support/functions/ui/login/esqueci-senha/compartilhado/esqueci-senha-por-perfil";
 
 test.describe("Esqueci senha - fluxo por perfil", () => {
   for (const perfil of perfisEsqueciSenha) {

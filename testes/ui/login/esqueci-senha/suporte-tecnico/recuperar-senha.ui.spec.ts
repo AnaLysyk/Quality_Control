@@ -1,0 +1,11 @@
+import { test } from "../../../../../support/fixtures/test";
+import {
+  executarRecuperacaoSenhaPorPerfil,
+  obterPerfilEsqueciSenha,
+} from "../../../../../support/functions/interface/acessos/esqueci-senha-por-perfil";
+
+test.describe("Esqueci senha - Suporte Tecnico", () => {
+  test("recupera senha, invalida token e mantem perfil administrativo", async ({ page }) => {
+    await executarRecuperacaoSenhaPorPerfil(page, obterPerfilEsqueciSenha("suporte-tecnico"));
+  });
+});

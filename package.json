@@ -30,6 +30,7 @@
     "backfill:company-integrations": "tsx support/functions/banco-de-dados/migracoes/integracoes/preencher-integracoes-existentes.ts",
     "test:e2e:smoke": "cross-env E2E_USE_JSON=1 playwright test --project=quality-smoke",
     "test:e2e:access": "cross-env E2E_USE_JSON=1 playwright test --project=quality-access",
+    "test:esqueci-senha:ui": "cross-env E2E_USE_JSON=1 playwright test testes/ui/login/esqueci-senha --project=chromium",
     "test:e2e:cases": "cross-env E2E_USE_JSON=1 playwright test --project=quality-test-cases",
     "test:e2e:profile-cycle": "cross-env E2E_USE_JSON=1 playwright test testes/ui/acessos/case-repository-profile-cycle.spec.ts --project=chromium",
     "test:e2e:automation-link": "cross-env E2E_USE_JSON=1 playwright test testes/ui/casos-de-teste/test-case-automation-link.spec.ts --project=chromium",

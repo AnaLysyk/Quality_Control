@@ -1,5 +1,7 @@
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import type { AuthUser } from "@/lib/jwtAuth";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
+import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
 export const ACCESS_REQUEST_V2_STATUSES = [
   "pending",
@@ -305,7 +307,7 @@ export function getEffectiveUserRole(user: Pick<AuthUser, "role" | "permissionRo
 
 export function canReviewAccessRequests(user: Pick<AuthUser, "role" | "permissionRole" | "companyRole" | "isGlobalAdmin"> | null | undefined) {
   const role = getEffectiveUserRole(user);
-  return role === SYSTEM_ROLES.LEADER_TC || role === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  return role === SYSTEM_ROLES.LEADER_TC || hasPermissionAccess(resolveRoleDefaults(role), "access_requests", "view");
 }
 
 export function canApproveRequestedRole(
@@ -320,6 +322,10 @@ export function canApproveRequestedRole(
 
   if (reviewerRole === SYSTEM_ROLES.TECHNICAL_SUPPORT) {
     return normalizedRequestedRole !== SYSTEM_ROLES.LEADER_TC;
+  }
+
+  if (reviewerRole === SYSTEM_ROLES.EMPRESA) {
+    return normalizedRequestedRole === SYSTEM_ROLES.COMPANY_USER;
   }
 
   return false;

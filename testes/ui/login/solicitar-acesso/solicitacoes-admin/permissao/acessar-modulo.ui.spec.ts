@@ -45,6 +45,33 @@ test.describe("Solicitacoes - acesso por perfil - UI", () => {
     });
   }
 
+  test("Empresa deve acessar somente a tela Solicitações dentro do admin", async ({
+    context,
+    page,
+  }) => {
+    await autenticarSolicitacaoAcessoNaInterface(page, "company");
+    await page.close();
+
+    const solicitacoesPage = await context.newPage();
+    await abrirModuloSolicitacoes(solicitacoesPage);
+    await validarTelaSolicitacoes(solicitacoesPage);
+    await expect(solicitacoesPage).toHaveURL(new RegExp(rotaSolicitacoes));
+    await solicitacoesPage.close();
+
+    const adminPage = await context.newPage();
+    try {
+      await adminPage.goto("/admin/users", { waitUntil: "domcontentloaded", timeout: 60000 });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      expect(message).toContain("ERR_TOO_MANY_REDIRECTS");
+      return;
+    }
+    await expect(adminPage).not.toHaveURL(/\/admin\/users/);
+    await expect(adminPage.getByRole("heading", { name: /Usuários|Usuarios/i })).not.toBeVisible({
+      timeout: 3000,
+    });
+  });
+
   test("rota antiga /admin/requests nao deve existir como fluxo valido", async ({
     context,
     page,

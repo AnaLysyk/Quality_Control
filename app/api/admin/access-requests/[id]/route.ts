@@ -81,6 +81,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
         companyRole: admin.role,
         permissionRole: admin.role,
         isGlobalAdmin: Boolean(admin.isGlobalAdmin),
+        companyId: admin.companyId,
+        companySlug: admin.companySlug,
       },
     );
     if (result === "forbidden") {

@@ -11,6 +11,12 @@
     email: "e2e-suporte@testingcompany.local",
     name: "E2E Suporte Técnico",
   },
+  {
+    label: "Empresa",
+    role: "company",
+    email: "e2e-empresa@empresa.local",
+    name: "E2E Empresa",
+  },
 ] as const;
 
 export const perfisNegadosSolicitacoes = [
@@ -26,14 +32,7 @@ export const perfisNegadosSolicitacoes = [
     email: "e2e-company-user@empresa.local",
     name: "E2E Usuário Empresa",
   },
-  {
-    label: "Empresa",
-    role: "company",
-    email: "e2e-empresa@empresa.local",
-    name: "E2E Empresa",
-  },
 ] as const;
 
 export const rotaSolicitacoes = "/admin/access-requests";
 export const rotaSolicitacoesRemovida = "/admin/requests";
-

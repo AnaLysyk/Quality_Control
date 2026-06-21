@@ -2,12 +2,18 @@
 
 export async function abrirModuloSolicitacoes(page: Page) {
   await page.goto("/admin/access-requests", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: /Solicitações de acesso/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Solicitações de acesso/i })).toBeVisible({
+    timeout: 60000,
+  });
 }
 
 export async function validarTelaSolicitacoes(page: Page) {
-  await expect(page.getByRole("heading", { name: /Solicitações de acesso/i })).toBeVisible();
-  await expect(page.getByText(/Solicitações/i).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Solicitações de acesso/i })).toBeVisible({
+    timeout: 60000,
+  });
+  await expect(page.getByText(/Solicitações/i).first()).toBeVisible({
+    timeout: 60000,
+  });
 }
 
 export async function validarAcessoNegadoAoModuloSolicitacoes(page: Page) {

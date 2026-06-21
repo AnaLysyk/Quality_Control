@@ -420,6 +420,7 @@ export async function updateAccessRequestDetailsForReviewer(
   if (!canReviewAccessRequests(reviewer)) return "forbidden" as const;
   const request = await getAccessRequestV2ById(id);
   if (!request) return null;
+  if (!canReviewerActOnRequest(reviewer, request)) return "forbidden" as const;
   if (isAccessRequestFinalStatus(request.status)) return "final" as const;
 
   const profile =
@@ -666,6 +667,37 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
   };
 }
 
+function normalizeScopeValue(value?: string | null) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function canReviewerActOnRequest(reviewer: AuthUser, request: AccessRequestV2) {
+  const role = getEffectiveUserRole(reviewer);
+  if (
+    reviewer.isGlobalAdmin === true ||
+    role === "leader_tc" ||
+    role === "technical_support"
+  ) {
+    return true;
+  }
+
+  if (role !== "empresa") return false;
+
+  const reviewerCompanyId = normalizeScopeValue(reviewer.companyId);
+  const requestCompanyId = normalizeScopeValue(request.requestedCompanyId);
+  if (reviewerCompanyId && requestCompanyId && reviewerCompanyId === requestCompanyId) {
+    return true;
+  }
+
+  const reviewerSlugs = [
+    reviewer.companySlug,
+    ...(Array.isArray(reviewer.companySlugs) ? reviewer.companySlugs : []),
+  ].map(normalizeScopeValue).filter(Boolean);
+  const requestCompanySlug = normalizeScopeValue(request.requestedCompanySlug);
+
+  return Boolean(requestCompanySlug && reviewerSlugs.includes(requestCompanySlug));
+}
+
 export async function transitionAccessRequest(
   id: string,
   action: "start-review" | "approve" | "reject" | "request-info",
@@ -679,6 +711,7 @@ export async function transitionAccessRequest(
   const request = await getAccessRequestV2ById(id);
   if (!request) return null;
   if (!canReviewAccessRequests(reviewer)) return "forbidden" as const;
+  if (!canReviewerActOnRequest(reviewer, request)) return "scope-denied" as const;
 
   const comment = asText(options?.comment, 2000) || undefined;
 

@@ -1,0 +1,417 @@
+# Resultado da sincronização com Qase
+
+- Projeto Qase: quality-control (qc)
+- URL: https://app.qase.io/project/qc
+- Cases existentes antes da atualização: 123
+- Suites existentes antes da atualização: 10
+- Arquivos de teste encontrados em `testes/`: 210
+- Testes individuais encontrados pelo `--list`: 526
+- Definições únicas mapeadas a cases técnicos: 456
+- Cases criados: 456
+- Cases atualizados: 0
+- Falhas de sincronização de case: 0
+- Total de cases após atualização: 579
+- Total de suites após atualização: 39
+- Plano criado/atualizado: Regressão Quality Control - Completa por Tela e Automação (#2)
+- Run criada: Run - Regressão Quality Control - Alinhamento Repositório x Qase - 2026-06-21 (#1)
+- Cases adicionados à run: 579
+- Quantidade executada de verdade: 4
+- Passed: 4
+- Failed: 0
+- Blocked: 0
+- Skipped: 0
+- Untested: 575
+
+## Suites criadas nesta etapa
+
+- 38: Regressão > Documentação viva testes
+- 39: Regressão > Documentação viva testes > API
+- 40: Regressão > Documentação viva testes > API > defeitos
+- 41: Regressão > Documentação viva testes > API > geral
+- 42: Regressão > Documentação viva testes > API > permissoes
+- 43: Regressão > Documentação viva testes > API > rotas
+- 44: Regressão > Documentação viva testes > API > runs
+- 45: Regressão > Documentação viva testes > API > solicitacoes
+- 46: Regressão > Documentação viva testes > API > solicitar-acesso
+- 47: Regressão > Documentação viva testes > API > usuarios
+- 48: Regressão > Documentação viva testes > BD
+- 49: Regressão > Documentação viva testes > BD > persistencia
+- 50: Regressão > Documentação viva testes > BD > solicitar-acesso
+- 51: Regressão > Documentação viva testes > UI
+- 52: Regressão > Documentação viva testes > UI > alertas
+- 53: Regressão > Documentação viva testes > UI > automacoes
+- 54: Regressão > Documentação viva testes > UI > brain
+- 55: Regressão > Documentação viva testes > UI > casos-de-teste
+- 56: Regressão > Documentação viva testes > UI > clientes
+- 57: Regressão > Documentação viva testes > UI > dashboard
+- 58: Regressão > Documentação viva testes > UI > defeitos
+- 59: Regressão > Documentação viva testes > UI > documentos
+- 60: Regressão > Documentação viva testes > UI > empresas
+- 61: Regressão > Documentação viva testes > UI > geral
+- 62: Regressão > Documentação viva testes > UI > repositorio-casos
+- 63: Regressão > Documentação viva testes > UI > runs
+- 64: Regressão > Documentação viva testes > UI > sistema
+- 65: Regressão > Documentação viva testes > UI > smoke
+- 66: Regressão > Documentação viva testes > UI > usuarios
+
+## Cases criados nesta etapa
+
+- AUTO-B8A54D28EC0B -> Qase #175: [AUTO] company nÃ£o consegue deletar defeito manual via API (403)
+- AUTO-461222CE58D7 -> Qase #176: [AUTO] cria chamado básico com título e descrição
+- AUTO-85557CBE35A6 -> Qase #177: [AUTO] cria chamado do tipo bug com prioridade high
+- AUTO-70D713576B24 -> Qase #178: [AUTO] cria chamado do tipo melhoria com tags
+- AUTO-DC29019630E8 -> Qase #179: [AUTO] cria chamado vinculado a empresa e com assignee
+- AUTO-EE37F4451C5A -> Qase #180: [AUTO] retorna null ao criar chamado sem título e sem descrição
+- AUTO-1D278AC0DB58 -> Qase #181: [AUTO] gera código SP-XXXXXX automaticamente
+- AUTO-A5F197A94263 -> Qase #182: [AUTO] status padrão do chamado criado é backlog
+- AUTO-ED6E9E622AEE -> Qase #183: [AUTO] criador edita título e descrição do próprio chamado
+- AUTO-65F26FF499CD -> Qase #184: [AUTO] admin edita tipo e prioridade do chamado
+- AUTO-73980E8A392E -> Qase #185: [AUTO] edita as tags do chamado
+- AUTO-EC709D2C7A4C -> Qase #186: [AUTO] atribui assignee ao chamado
+- AUTO-6B1441549D94 -> Qase #187: [AUTO] altera status do chamado: backlog → doing → review → done
+- AUTO-EB4EF35F7EFD -> Qase #188: [AUTO] retorna null ao editar chamado com id inexistente
+- AUTO-E5749F5CD733 -> Qase #189: [AUTO] updateSuporteForUser não permite editar chamado de outro usuário
+- AUTO-8CA9797C6248 -> Qase #190: [AUTO] lista apenas os chamados do usuário criador
+- AUTO-54485726DC0D -> Qase #191: [AUTO] edita o nome da empresa e persiste no banco
+- AUTO-2132A2C5D540 -> Qase #192: [AUTO] altera status active → inactive → active
+- AUTO-1994EFFD74B1 -> Qase #193: [AUTO] edita phone, address, website e cep
+- AUTO-2314B4176C11 -> Qase #194: [AUTO] edita o tax_id (CNPJ) da empresa
+- AUTO-8663E6CB0F30 -> Qase #195: [AUTO] edita short_description e notes
+- AUTO-CDF3BD88E343 -> Qase #196: [AUTO] edita campos de integração (jira, qase_project_code)
+- AUTO-94AF31E92787 -> Qase #197: [AUTO] limpa campos opcionais definindo como null
+- AUTO-4C232C2E6BC5 -> Qase #198: [AUTO] retorna null ao tentar editar empresa com id inexistente
+- AUTO-96985EE82A0B -> Qase #199: [AUTO] edita linkedin_url da empresa
+- AUTO-83391A382D05 -> Qase #200: [AUTO] edita múltiplos campos em uma única operação
+- AUTO-D1588D0C0BF8 -> Qase #201: [AUTO] 1. solicitante abre pedido de acesso com e-mail e mensagem
+- AUTO-E95DE3B4E6EA -> Qase #202: [AUTO] 2. solicitante pode abrir mais de uma solicitação (sem trava de duplicata)
+- AUTO-2ABCAC13F891 -> Qase #203: [AUTO] 3. solicitante consulta sua solicitação por id
+- AUTO-17824845C1D9 -> Qase #204: [AUTO] 4. solicitante adiciona comentário explicando o motivo
+- AUTO-DE8D5907D6BF -> Qase #205: [AUTO] 5. solicitante responde comentário do admin (segunda rodada)
+- AUTO-D2483DA6659A -> Qase #206: [AUTO] 6. admin visualiza todas as solicitações abertas
+- AUTO-36246F5CB244 -> Qase #207: [AUTO] 7. admin lê a mensagem e os comentários do solicitante
+- AUTO-B89364110A04 -> Qase #208: [AUTO] 8. admin adiciona comentário pedindo mais informações
+- AUTO-BD3DF514C90B -> Qase #209: [AUTO] 9. admin aceita a solicitação e vincula ao usuário criado
+- AUTO-A84DC4B1B088 -> Qase #210: [AUTO] 10. admin rejeita outra solicitação com justificativa no comentário
+- AUTO-1D71BE103913 -> Qase #211: [AUTO] 11. solicitante abre → admin comenta → solicitante responde → admin aceita
+- AUTO-A3FDA07ACEDB -> Qase #212: [AUTO] 12. após aceite: status é closed, user_id vinculado, histórico completo
+- AUTO-76CEC146D29E -> Qase #213: [AUTO] 13. solicitante abre → admin pede justificativa → solicitante responde → admin rejeita
+- AUTO-42F7CBE146FE -> Qase #214: [AUTO] 14. após recusa: comentários de ambos os lados gravados em ordem
+- AUTO-9FDE3E14426A -> Qase #215: [AUTO] 15. comentários de uma solicitação não aparecem em outra
+- AUTO-73E3B552CCDB -> Qase #216: [AUTO] 16. solicitações de e-mails diferentes não se misturam na listagem
+- AUTO-3228A55D3A00 -> Qase #217: [AUTO] 1. cria solicitação com status padrão open
+- AUTO-ABE5FB18368E -> Qase #218: [AUTO] 2. cria solicitação com status explícito in_progress
+- AUTO-C0327BA1DF9A -> Qase #219: [AUTO] 3. cria solicitação com ip_address, user_agent e user_id
+- AUTO-3A76842F1BC0 -> Qase #220: [AUTO] 4. permite múltiplas solicitações para o mesmo e-mail
+- AUTO-F7124834FCD7 -> Qase #221: [AUTO] 5. listAccessRequests retorna as solicitações criadas
+- AUTO-EA9A63B2CF5F -> Qase #222: [AUTO] 6. listAccessRequests retorna ordenado por createdAt desc
+- AUTO-2866D0AA4B95 -> Qase #223: [AUTO] 7. getAccessRequestById retorna registro existente
+- AUTO-9E17775B01C0 -> Qase #224: [AUTO] 8. getAccessRequestById retorna null para id inexistente
+- AUTO-F9D8ACF78C2D -> Qase #225: [AUTO] 9. campos opcionais são preservados após criação
+- AUTO-412239FDCA36 -> Qase #226: [AUTO] 10. altera status para in_progress
+- AUTO-49E013029768 -> Qase #227: [AUTO] 11. fecha a solicitação (closed)
+- AUTO-226B5D8F8574 -> Qase #228: [AUTO] 12. rejeita solicitação
+- AUTO-86CC495497D2 -> Qase #229: [AUTO] 13. atualiza o e-mail da solicitação
+- AUTO-6499626957EE -> Qase #230: [AUTO] 14. atualiza a mensagem da solicitação
+- AUTO-3F2185ECFBA2 -> Qase #231: [AUTO] 15. vincula user_id a uma solicitação existente
+- AUTO-0520714E9AC7 -> Qase #232: [AUTO] 1. solicitação é criada com status open
+- AUTO-B3EF53B9D1F3 -> Qase #233: [AUTO] 2. mensagem contém marcador ACCESS_REQUEST_V1
+- AUTO-894E66A74962 -> Qase #234: [AUTO] 3. parseAccessRequestMessage extrai campos corretamente
+- AUTO-2F554589962D -> Qase #235: [AUTO] 4. usuário é criado com campos corretos
+- AUTO-F03D204846F4 -> Qase #236: [AUTO] 5. membership vincula usuário à empresa
+- AUTO-0D2DA581DFE2 -> Qase #237: [AUTO] 6. solicitação aceita tem status closed e user_id
+- AUTO-4B2AA1D62554 -> Qase #238: [AUTO] 7. solicitação rejeitada tem status rejected
+- AUTO-E727A757C5D0 -> Qase #239: [AUTO] 8. solicitação rejeitada não possui user_id
+- AUTO-587BFEE35F2A -> Qase #240: [AUTO] 1. Vincular usuário como viewer → membership retornada
+- AUTO-03822E39BDAF -> Qase #241: [AUTO] 2. Vincular usuário como company_admin → role normalizado
+- AUTO-AEE2681027A9 -> Qase #242: [AUTO] 3. Vincular usuário como it_dev → role it_dev confirmado
+- AUTO-68CDCA058CA6 -> Qase #243: [AUTO] 4. resolveUserCompanies retorna empresa vinculada com dados completos
+- AUTO-BBB376121979 -> Qase #244: [AUTO] 5. Usuário sem vínculo → resolveUserCompanies vazio (visibilidade zero)
+- AUTO-C8899EA1BFA1 -> Qase #245: [AUTO] 6. Desvincular usuário → links vazios, empresa some da visibilidade
+- AUTO-C699F15590D9 -> Qase #246: [AUTO] 7. listLocalLinksForCompany lista todos os membros da empresa
+- AUTO-AC1CA1515B3D -> Qase #247: [AUTO] 8. Dois usuários vinculados à mesma empresa → ambos visualizam a empresa
+- AUTO-437354815018 -> Qase #248: [AUTO] 9. Atualizar role via upsert (viewer → company_admin)
+- AUTO-9A1B66DF0D4E -> Qase #249: [AUTO] 10. Vínculo com capabilities personalizadas → capabilities persistidas
+- AUTO-B9DD40B521F4 -> Qase #250: [AUTO] 11. Usuário vinculado a múltiplas empresas → resolveUserCompanies retorna todas
+- AUTO-5E4001B1EBE5 -> Qase #251: [AUTO] 12. Remover vínculo de uma empresa mantém vínculo nas demais
+- AUTO-039E96B5E616 -> Qase #252: [AUTO] endpoint nao revela se um email desconhecido esta cadastrado
+- AUTO-AF3CA98D4FF9 -> Qase #253: [AUTO] deve enviar e-mail com identidade, validar token, redefinir e preservar o perfil
+- AUTO-8AA835AFFBCE -> Qase #254: [AUTO] A1. releases: view permitido; escrita bloqueada
+- AUTO-2552F62FF283 -> Qase #255: [AUTO] A2. runs: view permitido; escrita/export bloqueados
+- AUTO-40632BE52E09 -> Qase #256: [AUTO] A3. defects: view permitido; escrita bloqueada
+- AUTO-E32C36639CFA -> Qase #257: [AUTO] A4. users: view/create por empresa; edit/delete globais bloqueados
+- AUTO-FE2B78A9E47D -> Qase #258: [AUTO] A5. permissions: view/edit/reset/clone todos bloqueados
+- AUTO-04544588BB64 -> Qase #259: [AUTO] A6. audit: view/export bloqueados
+- AUTO-2D217C7299A1 -> Qase #260: [AUTO] A7. access_requests: view bloqueado
+- AUTO-EC6380AEDAC3 -> Qase #261: [AUTO] A8. tickets: ações privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)
+- AUTO-4829A1E8BB9C -> Qase #262: [AUTO] A9. notes: edit/delete bloqueados (view/create permitidos)
+- AUTO-1BBB455A27A2 -> Qase #263: [AUTO] B1. users: view/create liberados; edit/delete bloqueados
+- AUTO-FC70611D5951 -> Qase #264: [AUTO] B1b. company_user também pode ver e criar usuários
+- AUTO-910885799C87 -> Qase #265: [AUTO] B2. permissions: view/edit/reset/clone todos bloqueados
+- AUTO-0BED9C4E8689 -> Qase #266: [AUTO] B3. access_requests: view/comment/approve/reject todos bloqueados
+- AUTO-BBCAD648529F -> Qase #267: [AUTO] B4. audit: view/export bloqueados
+- AUTO-3095D24EF2DF -> Qase #268: [AUTO] B5. releases: apenas view (create/edit/delete bloqueados)
+- AUTO-50112FEA6F2C -> Qase #269: [AUTO] B6. runs: apenas view (create/edit/delete/export bloqueados)
+- AUTO-597FA53F4B76 -> Qase #270: [AUTO] B7. defects: apenas view (create/edit/delete bloqueados)
+- AUTO-0C4FAC702BA1 -> Qase #271: [AUTO] B8. applications: delete/export bloqueados (view/create/edit permitidos)
+- AUTO-3E326116C277 -> Qase #272: [AUTO] B9. tickets: ações privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)
+- AUTO-B08BAEB2B154 -> Qase #273: [AUTO] B10. notes: edit/delete bloqueados (view/create permitidos)
+- AUTO-555607338289 -> Qase #274: [AUTO] C1. applications: mesma visão do lider_tc
+- AUTO-BDE714198E99 -> Qase #275: [AUTO] C2. releases: view permitido
+- AUTO-E159DF2B1A33 -> Qase #276: [AUTO] C3. runs: view permitido
+- AUTO-3FF6C7DFBB19 -> Qase #277: [AUTO] C4. defects: view permitido
+- AUTO-DCB163FB7DE3 -> Qase #278: [AUTO] C5. notes: view/create permitidos
+- AUTO-1467A07F7358 -> Qase #279: [AUTO] C6. settings: view permitido (edit bloqueado)
+- AUTO-AAD51651FE33 -> Qase #280: [AUTO] C7. audit: view permitido (adicionado ao perfil support)
+- AUTO-2CAD05E8D2CE -> Qase #281: [AUTO] C8. permissions: somente view (sem edit)
+- AUTO-133D407EEE54 -> Qase #282: [AUTO] C9. support possui tickets/suporte com permissões corretas + view_all
+- AUTO-BE29411F37A2 -> Qase #283: [AUTO] C10. support vê access_requests mas não pode aprovar/rejeitar
+- AUTO-75066F18C31F -> Qase #284: [AUTO] C11. users: somente view (sem create/edit)
+- AUTO-FEE0AECBA154 -> Qase #285: [AUTO] D1. effectivePermissions com deny remove ação disponível do leader_tc
+- AUTO-3C6A3AE2593B -> Qase #286: [AUTO] D2. effectivePermissions com allow adiciona ação ao 'user'
+- AUTO-141B554EAF49 -> Qase #287: [AUTO] D3. deny não afeta outros módulos
+- AUTO-0B823295526F -> Qase #288: [AUTO] D4. applyPermissionOverride: deny remove, allow adiciona na mesma chamada
+- AUTO-E2BA61FCC7A2 -> Qase #289: [AUTO] D5. effectivePermissions múltiplos deny no mesmo módulo
+- AUTO-6FC81FCBCE8B -> Qase #290: [AUTO] D6. toVisibilityMap retorna false para módulos sem view
+- AUTO-1DB6073C0A07 -> Qase #291: [AUTO] D7. getTicketViewScope retorna 'own' para perfil user
+- AUTO-0EB398B3D50D -> Qase #292: [AUTO] D8. getTicketViewScope retorna 'all' para suporte tecnico
+- AUTO-35A82910B2AD -> Qase #293: [AUTO] E1. Usuário viewer legado → permissionRole 'testing_company_user'
+- AUTO-E0719745AC5F -> Qase #294: [AUTO] E2. Membership company_admin legado → permissionRole 'empresa'
+- AUTO-B9F12BE7D189 -> Qase #295: [AUTO] E3. Membership it_dev legado → permissionRole 'technical_support'
+- AUTO-49C2F1E1E667 -> Qase #296: [AUTO] E4. Usuário global_admin legado → permissionRole 'leader_tc'
+- AUTO-E0EB391EEBA7 -> Qase #297: [AUTO] E5. Sem links e sem role → permissionRole 'testing_company_user'
+- AUTO-D11111D85225 -> Qase #298: [AUTO] E6. it_dev legado tem precedência sobre company_admin legado
+- AUTO-56DFD47DB9A2 -> Qase #299: [AUTO] E7. company_admin legado tem precedência sobre viewer legado
+- AUTO-747B084010B5 -> Qase #300: [AUTO] F1. Usuário viewer/TC → roleKey='testing_company_user', operação visível por empresa
+- AUTO-C6FA6F748593 -> Qase #301: [AUTO] F2. Usuário company_admin → roleKey='company', users liberados e permissões/audit bloqueados
+- AUTO-B50D84A71CBB -> Qase #302: [AUTO] F3. Usuário it_dev → roleKey='technical_support', mesma visão lider_tc + tickets view_all
+- AUTO-5FD37493E9FF -> Qase #303: [AUTO] F4. Usuário global_admin → roleKey='admin', permissões completas
+- AUTO-35FED6DD813B -> Qase #304: [AUTO] links company_user requests to the selected company instead of creating another company
+- AUTO-2667DEE1A026 -> Qase #305: [AUTO] upserts applications for returned JIRA issues
+- AUTO-D02D07B15C83 -> Qase #306: [AUTO] user nao consegue criar run via API
+- AUTO-BC061BC456A8 -> Qase #307: [AUTO] company nao consegue deletar run via API
+- AUTO-9949BCFC671F -> Qase #308: [AUTO] 1. cria solicitação EMAIL_CHANGE com status PENDING
+- AUTO-472E900CBA25 -> Qase #309: [AUTO] 2. cria solicitação COMPANY_CHANGE com companyId e companyName
+- AUTO-1B81AB209334 -> Qase #310: [AUTO] 3. cria solicitação PASSWORD_RESET
+- AUTO-238A1E522C94 -> Qase #311: [AUTO] 4. cria solicitação PROFILE_DELETION com motivo no payload
+- AUTO-0EDE9526D34E -> Qase #312: [AUTO] 5. bloqueia duplicata PENDING do mesmo usuário+tipo
+- AUTO-CE3FE497BB5F -> Qase #313: [AUTO] 6. listUserRequests retorna apenas solicitações do usuário
+- AUTO-6B5DF24145FC -> Qase #314: [AUTO] 7. listUserRequests filtra por status PENDING
+- AUTO-E62E277CF1EA -> Qase #315: [AUTO] 8. listUserRequests filtra por tipo PASSWORD_RESET
+- AUTO-9B197B4E5CED -> Qase #316: [AUTO] 9. listAllRequests retorna solicitações de múltiplos usuários
+- AUTO-0434868CBC70 -> Qase #317: [AUTO] 10. listAllRequests filtra por status PENDING
+- AUTO-C721F0302B25 -> Qase #318: [AUTO] 11. listAllRequests filtra por companyId
+- AUTO-F62CA60D814B -> Qase #319: [AUTO] 12. listAllRequests ordenação createdAt_asc
+- AUTO-2A80BB14522A -> Qase #320: [AUTO] 13. getRequestById retorna solicitação existente
+- AUTO-4072E0C57461 -> Qase #321: [AUTO] 14. getRequestById retorna null para id inexistente
+- AUTO-1968163DA923 -> Qase #322: [AUTO] 15. aprova solicitação PENDING
+- AUTO-27D493290CFB -> Qase #323: [AUTO] 16. rejeita solicitação PENDING de userB
+- AUTO-28BB5C7F6483 -> Qase #324: [AUTO] 17. registra reviewedBy, reviewNote e reviewedAt
+- AUTO-DBF5644A24C7 -> Qase #325: [AUTO] 18. não altera solicitação já revisada
+- AUTO-27ED01FE2292 -> Qase #326: [AUTO] 19. retorna null para id inexistente
+- AUTO-A84F16CDC08A -> Qase #327: [AUTO] 20. dois usuários com o mesmo tipo não conflitam (duplicate check é por userId)
+- AUTO-F4D106FE52CE -> Qase #328: [AUTO] deve consultar solicitação por accessKey e validar status, data e e-mail
+- AUTO-57A023801159 -> Qase #329: [AUTO] deve retornar erro para token inválido
+- AUTO-456B9F5C7CA8 -> Qase #330: [AUTO] deve aprovar solicitação e consultar status aprovado
+- AUTO-13047EA086BC -> Qase #331: [AUTO] deve recusar solicitação e consultar status recusado
+- AUTO-AA2BD728AF5C -> Qase #332: [AUTO] deve solicitar ajuste e consultar status ajuste necessário
+- AUTO-C3D2798CF5F8 -> Qase #333: [AUTO] deve aceitar somente os campos solicitados e registrar o retorno para análise
+- AUTO-09F79D1A445E -> Qase #334: [AUTO] deve enviar e-mail de ajuste, abrir consulta por chave e salvar dados corrigidos
+- AUTO-11C63079277A -> Qase #335: [AUTO] deve enviar e-mail aprovado para Empresa
+- AUTO-BAD959B4AE92 -> Qase #336: [AUTO] deve enviar e-mail aprovado para Líder TC
+- AUTO-F233E26FE9CE -> Qase #337: [AUTO] deve enviar e-mail aprovado para Suporte técnico
+- AUTO-7565CD7ED6BE -> Qase #338: [AUTO] deve enviar e-mail aprovado para Usuário da empresa
+- AUTO-5E4FDCAF9526 -> Qase #339: [AUTO] deve enviar e-mail aprovado para Usuário TC
+- AUTO-F142835CCF9E -> Qase #340: [AUTO] gera HTML dos e-mails de aprovação e rejeição dos cinco perfis
+- AUTO-D4D708A2E257 -> Qase #341: [AUTO] deve enviar e-mail rejeitado para Empresa
+- AUTO-5A8D7251F8BE -> Qase #342: [AUTO] deve enviar e-mail rejeitado para Líder TC
+- AUTO-C44EEAC02F4B -> Qase #343: [AUTO] deve enviar e-mail rejeitado para Suporte técnico
+- AUTO-8E06DE55F6E2 -> Qase #344: [AUTO] deve enviar e-mail rejeitado para Usuário da empresa
+- AUTO-CBBA1E593992 -> Qase #345: [AUTO] deve enviar e-mail rejeitado para Usuário TC
+- AUTO-DBE444D56497 -> Qase #346: [AUTO] deve criar solicitação pública e capturar e-mail de recebimento com detalhes
+- AUTO-ED21F9ABF751 -> Qase #347: [AUTO] deve concluir o envio do e-mail inicial para Líder TC
+- AUTO-8DB6FD2129E5 -> Qase #348: [AUTO] deve identificar pessoa e empresa sem exibir o rótulo genérico ao usuário empresarial
+- AUTO-FF8F35A43D97 -> Qase #349: [AUTO] não deve criar nova solicitação duplicada nem gerar novo e-mail
+- AUTO-DE52128AB89C -> Qase #350: [AUTO] deve reenviar o mesmo código somente por e-mail e responder de forma neutra
+- AUTO-63B0EB1DD110 -> Qase #351: [AUTO] consulta publica rejeita chave inexistente sem expor erro interno
+- AUTO-2CD75DAA20F1 -> Qase #352: [AUTO] listagem administrativa exige autenticacao
+- AUTO-114AF8DB76A5 -> Qase #353: [AUTO] Líder TC deve aprovar, enviar e-mail e liberar login
+- AUTO-7F5CE683CC5F -> Qase #354: [AUTO] Suporte Técnico deve aprovar, enviar e-mail e liberar login
+- AUTO-574E613288F3 -> Qase #355: [AUTO] Líder TC deve solicitar ajuste e receber dados corrigidos
+- AUTO-26AC53C63531 -> Qase #356: [AUTO] Suporte Técnico deve solicitar ajuste e receber dados corrigidos
+- AUTO-0A5F8BD0D26A -> Qase #357: [AUTO] Líder TC deve recusar com motivo e enviar e-mail
+- AUTO-4864AF83955B -> Qase #358: [AUTO] Suporte Técnico deve recusar com motivo e enviar e-mail
+- AUTO-5AD91714719D -> Qase #359: [AUTO] usuario nao autenticado deve receber 401
+- AUTO-4D26074AA414 -> Qase #360: [AUTO] Líder TC deve acessar a API
+- AUTO-D29212420F1F -> Qase #361: [AUTO] Suporte Técnico deve acessar a API
+- AUTO-AE7C19B9041E -> Qase #362: [AUTO] Empresa deve receber 403 na API
+- AUTO-FB9E6F33483D -> Qase #363: [AUTO] Usuário da empresa deve receber 403 na API
+- AUTO-E1CA7DAB27BB -> Qase #364: [AUTO] Usuário Testing Company deve receber 403 na API
+- AUTO-C704C824E73C -> Qase #365: [AUTO] deve criar, alterar e validar todos os campos editáveis do usuário
+- AUTO-DEDD7A5902A0 -> Qase #366: [AUTO] Regular: edita nome, email e telefone
+- AUTO-7FEBCC6B6199 -> Qase #367: [AUTO] IT Dev: edita job_title e linkedin_url
+- AUTO-5430B58A5A05 -> Qase #368: [AUTO] Admin Global: rebaixa para usuário normal (is_global_admin=false)
+- AUTO-C850766337E2 -> Qase #369: [AUTO] Viewer: promove membership de viewer para company_admin
+- AUTO-BFD8EDC7B391 -> Qase #370: [AUTO] CompAdmin: desativa conta (active=false, status=blocked)
+- AUTO-2EA2FF3B20F2 -> Qase #371: [AUTO] Convidado: ativa conta mudando status de invited para active
+- AUTO-5626DF085F78 -> Qase #372: [AUTO] Regular: promove role de user para it_dev com is_global_admin
+- AUTO-B64934C47660 -> Qase #373: [AUTO] rejeita edição com e-mail já cadastrado para outro usuário
+- AUTO-562EC94D7977 -> Qase #374: [AUTO] retorna null ao tentar editar usuário com id inexistente
+- AUTO-932AF72DE529 -> Qase #375: [AUTO] edita múltiplos campos do usuário em uma única operação
+- AUTO-A2F2B9306B01 -> Qase #376: [AUTO] cria nota 1 — rascunho, prioridade baixa
+- AUTO-1932FF56A580 -> Qase #377: [AUTO] cria nota 2 — em andamento, prioridade alta, com tags
+- AUTO-CFB87BD65880 -> Qase #378: [AUTO] cria nota 3 — urgente, cor sky
+- AUTO-A20A54E9A7B9 -> Qase #379: [AUTO] confirma que as 3 notas foram criadas para o usuário
+- AUTO-9F32E9BD08D7 -> Qase #380: [AUTO] deleta a nota 2
+- AUTO-B32ABED895E9 -> Qase #381: [AUTO] confirma que nota 1 e nota 3 permanecem após deletar nota 2
+- AUTO-CC502E86B45B -> Qase #382: [AUTO] edita nota 1 — altera título, conteúdo, status e prioridade
+- AUTO-DF3DE98D2B67 -> Qase #383: [AUTO] confirma que a edição da nota 1 foi persistida no banco
+- AUTO-28046D2D6870 -> Qase #384: [AUTO] 1. usuÃ¡rio cria solicitaÃ§Ã£o PASSWORD_RESET
+- AUTO-43D53C2A5B43 -> Qase #385: [AUTO] 2. solicitaÃ§Ã£o estÃ¡ PENDING no requestsStore
+- AUTO-B5B5386B7630 -> Qase #386: [AUTO] 3. LÃ­der TC aprova a solicitaÃ§Ã£o e token Ã© gerado no Redis
+- AUTO-38EB84ED10B3 -> Qase #387: [AUTO] 4. usuÃ¡rio redefine a senha usando o token
+- AUTO-0FF6BEF4E8A8 -> Qase #388: [AUTO] 5. token Ã© invalidado apÃ³s uso (nÃ£o pode ser reutilizado)
+- AUTO-B39AC06F9CAB -> Qase #389: [AUTO] 6. Suporte TÃ©cnico (it_dev) tambÃ©m aprova PASSWORD_RESET
+- AUTO-04968F93E4D8 -> Qase #390: [AUTO] armazena hash correto e permite verificar a senha plain-text posteriormente
+- AUTO-58AE42F94971 -> Qase #391: [AUTO] hash de senha diferente nÃ£o autentica com a senha temporÃ¡ria
+- AUTO-93E4C87A380A -> Qase #392: [AUTO] cria a empresa e persiste no PostgreSQL
+- AUTO-C1CC07FC9F13 -> Qase #393: [AUTO] confirma que a empresa está no banco via SELECT independente
+- AUTO-7B6C4080BAAE -> Qase #394: [AUTO] confirma que a empresa aparece na listagem geral do banco
+- AUTO-B0D4090C4F76 -> Qase #395: [AUTO] 1. Criar override allow → persistido no banco
+- AUTO-87090BDC19F2 -> Qase #396: [AUTO] 2. Criar override deny → persistido no banco
+- AUTO-927F249DF8F6 -> Qase #397: [AUTO] 3. Atualizar override via upsert → sem duplicação de linha
+- AUTO-F8A927F3C52D -> Qase #398: [AUTO] 4. Deletar override → linha removida do banco
+- AUTO-1D4F9DE40D0A -> Qase #399: [AUTO] 5. Usuário sem override → getUserOverride retorna null
+- AUTO-50D5847CE98B -> Qase #400: [AUTO] 6. listUserOverrides retorna todos os overrides cadastrados
+- AUTO-1459422E3D12 -> Qase #401: [AUTO] 7. Allow + Deny na mesma linha → effectivePermissions aplica ambos
+- AUTO-57F36EF3AD97 -> Qase #402: [AUTO] 8. updatedBy gravado corretamente na tabela
+- AUTO-8EBB858ADC84 -> Qase #403: [AUTO] 9. Override mantém isolamento — outro usuário não é afetado
+- AUTO-E66FD3B17A8B -> Qase #404: [AUTO] 10. Após deletar override, usuário volta às permissões padrão do perfil
+- AUTO-C0E6D000D811 -> Qase #405: [AUTO] cria ou reutiliza a empresa Testing Company
+- AUTO-8BE2C62DF5EF -> Qase #406: [AUTO] cria Usuário Empresa vinculado como viewer
+- AUTO-4BD73ADF32D8 -> Qase #407: [AUTO] cria Usuário Testing Company vinculado como viewer
+- AUTO-DB9B18AB67B5 -> Qase #408: [AUTO] cria Líder TC vinculado como company_admin
+- AUTO-D29149061A18 -> Qase #409: [AUTO] cria Suporte Técnico com role it_dev e global_admin
+- AUTO-76CED9A23BCF -> Qase #410: [AUTO] confirma todos os registros no banco
+- AUTO-385B8B560CA9 -> Qase #411: [AUTO] deve aprovar, logar e validar perfil para Líder TC
+- AUTO-155523397CF6 -> Qase #412: [AUTO] deve aprovar, logar e validar perfil para Suporte Técnico
+- AUTO-9494C7718F1E -> Qase #413: [AUTO] deve aprovar, logar e validar perfil para Usuário da empresa
+- AUTO-2BA1CCDBB981 -> Qase #414: [AUTO] deve aprovar, logar e validar perfil para Usuário TC
+- AUTO-70229A138138 -> Qase #415: [AUTO] alerta Ã© exibido para admin
+- AUTO-FF3C54D31340 -> Qase #416: [AUTO] admin acessa /automacoes/tools e ve a area Tools
+- AUTO-A7BED7665F96 -> Qase #417: [AUTO] admin ve o runner biometrico na pagina de execucoes
+- AUTO-3BA460AC506D -> Qase #418: [AUTO] admin ve lista de casos em /automacoes/casos
+- AUTO-2383DD4350D8 -> Qase #419: [AUTO] seletores da pagina de execucoes nao quebram
+- AUTO-BFE77209601C -> Qase #420: [AUTO] API Lab abre em /automacoes/api-lab sem erros
+- AUTO-915CA800F25A -> Qase #421: [AUTO] catalogo importado aparece no workbench
+- AUTO-021BA29B3B21 -> Qase #422: [AUTO] Base64 abre em /automacoes/base64 sem erros
+- AUTO-0A096F64AE02 -> Qase #423: [AUTO] Arquivos abre em /automacoes/arquivos sem erros
+- AUTO-E67BDCA124EB -> Qase #424: [AUTO] Logs abre em /automacoes/logs sem erros
+- AUTO-3F888A1CA10B -> Qase #425: [AUTO] Scripts abre em /automacoes/scripts sem erros
+- AUTO-D7DF99CFEC92 -> Qase #426: [AUTO] Fluxos abre em /automacoes/fluxos sem erros
+- AUTO-904BD3A8ECB7 -> Qase #427: [AUTO] ambiente exige URL base e token no Studio
+- AUTO-4B1A2BA807E2 -> Qase #428: [AUTO] brain agents tab renders agent selectors
+- AUTO-EB2826F8A09E -> Qase #429: [AUTO] brain agents tab switches agent modes
+- AUTO-7A5CE521238D -> Qase #430: [AUTO] brain agent sends message and receives streaming response
+- AUTO-DC2BC014DFBB -> Qase #431: [AUTO] brain agent input disabled while loading and send button inactive when empty
+- AUTO-AC0C4870A52C -> Qase #432: [AUTO] brain agents tab messages area starts empty with quick prompts
+- AUTO-2ABA0CF3A934 -> Qase #433: [AUTO] Sidebar Casos navega para rota canônica
+- AUTO-2E9655281ADE -> Qase #434: [AUTO] Atalho Casos do UI Studio navega para rota canônica
+- AUTO-163D983195C2 -> Qase #435: [AUTO] Líder TC vincula automação sem duplicar caso
+- AUTO-F392DC5B41FD -> Qase #436: [AUTO] Suporte Técnico vincula automação sem duplicar caso
+- AUTO-72F951F336C2 -> Qase #437: [AUTO] abre o repositorio central e mostra a tela unica
+- AUTO-B5A513D3ACCA -> Qase #438: [AUTO] admin global sees clients list
+- AUTO-35DC30DA7173 -> Qase #439: [AUTO] user cannot access /admin/clients
+- AUTO-BC81A983BE40 -> Qase #440: [AUTO] dashboard mostra leitura executiva e alertas quando existem
+- AUTO-8B5258BED8AF -> Qase #441: [AUTO] admin compara metricas entre empresas
+- AUTO-E5269C80A22F -> Qase #442: [AUTO] mttr aparece apos fechar defeito manual no modal
+- AUTO-0FF698CF39B8 -> Qase #443: [AUTO] quality gate reprova run com falhas
+- AUTO-4D2E3C5558A7 -> Qase #444: [AUTO] company loads the current dashboard shell and key summary blocks
+- AUTO-18573C990AA7 -> Qase #445: [AUTO] company consegue exportar CSV de qualidade
+- AUTO-DD71AD90BE18 -> Qase #446: [AUTO] health score attention aparece no dashboard
+- AUTO-355E0C606FD9 -> Qase #447: [AUTO] dashboard exibe MTTR mÃ©dio
+- AUTO-C72F17783F6E -> Qase #448: [AUTO] MTTR Ã© calculado ao fechar defeito manual
+- AUTO-B39737839C6C -> Qase #449: [AUTO] histÃ³rico de quality gate Ã© registrado
+- AUTO-33536009A204 -> Qase #450: [AUTO] meta de qualidade mantém leitura executiva disponível
+- AUTO-DC29971640B9 -> Qase #451: [AUTO] release exibe quality score
+- AUTO-B124CBDFFDF1 -> Qase #452: [AUTO] tendÃªncia improving aparece no dashboard
+- AUTO-426FEBC11178 -> Qase #453: [AUTO] release com risco aparece na leitura executiva
+- AUTO-545B5B8DD68D -> Qase #454: [AUTO] dashboard indica defeitos e sinais de SLA
+- AUTO-BAC1BC0AD6EE -> Qase #455: [AUTO] dashboard mostra tendÃªncia de MTTR
+- AUTO-2F54EB87F9B0 -> Qase #456: [AUTO] empresa cria run e defeito com vinculo basico
+- AUTO-E8AD5E858A4D -> Qase #457: [AUTO] user cria defeito na empresa ativa
+- AUTO-9C19D39F78CF -> Qase #458: [AUTO] vincula defeito manual a uma run
+- AUTO-3231477C36F2 -> Qase #459: [AUTO] user nÃ£o vÃª botÃ£o de ediÃ§Ã£o de defeito manual
+- AUTO-89D49765A7D0 -> Qase #460: [AUTO] admin acessa pÃ¡gina de defeitos
+- AUTO-2AED2B707332 -> Qase #461: [AUTO] user vÃª pÃ¡gina e lista de defeitos na empresa ativa
+- AUTO-B992D0E62F3A -> Qase #462: [AUTO] admin move card para outra coluna
+- AUTO-01DF121BBB22 -> Qase #463: [AUTO] user nÃ£o vÃª controles de movimentaÃ§Ã£o
+- AUTO-A9B8A0B7611A -> Qase #464: [AUTO] status persiste apÃ³s reload
+- AUTO-5FDBEAACC93C -> Qase #465: [AUTO] user vÃª colunas do kanban
+- AUTO-7D5767FC67D2 -> Qase #466: [AUTO] user nÃ£o vÃª aÃ§Ãµes protegidas
+- AUTO-0ED4AA0A9D57 -> Qase #467: [AUTO] company vÃª editar/link em defeito manual, mas nÃ£o delete
+- AUTO-C1DB57DE0738 -> Qase #468: [AUTO] admin vÃª todas as aÃ§Ãµes
+- AUTO-3499D4644D39 -> Qase #469: [AUTO] documentos - company anexa arquivo e salva link
+- AUTO-BF3EBB3E5BA8 -> Qase #470: [AUTO] documentos - admin acessa outras empresas e company nao
+- AUTO-CB64C49FED7E -> Qase #471: [AUTO] exporta relatorio CSV com dados do kanban
+- AUTO-8F23787E789E -> Qase #472: [AUTO] exporta relatorio PDF da run
+- AUTO-4C2A36D0DA25 -> Qase #473: [AUTO] quality gate falho bloqueia aprovacao de run manual
+- AUTO-199C19A2CADD -> Qase #474: [AUTO] empresa ativa persiste apÃ³s reload
+
+- ... 156 cases adicionais criados.
+
+## Cases atualizados nesta etapa
+
+- Nenhum case atualizado.
+
+
+## Falhas
+
+- Nenhuma falha reportada na criação/atualização de cases.
+
+## Comandos usados nesta sincronização
+
+- `npx playwright test --list` -> exit 0, 10468 ms
+- `npx playwright test testes/api/login/esqueci-senha/esqueci-senha.endpoint.api.spec.ts --project=chromium --workers=1 --reporter=list` -> exit 0, 110814 ms
+- `npx playwright test testes/ui/login/esqueci-senha/fluxos/validacoes-publicas.ui.spec.ts --project=chromium --headed --workers=1 --reporter=list` -> exit 0, 141466 ms
+- `npm test -- --runInBand testes/api/geral/system-roles.test.ts` -> exit 0, 14407 ms
+
+## Complemento 2026-06-21 - Empresa em Solicitações
+
+- Projeto Qase: quality-control (qc)
+- URL: https://app.qase.io/project/qc
+- Cases antes do complemento: 579
+- Cases depois do complemento: 581
+- Suites depois do complemento: 39
+- Cases manuais atualizados: #160 a #174
+- Cases automáticos criados: #631 e #632
+- Plano atualizado: Regressão Quality Control - Completa por Tela e Automação (#2), agora com 581 cases
+- Run base atualizada: #1
+- Run complementar criada: Run - Complemento Empresa Solicitações - 2026-06-21 (#2), vinculada ao plano completo #2
+- Cases no run complementar: 581
+- Cases com resultado Passed no run complementar: 14
+- Failed: 0
+- Blocked: 0
+- Skipped: 0
+- Untested no run complementar: 567
+
+Cases com resultado Passed no run #2:
+
+- #160 Empresa acessa tela de Solicitações com escopo da própria empresa
+- #161 Empresa visualiza somente solicitações vinculadas à própria empresa
+- #162 Empresa não visualiza solicitação de outra empresa na busca ou listagem
+- #163 Empresa não acessa nem atua em solicitação de outra empresa por ID/API direta
+- #164 Empresa aceita/aprova solicitação da própria empresa
+- #168 Empresa não atua em solicitação de outra empresa por URL direta ou API
+- #169 Empresa não acessa admin inteiro fora de `/admin/access-requests`
+- #171 Solicitação aprovada pela Empresa deve manter vínculo correto com a empresa
+- #172 Usuário aprovado por Empresa deve entrar com escopo correto da empresa
+- #173 Fluxo de escopo da Empresa deve usar pelo menos duas empresas distintas
+- #174 E-mails de aceite, alteração e recusa por ação da Empresa devem refletir status correto
+- #565 `[AUTO] cada empresa deve ver somente as solicitações realizadas para ela`
+- #631 `[AUTO] Empresa deve aceitar solicitacao vinculada a propria empresa`
+- #632 `[AUTO] Empresa deve acessar somente a tela Solicitações dentro do admin`
+
+Status de e-mail:
+
+- Captura configurada nesta execução; e-mail de aceite validado no fluxo positivo e case #174 marcado Passed por essa evidência.
+- Se a captura de e-mail não estiver configurada em execução futura, o case de e-mail não deve ser marcado Passed.

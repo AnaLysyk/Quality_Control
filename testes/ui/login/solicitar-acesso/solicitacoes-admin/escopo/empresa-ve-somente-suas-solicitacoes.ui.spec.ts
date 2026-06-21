@@ -75,7 +75,7 @@ async function criarSolicitacaoUsuarioDaEmpresa(
     requestedCompanySlug: params.companySlug,
   });
 
-  await criarSolicitacaoPublicaComChave(request, payload);
+  return criarSolicitacaoPublicaComChave(request, payload);
 }
 
 async function validarApiEscopo(page: Page, esperado: string, proibido: string) {
@@ -110,6 +110,60 @@ async function validarUiEscopo(page: Page, esperado: string, proibido: string) {
   });
 }
 
+async function esperarBloqueio(response: import("@playwright/test").APIResponse) {
+  const body = await response.text().catch(() => "");
+  expect([403, 404], `${response.url()} -> ${response.status()} ${body}`).toContain(response.status());
+}
+
+async function validarBloqueioDiretoOutraEmpresa(
+  page: Page,
+  params: { requestId: string; companyId: string; companySlug: string },
+) {
+  await esperarBloqueio(
+    await page.request.patch(`/api/admin/access-requests/${encodeURIComponent(params.requestId)}`, {
+      data: {
+        email: "tentativa-fora-escopo@quality-control.test",
+        full_name: "Tentativa fora de escopo",
+        access_type: "company_user",
+        client_id: params.companyId,
+        company: params.companySlug,
+        title: "Tentativa fora de escopo",
+        description: "Tentativa de edicao direta por outra empresa.",
+      },
+    }),
+  );
+
+  await esperarBloqueio(
+    await page.request.post(`/api/admin/access-requests/${encodeURIComponent(params.requestId)}/accept`, {
+      data: { comment: "Tentativa de aceitar solicitacao de outra empresa." },
+    }),
+  );
+
+  await esperarBloqueio(
+    await page.request.post(
+      `/api/admin/access-requests/${encodeURIComponent(params.requestId)}/request-adjustment`,
+      {
+        data: {
+          comment: "Tentativa de solicitar ajuste em solicitacao de outra empresa.",
+          fields: ["phone"],
+        },
+      },
+    ),
+  );
+
+  await esperarBloqueio(
+    await page.request.post(`/api/admin/access-requests/${encodeURIComponent(params.requestId)}/reject`, {
+      data: { reason: "Tentativa de recusar solicitacao de outra empresa." },
+    }),
+  );
+
+  await esperarBloqueio(
+    await page.request.post(`/api/admin/access-requests/${encodeURIComponent(params.requestId)}/comments`, {
+      data: { comment: "Tentativa de comentar solicitacao de outra empresa." },
+    }),
+  );
+}
+
 test.describe("Solicitações de acesso - escopo por empresa", () => {
   test.setTimeout(240000);
 
@@ -137,12 +191,12 @@ test.describe("Solicitações de acesso - escopo por empresa", () => {
       const emailA = criarEmailTeste("escopo-empresa-a");
       const emailB = criarEmailTeste("escopo-empresa-b");
 
-      await criarSolicitacaoUsuarioDaEmpresa(adminContext.request, {
+      const solicitacaoA = await criarSolicitacaoUsuarioDaEmpresa(adminContext.request, {
         email: emailA,
         companyId: empresaAtivaA.id,
         companySlug: empresaAtivaA.slug,
       });
-      await criarSolicitacaoUsuarioDaEmpresa(adminContext.request, {
+      const solicitacaoB = await criarSolicitacaoUsuarioDaEmpresa(adminContext.request, {
         email: emailB,
         companyId: empresaAtivaB.id,
         companySlug: empresaAtivaB.slug,
@@ -154,6 +208,11 @@ test.describe("Solicitações de acesso - escopo por empresa", () => {
       });
       await validarApiEscopo(pageA, emailA, emailB);
       await validarUiEscopo(pageA, emailA, emailB);
+      await validarBloqueioDiretoOutraEmpresa(pageA, {
+        requestId: solicitacaoB.id,
+        companyId: empresaAtivaB.id,
+        companySlug: empresaAtivaB.slug,
+      });
 
       await loginEmpresa(pageB, {
         username: empresaB.username,
@@ -161,6 +220,11 @@ test.describe("Solicitações de acesso - escopo por empresa", () => {
       });
       await validarApiEscopo(pageB, emailB, emailA);
       await validarUiEscopo(pageB, emailB, emailA);
+      await validarBloqueioDiretoOutraEmpresa(pageB, {
+        requestId: solicitacaoA.id,
+        companyId: empresaAtivaA.id,
+        companySlug: empresaAtivaA.slug,
+      });
     } finally {
       await adminContext.close();
       await pageA.close();

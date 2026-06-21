@@ -8,7 +8,7 @@ const runHeaded = process.env.PLAYWRIGHT_HEADED === "1" || process.env.PLAYWRIGH
 const runRealEmailTests =
   process.env.PLAYWRIGHT_REAL_EMAIL === "1" || process.env.PLAYWRIGHT_REAL_EMAIL === "true";
 const emailCaptureFile = resolve("test-results/emails/outbox.jsonl");
-const e2eAuthDataDir = resolve("test-results/e2e-auth");
+const e2eAuthDataDir = resolve(".tmp/e2e-auth");
 const e2eProfilePassword =
   process.env.E2E_PROFILE_PASSWORD || randomBytes(24).toString("base64url");
 

@@ -58,6 +58,8 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         companyRole: admin.role,
         permissionRole: admin.role,
         isGlobalAdmin: Boolean(admin.isGlobalAdmin),
+        companyId: admin.companyId,
+        companySlug: admin.companySlug,
       },
       {
         comment,

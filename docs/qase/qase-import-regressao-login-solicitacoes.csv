@@ -1,4 +1,4 @@
-Title,Description,Preconditions,Postconditions,Steps,Expected Result,Priority,Type,Tags,Suite,Automation Status,Automation Path,Execution Command
+﻿Title,Description,Preconditions,Postconditions,Steps,Expected Result,Priority,Type,Tags,Suite,Automation Status,Automation Path,Execution Command
 "[AUTO] company nÃ£o consegue deletar defeito manual via API (403)","AUTO_DOC_ID: AUTO-B8A54D28EC0B
 
 Objetivo: documentar e validar o teste automatizado existente em testes/api/defeitos/rbac-defects-api.spec.ts:6.
@@ -3743,11 +3743,11 @@ Resultado esperado: Conferir status HTTP, corpo da resposta, mensagens de erro e
 
 5. Ação: Registrar evidência
 Resultado esperado: Anexar payload, response, logs e prints de cliente API quando aplicável.","O comportamento descrito em ""D7. getTicketViewScope retorna 'own' para perfil user"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,jest,api,permissoes","Regressão > Documentação viva testes > API > permissoes","Automatizado","testes/api/permissoes/gestao-permissoes.test.ts","npm test -- --runInBand testes/api/permissoes/gestao-permissoes.test.ts"
-"[AUTO] D8. getTicketViewScope retorna 'all' para suporte tecnico","AUTO_DOC_ID: AUTO-0EB398B3D50D
+"[AUTO] D8. getTicketViewScope retorna 'all' para Suporte Técnico","AUTO_DOC_ID: AUTO-0EB398B3D50D
 
 Objetivo: documentar e validar o teste automatizado existente em testes/api/permissoes/gestao-permissoes.test.ts:421.
 
-Descrição funcional: D8. getTicketViewScope retorna 'all' para suporte tecnico. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
+Descrição funcional: D8. getTicketViewScope retorna 'all' para Suporte Técnico. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
 
 Regra validada: Permissão na área API / permissoes, camada API, perfil Suporte Técnico.
 
@@ -3768,13 +3768,13 @@ Resultado esperado: Garantir servidor local e dados necessários para API / perm
 Resultado esperado: Preparar endpoint, método, headers, autenticação e payload equivalentes ao teste automatizado.
 
 3. Ação: Executar chamada
-Resultado esperado: Enviar a requisição do cenário: D8. getTicketViewScope retorna 'all' para suporte tecnico.
+Resultado esperado: Enviar a requisição do cenário: D8. getTicketViewScope retorna 'all' para Suporte Técnico.
 
 4. Ação: Validar contrato e status
 Resultado esperado: Conferir status HTTP, corpo da resposta, mensagens de erro e ausência de dados indevidos.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar payload, response, logs e prints de cliente API quando aplicável.","O comportamento descrito em ""D8. getTicketViewScope retorna 'all' para suporte tecnico"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,jest,api,permissoes","Regressão > Documentação viva testes > API > permissoes","Automatizado","testes/api/permissoes/gestao-permissoes.test.ts","npm test -- --runInBand testes/api/permissoes/gestao-permissoes.test.ts"
+Resultado esperado: Anexar payload, response, logs e prints de cliente API quando aplicável.","O comportamento descrito em ""D8. getTicketViewScope retorna 'all' para Suporte Técnico"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,jest,api,permissoes","Regressão > Documentação viva testes > API > permissoes","Automatizado","testes/api/permissoes/gestao-permissoes.test.ts","npm test -- --runInBand testes/api/permissoes/gestao-permissoes.test.ts"
 "[AUTO] E1. Usuário viewer legado → permissionRole 'testing_company_user'","AUTO_DOC_ID: AUTO-35A82910B2AD
 
 Objetivo: documentar e validar o teste automatizado existente em testes/api/permissoes/gestao-permissoes.test.ts:433.
@@ -10719,11 +10719,11 @@ Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloquei
 
 5. Ação: Registrar evidência
 Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Esqueci senha - fluxo por perfil › Lider TC recupera senha pelo fluxo atual"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,esqueci-senha,fluxos","Regressão > Login > Esqueci Senha","Automatizado","testes/ui/login/esqueci-senha/fluxos/recuperar-senha-por-perfil.ui.spec.ts","npx playwright test testes/ui/login/esqueci-senha/fluxos/recuperar-senha-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
-"[AUTO] Suporte Tecnico recupera senha pelo fluxo atual","AUTO_DOC_ID: AUTO-162660417752
+"[AUTO] Suporte Técnico recupera senha pelo fluxo atual","AUTO_DOC_ID: AUTO-162660417752
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/esqueci-senha/fluxos/recuperar-senha-por-perfil.ui.spec.ts:9.
 
-Descrição funcional: Esqueci senha - fluxo por perfil › Suporte Tecnico recupera senha pelo fluxo atual. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
+Descrição funcional: Esqueci senha - fluxo por perfil › Suporte Técnico recupera senha pelo fluxo atual. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
 
 Regra validada: Fluxo completo na área Login / Esqueci Senha, camada UI, perfil Suporte Técnico.
 
@@ -10744,13 +10744,13 @@ Resultado esperado: Garantir usuário/perfil necessário para Login / Esqueci Se
 Resultado esperado: Acessar manualmente a rota relacionada a Login / Esqueci Senha e aguardar carregamento completo sem erro visual.
 
 3. Ação: Executar a ação principal
-Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Suporte Tecnico recupera senha pelo fluxo atual.
+Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Suporte Técnico recupera senha pelo fluxo atual.
 
 4. Ação: Validar estado visual e permissões
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Esqueci senha - fluxo por perfil › Suporte Tecnico recupera senha pelo fluxo atual"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,esqueci-senha,fluxos","Regressão > Login > Esqueci Senha","Automatizado","testes/ui/login/esqueci-senha/fluxos/recuperar-senha-por-perfil.ui.spec.ts","npx playwright test testes/ui/login/esqueci-senha/fluxos/recuperar-senha-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Esqueci senha - fluxo por perfil › Suporte Técnico recupera senha pelo fluxo atual"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,esqueci-senha,fluxos","Regressão > Login > Esqueci Senha","Automatizado","testes/ui/login/esqueci-senha/fluxos/recuperar-senha-por-perfil.ui.spec.ts","npx playwright test testes/ui/login/esqueci-senha/fluxos/recuperar-senha-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Usuario da Empresa recupera senha pelo fluxo atual","AUTO_DOC_ID: AUTO-A91306E0D01B
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/esqueci-senha/fluxos/recuperar-senha-por-perfil.ui.spec.ts:9.
@@ -10947,7 +10947,7 @@ Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário,
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/esqueci-senha/suporte-tecnico/recuperar-senha.ui.spec.ts:8.
 
-Descrição funcional: Esqueci senha - Suporte Tecnico › recupera senha, invalida token e mantem perfil administrativo. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
+Descrição funcional: Esqueci senha - Suporte Técnico › recupera senha, invalida token e mantem perfil administrativo. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
 
 Regra validada: Negativo na área Login / Esqueci Senha, camada UI, perfil Suporte Técnico, Admin.
 
@@ -10974,7 +10974,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: recu
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Esqueci senha - Suporte Tecnico › recupera senha, invalida token e mantem perfil administrativo"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,esqueci-senha,suporte-tecnico","Regressão > Login > Esqueci Senha","Automatizado","testes/ui/login/esqueci-senha/suporte-tecnico/recuperar-senha.ui.spec.ts","npx playwright test testes/ui/login/esqueci-senha/suporte-tecnico/recuperar-senha.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Esqueci senha - Suporte Técnico › recupera senha, invalida token e mantem perfil administrativo"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,esqueci-senha,suporte-tecnico","Regressão > Login > Esqueci Senha","Automatizado","testes/ui/login/esqueci-senha/suporte-tecnico/recuperar-senha.ui.spec.ts","npx playwright test testes/ui/login/esqueci-senha/suporte-tecnico/recuperar-senha.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] recupera senha, invalida token e preserva vinculo de empresa","AUTO_DOC_ID: AUTO-0EA57BDD846F
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/esqueci-senha/usuario-empresa/recuperar-senha.ui.spec.ts:8.
@@ -11262,7 +11262,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso, validar e-mail e consultar status para o perfil Líder TC","AUTO_DOC_ID: AUTO-3B3564BA9BF1
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts:15.
@@ -11294,7 +11294,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Líder TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Líder TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso, validar e-mail e consultar status para o perfil Suporte técnico","AUTO_DOC_ID: AUTO-F6B176A8800E
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts:15.
@@ -11326,7 +11326,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Suporte técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Suporte técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso, validar e-mail e consultar status para o perfil Usuário da empresa","AUTO_DOC_ID: AUTO-3882743A6ADC
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts:15.
@@ -11358,7 +11358,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Usuário da empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Usuário da empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso, validar e-mail e consultar status para o perfil Usuário Testing Company","AUTO_DOC_ID: AUTO-AE34A8921DA6
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts:15.
@@ -11390,7 +11390,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Usuário Testing Company"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Consulta de status da solicitação por perfil › deve solicitar acesso, validar e-mail e consultar status para o perfil Usuário Testing Company"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta-status","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta-status/consultar-status-solicitacao-por-perfil.visual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve consultar status e mostrar em análise com datas","AUTO_DOC_ID: AUTO-AD81E7974B38
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts:24.
@@ -11422,7 +11422,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve consultar status e mostrar em análise com datas"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve consultar status e mostrar em análise com datas"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve consultar manualmente por e-mail e token","AUTO_DOC_ID: AUTO-DF6205138446
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts:38.
@@ -11454,7 +11454,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve consultar manualmente por e-mail e token"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve consultar manualmente por e-mail e token"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve mostrar aprovado quando solicitação for aprovada","AUTO_DOC_ID: AUTO-CC15BE78EEF1
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts:49.
@@ -11486,7 +11486,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve mostrar aprovado quando solicitação for aprovada"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve mostrar aprovado quando solicitação for aprovada"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve mostrar recusado quando solicitação for recusada","AUTO_DOC_ID: AUTO-0A6B4D741A34
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts:63.
@@ -11518,7 +11518,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve mostrar recusado quando solicitação for recusada"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve mostrar recusado quando solicitação for recusada"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve mostrar campos de correção quando houver ajuste","AUTO_DOC_ID: AUTO-4CDE0C5308F9
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts:78.
@@ -11550,7 +11550,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve mostrar campos de correção quando houver ajuste"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - consulta/status UI › deve mostrar campos de correção quando houver ajuste"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,consulta","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/consulta/consultar-status.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] formulario publico nao possui violacoes graves de acessibilidade","AUTO_DOC_ID: AUTO-87732305FDF7
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/formulario-publico/acessibilidade/formulario.acessibilidade.ui.spec.ts:9.
@@ -11582,7 +11582,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: form
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""formulario publico nao possui violacoes graves de acessibilidade"" deve ocorrer sem divergência entre manual e automação.","Média","Acessibilidade","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,acessibilidade","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/acessibilidade/formulario.acessibilidade.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/acessibilidade/formulario.acessibilidade.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""formulario publico nao possui violacoes graves de acessibilidade"" deve ocorrer sem divergência entre manual e automação.","Média","Acessibilidade","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,acessibilidade","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/acessibilidade/formulario.acessibilidade.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/acessibilidade/formulario.acessibilidade.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso para o perfil Empresa","AUTO_DOC_ID: AUTO-DB0BDA0ABDBC
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts:105.
@@ -11614,7 +11614,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso para o perfil Líder TC","AUTO_DOC_ID: AUTO-12B655CB0B30
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts:105.
@@ -11646,7 +11646,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Líder TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Líder TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso para o perfil Suporte técnico","AUTO_DOC_ID: AUTO-0795164B4D49
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts:105.
@@ -11678,7 +11678,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Suporte técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Suporte técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso para o perfil Usuário da empresa","AUTO_DOC_ID: AUTO-20381FB2F4C0
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts:105.
@@ -11710,7 +11710,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Usuário da empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Usuário da empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso para o perfil Usuário Testing Company","AUTO_DOC_ID: AUTO-67D4D4DD3ACD
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts:105.
@@ -11742,7 +11742,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Usuário Testing Company"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - todos os perfis › deve solicitar acesso para o perfil Usuário Testing Company"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/criar-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve criar solicitação, validar e-mail recebido e consultar status pendente","AUTO_DOC_ID: AUTO-87CB5660E4E0
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/formulario-publico/perfis/lider-tc/criar-solicitacao.ui.spec.ts:35.
@@ -11774,7 +11774,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""UI - Login - Solicitar acesso - Líder TC › deve criar solicitação, validar e-mail recebido e consultar status pendente"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis,lider-tc","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/lider-tc/criar-solicitacao.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/lider-tc/criar-solicitacao.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""UI - Login - Solicitar acesso - Líder TC › deve criar solicitação, validar e-mail recebido e consultar status pendente"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis,lider-tc","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/lider-tc/criar-solicitacao.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/lider-tc/criar-solicitacao.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve criar solicitação, validar e-mail recebido e consultar status pendente","AUTO_DOC_ID: AUTO-6ECEFFA8A76B
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/formulario-publico/perfis/suporte-tecnico/criar-solicitacao.ui.spec.ts:35.
@@ -11806,7 +11806,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""UI - Login - Solicitar acesso - Suporte Técnico  › deve criar solicitação, validar e-mail recebido e consultar status pendente"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis,suporte-tecnico","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/suporte-tecnico/criar-solicitacao.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/suporte-tecnico/criar-solicitacao.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""UI - Login - Solicitar acesso - Suporte Técnico  › deve criar solicitação, validar e-mail recebido e consultar status pendente"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,formulario-publico,perfis,suporte-tecnico","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/formulario-publico/perfis/suporte-tecnico/criar-solicitacao.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/formulario-publico/perfis/suporte-tecnico/criar-solicitacao.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Empresa deve passar por 3 ajustes, conversa, aprovacao e login","AUTO_DOC_ID: AUTO-E332133062DC
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:69.
@@ -11838,7 +11838,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Empr
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Empresa deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Empresa deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Lider TC deve passar por 3 ajustes, conversa, aprovacao e login","AUTO_DOC_ID: AUTO-5D02F7902295
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:69.
@@ -11870,12 +11870,12 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Lide
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Lider TC deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
-"[AUTO] Suporte tecnico deve passar por 3 ajustes, conversa, aprovacao e login","AUTO_DOC_ID: AUTO-2573D5D79E25
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Lider TC deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+"[AUTO] Suporte Técnico deve passar por 3 ajustes, conversa, aprovacao e login","AUTO_DOC_ID: AUTO-2573D5D79E25
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:69.
 
-Descrição funcional: Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Suporte tecnico deve passar por 3 ajustes, conversa, aprovacao e login. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
+Descrição funcional: Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Suporte Técnico deve passar por 3 ajustes, conversa, aprovacao e login. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
 
 Regra validada: Negativo na área Login / Solicitar Acesso, camada UI, perfil Suporte Técnico.
 
@@ -11896,13 +11896,13 @@ Resultado esperado: Garantir usuário/perfil necessário para Login / Solicitar 
 Resultado esperado: Acessar manualmente a rota relacionada a Login / Solicitar Acesso e aguardar carregamento completo sem erro visual.
 
 3. Ação: Executar a ação principal
-Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Suporte tecnico deve passar por 3 ajustes, conversa, aprovacao e login.
+Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Suporte Técnico deve passar por 3 ajustes, conversa, aprovacao e login.
 
 4. Ação: Validar estado visual e permissões
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Suporte tecnico deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Suporte Técnico deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Usuario da empresa deve passar por 3 ajustes, conversa, aprovacao e login","AUTO_DOC_ID: AUTO-4BFA869A9A72
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:69.
@@ -11934,7 +11934,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Usua
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Usuario da empresa deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Usuario da empresa deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Usuario Testing Company deve passar por 3 ajustes, conversa, aprovacao e login","AUTO_DOC_ID: AUTO-C5CEC510E324
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:69.
@@ -11966,7 +11966,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Usua
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Usuario Testing Company deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Usuario Testing Company deve passar por 3 ajustes, conversa, aprovacao e login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Empresa deve recusar solicitacao, enviar e-mail e bloquear login","AUTO_DOC_ID: AUTO-49C5913214C7
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:171.
@@ -11998,7 +11998,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Empr
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Empresa deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Empresa deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Lider TC deve recusar solicitacao, enviar e-mail e bloquear login","AUTO_DOC_ID: AUTO-BA66D9F39F26
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:171.
@@ -12030,12 +12030,12 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Lide
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Lider TC deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
-"[AUTO] Suporte tecnico deve recusar solicitacao, enviar e-mail e bloquear login","AUTO_DOC_ID: AUTO-38BFDAE16A8F
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Lider TC deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+"[AUTO] Suporte Técnico deve recusar solicitacao, enviar e-mail e bloquear login","AUTO_DOC_ID: AUTO-38BFDAE16A8F
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:171.
 
-Descrição funcional: Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Suporte tecnico deve recusar solicitacao, enviar e-mail e bloquear login. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
+Descrição funcional: Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Suporte Técnico deve recusar solicitacao, enviar e-mail e bloquear login. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
 
 Regra validada: Negativo na área Login / Solicitar Acesso, camada UI, perfil Suporte Técnico.
 
@@ -12056,13 +12056,13 @@ Resultado esperado: Garantir usuário/perfil necessário para Login / Solicitar 
 Resultado esperado: Acessar manualmente a rota relacionada a Login / Solicitar Acesso e aguardar carregamento completo sem erro visual.
 
 3. Ação: Executar a ação principal
-Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Suporte tecnico deve recusar solicitacao, enviar e-mail e bloquear login.
+Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Suporte Técnico deve recusar solicitacao, enviar e-mail e bloquear login.
 
 4. Ação: Validar estado visual e permissões
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Suporte tecnico deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Suporte Técnico deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Usuario da empresa deve recusar solicitacao, enviar e-mail e bloquear login","AUTO_DOC_ID: AUTO-019D9B0FFB60
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:171.
@@ -12094,7 +12094,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Usua
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Usuario da empresa deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Usuario da empresa deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Usuario Testing Company deve recusar solicitacao, enviar e-mail e bloquear login","AUTO_DOC_ID: AUTO-A4F4F1DC649C
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts:171.
@@ -12126,7 +12126,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Usua
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Usuario Testing Company deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por perfil › Usuario Testing Company deve recusar solicitacao, enviar e-mail e bloquear login"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,perfis","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] tela administrativa nao possui violacoes graves de acessibilidade","AUTO_DOC_ID: AUTO-F74A1EC568D9
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/acessibilidade/solicitacoes.acessibilidade.ui.spec.ts:10.
@@ -12158,7 +12158,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: tela
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""tela administrativa nao possui violacoes graves de acessibilidade"" deve ocorrer sem divergência entre manual e automação.","Média","Acessibilidade","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,acessibilidade","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/acessibilidade/solicitacoes.acessibilidade.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/acessibilidade/solicitacoes.acessibilidade.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""tela administrativa nao possui violacoes graves de acessibilidade"" deve ocorrer sem divergência entre manual e automação.","Média","Acessibilidade","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,acessibilidade","Regressão > Solicitações > Suporte Técnico","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/acessibilidade/solicitacoes.acessibilidade.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/acessibilidade/solicitacoes.acessibilidade.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] solicitação pública aprovada por Líder TC","AUTO_DOC_ID: AUTO-9A880C75088C
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts:408.
@@ -12190,7 +12190,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: soli
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Solicitação de acesso com aprovação › solicitação pública aprovada por Líder TC"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,aprovacao","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Solicitação de acesso com aprovação › solicitação pública aprovada por Líder TC"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,aprovacao","Regressão > Solicitações > Líder TC","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] solicitação pública aprovada por Suporte Técnico","AUTO_DOC_ID: AUTO-1C2E9F4841D4
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts:408.
@@ -12222,7 +12222,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: soli
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Solicitação de acesso com aprovação › solicitação pública aprovada por Suporte Técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,aprovacao","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""VISUAL - Solicitação de acesso com aprovação › solicitação pública aprovada por Suporte Técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,aprovacao","Regressão > Solicitações > Suporte Técnico","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/aprovacao/aprovar-solicitacao.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve criar solicitaÃ§Ã£o a partir da tela pÃºblica e capturar e-mail com detalhes","AUTO_DOC_ID: AUTO-816ABC10D444
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts:22.
@@ -12254,7 +12254,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ãµes de acesso - ciclo de e-mail UI › deve criar solicitaÃ§Ã£o a partir da tela pÃºblica e capturar e-mail com detalhes"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ãµes de acesso - ciclo de e-mail UI › deve criar solicitaÃ§Ã£o a partir da tela pÃºblica e capturar e-mail com detalhes"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve bloquear duplicidade a partir da tela pÃºblica e nÃ£o gerar novo e-mail","AUTO_DOC_ID: AUTO-054626CCD5D3
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts:51.
@@ -12286,7 +12286,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ãµes de acesso - ciclo de e-mail UI › deve bloquear duplicidade a partir da tela pÃºblica e nÃ£o gerar novo e-mail"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ãµes de acesso - ciclo de e-mail UI › deve bloquear duplicidade a partir da tela pÃºblica e nÃ£o gerar novo e-mail"" deve ocorrer sem divergência entre manual e automação.","Média","Negativo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar reenvio do cÃ³digo por nome e e-mail","AUTO_DOC_ID: AUTO-14FCAA8F0F82
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts:85.
@@ -12318,7 +12318,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ãµes de acesso - ciclo de e-mail UI › deve solicitar reenvio do cÃ³digo por nome e e-mail"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ãµes de acesso - ciclo de e-mail UI › deve solicitar reenvio do cÃ³digo por nome e e-mail"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/captura-e-reenvio.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso real para Líder TC","AUTO_DOC_ID: AUTO-435BA9AAEEBF
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts:27.
@@ -12350,7 +12350,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail › deve solicitar acesso real para Líder TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail › deve solicitar acesso real para Líder TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso real para Suporte Técnico","AUTO_DOC_ID: AUTO-83A100556C9A
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts:27.
@@ -12382,7 +12382,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail › deve solicitar acesso real para Suporte Técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail › deve solicitar acesso real para Suporte Técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso real para Usuário da empresa","AUTO_DOC_ID: AUTO-5C9721C66ED3
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts:27.
@@ -12414,7 +12414,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail › deve solicitar acesso real para Usuário da empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail › deve solicitar acesso real para Usuário da empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar acesso real para Usuário TC","AUTO_DOC_ID: AUTO-4E8FF69F978C
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts:27.
@@ -12446,7 +12446,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail › deve solicitar acesso real para Usuário TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail › deve solicitar acesso real para Usuário TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,email","Regressão > Login > Solicitar Acesso — Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/email/enviar-email-real.manual.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] tela de Solicitacoes carrega os endpoints administrativos esperados","AUTO_DOC_ID: AUTO-00134A748EB9
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/endpoints/endpoints-da-tela.ui.spec.ts:10.
@@ -12478,7 +12478,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: tela
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""tela de Solicitacoes carrega os endpoints administrativos esperados"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,endpoints","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/endpoints/endpoints-da-tela.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/endpoints/endpoints-da-tela.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""tela de Solicitacoes carrega os endpoints administrativos esperados"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,endpoints","Regressão > Solicitações > Suporte Técnico","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/endpoints/endpoints-da-tela.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/endpoints/endpoints-da-tela.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] cada empresa deve ver somente as solicitações realizadas para ela","AUTO_DOC_ID: AUTO-C32599137B97
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/escopo/empresa-ve-somente-suas-solicitacoes.ui.spec.ts:116.
@@ -12510,7 +12510,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: cada
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - escopo por empresa › cada empresa deve ver somente as solicitações realizadas para ela"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,escopo","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/escopo/empresa-ve-somente-suas-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/escopo/empresa-ve-somente-suas-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitações de acesso - escopo por empresa › cada empresa deve ver somente as solicitações realizadas para ela"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,escopo","Regressão > Solicitações > Empresa","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/escopo/empresa-ve-somente-suas-solicitacoes.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/escopo/empresa-ve-somente-suas-solicitacoes.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] deve solicitar ajuste, corrigir pela consulta pública e aprovar pela tela","AUTO_DOC_ID: AUTO-0A11C44F7A7D
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/fluxo-completo/solicitacao-ajuste-aprovacao.ui.spec.ts:76.
@@ -12542,7 +12542,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: deve
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - fluxo completo pela UI interna › deve solicitar ajuste, corrigir pela consulta pública e aprovar pela tela"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,fluxo-completo","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/fluxo-completo/solicitacao-ajuste-aprovacao.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/fluxo-completo/solicitacao-ajuste-aprovacao.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitação de acesso - fluxo completo pela UI interna › deve solicitar ajuste, corrigir pela consulta pública e aprovar pela tela"" deve ocorrer sem divergência entre manual e automação.","Média","Fluxo completo","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,fluxo-completo","Regressão > Solicitações > Suporte Técnico","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/fluxo-completo/solicitacao-ajuste-aprovacao.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/fluxo-completo/solicitacao-ajuste-aprovacao.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Líder TC deve fazer login e visualizar o modulo Solicitacoes","AUTO_DOC_ID: AUTO-642613F796D3
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts:21.
@@ -12574,7 +12574,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Líd
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Líder TC deve fazer login e visualizar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Líder TC deve fazer login e visualizar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Solicitações > Líder TC","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Suporte Técnico deve fazer login e visualizar o modulo Solicitacoes","AUTO_DOC_ID: AUTO-D8E08974602D
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts:21.
@@ -12606,7 +12606,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Supo
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Suporte Técnico deve fazer login e visualizar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Suporte Técnico deve fazer login e visualizar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Solicitações > Suporte Técnico","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Empresa deve fazer login sem acessar o modulo Solicitacoes","AUTO_DOC_ID: AUTO-AFCB1A9D25B0
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts:37.
@@ -12638,7 +12638,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Empr
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Empresa deve fazer login sem acessar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Empresa deve fazer login sem acessar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Solicitações > Empresa","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Usuário da empresa deve fazer login sem acessar o modulo Solicitacoes","AUTO_DOC_ID: AUTO-BB028E90D8BB
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts:37.
@@ -12670,7 +12670,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Usu�
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Usuário da empresa deve fazer login sem acessar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Usuário da empresa deve fazer login sem acessar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Solicitações > Empresa","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Usuário Testing Company deve fazer login sem acessar o modulo Solicitacoes","AUTO_DOC_ID: AUTO-4A12C8B0716B
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts:37.
@@ -12702,7 +12702,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Usu�
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Usuário Testing Company deve fazer login sem acessar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › Usuário Testing Company deve fazer login sem acessar o modulo Solicitacoes"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Solicitações > Suporte Técnico","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] rota antiga /admin/requests nao deve existir como fluxo valido","AUTO_DOC_ID: AUTO-51C07961BE36
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts:48.
@@ -12734,7 +12734,7 @@ Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: rota
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › rota antiga /admin/requests nao deve existir como fluxo valido"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Login > Solicitar Acesso - Usuário Público","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Solicitacoes - acesso por perfil - UI › rota antiga /admin/requests nao deve existir como fluxo valido"" deve ocorrer sem divergência entre manual e automação.","Alta","Permissão","qase-doc-viva,automacao-existente,playwright,ui,login,solicitar-acesso,solicitacoes-admin,permissao","Regressão > Solicitações > Suporte Técnico","Automatizado","testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts","npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/permissao/acessar-modulo.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Empresa cria caso, plano e run no próprio contexto","AUTO_DOC_ID: AUTO-C8C8D68FE0DE
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/repositorio-casos/perfis/case-repository-profile-cycle.spec.ts:287.
@@ -14207,11 +14207,11 @@ Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloquei
 
 5. Ação: Registrar evidência
 Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Suporte Técnico — criação de perfis › Suporte TC cria perfil: Empresa"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts","npx playwright test testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
-"[AUTO] Suporte TC cria perfil: Suporte Tecnico","AUTO_DOC_ID: AUTO-963E92073693
+"[AUTO] Suporte TC cria perfil: Suporte Técnico","AUTO_DOC_ID: AUTO-963E92073693
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts:33.
 
-Descrição funcional: Suporte Técnico — criação de perfis › Suporte TC cria perfil: Suporte Tecnico. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
+Descrição funcional: Suporte Técnico — criação de perfis › Suporte TC cria perfil: Suporte Técnico. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
 
 Regra validada: Funcional na área UI / usuarios, camada UI, perfil Suporte Técnico.
 
@@ -14232,13 +14232,13 @@ Resultado esperado: Garantir usuário/perfil necessário para UI / usuarios, ser
 Resultado esperado: Acessar manualmente a rota relacionada a UI / usuarios e aguardar carregamento completo sem erro visual.
 
 3. Ação: Executar a ação principal
-Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Suporte TC cria perfil: Suporte Tecnico.
+Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Suporte TC cria perfil: Suporte Técnico.
 
 4. Ação: Validar estado visual e permissões
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Suporte Técnico — criação de perfis › Suporte TC cria perfil: Suporte Tecnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts","npx playwright test testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Suporte Técnico — criação de perfis › Suporte TC cria perfil: Suporte Técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts","npx playwright test testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Suporte TC cria perfil: Usuário da Empresa","AUTO_DOC_ID: AUTO-C52F0811879C
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts:33.
@@ -14367,11 +14367,11 @@ Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloquei
 
 5. Ação: Registrar evidência
 Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Líder TC — criação de perfis › Líder TC cria perfil: Lider TC"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts","npx playwright test testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
-"[AUTO] Líder TC cria perfil: Suporte Tecnico","AUTO_DOC_ID: AUTO-D20CB27EA754
+"[AUTO] Líder TC cria perfil: Suporte Técnico","AUTO_DOC_ID: AUTO-D20CB27EA754
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts:80.
 
-Descrição funcional: Líder TC — criação de perfis › Líder TC cria perfil: Suporte Tecnico. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
+Descrição funcional: Líder TC — criação de perfis › Líder TC cria perfil: Suporte Técnico. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
 
 Regra validada: Funcional na área UI / usuarios, camada UI, perfil Líder TC, Suporte Técnico.
 
@@ -14392,13 +14392,13 @@ Resultado esperado: Garantir usuário/perfil necessário para UI / usuarios, ser
 Resultado esperado: Acessar manualmente a rota relacionada a UI / usuarios e aguardar carregamento completo sem erro visual.
 
 3. Ação: Executar a ação principal
-Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Líder TC cria perfil: Suporte Tecnico.
+Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: Líder TC cria perfil: Suporte Técnico.
 
 4. Ação: Validar estado visual e permissões
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Líder TC — criação de perfis › Líder TC cria perfil: Suporte Tecnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts","npx playwright test testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""Líder TC — criação de perfis › Líder TC cria perfil: Suporte Técnico"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts","npx playwright test testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts --project=chromium --workers=1 --reporter=list"
 "[AUTO] Líder TC cria perfil: Usuário da Empresa","AUTO_DOC_ID: AUTO-21D42FA6E4F8
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/usuarios/criar-usuarios-por-perfil.ui.spec.ts:80.
@@ -14559,11 +14559,11 @@ Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloquei
 
 5. Ação: Registrar evidência
 Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""user sem empresas nao acessa contexto indevido"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios,sem-empresa","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/sem-empresa/user-without-companies.spec.ts","npx playwright test testes/ui/usuarios/sem-empresa/user-without-companies.spec.ts --project=chromium --workers=1 --reporter=list"
-"[AUTO] perfil suporte tecnico autentica via mock e acessa area global","AUTO_DOC_ID: AUTO-4A5F12B0C9A7
+"[AUTO] perfil Suporte Técnico autentica via mock e acessa area global","AUTO_DOC_ID: AUTO-4A5F12B0C9A7
 
 Objetivo: documentar e validar o teste automatizado existente em testes/ui/usuarios/suporte-tecnico/autenticacao/perfil-suporte-auth.spec.ts:4.
 
-Descrição funcional: perfil suporte tecnico autentica via mock e acessa area global. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
+Descrição funcional: perfil Suporte Técnico autentica via mock e acessa area global. Este case transforma o teste automatizado em documentação manual executável no Qase, mantendo o repositório e o Qase compatíveis.
 
 Regra validada: Funcional na área UI / usuarios, camada UI, perfil Suporte Técnico.
 
@@ -14584,10 +14584,10 @@ Resultado esperado: Garantir usuário/perfil necessário para UI / usuarios, ser
 Resultado esperado: Acessar manualmente a rota relacionada a UI / usuarios e aguardar carregamento completo sem erro visual.
 
 3. Ação: Executar a ação principal
-Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: perfil suporte tecnico autentica via mock e acessa area global.
+Resultado esperado: Reproduzir o cenário descrito pelo teste automatizado: perfil Suporte Técnico autentica via mock e acessa area global.
 
 4. Ação: Validar estado visual e permissões
 Resultado esperado: Confirmar mensagens, menus, botões, dados exibidos, bloqueios e redirecionamentos esperados.
 
 5. Ação: Registrar evidência
-Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""perfil suporte tecnico autentica via mock e acessa area global"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios,suporte-tecnico,autenticacao","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/suporte-tecnico/autenticacao/perfil-suporte-auth.spec.ts","npx playwright test testes/ui/usuarios/suporte-tecnico/autenticacao/perfil-suporte-auth.spec.ts --project=chromium --workers=1 --reporter=list"
+Resultado esperado: Anexar print, vídeo/trace se disponível e anotar usuário, perfil e massa usada.","O comportamento descrito em ""perfil Suporte Técnico autentica via mock e acessa area global"" deve ocorrer sem divergência entre manual e automação.","Média","Funcional","qase-doc-viva,automacao-existente,playwright,ui,usuarios,suporte-tecnico,autenticacao","Regressão > Documentação viva testes > UI > usuarios","Automatizado","testes/ui/usuarios/suporte-tecnico/autenticacao/perfil-suporte-auth.spec.ts","npx playwright test testes/ui/usuarios/suporte-tecnico/autenticacao/perfil-suporte-auth.spec.ts --project=chromium --workers=1 --reporter=list"

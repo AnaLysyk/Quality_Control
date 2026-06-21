@@ -1,4 +1,4 @@
-# Lacunas repositório x Qase
+﻿# Lacunas repositório x Qase
 
 ## Resumo
 
@@ -136,7 +136,7 @@
 - AUTO-E2BA61FCC7A2 - testes/api/permissoes/gestao-permissoes.test.ts:387 - D5. effectivePermissions múltiplos deny no mesmo módulo
 - AUTO-6FC81FCBCE8B - testes/api/permissoes/gestao-permissoes.test.ts:402 - D6. toVisibilityMap retorna false para módulos sem view
 - AUTO-1DB6073C0A07 - testes/api/permissoes/gestao-permissoes.test.ts:415 - D7. getTicketViewScope retorna 'own' para perfil user
-- AUTO-0EB398B3D50D - testes/api/permissoes/gestao-permissoes.test.ts:421 - D8. getTicketViewScope retorna 'all' para suporte tecnico
+- AUTO-0EB398B3D50D - testes/api/permissoes/gestao-permissoes.test.ts:421 - D8. getTicketViewScope retorna 'all' para Suporte Técnico
 - AUTO-35A82910B2AD - testes/api/permissoes/gestao-permissoes.test.ts:433 - E1. Usuário viewer legado → permissionRole 'testing_company_user'
 - AUTO-E0719745AC5F - testes/api/permissoes/gestao-permissoes.test.ts:440 - E2. Membership company_admin legado → permissionRole 'empresa'
 - AUTO-B9F12BE7D189 - testes/api/permissoes/gestao-permissoes.test.ts:447 - E3. Membership it_dev legado → permissionRole 'technical_support'

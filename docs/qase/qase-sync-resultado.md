@@ -1,4 +1,4 @@
-# Resultado da sincronização com Qase
+﻿# Resultado da sincronização com Qase
 
 - Projeto Qase: quality-control (qc)
 - URL: https://app.qase.io/project/qc
@@ -173,7 +173,7 @@
 - AUTO-E2BA61FCC7A2 -> Qase #289: [AUTO] D5. effectivePermissions múltiplos deny no mesmo módulo
 - AUTO-6FC81FCBCE8B -> Qase #290: [AUTO] D6. toVisibilityMap retorna false para módulos sem view
 - AUTO-1DB6073C0A07 -> Qase #291: [AUTO] D7. getTicketViewScope retorna 'own' para perfil user
-- AUTO-0EB398B3D50D -> Qase #292: [AUTO] D8. getTicketViewScope retorna 'all' para suporte tecnico
+- AUTO-0EB398B3D50D -> Qase #292: [AUTO] D8. getTicketViewScope retorna 'all' para Suporte Técnico
 - AUTO-35A82910B2AD -> Qase #293: [AUTO] E1. Usuário viewer legado → permissionRole 'testing_company_user'
 - AUTO-E0719745AC5F -> Qase #294: [AUTO] E2. Membership company_admin legado → permissionRole 'empresa'
 - AUTO-B9F12BE7D189 -> Qase #295: [AUTO] E3. Membership it_dev legado → permissionRole 'technical_support'

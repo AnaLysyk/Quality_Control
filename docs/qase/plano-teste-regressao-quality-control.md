@@ -1,4 +1,4 @@
-# Plano de teste - Regressão Quality Control
+﻿# Plano de teste - Regressão Quality Control
 
 - Nome do plano: Regressão Quality Control - Completa por Tela e Automação
 - Plano Qase: #2 (created)
@@ -78,7 +78,7 @@
 - Regressão > Documentação viva testes > UI > usuarios: 13
 - Regressão > Login > Acesso: 8
 - Regressão > Login > Esqueci Senha: 22
-- Regressão > Login > Solicitar Acesso - Usuário Público: 47
+- Regressão > Login > Solicitar Acesso — Usuário Público: 47
 
 ## Critérios de entrada
 

@@ -1,4 +1,4 @@
-# Plano de testes manual para Qase - Regressão Login e Solicitações
+﻿# Plano de testes manual para Qase - Regressão Login e Solicitações
 
 ## Contexto
 
@@ -16,7 +16,7 @@ Criar casos manuais ricos, rastreáveis e executáveis no Qase, mapeando a autom
 
 - Login / Acesso por perfil.
 - Login / Esqueci Senha por perfil, incluindo e-mails, token, senha antiga/nova e preservação de perfil.
-- Login / Solicitar Acesso - Usuário Público, incluindo criação, e-mails, consulta pública, aprovação, ajuste, recusa/rejeição e login pós-aprovação.
+- Login / Solicitar Acesso — Usuário Público, incluindo criação, e-mails, consulta pública, aprovação, ajuste, recusa/rejeição e login pós-aprovação.
 - Solicitações para Líder TC, Suporte Técnico e Empresa.
 - Escopo da Empresa com duas empresas distintas.
 
@@ -36,7 +36,7 @@ Regressão
   Login
     Acesso
     Esqueci Senha
-    Solicitar Acesso - Usuário Público
+    Solicitar Acesso — Usuário Público
       Consulta Pública
   Solicitações
     Líder TC
@@ -2186,7 +2186,7 @@ E-mail permite seguir o fluxo de redefinição com segurança.
 
 ### QC-REG-LS-031 - Tela pública de Solicitar Acesso deve abrir e adaptar campos conforme perfil
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar abertura do formulário público e exibição dinâmica de campos por perfil solicitado.
 - Descrição detalhada: O formulário deve orientar o usuário público e exibir campos de empresa, usuário ou vínculo apenas quando a regra do perfil exigir.
 - Regra de negócio validada: Perfis solicitáveis possuem campos específicos: Empresa exige dados da empresa; Usuário Empresa exige empresa vinculada; Suporte Técnico exige usuário/login.
@@ -2253,7 +2253,7 @@ Formulário preparado para criar solicitações válidas por perfil.
 
 ### QC-REG-LS-032 - Solicitar Acesso deve validar campos obrigatórios antes de criar solicitação
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Garantir que o formulário público não aceite envio incompleto.
 - Descrição detalhada: Dados obrigatórios incompletos geram solicitações sem rastreabilidade suficiente e podem travar a análise interna.
 - Regra de negócio validada: Campos obrigatórios do perfil selecionado devem ser preenchidos antes da criação.
@@ -2320,7 +2320,7 @@ Solicitações só são criadas com dados mínimos suficientes para análise.
 
 ### QC-REG-LS-033 - Solicitar Acesso deve rejeitar e-mail inválido com mensagem compreensível
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar formato do e-mail informado pelo usuário público.
 - Descrição detalhada: E-mail inválido impede comunicação de status, consulta pública e envio de aceite, ajuste ou recusa.
 - Regra de negócio validada: Solicitação depende de e-mail válido para acompanhamento.
@@ -2387,7 +2387,7 @@ Solicitação só segue com e-mail válido.
 
 ### QC-REG-LS-034 - Solicitar Acesso deve validar senha obrigatória e padrão de senha
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Garantir que senha cadastrada no fluxo público é obrigatória e compatível com login após aprovação.
 - Descrição detalhada: A senha definida na solicitação será usada ou referenciada após aprovação; por isso deve ser segura e persistida corretamente.
 - Regra de negócio validada: Senha obrigatória deve cumprir o padrão vigente para todos os perfis aplicáveis.
@@ -2454,7 +2454,7 @@ A senha aprovada deve permitir login quando a solicitação for aceita.
 
 ### QC-REG-LS-035 - Solicitação duplicada deve ser bloqueada sem gerar novo e-mail
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar bloqueio de duplicidade para solicitação pública pendente.
 - Descrição detalhada: Duplicidades poluem a fila de Solicitações e podem gerar múltiplos e-mails para o mesmo acompanhamento.
 - Regra de negócio validada: Solicitação pendente equivalente não deve ser duplicada.
@@ -2522,7 +2522,7 @@ A fila mantém uma única solicitação rastreável para o usuário.
 
 ### QC-REG-LS-036 - Solicitação pública criada deve aparecer na tela interna de Solicitações
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar que a criação pública entra na fila administrativa para revisão.
 - Descrição detalhada: Sem entrada na fila interna, Líder TC, Suporte Técnico ou Empresa não conseguem atuar na solicitação.
 - Regra de negócio validada: Toda solicitação pública válida deve ficar disponível para perfil revisor autorizado.
@@ -2590,7 +2590,7 @@ Fila interna recebe a solicitação pronta para análise.
 
 ### QC-REG-LS-037 - Formulário público de Solicitar Acesso deve atender acessibilidade crítica
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar que o formulário público não possui violações graves de acessibilidade.
 - Descrição detalhada: O usuário público precisa conseguir solicitar acesso sem depender de interação inacessível.
 - Regra de negócio validada: Tela pública deve ser operável e compreensível.
@@ -2657,7 +2657,7 @@ Tela apta para execução assistiva básica.
 
 ### QC-REG-LS-038 - Campos de Empresa devem validar CNPJ, CEP e vínculo quando o perfil exigir dados empresariais
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar comportamento de campos de empresa no fluxo público.
 - Descrição detalhada: Empresa e Usuário Empresa dependem de dados ou vínculo empresarial corretos para preservar escopo após aprovação.
 - Regra de negócio validada: Dados empresariais devem alimentar corretamente a solicitação e o vínculo posterior.
@@ -2724,7 +2724,7 @@ Solicitação preserva empresa solicitada ou empresa vinculada.
 
 ### QC-REG-LS-039 - Usuário público deve solicitar acesso como Empresa, receber e-mail inicial e acompanhar status
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar criação pública da solicitação para Empresa com e-mail de recebimento e consulta inicial.
 - Descrição detalhada: O fluxo completo inicial garante que Empresa entra na fila, recebe orientação e consegue acompanhar a solicitação sem login.
 - Regra de negócio validada: Solicitação pública válida nasce como aguardando análise e deve possuir chave de acompanhamento.
@@ -2791,7 +2791,7 @@ Empresa possui solicitação rastreável e pronta para revisão.
 
 ### QC-REG-LS-040 - E-mail de solicitação recebida para Empresa deve conter dados e link de consulta
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail inicial enviado ao solicitar acesso como Empresa.
 - Descrição detalhada: O e-mail inicial é a principal referência do usuário público para acompanhar a solicitação.
 - Regra de negócio validada: E-mail de recebimento deve informar perfil solicitado, solicitante, status inicial e caminho de consulta.
@@ -2859,7 +2859,7 @@ Usuário consegue acompanhar a solicitação pelo e-mail recebido.
 
 ### QC-REG-LS-041 - Consulta pública inicial de Empresa deve exibir status aguardando análise e dados essenciais
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar tela pública de acompanhamento após solicitação de Empresa.
 - Descrição detalhada: A consulta pública precisa informar o estado atual sem expor dados além do necessário.
 - Regra de negócio validada: Solicitação recém-criada deve aparecer como aguardando análise ou em análise.
@@ -2926,7 +2926,7 @@ Consulta pública confirma o acompanhamento da solicitação.
 
 ### QC-REG-LS-042 - E-mail de aceite para Empresa deve liberar login e preservar permissões
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail de aprovação e login após aceite de Empresa.
 - Descrição detalhada: A aprovação deve comunicar o usuário e permitir entrada no sistema com o perfil aprovado.
 - Regra de negócio validada: Acesso aprovado cria usuário/login com perfil e escopo corretos.
@@ -2995,7 +2995,7 @@ Empresa aprovado consegue autenticar com permissões corretas.
 
 ### QC-REG-LS-043 - E-mail de alteração para Empresa deve orientar correção e devolver solicitação para análise
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar pedido de alteração, e-mail de ajuste e correção do usuário para Empresa.
 - Descrição detalhada: Quando o revisor solicita alteração, o usuário público precisa receber instruções, corrigir somente campos permitidos e devolver a solicitação.
 - Regra de negócio validada: Ajustes devem registrar campos solicitados, comentário do revisor, correção e retorno para análise.
@@ -3063,7 +3063,7 @@ Solicitação corrigida fica disponível para nova avaliação.
 
 ### QC-REG-LS-044 - E-mail de recusa para Empresa deve informar justificativa e bloquear login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar recusa/rejeição da solicitação de Empresa.
 - Descrição detalhada: Recusa deve finalizar o fluxo de forma clara, preservar justificativa e impedir criação de acesso.
 - Regra de negócio validada: Solicitação recusada/rejeitada não pode liberar login nem ser aprovada posteriormente sem nova regra explícita.
@@ -3131,7 +3131,7 @@ Solicitação finalizada sem liberar acesso.
 
 ### QC-REG-LS-045 - Empresa deve passar por ajustes, conversa, aprovação final e login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar fluxo robusto de múltiplos ajustes, conversa e aprovação para Empresa.
 - Descrição detalhada: Esse caso cobre o caminho mais completo de colaboração entre revisor e solicitante antes da aprovação.
 - Regra de negócio validada: Histórico de ajustes e comentários deve ser preservado até a aprovação.
@@ -3198,7 +3198,7 @@ Fluxo completo mantém histórico e libera acesso apenas após aprovação.
 
 ### QC-REG-LS-046 - Usuário público deve solicitar acesso como Usuário Empresa, receber e-mail inicial e acompanhar status
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar criação pública da solicitação para Usuário Empresa com e-mail de recebimento e consulta inicial.
 - Descrição detalhada: O fluxo completo inicial garante que Usuário Empresa entra na fila, recebe orientação e consegue acompanhar a solicitação sem login.
 - Regra de negócio validada: Solicitação pública válida nasce como aguardando análise e deve possuir chave de acompanhamento.
@@ -3265,7 +3265,7 @@ Usuário Empresa possui solicitação rastreável e pronta para revisão.
 
 ### QC-REG-LS-047 - E-mail de solicitação recebida para Usuário Empresa deve conter dados e link de consulta
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail inicial enviado ao solicitar acesso como Usuário Empresa.
 - Descrição detalhada: O e-mail inicial é a principal referência do usuário público para acompanhar a solicitação.
 - Regra de negócio validada: E-mail de recebimento deve informar perfil solicitado, solicitante, status inicial e caminho de consulta.
@@ -3333,7 +3333,7 @@ Usuário consegue acompanhar a solicitação pelo e-mail recebido.
 
 ### QC-REG-LS-048 - Consulta pública inicial de Usuário Empresa deve exibir status aguardando análise e dados essenciais
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar tela pública de acompanhamento após solicitação de Usuário Empresa.
 - Descrição detalhada: A consulta pública precisa informar o estado atual sem expor dados além do necessário.
 - Regra de negócio validada: Solicitação recém-criada deve aparecer como aguardando análise ou em análise.
@@ -3400,7 +3400,7 @@ Consulta pública confirma o acompanhamento da solicitação.
 
 ### QC-REG-LS-049 - E-mail de aceite para Usuário Empresa deve liberar login e preservar permissões
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail de aprovação e login após aceite de Usuário Empresa.
 - Descrição detalhada: A aprovação deve comunicar o usuário e permitir entrada no sistema com o perfil aprovado.
 - Regra de negócio validada: Acesso aprovado cria usuário/login com perfil e escopo corretos.
@@ -3469,7 +3469,7 @@ Usuário Empresa aprovado consegue autenticar com permissões corretas.
 
 ### QC-REG-LS-050 - E-mail de alteração para Usuário Empresa deve orientar correção e devolver solicitação para análise
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar pedido de alteração, e-mail de ajuste e correção do usuário para Usuário Empresa.
 - Descrição detalhada: Quando o revisor solicita alteração, o usuário público precisa receber instruções, corrigir somente campos permitidos e devolver a solicitação.
 - Regra de negócio validada: Ajustes devem registrar campos solicitados, comentário do revisor, correção e retorno para análise.
@@ -3537,7 +3537,7 @@ Solicitação corrigida fica disponível para nova avaliação.
 
 ### QC-REG-LS-051 - E-mail de recusa para Usuário Empresa deve informar justificativa e bloquear login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar recusa/rejeição da solicitação de Usuário Empresa.
 - Descrição detalhada: Recusa deve finalizar o fluxo de forma clara, preservar justificativa e impedir criação de acesso.
 - Regra de negócio validada: Solicitação recusada/rejeitada não pode liberar login nem ser aprovada posteriormente sem nova regra explícita.
@@ -3605,7 +3605,7 @@ Solicitação finalizada sem liberar acesso.
 
 ### QC-REG-LS-052 - Usuário Empresa deve passar por ajustes, conversa, aprovação final e login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar fluxo robusto de múltiplos ajustes, conversa e aprovação para Usuário Empresa.
 - Descrição detalhada: Esse caso cobre o caminho mais completo de colaboração entre revisor e solicitante antes da aprovação.
 - Regra de negócio validada: Histórico de ajustes e comentários deve ser preservado até a aprovação.
@@ -3672,7 +3672,7 @@ Fluxo completo mantém histórico e libera acesso apenas após aprovação.
 
 ### QC-REG-LS-053 - Usuário público deve solicitar acesso como Usuário TC, receber e-mail inicial e acompanhar status
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar criação pública da solicitação para Usuário TC com e-mail de recebimento e consulta inicial.
 - Descrição detalhada: O fluxo completo inicial garante que Usuário TC entra na fila, recebe orientação e consegue acompanhar a solicitação sem login.
 - Regra de negócio validada: Solicitação pública válida nasce como aguardando análise e deve possuir chave de acompanhamento.
@@ -3739,7 +3739,7 @@ Usuário TC possui solicitação rastreável e pronta para revisão.
 
 ### QC-REG-LS-054 - E-mail de solicitação recebida para Usuário TC deve conter dados e link de consulta
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail inicial enviado ao solicitar acesso como Usuário TC.
 - Descrição detalhada: O e-mail inicial é a principal referência do usuário público para acompanhar a solicitação.
 - Regra de negócio validada: E-mail de recebimento deve informar perfil solicitado, solicitante, status inicial e caminho de consulta.
@@ -3807,7 +3807,7 @@ Usuário consegue acompanhar a solicitação pelo e-mail recebido.
 
 ### QC-REG-LS-055 - Consulta pública inicial de Usuário TC deve exibir status aguardando análise e dados essenciais
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar tela pública de acompanhamento após solicitação de Usuário TC.
 - Descrição detalhada: A consulta pública precisa informar o estado atual sem expor dados além do necessário.
 - Regra de negócio validada: Solicitação recém-criada deve aparecer como aguardando análise ou em análise.
@@ -3874,7 +3874,7 @@ Consulta pública confirma o acompanhamento da solicitação.
 
 ### QC-REG-LS-056 - E-mail de aceite para Usuário TC deve liberar login e preservar permissões
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail de aprovação e login após aceite de Usuário TC.
 - Descrição detalhada: A aprovação deve comunicar o usuário e permitir entrada no sistema com o perfil aprovado.
 - Regra de negócio validada: Acesso aprovado cria usuário/login com perfil e escopo corretos.
@@ -3943,7 +3943,7 @@ Usuário TC aprovado consegue autenticar com permissões corretas.
 
 ### QC-REG-LS-057 - E-mail de alteração para Usuário TC deve orientar correção e devolver solicitação para análise
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar pedido de alteração, e-mail de ajuste e correção do usuário para Usuário TC.
 - Descrição detalhada: Quando o revisor solicita alteração, o usuário público precisa receber instruções, corrigir somente campos permitidos e devolver a solicitação.
 - Regra de negócio validada: Ajustes devem registrar campos solicitados, comentário do revisor, correção e retorno para análise.
@@ -4011,7 +4011,7 @@ Solicitação corrigida fica disponível para nova avaliação.
 
 ### QC-REG-LS-058 - E-mail de recusa para Usuário TC deve informar justificativa e bloquear login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar recusa/rejeição da solicitação de Usuário TC.
 - Descrição detalhada: Recusa deve finalizar o fluxo de forma clara, preservar justificativa e impedir criação de acesso.
 - Regra de negócio validada: Solicitação recusada/rejeitada não pode liberar login nem ser aprovada posteriormente sem nova regra explícita.
@@ -4079,7 +4079,7 @@ Solicitação finalizada sem liberar acesso.
 
 ### QC-REG-LS-059 - Usuário TC deve passar por ajustes, conversa, aprovação final e login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar fluxo robusto de múltiplos ajustes, conversa e aprovação para Usuário TC.
 - Descrição detalhada: Esse caso cobre o caminho mais completo de colaboração entre revisor e solicitante antes da aprovação.
 - Regra de negócio validada: Histórico de ajustes e comentários deve ser preservado até a aprovação.
@@ -4146,7 +4146,7 @@ Fluxo completo mantém histórico e libera acesso apenas após aprovação.
 
 ### QC-REG-LS-060 - Usuário público deve solicitar acesso como Líder TC, receber e-mail inicial e acompanhar status
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar criação pública da solicitação para Líder TC com e-mail de recebimento e consulta inicial.
 - Descrição detalhada: O fluxo completo inicial garante que Líder TC entra na fila, recebe orientação e consegue acompanhar a solicitação sem login.
 - Regra de negócio validada: Solicitação pública válida nasce como aguardando análise e deve possuir chave de acompanhamento.
@@ -4213,7 +4213,7 @@ Líder TC possui solicitação rastreável e pronta para revisão.
 
 ### QC-REG-LS-061 - E-mail de solicitação recebida para Líder TC deve conter dados e link de consulta
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail inicial enviado ao solicitar acesso como Líder TC.
 - Descrição detalhada: O e-mail inicial é a principal referência do usuário público para acompanhar a solicitação.
 - Regra de negócio validada: E-mail de recebimento deve informar perfil solicitado, solicitante, status inicial e caminho de consulta.
@@ -4281,7 +4281,7 @@ Usuário consegue acompanhar a solicitação pelo e-mail recebido.
 
 ### QC-REG-LS-062 - Consulta pública inicial de Líder TC deve exibir status aguardando análise e dados essenciais
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar tela pública de acompanhamento após solicitação de Líder TC.
 - Descrição detalhada: A consulta pública precisa informar o estado atual sem expor dados além do necessário.
 - Regra de negócio validada: Solicitação recém-criada deve aparecer como aguardando análise ou em análise.
@@ -4348,7 +4348,7 @@ Consulta pública confirma o acompanhamento da solicitação.
 
 ### QC-REG-LS-063 - E-mail de aceite para Líder TC deve liberar login e preservar permissões
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail de aprovação e login após aceite de Líder TC.
 - Descrição detalhada: A aprovação deve comunicar o usuário e permitir entrada no sistema com o perfil aprovado.
 - Regra de negócio validada: Acesso aprovado cria usuário/login com perfil e escopo corretos.
@@ -4417,7 +4417,7 @@ Líder TC aprovado consegue autenticar com permissões corretas.
 
 ### QC-REG-LS-064 - E-mail de alteração para Líder TC deve orientar correção e devolver solicitação para análise
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar pedido de alteração, e-mail de ajuste e correção do usuário para Líder TC.
 - Descrição detalhada: Quando o revisor solicita alteração, o usuário público precisa receber instruções, corrigir somente campos permitidos e devolver a solicitação.
 - Regra de negócio validada: Ajustes devem registrar campos solicitados, comentário do revisor, correção e retorno para análise.
@@ -4485,7 +4485,7 @@ Solicitação corrigida fica disponível para nova avaliação.
 
 ### QC-REG-LS-065 - E-mail de recusa para Líder TC deve informar justificativa e bloquear login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar recusa/rejeição da solicitação de Líder TC.
 - Descrição detalhada: Recusa deve finalizar o fluxo de forma clara, preservar justificativa e impedir criação de acesso.
 - Regra de negócio validada: Solicitação recusada/rejeitada não pode liberar login nem ser aprovada posteriormente sem nova regra explícita.
@@ -4553,7 +4553,7 @@ Solicitação finalizada sem liberar acesso.
 
 ### QC-REG-LS-066 - Líder TC deve passar por ajustes, conversa, aprovação final e login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar fluxo robusto de múltiplos ajustes, conversa e aprovação para Líder TC.
 - Descrição detalhada: Esse caso cobre o caminho mais completo de colaboração entre revisor e solicitante antes da aprovação.
 - Regra de negócio validada: Histórico de ajustes e comentários deve ser preservado até a aprovação.
@@ -4620,7 +4620,7 @@ Fluxo completo mantém histórico e libera acesso apenas após aprovação.
 
 ### QC-REG-LS-067 - Usuário público deve solicitar acesso como Suporte Técnico, receber e-mail inicial e acompanhar status
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar criação pública da solicitação para Suporte Técnico com e-mail de recebimento e consulta inicial.
 - Descrição detalhada: O fluxo completo inicial garante que Suporte Técnico entra na fila, recebe orientação e consegue acompanhar a solicitação sem login.
 - Regra de negócio validada: Solicitação pública válida nasce como aguardando análise e deve possuir chave de acompanhamento.
@@ -4687,7 +4687,7 @@ Suporte Técnico possui solicitação rastreável e pronta para revisão.
 
 ### QC-REG-LS-068 - E-mail de solicitação recebida para Suporte Técnico deve conter dados e link de consulta
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail inicial enviado ao solicitar acesso como Suporte Técnico.
 - Descrição detalhada: O e-mail inicial é a principal referência do usuário público para acompanhar a solicitação.
 - Regra de negócio validada: E-mail de recebimento deve informar perfil solicitado, solicitante, status inicial e caminho de consulta.
@@ -4755,7 +4755,7 @@ Usuário consegue acompanhar a solicitação pelo e-mail recebido.
 
 ### QC-REG-LS-069 - Consulta pública inicial de Suporte Técnico deve exibir status aguardando análise e dados essenciais
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar tela pública de acompanhamento após solicitação de Suporte Técnico.
 - Descrição detalhada: A consulta pública precisa informar o estado atual sem expor dados além do necessário.
 - Regra de negócio validada: Solicitação recém-criada deve aparecer como aguardando análise ou em análise.
@@ -4822,7 +4822,7 @@ Consulta pública confirma o acompanhamento da solicitação.
 
 ### QC-REG-LS-070 - E-mail de aceite para Suporte Técnico deve liberar login e preservar permissões
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar e-mail de aprovação e login após aceite de Suporte Técnico.
 - Descrição detalhada: A aprovação deve comunicar o usuário e permitir entrada no sistema com o perfil aprovado.
 - Regra de negócio validada: Acesso aprovado cria usuário/login com perfil e escopo corretos.
@@ -4891,7 +4891,7 @@ Suporte Técnico aprovado consegue autenticar com permissões corretas.
 
 ### QC-REG-LS-071 - E-mail de alteração para Suporte Técnico deve orientar correção e devolver solicitação para análise
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar pedido de alteração, e-mail de ajuste e correção do usuário para Suporte Técnico.
 - Descrição detalhada: Quando o revisor solicita alteração, o usuário público precisa receber instruções, corrigir somente campos permitidos e devolver a solicitação.
 - Regra de negócio validada: Ajustes devem registrar campos solicitados, comentário do revisor, correção e retorno para análise.
@@ -4959,7 +4959,7 @@ Solicitação corrigida fica disponível para nova avaliação.
 
 ### QC-REG-LS-072 - E-mail de recusa para Suporte Técnico deve informar justificativa e bloquear login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar recusa/rejeição da solicitação de Suporte Técnico.
 - Descrição detalhada: Recusa deve finalizar o fluxo de forma clara, preservar justificativa e impedir criação de acesso.
 - Regra de negócio validada: Solicitação recusada/rejeitada não pode liberar login nem ser aprovada posteriormente sem nova regra explícita.
@@ -5027,7 +5027,7 @@ Solicitação finalizada sem liberar acesso.
 
 ### QC-REG-LS-073 - Suporte Técnico deve passar por ajustes, conversa, aprovação final e login
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público
 - Objetivo: Validar fluxo robusto de múltiplos ajustes, conversa e aprovação para Suporte Técnico.
 - Descrição detalhada: Esse caso cobre o caminho mais completo de colaboração entre revisor e solicitante antes da aprovação.
 - Regra de negócio validada: Histórico de ajustes e comentários deve ser preservado até a aprovação.
@@ -5094,7 +5094,7 @@ Fluxo completo mantém histórico e libera acesso apenas após aprovação.
 
 ### QC-REG-LS-074 - Consulta pública pelo link recebido no e-mail deve abrir a solicitação correta
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar que o link/botão do e-mail leva à consulta da solicitação correspondente.
 - Descrição detalhada: Validar que o link/botão do e-mail leva à consulta da solicitação correspondente. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Acompanhamento público depende de accessKey válido enviado por e-mail.
@@ -5162,7 +5162,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-075 - Consulta manual por e-mail e token deve retornar status sem expor chave em resposta pública
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar consulta manual quando disponível na tela pública.
 - Descrição detalhada: Validar consulta manual quando disponível na tela pública. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Consulta manual deve funcionar de modo neutro e não expor a chave diretamente.
@@ -5229,7 +5229,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-076 - Consulta com status aguardando análise deve exibir datas e mensagem de acompanhamento
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar estado inicial da consulta após criação da solicitação.
 - Descrição detalhada: Validar estado inicial da consulta após criação da solicitação. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Solicitação recém-criada inicia aguardando análise ou em análise.
@@ -5297,7 +5297,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-077 - Consulta após solicitação de alteração deve exibir campos e comentários de correção
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar orientação ao solicitante quando revisor pede ajuste.
 - Descrição detalhada: Validar orientação ao solicitante quando revisor pede ajuste. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Somente campos solicitados devem ficar disponíveis para correção.
@@ -5365,7 +5365,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-078 - Consulta após correção enviada deve retornar solicitação para análise
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar transição de ajuste necessário para em análise após correção.
 - Descrição detalhada: Validar transição de ajuste necessário para em análise após correção. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Correção do solicitante devolve a solicitação para o revisor.
@@ -5432,7 +5432,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-079 - Consulta após aprovação deve exibir status aprovado e orientação de acesso
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar feedback público depois do aceite da solicitação.
 - Descrição detalhada: Validar feedback público depois do aceite da solicitação. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Aprovação deve refletir na consulta pública.
@@ -5500,7 +5500,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-080 - Consulta após recusa ou rejeição deve exibir status final e justificativa
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar feedback público depois de recusa/rejeição.
 - Descrição detalhada: Validar feedback público depois de recusa/rejeição. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Recusa final deve apresentar justificativa sem liberar ações indevidas.
@@ -5568,7 +5568,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-081 - Consulta com link ou chave inválida não deve expor erro interno
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar segurança da consulta pública com chave inexistente.
 - Descrição detalhada: Validar segurança da consulta pública com chave inexistente. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: AccessKey inválido deve retornar erro controlado.
@@ -5636,7 +5636,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-082 - Consulta de solicitação inexistente deve orientar usuário sem enumerar dados
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar resposta neutra para combinações que não localizam solicitação.
 - Descrição detalhada: Validar resposta neutra para combinações que não localizam solicitação. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Consulta pública não deve permitir enumeração de solicitações.
@@ -5703,7 +5703,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-083 - Consulta pública não deve expor senha, dados administrativos ou campos não necessários
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar minimização de dados na consulta pública e e-mails associados.
 - Descrição detalhada: Validar minimização de dados na consulta pública e e-mails associados. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Usuário público só deve ver dados necessários para acompanhar e corrigir sua solicitação.
@@ -5772,7 +5772,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-084 - Consulta deve aceitar somente campos solicitados para correção
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar que o solicitante não altera campos fora do pedido de ajuste.
 - Descrição detalhada: Validar que o solicitante não altera campos fora do pedido de ajuste. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Correção pública deve respeitar lista de campos autorizados pelo revisor.
@@ -5839,7 +5839,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-085 - Consulta não deve permitir nova correção após retorno para análise
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar bloqueio de correção repetida fora do status permitido.
 - Descrição detalhada: Validar bloqueio de correção repetida fora do status permitido. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Após reenviar correção, nova alteração pública deve ser bloqueada até novo pedido de ajuste.
@@ -5906,7 +5906,7 @@ Consulta pública apresenta o estado correto e preserva segurança dos dados.
 
 ### QC-REG-LS-086 - Reenvio de código de consulta deve enviar e-mail sem revelar accessKey na resposta
 
-- Suite Qase: Regressão > Login > Solicitar Acesso - Usuário Público > Consulta Pública
+- Suite Qase: Regressão > Login > Solicitar Acesso — Usuário Público > Consulta Pública
 - Objetivo: Validar fluxo de recuperação do link/código de acompanhamento.
 - Descrição detalhada: Validar fluxo de recuperação do link/código de acompanhamento. Esse caso garante que o acompanhamento público seja útil para o usuário e seguro para a aplicação.
 - Regra de negócio validada: Usuário depende do e-mail para recuperar a consulta, sem expor chave diretamente pela resposta pública.

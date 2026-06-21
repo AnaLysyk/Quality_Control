@@ -1,4 +1,4 @@
-import { obterSenhaTesteSolicitacaoAcesso } from "../../api/solicitar-acesso/compartilhado/autenticar-revisor";
+import { obterSenhaTesteSolicitacaoAcesso } from "../../../api/solicitar-acesso/autenticacao/autenticar-revisor";
 
 export function montarPayloadSolicitacaoAcesso(suffix = Date.now()) {
   return {

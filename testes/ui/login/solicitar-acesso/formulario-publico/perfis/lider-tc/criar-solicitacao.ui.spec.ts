@@ -25,7 +25,7 @@ import {
   validarEmailRecebido,
   textoEmail,
   type DadosSolicitacaoAcesso,
-} from "../../../../../../support/functions/ui/login/solicitar-acesso/solicitacoes/solicitacao-publica";
+} from "../../../../../../../support/functions/ui/login/solicitar-acesso/solicitacoes/solicitacao-publica";
 
 test.describe("UI - Login - Solicitar acesso - Líder TC", () => {
   test.beforeEach(() => {
@@ -70,7 +70,6 @@ test.describe("UI - Login - Solicitar acesso - Líder TC", () => {
     await aguardarConferenciaVisual(page, "Consulta pública pendente aberta para conferÃªncia");
   });
 });
-
 
 
 

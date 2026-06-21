@@ -2,10 +2,10 @@
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/solicitacoes/endpoints-da-tela.ui.spec.ts --project=chromium
  */
-import { expect, test } from "../../../../../support/fixtures/test";
-import { autenticarSolicitacaoAcessoNaInterface } from "../../../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
-import { endpointsTelaSolicitacoes } from "../../../../../support/functions/api/solicitar-acesso/endpoints/solicitacoes.endpoints";
-import { localizarElementosTelaSolicitacoes } from "../../../../../support/functions/ui/login/solicitar-acesso/elementos/solicitacoes.elementos";
+import { expect, test } from "../../../../../../support/fixtures/test";
+import { autenticarSolicitacaoAcessoNaInterface } from "../../../../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
+import { endpointsTelaSolicitacoes } from "../../../../../../support/functions/api/solicitar-acesso/endpoints/solicitacoes.endpoints";
+import { localizarElementosTelaSolicitacoes } from "../../../../../../support/functions/ui/login/solicitar-acesso/elementos/solicitacoes.elementos";
 
 test("tela de Solicitacoes carrega os endpoints administrativos esperados", async ({
   context,
@@ -33,4 +33,3 @@ test("tela de Solicitacoes carrega os endpoints administrativos esperados", asyn
     expect(resposta.ok()).toBeTruthy();
   }
 });
-

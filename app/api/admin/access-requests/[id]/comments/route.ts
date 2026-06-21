@@ -6,6 +6,8 @@ import {
   listAccessRequestComments,
 } from "@/data/accessRequestCommentsStore";
 import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
+import type { AccessRequestV2 } from "@/lib/accessRequestsV2/domain";
+import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { notifyAccessRequestComment } from "@/lib/notificationService";
 import { extractPasswordResetRequestId } from "@/lib/passwordResetAccessQueue";
@@ -61,6 +63,33 @@ function isFinalV2Status(status: string | null | undefined) {
   );
 }
 
+function canAccessV2Request(
+  admin: {
+    role?: string | null;
+    companyId?: string | null;
+    companySlug?: string | null;
+    isGlobalAdmin?: boolean;
+  },
+  request: AccessRequestV2,
+) {
+  const adminRole = normalizeLegacyRole(admin.role);
+  if (
+    admin.isGlobalAdmin === true ||
+    adminRole === SYSTEM_ROLES.LEADER_TC ||
+    adminRole === SYSTEM_ROLES.TECHNICAL_SUPPORT
+  ) {
+    return true;
+  }
+
+  const companyId = admin.companyId ?? null;
+  if (companyId && request.requestedCompanyId === companyId) return true;
+
+  const companySlug = (admin.companySlug ?? "").trim().toLowerCase();
+  if (!companySlug) return false;
+
+  return (request.requestedCompanySlug ?? "").trim().toLowerCase() === companySlug;
+}
+
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
@@ -77,6 +106,13 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 
   const v2Request = await getAccessRequestV2ById(id);
   if (v2Request?.accessKey) {
+    if (!canAccessV2Request(admin, v2Request)) {
+      return NextResponse.json(
+        { error: "Sem permissao para esta solicitacao" },
+        { status: 403, headers: NO_STORE_HEADERS },
+      );
+    }
+
     const comments = await listAccessRequestComments(id).catch((error) => {
       console.error("Falha ao carregar comentarios V2 (access-requests):", error);
       return [];
@@ -132,6 +168,13 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
   const v2Request = await getAccessRequestV2ById(id);
   if (v2Request?.accessKey) {
+    if (!canAccessV2Request(admin, v2Request)) {
+      return NextResponse.json(
+        { error: "Sem permissao para esta solicitacao" },
+        { status: 403 },
+      );
+    }
+
     if (isFinalV2Status(v2Request.status)) {
       return NextResponse.json(
         { error: "Esta solicitacao ja foi finalizada e nao aceita novos comentarios." },

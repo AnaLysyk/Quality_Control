@@ -2,19 +2,19 @@
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/permissoes/acessar-modulo.ui.spec.ts --project=chromium
  */
-import { expect, test } from "../../../../../support/fixtures/test";
-import { autenticarSolicitacaoAcessoNaInterface } from "../../../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
+import { expect, test } from "../../../../../../support/fixtures/test";
+import { autenticarSolicitacaoAcessoNaInterface } from "../../../../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
 import {
   rotaSolicitacoes,
   perfisAutorizadosSolicitacoes,
   perfisNegadosSolicitacoes,
-} from "../../../../../support/functions/banco-de-dados/solicitar-acesso/perfis/definir-perfis-teste";
+} from "../../../../../../support/functions/banco-de-dados/solicitar-acesso/perfis/definir-perfis-teste";
 import {
   abrirModuloSolicitacoes,
   validarAcessoNegadoAoModuloSolicitacoes,
   validarRotaRemovidaNaoExiste,
   validarTelaSolicitacoes,
-} from "../../../../../support/functions/ui/login/solicitar-acesso/solicitacoes/operar-tela-solicitacoes";
+} from "../../../../../../support/functions/ui/login/solicitar-acesso/solicitacoes/operar-tela-solicitacoes";
 
 test.describe("Solicitacoes - acesso por perfil - UI", () => {
   for (const perfil of perfisAutorizadosSolicitacoes) {
@@ -55,4 +55,3 @@ test.describe("Solicitacoes - acesso por perfil - UI", () => {
     await validarRotaRemovidaNaoExiste(oldRoutePage);
   });
 });
-

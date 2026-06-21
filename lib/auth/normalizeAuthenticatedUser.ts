@@ -242,6 +242,7 @@ export function normalizeAuthenticatedUser(
     collectCompanyCandidates(raw.tenant),
     collectCompanyCandidates(raw.organization),
     collectCompanyCandidates(raw.organizations),
+    collectCompanyCandidates(raw.metadata),
     collectCompanyCandidates(raw.permissions),
     collectCompanyCandidates(raw.permissionKeys),
     collectCompanyCandidates(raw.capabilities),

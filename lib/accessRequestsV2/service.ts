@@ -348,22 +348,22 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
 
   const companyDetailsForReceivedEmail = buildCompanyDetailsForEmail(payload);
 
-  const receivedEmailSent = await emailService.sendAccessRequestReceivedEmail(requesterEmail, {
-    name: requesterName || null,
-    accessKey: created.accessKey ?? created.id,
-    email: requesterEmail,
-    username: requestedUser || null,
-    phone,
-    passwordDefined: Boolean(requestedPasswordHash),
-    companyDetails: companyDetailsForReceivedEmail,
-    profileType: created.requestedRole,
-    title: title ?? null,
-    description: reason ?? null,
-    companyName: companyLabel ?? null,
-  });
-  if (!receivedEmailSent) {
-    console.warn("[ACCESS-REQUESTS][V2][EMAIL][RECEIVED] not_sent:", requesterEmail);
-  }
+  await waitForAccessRequestEmail(
+    emailService.sendAccessRequestReceivedEmail(requesterEmail, {
+      name: requesterName || null,
+      accessKey: created.accessKey ?? created.id,
+      email: requesterEmail,
+      username: requestedUser || null,
+      phone,
+      passwordDefined: Boolean(requestedPasswordHash),
+      companyDetails: companyDetailsForReceivedEmail,
+      profileType: created.requestedRole,
+      title: title ?? null,
+      description: reason ?? null,
+      companyName: companyLabel ?? null,
+    }),
+    "received",
+  );
 
   addAuditLogSafe({
     actorUserId: authUser?.id ?? null,
@@ -789,21 +789,27 @@ export async function transitionAccessRequest(
   const recipientName = request.requesterName || null;
 
   if (action === "approve" && approvalCredentials) {
-    await emailService.sendAccessApprovedEmail(recipientEmail, {
-      name: recipientName,
-      login: approvalCredentials.login,
-      tempPassword: approvalCredentials.tempPassword,
-      passwordFromRequest: approvalCredentials.passwordFromRequest,
-      profileType: request.requestedRole,
-      companySlug: approvalCredentials.companySlug,
-      companyName: approvalCredentials.companyName,
-    });
+    await waitForAccessRequestEmail(
+      emailService.sendAccessApprovedEmail(recipientEmail, {
+        name: recipientName,
+        login: approvalCredentials.login,
+        tempPassword: approvalCredentials.tempPassword,
+        passwordFromRequest: approvalCredentials.passwordFromRequest,
+        profileType: request.requestedRole,
+        companySlug: approvalCredentials.companySlug,
+        companyName: approvalCredentials.companyName,
+      }),
+      "approved",
+    );
   } else if (action === "reject") {
-    await emailService.sendAccessRejectedEmail(recipientEmail, {
-      name: recipientName,
-      comment,
-      accessKey: request.accessKey,
-    });
+    await waitForAccessRequestEmail(
+      emailService.sendAccessRejectedEmail(recipientEmail, {
+        name: recipientName,
+        comment,
+        accessKey: request.accessKey,
+      }),
+      "rejected",
+    );
   } else if (action === "request-info" && request.accessKey) {
     const fieldCommentLines = adjustmentFields
       .map((field) => {
@@ -813,17 +819,40 @@ export async function transitionAccessRequest(
           : "";
       })
       .filter(Boolean);
-    await emailService.sendAccessAdjustmentEmail(recipientEmail, {
-      name: recipientName,
-      adjustmentFields: adjustmentFields.map(
-        (field) => ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS[field],
-      ),
-      comment: [comment, ...fieldCommentLines].filter(Boolean).join("\n"),
-      accessKey: request.accessKey,
-    });
+    await waitForAccessRequestEmail(
+      emailService.sendAccessAdjustmentEmail(recipientEmail, {
+        name: recipientName,
+        adjustmentFields: adjustmentFields.map(
+          (field) => ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS[field],
+        ),
+        comment: [comment, ...fieldCommentLines].filter(Boolean).join("\n"),
+        accessKey: request.accessKey,
+      }),
+      "adjustment",
+    );
   }
 
   return updated;
+}
+
+async function waitForAccessRequestEmail(task: Promise<unknown>, label: string) {
+  const timeoutMs = Number(process.env.ACCESS_REQUEST_EMAIL_TIMEOUT_MS ?? 5000);
+  let timedOut = false;
+  const guardedTask = task.catch((error) => {
+    console.error(`[ACCESS_REQUEST_EMAIL][${label}]`, error);
+  });
+  await Promise.race([
+    guardedTask,
+    new Promise<void>((resolve) => {
+      setTimeout(() => {
+        timedOut = true;
+        resolve();
+      }, timeoutMs);
+    }),
+  ]);
+  if (timedOut) {
+    console.warn(`[ACCESS_REQUEST_EMAIL][${label}] timeout apos ${timeoutMs}ms; envio segue em background.`);
+  }
 }
 
 function publicFieldValue(request: AccessRequestV2, field: AccessRequestAdjustmentField) {
@@ -1253,6 +1282,8 @@ export function mapV2ToLegacySupportRow(request: AccessRequestV2) {
 
   return {
     id: request.id,
+    accessKey: request.accessKey ?? null,
+    access_key: request.accessKey ?? null,
     email: request.requesterEmail,
     message,
     status,

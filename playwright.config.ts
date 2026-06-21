@@ -76,7 +76,7 @@ export default defineConfig({
     ? undefined
     : {
       command:
-        "npx tsx support/functions/banco-de-dados/solicitar-acesso/criar-usuarios-teste.ts && npm run dev:ci:clean",
+        "npx tsx support/functions/banco-de-dados/solicitar-acesso/usuarios/criar-usuarios-teste.ts && npm run dev:ci:clean",
         url: baseURL,
         reuseExistingServer: true,
         timeout: 300 * 1000,

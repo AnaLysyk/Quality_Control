@@ -8,7 +8,7 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
 
-import { CreateClientModal } from "@/clients/components/CreateClientModal";
+import { CreateClientModal } from "../../../app/clients/components/CreateClientModal";
 
 const originalFetch = globalThis.fetch;
 

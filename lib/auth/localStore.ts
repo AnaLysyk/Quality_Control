@@ -1,1 +1,1 @@
-export * from "@/core/auth/localStore";
+﻿export * from "../core/auth/localStore";

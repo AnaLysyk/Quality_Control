@@ -1,6 +1,6 @@
 import { test, expect } from "../../../support/fixtures/test";
 import type { Page } from "@playwright/test";
-import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/interface/apoio/autenticar-usuario-teste";
+import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
 type Viewport = { width: number; height: number; label: string };
 

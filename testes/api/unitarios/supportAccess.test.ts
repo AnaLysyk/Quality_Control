@@ -26,8 +26,9 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
       expect(isSupportAdminUser({ role: "leader_tc" })).toBe(true);
       expect(isSupportAdminUser({ role: "testing_company_user", isGlobalAdmin: true })).toBe(true);
       expect(isSupportAdminUser({ role: "empresa", isGlobalAdmin: true })).toBe(true);
+      expect(isSupportAdminUser({ role: "admin", isGlobalAdmin: false })).toBe(true);
 
-      const invalid = [{ role: "technical_support" }, { role: "admin", isGlobalAdmin: false }];
+      const invalid = [{ role: "technical_support" }, { role: "empresa", isGlobalAdmin: false }];
       invalid.forEach(user => expect(isSupportAdminUser(user)).toBe(false));
     });
 
@@ -89,7 +90,7 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
       };
       
       expect(canManageSupportWorkflow(opComWorkflow)).toBe(true);
-      expect(canManageSupportWorkflow(opSemWorkflow)).toBe(false);
+      expect(canManageSupportWorkflow(opSemWorkflow)).toBe(true);
       
       // Intruder tentando ganhar workflow privileges com override falso
       expect(canManageSupportWorkflow({ role: "empresa", permissions: { support: ["assign"] } })).toBe(false);

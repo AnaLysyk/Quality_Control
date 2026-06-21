@@ -1,7 +1,7 @@
-﻿import { readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
-import { validarDashboardAtualPronto } from "../../../support/functions/interface/apoio/operar-dashboard-e-defeitos";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
+import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
 test("company consegue exportar CSV de qualidade", async ({ page, context }) => {
   await simularAutenticacao(context, {

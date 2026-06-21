@@ -1,5 +1,5 @@
-﻿import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { test, expect } from "@playwright/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { criarAlertaQualidade } from "../../../support/functions/banco-de-dados/geradores-dados/criar-dados-base";
 
 test("alerta Ã© exibido para admin", async ({ page, context }) => {

@@ -23,7 +23,7 @@ function isReviewerUser(
     normalizeLegacyRole(user.companyRole),
   ];
 
-  return roles.some((role) => role === "leader_tc" || role === "technical_support");
+  return roles.some((role) => role === "leader_tc" || role === "technical_support" || role === "empresa");
 }
 
 export function RequireAccessRequestReviewer({ children, fallback }: RequireAccessRequestReviewerProps) {
@@ -63,5 +63,4 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
 }
 
 export default RequireAccessRequestReviewer;
-
 

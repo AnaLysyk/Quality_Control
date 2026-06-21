@@ -1,5 +1,5 @@
-﻿import { test } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { test } from "@playwright/test";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test("admin seleciona empresa no dashboard global", async ({ page, context }) => {
   await simularAutenticacao(context, {

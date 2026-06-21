@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 function slugify(value: string) {
   return value

@@ -1,6 +1,6 @@
-﻿import fs from "fs";
+import fs from "fs";
 import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/interface/apoio/simular-autenticacao";
+import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test("exporta relatorio CSV com dados do kanban", async ({ page, context }) => {
   await simularAutenticacao(context, {

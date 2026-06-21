@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
+import { env } from "node:process";
 
-const email = process.env.PLAYWRIGHT_EMAIL || "";
-const password = process.env.PLAYWRIGHT_PASSWORD || "";
+const email = env.PLAYWRIGHT_EMAIL || "";
+const password = env.PLAYWRIGHT_PASSWORD || "";
 
 test.describe("Prod smoke", () => {
   test("login and dashboard loads", async ({ page }) => {

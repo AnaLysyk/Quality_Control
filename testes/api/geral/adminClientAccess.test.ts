@@ -1,4 +1,4 @@
-import { hasAdminClientToolAccess } from "@/lib/adminClientAccess";
+﻿import { hasAdminClientToolAccess } from "../../../lib/adminClientAccess";
 
 describe("admin client access", () => {
   it("allows leader TC and technical support roles to see client admin tools", () => {
@@ -17,3 +17,4 @@ describe("admin client access", () => {
     expect(hasAdminClientToolAccess({ permissionRole: "testing_company_user", globalRole: "technical_support" })).toBe(true);
   });
 });
+

@@ -24,9 +24,9 @@ test.describe("Solicitações de acesso - ciclo de e-mail API", () => {
     const email = criarEmailTeste("api");
     const payload = montarPayloadSolicitacaoPublica(email);
 
-    await criarSolicitacaoPublicaViaApi(request, payload);
+    const created = await criarSolicitacaoPublicaViaApi(request, payload);
 
-    await esperarEmailCapturado({
+    const captured = await esperarEmailCapturado({
       to: email,
       subject: /Solicita.*acesso recebida - Quality Control/i,
       contains: [
@@ -37,6 +37,13 @@ test.describe("Solicitações de acesso - ciclo de e-mail API", () => {
         "Perfil solicitado",
       ],
     });
+
+    const content = `${captured.html}\n${captured.text ?? ""}`;
+
+    expect(content).toContain(created.accessKey);
+    expect(content).toContain("/login/access-request");
+    expect(content).toContain("nome, e-mail e código");
+    expect(content).not.toContain("/login/access-request/status?key=");
   });
 
   test("deve concluir o envio do e-mail inicial para Líder TC", async ({ request }) => {
@@ -135,4 +142,3 @@ test.describe("Solicitações de acesso - ciclo de e-mail API", () => {
     expect(listarEmailsCapturados()).toHaveLength(totalBeforeUnknown);
   });
 });
-

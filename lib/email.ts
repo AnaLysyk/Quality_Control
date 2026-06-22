@@ -636,7 +636,7 @@ Equipe Testing Company
       companyDetails?: Record<string, unknown> | null;
     },
   ): Promise<boolean> {
-    const statusUrl = `${this.resolvePublicBaseUrl()}/login/access-request/status?key=${data.accessKey}`;
+    const lookupUrl = `${this.resolvePublicBaseUrl()}/login/access-request`;
     const accessUsername = (data.username ?? data.user ?? data.email ?? "").trim();
     const profileKey = String(data.profileType ?? "").trim();
     const companyName = String(data.companyName ?? "").trim();
@@ -818,17 +818,17 @@ Equipe Testing Company
         ${companyUserSection}
         ${companySection}
 
-        <div class="box">Guarde este código. Ele será usado junto com seu nome e e-mail para consultar o andamento da solicitação.</div>
+        <div class="box">Guarde este código. Para consultar o andamento, acesse a tela de consulta e informe seu nome, e-mail e código de consulta.</div>
 
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto 10px;border-collapse:separate;">
                 <tr>
                   <td align="center" bgcolor="#ef0001" style="background-color:#ef0001;border-radius:9px;mso-padding-alt:11px 20px;">
-                    <a href="${escapeHtml(statusUrl)}" style="display:inline-block;padding:11px 20px;color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;line-height:18px;text-align:center;text-decoration:none;">Consultar solicitação</a>
+                    <a href="${escapeHtml(lookupUrl)}" style="display:inline-block;padding:11px 20px;color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;line-height:18px;text-align:center;text-decoration:none;">Consultar solicitação</a>
                   </td>
                 </tr>
               </table>
 
-              <p style="margin:0;text-align:center;font-size:11px;line-height:17px;color:#64748b;word-break:break-all;">Link direto: <a href="${escapeHtml(statusUrl)}" style="color:#27457d;text-decoration:underline;">${escapeHtml(statusUrl)}</a></p>
+              <p style="margin:0;text-align:center;font-size:11px;line-height:17px;color:#64748b;word-break:break-all;">Acesse a consulta em: <a href="${escapeHtml(lookupUrl)}" style="color:#27457d;text-decoration:underline;">${escapeHtml(lookupUrl)}</a></p>
             </td>
           </tr>
           <tr>
@@ -877,8 +877,10 @@ ${companyText ? `DADOS DA EMPRESA
 ${companyText}
 ` : ""}
 
-Consulte sua solicitação em:
-${statusUrl}
+Para consultar o andamento, acesse a tela de consulta e informe seu nome, e-mail e código.
+
+Acesse a consulta em:
+${lookupUrl}
 
 Guarde este código para acompanhar o andamento da sua solicitação.`;
 

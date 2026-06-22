@@ -346,7 +346,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
               {loading ? "..." : "Reabrir"}
             </button>
           ) : (
-            <button type="button" onClick={finalize} disabled={loading || gateBlocked} aria-disabled={gateBlocked} data-testid="release-approve" className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60">
+            <button type="button" onClick={finalize} disabled={loading || gateBlocked} aria-disabled={gateBlocked} data-testid="run-approve" className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60">
               {loading ? "..." : "Finalizar run"}
             </button>
           )}

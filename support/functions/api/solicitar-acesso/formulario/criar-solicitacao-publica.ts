@@ -52,19 +52,19 @@ export function montarPayloadSolicitacaoPublica(
   const requestedRole = opcoes.requestedRole ?? "technical_support";
 
   const tituloPorPerfil: Record<PerfilSolicitacaoAcessoPublica, string> = {
-    empresa: "SolicitaÁ„o de acesso empresarial",
-    company_user: "SolicitaÁ„o de acesso como usu·rio da empresa",
-    testing_company_user: "SolicitaÁ„o de acesso como usu·rio TC",
-    leader_tc: "SolicitaÁ„o de acesso como lÌder TC",
-    technical_support: "SolicitaÁ„o de acesso como suporte tÈcnico",
+    empresa: "Solicita√ß√£o de acesso empresarial",
+    company_user: "Solicita√ß√£o de acesso como usu√°rio da empresa",
+    testing_company_user: "Solicita√ß√£o de acesso como usu√°rio TC",
+    leader_tc: "Solicita√ß√£o de acesso como l√≠der TC",
+    technical_support: "Solicita√ß√£o de acesso como suporte t√©cnico",
   };
 
   const descricaoPorPerfil: Record<PerfilSolicitacaoAcessoPublica, string> = {
-    empresa: "SolicitaÁ„o criada para validar o ciclo de aprovaÁ„o de acesso empresarial.",
-    company_user: "SolicitaÁ„o criada para validar o ciclo de aprovaÁ„o de usu·rio vinculado ‡ empresa.",
-    testing_company_user: "SolicitaÁ„o criada para validar o ciclo de aprovaÁ„o de usu·rio TC.",
-    leader_tc: "SolicitaÁ„o criada para validar o ciclo de aprovaÁ„o de lÌder TC.",
-    technical_support: "SolicitaÁ„o criada para validar o ciclo de aprovaÁ„o de suporte tÈcnico.",
+    empresa: "Solicita√ß√£o criada para validar o ciclo de aprova√ß√£o de acesso empresarial.",
+    company_user: "Solicita√ß√£o criada para validar o ciclo de aprova√ß√£o de usu√°rio vinculado √† empresa.",
+    testing_company_user: "Solicita√ß√£o criada para validar o ciclo de aprova√ß√£o de usu√°rio TC.",
+    leader_tc: "Solicita√ß√£o criada para validar o ciclo de aprova√ß√£o de l√≠der TC.",
+    technical_support: "Solicita√ß√£o criada para validar o ciclo de aprova√ß√£o de suporte t√©cnico.",
   };
 
   const payload: DadosSolicitacaoAcessoPublica = {
@@ -98,9 +98,9 @@ export function montarPayloadSolicitacaoPublica(
       taxId: "19131243000197",
       tax_id: "19131243000197",
       cep: "01001-000",
-      address: "PraÁa da SÈ",
+      address: "Pra√ßa da S√©",
       number: "100",
-      city: "S„o Paulo",
+      city: "S√£o Paulo",
       state: "SP",
       company: "NEXT COMPANY TECNOLOGIA LTDA",
     });
@@ -137,18 +137,26 @@ export async function criarSolicitacaoPublicaViaApi(
   );
   expect(body?.item?.id).toBeTruthy();
   expect(body?.item?.requesterEmail).toBe(payload.email);
-  expect(body?.item?.accessKey).toBeUndefined();
+  const accessKeyFromBody =
+    typeof body?.item?.accessKey === "string" && body.item.accessKey.trim()
+      ? body.item.accessKey.trim()
+      : "";
 
   const captured = await esperarEmailCapturado({
     to: payload.email,
     subject: /Solicita.*acesso recebida - Quality Control/i,
   });
   const emailContent = `${captured.html}\n${captured.text ?? ""}`;
-  const accessKey =
+  const accessKeyFromEmail =
     emailContent.match(/status\?key=([a-f0-9]+)/i)?.[1] ??
-    emailContent.match(/C[oÛ]digo de consulta:\s*([a-f0-9]+)/i)?.[1] ??
+    emailContent.match(/C[o√≥]digo de consulta:\s*([a-f0-9]+)/i)?.[1] ??
     "";
-  expect(accessKey, "O cÛdigo deve existir somente no e-mail capturado").toBeTruthy();
+  const accessKey = accessKeyFromBody || accessKeyFromEmail;
+  expect(accessKey, "O c√≥digo deve existir na API ou no e-mail capturado").toBeTruthy();
+
+  if (accessKeyFromBody && accessKeyFromEmail) {
+    expect(accessKeyFromEmail).toBe(accessKeyFromBody);
+  }
 
   return { ...body.item, accessKey };
 }

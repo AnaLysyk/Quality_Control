@@ -186,6 +186,7 @@ function filterCustomPeriod(items: OperationSignal[], from: string, to: string) 
 export function OperationsWorkspaceClient() {
   const { user, normalizedUser } = useAuthUser();
   const { clients, activeClientSlug } = useClientContext();
+  const [hydrated, setHydrated] = useState(false);
 
   const visibleCompanies = useMemo(() => {
     const nonSeed = clients.filter((company) => {
@@ -226,6 +227,10 @@ export function OperationsWorkspaceClient() {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshNonce, setRefreshNonce] = useState(0);
 
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   const companyRouteInput: CompanyRouteInput = {
     isGlobalAdmin: user?.isGlobalAdmin === true,
     permissionRole: user?.permissionRole ?? null,
@@ -241,6 +246,7 @@ export function OperationsWorkspaceClient() {
   };
 
   useEffect(() => {
+    if (!hydrated) return;
     if (visibleCompanies.length === 0) return;
     if (draftCompanySlugs.length > 0) return;
 
@@ -252,7 +258,7 @@ export function OperationsWorkspaceClient() {
     if (firstSlug) {
       setDraftCompanySlugs([firstSlug]);
     }
-  }, [activeClientSlug, draftCompanySlugs.length, visibleCompanies]);
+  }, [activeClientSlug, draftCompanySlugs.length, hydrated, visibleCompanies]);
 
   useEffect(() => {
     if (draftCompanySlugs.length !== 1) {
@@ -368,7 +374,8 @@ export function OperationsWorkspaceClient() {
     );
   }, [companyFilterQuery, visibleCompanies]);
 
-  const hasCompanySearchQuery = companyFilterQuery.trim().length > 0;
+  const renderedVisibleCompanies = hydrated ? filteredVisibleCompanies : [];
+  const hasCompanySearchQuery = hydrated && companyFilterQuery.trim().length > 0;
 
   const applicationsForSelection = useMemo(() => {
     const apps = new Set(
@@ -619,7 +626,7 @@ export function OperationsWorkspaceClient() {
                   />
                 </div>
                 <div className="max-h-32 space-y-1 overflow-auto rounded-xl bg-(--tc-surface,#fff) p-1.5">
-                {filteredVisibleCompanies.map((company) => (
+                {renderedVisibleCompanies.map((company) => (
                   <label key={company.slug} className="flex items-center gap-2 rounded px-1.5 py-1 text-sm">
                     <input
                       type="checkbox"
@@ -629,9 +636,11 @@ export function OperationsWorkspaceClient() {
                     <span className="truncate">{company.name}</span>
                   </label>
                 ))}
-                {filteredVisibleCompanies.length === 0 ? (
+                {renderedVisibleCompanies.length === 0 ? (
                   <p className="px-1.5 py-1 text-xs text-(--tc-text-muted,#6b7280)">
-                    {visibleCompanies.length === 0
+                    {!hydrated
+                      ? "Carregando empresas disponíveis."
+                      : visibleCompanies.length === 0
                       ? "Sem empresas disponíveis para o seu acesso."
                       : hasCompanySearchQuery
                         ? "Nenhuma empresa encontrada para a busca."
@@ -845,7 +854,7 @@ export function OperationsWorkspaceClient() {
                   >
                     <p className="font-semibold text-(--page-text,#0b1a3c)">{app.name}</p>
                     <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Status geral: {app.total > 0 ? "Com eventos" : "Sem eventos"}</p>
-                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Última atividade: {new Date(app.lastIso).toLocaleString("pt-BR")}</p>
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Última atividade: {hydrated ? new Date(app.lastIso).toLocaleString("pt-BR") : "--/--/---- --:--:--"}</p>
                     <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Módulos disponíveis: {app.modules.size}</p>
                     <p className="mt-1 text-xs font-semibold text-(--tc-accent,#ef0001)">Abrir</p>
                   </button>
@@ -904,10 +913,10 @@ export function OperationsWorkspaceClient() {
                       <td className="px-2 py-2">{item.application}</td>
                       <td className="px-2 py-2">{item.module}</td>
                       <td className="px-2 py-2">{item.owner}</td>
-                      <td className="px-2 py-2">{new Date(item.updatedAtIso).toLocaleString("pt-BR")}</td>
+                      <td className="px-2 py-2">{hydrated ? new Date(item.updatedAtIso).toLocaleString("pt-BR") : "--/--/---- --:--:--"}</td>
                       <td className="px-2 py-2">{item.durationMin != null ? `${item.durationMin} min` : "-"}</td>
                       <td className="px-2 py-2">{item.passRate != null ? `${item.passRate}%` : "-"}</td>
-                      <td className="px-2 py-2">{formatAgo(item.updatedAtIso)}</td>
+                      <td className="px-2 py-2">{hydrated ? formatAgo(item.updatedAtIso) : "--"}</td>
                       <td className="px-2 py-2">
                         {singleCompanySlug ? (
                           <Link href={buildCompanyPathForAccess(singleCompanySlug, "runs", companyRouteInput)} className="text-(--tc-accent,#ef0001)">
@@ -949,8 +958,8 @@ export function OperationsWorkspaceClient() {
                       <td className="px-2 py-2">{item.priority}</td>
                       <td className="px-2 py-2">{item.status}</td>
                       <td className="px-2 py-2">{item.owner}</td>
-                      <td className="px-2 py-2">{new Date(item.updatedAtIso).toLocaleString("pt-BR")}</td>
-                      <td className="px-2 py-2">{formatAgo(item.updatedAtIso)}</td>
+                      <td className="px-2 py-2">{hydrated ? new Date(item.updatedAtIso).toLocaleString("pt-BR") : "--/--/---- --:--:--"}</td>
+                      <td className="px-2 py-2">{hydrated ? formatAgo(item.updatedAtIso) : "--"}</td>
                       <td className="px-2 py-2">
                         {singleCompanySlug ? (
                           <Link href={buildCompanyPathForAccess(singleCompanySlug, "defeitos", companyRouteInput)} className="text-(--tc-accent,#ef0001)">
@@ -974,7 +983,7 @@ export function OperationsWorkspaceClient() {
                   <div key={item.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
                     <p className="font-semibold">{item.title}</p>
                     <p className="text-xs text-(--tc-text-muted,#6b7280)">
-                      {item.companyName} · {item.application} · {item.status} · {new Date(item.updatedAtIso).toLocaleString("pt-BR")}
+                      {item.companyName} · {item.application} · {item.status} · {hydrated ? new Date(item.updatedAtIso).toLocaleString("pt-BR") : "--/--/---- --:--:--"}
                     </p>
                   </div>
                 ))}
@@ -987,4 +996,3 @@ export function OperationsWorkspaceClient() {
     </div>
   );
 }
-

@@ -114,7 +114,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
           CSV
         </a>
         <a
-          data-testid="release-export-pdf"
+          data-testid="run-export-pdf"
           href={vm.pdfExportUrl}
           download={`run-${vm.releaseData.slug}.pdf`}
           className="inline-flex items-center rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-[12px] font-semibold text-white/80 hover:bg-white/15 transition-colors"

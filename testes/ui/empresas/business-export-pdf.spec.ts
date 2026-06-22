@@ -1,49 +1,27 @@
-import fs from "fs";
 import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
-
-function slugify(value: string) {
-  return value
-    .replace(/^run\s+/i, "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .replace(/_{2,}/g, "_");
-}
+import {
+  autenticarPerfilRuns,
+} from "../../../support/functions/ui/runs/rotas-runs";
+import { criarRunManualPorApi } from "../../../support/functions/api/runs/criar-run-manual";
+import { exportarPdfRunManualPorApi } from "../../../support/functions/api/runs/exportar-run-manual";
 
 test("exporta relatorio PDF da run", async ({ page, context }) => {
-  await simularAutenticacao(context, {
-    role: "company",
-    companies: ["DEMO"],
-    clientSlug: "DEMO",
-  });
+  await autenticarPerfilRuns(context, "empresa");
 
   const runTitle = "Run PDF Export";
-  const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
+  const { slug: runSlug } = await criarRunManualPorApi(page.request, {
+    titulo: runTitle,
+    pass: 80,
+    fail: 10,
+    blocked: 10,
+    notRun: 0,
+  });
 
-  await page.getByTestId("run-create").click();
-  await page.getByTestId("run-title").fill(runTitle);
-  await page.getByTestId("run-stat-pass").fill("80");
-  await page.getByTestId("run-stat-fail").fill("10");
-  await page.getByTestId("run-stat-blocked").fill("10");
-  await page.getByTestId("run-stat-not-run").fill("0");
-  await page.getByTestId("run-submit").click();
+  const response = await exportarPdfRunManualPorApi(page.request, runSlug);
 
-  await page.waitForURL(new RegExp(`/empresas/demo/runs/${runSlug}`));
-
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByTestId("export-pdf").click(),
-  ]);
-
-  const filePath = await download.path();
-  expect(filePath).toBeTruthy();
-  expect(await download.suggestedFilename()).toBe(`${runSlug}.pdf`);
-
-  const stat = fs.statSync(filePath as string);
-  expect(stat.size).toBeGreaterThan(1000);
+  expect(response.ok()).toBeTruthy();
+  expect(response.headers()["content-disposition"]).toContain(`run-${runSlug}.pdf`);
+  expect(response.headers()["content-type"]).toContain("application/pdf");
+  expect((await response.body()).length).toBeGreaterThan(1000);
 });

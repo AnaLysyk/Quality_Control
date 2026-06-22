@@ -154,9 +154,15 @@ async function generateExecutiveAnalysis(req: ExecutiveAnalysisRequest): Promise
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    const body = (await req.json()) as ExecutiveAnalysisRequest;
+  let body: ExecutiveAnalysisRequest;
 
+  try {
+    body = (await req.json()) as ExecutiveAnalysisRequest;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  try {
     if (!body.companySlug || !body.runs || !body.applications) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }

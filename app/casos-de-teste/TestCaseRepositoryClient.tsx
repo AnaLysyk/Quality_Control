@@ -290,6 +290,7 @@ export default function TestCaseRepositoryClient() {
   const { user, normalizedUser } = useAuthUser();
   const { activeClientSlug } = useClientContext();
   const { activeProject: selectedProject } = useProjectContext();
+  const [hydrated, setHydrated] = useState(false);
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("all");
   const [status, setStatus] = useState("all");
@@ -324,12 +325,17 @@ export default function TestCaseRepositoryClient() {
   const [assistantBusy, setAssistantBusy] = useState(false);
   const [agentRuns, setAgentRuns] = useState<AutomationAgentRun[]>([]);
 
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   const roleKey =
     (typeof user?.permissionRole === "string" && user.permissionRole.trim()) ||
     (typeof user?.companyRole === "string" && user.companyRole.trim()) ||
     (typeof user?.role === "string" && user.role.trim()) ||
     "";
-  const roleLabel = PROFILE_LABEL[roleKey.toLowerCase()] ?? (roleKey || "Perfil");
+  const resolvedRoleLabel = PROFILE_LABEL[roleKey.toLowerCase()] ?? (roleKey || "Perfil");
+  const roleLabel = hydrated ? resolvedRoleLabel : "Perfil";
   const canViewCompanyFilter =
     user?.isGlobalAdmin === true ||
     ["leader_tc", "technical_support", "admin"].includes(roleKey.toLowerCase());
@@ -415,7 +421,9 @@ export default function TestCaseRepositoryClient() {
     return Array.from(byId.entries()).sort((left, right) => left[1].localeCompare(right[1]));
   }, [items, projectFilter, testProjects]);
 
-  const visibleCompanyCount = canViewCompanyFilter ? Math.max(companyOptions.length, normalizedUser.companySlugs.length) : 1;
+  const visibleCompanyCount = hydrated && canViewCompanyFilter
+    ? Math.max(companyOptions.length, normalizedUser.companySlugs.length)
+    : 1;
 
   const coverContent = useMemo(
     () => (
@@ -427,7 +435,7 @@ export default function TestCaseRepositoryClient() {
           <FiBookOpen className="h-4 w-4 shrink-0" />
           Abrir documentação do código
         </Link>
-        {selectedProject && (
+        {hydrated && selectedProject && (
           <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
             <FiLayers className="h-4 w-4 shrink-0" />
             <span className="max-w-40 truncate">{selectedProject.name}</span>
@@ -1815,7 +1823,7 @@ export default function TestCaseRepositoryClient() {
                         <div className="mt-2 space-y-1 text-(--tc-text-secondary,#4b5563)">
                           {agentRuns.slice(0, 8).map((run) => (
                             <p key={run.id}>
-                              [{new Date(run.createdAt).toLocaleTimeString("pt-BR")}] {run.agentName} - {run.status}
+                              [{hydrated ? new Date(run.createdAt).toLocaleTimeString("pt-BR") : "--:--:--"}] {run.agentName} - {run.status}
                             </p>
                           ))}
                         </div>

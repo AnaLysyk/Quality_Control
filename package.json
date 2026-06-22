@@ -33,7 +33,7 @@
     "test:solicitar-acesso:ui": "cross-env E2E_USE_JSON=1 playwright test testes/ui/login/solicitar-acesso --project=chromium",
     "test:solicitar-acesso:api": "cross-env E2E_USE_JSON=1 playwright test testes/api/solicitar-acesso --project=chromium",
     "test:solicitar-acesso:bd": "cross-env E2E_USE_JSON=1 playwright test testes/bd/solicitar-acesso --project=chromium",
-    "test:solicitar-acesso:acessibilidade": "cross-env E2E_USE_JSON=1 playwright test testes/ui/login/solicitar-acesso/formulario-publico/acessibilidade testes/ui/login/solicitar-acesso/solicitacoes-admin/acessibilidade --project=chromium",
+    "test:solicitar-acesso:acessibilidade": "cross-env E2E_USE_JSON=1 playwright test testes/ui/login/solicitar-acesso/formulario-publico/acessibilidade testes/ui/login/solicitar-acesso/gestao-solicitacoes/acessibilidade --project=chromium",
     "test:esqueci-senha:ui": "cross-env E2E_USE_JSON=1 playwright test testes/ui/login/esqueci-senha --project=chromium",
     "test:acessibilidade": "cross-env E2E_USE_JSON=1 playwright test **/*.acessibilidade.ui.spec.ts --project=chromium",
     "test:e2e:cases": "cross-env E2E_USE_JSON=1 playwright test --project=quality-test-cases",

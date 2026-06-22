@@ -2,13 +2,10 @@
 
 import {
   BASE_URL,
-  EMPRESA_E2E,
-  autenticarAdminDeTeste,
-  montarDadosEmpresaE2E,
   extrairCookie,
 } from "../../../../api/autenticacao/autenticar-por-cookie";
 
-export const SENHA_ORIGINAL_RECUPERACAO = "Demo@123";
+export const SENHA_ORIGINAL_RECUPERACAO = process.env.E2E_PROFILE_PASSWORD ?? "Demo@123";
 export const NOVA_SENHA_RECUPERACAO = "NovaSenha@2026!";
 
 export const perfisRecuperacaoSenha = [
@@ -19,37 +16,36 @@ export const perfisRecuperacaoSenha = [
   { role: "technical_support", label: "Suporte Tecnico" },
 ];
 
-export async function criarUsuarioTesteParaRecuperacao(
-  page: Page,
-  name: string,
-  email: string,
-  role: string,
-): Promise<string | null> {
-  await autenticarAdminDeTeste(page);
+const PERFIS_SEEDADOS: Record<string, { email: string; companySlug?: string; companyId?: string }> = {
+  empresa: {
+    email: "e2e-empresa@empresa.local",
+    companySlug: "empresa-e2e",
+    companyId: "cmp_e2e_client",
+  },
+  company_user: {
+    email: "e2e-company-user@empresa.local",
+    companySlug: "empresa-e2e",
+    companyId: "cmp_e2e_client",
+  },
+  testing_company_user: {
+    email: "e2e-user-tc@testingcompany.local",
+    companySlug: "testing-company",
+    companyId: "cmp_e2e_testing_company",
+  },
+  leader_tc: {
+    email: "e2e-leader-tc@testingcompany.local",
+  },
+  technical_support: {
+    email: "e2e-suporte@testingcompany.local",
+  },
+};
 
-  const response = await page.request.post(`${BASE_URL}/api/admin/users`, {
-    data: {
-      name,
-      email,
-      role,
-      password: SENHA_ORIGINAL_RECUPERACAO,
-      ...montarDadosEmpresaE2E(role),
-    },
-  });
-
-  if (!response.ok()) {
-    const body = await response.text();
-    throw new Error(`Falha ao criar usuário ${email}: ${response.status()} ${body}`);
+export function obterContaSeedadaRecuperacao(role: string) {
+  const conta = PERFIS_SEEDADOS[role];
+  if (!conta) {
+    throw new Error(`Conta seedada nao configurada para recuperacao: ${role}`);
   }
-
-  const body = await response.json().catch(() => ({}));
-
-  return body.id ?? body.user?.id ?? null;
-}
-
-export async function excluirUsuarioTesteRecuperacao(page: Page, userId: string) {
-  await autenticarAdminDeTeste(page);
-  await page.request.delete(`${BASE_URL}/api/admin/users/${userId}`).catch(() => {});
+  return conta;
 }
 
 export async function solicitarRecuperacaoSenha(
@@ -124,10 +120,6 @@ export async function aplicarResetDireto(page: Page, email: string) {
   });
 }
 
-export async function prepararAdminParaRecuperacao(page: Page) {
-  return autenticarAdminDeTeste(page);
-}
-
 export async function validarPerfilAposReset(
   page: Page,
   sessionId: string,
@@ -155,12 +147,13 @@ export async function validarPerfilAposReset(
   expect(me.user.role).toBe(role);
 
   if (!["leader_tc", "technical_support"].includes(role)) {
+    const contaEsperada = obterContaSeedadaRecuperacao(role);
     const hasCompany =
-      me.user.clientSlug === EMPRESA_E2E.slug ||
-      me.user.clientId === EMPRESA_E2E.id ||
+      me.user.clientSlug === contaEsperada.companySlug ||
+      me.user.clientId === contaEsperada.companyId ||
       me.companies?.some(
         (company: { slug?: string; id?: string }) =>
-          company.slug === EMPRESA_E2E.slug || company.id === EMPRESA_E2E.id,
+          company.slug === contaEsperada.companySlug || company.id === contaEsperada.companyId,
       );
 
     expect(hasCompany, `Vínculo de empresa perdido após reset para ${email}`).toBeTruthy();
@@ -170,7 +163,9 @@ export async function validarPerfilAposReset(
     headers: authHeaders,
   });
 
-  if (!["leader_tc", "technical_support"].includes(role)) {
+  if (["leader_tc", "technical_support", "empresa"].includes(role)) {
+    expect(adminApiResponse.status()).toBe(200);
+  } else {
     expect([401, 403]).toContain(adminApiResponse.status());
   }
 }

@@ -1378,11 +1378,11 @@ testes\ui\login\login\login-real.ui.spec.ts
 testes\ui\login\login\menu-autenticado.ui.spec.ts
 testes\ui\login\solicitar-acesso\aprovacao\aprovar-solicitacao.manual.ui.spec.ts
 testes\ui\login\solicitar-acesso\consulta\consultar-status.ui.spec.ts
-testes\ui\login\solicitar-acesso\email\captura-e-reenvio.ui.spec.ts
+testes\ui\login\solicitar-acesso\gestao-solicitacoes\email\capturar-e-reenviar-email-solicitacao.ui.spec.ts
 testes\ui\login\solicitar-acesso\email\enviar-email-real.manual.ui.spec.ts
 testes\ui\login\solicitar-acesso\lider-tc\criar-solicitacao.ui.spec.ts
 testes\ui\login\solicitar-acesso\perfis\criar-solicitacoes.ui.spec.ts
-testes\ui\login\solicitar-acesso\permissoes\acessar-modulo.ui.spec.ts
+testes\ui\login\solicitar-acesso\gestao-solicitacoes\permissao\validar-acesso-modulo-solicitacoes-por-perfil.ui.spec.ts
 testes\ui\login\solicitar-acesso\suporte-tecnico\criar-solicitacao.ui.spec.ts
 testes\ui\runs\exportar-runs.spec.ts
 testes\ui\runs\linha-tempo-runs.spec.ts

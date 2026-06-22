@@ -4,22 +4,28 @@ import { simularAutenticacao } from "./simular-autenticacao";
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
 
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@demo.test";
-const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Demo@123";
-const USER_EMAIL = process.env.E2E_USER_EMAIL || "user@demo.test";
-const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Demo@123";
+const useJsonSeed = process.env.E2E_USE_JSON === "1";
+const sharedPassword = process.env.E2E_PROFILE_PASSWORD || "Demo@123";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || (useJsonSeed ? "e2e-leader-tc@testingcompany.local" : "admin@demo.test");
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || sharedPassword;
+const USER_EMAIL = process.env.E2E_USER_EMAIL || (useJsonSeed ? "e2e-user-tc@testingcompany.local" : "user@demo.test");
+const USER_PASSWORD = process.env.E2E_USER_PASSWORD || sharedPassword;
 
 function montarSenhasCandidatas(primary: string) {
-  return Array.from(new Set([primary, "Griaule@123", "Demo@123", "senha"]));
+  return Array.from(new Set([primary, process.env.E2E_PROFILE_PASSWORD, "Griaule@123", "Demo@123", "senha"].filter(Boolean)));
 }
 
 function montarEmailsCandidatos(primary: string, type: "admin" | "company" | "user") {
   const defaultsByType =
     type === "admin"
-      ? ["admin@demo.test", "admin", "ana1"]
+      ? useJsonSeed
+        ? ["e2e-leader-tc@testingcompany.local", "e2e-suporte@testingcompany.local", "admin@demo.test", "admin", "ana1"]
+        : ["admin@demo.test", "admin", "ana1"]
       : type === "company"
         ? ["company@demo.test", "demo"]
-        : ["user@demo.test", "anapaula", "analysyk"];
+        : useJsonSeed
+          ? ["e2e-user-tc@testingcompany.local", "e2e-company-user@empresa.local", "user@demo.test", "anapaula", "analysyk"]
+          : ["user@demo.test", "anapaula", "analysyk"];
   return Array.from(new Set([primary, ...defaultsByType].filter(Boolean)));
 }
 

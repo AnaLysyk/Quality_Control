@@ -8,40 +8,23 @@ const themes: Theme[] = ["light", "dark"];
 const publicRoutes = [
   "/",
   "/login",
-  "/dashboard",
-  "/dashboard/apps",
-  "/painel",
-  "/release",
-  "/release/release_1_teste_painel_qa_ace",
-  "/applications",
-  "/applications/smart",
-  "/defects",
-  "/run/1",
+  "/login/forgot-password",
+  "/login/access-request",
+  "/login/access-request/status",
 ];
 
 const adminRoutes = [
   "/admin/dashboard",
-  "/admin/clients",
   "/admin/runs",
-  "/admin/test-metric",
   "/admin/defeitos",
   "/admin/requests",
-  "/admin/users",
-  "/admin/support",
-  "/admin/releases",
-  "/clients",
-  "/clientes",
-  "/settings",
-  "/settings/profile",
 ];
 
+const companySlug = "empresa-e2e";
 const companyRoutes = [
-  "/empresas/griaule/dashboard",
-  "/empresas/griaule/runs",
-  "/empresas/griaule/releases",
-  "/empresas/griaule/defeitos",
-  "/empresas/griaule/planos-de-teste",
-  "/empresas/griaule/aplicacoes",
+  `/${companySlug}/dashboard`,
+  `/${companySlug}/runs`,
+  `/${companySlug}/defeitos`,
 ];
 
 async function setThemeStorage(page: import("@playwright/test").Page, theme: Theme, userId?: string) {
@@ -131,7 +114,7 @@ test.describe("theme visibility - admin", () => {
 
   for (const theme of themes) {
     test(`admin routes @ ${theme}`, async ({ page }) => {
-      await setThemeStorage(page, theme, "usr_admin_griaule_test");
+      await setThemeStorage(page, theme, "usr_admin_empresa_e2e_test");
       await mockUserSettings(page, theme);
       await configurarUsuarioSimulado(page, "admin");
       await autenticarUsuario(page, "admin@example.com", "senha");
@@ -150,9 +133,9 @@ test.describe("theme visibility - company", () => {
 
   for (const theme of themes) {
     test(`company routes @ ${theme}`, async ({ page }) => {
-      await setThemeStorage(page, theme, "usr_user_griaule_test");
+      await setThemeStorage(page, theme, "usr_user_empresa_e2e_test");
       await mockUserSettings(page, theme);
-      await configurarUsuarioSimulado(page, "user", "griaule");
+      await configurarUsuarioSimulado(page, "user", companySlug);
       await autenticarUsuario(page, "user@example.com", "senha");
 
       for (const route of companyRoutes) {

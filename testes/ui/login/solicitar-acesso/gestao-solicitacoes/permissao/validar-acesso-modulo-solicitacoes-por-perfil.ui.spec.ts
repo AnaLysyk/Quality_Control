@@ -1,6 +1,6 @@
-﻿/**
+/**
  * Rodar:
- * npx playwright test testes/ui/login/solicitar-acesso/permissoes/acessar-modulo.ui.spec.ts --project=chromium
+ * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/permissao/validar-acesso-modulo-solicitacoes-por-perfil.ui.spec.ts --project=chromium
  */
 import { expect, test } from "../../../../../../support/fixtures/test";
 import { autenticarSolicitacaoAcessoNaInterface } from "../../../../../../support/functions/api/solicitar-acesso/autenticacao/autenticar-revisor";
@@ -16,9 +16,9 @@ import {
   validarTelaSolicitacoes,
 } from "../../../../../../support/functions/ui/login/solicitar-acesso/solicitacoes/operar-tela-solicitacoes";
 
-test.describe("Solicitacoes - acesso por perfil - UI", () => {
+test.describe("Solicitações - acesso por perfil - UI", () => {
   for (const perfil of perfisAutorizadosSolicitacoes) {
-    test(`${perfil.label} deve fazer login e visualizar o modulo Solicitacoes`, async ({
+    test(`${perfil.label} deve fazer login e visualizar o módulo Solicitações`, async ({
       context,
       page,
     }) => {
@@ -34,7 +34,7 @@ test.describe("Solicitacoes - acesso por perfil - UI", () => {
   }
 
   for (const perfil of perfisNegadosSolicitacoes) {
-    test(`${perfil.label} deve fazer login sem acessar o modulo Solicitacoes`, async ({
+    test(`${perfil.label} deve fazer login sem acessar o módulo Solicitações`, async ({
       context,
       page,
     }) => {
@@ -72,7 +72,7 @@ test.describe("Solicitacoes - acesso por perfil - UI", () => {
     });
   });
 
-  test("rota antiga /admin/requests nao deve existir como fluxo valido", async ({
+  test("rota antiga /admin/requests não deve existir como fluxo válido", async ({
     context,
     page,
   }) => {

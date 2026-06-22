@@ -1,58 +1,40 @@
 import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
+import {
+  autenticarPerfilRuns,
+  rotaRunsEmpresa,
+} from "../../../support/functions/ui/runs/rotas-runs";
 
 test.describe("rbac - runs UI", () => {
-  test("user nao ve botao de criar run", async ({ page, context }) => {
-    await simularAutenticacao(context, {
-      role: "user",
-      companies: ["DEMO"],
-      clientSlug: "DEMO",
-    });
+  test("usuario da empresa nao ve botao de criar run", async ({ page, context }) => {
+    await autenticarPerfilRuns(context, "company_user");
 
-    await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
+    await page.goto(rotaRunsEmpresa(), { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("run-create")).toHaveCount(0);
   });
 
-  test("company ve botao de criar run", async ({ page, context }) => {
-    await simularAutenticacao(context, {
-      role: "company",
-      companies: ["DEMO"],
-      clientSlug: "DEMO",
-    });
+  test("empresa ve botao de criar run", async ({ page, context }) => {
+    await autenticarPerfilRuns(context, "empresa");
 
-    await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
+    await page.goto(rotaRunsEmpresa(), { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("run-create")).toBeVisible();
   });
 
-  test("company nao ve deletar run", async ({ page, context }) => {
-    await simularAutenticacao(context, {
-      role: "company",
-      companies: ["DEMO"],
-      clientSlug: "DEMO",
-    });
+  test("empresa nao ve deletar run", async ({ page, context }) => {
+    await autenticarPerfilRuns(context, "empresa");
 
-    await page.goto("/admin/runs", { waitUntil: "domcontentloaded" });
+    await page.goto(rotaRunsEmpresa(), { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("run-delete")).toHaveCount(0);
   });
 
-  test("admin ve deletar run", async ({ page, context }) => {
-    await simularAutenticacao(context, {
-      role: "admin",
-      companies: ["DEMO"],
-      clientSlug: "DEMO",
-    });
+  test("admin acessa repositorio de runs da empresa", async ({ page, context }) => {
+    await autenticarPerfilRuns(context, "admin");
 
-    await page.goto("/admin/runs", { waitUntil: "domcontentloaded" });
+    await page.goto(rotaRunsEmpresa(), { waitUntil: "networkidle" });
 
-    await expect(page.getByRole("heading", { name: /Gerenciar Runs|Central Operacional/i })).toBeVisible({ timeout: 30000 });
-    const deleteButtons = page.getByTestId("run-delete");
-    if ((await deleteButtons.count()) > 0) {
-      await expect(deleteButtons.first()).toBeVisible();
-    } else {
-      await expect(page.getByText(/Mostrando 0 de 0|Nenhuma/i).first()).toBeVisible();
-    }
+    await expect(page.getByTestId("test-run-repository")).toBeVisible();
+    await expect(page.getByTestId("test-run-list")).toBeVisible();
   });
 });

@@ -1,17 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
+import { autenticarPerfilRuns, rotaRunsEmpresa } from "../../../support/functions/ui/runs/rotas-runs";
 
 test.describe("runs - lista", () => {
   test("user vÃª runs da empresa ativa", async ({ page, context }) => {
-    await simularAutenticacao(context, {
-      role: "user",
-      companies: ["DEMO"],
-      clientSlug: "DEMO",
-    });
+    await autenticarPerfilRuns(context, "company_user");
 
-    await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
+    await page.goto(rotaRunsEmpresa(), { waitUntil: "networkidle" });
 
-    await expect(page.getByTestId("runs-page")).toBeVisible();
-    await expect(page.getByTestId("runs-list")).toBeVisible();
+    await expect(page.getByTestId("test-run-repository")).toBeVisible();
+    await expect(page.getByTestId("test-run-list")).toBeVisible();
   });
 });

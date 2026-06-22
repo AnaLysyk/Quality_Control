@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FiArrowRight } from "react-icons/fi";
 import { useClientContext } from "@/context/ClientContext";
 import { ClientSkeleton } from "./ClientSkeleton";
@@ -37,6 +37,11 @@ export function CompanySelector({
   accent = "light",
 }: CompanySelectorProps) {
   const { clients, activeClientSlug, loading, error, setActiveClientSlug, refreshClients } = useClientContext();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const companies = useMemo<CompanySelectorItem[]>(
     () =>
@@ -63,6 +68,10 @@ export function CompanySelector({
   // Prefer semantic class for text color
   const tone = accent === "dark" ? "text-(--tc-text-inverse)" : "text-text";
   const hasCompanies = companies.length > 0;
+  const showSkeleton = !hydrated || loading;
+  const showError = hydrated && !loading && Boolean(error);
+  const showEmpty = hydrated && !loading && !error && !hasCompanies;
+  const showGrid = hydrated && !loading && !error && hasCompanies;
 
   return (
     <div data-testid="company-selector" className={`space-y-6 ${tone}`}>
@@ -71,7 +80,7 @@ export function CompanySelector({
         {description && <p className="text-sm text-(--tc-text-secondary,#4b5563)">{description}</p>}
       </div>
 
-      {loading && (
+      {showSkeleton && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
             <div key={index}>
@@ -81,7 +90,7 @@ export function CompanySelector({
         </div>
       )}
 
-      {!loading && error && (
+      {showError && (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
           <p className="text-sm font-semibold">{error}</p>
           <button
@@ -95,11 +104,11 @@ export function CompanySelector({
         </div>
       )}
 
-      {!loading && !error && !hasCompanies && (
+      {showEmpty && (
         <p className="text-sm text-muted">{emptyMessage}</p>
       )}
 
-      {!loading && !error && hasCompanies && (
+      {showGrid && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {companies.map((company) => {
             const isActive = company.clientSlug === activeClientSlug;
@@ -108,28 +117,27 @@ export function CompanySelector({
               company.createdAt && !Number.isNaN(Date.parse(company.createdAt))
                 ? new Date(company.createdAt).toLocaleDateString("pt-BR")
                 : null;
-
             return (
-            <Link
-              data-testid={`company-item-${company.clientSlug}`}
-              data-disabled={isDisabled ? "true" : undefined}
-              key={`${company.clientId}-${company.clientSlug}`}
-              href={buildHref(company)}
-              aria-disabled={isDisabled}
-              tabIndex={isDisabled ? -1 : undefined}
-              onClick={(event) => {
-                if (isDisabled) {
-                  event.preventDefault();
-                  return;
-                }
-                setActiveClientSlug(company.clientSlug);
-              }}
-              className={`group relative tc-section rounded-2xl p-5 shadow-sm transition ${
-                isDisabled
-                  ? "cursor-not-allowed opacity-60"
-                  : "cursor-pointer hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]"
-              } ${isActive ? "border-accent/70 ring-2 ring-accent/30" : ""}`}
-            >
+              <Link
+                data-testid={`company-item-${company.clientSlug}`}
+                data-disabled={isDisabled ? "true" : undefined}
+                key={`${company.clientId}-${company.clientSlug}`}
+                href={buildHref(company)}
+                aria-disabled={isDisabled}
+                tabIndex={isDisabled ? -1 : undefined}
+                onClick={(event) => {
+                  if (isDisabled) {
+                    event.preventDefault();
+                    return;
+                  }
+                  setActiveClientSlug(company.clientSlug);
+                }}
+                className={`group relative tc-section rounded-2xl p-5 shadow-sm transition ${
+                  isDisabled
+                    ? "cursor-not-allowed opacity-60"
+                    : "cursor-pointer hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]"
+                } ${isActive ? "border-accent/70 ring-2 ring-accent/30" : ""}`}
+              >
                 {isActive && (
                   <span className="absolute right-4 top-4 inline-flex items-center rounded-full bg-(--tc-accent,#ef0001)/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">
                     Atual

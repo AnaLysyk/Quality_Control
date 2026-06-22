@@ -22,6 +22,10 @@ function getProfile(role: PerfilTesteSolicitacaoAcesso) {
   return profile;
 }
 
+async function esperar(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function obterSenhaTesteSolicitacaoAcesso() {
   const password = process.env.E2E_PROFILE_PASSWORD;
   if (!password) throw new Error("E2E_PROFILE_PASSWORD nao configurada.");
@@ -33,15 +37,32 @@ export async function autenticarSolicitacaoAcessoViaApi(
   role: PerfilTesteSolicitacaoAcesso,
 ) {
   const profile = getProfile(role);
-  const response = await request.post("/api/auth/login", {
-    data: {
-      user: profile.email,
-      password: obterSenhaTesteSolicitacaoAcesso(),
-    },
-  });
-  const text = await response.text();
+  let response: Awaited<ReturnType<APIRequestContext["post"]>> | null = null;
+  let text = "";
 
-  expect(response.status(), text).toBe(200);
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      response = await request.post("/api/auth/login", {
+        data: {
+          user: profile.email,
+          password: obterSenhaTesteSolicitacaoAcesso(),
+        },
+      });
+      text = await response.text();
+
+      if (response.status() === 200) {
+        break;
+      }
+    } catch (error) {
+      text = error instanceof Error ? error.message : String(error);
+    }
+
+    if (attempt < 3) {
+      await esperar(1000 * attempt);
+    }
+  }
+
+  expect(response?.status(), text).toBe(200);
 
   const meResponse = await request.get("/api/me");
   const me = await meResponse.json().catch(() => null);
@@ -98,7 +119,6 @@ export async function autenticarSolicitacaoAcessoNaInterface(page: Page, role: P
 
   return autenticarSolicitacaoAcessoViaApi(page.request, role);
 }
-
 
 
 

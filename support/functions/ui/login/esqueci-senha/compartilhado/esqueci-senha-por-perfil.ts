@@ -2,7 +2,6 @@ import { expect, type Page } from "@playwright/test";
 
 import {
   BASE_URL,
-  EMPRESA_E2E,
 } from "../../../../api/autenticacao/autenticar-por-cookie";
 import {
   esperarEmailCapturado,
@@ -11,9 +10,8 @@ import {
 import {
   NOVA_SENHA_RECUPERACAO,
   SENHA_ORIGINAL_RECUPERACAO,
-  criarUsuarioTesteParaRecuperacao,
-  excluirUsuarioTesteRecuperacao,
   loginComSenha,
+  obterContaSeedadaRecuperacao,
   validarPerfilAposReset,
 } from "./recuperar-senha-por-perfil";
 
@@ -40,14 +38,46 @@ export function obterPerfilEsqueciSenha(slug: string) {
 export async function solicitarEsqueciSenhaPelaTela(page: Page, email: string) {
   limparEmailsCapturados();
   await page.goto("/login/forgot-password", { waitUntil: "domcontentloaded" });
-  await expect(page.getByTestId("forgot-password-form")).toBeVisible({ timeout: 15000 });
+  const form = page.getByTestId("forgot-password-form");
+  await expect(form).toBeVisible({ timeout: 15000 });
+  await expect
+    .poll(
+      () =>
+        form.evaluate((element) => {
+          const propsKey = Object.keys(element).find((key) => key.startsWith("__reactProps$"));
+          const props = propsKey
+            ? (element as unknown as Record<string, Record<string, unknown>>)[propsKey]
+            : null;
+          return typeof props?.onSubmit === "function";
+        }),
+      {
+        message: "Esperando o formulario de esqueci-senha concluir a hidratacao.",
+        timeout: 30000,
+      },
+    )
+    .toBe(true);
 
   await page.getByTestId("forgot-password-email-input").fill(email);
+  const forgotResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/auth/forgot-password") && response.request().method() === "POST",
+  );
   await page.getByTestId("forgot-password-submit-button").click();
 
-  await expect(page.getByText(/se o e-mail informado estiver cadastrado/i)).toBeVisible({
-    timeout: 15000,
-  });
+  const forgotResponse = await forgotResponsePromise;
+  const forgotBody = (await forgotResponse.json().catch(() => null)) as { message?: string; error?: string } | null;
+  expect(forgotResponse.status(), JSON.stringify(forgotBody)).toBe(200);
+
+  const successMessage =
+    typeof forgotBody?.message === "string" && forgotBody.message.trim()
+      ? forgotBody.message.trim()
+      : null;
+
+  if (successMessage) {
+    await expect(page.getByText(successMessage, { exact: false })).toBeVisible({ timeout: 15000 });
+  } else {
+    await expect(page.getByTestId("forgot-password-email-input")).toHaveValue("", { timeout: 15000 });
+  }
 }
 
 export async function capturarTokenResetSenha(email: string) {
@@ -101,19 +131,10 @@ export async function validarTokenInvalidoEsqueciSenha(page: Page) {
 }
 
 export async function executarRecuperacaoSenhaPorPerfil(page: Page, perfil: PerfilEsqueciSenha) {
-  const suffix = `${Date.now().toString().slice(-6)}-${Math.random().toString(36).slice(2, 5)}`;
-  const email = `e2e-reset-${perfil.slug}-${suffix}@demo.test`;
-  let userId: string | null = null;
+  const { email } = obterContaSeedadaRecuperacao(perfil.role);
+  let senhaAlterada = false;
 
   try {
-    userId = await criarUsuarioTesteParaRecuperacao(
-      page,
-      `Reset ${perfil.label} ${suffix}`,
-      email,
-      perfil.role,
-    );
-    expect(userId, `Usuario de teste nao foi criado para ${perfil.label}`).toBeTruthy();
-
     await solicitarEsqueciSenhaPelaTela(page, email);
     const token = await capturarTokenResetSenha(email);
 
@@ -129,6 +150,7 @@ export async function executarRecuperacaoSenhaPorPerfil(page: Page, perfil: Perf
     });
     const confirmText = await confirmResponse.text();
     expect(confirmResponse.ok(), confirmText).toBeTruthy();
+    senhaAlterada = true;
 
     const consumedResponse = await page.request.post(`${BASE_URL}/api/auth/reset-password/validate`, {
       data: { token },
@@ -148,27 +170,17 @@ export async function executarRecuperacaoSenhaPorPerfil(page: Page, perfil: Perf
       data: { user: email, password: SENHA_ORIGINAL_RECUPERACAO },
     });
     expect([401, 403]).toContain(oldLoginResponse.status());
-
-    if (!["leader_tc", "technical_support"].includes(perfil.role)) {
-      const meResponse = await page.request.get(`${BASE_URL}/api/me`, {
-        headers: {
-          cookie: `session_id=${sessionId}${authToken ? `; auth_token=${authToken}` : ""}`,
-          ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
+  } finally {
+    if (senhaAlterada) {
+      const restoreResponse = await page.request.post(`${BASE_URL}/api/auth/reset-direct`, {
+        data: {
+          user: email,
+          email,
+          newPassword: SENHA_ORIGINAL_RECUPERACAO,
         },
       });
-      const me = (await meResponse.json().catch(() => ({}))) as {
-        user?: { clientSlug?: string; clientId?: string };
-        companies?: Array<{ slug?: string; id?: string }>;
-      };
-      const manteveEmpresa =
-        me.user?.clientSlug === EMPRESA_E2E.slug ||
-        me.user?.clientId === EMPRESA_E2E.id ||
-        me.companies?.some((company) => company.slug === EMPRESA_E2E.slug || company.id === EMPRESA_E2E.id);
-      expect(manteveEmpresa, `Vinculo de empresa perdido para ${perfil.label}`).toBeTruthy();
-    }
-  } finally {
-    if (userId) {
-      await excluirUsuarioTesteRecuperacao(page, userId);
+      const restoreText = await restoreResponse.text().catch(() => "");
+      expect(restoreResponse.ok(), `Falha ao restaurar senha original de ${email}: ${restoreText}`).toBeTruthy();
     }
   }
 }

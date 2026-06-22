@@ -78,6 +78,7 @@ function getPriorityLabel(priority?: TicketPriority | null) {
 
 export default function TicketsButton({ defaultOpen = false }: TicketsButtonProps) {
   const { user } = usePermissionAccess();
+  const [hydrated, setHydrated] = useState(false);
   const [open, setOpen] = useState(defaultOpen);
   const [items, setItems] = useState<TicketItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -102,6 +103,10 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
   const canManageWorkflow = canManageSupportWorkflow(user);
 
   const isCreating = editingId === "new";
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const syncPanelAnchor = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -373,7 +378,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
     }
   }
 
-  if (!user || !canOpenSupport) return null;
+  if (!hydrated || !user || !canOpenSupport) return null;
 
   return (
     <div className="relative shrink-0" ref={boxRef}>
@@ -565,7 +570,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
                     <div className="min-w-0 flex-1">
                       <p className="tickets-ticket-title">{ticket.title || "Sem título"}</p>
                       <p className="tickets-ticket-meta">
-                        Atualizado em {new Date(ticket.updatedAt).toLocaleString("pt-BR")}
+                        Atualizado em {hydrated ? new Date(ticket.updatedAt).toLocaleString("pt-BR") : "--/--/---- --:--:--"}
                       </p>
                       {user?.isGlobalAdmin && creatorLabel && (
                         <p className="tickets-ticket-meta">

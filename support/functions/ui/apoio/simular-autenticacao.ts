@@ -2,28 +2,38 @@
 
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 const baseURL = /^https?:\/\//i.test(rawBaseURL) ? rawBaseURL : `http://${rawBaseURL}`;
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@demo.test";
-const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Demo@123";
-const COMPANY_EMAIL = process.env.E2E_COMPANY_EMAIL || "company@demo.test";
-const COMPANY_PASSWORD = process.env.E2E_COMPANY_PASSWORD || "Demo@123";
-const USER_EMAIL = process.env.E2E_USER_EMAIL || "user@demo.test";
-const USER_PASSWORD = process.env.E2E_USER_PASSWORD || "Demo@123";
-const NO_COMPANY_EMAIL = process.env.E2E_NO_COMPANY_EMAIL || "nocompany@demo.test";
-const NO_COMPANY_PASSWORD = process.env.E2E_NO_COMPANY_PASSWORD || "Demo@123";
+const useJsonSeed = process.env.E2E_USE_JSON === "1";
+const sharedPassword = process.env.E2E_PROFILE_PASSWORD || "Demo@123";
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || (useJsonSeed ? "e2e-leader-tc@testingcompany.local" : "admin@demo.test");
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || sharedPassword;
+const COMPANY_EMAIL = process.env.E2E_COMPANY_EMAIL || (useJsonSeed ? "e2e-company-user@empresa.local" : "company@demo.test");
+const COMPANY_PASSWORD = process.env.E2E_COMPANY_PASSWORD || sharedPassword;
+const USER_EMAIL = process.env.E2E_USER_EMAIL || (useJsonSeed ? "e2e-user-tc@testingcompany.local" : "user@demo.test");
+const USER_PASSWORD = process.env.E2E_USER_PASSWORD || sharedPassword;
+const NO_COMPANY_EMAIL = process.env.E2E_NO_COMPANY_EMAIL || (useJsonSeed ? "e2e-password-reset@testingcompany.local" : "nocompany@demo.test");
+const NO_COMPANY_PASSWORD = process.env.E2E_NO_COMPANY_PASSWORD || sharedPassword;
 
 function montarSenhasCandidatas(primary: string) {
-  return Array.from(new Set([primary, "Griaule@123", "Demo@123", "senha"]));
+  return Array.from(new Set([primary, process.env.E2E_PROFILE_PASSWORD, "Griaule@123", "Demo@123", "senha"].filter(Boolean)));
 }
 
 function montarEmailsCandidatos(primary: string, role: OpcoesAutenticacaoSimulada["role"], wantsNoCompany: boolean) {
   const defaultsByRole =
     role === "admin" || role === "leader_tc" || role === "technical_support"
-      ? ["admin@demo.test", "admin", "ana1"]
+      ? useJsonSeed
+        ? ["e2e-leader-tc@testingcompany.local", "e2e-suporte@testingcompany.local", "admin@demo.test", "admin", "ana1"]
+        : ["admin@demo.test", "admin", "ana1"]
       : role === "company" || role === "client" || role === "empresa" || role === "company_user"
-        ? ["company@demo.test", "demo"]
+        ? useJsonSeed
+          ? ["e2e-company-user@empresa.local", "e2e-empresa@empresa.local", "company@demo.test", "demo"]
+          : ["company@demo.test", "demo"]
         : wantsNoCompany
-          ? ["nocompany@demo.test"]
-          : ["user@demo.test", "anapaula", "analysyk"];
+          ? useJsonSeed
+            ? ["e2e-password-reset@testingcompany.local", "nocompany@demo.test"]
+            : ["nocompany@demo.test"]
+          : useJsonSeed
+            ? ["e2e-user-tc@testingcompany.local", "e2e-company-user@empresa.local", "user@demo.test", "anapaula", "analysyk"]
+            : ["user@demo.test", "anapaula", "analysyk"];
   return Array.from(new Set([primary, ...defaultsByRole].filter(Boolean)));
 }
 
@@ -56,7 +66,7 @@ function normalizeList(values: Array<string | null | undefined>) {
   return Array.from(
     new Set(
       values
-        .map((value) => String(value ?? "").trim())
+        .map((value) => String(value ?? "").trim().toLowerCase())
         .filter((value) => value.length > 0),
     ),
   );
@@ -65,35 +75,53 @@ function normalizeList(values: Array<string | null | undefined>) {
 function toCompanyName(slug: string) {
   const normalized = slug.trim().toLowerCase();
   if (normalized === "testing-company") return "Testing Company";
+  if (normalized === "empresa-e2e") return "Empresa Cliente E2E";
   return slug;
 }
 
+function mapRoleAlias(role: OpcoesAutenticacaoSimulada["role"]) {
+  if (role === "admin") return "leader_tc";
+  if (role === "company" || role === "client") return "empresa";
+  if (role === "user") return "testing_company_user";
+  return role;
+}
+
+function normalizeE2eSlug(value?: string | null) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return null;
+  if (useJsonSeed && normalized === "demo") return "empresa-e2e";
+  return normalized;
+}
+
 function buildMockMePayload(options: OpcoesAutenticacaoSimulada) {
+  const mappedRole = mapRoleAlias(options.role);
   const companySlugs = normalizeList([
     ...(options.companySlugs ?? []),
     ...(options.clientSlugs ?? []),
     ...(options.companies ?? []),
     options.companySlug,
     options.clientSlug,
-  ]);
+  ]).map((slug) => normalizeE2eSlug(slug) ?? slug);
 
   const effectiveCompanySlug =
-    String(options.companySlug ?? options.clientSlug ?? companySlugs[0] ?? "testing-company").trim() || "testing-company";
+    normalizeE2eSlug(options.companySlug ?? options.clientSlug ?? companySlugs[0]) ?? "testing-company";
+  const clientSlug = normalizeE2eSlug(options.clientSlug) ?? effectiveCompanySlug;
+  const clientSlugs = normalizeList(options.clientSlugs ?? companySlugs).map((slug) => normalizeE2eSlug(slug) ?? slug);
 
   const user = {
-    id: options.id ?? `e2e-${options.role}`,
+    id: options.id ?? `e2e-${mappedRole}`,
     email: options.email ?? `e2e-${options.role}@testingcompany.local`,
     name: options.name ?? `E2E ${options.role}`,
-    role: options.role,
-    permissionRole: options.permissionRole ?? options.role,
-    companyRole: options.companyRole ?? options.role,
+    role: mappedRole,
+    permissionRole: options.permissionRole ?? mappedRole,
+    companyRole: options.companyRole ?? mappedRole,
     companySlug: effectiveCompanySlug,
     companySlugs,
-    clientSlug: options.clientSlug ?? effectiveCompanySlug,
-    clientSlugs: options.clientSlugs ?? companySlugs,
-    isGlobalAdmin: options.isGlobalAdmin === true,
+    clientSlug,
+    clientSlugs,
+    isGlobalAdmin: options.isGlobalAdmin === true || mappedRole === "leader_tc",
     permissions: options.permissions,
-    defaultClientSlug: options.clientSlug ?? effectiveCompanySlug,
+    defaultClientSlug: clientSlug,
   };
 
   const companies = companySlugs
@@ -102,9 +130,9 @@ function buildMockMePayload(options: OpcoesAutenticacaoSimulada) {
       id: slug,
       slug,
       name: toCompanyName(slug),
-      role: (options.companyRole ?? options.role).toUpperCase() === "EMPRESA" ? "ADMIN" : "USER",
+      role: (options.companyRole ?? mappedRole).toUpperCase() === "EMPRESA" ? "ADMIN" : "USER",
       active: true,
-      companyRole: options.companyRole ?? options.role,
+      companyRole: options.companyRole ?? mappedRole,
     }));
 
   return { user, companies };
@@ -174,7 +202,12 @@ export async function simularAutenticacao(context: BrowserContext, options: Opco
     cookies.push({ name: "active_company_slug", value: activeCompanyMatch[1], url: baseURL });
   }
   if (options.companySlug) {
-    cookies.push({ name: "active_company_slug", value: options.companySlug, url: baseURL });
+    cookies.push({ name: "active_company_slug", value: normalizeE2eSlug(options.companySlug) ?? options.companySlug.toLowerCase(), url: baseURL });
+  } else if (options.clientSlug) {
+    const normalizedClientSlug = normalizeE2eSlug(options.clientSlug);
+    if (normalizedClientSlug) {
+      cookies.push({ name: "active_company_slug", value: normalizedClientSlug, url: baseURL });
+    }
   }
   await context.addCookies(cookies);
 

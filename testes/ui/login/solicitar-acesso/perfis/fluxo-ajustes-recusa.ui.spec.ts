@@ -29,7 +29,7 @@ import {
   validarLoginUsuarioAprovadoPorApi,
 } from "../../../../../support/functions/api/solicitar-acesso/fluxos/fluxo-ajustes-recusa";
 
-test.use({ baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000" });
+test.use({ baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100" });
 
 const perfis: Array<{
   role: PerfilSolicitacaoAcessoPublica;

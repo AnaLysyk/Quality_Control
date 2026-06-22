@@ -3,10 +3,14 @@
 export const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
 
 export const EMPRESA_E2E = {
-  slug: "DEMO",
-  id: "cmp_e2e_testing_company",
-  name: "Testing Company E2E",
+  slug: "empresa-e2e",
+  id: "cmp_e2e_client",
+  name: "Empresa Cliente E2E",
 };
+
+async function esperar(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function extrairCookie(
   setCookie: string | string[] | undefined,
@@ -69,25 +73,40 @@ export async function autenticarAdminDeTeste(page: Page) {
 
   const candidatos = [
     { user: "e2e-leader-tc@testingcompany.local", password: senhaPerfil },
-    { user: "e2e-technical-support@testingcompany.local", password: senhaPerfil },
+    { user: "e2e-suporte@testingcompany.local", password: senhaPerfil },
     { user: "admin@demo.test", password: "Demo@123" },
     { user: "admin@demo.test", password: "Griaule@123" },
   ].filter((item) => item.password);
 
   for (const candidato of candidatos) {
-    const response = await page.request.post(`${BASE_URL}/api/auth/login`, {
-      data: {
-        user: candidato.user,
-        password: candidato.password,
-      },
-    });
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const response = await page.request.post(`${BASE_URL}/api/auth/login`, {
+          data: {
+            user: candidato.user,
+            password: candidato.password,
+          },
+        });
 
-    if (!response.ok()) continue;
+        if (!response.ok()) {
+          if (attempt < 3) {
+            await esperar(1000 * attempt);
+            continue;
+          }
+          break;
+        }
 
-    const sessionId = await adicionarCookiesDeLogin(page, response.headers()["set-cookie"]);
+        const sessionId = await adicionarCookiesDeLogin(page, response.headers()["set-cookie"]);
 
-    if (sessionId) {
-      return { user: candidato.user, sessionId };
+        if (sessionId) {
+          return { user: candidato.user, sessionId };
+        }
+      } catch {
+        if (attempt < 3) {
+          await esperar(1000 * attempt);
+          continue;
+        }
+      }
     }
   }
 

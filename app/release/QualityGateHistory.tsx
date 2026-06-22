@@ -61,10 +61,10 @@ export function QualityGateHistory({
         <div
           className="mt-4 border rounded p-3 bg-white max-w-xl"
           data-testid="quality-gate-history-list"
-          data-release-timeline="true"
+          data-run-timeline="true"
         >
           {events.length === 0 && <div className="text-xs text-gray-500">Nenhum histórico encontrado.</div>}
-          <ul className="space-y-2" data-testid="release-timeline">
+          <ul className="space-y-2" data-testid="run-timeline">
             {events.map((item, i) => {
               const reasons = Array.isArray(item.meta?.reasons)
                 ? (item.meta.reasons as unknown[]).filter((r): r is string => typeof r === "string" && r.length > 0)

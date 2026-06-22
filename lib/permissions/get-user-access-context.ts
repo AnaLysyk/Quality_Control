@@ -48,14 +48,16 @@ export function getUserAccessContext(
     user.isGlobalAdmin === true ||
     user.is_global_admin === true ||
     String(user.globalRole ?? "").toLowerCase() === "global_admin";
+  const companyRole = typeof user.companyRole === "string" ? user.companyRole : null;
   const permissionRole =
+    (isGlobalAdmin ? SYSTEM_ROLES.LEADER_TC : null) ??
     normalizeLegacyRole(user.permissionRole ?? null) ??
     normalizeLegacyRole(user.role ?? null) ??
-    normalizeLegacyRole(user.companyRole ?? null) ??
-    (isGlobalAdmin ? SYSTEM_ROLES.LEADER_TC : null);
+    normalizeLegacyRole(companyRole);
   const role =
+    (isGlobalAdmin ? SYSTEM_ROLES.LEADER_TC : null) ??
     normalizeLegacyRole(user.role ?? null) ??
-    normalizeLegacyRole(user.companyRole ?? null) ??
+    normalizeLegacyRole(companyRole) ??
     permissionRole;
   const normalizedUser = normalizeAuthenticatedUser(user, companies);
   const companySlug =
@@ -71,7 +73,7 @@ export function getUserAccessContext(
   const profileKind = resolveFixedProfileKind({
     permissionRole,
     role,
-    companyRole: typeof user.companyRole === "string" ? user.companyRole : null,
+    companyRole,
     clientSlug: companySlug,
     companyCount: normalizedUser.companyCount,
   });
@@ -94,8 +96,15 @@ export function getUserAccessContext(
     isGlobalAdmin,
     isTestingCompanyUser,
     isCompanyUser,
-    permissions:
-      user.permissions != null
+    permissions: isGlobalAdmin
+      ? resolveEffectivePermissionMatrix({
+          permissionRole,
+          role,
+          companyRole,
+          globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
+          isGlobalAdmin,
+        })
+      : user.permissions != null
         ? normalizePermissionMatrix(user.permissions)
         : resolveEffectivePermissionMatrix(user),
   };

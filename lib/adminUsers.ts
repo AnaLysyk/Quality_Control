@@ -151,9 +151,9 @@ export function resolvePermissionRoleForUser(
     (ROLE_WEIGHT[userRole] ?? ROLE_WEIGHT.company_user) > (ROLE_WEIGHT[strongestFromLinks] ?? ROLE_WEIGHT.company_user)
       ? userRole
       : strongestFromLinks;
+  if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return SYSTEM_ROLES.LEADER_TC;
   if (strongest === "leader_tc") return SYSTEM_ROLES.LEADER_TC;
   if (strongest === "technical_support") return SYSTEM_ROLES.TECHNICAL_SUPPORT;
-  if (user?.globalRole === "global_admin" || user?.is_global_admin === true) return SYSTEM_ROLES.LEADER_TC;
   if (strongest === "empresa") return SYSTEM_ROLES.EMPRESA;
   if (origin === "client_company" || scope === "company_only" || allowMultiCompanyLink === false) {
     return SYSTEM_ROLES.COMPANY_USER;

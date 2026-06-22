@@ -39,6 +39,7 @@ export function hasSupportAccess(
   action: string,
 ) {
   if (!user) return false;
+  if (user.isGlobalAdmin) return true;
   return hasPermissionAccess(user.permissions, moduleId, action) || hasRoleDefaultAccess(user, moduleId, action);
 }
 
@@ -72,11 +73,11 @@ export function isSupportOperatorUser(user: SupportAccessUser) {
 
 export function canAccessGlobalSupportScope(user: SupportAccessUser) {
   if (!canViewSupportBoard(user)) return false;
-  return isSupportOperatorUser(user);
+  return isSupportOperatorUser(user) || isSupportAdminUser(user);
 }
 
 export function canManageSupportWorkflow(user: SupportAccessUser) {
-  if (!isSupportOperatorUser(user)) return false;
+  if (!isSupportOperatorUser(user) && !isSupportAdminUser(user)) return false;
   return (
     hasSupportAccess(user, "tickets", "assign") ||
     hasSupportAccess(user, "tickets", "status") ||

@@ -52,10 +52,25 @@ describe("permissionMatrix - Matriz Rígida de Autorização baseada em Módulos
       const matrix = resolveEffectivePermissionMatrix({
         permissions: { tickets: ["view_all"] },
         role: "technical_support",
-        isGlobalAdmin: true
+        isGlobalAdmin: false
       });
       // Importante: prevalece os permissions override explícitos se existem
       expect(matrix).toEqual({ tickets: ["view_all"] });
+    });
+
+    it("deve garantir matriz completa para o perfil existente leader_tc", () => {
+      const matrix = resolveEffectivePermissionMatrix({
+        permissionRole: "leader_tc",
+        role: "technical_support",
+        isGlobalAdmin: false
+      });
+
+      expect(matrix.tickets).toContain("view_all");
+      expect(matrix.tickets).toContain("delete");
+      expect(matrix.users).toContain("delete");
+      expect(matrix.audit).toContain("export");
+      expect(matrix.settings).toContain("edit");
+      expect(matrix.test_repository).toContain("import");
     });
 
     it("fallback em cascata rigidamente priorizado: permissionRole > role > companyRole > globalRole > isGlobalAdmin", () => {

@@ -23,4 +23,14 @@ describe("resolveEffectivePermissionMatrix", () => {
       tickets: ["view"],
     });
   });
+
+  it("resolves full permissions for the existing leader_tc profile", () => {
+    const matrix = resolveEffectivePermissionMatrix({
+      permissionRole: "leader_tc",
+    });
+
+    expect(matrix.tickets).toContain("view_all");
+    expect(matrix.users).toContain("delete");
+    expect(matrix.audit).toContain("export");
+  });
 });

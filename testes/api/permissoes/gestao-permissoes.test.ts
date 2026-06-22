@@ -591,9 +591,11 @@ describeDb("F) Integração DB — resolvePermissionAccessForUser", () => {
     expect(access.roleKey).toBe("leader_tc");
     expect(hasPermissionAccess(access.permissions, "permissions", "reset")).toBe(true);
     expect(hasPermissionAccess(access.permissions, "permissions", "clone")).toBe(true);
-    expect(hasPermissionAccess(access.permissions, "audit", "export")).toBe(false);
-    expect(hasPermissionAccess(access.permissions, "users", "delete")).toBe(false);
-    expect(hasPermissionAccess(access.permissions, "tickets", "view_all")).toBe(false);
+    expect(hasPermissionAccess(access.permissions, "audit", "export")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "users", "delete")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "tickets", "view_all")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "settings", "edit")).toBe(true);
+    expect(hasPermissionAccess(access.permissions, "applications", "export")).toBe(true);
 
     console.log(`✅ F4. global_admin (DB) → roleKey=${access.roleKey} | permissions.reset=${hasPermissionAccess(access.permissions,"permissions","reset")}`);
   });

@@ -21,10 +21,8 @@ export async function requireAccessRequestReviewer(
   if (!session) return null;
 
   const role = session.role ?? null;
-  const normalizedRole = normalizeLegacyRole(role);
   const isGlobalAdmin =
-    normalizedRole !== SYSTEM_ROLES.TECHNICAL_SUPPORT &&
-    (session.isGlobalAdmin === true || (session.globalRole ?? "").toLowerCase() === "global_admin");
+    session.isGlobalAdmin === true || (session.globalRole ?? "").toLowerCase() === "global_admin";
   const isGlobalReviewer = isGlobalAdmin || canReviewAccessRequests(role);
   if (!isGlobalReviewer && !canReviewAccessRequests(role)) return null;
 

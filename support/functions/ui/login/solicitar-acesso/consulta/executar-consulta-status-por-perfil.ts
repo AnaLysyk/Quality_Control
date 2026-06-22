@@ -22,6 +22,49 @@ async function passo(nome: string, page: Page) {
   await page.waitForTimeout(delayMs);
 }
 
+async function abrirFormularioConsultaPublica(page: Page) {
+  const botaoAbrir = page.getByTestId("open-access-request-lookup-button");
+  const formulario = page.getByTestId("access-request-lookup-form");
+
+  await expect(botaoAbrir).toBeVisible({ timeout: 30000 });
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(2000);
+  await expect
+    .poll(
+      () =>
+        botaoAbrir.evaluate((element) => {
+          const propsKey = Object.keys(element).find((key) => key.startsWith("__reactProps$"));
+          const props = propsKey
+            ? (element as unknown as Record<string, Record<string, unknown>>)[propsKey]
+            : null;
+          return typeof props?.onClick === "function";
+        }),
+      {
+        message: "Esperando o botao de consultar solicitacao concluir a hidratacao.",
+        timeout: 60000,
+      },
+    )
+    .toBe(true);
+
+  for (let attemptsRemaining = 6; attemptsRemaining > 0; attemptsRemaining -= 1) {
+    if (await formulario.isVisible().catch(() => false)) {
+      return;
+    }
+
+    await botaoAbrir.scrollIntoViewIfNeeded();
+    await botaoAbrir.click();
+
+    await expect(formulario).toBeVisible({ timeout: 3000 }).catch(() => undefined);
+  }
+
+  await page.screenshot({
+    path: "test-results/access-request-lookup-form-nao-abriu.png",
+    fullPage: true,
+  });
+
+  await expect(formulario).toBeVisible({ timeout: 30000 });
+}
+
 export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, perfil: PerfilSolicitacao) {
   const email = criarEmailTeste(`visual-${perfil.value}`);
 
@@ -39,7 +82,7 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
 
   await passo(`Formulário aberto para ${perfil.labelTelaStatus}`, page);
 
-  await preencherFormularioSolicitacaoPorPerfil(page, perfil, email);
+  const dadosPreenchidos = await preencherFormularioSolicitacaoPorPerfil(page, perfil, email);
 
   await passo(`Formulário preenchido para ${perfil.labelTelaStatus}`, page);
 
@@ -85,8 +128,22 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
 
   await passo(`E-mail recebido e chave capturada para ${perfil.labelTelaStatus}`, page);
 
-  await page.goto(`/login/access-request/status?key=${chave}`, {
+  await page.goto("/login/access-request", {
     waitUntil: "domcontentloaded",
+    timeout: 90000,
+  });
+
+  await abrirFormularioConsultaPublica(page);
+
+  await page.getByTestId("request-access-lookup-name-input").fill(dadosPreenchidos.nomeCompleto);
+  await page.getByTestId("request-access-lookup-email-input").fill(email);
+  await page.getByTestId("request-access-lookup-code-input").fill(chave);
+
+  await passo(`Consulta pública preenchida para ${perfil.labelTelaStatus}`, page);
+
+  await page.getByTestId("request-access-lookup-submit-button").click();
+
+  await expect(page).toHaveURL(/\/login\/access-request\/status\?key=/, {
     timeout: 90000,
   });
 

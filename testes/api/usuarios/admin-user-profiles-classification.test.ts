@@ -139,4 +139,30 @@ describe("admin user profile classification", () => {
     expect(resolvePermissionRoleForUser(user, links)).toBe("technical_support");
     expect(resolveAdminUserProfileKind(user, links, makeCompany("technical_support"))).toBe("technical_support");
   });
+
+  it("gives global admin precedence over the technical support role", () => {
+    const user = makeUser({
+      name: "Ana Paula Lysyk",
+      full_name: "Ana Paula Lysyk",
+      email: "ana.paula.lysyk@techcompany.com",
+      user: "ana.paula.lysyk",
+      role: "technical_support",
+      globalRole: "global_admin",
+      is_global_admin: true,
+      user_origin: "testing_company",
+    });
+    const links = [makeLink("technical_support")];
+
+    expect(resolvePermissionRoleForUser(user, links)).toBe("leader_tc");
+    expect(resolveAdminUserProfileKind(user, links, makeCompany("technical_support"))).toBe("leader_tc");
+    expect(
+      buildAdminUserItem(
+        user,
+        links,
+        new Map<string, LocalAuthCompany>([
+          ["Demo", { id: "Demo", name: "Demo", slug: "Demo" } as LocalAuthCompany],
+        ]),
+      ).permission_role,
+    ).toBe("leader_tc");
+  });
 });

@@ -42,7 +42,7 @@ describe("system role contract", () => {
     expect(canReviewerAccessQueue({ role: "technical_support" }, "global_only")).toBe(false);
     expect(canReviewerAccessQueue({ role: "technical_support" }, "admin_and_global")).toBe(false);
     expect(canReviewerAccessQueue({ role: "it_dev" }, "global_only")).toBe(false);
-    expect(canReviewerAccessQueue({ role: "technical_support", isGlobalAdmin: true }, "global_only")).toBe(false);
+    expect(canReviewerAccessQueue({ role: "technical_support", isGlobalAdmin: true }, "global_only")).toBe(true);
     expect(canReviewerAccessQueue({ role: "leader_tc" }, "admin_and_global")).toBe(true);
     expect(canReviewerAccessQueue({ role: "leader_tc" }, "global_only")).toBe(true);
     expect(canReviewerAccessQueue({ role: "user" }, "admin_and_global")).toBe(false);

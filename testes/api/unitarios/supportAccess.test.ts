@@ -75,6 +75,7 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
 
       // Um company user mesmo forçado n pode acessar Global Space do suporte vertical
       expect(canAccessGlobalSupportScope({ role: "company_user", permissions: { support: ["view", "edit"] } })).toBe(false);
+      expect(canAccessGlobalSupportScope({ role: "leader_tc" })).toBe(true);
     });
 
     it("canManageSupportWorkflow: exige ser Operator E ter permissões para assign/status", () => {
@@ -94,6 +95,7 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
       
       // Intruder tentando ganhar workflow privileges com override falso
       expect(canManageSupportWorkflow({ role: "empresa", permissions: { support: ["assign"] } })).toBe(false);
+      expect(canManageSupportWorkflow({ role: "leader_tc" })).toBe(true);
     });
   });
 });

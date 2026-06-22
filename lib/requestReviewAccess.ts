@@ -21,9 +21,9 @@ export function isGlobalReviewer(session: ReviewerSession | null | undefined) {
 
 export function canReviewAccessRequests(session: ReviewerSession | null | undefined) {
   if (!session) return false;
+  if (session.isGlobalAdmin === true) return true;
   const role = normalizeLegacyRole(session.role);
   if (role === SYSTEM_ROLES.TECHNICAL_SUPPORT) return false;
-  if (session.isGlobalAdmin === true) return true;
   return role === SYSTEM_ROLES.LEADER_TC || hasPermissionAccess(resolveRoleDefaults(role), "access_requests", "view");
 }
 

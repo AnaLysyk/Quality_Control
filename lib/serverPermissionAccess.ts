@@ -18,25 +18,48 @@ export type ResolvedPermissionAccess = {
   permissions: PermissionMatrix;
 };
 
-export async function resolveRoleKeyForUser(userId: string): Promise<RoleKey> {
-  const [users, links] = await Promise.all([listLocalUsers(), listLocalLinksForUser(userId)]);
-  const user = users.find((item) => item.id === userId) ?? null;
-  if (
-    user &&
+type LocalPermissionUser = Awaited<ReturnType<typeof listLocalUsers>>[number];
+type LocalPermissionLink = Awaited<ReturnType<typeof listLocalLinksForUser>>[number];
+
+function resolvesToLeaderProfile(user: LocalPermissionUser | null | undefined) {
+  if (!user) return false;
+  return (
+    user.globalRole === "global_admin" ||
+    user.is_global_admin === true ||
     hasForcedGlobalAccessForUser({ id: user.id, email: user.email, user: user.user ?? null })
-  ) {
-    return SYSTEM_ROLES.LEADER_TC;
-  }
-  return resolvePermissionRoleForUser(user, links);
+  );
+}
+
+async function resolvePermissionSourceForUser(userId: string): Promise<{
+  roleKey: RoleKey;
+}> {
+  const [users, links]: [LocalPermissionUser[], LocalPermissionLink[]] = await Promise.all([
+    listLocalUsers(),
+    listLocalLinksForUser(userId),
+  ]);
+  const user = users.find((item) => item.id === userId) ?? null;
+
+  return {
+    roleKey: resolvesToLeaderProfile(user) ? SYSTEM_ROLES.LEADER_TC : resolvePermissionRoleForUser(user, links),
+  };
+}
+
+export async function resolveRoleKeyForUser(userId: string): Promise<RoleKey> {
+  const source = await resolvePermissionSourceForUser(userId);
+  return source.roleKey;
 }
 
 export async function resolvePermissionAccessForUser(userId: string): Promise<ResolvedPermissionAccess> {
-  const roleKey = await resolveRoleKeyForUser(userId);
+  const { roleKey } = await resolvePermissionSourceForUser(userId);
   const override = await getUserOverride(userId);
   const roleDefaults = resolveRoleDefaults(roleKey);
-  const calculated = effectivePermissions(roleKey, override ?? undefined);
   const permissions = normalizePermissionMatrix(
-    Object.fromEntries(Object.entries(calculated).map(([moduleId, actions]) => [moduleId, Array.from(actions)])),
+    Object.fromEntries(
+      Object.entries(effectivePermissions(roleKey, override ?? undefined)).map(([moduleId, actions]) => [
+        moduleId,
+        Array.from(actions),
+      ]),
+    ),
   );
 
   return {

@@ -40,11 +40,11 @@ function hasAnyPermissionActions(matrix: PermissionMatrix) {
 
 function resolvePermissionRole(input: EffectivePermissionMatrixInput | null | undefined) {
   return (
+    (input?.isGlobalAdmin === true ? normalizeLegacyRole("global_admin") : null) ??
     normalizeLegacyRole(input?.permissionRole ?? null) ??
     normalizeLegacyRole(input?.role ?? null) ??
     normalizeLegacyRole(input?.companyRole ?? null) ??
-    normalizeLegacyRole(input?.globalRole ?? null) ??
-    (input?.isGlobalAdmin === true ? normalizeLegacyRole("global_admin") : null)
+    normalizeLegacyRole(input?.globalRole ?? null)
   );
 }
 

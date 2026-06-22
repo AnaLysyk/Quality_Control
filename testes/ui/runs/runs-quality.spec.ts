@@ -1,19 +1,23 @@
 import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
+import { criarRunManualPorApi } from "../../../support/functions/api/runs/criar-run-manual";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
+import { autenticarPerfilRuns, rotaDashboardEmpresa } from "../../../support/functions/ui/runs/rotas-runs";
 
 test("dashboard mostra qualidade por run", async ({ page, context }) => {
-  await simularAutenticacao(context, {
-    role: "admin",
-    companies: ["DEMO"],
-    clientSlug: "DEMO",
+  await autenticarPerfilRuns(context, "admin");
+  await criarRunManualPorApi(page.request, {
+    titulo: "Run Qualidade Dashboard",
+    pass: 90,
+    fail: 5,
+    blocked: 0,
+    notRun: 5,
   });
 
-  await page.goto("/empresas/demo/dashboard", {
-    waitUntil: "networkidle",
+  await page.goto(rotaDashboardEmpresa(), {
+    waitUntil: "domcontentloaded",
   });
 
   await validarDashboardAtualPronto(page);
-  await page.getByRole("button", { name: /Comparativos/i }).click();
-  await expect(page.getByText(/Runs com mais impacto|Sem comparativos para exibir/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole("heading", { name: /Runs com mais impacto/i })).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/Qualidade Dashboard/i).first()).toBeVisible({ timeout: 10000 });
 });

@@ -9,6 +9,8 @@ import {
   shouldUseShortCompanyRoutes,
 } from "@/lib/companyRoutes";
 
+const COMPANY_ROUTE_REWRITE_HEADER = "x-company-route-rewrite";
+
 function normalizeValue(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
@@ -165,6 +167,7 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-current-path", pathname);
+  const isCompanyRouteRewrite = request.headers.get(COMPANY_ROUTE_REWRITE_HEADER) === "1";
 
   if (pathname === "/audit-logs") {
     const url = request.nextUrl.clone();
@@ -206,7 +209,7 @@ export function proxy(request: NextRequest) {
   }
 
   const routeAccess = resolveCompanyRouteAccessForRequest(request);
-  const canonicalPath = routeAccess.usePublicRoutes
+  const canonicalPath = !isCompanyRouteRewrite && routeAccess.usePublicRoutes
     ? canonicalizeCompanyPathnameForAccess(request.nextUrl.pathname, {
         isGlobalAdmin: routeAccess.isGlobalAdmin,
         role: routeAccess.role || null,
@@ -228,6 +231,7 @@ export function proxy(request: NextRequest) {
     debugCompanyRouteDecision(request, routeAccess, "rewrite", rewrittenPath);
     const nextUrl = request.nextUrl.clone();
     nextUrl.pathname = rewrittenPath;
+    requestHeaders.set(COMPANY_ROUTE_REWRITE_HEADER, "1");
     return NextResponse.rewrite(nextUrl, {
       request: {
         headers: requestHeaders,

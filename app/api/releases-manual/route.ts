@@ -219,13 +219,15 @@ export async function POST(req: Request) {
       },
     };
 
-    syncReleaseManualToBrain({
-      id: release.id,
-      title: release.name,
-      description: release.observations ?? null,
-      status: release.status ?? null,
-      companyId: release.clientSlug ?? null,
-    }).catch(() => {});
+    if (process.env.E2E_USE_JSON !== "1" && process.env.E2E_USE_JSON !== "true") {
+      syncReleaseManualToBrain({
+        id: release.id,
+        title: release.name,
+        description: release.observations ?? null,
+        status: release.status ?? null,
+        companyId: release.clientSlug ?? null,
+      }).catch(() => {});
+    }
 
     return NextResponse.json(payload, { status: 201 });
   } catch (error) {

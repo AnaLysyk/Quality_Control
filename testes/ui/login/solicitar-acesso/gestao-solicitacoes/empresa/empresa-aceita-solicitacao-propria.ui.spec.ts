@@ -1,6 +1,6 @@
 /**
  * Rodar:
- * npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/empresa/empresa-aceita-solicitacao-propria.ui.spec.ts --headed --workers=1 --reporter=list
+ * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/empresa/empresa-aceita-solicitacao-propria.ui.spec.ts --headed --workers=1 --reporter=list
  */
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
@@ -18,7 +18,7 @@ import {
   limparEmailsCapturados,
 } from "../../../../../../support/functions/api/solicitar-acesso/emails/capturar-emails";
 
-test.use({ baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000" });
+test.use({ baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100" });
 
 const PASSWORD = process.env.E2E_PROFILE_PASSWORD ?? "SenhaVisual@123";
 
@@ -127,14 +127,14 @@ async function aguardarStatusPublico(request: APIRequestContext, accessKey: stri
     .toBe(status);
 }
 
-test.describe("Solicitacoes de acesso - Empresa aprova no proprio escopo", () => {
+test.describe("Solicitações de acesso - Empresa aprova no próprio escopo", () => {
   test.setTimeout(360000);
 
   test.beforeEach(() => {
     limparEmailsCapturados();
   });
 
-  test("Empresa deve aceitar solicitacao vinculada a propria empresa", async ({ browser }) => {
+  test("Empresa deve aceitar solicitação vinculada à própria empresa", async ({ browser }) => {
     const adminContext = await browser.newContext();
     const empresaPage = await browser.newPage();
     const approvedContext = await browser.newContext();

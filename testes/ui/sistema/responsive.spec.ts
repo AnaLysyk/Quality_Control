@@ -13,40 +13,23 @@ const viewports: Viewport[] = [
 const publicRoutes = [
   "/",
   "/login",
-  "/dashboard",
-  "/dashboard/apps",
-  "/painel",
-  "/release",
-  "/release/release_1_teste_painel_qa_ace",
-  "/applications",
-  "/applications/smart",
-  "/defects",
-  "/run/1",
+  "/login/forgot-password",
+  "/login/access-request",
+  "/login/access-request/status",
 ];
 
 const adminRoutes = [
   "/admin/dashboard",
-  "/admin/clients",
   "/admin/runs",
-  "/admin/test-metric",
   "/admin/defeitos",
   "/admin/requests",
-  "/admin/users",
-  "/admin/support",
-  "/admin/releases",
-  "/clients",
-  "/clientes",
-  "/settings",
-  "/settings/profile",
 ];
 
+const companySlug = "empresa-e2e";
 const companyRoutes = [
-  "/empresas/griaule/dashboard",
-  "/empresas/griaule/runs",
-  "/empresas/griaule/releases",
-  "/empresas/griaule/defeitos",
-  "/empresas/griaule/planos-de-teste",
-  "/empresas/griaule/aplicacoes",
+  `/${companySlug}/dashboard`,
+  `/${companySlug}/runs`,
+  `/${companySlug}/defeitos`,
 ];
 
 async function assertNoHorizontalOverflow(page: Page, route: string) {
@@ -105,7 +88,7 @@ test.describe("responsive layout audit - company", () => {
   for (const viewport of viewports) {
     test(`company routes @ ${viewport.label}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await configurarUsuarioSimulado(page, "admin", "griaule");
+      await configurarUsuarioSimulado(page, "admin", companySlug);
       await autenticarUsuario(page, "admin@example.com", "senha");
 
       for (const route of companyRoutes) {

@@ -1,6 +1,6 @@
 ﻿/**
  * Rodar:
- * npx playwright test testes/ui/login/solicitar-acesso/email/enviar-email-real.manual.ui.spec.ts --project=chromium
+ * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/email/enviar-email-real.manual.ui.spec.ts --project=chromium
  */
 import { expect, test } from "@playwright/test";
 import {
@@ -15,10 +15,10 @@ import {
 const REAL_EMAIL = process.env.E2E_REAL_EMAIL_TARGET ?? "";
 const PASSWORD = process.env.E2E_PROFILE_PASSWORD ?? "";
 
-test.describe("SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail", () => {
+test.describe("Solicitação pública de acesso com envio real de e-mail", () => {
   test.skip(
     process.env.E2E_SEND_REAL_EMAIL !== "true" || !REAL_EMAIL,
-    "CenÃ¡rio protegido: configure E2E_SEND_REAL_EMAIL=true e E2E_REAL_EMAIL_TARGET.",
+    "Cenário protegido: configure E2E_SEND_REAL_EMAIL=true e E2E_REAL_EMAIL_TARGET.",
   );
 
   test.setTimeout(120_000);
@@ -48,9 +48,9 @@ test.describe("SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail",
         await companySelect.selectOption("cmp_e2e_testing_company");
       }
 
-      await page.getByTestId("request-access-name-input").fill(`ValidaÃ§Ã£o ${profile.label} ${unique}`);
+      await page.getByTestId("request-access-name-input").fill(`Validação ${profile.label} ${unique}`);
 
-      const supportLogin = page.getByLabel("UsuÃ¡rio/login");
+      const supportLogin = page.getByLabel("Usuário/login");
       if (await supportLogin.isVisible().catch(() => false)) {
         await supportLogin.fill(requestEmail);
       }
@@ -60,9 +60,9 @@ test.describe("SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail",
 
       await selecionarCargoAnalista(page);
 
-      await page.getByLabel("TÃ­tulo da solicitaÃ§Ã£o").fill(`SolicitaÃ§Ã£o de acesso - ${profile.label}`);
+      await page.getByLabel("Título da solicitação").fill(`Solicitação de acesso - ${profile.label}`);
       await page.getByTestId("request-access-reason-input").fill(
-        `ValidaÃ§Ã£o do envio de e-mail para ${profile.label}.`,
+        `Validação do envio de e-mail para ${profile.label}.`,
       );
 
       await page.getByLabel("Senha escolhida para o novo acesso").fill(PASSWORD);
@@ -104,5 +104,4 @@ test.describe("SolicitaÃ§Ã£o pÃºblica de acesso com envio real de e-mail",
     });
   }
 });
-
 

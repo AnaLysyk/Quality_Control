@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 export async function validarDashboardAtualPronto(page: Page) {
-  await expect(page.getByRole("heading", { name: /Resumo executivo de qualidade/i })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: /Recorte anal.tico/i })).toBeVisible({ timeout: 30000 });
   await expect(page.getByText(/Recorte atual:/i).first()).toBeVisible({ timeout: 30000 });
 }
 

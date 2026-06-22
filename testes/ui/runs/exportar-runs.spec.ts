@@ -1,20 +1,23 @@
 import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
+import { criarRunManualPorApi } from "../../../support/functions/api/runs/criar-run-manual";
+import { exportarPdfRunManualPorApi } from "../../../support/functions/api/runs/exportar-run-manual";
+import { autenticarPerfilRuns } from "../../../support/functions/ui/runs/rotas-runs";
 
-test("admin consegue exportar release", async ({ page, context }) => {
-  await simularAutenticacao(context, {
-    role: "admin",
-    companies: ["DEMO"],
-    clientSlug: "DEMO",
+test("admin consegue exportar run", async ({ page, context }) => {
+  await autenticarPerfilRuns(context, "admin");
+
+  const { slug } = await criarRunManualPorApi(page.request, {
+    titulo: "Run Export Admin",
+    pass: 90,
+    fail: 5,
+    blocked: 0,
+    notRun: 5,
   });
 
-  await page.goto("/empresas/demo/releases/v1_8_0_reg", { waitUntil: "networkidle" });
+  const response = await exportarPdfRunManualPorApi(page.request, slug);
 
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByTestId("release-export-pdf").click(),
-  ]);
-
-  const filename = download.suggestedFilename();
-  expect(filename).toMatch(/release-.*\.(pdf|csv)$/);
+  expect(response.ok()).toBeTruthy();
+  expect(response.headers()["content-disposition"]).toContain(`run-${slug}.pdf`);
+  expect(response.headers()["content-type"]).toContain("application/pdf");
+  expect((await response.body()).length).toBeGreaterThan(1000);
 });

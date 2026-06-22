@@ -2999,7 +2999,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         {hasFilterResults ? (
           filteredRuns.length > 0 ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] 2xl:grid-cols-[minmax(0,1.2fr)_minmax(26rem,0.8fr)]">
-          <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href="../runs" className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
+          <Panel eyebrow="Comparativos" title="Runs com mais impacto" description={undefined} actions={<Link href={`/${encodeURIComponent(props.companySlug)}/runs`} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">Lista completa<FiArrowRight className="h-4 w-4" /></Link>}>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>

@@ -31,7 +31,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const { searchParams } = new URL(req.url);
   const format = (searchParams.get("format") || "csv").toLowerCase();
   const safeFormat = format === "pdf" ? "pdf" : "csv";
-  const filename = `release-${releaseSlug}.${safeFormat}`;
+  const filename = `run-${releaseSlug}.${safeFormat}`;
 
   const headers = new Headers();
   headers.set("Content-Disposition", `attachment; filename="${filename}"`);
@@ -54,4 +54,3 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   headers.set("Content-Type", "text/csv; charset=utf-8");
   return new NextResponse(buildCsv(vm), { headers });
 }
-

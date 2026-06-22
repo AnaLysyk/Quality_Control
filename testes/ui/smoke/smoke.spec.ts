@@ -17,7 +17,7 @@ test("@smoke login and load clientes", async ({ page }) => {
 
 const supportCriticalRoutes = [
   "/admin/clients",
-  "/solicitacoes",
+  "/admin/access-requests",
   "/suporte",
   "/suporte/kanban",
   "/chamados",

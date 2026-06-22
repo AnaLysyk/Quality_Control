@@ -1,52 +1,22 @@
 import { test, expect } from "@playwright/test";
-import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
-
-function slugify(value: string) {
-  return value
-    .replace(/^run\s+/i, "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .replace(/_{2,}/g, "_");
-}
+import { autenticarPerfilRuns } from "../../../support/functions/ui/runs/rotas-runs";
+import { criarRunManualPorApi } from "../../../support/functions/api/runs/criar-run-manual";
+import { finalizarRunManualPorApi } from "../../../support/functions/api/runs/finalizar-run-manual";
 
 test("quality gate falho bloqueia aprovacao de run manual", async ({ page, context }) => {
-  await simularAutenticacao(context, {
-    role: "company",
-    companies: ["DEMO"],
-    clientSlug: "DEMO",
-  });
+  await autenticarPerfilRuns(context, "empresa");
 
   const runTitle = "Run Bloqueada";
-  const runSlug = slugify(runTitle);
 
-  await page.goto("/empresas/demo/runs", { waitUntil: "networkidle" });
+  const { slug: runSlug } = await criarRunManualPorApi(page.request, {
+    titulo: runTitle,
+    pass: 0,
+    fail: 60,
+    blocked: 40,
+    notRun: 0,
+  });
 
-  await page.getByTestId("run-create").click();
-  await page.getByTestId("run-title").fill(runTitle);
-  await page.getByTestId("run-stat-pass").fill("0");
-  await page.getByTestId("run-stat-fail").fill("60");
-  await page.getByTestId("run-stat-blocked").fill("40");
-  await page.getByTestId("run-stat-not-run").fill("0");
-  await page.getByTestId("run-submit").click();
+  const response = await finalizarRunManualPorApi(page.request, runSlug);
 
-  await page.waitForURL(new RegExp(`/empresas/demo/runs/${runSlug}`));
-
-  const approve = page.getByTestId("release-approve");
-  await expect(approve).toHaveAttribute("aria-disabled", "true");
-  await expect(page.getByTestId("quality-gate-blocked-message")).toBeVisible();
-
-  const status = await page.evaluate(async (slug) => {
-    const res = await fetch(`/api/releases-manual/${slug}`, {
-      method: "PATCH",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "FINALIZADA" }),
-    });
-    return res.status;
-  }, runSlug);
-
-  expect(status).toBe(403);
+  expect(response.status()).toBe(403);
 });

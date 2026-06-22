@@ -1,6 +1,6 @@
 ﻿/**
  * Rodar:
- * npx playwright test testes/ui/login/solicitar-acesso/aprovacao/aprovar-solicitacao.manual.ui.spec.ts --project=chromium
+ * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/aprovacao/aprovar-solicitacao.manual.ui.spec.ts --project=chromium
  */
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
@@ -475,4 +475,3 @@ test.describe("VISUAL - Solicitação de acesso com aprovação", () => {
     });
   }
 });
-

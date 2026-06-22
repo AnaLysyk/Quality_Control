@@ -7,7 +7,7 @@ test("admin global sees clients list", async ({ page }) => {
 
   await page.goto("/admin/clients");
   await expect(page).toHaveURL(/\/admin\/clients/);
-  await expect(page.getByRole("heading", { name: "Empresas da plataforma" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Lista de empresas/i })).toBeVisible();
 });
 
 test("user cannot access /admin/clients", async ({ page }) => {

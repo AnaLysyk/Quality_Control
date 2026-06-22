@@ -539,7 +539,7 @@ function buildManualRunItem(run: Release, companySlug: string): HomeRunItem {
     slug: run.slug,
     runId: normalizeNumericId(run.runId),
     title: formatRunTitle(run.name || run.slug, "Run manual"),
-    href: `../runs/${encodeURIComponent(run.slug)}`,
+    href: `/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(run.slug)}`,
     applicationKey: normalizeKey(run.app || run.qaseProject || applicationName),
     applicationName,
     projectCode: normalizeProjectCode(run.qaseProject ?? run.app),
@@ -576,7 +576,7 @@ function buildIntegratedRunItem(release: ReleaseEntry, companySlug: string): Hom
     slug: release.slug,
     runId: normalizeNumericId(release.runId),
     title: formatRunTitle(release.title || release.slug, "Run integrada"),
-    href: `../runs/${encodeURIComponent(release.slug)}`,
+    href: `/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(release.slug)}`,
     applicationKey: normalizeKey(release.app || release.project || release.qaseProject || applicationName),
     applicationName,
     projectCode: normalizeProjectCode(release.qaseProject ?? release.project ?? release.app),
@@ -609,8 +609,8 @@ function buildDefectItem(defect: Release, companySlug: string): CompanyDefectIte
     slug: defect.slug,
     title: formatRunTitle(defect.name || defect.slug, "Defeito"),
     href: defect.runSlug
-      ? `../defeitos?run=${encodeURIComponent(defect.runSlug)}`
-      : "../defeitos",
+      ? `/${encodeURIComponent(companySlug)}/defeitos?run=${encodeURIComponent(defect.runSlug)}`
+      : `/${encodeURIComponent(companySlug)}/defeitos`,
     runSlug: defect.runSlug ?? null,
     runName: defect.runName ?? null,
     applicationKey: normalizeKey(defect.app || defect.qaseProject || applicationName),

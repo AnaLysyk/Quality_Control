@@ -1,6 +1,6 @@
 /**
  * Rodar:
- * npx playwright test testes/ui/login/solicitar-acesso/solicitacoes-admin/escopo/empresa-ve-somente-suas-solicitacoes.ui.spec.ts --headed --workers=1 --reporter=list
+ * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/escopo/empresa-ve-somente-suas-solicitacoes.ui.spec.ts --headed --workers=1 --reporter=list
  */
 import { expect, test, type Page } from "@playwright/test";
 
@@ -13,7 +13,7 @@ import {
 } from "../../../../../../support/functions/api/solicitar-acesso/fluxos/fluxo-ajustes-recusa";
 import { criarEmailTeste } from "../../../../../../support/functions/api/solicitar-acesso/emails/capturar-emails";
 
-test.use({ baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000" });
+test.use({ baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100" });
 
 const PASSWORD = process.env.E2E_PROFILE_PASSWORD ?? "SenhaVisual@123";
 

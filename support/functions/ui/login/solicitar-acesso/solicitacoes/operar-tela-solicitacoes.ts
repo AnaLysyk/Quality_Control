@@ -38,14 +38,15 @@ export async function validarAcessoNegadoAoModuloSolicitacoes(page: Page) {
   });
 }
 
-export async function validarRotaRemovidaNaoExiste(page: Page) {
+export async function validarRotaLegadaRedirecionaParaSolicitacoes(page: Page) {
   const response = await page.goto("/admin/requests", {
     waitUntil: "domcontentloaded",
   });
 
   expect(response?.status()).not.toBe(500);
+  await expect(page).toHaveURL(/\/admin\/access-requests/);
 
-  await expect(page.getByRole("heading", { name: /Solicitações de acesso/i })).not.toBeVisible({
-    timeout: 3000,
+  await expect(page.getByRole("heading", { name: /Solicitações de acesso/i })).toBeVisible({
+    timeout: 60000,
   });
 }

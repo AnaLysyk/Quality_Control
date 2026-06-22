@@ -38,7 +38,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   );
   const canOpenAdminRoute =
     hasAdminAccess ||
-    (hasAccessRequestsAccess && pathname.startsWith("/admin/access-requests"));
+    (hasAccessRequestsAccess &&
+      (pathname.startsWith("/admin/access-requests") || pathname.startsWith("/admin/requests")));
 
   if (!canOpenAdminRoute) {
     const fallbackCompany = access.companySlug ?? access.companySlugs[0] ?? null;

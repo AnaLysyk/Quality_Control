@@ -12,7 +12,7 @@ import {
 import {
   abrirModuloSolicitacoes,
   validarAcessoNegadoAoModuloSolicitacoes,
-  validarRotaRemovidaNaoExiste,
+  validarRotaLegadaRedirecionaParaSolicitacoes,
   validarTelaSolicitacoes,
 } from "../../../../../../support/functions/ui/login/solicitar-acesso/solicitacoes/operar-tela-solicitacoes";
 
@@ -72,13 +72,13 @@ test.describe("Solicitações - acesso por perfil - UI", () => {
     });
   });
 
-  test("rota antiga /admin/requests não deve existir como fluxo válido", async ({
+  test("rota antiga /admin/requests deve redirecionar para Solicitações", async ({
     context,
     page,
   }) => {
     await autenticarSolicitacaoAcessoNaInterface(page, "leader_tc");
     await page.close();
     const oldRoutePage = await context.newPage();
-    await validarRotaRemovidaNaoExiste(oldRoutePage);
+    await validarRotaLegadaRedirecionaParaSolicitacoes(oldRoutePage);
   });
 });

@@ -192,7 +192,14 @@ export function proxy(request: NextRequest) {
 
   if (pathname === "/solicitacoes") {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/requests";
+    url.pathname = "/admin/access-requests";
+    url.search = search;
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/admin/requests") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/access-requests";
     url.search = search;
     return NextResponse.redirect(url);
   }

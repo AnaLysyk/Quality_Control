@@ -1,4 +1,4 @@
-﻿import { test, expect } from "../../../../../support/fixtures/test";
+import { test, expect } from "../../../../../support/fixtures/test";
 import { BASE_URL } from "../../../../../support/functions/api/autenticacao/autenticar-por-cookie";
 import {
   SENHA_USUARIO_NOVO,
@@ -10,6 +10,7 @@ import {
   validarBloqueioAdminParaPerfilCriado,
   temEmpresaE2E,
 } from "../../../../../support/functions/ui/usuarios/criar-usuario-por-perfil";
+import { validarMeuPerfilUsuarioCriado } from "../../../../../support/functions/ui/usuarios/validar-meu-perfil-usuario-criado";
 
 test.setTimeout(180000);
 
@@ -43,6 +44,8 @@ test.describe("Criar usuário - Usuário da empresa", () => {
 
     await page.context().clearCookies();
     await loginDiretoUsuarioCriado(page, email, SENHA_USUARIO_NOVO);
+
+    await validarMeuPerfilUsuarioCriado(page, { name, email });
 
     const me = await validarSessaoUsuarioCriado(page, email, "company_user");
     expect(temEmpresaE2E(me)).toBeTruthy();

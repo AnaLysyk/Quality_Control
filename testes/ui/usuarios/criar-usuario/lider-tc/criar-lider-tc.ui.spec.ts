@@ -1,4 +1,4 @@
-﻿import { test, expect } from "../../../../../support/fixtures/test";
+import { test, expect } from "../../../../../support/fixtures/test";
 import { BASE_URL } from "../../../../../support/functions/api/autenticacao/autenticar-por-cookie";
 import {
   SENHA_USUARIO_NOVO,
@@ -7,6 +7,7 @@ import {
   criarUsuarioViaApi,
   loginDiretoUsuarioCriado,
 } from "../../../../../support/functions/ui/usuarios/criar-usuario-por-perfil";
+import { validarMeuPerfilUsuarioCriado } from "../../../../../support/functions/ui/usuarios/validar-meu-perfil-usuario-criado";
 
 test.setTimeout(180000);
 
@@ -39,6 +40,8 @@ test.describe("Criar usuário - Líder TC", () => {
 
     await page.context().clearCookies();
     await loginDiretoUsuarioCriado(page, email, SENHA_USUARIO_NOVO);
+
+    await validarMeuPerfilUsuarioCriado(page, { name, email });
 
     await page.goto("/admin", { waitUntil: "domcontentloaded" });
     await expect(page).not.toHaveURL(/\/login/);

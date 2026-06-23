@@ -31,7 +31,11 @@ export async function consultarSolicitacaoComTokenInvalido(request: APIRequestCo
     body,
     "GET /api/access-requests/by-key/:key - 404",
   );
-  expect(body?.message).toContain("Solicitação");
+  const normalizedMessage = String(body?.message ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  expect(normalizedMessage).toContain("Solicitacao");
 
   return body;
 }
@@ -39,7 +43,7 @@ export async function consultarSolicitacaoComTokenInvalido(request: APIRequestCo
 export async function aprovarSolicitacaoViaApiV2(request: APIRequestContext, id: string) {
   const response = await request.post(`/api/access-requests/${id}/approve`, {
     data: {
-      comment: "Aprovado após validação dos dados.",
+      comment: "Aprovado apos validacao dos dados.",
     },
   });
 
@@ -54,7 +58,7 @@ export async function aprovarSolicitacaoViaApiV2(request: APIRequestContext, id:
 export async function recusarSolicitacaoViaApiV2(request: APIRequestContext, id: string) {
   const response = await request.post(`/api/access-requests/${id}/reject`, {
     data: {
-      comment: "Recusado por dados incompatíveis.",
+      comment: "Recusado por dados incompativeis.",
     },
   });
 
@@ -69,7 +73,7 @@ export async function recusarSolicitacaoViaApiV2(request: APIRequestContext, id:
 export async function solicitarAjusteViaApiV2(request: APIRequestContext, id: string) {
   const response = await request.post(`/api/access-requests/${id}/request-info`, {
     data: {
-      comment: "Corrigir telefone e descrição antes da aprovação.",
+      comment: "Corrigir telefone e descricao antes da aprovacao.",
       adjustmentFields: ["phone", "description"],
     },
   });

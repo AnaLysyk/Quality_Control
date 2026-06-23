@@ -162,6 +162,8 @@ export type AccessRequestV2 = {
   id: string;
   /** Chave pública de acesso segúro — enviada por e-mail, usada sem autenticação */
   accessKey?: string;
+  /** Data/hora de expiração do código de consulta enviado por e-mail */
+  accessKeyExpiresAt?: string;
   requesterUserId?: string;
   requesterEmail: string;
   requesterName?: string;

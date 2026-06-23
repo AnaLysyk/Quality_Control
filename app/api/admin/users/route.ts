@@ -73,7 +73,11 @@ function buildUniqueLogin(
   return `${base}.${counter}`;
 }
 
-function canManageInstitutionalProfiles(access: Awaited<ReturnType<typeof getAccessContext>> | null) {
+function canManageInstitutionalProfiles(
+  access: Awaited<ReturnType<typeof getAccessContext>> | null,
+  userAccess?: { canManagePrivilegedProfiles?: boolean } | null,
+) {
+  if (userAccess?.canManagePrivilegedProfiles) return true;
   if (!access) return false;
   const role = normalizeLegacyRole(access.role);
   const companyRole = normalizeLegacyRole(access.companyRole);
@@ -130,7 +134,7 @@ export async function POST(req: NextRequest) {
   if (!userAccess.canCreateUsers) {
     return NextResponse.json({ error: "Sem permissão para criar usuários" }, { status: 403 });
   }
-  const canManageProfiles = canManageInstitutionalProfiles(access);
+  const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
 
   const body = await req.json().catch(() => null);
   const profileFields = readSyncedUserProfileFields(body);
@@ -292,7 +296,7 @@ export async function PATCH(req: NextRequest) {
   if (!userAccess.canEditUsers) {
     return NextResponse.json({ error: "Sem permissão para editar usuários" }, { status: 403 });
   }
-  const canManageProfiles = canManageInstitutionalProfiles(access);
+  const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
 
   const body = await req.json().catch(() => null);
   const userId = typeof body?.id === "string" ? body.id : "";

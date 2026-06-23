@@ -1,4 +1,4 @@
-﻿import { expect, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import {
   criarEmailTeste,
@@ -65,6 +65,28 @@ async function abrirFormularioConsultaPublica(page: Page) {
   await expect(formulario).toBeVisible({ timeout: 30000 });
 }
 
+async function esperarFormularioConsultaHidratado(page: Page) {
+  const formulario = page.getByTestId("access-request-lookup-form");
+
+  await expect(formulario).toBeVisible({ timeout: 30000 });
+
+  await expect
+    .poll(
+      () =>
+        formulario.evaluate((element) => {
+          const propsKey = Object.keys(element).find((key) => key.startsWith("__reactProps$"));
+          const props = propsKey
+            ? (element as unknown as Record<string, Record<string, unknown>>)[propsKey]
+            : null;
+          return typeof props?.onSubmit === "function";
+        }),
+      {
+        message: "Esperando o formulário de consulta concluir a hidratação.",
+        timeout: 60000,
+      },
+    )
+    .toBe(true);
+}
 export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, perfil: PerfilSolicitacao) {
   const email = criarEmailTeste(`visual-${perfil.value}`);
 
@@ -104,6 +126,15 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
 
   const respostaSubmit = await respostaSubmitPromise;
   const corpoSubmit = await respostaSubmit.text().catch(() => "");
+  const payloadSubmit = JSON.parse(corpoSubmit) as {
+    item?: {
+      accessKey?: string;
+      requesterName?: string;
+      requesterEmail?: string;
+    };
+  };
+  const nomeConsulta = payloadSubmit.item?.requesterName?.trim() || dadosPreenchidos.nomeCompleto;
+  const emailConsulta = payloadSubmit.item?.requesterEmail?.trim().toLowerCase() || email;
 
   console.log("[VISUAL][SOLICITAR-ACESSO]", {
     perfil: perfil.value,
@@ -135,16 +166,63 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
 
   await abrirFormularioConsultaPublica(page);
 
-  await page.getByTestId("request-access-lookup-name-input").fill(dadosPreenchidos.nomeCompleto);
-  await page.getByTestId("request-access-lookup-email-input").fill(email);
+  await page.getByTestId("request-access-lookup-name-input").fill(nomeConsulta);
+  await page.getByTestId("request-access-lookup-email-input").fill(emailConsulta);
   await page.getByTestId("request-access-lookup-code-input").fill(chave);
 
   await passo(`Consulta pública preenchida para ${perfil.labelTelaStatus}`, page);
 
-  await page.getByTestId("request-access-lookup-submit-button").click();
+  await esperarFormularioConsultaHidratado(page);
 
-  await expect(page).toHaveURL(/\/login\/access-request\/status\?key=/, {
+  const botaoConsultar = page.getByTestId("request-access-lookup-submit-button");
+  await expect(botaoConsultar).toBeEnabled({ timeout: 30000 });
+
+  const aguardarRespostaConsulta = () =>
+    page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/access-requests/by-key/${encodeURIComponent(chave)}`),
+      { timeout: 30000 },
+    );
+
+  let respostaConsulta = await Promise.all([
+    aguardarRespostaConsulta().catch(() => null),
+    botaoConsultar.click(),
+  ]).then(([response]) => response);
+
+  if (!respostaConsulta) {
+    const formularioConsulta = page.getByTestId("access-request-lookup-form");
+
+    respostaConsulta = await Promise.all([
+      aguardarRespostaConsulta().catch(() => null),
+      formularioConsulta.evaluate((form) => {
+        if (form instanceof HTMLFormElement) {
+          form.requestSubmit();
+        }
+      }),
+    ]).then(([response]) => response);
+  }
+
+  expect(respostaConsulta, "A consulta pública deve chamar a API by-key").not.toBeNull();
+
+  const corpoConsulta = await respostaConsulta!.text().catch(() => "");
+  expect(respostaConsulta!.ok(), corpoConsulta).toBe(true);
+
+  await page.waitForURL(/\/login\/access-request\/status\?key=/, {
     timeout: 90000,
+    waitUntil: "domcontentloaded",
+  }).catch(async (error) => {
+    const bodyText = await page.locator("body").innerText().catch(() => "");
+    console.log("[VISUAL][LOOKUP][FALHA]", {
+      perfil: perfil.value,
+      url: page.url(),
+      nomeConsulta,
+      emailConsulta,
+      chave,
+      consultaStatus: respostaConsulta?.status(),
+      consultaBody: corpoConsulta.slice(0, 2000),
+      body: bodyText.slice(0, 2000),
+    });
+    throw error;
   });
 
   await expect(page.getByTestId("access-request-status-result")).toBeVisible({

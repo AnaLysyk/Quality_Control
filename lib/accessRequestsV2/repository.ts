@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from "crypto";
 
+import { createAccessRequestLookupCodeExpiresAt } from "@/lib/accessRequestsV2/accessKeyExpiration";
 import {
   createAccessRequest,
   getAccessRequestById,
@@ -45,6 +46,8 @@ type V2Meta = {
   reviewComment?: string;
   /** Chave pública opaca para consulta sem login */
   accessKey?: string;
+  /** Data/hora de expiração do código de consulta */
+  accessKeyExpiresAt?: string;
   /** Campos sinalizados para ajuste pelo revisor */
   adjustmentFields?: AccessRequestAdjustmentField[];
   details?: AccessRequestV2Details;
@@ -81,6 +84,7 @@ function parseV2Message(message: string): V2Meta | null {
       reviewedAt: parsed.reviewedAt,
       reviewComment: parsed.reviewComment,
       accessKey: parsed.accessKey,
+      accessKeyExpiresAt: parsed.accessKeyExpiresAt,
       adjustmentFields: normalizeAccessRequestAdjustmentFields(parsed.adjustmentFields),
       details: parsed.details,
       adjustmentHistory: Array.isArray(parsed.adjustmentHistory) ? parsed.adjustmentHistory : [],
@@ -130,6 +134,7 @@ function mapPrismaRowToV2(row: {
   let requestedPasswordHash: string | undefined;
   let requestedCompanySlug: string | undefined;
   let accessKey: string | undefined;
+  let accessKeyExpiresAt: string | undefined;
   let adjustmentFields: AccessRequestAdjustmentField[] | undefined;
   let details: AccessRequestV2Details | undefined;
   let adjustmentHistory: AccessRequestAdjustmentRound[] | undefined;
@@ -149,6 +154,7 @@ function mapPrismaRowToV2(row: {
       requestedPasswordHash = meta.requestedPasswordHash;
       requestedCompanySlug = meta.requestedCompanySlug;
       accessKey = meta.accessKey;
+      accessKeyExpiresAt = meta.accessKeyExpiresAt;
       adjustmentFields = meta.adjustmentFields;
       details = meta.details;
       adjustmentHistory = meta.adjustmentHistory;
@@ -160,6 +166,7 @@ function mapPrismaRowToV2(row: {
   return {
     id: row.id,
     accessKey,
+    accessKeyExpiresAt,
     requesterUserId: row.userId ?? undefined,
     requesterEmail: row.email,
     requesterName: row.name ?? undefined,
@@ -214,6 +221,7 @@ export async function listAccessRequestsV2(filters?: {
         return {
           id: record.id,
           accessKey: meta.accessKey,
+          accessKeyExpiresAt: meta.accessKeyExpiresAt,
           requesterUserId: record.user_id ?? undefined,
           requesterEmail: meta.requesterEmail,
           requesterName: meta.requesterName,
@@ -352,6 +360,7 @@ export async function createAccessRequestV2(input: {
   const request: AccessRequestV2 = {
     id: randomUUID(),
     accessKey: randomBytes(20).toString("hex"),
+    accessKeyExpiresAt: createAccessRequestLookupCodeExpiresAt(),
     requesterUserId: input.requesterUserId,
     requesterEmail: input.requesterEmail,
     requesterName: input.requesterName,
@@ -387,6 +396,7 @@ export async function createAccessRequestV2(input: {
       adjustmentHistory: [],
       lastAdjustmentDiff: [],
       accessKey: request.accessKey,
+      accessKeyExpiresAt: request.accessKeyExpiresAt,
       createdAt: request.createdAt,
       updatedAt: request.updatedAt,
     };
@@ -426,6 +436,7 @@ export async function createAccessRequestV2(input: {
     adjustmentHistory: [],
     lastAdjustmentDiff: [],
     accessKey: request.accessKey,
+    accessKeyExpiresAt: request.accessKeyExpiresAt,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
   };
@@ -493,6 +504,7 @@ export async function updateAccessRequestV2(
       reviewedAt: next.reviewedAt,
       reviewComment: next.reviewComment,
       accessKey: next.accessKey,
+      accessKeyExpiresAt: next.accessKeyExpiresAt,
       adjustmentFields: next.adjustmentFields,
       details: next.details,
       adjustmentHistory: next.adjustmentHistory,
@@ -536,6 +548,7 @@ export async function updateAccessRequestV2(
     reviewedAt: next.reviewedAt,
     reviewComment: next.reviewComment,
     accessKey: next.accessKey,
+    accessKeyExpiresAt: next.accessKeyExpiresAt,
     adjustmentFields: next.adjustmentFields,
     details: next.details,
     adjustmentHistory: next.adjustmentHistory,

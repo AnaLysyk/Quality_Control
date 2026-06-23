@@ -13,6 +13,7 @@ import {
   updateLocalUser,
 } from "@/lib/auth/localStore";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
+import { isAccessRequestLookupCodeExpired } from "@/lib/accessRequestsV2/accessKeyExpiration";
 import { emailService } from "@/lib/email";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { shouldUseJsonStore } from "@/lib/storeMode";
@@ -950,6 +951,7 @@ export async function updateAccessRequestByKey(
 ) {
   const request = await getAccessRequestV2ByKey(accessKey);
   if (!request) return null;
+  if (isAccessRequestLookupCodeExpired(request.accessKeyExpiresAt)) return null;
   if (request.status !== "needs_more_info") return "not-adjustable" as const;
 
   const allowedFields = normalizeAccessRequestAdjustmentFields(request.adjustmentFields);
@@ -1103,6 +1105,7 @@ export async function addPublicAccessRequestComment(input: {
 }) {
   const request = await getAccessRequestV2ByKey(input.accessKey);
   if (!request) return null;
+  if (isAccessRequestLookupCodeExpired(request.accessKeyExpiresAt)) return null;
   if (isAccessRequestFinalStatus(request.status)) return "final" as const;
   if (
     normalizeDuplicateValue(request.requesterEmail) !== normalizeDuplicateValue(input.email) ||
@@ -1122,6 +1125,18 @@ export async function addPublicAccessRequestComment(input: {
 export async function getPublicAccessRequestByKey(accessKey: string) {
   const request = await getAccessRequestV2ByKey(accessKey);
   if (!request) return null;
+
+  if (isAccessRequestLookupCodeExpired(request.accessKeyExpiresAt)) {
+    if (canTransitionAccessRequest(request.status, "expired")) {
+      await updateAccessRequestV2(request.id, {
+        status: "expired",
+        reviewComment: "Código de consulta expirado.",
+        adjustmentFields: [],
+      });
+    }
+    return null;
+  }
+
   const comments = await listAccessRequestComments(request.id);
   return { request, comments };
 }
@@ -1172,6 +1187,7 @@ export async function resendAccessRequestCode(input: { name: string; email: stri
       normalizeAccessRequestLookup(item.requesterEmail) === email,
   );
   if (!request?.accessKey) return false;
+  if (isAccessRequestLookupCodeExpired(request.accessKeyExpiresAt)) return false;
 
   const sent = await emailService.sendAccessRequestReceivedEmail(request.requesterEmail, {
     name: request.requesterName,

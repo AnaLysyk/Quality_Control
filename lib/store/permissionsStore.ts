@@ -1,5 +1,7 @@
 import "server-only";
 
+import { mkdir, readFile, rename, writeFile } from "fs/promises";
+import { dirname, resolve } from "path";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getPrismaClientOptions } from "@/lib/prismaClientOptions";
 import { isRedisConfigured } from "@/lib/redis";
@@ -32,6 +34,9 @@ async function getPrisma() {
 }
 
 const PREFIX = "qc:user_permissions:";
+const LOCAL_PERMISSIONS_FILE = process.env.LOCAL_AUTH_DATA_DIR
+  ? resolve(process.env.LOCAL_AUTH_DATA_DIR, "user-permissions-overrides.json")
+  : null;
 let memoryItems: UserPermissionsOverride[] = [];
 
 export type UserPermissionsOverride = {
@@ -117,11 +122,36 @@ async function pgListOverrides(): Promise<UserPermissionsOverride[]> {
 // ── Memory helpers (fallback) ──────────────────────────────────────────────
 
 async function readOverridesFile(): Promise<PermissionsOverrideFile> {
+  if (LOCAL_PERMISSIONS_FILE) {
+    try {
+      const parsed = JSON.parse(await readFile(LOCAL_PERMISSIONS_FILE, "utf8")) as PermissionsOverrideFile;
+      const items = Array.isArray(parsed?.items)
+        ? parsed.items
+            .map(normalizeStoredOverride)
+            .filter((item): item is UserPermissionsOverride => item !== null)
+        : [];
+      memoryItems = items;
+      return { items };
+    } catch {
+      return { items: memoryItems };
+    }
+  }
+
   return { items: memoryItems };
 }
 
 async function writeOverridesFile(store: PermissionsOverrideFile) {
-  memoryItems = store.items;
+  const items = store.items
+    .map(normalizeStoredOverride)
+    .filter((item): item is UserPermissionsOverride => item !== null);
+  memoryItems = items;
+
+  if (!LOCAL_PERMISSIONS_FILE) return;
+
+  await mkdir(dirname(LOCAL_PERMISSIONS_FILE), { recursive: true });
+  const temporaryFile = `${LOCAL_PERMISSIONS_FILE}.${process.pid}.tmp`;
+  await writeFile(temporaryFile, JSON.stringify({ items }, null, 2), "utf8");
+  await rename(temporaryFile, LOCAL_PERMISSIONS_FILE);
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────

@@ -59,9 +59,21 @@ const normalizeRole = (value?: string | null): RoleValue => {
 };
 
 function canManageInstitutionalProfiles(
-  user?: { role?: string | null; permissionRole?: string | null; companyRole?: string | null } | null,
+  user?: {
+    role?: string | null;
+    permissionRole?: string | null;
+    companyRole?: string | null;
+    permissions?: Record<string, string[]> | null;
+  } | null,
 ) {
+  const canManageByPermission =
+    Array.isArray(user?.permissions?.users) &&
+    user.permissions.users.includes("edit") &&
+    Array.isArray(user?.permissions?.permissions) &&
+    user.permissions.permissions.includes("edit");
+
   return (
+    canManageByPermission ||
     normalizeEditableProfileRole(user?.role) === "leader_tc" ||
     normalizeEditableProfileRole(user?.permissionRole) === "leader_tc" ||
     normalizeEditableProfileRole(user?.companyRole) === "leader_tc"

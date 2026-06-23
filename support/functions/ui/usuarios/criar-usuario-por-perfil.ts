@@ -34,6 +34,8 @@ export async function criarUsuarioViaApi(
   payload: {
     name: string;
     email: string;
+    login?: string;
+    user?: string;
     role: string;
     companySlug?: string;
     password?: string;
@@ -43,8 +45,9 @@ export async function criarUsuarioViaApi(
     data: {
       name: payload.name,
       email: payload.email,
+      ...((payload.login ?? payload.user) ? { user: payload.login ?? payload.user } : {}),
       role: payload.role,
-      password: payload.password ?? SENHA_USUARIO_NOVO,
+      ...(payload.password !== undefined ? { password: payload.password } : {}),
       ...montarDadosEmpresaE2E(payload.role),
     },
   });

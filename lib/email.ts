@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+﻿import nodemailer from 'nodemailer';
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 
@@ -1317,62 +1317,128 @@ Para dúvidas, entre em contato com o suporte.`;
       accessKey: string;
     },
   ): Promise<boolean> {
-    const baseUrl = this.resolvePublicBaseUrl();
-    const statusUrl = `${baseUrl}/login/access-request/status?key=${data.accessKey}`;
+    const lookupUrl = `${this.resolvePublicBaseUrl()}/login/access-request`;
     const greetingText = data.name ? `Olá, ${data.name}!` : "Olá!";
-    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : 'Olá!';
-
-    const fieldsHtml = data.adjustmentFields && data.adjustmentFields.length > 0
-      ? `<ul style="margin:8px 0 16px;padding-left:20px">${data.adjustmentFields.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}</ul>`
-      : '';
-    const fieldsText = data.adjustmentFields && data.adjustmentFields.length > 0
-      ? `\nCampos que precisam de ajuste:\n${data.adjustmentFields.map((f) => `- ${f}`).join('\n')}\n`
-      : '';
-
-    const commentBlock = data.comment
-      ? `<div style="background:#fffbea;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:4px;margin:16px 0"><p style="margin:0;color:#444;white-space:pre-wrap"><strong>Observação do revisor:</strong> ${escapeHtml(data.comment)}</p></div>`
-      : '';
-    const commentText = data.comment ? `\nObservação do revisor:\n${data.comment}\n` : '';
+    const greeting = data.name ? `Olá, ${escapeHtml(data.name)}!` : "Olá!";
+    const ttlMinutesRaw =
+      process.env.ACCESS_REQUEST_LOOKUP_CODE_TTL_MINUTES ||
+      process.env.ACCESS_REQUEST_ACCESS_KEY_TTL_MINUTES ||
+      "5";
+    const ttlMinutes = Number.parseInt(ttlMinutesRaw, 10) > 0 ? Number.parseInt(ttlMinutesRaw, 10) : 5;
+    const observation = (data.comment ?? "").trim() || "Revise sua solicitação pela tela de consulta.";
+    const observationHtml = escapeHtml(observation).replaceAll("\n", "<br>");
+    const safeLookupUrl = escapeHtml(lookupUrl);
+    const safeAccessKey = escapeHtml(data.accessKey);
+    const logoUrl = escapeHtml(this.resolveEmailLogoSrc());
 
     const html = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Ajuste necessário - Quality Control</title>
-<style>
-  body{font-family:Arial,sans-serif;line-height:1.6;color:#333;background:#f4f6fb}
-  .wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-  .hdr{background:#011848;color:#fff;padding:28px 32px;text-align:center}
-  .hdr h1{margin:0;font-size:22px}
-  .body{padding:32px}
-  .badge{display:inline-block;background:#f59e0b;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;margin-bottom:16px}
-  .key{font-family:monospace;background:#f0f4ff;padding:8px 14px;border-radius:4px;font-size:14px;display:inline-block;margin:8px 0}
-  .btn{display:inline-block;padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;margin-top:16px}
-  .footer{text-align:center;padding:20px;font-size:12px;color:#888}
-</style>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ajuste necessário na solicitação - Quality Control</title>
+  <style>
+    body{width:100%!important;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;color:#011848;background:#f4f6fb;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+    table{border-spacing:0}
+    .card{width:600px;max-width:600px;margin:0 auto;background:#fff;border:1px solid rgba(1,24,72,.12);border-radius:20px;overflow:hidden;box-shadow:0 18px 46px rgba(1,24,72,.20)}
+    .header{background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);color:#fff;padding:10px 20px;text-align:center}
+    .header h1{margin:0;font-size:22px;line-height:1.15;letter-spacing:-.2px}
+    .header p{margin:3px 0 0;font-size:12px;line-height:16px;opacity:.92}
+    .content{padding:22px 28px 26px;word-wrap:break-word}
+    .badge{display:inline-block;padding:7px 12px;border-radius:999px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;font-size:12px;font-weight:900;margin-bottom:12px}
+    h2{margin:0 0 10px;color:#011848;font-size:22px;line-height:1.3}
+    p{margin:0 0 14px;color:#475569;font-size:14px;line-height:1.65}
+    .section-title{margin:20px 0 8px;color:#011848;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
+    .info{margin:0 0 16px;border:1px solid #d8dfeb;border-radius:14px;overflow:hidden;background:#f8fafc}
+    .info table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .info td{padding:11px 14px;border-bottom:1px solid #e5eaf3;font-size:14px;vertical-align:top}
+    .info tr:last-child td{border-bottom:0}
+    .label{width:34%;color:#64748b;font-weight:900}
+    .value{color:#011848;font-weight:900;word-break:break-word;overflow-wrap:anywhere}
+    .box{margin:18px 0;padding:14px 16px;background:#f0f4ff;border:1px solid #d8dfeb;border-left:5px solid #011848;border-radius:12px;color:#27457d;font-size:13px;line-height:1.6}
+    .warning{background:#fff7ed;border-color:#fed7aa;border-left-color:#f97316;color:#9a3412}
+    .footer{padding:16px 24px 20px;text-align:center;color:#64748b;font-size:12px;background:#fff}
+    @media only screen and (max-width:620px){
+      .card{width:100%!important}
+      .content{padding:20px 16px 24px!important}
+      .label,.value{display:block!important;width:auto!important}
+      .label{padding-bottom:3px!important;border-bottom:0!important}
+      .value{padding-top:0!important}
+    }
+  </style>
 </head>
-<body>
-<div class="wrap">
-  <div class="hdr"><img src="${escapeHtml(this.resolveEmailLogoSrc())}" alt="" style="display:block;margin:0 auto 10px;max-width:130px;height:auto;border:0;" /><h1>Quality Control</h1><p style="margin:4px 0;opacity:.8">Ajuste necessário na solicitação</p></div>
-  <div class="body">
-    <span class="badge">⚠ Ajuste necessário</span>
-    <h2 style="margin-top:0">${greeting}</h2>
-    <p>Sua solicitação de acesso precisa de <strong>ajustes</strong> antes de ser aprovada.</p>
-    ${fieldsHtml ? `<p><strong>Campos que precisam de revisão:</strong></p>${fieldsHtml}` : ''}
-    ${commentBlock}
-    <p>Use o link abaixo para acessar e corrigir sua solicitação:</p>
-    <p class="key">Chave de acesso: <strong>${escapeHtml(data.accessKey)}</strong></p>
-    <a href="${escapeHtml(statusUrl)}" class="btn">Abrir minha solicitação</a>
-    <p style="margin-top:24px;font-size:12px;color:#888">Ou copie o link: ${escapeHtml(statusUrl)}</p>
-  </div>
-  <div class="footer"><p>E-mail automático. Não responda.</p><p>© ${new Date().getFullYear()} Quality Control.</p></div>
-</div>
+<body style="width:100%!important;margin:0;padding:0;background-color:#f4f6fb;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f6fb" style="width:100%;border-collapse:collapse;background-color:#f4f6fb;background-image:linear-gradient(135deg,#011848 0%,#eef2f8 48%,#ef0001 100%);">
+    <tr>
+      <td align="center" style="padding:16px 8px;">
+        <table role="presentation" class="card" width="600" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width:600px;max-width:600px;border:1px solid #d8dfeb;border-collapse:separate;border-spacing:0;background-color:#ffffff;border-radius:20px;overflow:hidden;">
+          <tr>
+            <td class="header" align="center" bgcolor="#011848" style="padding:10px 20px;background-color:#011848;background-image:linear-gradient(135deg,#011848 0%,#142b63 46%,#ef0001 100%);border-radius:20px 20px 0 0;color:#ffffff;text-align:center;">
+              <img src="${logoUrl}" alt="" width="48" style="display:block;width:48px;max-width:48px;height:auto;margin:0 auto 4px;border:0;outline:none;text-decoration:none;">
+              <h1 style="margin:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:25px;letter-spacing:-.2px;">Quality Control</h1>
+              <p style="margin:3px 0 0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:16px;">Ajuste necessário na solicitação</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="content" style="padding:22px 28px 26px;color:#011848;font-family:Arial,Helvetica,sans-serif;word-wrap:break-word;">
+              <span class="badge">Ajuste necessário</span>
+              <h2>${greeting}</h2>
+              <p>Sua solicitação de acesso precisa de ajuste antes de seguir para aprovação.</p>
+
+              <div class="section-title">Observação do revisor</div>
+              <div class="box warning">${observationHtml}</div>
+
+              <div class="section-title">Código de consulta</div>
+              <div class="info">
+                <table>
+                  <tr><td class="label">Código</td><td class="value">${safeAccessKey}</td></tr>
+                  <tr><td class="label">Validade</td><td class="value">Este código expira em ${ttlMinutes} minutos.</td></tr>
+                </table>
+              </div>
+
+              <div class="box">Para consultar e ajustar sua solicitação, acesse a tela de consulta e informe seu nome, e-mail e código de consulta.</div>
+
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto 10px;border-collapse:separate;">
+                <tr>
+                  <td align="center" bgcolor="#ef0001" style="background-color:#ef0001;border-radius:9px;mso-padding-alt:11px 20px;">
+                    <a href="${safeLookupUrl}" style="display:inline-block;padding:11px 20px;color:#ffffff!important;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;line-height:18px;text-align:center;text-decoration:none;">Consultar solicitação</a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;text-align:center;font-size:11px;line-height:17px;color:#64748b;word-break:break-all;">Acesse a consulta em: <a href="${safeLookupUrl}" style="color:#27457d;text-decoration:underline;">${safeLookupUrl}</a></p>
+            </td>
+          </tr>
+          <tr>
+            <td class="footer" align="center" bgcolor="#ffffff" style="padding:16px 24px 20px;border-top:1px solid #e5eaf3;background-color:#ffffff;color:#64748b;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;text-align:center;">E-mail automático. Não responda.<br>© ${new Date().getFullYear()} Quality Control.</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 
-    const text = `${greetingText}\n\nSua solicitação de acesso precisa de ajustes.${fieldsText}${commentText}\nAcesse sua solicitação em:\n${statusUrl}\n\nChave de acesso: ${data.accessKey}`;
+    const text = `${greetingText}
+
+Sua solicitação de acesso precisa de ajuste antes de seguir para aprovação.
+
+OBSERVAÇÃO DO REVISOR
+${observation}
+
+CÓDIGO DE CONSULTA
+${data.accessKey}
+
+Este código expira em ${ttlMinutes} minutos.
+
+Para consultar e ajustar sua solicitação, acesse a tela de consulta e informe seu nome, e-mail e código.
+
+Acesse a consulta em:
+${lookupUrl}`;
 
     return this.sendEmail({
       to,
-      subject: 'Ajuste necessário na sua solicitação - Quality Control',
+      subject: "Ajuste necessário na sua solicitação - Quality Control",
       html,
       text,
     });
@@ -1380,3 +1446,4 @@ Para dúvidas, entre em contato com o suporte.`;
 }
 
 export const emailService = new EmailService();
+

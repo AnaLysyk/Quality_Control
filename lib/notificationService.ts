@@ -1,5 +1,5 @@
 ﻿import "server-only";
-
+import { emailService } from "@/lib/email";
 import type { WikiDoc } from "@/data/platformDocsStore";
 import type { RequestRecord } from "@/data/requestsStore";
 import type { Release } from "@/types/release";
@@ -791,18 +791,62 @@ export async function notifyAccessRequestCreated(input: {
     companySlug: input.companySlug ?? null,
     clientId: input.clientId ?? null,
   });
+
   if (!recipients.length) return;
+
+  const title = "Nova solicitação de acesso";
+  const profileLabel = toRequestProfileTypeLabel(input.profileType);
+  const description = `${input.requesterName} solicitou ${profileLabel}.`;
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_URL ||
+    "https://quality-control-qwqs.onrender.com";
+  const accessRequestsUrl = `${baseUrl.replace(/\/+$/, "")}/admin/access-requests`;
+
   await createNotificationsForUsers(recipients, {
     type: "ACCESS_REQUEST_CREATED",
-    title: "Nova solicitacao de acesso",
-    description: `${input.requesterName} solicitou ${toRequestProfileTypeLabel(input.profileType)}.`,
+    title,
+    description,
     requestId: input.requestId,
     link: "/admin/access-requests",
     companySlug: input.companySlug ?? null,
     dedupeKey: `access-request:${input.requestId}:created`,
   });
-}
 
+  const users = await listLocalUsers();
+  const recipientEmails = Array.from(
+    new Set(
+      users
+        .filter((user) => recipients.includes(user.id))
+        .map((user) => user.email)
+        .filter((email): email is string => Boolean(email)),
+    ),
+  );
+
+  await Promise.allSettled(
+    recipientEmails.map((email) =>
+      emailService.sendEmail({
+        to: email,
+        subject: "Nova solicitação de acesso - Quality Control",
+        html: `
+          <p>Olá!</p>
+          <p>Uma nova solicitação de acesso foi criada na plataforma.</p>
+          <p><strong>Solicitante:</strong> ${input.requesterName}</p>
+          <p><strong>Perfil solicitado:</strong> ${profileLabel}</p>
+          <p><a href="${accessRequestsUrl}">Abrir solicitações de acesso</a></p>
+        `,
+        text: `Nova solicitação de acesso criada.
+
+Solicitante: ${input.requesterName}
+Perfil solicitado: ${profileLabel}
+
+Acesse:
+${accessRequestsUrl}`,
+      }),
+    ),
+  );
+}
 export async function notifyAccessRequestAccepted(input: {
   requestId: string;
   requesterName: string;
@@ -962,4 +1006,5 @@ export async function notifyTicketUpdated(input: {
     dedupeKey: `suporte:${suporte.id}:updated:${Date.now()}`,
   });
 }
+
 

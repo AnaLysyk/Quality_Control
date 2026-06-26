@@ -1,4 +1,4 @@
-import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
+﻿import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { addAuditLogSafe, listAuditLogs } from "@/data/auditLogRepository";
 import {
   createLocalCompany,
@@ -13,7 +13,7 @@ import {
   updateLocalUser,
 } from "@/lib/auth/localStore";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
-import { isAccessRequestLookupCodeExpired } from "@/lib/accessRequestsV2/accessKeyExpiration";
+import { createAccessRequestLookupCodeExpiresAt, isAccessRequestLookupCodeExpired } from "@/lib/accessRequestsV2/accessKeyExpiration";
 import { emailService } from "@/lib/email";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { shouldUseJsonStore } from "@/lib/storeMode";
@@ -780,7 +780,7 @@ export async function transitionAccessRequest(
       : request.adjustmentHistory;
 
   const updated = await updateAccessRequestV2(id, {
-    ...(action === "request-info" ? { adjustmentFields, adjustmentHistory: nextHistory } : {}),
+    ...(action === "request-info" ? { adjustmentFields, adjustmentHistory: nextHistory, accessKeyExpiresAt: createAccessRequestLookupCodeExpiresAt() } : {}),
     ...(action === "approve" || action === "reject" ? { adjustmentFields: [] } : {}),
     ...(action === "approve" && approvalCredentials
       ? {
@@ -845,21 +845,13 @@ export async function transitionAccessRequest(
       "rejected",
     );
   } else if (action === "request-info" && request.accessKey) {
-    const fieldCommentLines = adjustmentFields
-      .map((field) => {
-        const fieldComment = fieldComments[field];
-        return fieldComment
-          ? `${ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS[field]}: ${fieldComment}`
-          : "";
-      })
-      .filter(Boolean);
     await waitForAccessRequestEmail(
       emailService.sendAccessAdjustmentEmail(recipientEmail, {
         name: recipientName,
         adjustmentFields: adjustmentFields.map(
           (field) => ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS[field],
         ),
-        comment: [comment, ...fieldCommentLines].filter(Boolean).join("\n"),
+        comment,
         accessKey: request.accessKey,
       }),
       "adjustment",
@@ -1340,3 +1332,4 @@ export function mapV2ToLegacySupportRow(request: AccessRequestV2) {
     admin_notes: request.reviewComment ?? null,
   };
 }
+

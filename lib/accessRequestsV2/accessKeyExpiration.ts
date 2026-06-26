@@ -1,4 +1,4 @@
-﻿const DEFAULT_ACCESS_REQUEST_LOOKUP_CODE_TTL_MINUTES = 15;
+﻿const DEFAULT_ACCESS_REQUEST_LOOKUP_CODE_TTL_MINUTES = 5;
 
 function readPositiveNumber(value: string | undefined) {
   if (!value) return null;
@@ -33,3 +33,4 @@ export function isAccessRequestLookupCodeExpired(
 
   return expiresAtTime <= now.getTime();
 }
+

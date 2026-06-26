@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from "crypto";
+﻿import { randomBytes, randomUUID } from "crypto";
 
 import { createAccessRequestLookupCodeExpiresAt } from "@/lib/accessRequestsV2/accessKeyExpiration";
 import {
@@ -456,7 +456,7 @@ export async function createAccessRequestV2(input: {
 
 export async function updateAccessRequestV2(
   id: string,
-  patch: Partial<Pick<AccessRequestV2, "status" | "priority" | "reviewedBy" | "reviewedAt" | "reviewComment" | "reason" | "adjustmentFields" | "requestedPasswordHash" | "requesterName" | "requesterEmail" | "requestedRole" | "details" | "adjustmentHistory" | "lastAdjustmentAt" | "lastAdjustmentDiff">> & {
+  patch: Partial<Pick<AccessRequestV2, "status" | "priority" | "reviewedBy" | "reviewedAt" | "reviewComment" | "reason" | "adjustmentFields" | "requestedPasswordHash" | "requesterName" | "requesterEmail" | "requestedRole" | "details" | "adjustmentHistory" | "lastAdjustmentAt" | "lastAdjustmentDiff" | "accessKeyExpiresAt">> & {
     requestedCompanySlug?: string | null;
     requestedCompanyId?: string | null;
   },
@@ -483,6 +483,7 @@ export async function updateAccessRequestV2(
     ...(patch.adjustmentHistory !== undefined ? { adjustmentHistory: patch.adjustmentHistory } : {}),
     ...(patch.lastAdjustmentAt !== undefined ? { lastAdjustmentAt: patch.lastAdjustmentAt } : {}),
     ...(patch.lastAdjustmentDiff !== undefined ? { lastAdjustmentDiff: patch.lastAdjustmentDiff } : {}),
+    ...(patch.accessKeyExpiresAt !== undefined ? { accessKeyExpiresAt: patch.accessKeyExpiresAt } : {}),
     updatedAt: new Date().toISOString(),
   };
 
@@ -566,3 +567,4 @@ export async function updateAccessRequestV2(
 
   return next;
 }
+

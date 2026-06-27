@@ -433,7 +433,10 @@ const sectionCard =
 const sectionMuted =
   "rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
+const PROFILE_EMOJI_OPTIONS = ["👤", "🧑‍💻", "🧪", "🛡️", "🏢", "📊", "🚀", "⭐"] as const;
+
 type StatusFilter = "all" | "open" | "in_progress" | "closed" | "rejected";
+type DateFilter = "all" | "today" | "week" | "month";
 type StatusCounters = {
   approved: number;
   inProgress: number;
@@ -459,14 +462,42 @@ function resolveViewerProfileLabel(user: ReturnType<typeof useAuthUser>["user"])
   return "Painel institucional";
 }
 
+function isWithinDateFilter(value: string, dateFilter: DateFilter) {
+  if (dateFilter === "all") return true;
+
+  const createdAt = new Date(value);
+  if (Number.isNaN(createdAt.getTime())) return true;
+
+  const now = new Date();
+  const start = new Date(now);
+
+  if (dateFilter === "today") {
+    start.setHours(0, 0, 0, 0);
+  }
+
+  if (dateFilter === "week") {
+    start.setDate(now.getDate() - 7);
+    start.setHours(0, 0, 0, 0);
+  }
+
+  if (dateFilter === "month") {
+    start.setDate(now.getDate() - 30);
+    start.setHours(0, 0, 0, 0);
+  }
+
+  return createdAt >= start;
+}
+
 function filterAccessRequestItems(
   items: AccessRequestItem[],
   searchTerm: string,
   statusFilter: StatusFilter,
+  dateFilter: DateFilter,
 ) {
   const query = searchTerm.trim().toLowerCase();
   return items.filter((item) => {
     if (statusFilter !== "all" && item.status !== statusFilter) return false;
+    if (!isWithinDateFilter(item.createdAt, dateFilter)) return false;
     if (!query) return true;
     return [
       item.fullName,
@@ -476,6 +507,7 @@ function filterAccessRequestItems(
       item.accessType,
       item.jobRole,
       item.title,
+      item.status,
     ]
       .join(" ")
       .toLowerCase()
@@ -703,10 +735,10 @@ function AccessRequestsPage() {
   const [commentError, setCommentError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-
-  const viewerProfileLabel = useMemo(() => resolveViewerProfileLabel(user), [user]);
-
-  // Track whether the user has modified the draft form since the last selection change.
+  const [dateFilter, setDateFilter] = useState<DateFilter>("month");
+  const [profileEmoji, setProfileEmoji] = useState<string>(PROFILE_EMOJI_OPTIONS[0]);
+  const [internalNotesDraft, setInternalNotesDraft] = useState("");
+// Track whether the user has modified the draft form since the last selection change.
   // Prevents React Strict Mode double-invoke of load() from resetting user edits.
   const draftTouchedRef = useRef(false);
 
@@ -716,8 +748,8 @@ function AccessRequestsPage() {
   );
 
   const filteredItems = useMemo(
-    () => filterAccessRequestItems(items, searchTerm, statusFilter),
-    [items, searchTerm, statusFilter],
+    () => filterAccessRequestItems(items, searchTerm, statusFilter, dateFilter),
+    [items, searchTerm, statusFilter, dateFilter],
   );
 
   const statusCounters = useMemo(() => calculateStatusCounters(items), [items]);
@@ -832,6 +864,11 @@ function AccessRequestsPage() {
     setAdjustmentFieldComments({});
   }, [selected]);
 
+  useEffect(() => {
+    setProfileEmoji(selected?.visualProfile?.avatarValue || PROFILE_EMOJI_OPTIONS[0]);
+    setInternalNotesDraft(selected?.reviewSummary?.internalNotes || selected?.adminNotes || "");
+  }, [selectedId, selected]);
+
   async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -862,9 +899,14 @@ function AccessRequestsPage() {
           client_id: draft.clientId,
           access_type: draft.accessType,
           notes: draft.notes,
-          admin_notes: draft.adminNotes ?? "",
+          admin_notes: internalNotesDraft || draft.adminNotes || "",
           title: draft.title,
           description: draft.description,
+          avatarKind: "emoji",
+          avatarValue: profileEmoji,
+          avatarLabel: "Perfil do solicitante",
+          internalNotes: internalNotesDraft,
+          visualStatus: missingRequiredFields ? "needs_adjustment" : "ready",
         }),
       });
 
@@ -883,6 +925,53 @@ function AccessRequestsPage() {
     }
   }
 
+  async function persistVisualReview(next?: { emoji?: string; internalNotes?: string }) {
+    if (!selected || !draft) return;
+
+    const nextEmoji = next?.emoji ?? profileEmoji;
+    const nextInternalNotes = next?.internalNotes ?? internalNotesDraft;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const res = await fetchWithToken(`/api/admin/access-requests/${selected.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: draft.email,
+          name: draft.fullName || draft.name,
+          full_name: draft.fullName,
+          user: draft.username,
+          phone: draft.phone,
+          role: draft.jobRole,
+          company: draft.company,
+          client_id: draft.clientId,
+          access_type: draft.accessType,
+          notes: draft.notes,
+          admin_notes: nextInternalNotes,
+          title: draft.title,
+          description: draft.description,
+          avatarKind: "emoji",
+          avatarValue: nextEmoji,
+          avatarLabel: "Perfil do solicitante",
+          internalNotes: nextInternalNotes,
+          visualStatus: missingRequiredFields ? "needs_adjustment" : "ready",
+        }),
+      });
+
+      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      if (!res.ok) {
+        setError((json.error as string) || (json.message as string) || "Falha ao salvar dados visuais");
+        return;
+      }
+
+      draftTouchedRef.current = false;
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  }
   async function requestAdjustment() {
     if (!selected) return;
     const body = commentDraft.trim();
@@ -1029,25 +1118,18 @@ function AccessRequestsPage() {
               </div>
 
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/72">{viewerProfileLabel}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/72">Central de aprovação</p>
                 <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Solicitações de acesso</h1>
                 <p className="mt-2 max-w-2xl text-sm text-white/84">
-                  Central de triagem para revisar o que foi enviado pelo solicitante, decidir perfil, empresa e concluir a aprovação.
+                  Revise solicitações, acompanhe ajustes e aprove novos perfis de usuário.
                 </p>
               </div>
             </div>
 
-            <button
-              onClick={load}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition hover:-translate-y-0.5 hover:bg-white/16 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={loading}
-            >
-              <FiRefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              {loading ? "Atualizando" : "Atualizar"}
-            </button>
+
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+          <div className="mt-4 hidden gap-3 xl:grid xl:grid-cols-5">
             <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Abertas</span>
@@ -1161,32 +1243,36 @@ function AccessRequestsPage() {
                 className="w-full rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) py-3 pl-10 pr-4 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]"
               />
             </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                { value: "all", label: "Todas" },
-                { value: "open", label: "Novas" },
-                { value: "in_progress", label: "Aguardando ajuste" },
-                { value: "closed", label: "Aprovadas" },
-                { value: "rejected", label: "Recusadas" },
-              ].map((filter) => {
-                const active = statusFilter === filter.value;
-                return (
-                  <button
-                    key={filter.value}
-                    type="button"
-                    onClick={() => setStatusFilter(filter.value as typeof statusFilter)}
-                    className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] transition ${
-                      active
-                        ? "border-[rgba(239,0,1,0.18)] bg-[rgba(239,0,1,0.1)] text-(--tc-accent) shadow-[0_10px_24px_rgba(214,34,70,0.12)]"
-                        : "border-(--tc-border) bg-(--tc-surface) text-(--tc-text-muted) hover:border-[rgba(1,24,72,0.2)] hover:text-(--tc-text-primary)"
-                    }`}
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label className="text-xs font-black uppercase tracking-[0.18em] text-(--tc-text-muted)">
+                  Status
+                  <select
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+                    className="mt-2 w-full rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5 text-sm font-semibold normal-case tracking-normal text-(--tc-text-primary) outline-none transition focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
                   >
-                    {filter.label}
-                  </button>
-                );
-              })}
-            </div>
+                    <option value="all">Todos os status</option>
+                    <option value="open">Novas</option>
+                    <option value="in_progress">Aguardando ajuste</option>
+                    <option value="closed">Aprovadas</option>
+                    <option value="rejected">Recusadas</option>
+                  </select>
+                </label>
+
+                <label className="text-xs font-black uppercase tracking-[0.18em] text-(--tc-text-muted)">
+                  Período
+                  <select
+                    value={dateFilter}
+                    onChange={(event) => setDateFilter(event.target.value as DateFilter)}
+                    className="mt-2 w-full rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5 text-sm font-semibold normal-case tracking-normal text-(--tc-text-primary) outline-none transition focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
+                  >
+                    <option value="all">Todo o histórico</option>
+                    <option value="today">Hoje</option>
+                    <option value="week">Últimos 7 dias</option>
+                    <option value="month">Últimos 30 dias</option>
+                  </select>
+                </label>
+              </div>
             </div>
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 pr-3 [scrollbar-width:none] sm:p-5 sm:pr-4 [&::-webkit-scrollbar]:hidden" data-testid="access-requests-list">
@@ -1216,13 +1302,13 @@ function AccessRequestsPage() {
                       <button type="button" onClick={() => setSelectedId(it.id)} className="w-full text-left">
                         <div className="flex items-start gap-3">
                           <div
-                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-black shadow-[0_12px_26px_rgba(15,23,42,0.12)] ${
+                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl font-black shadow-[0_12px_26px_rgba(15,23,42,0.12)] ${
                               selectedRow
                                 ? "border border-white/20 bg-white/15 text-white"
                                 : "border border-(--tc-border) bg-[linear-gradient(135deg,var(--tc-primary)_0%,rgba(239,0,1,0.82)_160%)] text-white"
                             }`}
                           >
-                            {initials}
+                            {it.visualProfile?.avatarValue || initials}
                           </div>
 
                           <div className="min-w-0 flex-1">
@@ -1313,8 +1399,8 @@ function AccessRequestsPage() {
 
                   <div className="relative z-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)] lg:items-stretch">
                     <div className="flex min-w-0 gap-4">
-                      <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-[28px] border border-white/20 bg-white/15 text-2xl font-black text-white shadow-[0_18px_38px_rgba(15,23,42,0.2)]">
-                        {getPersonInitials(selected.fullName || selected.name || selected.email)}
+                      <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-[28px] border border-white/20 bg-white/15 text-4xl font-black text-white shadow-[0_18px_38px_rgba(15,23,42,0.2)]">
+                        {profileEmoji || getPersonInitials(selected.fullName || selected.name || selected.email)}
                       </div>
 
                       <div className="min-w-0 flex-1">
@@ -1327,7 +1413,7 @@ function AccessRequestsPage() {
                           </span>
                         </div>
 
-                        <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/74">Perfil em análise</p>
+                        <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/74">Perfil que será criado</p>
                         <h2 className="mt-2 break-words text-3xl font-black tracking-tight text-white">
                           {selected.fullName || selected.name || "(sem nome)"}
                         </h2>
@@ -1338,7 +1424,7 @@ function AccessRequestsPage() {
                         </div>
 
                         <p className="mt-4 max-w-3xl text-sm leading-6 text-white/80">
-                          Esta solicitação vai virar um cadastro de usuário. Revise os dados como um perfil real antes de aprovar, recusar ou devolver para ajuste.
+                          Este é o perfil final que será criado no sistema. Revise os dados, escolha o visual do perfil e acompanhe os ajustes antes da decisão.
                         </p>
                       </div>
                     </div>
@@ -1411,10 +1497,10 @@ function AccessRequestsPage() {
                 <section className={`${sectionCard} overflow-hidden`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Comparativo da solicitação</p>
-                      <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">Original x versão atual</h3>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Alterações do solicitante</p>
+                      <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">O que mudou antes de virar perfil</h3>
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary)">
-                        Compare o que foi enviado no primeiro pedido com a versão atual da triagem. Campos alterados aparecem destacados.
+                        Campos alterados aparecem em destaque. A versão atual representa o que será usado na criação do perfil.
                       </p>
                     </div>
 
@@ -1870,13 +1956,37 @@ function AccessRequestsPage() {
                   </section>
                 </div>
 
+                <section className={`${sectionCard} overflow-hidden`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Observações internas</p>
+                      <h3 className="mt-1 text-lg font-black tracking-tight text-(--tc-text-primary)">Notas da análise</h3>
+                      <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
+                        Informação visível apenas para administradores/revisores. Não será enviada para o solicitante.
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-black text-(--tc-text-muted)">
+                      Interno
+                    </span>
+                  </div>
+
+                  <textarea
+                    value={internalNotesDraft}
+                    onChange={(event) => setInternalNotesDraft(event.target.value)}
+                    onBlur={() => void persistVisualReview({ internalNotes: internalNotesDraft })}
+                    placeholder="Registre contexto, validação do gestor, motivo da decisão ou ressalvas internas..."
+                    rows={4}
+                    className="mt-4 w-full resize-none rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3 text-sm font-medium leading-6 text-(--tc-text-primary) outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
+                  />
+                </section>
+
                 <section className={sectionMuted}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-(--tc-accent)">Histórico e observações</p>
-                      <h3 className="mt-2 text-lg font-semibold text-(--tc-text-primary)">Conversa com o solicitante</h3>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-(--tc-accent)">Linha do tempo e conversa</p>
+                      <h3 className="mt-2 text-lg font-semibold text-(--tc-text-primary)">Linha do tempo e conversa</h3>
                       <p className="mt-1 text-sm text-(--tc-text-secondary)">
-                        Use esse bloco para pedir complemento ou registrar a decisão tomada.
+                        Acompanhe o histórico, registre mensagens e mantenha a comunicação com o solicitante.
                       </p>
                     </div>
                     {commentLoading ? <span className="text-sm font-medium text-(--tc-text-muted)">Carregando...</span> : null}
@@ -2033,7 +2143,7 @@ function AccessRequestsPage() {
                     </div>
                   ) : null}
 
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border) pt-4">
+                  <div className="sticky bottom-0 z-20 mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-(--tc-border) bg-white/95 px-4 py-4 shadow-[0_-18px_42px_rgba(15,23,42,0.10)] backdrop-blur-md">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${draft.passwordProvided ? "border border-emerald-300 bg-emerald-100 text-emerald-800" : "border border-rose-300 bg-rose-100 text-rose-800"}`}>
                         {draft.passwordProvided ? "Senha válida" : "Senha ausente"}
@@ -2061,20 +2171,11 @@ function AccessRequestsPage() {
                         </option>
                       ))}
                     </select>
-                    <button
-                      type="button"
-                      onClick={saveChanges}
-                      disabled={saving || !dirty || selectedIsPasswordReset}
-                      className="rounded-full border border-(--tc-primary) bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-primary) transition hover:-translate-y-0.5 hover:bg-(--tc-primary) hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {saving ? "Salvando..." : dirty ? "Salvar análise" : "Sem alterações"}
-                    </button>
-
-                    <button
+<button
                       type="button"
                       onClick={requestAdjustment}
                       disabled={requestingAdjustment || selectedIsPasswordReset || !commentDraft.trim() || commentsLocked || adjustmentFieldsDraft.length === 0}
-                      className="rounded-full border border-amber-400 bg-amber-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-amber-800 transition hover:-translate-y-0.5 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-[20px] border border-amber-300 bg-amber-50 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-amber-800 transition hover:-translate-y-0.5 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {requestingAdjustment ? "Enviando..." : "Solicitar ajuste"}
                     </button>
@@ -2084,7 +2185,7 @@ function AccessRequestsPage() {
                       onClick={rejectRequest}
                       aria-label="Recusar solicitação"
                       disabled={accepting || !rejectionReasonDraft || commentsLocked}
-                      className="rounded-full border border-rose-400 bg-rose-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-rose-700 transition hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-[20px] border border-rose-300 bg-rose-50 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-rose-700 transition hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {accepting ? "Processando..." : "Recusar"}
                     </button>
@@ -2094,7 +2195,7 @@ function AccessRequestsPage() {
                       onClick={acceptRequest}
                       aria-label="Aprovar solicitação"
                       disabled={acceptDisabled}
-                      className="rounded-full bg-(--tc-primary) px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.28em] text-white shadow-[0_14px_30px_rgba(1,24,72,0.2)] transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-[22px] bg-(--tc-primary) px-7 py-3 text-xs font-black uppercase tracking-[0.24em] text-white shadow-[0_18px_38px_rgba(1,24,72,0.26)] transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {accepting ? "Aprovando..." : selectedIsPasswordReset ? "Aprovar reset" : "Aprovar acesso"}
                     </button>
@@ -2117,5 +2218,4 @@ export default function AccessRequestsPageWithGuard() {
     </RequireAccessRequestReviewer>
   );
 }
-
 

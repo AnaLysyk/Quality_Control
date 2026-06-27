@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -305,6 +305,7 @@ const readOnlyInputBase =
   "mt-1 w-full rounded-[16px] border border-(--tc-border) bg-(--tc-surface-2) px-3.5 py-2.5 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
 const labelBase = "text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent)";
+const formLabelBase = "text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted)";
 
 const sectionCard =
   "rounded-3xl border border-(--tc-border) bg-(--tc-surface) p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]";
@@ -948,7 +949,7 @@ function AccessRequestsPage() {
                 <FiRefreshCw className="h-4 w-4 text-white/72" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-white">{statusCounters.inProgress}</div>
-              <p className="mt-1 text-sm text-white/76">Aguardando retorno do solicitante.</p>
+              <p className="mt-1 text-sm text-white/76">Solicitante reenviou a solicitação para nova análise.</p>
             </div>
 
             <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
@@ -1237,20 +1238,20 @@ function AccessRequestsPage() {
                   </div>
                 ) : null}
 
-                <div className="grid items-stretch gap-5 2xl:grid-cols-[minmax(0,1fr)_minmax(430px,0.92fr)]">
-                  <section className={`${sectionMuted} flex h-full flex-col`}>
+                <div className="grid gap-5 xl:grid-cols-2">
+                  <section className={`${sectionMuted} flex h-full min-w-0 flex-col`}>
                     <div className="space-y-2">
-                      <p className={labelBase}>Dados enviados pelo solicitante</p>
-                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Base original da solicitação</h3>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Solicitação original</p>
+                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Dados recebidos no primeiro envio</h3>
                       <p className="text-sm text-(--tc-text-secondary)">
-                        Estes campos são somente leitura e mostram exatamente o que foi enviado antes da decisão administrativa.
+                        Campos somente leitura com o conteúdo recebido no envio inicial da solicitação.
                       </p>
                     </div>
 
                     <div className="mt-5 flex-1 space-y-4">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <label className="block">
-                        <span className={labelBase}>Perfil solicitado</span>
+                        <span className={formLabelBase}>Perfil solicitado</span>
                         <input
                           className={readOnlyInputBase}
                           value={selectedOriginal ? toRequestProfileTypeLabel(selectedOriginal.profileType) : selected.accessType ?? ""}
@@ -1259,42 +1260,42 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>Empresa solicitada</span>
+                        <span className={formLabelBase}>Empresa solicitada</span>
                         <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.company, "Sem empresa definida")} readOnly />
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>Nome completo</span>
+                        <span className={formLabelBase}>Nome completo</span>
                         <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.fullName || selectedOriginal?.name)} readOnly />
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>E-mail</span>
+                        <span className={formLabelBase}>E-mail</span>
                         <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.email)} readOnly />
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>Telefone</span>
+                        <span className={formLabelBase}>Telefone</span>
                         <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.phone)} readOnly />
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>Cargo</span>
+                        <span className={formLabelBase}>Cargo</span>
                         <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.jobRole)} readOnly />
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Título da solicitação</span>
+                        <span className={formLabelBase}>Título da solicitação</span>
                         <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.title, "Sem título")} readOnly />
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Descrição detalhada</span>
+                        <span className={formLabelBase}>Descrição detalhada</span>
                         <textarea className={readOnlyInputBase} rows={5} value={textOrFallback(selectedOriginal?.description)} readOnly />
                       </label>
 
                       <label className="block md:col-span-2">
-                            <span className={labelBase}>Observações do solicitante</span>
+                            <span className={formLabelBase}>Observações do solicitante</span>
                         <textarea className={readOnlyInputBase} rows={4} value={textOrFallback(selectedOriginal?.notes)} readOnly />
                       </label>
                     </div>
@@ -1303,7 +1304,7 @@ function AccessRequestsPage() {
                       <div className="rounded-[20px] border border-(--tc-border) bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className={labelBase}>Cadastro institucional original</p>
+                            <p className={formLabelBase}>Cadastro institucional original</p>
                             <p className="mt-2 text-sm text-(--tc-text-secondary)">
                               Dados corporativos enviados junto da solicitação.
                             </p>
@@ -1314,39 +1315,39 @@ function AccessRequestsPage() {
                         </div>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                           <label className="block">
-                            <span className={labelBase}>Razão social</span>
+                            <span className={formLabelBase}>Razão social</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyName)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>CNPJ</span>
+                            <span className={formLabelBase}>CNPJ</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyTaxId)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>CEP</span>
+                            <span className={formLabelBase}>CEP</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyZip)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>Telefone da empresa</span>
+                            <span className={formLabelBase}>Telefone da empresa</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyPhone)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Endereço</span>
+                            <span className={formLabelBase}>Endereço</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyAddress)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>Website</span>
+                            <span className={formLabelBase}>Website</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyWebsite)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>LinkedIn</span>
+                            <span className={formLabelBase}>LinkedIn</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyLinkedin)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Descrição da empresa</span>
+                            <span className={formLabelBase}>Descrição da empresa</span>
                             <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selectedOriginal.companyProfile.companyDescription)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Observações da empresa</span>
+                            <span className={formLabelBase}>Observações da empresa</span>
                             <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selectedOriginal.companyProfile.companyNotes)} readOnly />
                           </label>
                         </div>
@@ -1367,12 +1368,12 @@ function AccessRequestsPage() {
                     </div>
                   </section>
 
-                  <section className={`${sectionCard} flex h-full flex-col`}>
+                  <section className={`${sectionCard} flex h-full min-w-0 flex-col`}>
                     <div className="space-y-2">
-                      <p className={labelBase}>Base administrativa e devolvida</p>
-                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Versão atual da triagem</h3>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Retorno / triagem atual</p>
+                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Dados em análise para aprovação</h3>
                       <p className="text-sm text-(--tc-text-secondary)">
-                        Edite o que precisa ser aprovado e acompanhe a versão que voltou do solicitante para nova análise.
+                        Revise a versão atual, aplique ajustes administrativos e acompanhe o retorno enviado pelo solicitante.
                       </p>
                     </div>
 
@@ -1380,9 +1381,9 @@ function AccessRequestsPage() {
                       <div className="mt-5 rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-4 shadow-[0_10px_24px_rgba(217,119,6,0.08)]">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Rodada de ajuste {latestAdjustmentRound.round}</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Retorno do solicitante · rodada {latestAdjustmentRound.round}</p>
                             <p className="mt-2 text-sm font-semibold text-amber-900">
-                              {latestAdjustmentRound.requestMessage?.trim() || "Aguardando retorno do solicitante."}
+                              {latestAdjustmentRound.requestMessage?.trim() || "Solicitante reenviou a solicitação para nova análise."}
                             </p>
                           </div>
                           <span className="rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-700">
@@ -1404,7 +1405,7 @@ function AccessRequestsPage() {
 
                     <fieldset className="mt-5 flex-1 grid grid-cols-1 gap-4 md:grid-cols-2">
                       <label className="block">
-                        <span className={labelBase}>Tipo de perfil</span>
+                        <span className={formLabelBase}>Tipo de perfil</span>
                         <select
                           className={inputBase}
                           value={(draft.accessType ?? "Usuário Testing Company") as AccessTypeLabel}
@@ -1427,7 +1428,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>Usuário gerado</span>
+                        <span className={formLabelBase}>Usuário gerado</span>
                         <input
                           className={inputBase}
                           value={draft.username ?? ""}
@@ -1439,7 +1440,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>Nome completo</span>
+                        <span className={formLabelBase}>Nome completo</span>
                         <input
                           className={inputBase}
                           value={draft.fullName ?? ""}
@@ -1460,7 +1461,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>E-mail</span>
+                        <span className={formLabelBase}>E-mail</span>
                         <input
                           type="email"
                           className={inputBase}
@@ -1473,7 +1474,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block">
-                        <span className={labelBase}>Telefone</span>
+                        <span className={formLabelBase}>Telefone</span>
                         <input
                           className={inputBase}
                           value={draft.phone ?? ""}
@@ -1488,7 +1489,7 @@ function AccessRequestsPage() {
                         normalizeRequestProfileType((draft.accessType ?? "Usuário Testing Company") as string) ?? "company_user",
                       ) ? (
                         <label className="block">
-                          <span className={labelBase}>Empresa final</span>
+                          <span className={formLabelBase}>Empresa final</span>
                           <select
                             className={inputBase}
                             value={draft.clientId ?? ""}
@@ -1512,7 +1513,7 @@ function AccessRequestsPage() {
                       ) : null}
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Cargo</span>
+                        <span className={formLabelBase}>Cargo</span>
                         <input
                           className={inputBase}
                           value={draft.jobRole ?? ""}
@@ -1524,7 +1525,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Título da solicitação</span>
+                        <span className={formLabelBase}>Título da solicitação</span>
                         <input
                           className={inputBase}
                           value={draft.title ?? ""}
@@ -1536,7 +1537,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className={labelBase}>Descrição final</span>
+                        <span className={formLabelBase}>Descrição final</span>
                         <textarea
                           className={inputBase}
                           rows={5}
@@ -1549,7 +1550,7 @@ function AccessRequestsPage() {
                       </label>
 
                       <label className="block md:col-span-2">
-                            <span className={labelBase}>Observação interna</span>
+                            <span className={formLabelBase}>Observação interna</span>
                         <textarea
                           className={inputBase}
                           rows={4}
@@ -1566,7 +1567,7 @@ function AccessRequestsPage() {
                       <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className={labelBase}>Base devolvida / ajustada</p>
+                            <p className={formLabelBase}>Base devolvida / ajustada</p>
                             <p className="mt-2 text-sm text-(--tc-text-secondary)">
                               Versão atual dos dados institucionais que seguem junto da solicitação.
                             </p>
@@ -1577,39 +1578,39 @@ function AccessRequestsPage() {
                         </div>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                           <label className="block">
-                            <span className={labelBase}>Razão social</span>
+                            <span className={formLabelBase}>Razão social</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyName)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>CNPJ</span>
+                            <span className={formLabelBase}>CNPJ</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyTaxId)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>CEP</span>
+                            <span className={formLabelBase}>CEP</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyZip)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>Telefone da empresa</span>
+                            <span className={formLabelBase}>Telefone da empresa</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyPhone)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Endereço</span>
+                            <span className={formLabelBase}>Endereço</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyAddress)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>Website</span>
+                            <span className={formLabelBase}>Website</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyWebsite)} readOnly />
                           </label>
                           <label className="block">
-                            <span className={labelBase}>LinkedIn</span>
+                            <span className={formLabelBase}>LinkedIn</span>
                             <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyLinkedin)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Descrição da empresa</span>
+                            <span className={formLabelBase}>Descrição da empresa</span>
                             <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selected.companyProfile.companyDescription)} readOnly />
                           </label>
                           <label className="block md:col-span-2">
-                            <span className={labelBase}>Observações da empresa</span>
+                            <span className={formLabelBase}>Observações da empresa</span>
                             <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selected.companyProfile.companyNotes)} readOnly />
                           </label>
                         </div>
@@ -1865,3 +1866,4 @@ export default function AccessRequestsPageWithGuard() {
     </RequireAccessRequestReviewer>
   );
 }
+

@@ -425,7 +425,7 @@ const inputBase =
 const readOnlyInputBase =
   "mt-1 w-full rounded-[16px] border border-(--tc-border) bg-(--tc-surface-2) px-3.5 py-2.5 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
-const labelBase = "text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent)";
+const labelBase = "text-[11px] font-black uppercase tracking-[0.22em] text-slate-500";
 const formLabelBase = "text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted)";
 
 const sectionCard =
@@ -1057,11 +1057,11 @@ function AccessRequestsPage() {
     const rejectionReason = ACCESS_REQUEST_REJECTION_REASONS.find(
       (item) => item.value === rejectionReasonDraft,
     );
-    if (!rejectionReason) {
-      setError("Selecione o motivo da rejeição.");
+    if (!rejectionReason && !commentDraft.trim()) {
+      setError("Informe um motivo da rejeição ou escreva um comentário antes de recusar.");
       return;
     }
-    const rejectionText = [rejectionReason.label, commentDraft.trim()]
+    const rejectionText = [rejectionReason?.label, commentDraft.trim()]
       .filter(Boolean)
       .join("\n");
 
@@ -1391,11 +1391,11 @@ function AccessRequestsPage() {
               </div>
             ) : (
               <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-3 [scrollbar-width:none] sm:p-4 xl:p-5 2xl:p-6 [&::-webkit-scrollbar]:hidden">
-                <section className="overflow-hidden rounded-[30px] border border-(--tc-border) bg-white p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
+                <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_64px_rgba(15,23,42,0.10)]">
                   <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)]">
                     <div className="flex min-w-0 gap-5">
                       <div className="flex min-w-[132px] flex-col items-center">
-                        <div className="flex h-28 w-28 items-center justify-center rounded-[34px] border border-sky-100 bg-[linear-gradient(135deg,#eff6ff_0%,#dbeafe_100%)] text-6xl shadow-[0_20px_42px_rgba(37,99,235,0.14)]">
+                        <div className="flex h-32 w-32 items-center justify-center rounded-[36px] border border-sky-100 bg-[linear-gradient(135deg,#eff6ff_0%,#dbeafe_100%)] text-7xl shadow-[0_22px_48px_rgba(37,99,235,0.16)]">
                           {profileEmoji || selected.visualProfile?.avatarValue || getPersonInitials(selected.fullName || selected.name || selected.email)}
                         </div>
 
@@ -1434,7 +1434,7 @@ function AccessRequestsPage() {
                           </span>
                         </div>
 
-                        <p className="mt-4 text-[11px] font-black uppercase tracking-[0.24em] text-sky-700">Perfil que será criado</p>
+                        <p className="mt-4 text-[11px] font-black uppercase tracking-[0.24em] text-sky-700">Prévia do perfil</p>
                         <h2 className="mt-1 break-words text-3xl font-black tracking-tight text-(--tc-text-primary)">
                           {draft.fullName || selected.fullName || selected.name || "(sem nome)"}
                         </h2>
@@ -1449,7 +1449,7 @@ function AccessRequestsPage() {
                         </div>
 
                         <p className="mt-4 max-w-3xl text-sm leading-6 text-(--tc-text-secondary)">
-                          Este é o cadastro que será liberado no sistema. Revise os dados finais, confira as alterações do solicitante e conclua a decisão.
+                          Veja como este usuário ficará no sistema após a aprovação. O avatar é opcional e pode ser mantido como padrão.
                         </p>
                       </div>
                     </div>
@@ -1584,13 +1584,13 @@ function AccessRequestsPage() {
                     </div>
                   </div>
                 </section>
-                <section className="rounded-3xl border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+                <section className="rounded-[26px] border border-dashed border-slate-200 bg-slate-50 px-5 py-4 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Dados técnicos completos</p>
                       <h3 className="mt-1 text-lg font-black tracking-tight text-(--tc-text-primary)">Base original e edição administrativa</h3>
                       <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
-                        Área técnica mantida como apoio interno. A decisão principal deve ser feita pelos cards de perfil, resumo e alterações acima.
+                        Área técnica recolhida para apoio interno. Use os cards acima para decidir a aprovação, ajuste ou recusa.
                       </p>
                     </div>
 
@@ -1623,13 +1623,13 @@ function AccessRequestsPage() {
                   />
                 </section>
 
-                <section className={sectionMuted}>
+                <section className="rounded-[28px] border border-(--tc-border) bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-(--tc-accent)">Linha do tempo e conversa</p>
-                      <h3 className="mt-2 text-lg font-semibold text-(--tc-text-primary)">Linha do tempo e conversa</h3>
+                      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Linha do tempo e conversa</p>
+                      <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">Conversa com o solicitante</h3>
                       <p className="mt-1 text-sm text-(--tc-text-secondary)">
-                        Acompanhe o histórico, registre mensagens e mantenha a comunicação com o solicitante.
+                        Histórico de mensagens e retornos do solicitante. A decisão fica em um bloco separado abaixo.
                       </p>
                     </div>
                     {commentLoading ? <span className="text-sm font-medium text-(--tc-text-muted)">Carregando...</span> : null}
@@ -1712,7 +1712,7 @@ function AccessRequestsPage() {
                       <textarea
                         className={`${inputBase} mt-0 min-h-30 resize-none`}
                         rows={4}
-                        placeholder={commentsLocked ? "Solicitação finalizada" : "Descreva o ajuste, a observação interna ou o motivo da decisão"}
+                        placeholder={commentsLocked ? "Solicitação finalizada — conversa bloqueada" : "Mensagem para o solicitante ou observação da conversa"}
                         value={commentDraft}
                         onChange={(e) => setCommentDraft(e.target.value)}
                         disabled={commentsLocked}
@@ -1786,7 +1786,24 @@ function AccessRequestsPage() {
                     </div>
                   ) : null}
 
-                  <div className="sticky bottom-0 z-20 mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-(--tc-border) bg-white/95 px-4 py-4 shadow-[0_-18px_42px_rgba(15,23,42,0.10)] backdrop-blur-md">
+                  <div className="mt-6 rounded-[30px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] px-5 py-5 shadow-[0_20px_50px_rgba(15,23,42,0.10)]">
+                    <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Decisão da solicitação</p>
+                        <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">Concluir análise do perfil</h3>
+                        <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
+                          Aprove o acesso, solicite ajuste ao solicitante ou recuse informando o motivo.
+                        </p>
+                      </div>
+                      <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${
+                        acceptDisabled
+                          ? "border-amber-200 bg-amber-50 text-amber-800"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      }`}>
+                        {acceptDisabled ? "Com pendências" : "Pronto para aprovar"}
+                      </span>
+                    </div>
+
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${draft.passwordProvided ? "border border-emerald-300 bg-emerald-100 text-emerald-800" : "border border-rose-300 bg-rose-100 text-rose-800"}`}>
                         {draft.passwordProvided ? "Senha válida" : "Senha ausente"}
@@ -1798,12 +1815,12 @@ function AccessRequestsPage() {
                       ) : null}
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
+                    <div className="mt-5 grid w-full gap-3 lg:grid-cols-[minmax(220px,0.7fr)_auto_auto_auto] lg:items-center">
                     <select
                       value={rejectionReasonDraft}
                       onChange={(event) => setRejectionReasonDraft(event.target.value)}
                       disabled={commentsLocked}
-                      className="min-h-10 rounded-full border border-rose-300 bg-white px-4 text-xs font-semibold text-rose-700 disabled:opacity-60"
+                      className="min-h-12 rounded-[18px] border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 disabled:opacity-60"
                       data-testid="access-request-rejection-reason"
                       aria-label="Motivo da rejeição"
                     >
@@ -1818,7 +1835,7 @@ function AccessRequestsPage() {
                       type="button"
                       onClick={requestAdjustment}
                       disabled={requestingAdjustment || selectedIsPasswordReset || !commentDraft.trim() || commentsLocked || adjustmentFieldsDraft.length === 0}
-                      className="rounded-[20px] border border-amber-300 bg-amber-50 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-amber-800 transition hover:-translate-y-0.5 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-[18px] border border-amber-300 bg-amber-50 px-5 py-3.5 text-xs font-black uppercase tracking-[0.18em] text-amber-800 transition hover:-translate-y-0.5 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {requestingAdjustment ? "Enviando..." : "Solicitar ajuste"}
                     </button>
@@ -1827,8 +1844,8 @@ function AccessRequestsPage() {
                       type="button"
                       onClick={rejectRequest}
                       aria-label="Recusar solicitação"
-                      disabled={accepting || !rejectionReasonDraft || commentsLocked}
-                      className="rounded-[20px] border border-rose-300 bg-rose-50 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-rose-700 transition hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={accepting || commentsLocked || (!rejectionReasonDraft && !commentDraft.trim())}
+                      className="rounded-[18px] border border-rose-300 bg-rose-50 px-5 py-3.5 text-xs font-black uppercase tracking-[0.18em] text-rose-700 transition hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {accepting ? "Processando..." : "Recusar"}
                     </button>
@@ -1838,7 +1855,7 @@ function AccessRequestsPage() {
                       onClick={acceptRequest}
                       aria-label="Aprovar solicitação"
                       disabled={acceptDisabled}
-                      className="rounded-[22px] bg-(--tc-primary) px-7 py-3 text-xs font-black uppercase tracking-[0.24em] text-white shadow-[0_18px_38px_rgba(1,24,72,0.26)] transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-[18px] bg-(--tc-primary) px-7 py-3.5 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_38px_rgba(1,24,72,0.26)] transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {accepting ? "Aprovando..." : selectedIsPasswordReset ? "Aprovar reset" : "Aprovar acesso"}
                     </button>

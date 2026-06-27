@@ -1100,7 +1100,7 @@ function AccessRequestsPage() {
     <div className="min-h-screen bg-transparent text-(--tc-text-primary)">
       <div className="mx-auto flex w-full max-w-480 flex-col gap-5 px-2.5 py-5 sm:px-3 sm:py-6 lg:px-4 xl:px-5 2xl:px-6">
         <section
-          className={`relative overflow-hidden rounded-[28px] border border-(--tc-border) p-4 text-white shadow-[0_28px_72px_rgba(15,23,42,0.16)] sm:rounded-[30px] sm:p-5 xl:rounded-4xl xl:p-6 ${styles.headerCard}`}
+          className={`relative overflow-hidden rounded-[26px] border border-(--tc-border) px-4 py-3 text-white shadow-[0_18px_44px_rgba(15,23,42,0.12)] sm:px-5 sm:py-4 ${styles.headerCard}`}
         >
           <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
           <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
@@ -1119,7 +1119,7 @@ function AccessRequestsPage() {
 
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/72">Central de aprovação</p>
-                <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">Solicitações de acesso</h1>
+                <h1 className="mt-1 text-2xl font-black text-white sm:text-3xl">Solicitações de acesso</h1>
                 <p className="mt-2 max-w-2xl text-sm text-white/84">
                   Revise solicitações, acompanhe ajustes e aprove novos perfis de usuário.
                 </p>
@@ -1129,7 +1129,7 @@ function AccessRequestsPage() {
 
           </div>
 
-          <div className="mt-4 hidden gap-3 xl:grid xl:grid-cols-5">
+          <div className="hidden">
             <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Abertas</span>
@@ -1221,8 +1221,8 @@ function AccessRequestsPage() {
           </div>
         ) : null}
 
-        <div className="grid items-stretch grid-cols-1 gap-5 xl:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(360px,430px)_minmax(0,1fr)]">
-          <aside className="flex min-h-170 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-6.5rem)] xl:min-h-0 2xl:sticky 2xl:top-4">
+        <div className="grid items-stretch grid-cols-1 gap-5 xl:grid-cols-[minmax(300px,350px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(330px,390px)_minmax(0,1fr)]">
+          <aside className="flex min-h-170 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-5.2rem)] xl:min-h-0 2xl:sticky 2xl:top-4">
             <div className={`border-b border-(--tc-border) p-5 ${styles.asideHeader}`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -1353,7 +1353,7 @@ function AccessRequestsPage() {
             </div>
           </aside>
 
-          <section className="flex min-h-170 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-6.5rem)] xl:min-h-0">
+          <section className="flex min-h-170 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-5.2rem)] xl:min-h-0">
             {!selected || !draft ? (
               <div className={`${sectionMuted} flex min-h-105 flex-1 items-center justify-center p-6 sm:p-8`}>
                 <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
@@ -1391,571 +1391,214 @@ function AccessRequestsPage() {
               </div>
             ) : (
               <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-3 [scrollbar-width:none] sm:p-4 xl:p-5 2xl:p-6 [&::-webkit-scrollbar]:hidden">
-                <div
-                  className={`relative overflow-hidden rounded-[30px] border border-(--tc-border) p-4 text-white shadow-[0_24px_56px_rgba(1,24,72,0.18)] sm:p-5 ${styles.detailCard}`}
-                >
-                  <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
-                  <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
+                <section className="overflow-hidden rounded-[30px] border border-(--tc-border) bg-white p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
+                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)]">
+                    <div className="flex min-w-0 gap-5">
+                      <div className="flex min-w-[132px] flex-col items-center">
+                        <div className="flex h-28 w-28 items-center justify-center rounded-[34px] border border-sky-100 bg-[linear-gradient(135deg,#eff6ff_0%,#dbeafe_100%)] text-6xl shadow-[0_20px_42px_rgba(37,99,235,0.14)]">
+                          {profileEmoji || selected.visualProfile?.avatarValue || getPersonInitials(selected.fullName || selected.name || selected.email)}
+                        </div>
 
-                  <div className="relative z-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)] lg:items-stretch">
-                    <div className="flex min-w-0 gap-4">
-                      <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-[28px] border border-white/20 bg-white/15 text-4xl font-black text-white shadow-[0_18px_38px_rgba(15,23,42,0.2)]">
-                        {profileEmoji || getPersonInitials(selected.fullName || selected.name || selected.email)}
+                        <div className="mt-3 flex flex-wrap justify-center gap-2">
+                          {PROFILE_EMOJI_OPTIONS.slice(0, 6).map((emoji) => {
+                            const activeEmoji = profileEmoji === emoji;
+                            return (
+                              <button
+                                key={`profile-emoji-${emoji}`}
+                                type="button"
+                                onClick={() => {
+                                  setProfileEmoji(emoji);
+                                  void persistVisualReview({ emoji });
+                                }}
+                                className={`flex h-9 w-9 items-center justify-center rounded-2xl border text-lg transition ${
+                                  activeEmoji
+                                    ? "border-sky-300 bg-sky-50 shadow-[0_10px_22px_rgba(37,99,235,0.12)]"
+                                    : "border-(--tc-border) bg-white hover:bg-(--tc-surface-2)"
+                                }`}
+                                aria-label={`Usar emoji ${emoji} no perfil`}
+                              >
+                                {emoji}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${statusBadgeClass(selected.status)}`}>
+                          <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-black ${statusBadgeClass(selected.status)}`}>
                             {statusLabel(selected.status)}
                           </span>
-                          <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${accessTypeBadgeClass(selected.accessType)}`}>
+                          <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-black ${accessTypeBadgeClass(selected.accessType)}`}>
                             {selected.accessType}
                           </span>
                         </div>
 
-                        <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/74">Perfil que será criado</p>
-                        <h2 className="mt-2 break-words text-3xl font-black tracking-tight text-white">
-                          {selected.fullName || selected.name || "(sem nome)"}
+                        <p className="mt-4 text-[11px] font-black uppercase tracking-[0.24em] text-sky-700">Perfil que será criado</p>
+                        <h2 className="mt-1 break-words text-3xl font-black tracking-tight text-(--tc-text-primary)">
+                          {draft.fullName || selected.fullName || selected.name || "(sem nome)"}
                         </h2>
 
-                        <div className="mt-3 grid gap-2 text-sm font-semibold text-white/84 sm:grid-cols-2">
-                          <p className="truncate">{selected.email}</p>
-                          <p className="truncate">{selected.phone || "Telefone não informado"}</p>
+                        <div className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text-secondary) sm:grid-cols-2">
+                          <p className="truncate">E-mail: {draft.email || selected.email}</p>
+                          <p className="truncate">Telefone: {draft.phone || selected.phone || "Não informado"}</p>
+                          <p className="truncate">Usuário: @{draft.username || selected.username || "a-definir"}</p>
+                          <p className="truncate">Cargo: {draft.jobRole || selected.jobRole || "Não informado"}</p>
+                          <p className="truncate">Empresa: {draft.company || selected.company || "Sem empresa"}</p>
+                          <p className="truncate">Recebida: {formatDateTime(selected.createdAt)}</p>
                         </div>
 
-                        <p className="mt-4 max-w-3xl text-sm leading-6 text-white/80">
-                          Este é o perfil final que será criado no sistema. Revise os dados, escolha o visual do perfil e acompanhe os ajustes antes da decisão.
+                        <p className="mt-4 max-w-3xl text-sm leading-6 text-(--tc-text-secondary)">
+                          Este é o cadastro que será liberado no sistema. Revise os dados finais, confira as alterações do solicitante e conclua a decisão.
                         </p>
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                      <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Empresa solicitada</p>
-                        <p className="mt-2 truncate text-base font-black text-white">{selected.company || "Sem empresa definida"}</p>
+                    <div className="rounded-[26px] border border-(--tc-border) bg-(--tc-surface-2) p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-(--tc-text-muted)">Resumo da análise</p>
+                          <h3 className="mt-1 text-lg font-black text-(--tc-text-primary)">Pronto para decisão</h3>
+                        </div>
+                        <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${
+                          acceptDisabled
+                            ? "border-amber-200 bg-amber-50 text-amber-800"
+                            : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        }`}>
+                          {acceptDisabled ? "Pendências" : "Pronto para aprovação"}
+                        </span>
                       </div>
-                      <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Usuário gerado</p>
-                        <p className="mt-2 truncate text-base font-black text-white">{draft.username || "A definir"}</p>
-                      </div>
-                      <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Recebida em</p>
-                        <p className="mt-2 text-base font-black text-white">{formatDateTime(selected.createdAt)}</p>
+
+                      <div className="mt-4 grid gap-3">
+                        <div className="flex items-center justify-between rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5">
+                          <span className="text-sm font-semibold text-(--tc-text-secondary)">Senha definida</span>
+                          <span className={`text-sm font-black ${draft.passwordProvided ? "text-emerald-700" : "text-rose-700"}`}>
+                            {draft.passwordProvided ? "Sim" : "Não"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5">
+                          <span className="text-sm font-semibold text-(--tc-text-secondary)">Campos obrigatórios</span>
+                          <span className={`text-sm font-black ${missingRequiredFields ? "text-amber-700" : "text-emerald-700"}`}>
+                            {missingRequiredFields ? "Pendentes" : "OK"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5">
+                          <span className="text-sm font-semibold text-(--tc-text-secondary)">Alterações do solicitante</span>
+                          <span className="text-sm font-black text-amber-700">
+                            {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).filter((row) => row.changed).length}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5">
+                          <span className="text-sm font-semibold text-(--tc-text-secondary)">Última análise</span>
+                          <span className="text-sm font-black text-(--tc-text-primary)">
+                            {selected.reviewSummary?.lastReviewedAt ? formatDateTime(selected.reviewSummary.lastReviewedAt) : "Ainda não analisada"}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {selectedHasRequesterAdjustment ? (
-                  <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-[0_14px_34px_rgba(217,119,6,0.08)]">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                </section>
+                <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.9fr)]">
+                  <div className={`${sectionCard} overflow-hidden border-0 bg-[linear-gradient(135deg,#fff7ed_0%,#ffffff_46%,#eff6ff_100%)]`}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-amber-900">Solicitação reenviada com ajustes</p>
-                        <p className="mt-1 text-sm text-amber-800">
-                          Último reenvio em{" "}
-                          <span suppressHydrationWarning={true}>
-                            {selected?.lastAdjustmentAt ? formatDateTime(selected.lastAdjustmentAt) : "-"}
-                          </span>
+                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-700">Alterações do solicitante</p>
+                        <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">O que mudou antes de virar perfil</h3>
+                        <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary)">
+                          Cada card mostra o valor original e o valor atual que será usado na criação do usuário.
                         </p>
                       </div>
-                      <span className="rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-700">
-                        {selectedAdjustmentDiff.length} alterações
+
+                      <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800">
+                        {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).filter((row) => row.changed).length} alteração(ões)
                       </span>
                     </div>
 
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <div className="sm:col-span-2 flex flex-wrap gap-2">
-                        {selectedAdjustmentDiff.map((entry, index) => (
-                          <span
-                            key={`selected-adjustment-chip-${entry.field}-${index}`}
-                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${adjustmentFieldBadgeClass(entry.field)}`}
-                            title={entry.label}
-                          >
-                            {adjustmentFieldLabel(entry.field, entry.label)}
-                          </span>
-                        ))}
-                      </div>
-                      {selectedAdjustmentDiff.map((entry, index) => (
-                        <div key={`${entry.field}-${index}`} className="rounded-lg border border-amber-200 bg-white px-3 py-3">
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{entry.label}</p>
-                          <div className="mt-2 space-y-2 text-sm">
-                            <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700">
-                              <span className="block text-[10px] font-semibold uppercase tracking-[0.18em]">Antes</span>
-                              <span className="mt-1 block whitespace-pre-wrap">{entry.previous}</span>
-                            </div>
-                            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700">
-                              <span className="block text-[10px] font-semibold uppercase tracking-[0.18em]">Agora</span>
-                              <span className="mt-1 block whitespace-pre-wrap">{entry.next}</span>
-                            </div>
-                          </div>
+                    <div className="mt-5 grid gap-3">
+                      {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).filter((row) => row.changed).length > 0 ? (
+                        buildAccessRequestComparisonRows({ selected, selectedOriginal, draft })
+                          .filter((row) => row.changed)
+                          .map((row) => (
+                            <article
+                              key={`visual-change-${row.label}`}
+                              className="overflow-hidden rounded-[24px] border border-amber-200 bg-white shadow-[0_16px_34px_rgba(217,119,6,0.10)]"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-100 bg-amber-50 px-4 py-3">
+                                <h4 className="font-black text-(--tc-text-primary)">{row.label}</h4>
+                                <span className="rounded-full border border-amber-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-800">
+                                  Alterado
+                                </span>
+                              </div>
+
+                              <div className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)] md:items-stretch">
+                                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-3">
+                                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-700">Antes</p>
+                                  <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-rose-900">{row.originalText}</p>
+                                </div>
+
+                                <div className="hidden items-center justify-center text-xl font-black text-(--tc-text-muted) md:flex">→</div>
+
+                                <div className="rounded-2xl border border-sky-200 bg-sky-50 px-3 py-3 ring-2 ring-sky-100">
+                                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-700">Agora / perfil</p>
+                                  <p className="mt-2 whitespace-pre-wrap break-words text-sm font-black leading-6 text-sky-950">{row.currentText}</p>
+                                </div>
+                              </div>
+                            </article>
+                          ))
+                      ) : (
+                        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-5 text-emerald-800">
+                          <p className="font-black">Nenhuma alteração identificada.</p>
+                          <p className="mt-1 text-sm leading-6">Os dados atuais estão iguais ao envio original.</p>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
-                ) : null}
 
-                <section className={`${sectionCard} overflow-hidden`}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Alterações do solicitante</p>
-                      <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">O que mudou antes de virar perfil</h3>
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary)">
-                        Campos alterados aparecem em destaque. A versão atual representa o que será usado na criação do perfil.
-                      </p>
+                  <div className={`${sectionCard} overflow-hidden`}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-sky-700">Dados que serão salvos no perfil</p>
+                        <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">Cadastro final</h3>
+                      </div>
+                      <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-black text-(--tc-text-muted)">
+                        Prévia
+                      </span>
                     </div>
 
-                    <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-black text-(--tc-text-muted)">
-                      {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).filter((row) => row.changed).length} alteração(ões)
-                    </span>
-                  </div>
-
-                  <div className="mt-5 overflow-hidden rounded-[24px] border border-(--tc-border) bg-(--tc-surface)">
-                    <div className="hidden border-b border-(--tc-border) bg-(--tc-surface-2) px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted) md:grid md:grid-cols-[150px_minmax(0,1fr)_minmax(0,1fr)_110px]">
-                      <div>Campo</div>
-                      <div>Original enviado</div>
-                      <div>Versão atual</div>
-                      <div className="text-right">Status</div>
-                    </div>
-
-                    <div className="divide-y divide-(--tc-border)">
-                      {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).map((row) => (
-                        <div
-                          key={`comparison-${row.label}`}
-                          className={`grid grid-cols-1 gap-3 px-4 py-4 text-sm md:grid-cols-[150px_minmax(0,1fr)_minmax(0,1fr)_110px] md:items-start ${
-                            row.changed ? "bg-amber-50/70" : "bg-white"
-                          }`}
-                        >
-                          <div>
-                            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted)">Campo</p>
-                            <p className="mt-1 font-black text-(--tc-text-primary)">{row.label}</p>
-                          </div>
-
-                          <div className="min-w-0 rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5">
-                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--tc-text-muted) md:hidden">Original</p>
-                            <p className="mt-1 whitespace-pre-wrap break-words font-semibold leading-6 text-(--tc-text-primary) md:mt-0">
-                              {row.originalText}
-                            </p>
-                          </div>
-
-                          <div className={`min-w-0 rounded-2xl border px-3 py-2.5 ${
-                            row.changed
-                              ? "border-amber-200 bg-white text-amber-950"
-                              : "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-primary)"
-                          }`}>
-                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--tc-text-muted) md:hidden">Atual</p>
-                            <p className="mt-1 whitespace-pre-wrap break-words font-semibold leading-6 md:mt-0">
-                              {row.currentText}
-                            </p>
-                          </div>
-
-                          <div className="flex justify-start md:justify-end">
-                            <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${
-                              row.changed
-                                ? "border-amber-200 bg-amber-100 text-amber-800"
-                                : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            }`}>
-                              {row.changed ? "Alterado" : "Igual"}
-                            </span>
-                          </div>
+                    <div className="mt-5 divide-y divide-(--tc-border) rounded-[24px] border border-(--tc-border) bg-white">
+                      {[
+                        { label: "Nome completo", value: draft.fullName || selected.fullName || selected.name || "Não informado" },
+                        { label: "Usuário", value: draft.username || selected.username || "A definir" },
+                        { label: "E-mail", value: draft.email || selected.email || "Não informado" },
+                        { label: "Telefone", value: draft.phone || selected.phone || "Não informado" },
+                        { label: "Empresa", value: draft.company || selected.company || "Sem empresa" },
+                        { label: "Cargo", value: draft.jobRole || selected.jobRole || "Não informado" },
+                        { label: "Perfil de acesso", value: draft.accessType || selected.accessType || "Não informado" },
+                        { label: "Senha", value: draft.passwordProvided ? "Senha informada" : "Senha pendente" },
+                      ].map((field) => (
+                        <div key={`profile-final-${field.label}`} className="grid gap-2 px-4 py-3 sm:grid-cols-[150px_minmax(0,1fr)]">
+                          <span className="text-[11px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted)">{field.label}</span>
+                          <span className="break-words text-sm font-black text-(--tc-text-primary)">{field.value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </section>
-
-                <div className="rounded-3xl border border-(--tc-border) bg-(--tc-surface) p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+                <section className="rounded-3xl border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Dados detalhados</p>
-                      <h3 className="mt-1 text-lg font-black tracking-tight text-(--tc-text-primary)">Consulta completa e edição administrativa</h3>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Dados técnicos completos</p>
+                      <h3 className="mt-1 text-lg font-black tracking-tight text-(--tc-text-primary)">Base original e edição administrativa</h3>
                       <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
-                        Abaixo ficam a base original completa e os campos editáveis usados na aprovação.
+                        Área técnica mantida como apoio interno. A decisão principal deve ser feita pelos cards de perfil, resumo e alterações acima.
                       </p>
                     </div>
+
+                    <span className="rounded-full border border-(--tc-border) bg-white px-3 py-1.5 text-xs font-black text-(--tc-text-muted)">
+                      Oculto no fluxo principal
+                    </span>
                   </div>
-                </div>
-
-                <div className="grid gap-5 xl:grid-cols-2">
-                  <section className={`${sectionMuted} flex h-full min-w-0 flex-col`}>
-                    <div className="space-y-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Solicitação original</p>
-                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Base original completa</h3>
-                      <p className="text-sm text-(--tc-text-secondary)">
-                        Campos somente leitura com o conteúdo recebido no envio inicial da solicitação.
-                      </p>
-                    </div>
-
-                    <div className="mt-5 flex-1 space-y-4">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <label className="block">
-                        <span className={formLabelBase}>Perfil solicitado</span>
-                        <input
-                          className={readOnlyInputBase}
-                          value={selectedOriginal ? toRequestProfileTypeLabel(selectedOriginal.profileType) : selected.accessType ?? ""}
-                          readOnly
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>Empresa solicitada</span>
-                        <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.company, "Sem empresa definida")} readOnly />
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>Nome completo</span>
-                        <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.fullName || selectedOriginal?.name)} readOnly />
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>E-mail</span>
-                        <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.email)} readOnly />
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>Telefone</span>
-                        <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.phone)} readOnly />
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>Cargo</span>
-                        <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.jobRole)} readOnly />
-                      </label>
-
-                      <label className="block md:col-span-2">
-                        <span className={formLabelBase}>Título da solicitação</span>
-                        <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal?.title, "Sem título")} readOnly />
-                      </label>
-
-                      <label className="block md:col-span-2">
-                        <span className={formLabelBase}>Descrição detalhada</span>
-                        <textarea className={readOnlyInputBase} rows={5} value={textOrFallback(selectedOriginal?.description)} readOnly />
-                      </label>
-
-                      <label className="block md:col-span-2">
-                            <span className={formLabelBase}>Observações do solicitante</span>
-                        <textarea className={readOnlyInputBase} rows={4} value={textOrFallback(selectedOriginal?.notes)} readOnly />
-                      </label>
-                    </div>
-
-                    {selectedOriginal?.companyProfile ? (
-                      <div className="rounded-[20px] border border-(--tc-border) bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className={formLabelBase}>Cadastro institucional original</p>
-                            <p className="mt-2 text-sm text-(--tc-text-secondary)">
-                              Dados corporativos enviados junto da solicitação.
-                            </p>
-                          </div>
-                          <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
-                            Original
-                          </span>
-                        </div>
-                        <div className="mt-4 grid gap-4 md:grid-cols-2">
-                          <label className="block">
-                            <span className={formLabelBase}>Razão social</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyName)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>CNPJ</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyTaxId)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>CEP</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyZip)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>Telefone da empresa</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyPhone)} readOnly />
-                          </label>
-                          <label className="block md:col-span-2">
-                            <span className={formLabelBase}>Endereço</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyAddress)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>Website</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyWebsite)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>LinkedIn</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selectedOriginal.companyProfile.companyLinkedin)} readOnly />
-                          </label>
-                          <label className="block md:col-span-2">
-                            <span className={formLabelBase}>Descrição da empresa</span>
-                            <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selectedOriginal.companyProfile.companyDescription)} readOnly />
-                          </label>
-                          <label className="block md:col-span-2">
-                            <span className={formLabelBase}>Observações da empresa</span>
-                            <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selectedOriginal.companyProfile.companyNotes)} readOnly />
-                          </label>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-3 text-sm shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <span className="font-semibold text-(--tc-text-primary)">Senha informada na solicitação</span>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${draft.passwordProvided ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
-                          {draft.passwordProvided ? "Preenchida" : "Ausente"}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-xs text-(--tc-text-secondary)">
-                        A aprovação só pode seguir quando a solicitação já tiver uma senha definida pelo solicitante.
-                      </p>
-                    </div>
-                    </div>
-                  </section>
-
-                  <section className={`${sectionCard} flex h-full min-w-0 flex-col`}>
-                    <div className="space-y-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Retorno / triagem atual</p>
-                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Edição administrativa</h3>
-                      <p className="text-sm text-(--tc-text-secondary)">
-                        Revise a versão atual, aplique ajustes administrativos e acompanhe o retorno enviado pelo solicitante.
-                      </p>
-                    </div>
-
-                    {latestAdjustmentRound ? (
-                      <div className="mt-5 rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-4 shadow-[0_10px_24px_rgba(217,119,6,0.08)]">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Retorno do solicitante · rodada {latestAdjustmentRound.round}</p>
-                            <p className="mt-2 text-sm font-semibold text-amber-900">
-                              {latestAdjustmentRound.requestMessage?.trim() || "Solicitante reenviou a solicitação para nova análise."}
-                            </p>
-                          </div>
-                          <span className="rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-700">
-                            {latestAdjustmentRound.requesterReturnedAt ? "Respondida" : "Pendente"}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {latestAdjustmentRound.requestedFields.map((field) => (
-                            <span
-                              key={`latest-round-${field}`}
-                              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${adjustmentFieldBadgeClass(field)}`}
-                            >
-                              {adjustmentFieldLabel(field, field)}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <fieldset className="mt-5 flex-1 grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <label className="block">
-                        <span className={formLabelBase}>Tipo de perfil</span>
-                        <select
-                          className={inputBase}
-                          value={(draft.accessType ?? "Usuário Testing Company") as AccessTypeLabel}
-                          onChange={(e) => {
-                            draftTouchedRef.current = true;
-                            const v = e.target.value as AccessTypeLabel;
-                            setDraft((d) => (d ? { ...d, accessType: v } : d));
-                            if (!requestProfileTypeNeedsCompany(normalizeRequestProfileType(v) ?? "company_user")) {
-                              setDraft((d) => (d ? { ...d, clientId: null, company: "" } : d));
-                            }
-                          }}
-                          aria-label="Tipo de perfil"
-                          title="Tipo de perfil"
-                        >
-                          <option value="Usuário Testing Company">Usuário Testing Company</option>
-                          <option value="Usuário da empresa">Usuário da empresa</option>
-                          <option value="Lider TC">Lider TC</option>
-                          <option value="Suporte Técnico">Suporte Técnico</option>
-                        </select>
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>Usuário gerado</span>
-                        <input
-                          className={inputBase}
-                          value={draft.username ?? ""}
-                          onChange={(e) => {
-                            draftTouchedRef.current = true;
-                            setDraft((d) => (d ? { ...d, username: e.target.value.trim().toLowerCase() } : d));
-                          }}
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>Nome completo</span>
-                        <input
-                          className={inputBase}
-                          value={draft.fullName ?? ""}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            draftTouchedRef.current = true;
-                            setDraft((d) =>
-                              d
-                                ? {
-                                    ...d,
-                                    fullName: value,
-                                    username: buildUniqueUsername(value || d.email || "", existingLogins, d.username),
-                                  }
-                                : d,
-                            );
-                          }}
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>E-mail</span>
-                        <input
-                          type="email"
-                          className={inputBase}
-                          value={draft.email ?? ""}
-                          onChange={(e) => {
-                            draftTouchedRef.current = true;
-                            setDraft((d) => (d ? { ...d, email: e.target.value } : d));
-                          }}
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className={formLabelBase}>Telefone</span>
-                        <input
-                          className={inputBase}
-                          value={draft.phone ?? ""}
-                          onChange={(e) => {
-                            draftTouchedRef.current = true;
-                            setDraft((d) => (d ? { ...d, phone: e.target.value } : d));
-                          }}
-                        />
-                      </label>
-
-                      {requestProfileTypeNeedsCompany(
-                        normalizeRequestProfileType((draft.accessType ?? "Usuário Testing Company") as string) ?? "company_user",
-                      ) ? (
-                        <label className="block">
-                          <span className={formLabelBase}>Empresa final</span>
-                          <select
-                            className={inputBase}
-                            value={draft.clientId ?? ""}
-                            onChange={(e) => {
-                              draftTouchedRef.current = true;
-                              const id = e.target.value || null;
-                              const match = clients.find((c) => c.id === id);
-                              setDraft((d) => (d ? { ...d, clientId: id, company: match?.name ?? d.company ?? "" } : d));
-                            }}
-                            aria-label="Empresa"
-                            title="Empresa"
-                          >
-                            <option value="">Selecionar empresa</option>
-                            {clients.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      ) : null}
-
-                      <label className="block md:col-span-2">
-                        <span className={formLabelBase}>Cargo</span>
-                        <input
-                          className={inputBase}
-                          value={draft.jobRole ?? ""}
-                          onChange={(e) => {
-                            draftTouchedRef.current = true;
-                            setDraft((d) => (d ? { ...d, jobRole: e.target.value } : d));
-                          }}
-                        />
-                      </label>
-
-                      <label className="block md:col-span-2">
-                        <span className={formLabelBase}>Título da solicitação</span>
-                        <input
-                          className={inputBase}
-                          value={draft.title ?? ""}
-                          onChange={(e) => {
-                            draftTouchedRef.current = true;
-                            setDraft((d) => (d ? { ...d, title: e.target.value } : d));
-                          }}
-                        />
-                      </label>
-
-                      <label className="block md:col-span-2">
-                        <span className={formLabelBase}>Descrição final</span>
-                        <textarea
-                          className={inputBase}
-                          rows={5}
-                          value={draft.description ?? ""}
-                          onChange={(e) => {
-                            draftTouchedRef.current = true;
-                            setDraft((d) => (d ? { ...d, description: e.target.value } : d));
-                          }}
-                        />
-                      </label>
-
-                      <label className="block md:col-span-2">
-                            <span className={formLabelBase}>Observação interna</span>
-                        <textarea
-                          className={inputBase}
-                          rows={4}
-                          value={draft.adminNotes ?? ""}
-                          onChange={(e) => {
-                            draftTouchedRef.current = true;
-                            setDraft((d) => (d ? { ...d, adminNotes: e.target.value } : d));
-                          }}
-                        />
-                      </label>
-                    </fieldset>
-
-                    {selected.companyProfile ? (
-                      <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className={formLabelBase}>Base devolvida / ajustada</p>
-                            <p className="mt-2 text-sm text-(--tc-text-secondary)">
-                              Versão atual dos dados institucionais que seguem junto da solicitação.
-                            </p>
-                          </div>
-                          <span className="rounded-full border border-(--tc-border) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
-                            Atual
-                          </span>
-                        </div>
-                        <div className="mt-4 grid gap-4 md:grid-cols-2">
-                          <label className="block">
-                            <span className={formLabelBase}>Razão social</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyName)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>CNPJ</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyTaxId)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>CEP</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyZip)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>Telefone da empresa</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyPhone)} readOnly />
-                          </label>
-                          <label className="block md:col-span-2">
-                            <span className={formLabelBase}>Endereço</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyAddress)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>Website</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyWebsite)} readOnly />
-                          </label>
-                          <label className="block">
-                            <span className={formLabelBase}>LinkedIn</span>
-                            <input className={readOnlyInputBase} value={textOrFallback(selected.companyProfile.companyLinkedin)} readOnly />
-                          </label>
-                          <label className="block md:col-span-2">
-                            <span className={formLabelBase}>Descrição da empresa</span>
-                            <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selected.companyProfile.companyDescription)} readOnly />
-                          </label>
-                          <label className="block md:col-span-2">
-                            <span className={formLabelBase}>Observações da empresa</span>
-                            <textarea className={readOnlyInputBase} rows={3} value={textOrFallback(selected.companyProfile.companyNotes)} readOnly />
-                          </label>
-                        </div>
-                      </div>
-                    ) : null}
-                  </section>
-                </div>
-
+                </section>
                 <section className={`${sectionCard} overflow-hidden`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>

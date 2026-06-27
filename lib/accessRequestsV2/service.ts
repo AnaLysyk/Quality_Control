@@ -41,6 +41,8 @@ import {
   type AccessRequestV2Priority,
   type AccessRequestV2Status,
   type AccessRequestV2Type,
+  type AccessRequestVisualProfile,
+  type AccessRequestReviewSummary,
   getEffectiveUserRole,
   normalizeAccessRequestV2Priority,
   normalizeAccessRequestV2Status,
@@ -164,6 +166,68 @@ function buildRequestDetails(payload: Record<string, unknown>) {
       readTextFromPayload(payload, ["description", "reason", "descricao"], 2000) || undefined,
     notes: readTextFromPayload(payload, ["notes", "observacoes"], 2000) || undefined,
     company: Object.keys(company).length ? company : undefined,
+  };
+}
+
+function normalizeVisualProfileFromPayload(
+  payload: Record<string, unknown>,
+  current?: AccessRequestVisualProfile,
+): AccessRequestVisualProfile | undefined {
+  const avatarKind = readTextFromPayload(payload, ["avatarKind", "profileAvatarKind"], 20);
+  const avatarValue = readTextFromPayload(payload, ["avatarValue", "profileEmoji", "profileAvatarValue"], 255);
+  const avatarLabel = readTextFromPayload(payload, ["avatarLabel", "profileAvatarLabel"], 120);
+
+  if (!avatarKind && !avatarValue && !avatarLabel) return current;
+
+  const safeKind =
+    avatarKind === "gif" || avatarKind === "emoji" || avatarKind === "default"
+      ? avatarKind
+      : avatarValue
+        ? "emoji"
+        : "default";
+
+  return {
+    avatarKind: safeKind,
+    avatarValue: avatarValue || current?.avatarValue || "👤",
+    avatarLabel: avatarLabel || current?.avatarLabel || "Perfil",
+  };
+}
+
+function normalizeReviewSummaryFromPayload(input: {
+  payload: Record<string, unknown>;
+  current?: AccessRequestReviewSummary;
+  reviewer?: AuthUser;
+  changedCount?: number;
+  pendingFieldCount?: number;
+  requiredFieldsOk?: boolean;
+  passwordDefined?: boolean;
+  companyDefined?: boolean;
+}): AccessRequestReviewSummary | undefined {
+  const internalNotes = readTextFromPayload(input.payload, ["internalNotes", "internal_notes", "reviewInternalNotes"], 4000);
+  const visualStatus = readTextFromPayload(input.payload, ["visualStatus", "reviewVisualStatus"], 40);
+
+  if (!internalNotes && !visualStatus && !input.current) return undefined;
+
+  const safeStatus =
+    visualStatus === "ready" ||
+    visualStatus === "needs_adjustment" ||
+    visualStatus === "rejected" ||
+    visualStatus === "approved" ||
+    visualStatus === "draft"
+      ? visualStatus
+      : input.current?.visualStatus ?? "draft";
+
+  return {
+    ...(input.current ?? {}),
+    ...(internalNotes ? { internalNotes } : {}),
+    visualStatus: safeStatus,
+    lastReviewedAt: new Date().toISOString(),
+    lastReviewedBy: input.reviewer?.email ?? input.reviewer?.id ?? input.current?.lastReviewedBy,
+    changedCount: input.changedCount ?? input.current?.changedCount ?? 0,
+    pendingFieldCount: input.pendingFieldCount ?? input.current?.pendingFieldCount ?? 0,
+    requiredFieldsOk: input.requiredFieldsOk ?? input.current?.requiredFieldsOk ?? false,
+    passwordDefined: input.passwordDefined ?? input.current?.passwordDefined ?? false,
+    companyDefined: input.companyDefined ?? input.current?.companyDefined ?? false,
   };
 }
 
@@ -344,7 +408,7 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     requestedPasswordHash,
     reason,
     priority: resolvePriorityFromPayload(payload),
-    details,
+    details: persistedDetails,
   });
 
   const companyDetailsForReceivedEmail = buildCompanyDetailsForEmail(payload);
@@ -444,6 +508,30 @@ export async function updateAccessRequestDetailsForReviewer(
     company: request.details?.company,
   };
 
+  const nextVisualProfile = normalizeVisualProfileFromPayload(payload, request.details?.visualProfile);
+  const nextReviewSummary = normalizeReviewSummaryFromPayload({
+    payload,
+    current: request.details?.reviewSummary,
+    reviewer,
+    changedCount: request.lastAdjustmentDiff?.length ?? 0,
+    pendingFieldCount: request.adjustmentFields?.length ?? 0,
+    requiredFieldsOk: Boolean(
+      request.requesterEmail &&
+      request.requesterName &&
+      (details.username || request.details?.username) &&
+      (details.phone || request.details?.phone) &&
+      (details.jobRole || request.details?.jobRole),
+    ),
+    passwordDefined: Boolean(request.requestedPasswordHash),
+    companyDefined: Boolean(companyId || request.requestedCompanyId || request.requestedCompanySlug),
+  });
+
+  const persistedDetails = {
+    ...details,
+    ...(nextVisualProfile ? { visualProfile: nextVisualProfile } : {}),
+    ...(nextReviewSummary ? { reviewSummary: nextReviewSummary } : {}),
+  };
+
   const companyId =
     readTextFromPayload(payload, ["client_id", "requestedCompanyId"], 120) ||
     request.requestedCompanyId;
@@ -471,7 +559,7 @@ export async function updateAccessRequestDetailsForReviewer(
       accessRequestProfileUsesAutomaticCompany(profile) ? undefined : companySlug,
     requestedPasswordHash: password ? hashPasswordSha256(password) : request.requestedPasswordHash,
     reason: details.description ?? request.reason,
-    details,
+    details: persistedDetails,
   });
 }
 
@@ -1308,6 +1396,8 @@ export function mapV2ToLegacySupportRow(request: AccessRequestV2) {
     lastAdjustmentAt: request.lastAdjustmentAt ?? null,
     lastAdjustmentDiff: request.lastAdjustmentDiff ?? [],
     adminNotes: request.reviewComment ?? null,
+    visualProfile: request.details?.visualProfile ?? null,
+    reviewSummary: request.details?.reviewSummary ?? null,
   });
 
   const status =
@@ -1332,4 +1422,5 @@ export function mapV2ToLegacySupportRow(request: AccessRequestV2) {
     admin_notes: request.reviewComment ?? null,
   };
 }
+
 

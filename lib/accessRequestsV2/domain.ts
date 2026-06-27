@@ -1,4 +1,4 @@
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
@@ -115,6 +115,24 @@ export type AccessRequestCompanyDetails = {
   shareCapital?: string;
 };
 
+export type AccessRequestVisualProfile = {
+  avatarKind?: "emoji" | "gif" | "default";
+  avatarValue?: string;
+  avatarLabel?: string;
+};
+
+export type AccessRequestReviewSummary = {
+  internalNotes?: string;
+  visualStatus?: "draft" | "ready" | "needs_adjustment" | "rejected" | "approved";
+  lastReviewedAt?: string;
+  lastReviewedBy?: string;
+  changedCount?: number;
+  pendingFieldCount?: number;
+  requiredFieldsOk?: boolean;
+  passwordDefined?: boolean;
+  companyDefined?: boolean;
+};
+
 export type AccessRequestV2Details = {
   username?: string;
   phone?: string;
@@ -123,6 +141,8 @@ export type AccessRequestV2Details = {
   description?: string;
   notes?: string;
   company?: AccessRequestCompanyDetails;
+  visualProfile?: AccessRequestVisualProfile;
+  reviewSummary?: AccessRequestReviewSummary;
 };
 
 export type AccessRequestAdjustmentEntry = {
@@ -346,3 +366,4 @@ export function canViewAccessRequest(
   if (requesterEmail && userEmail && requesterEmail === userEmail) return true;
   return false;
 }
+

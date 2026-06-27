@@ -1,4 +1,4 @@
-import {
+﻿import {
   normalizeRequestProfileType,
   resolveReviewQueue,
   toRequestProfileTypeLabel,
@@ -105,6 +105,22 @@ export type ParsedAccessRequest = {
   adjustmentHistory: AccessRequestAdjustmentRound[];
   lastAdjustmentAt: string | null;
   lastAdjustmentDiff: AccessRequestAdjustmentEntry[];
+  visualProfile?: {
+    avatarKind?: "emoji" | "gif" | "default";
+    avatarValue?: string;
+    avatarLabel?: string;
+  } | null;
+  reviewSummary?: {
+    internalNotes?: string;
+    visualStatus?: string;
+    lastReviewedAt?: string;
+    lastReviewedBy?: string;
+    changedCount?: number;
+    pendingFieldCount?: number;
+    requiredFieldsOk?: boolean;
+    passwordDefined?: boolean;
+    companyDefined?: boolean;
+  } | null;
 };
 
 type ComposeAccessRequestInput = {
@@ -130,6 +146,22 @@ type ComposeAccessRequestInput = {
   adjustmentHistory?: AccessRequestAdjustmentRound[];
   lastAdjustmentAt?: string | null;
   lastAdjustmentDiff?: AccessRequestAdjustmentEntry[];
+  visualProfile?: {
+    avatarKind?: "emoji" | "gif" | "default";
+    avatarValue?: string;
+    avatarLabel?: string;
+  } | null;
+  reviewSummary?: {
+    internalNotes?: string;
+    visualStatus?: string;
+    lastReviewedAt?: string;
+    lastReviewedBy?: string;
+    changedCount?: number;
+    pendingFieldCount?: number;
+    requiredFieldsOk?: boolean;
+    passwordDefined?: boolean;
+    companyDefined?: boolean;
+  } | null;
 };
 
 function normalizeCompanyProfile(input?: Partial<AccessRequestCompanyProfile> | null): AccessRequestCompanyProfile | null {
@@ -298,6 +330,8 @@ function buildAccessRequestPayload(input: ComposeAccessRequestInput) {
     adjustmentHistory: normalizeAdjustmentHistory(input.adjustmentHistory),
     lastAdjustmentAt: input.lastAdjustmentAt ?? null,
     lastAdjustmentDiff: Array.isArray(input.lastAdjustmentDiff) ? input.lastAdjustmentDiff : [],
+    visualProfile: input.visualProfile ?? null,
+    reviewSummary: input.reviewSummary ?? null,
   };
 }
 
@@ -462,6 +496,14 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
               })
               .filter((entry) => entry.label)
           : [],
+        visualProfile:
+          typeof json.visualProfile === "object" && json.visualProfile !== null
+            ? (json.visualProfile as ParsedAccessRequest["visualProfile"])
+            : null,
+        reviewSummary:
+          typeof json.reviewSummary === "object" && json.reviewSummary !== null
+            ? (json.reviewSummary as ParsedAccessRequest["reviewSummary"])
+            : null,
       };
     } catch {
       // fallthrough
@@ -543,7 +585,10 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
     adjustmentHistory: [],
     lastAdjustmentAt: null,
     lastAdjustmentDiff: [],
+    visualProfile: null,
+    reviewSummary: null,
   };
 }
 
 export { toRequestProfileTypeLabel };
+

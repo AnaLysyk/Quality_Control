@@ -69,6 +69,22 @@ type AccessRequestItem = {
   adminNotes: string | null;
   requestKind: "access_request" | "password_reset";
   linkedRequestId: string | null;
+  visualProfile?: {
+    avatarKind?: "emoji" | "gif" | "default";
+    avatarValue?: string;
+    avatarLabel?: string;
+  } | null;
+  reviewSummary?: {
+    internalNotes?: string;
+    visualStatus?: string;
+    lastReviewedAt?: string;
+    lastReviewedBy?: string;
+    changedCount?: number;
+    pendingFieldCount?: number;
+    requiredFieldsOk?: boolean;
+    passwordDefined?: boolean;
+    companyDefined?: boolean;
+  } | null;
 };
 
 type UserLoginCandidate = {
@@ -162,6 +178,8 @@ function parseFromMessage(message: string, fallbackEmail: string): Partial<Acces
     adjustmentHistory: parsed.adjustmentHistory,
     lastAdjustmentAt: parsed.lastAdjustmentAt,
     lastAdjustmentDiff: parsed.lastAdjustmentDiff,
+    visualProfile: parsed.visualProfile ?? null,
+    reviewSummary: parsed.reviewSummary ?? null,
   };
 }
 
@@ -603,6 +621,8 @@ function mapAccessRequestItem(r: RawSupportRequest): AccessRequestItem {
     adminNotes: (r.admin_notes as string | null) ?? null,
     requestKind: parsedMsg.requestKind ?? "access_request",
     linkedRequestId: parsedMsg.linkedRequestId ?? null,
+    visualProfile: parsedMsg.visualProfile ?? null,
+    reviewSummary: parsedMsg.reviewSummary ?? null,
   };
 }
 
@@ -2097,4 +2117,5 @@ export default function AccessRequestsPageWithGuard() {
     </RequireAccessRequestReviewer>
   );
 }
+
 

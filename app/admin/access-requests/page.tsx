@@ -264,6 +264,83 @@ function getStatusTone(status: string) {
   return "bg-sky-50 text-sky-700 border-sky-200";
 }
 
+function normalizeComparisonText(value: unknown, fallback = "Não informado") {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+function buildAccessRequestComparisonRows(input: {
+  selected: AccessRequestItem;
+  selectedOriginal: AccessRequestSnapshot | null;
+  draft: Partial<AccessRequestItem>;
+}) {
+  const { selected, selectedOriginal, draft } = input;
+  const original = selectedOriginal ?? selected.originalRequest ?? null;
+
+  return [
+    {
+      label: "Perfil",
+      original: original ? toRequestProfileTypeLabel(original.profileType) : selected.accessType,
+      current: draft.accessType ?? selected.accessType,
+    },
+    {
+      label: "Empresa",
+      original: original?.company || selected.company,
+      current: draft.company ?? selected.company,
+    },
+    {
+      label: "Usuário",
+      original: original?.username || selected.username || "",
+      current: draft.username ?? selected.username ?? "",
+    },
+    {
+      label: "Nome completo",
+      original: original?.fullName || original?.name || selected.fullName || selected.name,
+      current: draft.fullName ?? selected.fullName ?? selected.name,
+    },
+    {
+      label: "E-mail",
+      original: original?.email || selected.email,
+      current: draft.email ?? selected.email,
+    },
+    {
+      label: "Telefone",
+      original: original?.phone || selected.phone,
+      current: draft.phone ?? selected.phone,
+    },
+    {
+      label: "Cargo",
+      original: original?.jobRole || selected.jobRole,
+      current: draft.jobRole ?? selected.jobRole,
+    },
+    {
+      label: "Título",
+      original: original?.title || selected.title,
+      current: draft.title ?? selected.title,
+    },
+    {
+      label: "Descrição",
+      original: original?.description || selected.description,
+      current: draft.description ?? selected.description,
+    },
+    {
+      label: "Observações",
+      original: original?.notes || selected.notes,
+      current: draft.adminNotes ?? selected.adminNotes ?? "",
+    },
+  ].map((row) => {
+    const originalText = normalizeComparisonText(row.original);
+    const currentText = normalizeComparisonText(row.current);
+
+    return {
+      ...row,
+      originalText,
+      currentText,
+      changed: originalText !== currentText,
+    };
+  });
+}
+
 function adjustmentFieldLabel(field: AccessRequestAdjustmentEntry["field"], fallback: string) {
   if (field === "profileType") return "Perfil";
   if (field === "company") return "Empresa";
@@ -1311,11 +1388,92 @@ function AccessRequestsPage() {
                   </div>
                 ) : null}
 
+                <section className={`${sectionCard} overflow-hidden`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Comparativo da solicitação</p>
+                      <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">Original x versão atual</h3>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary)">
+                        Compare o que foi enviado no primeiro pedido com a versão atual da triagem. Campos alterados aparecem destacados.
+                      </p>
+                    </div>
+
+                    <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-black text-(--tc-text-muted)">
+                      {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).filter((row) => row.changed).length} alteração(ões)
+                    </span>
+                  </div>
+
+                  <div className="mt-5 overflow-hidden rounded-[24px] border border-(--tc-border) bg-(--tc-surface)">
+                    <div className="hidden border-b border-(--tc-border) bg-(--tc-surface-2) px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted) md:grid md:grid-cols-[150px_minmax(0,1fr)_minmax(0,1fr)_110px]">
+                      <div>Campo</div>
+                      <div>Original enviado</div>
+                      <div>Versão atual</div>
+                      <div className="text-right">Status</div>
+                    </div>
+
+                    <div className="divide-y divide-(--tc-border)">
+                      {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).map((row) => (
+                        <div
+                          key={`comparison-${row.label}`}
+                          className={`grid grid-cols-1 gap-3 px-4 py-4 text-sm md:grid-cols-[150px_minmax(0,1fr)_minmax(0,1fr)_110px] md:items-start ${
+                            row.changed ? "bg-amber-50/70" : "bg-white"
+                          }`}
+                        >
+                          <div>
+                            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted)">Campo</p>
+                            <p className="mt-1 font-black text-(--tc-text-primary)">{row.label}</p>
+                          </div>
+
+                          <div className="min-w-0 rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-3 py-2.5">
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--tc-text-muted) md:hidden">Original</p>
+                            <p className="mt-1 whitespace-pre-wrap break-words font-semibold leading-6 text-(--tc-text-primary) md:mt-0">
+                              {row.originalText}
+                            </p>
+                          </div>
+
+                          <div className={`min-w-0 rounded-2xl border px-3 py-2.5 ${
+                            row.changed
+                              ? "border-amber-200 bg-white text-amber-950"
+                              : "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-primary)"
+                          }`}>
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--tc-text-muted) md:hidden">Atual</p>
+                            <p className="mt-1 whitespace-pre-wrap break-words font-semibold leading-6 md:mt-0">
+                              {row.currentText}
+                            </p>
+                          </div>
+
+                          <div className="flex justify-start md:justify-end">
+                            <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${
+                              row.changed
+                                ? "border-amber-200 bg-amber-100 text-amber-800"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            }`}>
+                              {row.changed ? "Alterado" : "Igual"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                <div className="rounded-3xl border border-(--tc-border) bg-(--tc-surface) p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Dados detalhados</p>
+                      <h3 className="mt-1 text-lg font-black tracking-tight text-(--tc-text-primary)">Consulta completa e edição administrativa</h3>
+                      <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
+                        Abaixo ficam a base original completa e os campos editáveis usados na aprovação.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid gap-5 xl:grid-cols-2">
                   <section className={`${sectionMuted} flex h-full min-w-0 flex-col`}>
                     <div className="space-y-2">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Solicitação original</p>
-                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Dados recebidos no primeiro envio</h3>
+                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Base original completa</h3>
                       <p className="text-sm text-(--tc-text-secondary)">
                         Campos somente leitura com o conteúdo recebido no envio inicial da solicitação.
                       </p>
@@ -1444,7 +1602,7 @@ function AccessRequestsPage() {
                   <section className={`${sectionCard} flex h-full min-w-0 flex-col`}>
                     <div className="space-y-2">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Retorno / triagem atual</p>
-                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Dados em análise para aprovação</h3>
+                      <h3 className="text-lg font-semibold text-(--tc-text-primary)">Edição administrativa</h3>
                       <p className="text-sm text-(--tc-text-secondary)">
                         Revise a versão atual, aplique ajustes administrativos e acompanhe o retorno enviado pelo solicitante.
                       </p>

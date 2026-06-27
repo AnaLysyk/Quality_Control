@@ -238,6 +238,32 @@ function textOrFallback(value: string | null | undefined, fallback = "Não infor
   return value && value.trim() ? value : fallback;
 }
 
+function getPersonInitials(value: string | null | undefined) {
+  const cleaned = (value ?? "").trim();
+  if (!cleaned) return "QC";
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : parts[0]?.[1] ?? "";
+  return `${first}${last}`.toUpperCase();
+}
+
+function getPersonDisplayName(item: Pick<AccessRequestItem, "fullName" | "name" | "email">) {
+  return item.fullName || item.name || item.email || "(sem nome)";
+}
+
+function getRequestPersonaSubtitle(item: Pick<AccessRequestItem, "accessType" | "company" | "jobRole">) {
+  return [item.accessType, item.company || "Sem empresa", item.jobRole || "Cargo não informado"]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function getStatusTone(status: string) {
+  if (status === "closed") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (status === "rejected") return "bg-rose-50 text-rose-700 border-rose-200";
+  if (status === "in_progress") return "bg-amber-50 text-amber-800 border-amber-200";
+  return "bg-sky-50 text-sky-700 border-sky-200";
+}
+
 function adjustmentFieldLabel(field: AccessRequestAdjustmentEntry["field"], fallback: string) {
   if (field === "profileType") return "Perfil";
   if (field === "company") return "Empresa";
@@ -972,15 +998,47 @@ function AccessRequestsPage() {
           </div>
         </section>
 
-        {error ? (
-          <div className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-800 shadow-[0_14px_28px_rgba(225,29,72,0.08)]">
-            {error}
-          </div>
-        ) : null}
+        {(error || successMessage) ? (
+          <div className="fixed right-4 top-4 z-[80] flex w-[min(420px,calc(100vw-2rem))] flex-col gap-3">
+            {error ? (
+              <div className="animate-in fade-in slide-in-from-top-2 rounded-3xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 shadow-[0_22px_50px_rgba(15,23,42,0.18)]">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-base">!</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black text-rose-900">Atenção</p>
+                    <p className="mt-1 leading-6">{error}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setError(null)}
+                    aria-label="Fechar aviso de erro"
+                    className="rounded-full border border-rose-100 bg-rose-50 px-2 py-1 text-xs font-black text-rose-700 transition hover:bg-rose-100"
+                  >
+                    X
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
-        {successMessage ? (
-          <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 shadow-[0_14px_28px_rgba(5,150,105,0.08)]">
-            {successMessage}
+            {successMessage ? (
+              <div className="animate-in fade-in slide-in-from-top-2 rounded-3xl border border-emerald-200 bg-white px-4 py-3 text-sm text-emerald-800 shadow-[0_22px_50px_rgba(15,23,42,0.18)]">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-base">✓</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black text-emerald-900">Tudo certo</p>
+                    <p className="mt-1 leading-6">{successMessage}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSuccessMessage(null)}
+                    aria-label="Fechar aviso de sucesso"
+                    className="rounded-full border border-emerald-100 bg-emerald-50 px-2 py-1 text-xs font-black text-emerald-700 transition hover:bg-emerald-100"
+                  >
+                    X
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -989,7 +1047,7 @@ function AccessRequestsPage() {
             <div className={`border-b border-(--tc-border) p-5 ${styles.asideHeader}`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">{filteredItems.length} em revisão</h2>
+                  <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">Fila de solicitações</h2><p className="mt-1 text-sm text-(--tc-text-muted)">{filteredItems.length} item(ns) no filtro atual</p>
                 </div>
                 <div className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-semibold text-(--tc-text-muted)">
                   {statusCounters.total} total
@@ -1001,7 +1059,7 @@ function AccessRequestsPage() {
               <input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar nome, email ou empresa"
+                placeholder="Buscar por nome, e-mail, empresa, perfil ou cargo"
                 data-testid="access-requests-search-input"
                 className="w-full rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) py-3 pl-10 pr-4 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]"
               />
@@ -1010,8 +1068,8 @@ function AccessRequestsPage() {
             <div className="mt-4 flex flex-wrap gap-2">
               {[
                 { value: "all", label: "Todas" },
-                { value: "open", label: "Abertas" },
-                { value: "in_progress", label: "Ajuste" },
+                { value: "open", label: "Novas" },
+                { value: "in_progress", label: "Aguardando ajuste" },
                 { value: "closed", label: "Aprovadas" },
                 { value: "rejected", label: "Recusadas" },
               ].map((filter) => {
@@ -1044,61 +1102,68 @@ function AccessRequestsPage() {
               ) : (
                 filteredItems.map((it) => {
                   const selectedRow = selectedId === it.id;
+                  const displayName = getPersonDisplayName(it);
+                  const initials = getPersonInitials(displayName);
+                  const subtitle = getRequestPersonaSubtitle(it);
+
                   return (
-                    <div
+                    <article
                       key={it.id}
                       data-testid="access-request-row"
-                      className={`rounded-[26px] border p-4 sm:p-5 transition focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.22)] ${
+                      className={`group rounded-[26px] border p-3.5 transition focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.22)] ${
                         selectedRow
                           ? `border-transparent text-white shadow-[0_20px_44px_rgba(1,24,72,0.18)] ${styles.rowSelected}`
                           : "border-(--tc-border) bg-(--tc-surface) shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-[rgba(1,24,72,0.14)] hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]"
                       }`}
                     >
                       <button type="button" onClick={() => setSelectedId(it.id)} className="w-full text-left">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className={`truncate text-base font-semibold ${selectedRow ? "text-white" : "text-(--tc-text-primary)"}`}>
-                              {it.fullName || it.name || "(sem nome)"}
-                            </p>
-                            <p className={`mt-1 truncate text-sm font-medium ${selectedRow ? "text-white/78" : "text-(--tc-text-secondary)"}`}>{it.email}</p>
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-black shadow-[0_12px_26px_rgba(15,23,42,0.12)] ${
+                              selectedRow
+                                ? "border border-white/20 bg-white/15 text-white"
+                                : "border border-(--tc-border) bg-[linear-gradient(135deg,var(--tc-primary)_0%,rgba(239,0,1,0.82)_160%)] text-white"
+                            }`}
+                          >
+                            {initials}
                           </div>
-                        </div>
 
-                        <div className={`mt-4 grid gap-3 text-sm ${selectedRow ? "text-white/88" : "text-(--tc-text-secondary)"}`}>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${statusBadgeClass(it.status)}`}>
-                              {statusLabel(it.status)}
-                            </span>
-                            <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${accessTypeBadgeClass(it.accessType)}`}>
-                              {it.accessType}
-                            </span>
-                          </div>
-                          <div className="grid gap-2 sm:grid-cols-2">
-                            <div>
-                              <p className={`wrap-break-word pr-1 font-medium leading-5 ${selectedRow ? "text-white" : "text-(--tc-text-primary)"}`}>{it.company || "Sem empresa"}</p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex min-w-0 items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className={`truncate text-base font-black leading-5 ${selectedRow ? "text-white" : "text-(--tc-text-primary)"}`}>
+                                  {displayName}
+                                </p>
+                                <p className={`mt-1 truncate text-xs font-semibold ${selectedRow ? "text-white/78" : "text-(--tc-text-secondary)"}`}>
+                                  {it.email}
+                                </p>
+                              </div>
+
+                              <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
+                                selectedRow ? "border-white/20 bg-white/15 text-white" : getStatusTone(it.status)
+                              }`}>
+                                {statusLabel(it.status)}
+                              </span>
                             </div>
-                            <div>
-                              <p className={`wrap-break-word pr-1 font-medium leading-5 ${selectedRow ? "text-white/74" : "text-(--tc-text-secondary)"}`}>{it.jobRole || "Cargo não informado"}</p>
+
+                            <p className={`mt-3 line-clamp-2 text-xs font-semibold leading-5 ${selectedRow ? "text-white/82" : "text-(--tc-text-muted)"}`}>
+                              {subtitle}
+                            </p>
+
+                            <div className={`mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3 ${selectedRow ? "border-white/12" : "border-(--tc-border)"}`}>
+                              <span className={`text-[11px] font-semibold ${selectedRow ? "text-white/72" : "text-(--tc-text-muted)"}`}>
+                                {formatDateTime(it.createdAt)}
+                              </span>
+                              <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${
+                                selectedRow ? "border-white/20 bg-white/10 text-white" : accessTypeBadgeClass(it.accessType)
+                              }`}>
+                                {it.accessType}
+                              </span>
                             </div>
                           </div>
                         </div>
                       </button>
-
-                      <div className={`mt-4 flex items-center justify-between gap-3 border-t pt-3 ${selectedRow ? "border-white/12" : "border-(--tc-border)"}`}>
-                        <span className={`text-xs font-medium ${selectedRow ? "text-white/72" : "text-(--tc-text-muted)"}`}>{formatDateTime(it.createdAt)}</span>
-                        <button
-                          type="button"
-                          className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
-                            selectedRow
-                              ? "border-white/15 bg-white/10 text-white hover:bg-white/16"
-                              : "border-(--tc-border) bg-(--tc-surface) text-(--tc-primary) hover:border-(--tc-accent) hover:text-(--tc-accent)"
-                          }`}
-                          onClick={() => copy(it.email)}
-                        >
-                          Copiar
-                        </button>
-                      </div>
-                    </div>
+                    </article>
                   );
                 })
               )}
@@ -1114,11 +1179,11 @@ function AccessRequestsPage() {
                   </div>
                   <div className="mt-5 space-y-2">
                     <h3 className="text-[1.6rem] font-black tracking-[-0.04em] text-(--tc-text-primary)">
-                      Selecione uma solicitação
+                      Selecione uma pessoa para analisar
                     </h3>
                     <p className="max-w-2xl text-sm leading-7 text-(--tc-text-muted)">
-                      Escolha um item na coluna da esquerda para abrir a triagem, comparar os dados enviados,
-                      revisar ajustes e decidir a aprovação com contexto completo.
+                      Escolha uma solicitação na fila para abrir o perfil em análise, comparar os dados enviados,
+                      revisar ajustes e concluir a decisão com contexto completo.
                     </p>
                   </div>
 
@@ -1144,47 +1209,55 @@ function AccessRequestsPage() {
             ) : (
               <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-3 [scrollbar-width:none] sm:p-4 xl:p-5 2xl:p-6 [&::-webkit-scrollbar]:hidden">
                 <div
-                  className={`relative overflow-hidden rounded-[26px] border border-(--tc-border) p-4 text-white shadow-[0_24px_56px_rgba(1,24,72,0.18)] sm:rounded-[28px] sm:p-5 ${styles.detailCard}`}
+                  className={`relative overflow-hidden rounded-[30px] border border-(--tc-border) p-4 text-white shadow-[0_24px_56px_rgba(1,24,72,0.18)] sm:p-5 ${styles.detailCard}`}
                 >
                   <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
                   <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
 
-                  <div className="relative grid gap-4 2xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.95fr)] 2xl:items-start">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${statusBadgeClass(selected.status)}`}>
-                          {statusLabel(selected.status)}
-                        </span>
-                        <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${accessTypeBadgeClass(selected.accessType)}`}>
-                          {selected.accessType}
-                        </span>
+                  <div className="relative z-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)] lg:items-stretch">
+                    <div className="flex min-w-0 gap-4">
+                      <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-[28px] border border-white/20 bg-white/15 text-2xl font-black text-white shadow-[0_18px_38px_rgba(15,23,42,0.2)]">
+                        {getPersonInitials(selected.fullName || selected.name || selected.email)}
                       </div>
-                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/74">Solicitação selecionada</p>
-                      <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">
-                        {selected.fullName || selected.name || "(sem nome)"}
-                      </h2>
-                      <p className="mt-2 text-base font-medium text-white/82">{selected.email}</p>
-                      <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80">
-                        Revise o que o solicitante enviou, confirme o perfil final e conclua a aprovação sem perder o histórico da conversa.
-                      </p>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${statusBadgeClass(selected.status)}`}>
+                            {statusLabel(selected.status)}
+                          </span>
+                          <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${accessTypeBadgeClass(selected.accessType)}`}>
+                            {selected.accessType}
+                          </span>
+                        </div>
+
+                        <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/74">Perfil em análise</p>
+                        <h2 className="mt-2 break-words text-3xl font-black tracking-tight text-white">
+                          {selected.fullName || selected.name || "(sem nome)"}
+                        </h2>
+
+                        <div className="mt-3 grid gap-2 text-sm font-semibold text-white/84 sm:grid-cols-2">
+                          <p className="truncate">{selected.email}</p>
+                          <p className="truncate">{selected.phone || "Telefone não informado"}</p>
+                        </div>
+
+                        <p className="mt-4 max-w-3xl text-sm leading-6 text-white/80">
+                          Esta solicitação vai virar um cadastro de usuário. Revise os dados como um perfil real antes de aprovar, recusar ou devolver para ajuste.
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                       <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/74">Empresa pedida</p>
-                        <p className="mt-2 text-base font-semibold text-white">{selected.company || "Sem empresa definida"}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Empresa solicitada</p>
+                        <p className="mt-2 truncate text-base font-black text-white">{selected.company || "Sem empresa definida"}</p>
                       </div>
                       <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/74">Recebida em</p>
-                        <p className="mt-2 text-base font-semibold text-white">{formatDateTime(selected.createdAt)}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Usuário gerado</p>
+                        <p className="mt-2 truncate text-base font-black text-white">{draft.username || "A definir"}</p>
                       </div>
-                      <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/74">Usuário sugerido</p>
-                        <p className="mt-2 text-base font-semibold text-white">{draft.username || "A definir"}</p>
-                      </div>
-                      <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/74">Última interação</p>
-                        <p className="mt-2 text-base font-semibold text-white">{comments.length > 0 ? formatDateTime(comments[comments.length - 1]!.createdAt) : "Sem histórico"}</p>
+                      <div className="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Recebida em</p>
+                        <p className="mt-2 text-base font-black text-white">{formatDateTime(selected.createdAt)}</p>
                       </div>
                     </div>
                   </div>

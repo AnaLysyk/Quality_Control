@@ -21,8 +21,8 @@ export function ConversationPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Conversa com o solicitante</p>
-          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950">Linha do tempo e mensagens</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Histórico de retorno do solicitante. A decisão fica separada.</p>
+          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950">Mensagem para ajuste ou decisão</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Use este campo para orientar o solicitante. A mensagem acompanha solicitar ajuste ou recusar.</p>
         </div>
         {loading ? <span className="text-sm font-medium text-slate-500">Carregando...</span> : null}
       </div>
@@ -34,7 +34,7 @@ export function ConversationPanel({
       <div className="mt-5 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
         <div className="max-h-64 space-y-3 overflow-y-auto pr-1">
           {comments.length === 0 ? (
-            <p className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Nenhuma interação registrada ainda.</p>
+            <p className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Nenhuma interação registrada ainda. Escreva abaixo se precisar devolver para ajuste.</p>
           ) : (
             comments.map((comment) => {
               const mine = comment.authorRole === "leader_tc";
@@ -61,7 +61,7 @@ export function ConversationPanel({
           <textarea
             className="mt-4 w-full resize-none rounded-[20px] border border-slate-200 bg-white px-4 py-3 text-sm font-medium leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-[var(--tc-accent)] focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
             rows={3}
-            placeholder="Mensagem para o solicitante ou observação da conversa"
+            placeholder="Escreva o que o solicitante precisa corrigir ou o motivo da decisão..."
             value={value}
             onChange={(event) => onChange(event.target.value)}
           />

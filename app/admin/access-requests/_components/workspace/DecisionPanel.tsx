@@ -84,8 +84,8 @@ export function DecisionPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Decisão da solicitação</p>
-          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950">Concluir análise do perfil</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Aprove, solicite ajuste ou recuse com motivo/comentário.</p>
+          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950">Concluir ou devolver</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Depois de revisar alterações, mensagem e campos, escolha a ação final.</p>
         </div>
 
         <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${acceptDisabled ? "border-amber-200 bg-amber-50 text-amber-800" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
@@ -103,6 +103,10 @@ export function DecisionPanel({
             Empresa obrigatória
           </span>
         ) : null}
+      </div>
+
+      <div className="mt-4 rounded-[18px] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
+        Para solicitar ajuste, selecione ao menos um campo para correção e escreva a mensagem ao solicitante. Para recusar, escolha um motivo ou escreva uma mensagem.
       </div>
 
       <div className="mt-5 grid w-full gap-3 lg:grid-cols-[minmax(220px,0.7fr)_auto_auto_auto] lg:items-center">

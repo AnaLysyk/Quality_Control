@@ -18,8 +18,8 @@ export function AdjustmentFieldsPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Campos para correção</p>
-          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950">Liberar ajuste ao solicitante</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Marque os campos que poderão ser corrigidos.</p>
+          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950">O que o solicitante pode alterar</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Marque os campos liberados. O botão Solicitar ajuste usa esta seleção e a mensagem ao lado.</p>
         </div>
 
         <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600">

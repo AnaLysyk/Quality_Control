@@ -3,10 +3,8 @@ import type {
   AccessRequestCommentView,
   AccessRequestComparisonRow,
   AccessRequestProfilePreview,
-  AdjustmentFieldOptionView,
   AvatarChoice,
 } from "../../_types/accessRequests.types";
-import { AdjustmentFieldsPanel } from "./AdjustmentFieldsPanel";
 import { ChangesShowcase } from "./ChangesShowcase";
 import { ConversationPanel } from "./ConversationPanel";
 import { DecisionPanel } from "./DecisionPanel";
@@ -49,9 +47,8 @@ type AccessRequestProfileWorkspaceProps = {
 
   internalNotesDraft: string;
   onInternalNotesChange: (value: string) => void;
-  onSaveInternalNotes: () => void;
+  onSaveInternalNotes: (value: string) => void;
 
-  adjustmentFieldOptions: AdjustmentFieldOptionView[];
   adjustmentFieldsDraft: string[];
   adjustmentFieldComments: Record<string, string>;
   onToggleAdjustmentField: (field: string) => void;
@@ -91,7 +88,6 @@ export function AccessRequestProfileWorkspace({
   internalNotesDraft,
   onInternalNotesChange,
   onSaveInternalNotes,
-  adjustmentFieldOptions,
   adjustmentFieldsDraft,
   adjustmentFieldComments,
   onToggleAdjustmentField,
@@ -149,7 +145,14 @@ export function AccessRequestProfileWorkspace({
       />
 
       <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.42fr)]">
-        <ChangesShowcase rows={comparisonRows} />
+        <ChangesShowcase
+          rows={comparisonRows}
+          selectedFields={adjustmentFieldsDraft}
+          fieldComments={adjustmentFieldComments}
+          readOnly={readOnly || commentsLocked}
+          onToggleField={onToggleAdjustmentField}
+          onFieldCommentChange={onAdjustmentFieldCommentChange}
+        />
         <NotesPanel
           value={internalNotesDraft}
           locked={readOnly || commentsLocked}
@@ -175,25 +178,16 @@ export function AccessRequestProfileWorkspace({
         </div>
 
         <div className="mt-5 grid gap-4">
-          <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.86fr)]">
+          <div className="grid items-start gap-4">
             <ConversationPanel
               comments={comments}
               loading={commentLoading}
               error={commentError}
               locked={readOnly || commentsLocked}
               value={commentDraft}
+              selectedFieldCount={adjustmentFieldsDraft.length}
               onChange={onCommentDraftChange}
             />
-
-            {!readOnly && !commentsLocked ? (
-              <AdjustmentFieldsPanel
-                options={adjustmentFieldOptions}
-                selectedFields={adjustmentFieldsDraft}
-                comments={adjustmentFieldComments}
-                onToggle={onToggleAdjustmentField}
-                onCommentChange={onAdjustmentFieldCommentChange}
-              />
-            ) : null}
           </div>
 
           <DecisionPanel

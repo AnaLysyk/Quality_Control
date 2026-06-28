@@ -39,6 +39,7 @@ export type AccessRequestProfilePreview = {
 };
 
 export type AccessRequestComparisonRow = {
+  field: string;
   label: string;
   originalText: string;
   currentText: string;

@@ -298,54 +298,70 @@ function buildAccessRequestComparisonRows(input: {
 
   return [
     {
+      field: "profileType",
       label: "Perfil",
       original: original ? toRequestProfileTypeLabel(original.profileType) : selected.accessType,
       current: draft.accessType ?? selected.accessType,
     },
     {
+      field: "company",
       label: "Empresa",
       original: original?.company || selected.company,
       current: draft.company ?? selected.company,
     },
     {
+      field: "username",
       label: "Usuário",
       original: original?.username || selected.username || "",
       current: draft.username ?? selected.username ?? "",
     },
     {
+      field: "fullName",
       label: "Nome completo",
       original: original?.fullName || original?.name || selected.fullName || selected.name,
       current: draft.fullName ?? selected.fullName ?? selected.name,
     },
     {
+      field: "email",
       label: "E-mail",
       original: original?.email || selected.email,
       current: draft.email ?? selected.email,
     },
     {
+      field: "phone",
       label: "Telefone",
       original: original?.phone || selected.phone,
       current: draft.phone ?? selected.phone,
     },
     {
+      field: "jobRole",
       label: "Cargo",
       original: original?.jobRole || selected.jobRole,
       current: draft.jobRole ?? selected.jobRole,
     },
     {
+      field: "title",
       label: "Título",
       original: original?.title || selected.title,
       current: draft.title ?? selected.title,
     },
     {
+      field: "description",
       label: "Descrição",
       original: original?.description || selected.description,
       current: draft.description ?? selected.description,
     },
     {
+      field: "notes",
       label: "Observações",
       original: original?.notes || selected.notes,
       current: draft.adminNotes ?? selected.adminNotes ?? "",
+    },
+    {
+      field: "password",
+      label: "Senha",
+      original: selected.passwordProvided ? "Informada" : "Pendente",
+      current: selected.passwordProvided ? "Informada" : "Pendente",
     },
   ].map((row) => {
     const originalText = normalizeComparisonText(row.original);
@@ -1305,16 +1321,22 @@ function AccessRequestsPage() {
                 onCommentDraftChange={setCommentDraft}
                 internalNotesDraft={internalNotesDraft}
                 onInternalNotesChange={setInternalNotesDraft}
-                onSaveInternalNotes={() => void persistVisualReview({ internalNotes: internalNotesDraft })}
-                adjustmentFieldOptions={adjustmentFieldOptions}
+                onSaveInternalNotes={(value) => void persistVisualReview({ internalNotes: value })}
                 adjustmentFieldsDraft={adjustmentFieldsDraft}
                 adjustmentFieldComments={adjustmentFieldComments}
                 onToggleAdjustmentField={(field) =>
-                  setAdjustmentFieldsDraft((current) =>
-                    current.includes(field as AccessRequestAdjustmentField)
-                      ? current.filter((item) => item !== field)
-                      : [...current, field as AccessRequestAdjustmentField],
-                  )
+                  setAdjustmentFieldsDraft((current) => {
+                    const typedField = field as AccessRequestAdjustmentField;
+                    if (current.includes(typedField)) {
+                      setAdjustmentFieldComments((comments) => {
+                        const next = { ...comments };
+                        delete next[field];
+                        return next;
+                      });
+                      return current.filter((item) => item !== typedField);
+                    }
+                    return [...current, typedField];
+                  })
                 }
                 onAdjustmentFieldCommentChange={(field, value) =>
                   setAdjustmentFieldComments((current) => ({
@@ -1344,4 +1366,3 @@ export default function AccessRequestsPageWithGuard() {
     </RequireAccessRequestReviewer>
   );
 }
-

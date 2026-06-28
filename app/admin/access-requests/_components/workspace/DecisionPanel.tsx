@@ -86,7 +86,7 @@ export function DecisionPanel({
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Decisão</p>
           <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Concluir análise</h3>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Escolha a ação depois de revisar origem, alterações e perfil final.
+            Escolha a ação depois de revisar o formulário recebido e marcar os campos que precisam de ajuste.
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export function DecisionPanel({
       </div>
 
       <div className="border-t border-slate-100 px-5 py-3 text-xs font-semibold text-slate-500">
-        Solicitar ajuste exige mensagem ao solicitante e ao menos um campo liberado. Recusar exige motivo ou mensagem.
+        Solicitar ajuste exige ao menos um campo marcado em vermelho no formulário e uma mensagem no chat da solicitação.
       </div>
     </section>
   );

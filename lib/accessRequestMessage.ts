@@ -66,6 +66,7 @@ export type AccessRequestAdjustmentRound = {
   requestedAt: string;
   requestedFields: AccessRequestAdjustmentField[];
   requestMessage: string | null;
+  fieldComments?: Record<string, string>;
   requesterReturnedAt?: string | null;
   requesterDiff?: AccessRequestAdjustmentEntry[];
 };
@@ -231,6 +232,17 @@ function normalizeAdjustmentFields(input: unknown): AccessRequestAdjustmentField
     .filter(Boolean) as AccessRequestAdjustmentField[];
 }
 
+function normalizeFieldComments(input: unknown): Record<string, string> | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const comments = Object.entries(input as Record<string, unknown>).reduce<Record<string, string>>((acc, [field, value]) => {
+    if (typeof value !== "string") return acc;
+    const text = value.trim();
+    if (field && text) acc[field] = text;
+    return acc;
+  }, {});
+  return Object.keys(comments).length > 0 ? comments : undefined;
+}
+
 function normalizeAdjustmentHistory(input: unknown): AccessRequestAdjustmentRound[] {
   if (!Array.isArray(input)) return [];
   return input
@@ -244,6 +256,7 @@ function normalizeAdjustmentHistory(input: unknown): AccessRequestAdjustmentRoun
         requestedAt,
         requestedFields: normalizeAdjustmentFields(record.requestedFields),
         requestMessage: typeof record.requestMessage === "string" ? record.requestMessage : null,
+        fieldComments: normalizeFieldComments(record.fieldComments),
         requesterReturnedAt: typeof record.requesterReturnedAt === "string" ? record.requesterReturnedAt : null,
         requesterDiff: Array.isArray(record.requesterDiff)
           ? record.requesterDiff
@@ -591,4 +604,3 @@ export function parseAccessRequestMessage(message: string, fallbackEmail: string
 }
 
 export { toRequestProfileTypeLabel };
-

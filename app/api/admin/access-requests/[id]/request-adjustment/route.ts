@@ -28,6 +28,21 @@ function isFinalStatus(status: string | null | undefined) {
   return status === "closed" || status === "rejected";
 }
 
+function sanitizeFieldComments(
+  fields: AccessRequestAdjustmentField[],
+  value: unknown,
+): Record<string, string> {
+  if (!value || typeof value !== "object") return {};
+  const source = value as Record<string, unknown>;
+  return fields.reduce<Record<string, string>>((acc, field) => {
+    const comment = source[field];
+    if (typeof comment !== "string") return acc;
+    const trimmed = comment.trim();
+    if (trimmed) acc[field] = trimmed.slice(0, 1000);
+    return acc;
+  }, {});
+}
+
 async function notifyAndAuditAdjustment(input: {
   id: string;
   email: string;
@@ -35,6 +50,7 @@ async function notifyAndAuditAdjustment(input: {
   admin: { id?: string | null; email?: string | null };
   comment: string;
   fields: AccessRequestAdjustmentField[];
+  fieldComments: Record<string, string>;
 }) {
   const parsed = parseAccessRequestMessage(input.message, input.email);
   await notifyAccessRequestAdjustmentRequested({
@@ -60,6 +76,7 @@ async function notifyAndAuditAdjustment(input: {
       event: "adjustment_requested",
       fields: input.fields,
       comment: input.comment,
+      fieldComments: input.fieldComments,
     },
   });
 }
@@ -81,6 +98,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (!fields.length) {
     return NextResponse.json({ error: "Selecione ao menos um campo para ajuste" }, { status: 400 });
   }
+  const fieldComments = sanitizeFieldComments(fields, body?.fieldComments);
 
   const { id } = await context.params;
 
@@ -103,7 +121,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       {
         comment,
         adjustmentFields: fields,
-        fieldComments: body?.fieldComments,
+        fieldComments,
       },
     );
     if (result === "adjustment-details-required") {
@@ -140,6 +158,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       requestedAt: new Date().toISOString(),
       requestedFields: fields,
       requestMessage: comment,
+      fieldComments,
       requesterReturnedAt: null,
       requesterDiff: [],
     };
@@ -183,6 +202,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       admin,
       comment,
       fields,
+      fieldComments,
     });
 
     return NextResponse.json({
@@ -213,6 +233,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       requestedAt: new Date().toISOString(),
       requestedFields: fields,
       requestMessage: comment,
+      fieldComments,
       requesterReturnedAt: null,
       requesterDiff: [],
     };
@@ -260,6 +281,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       admin,
       comment,
       fields,
+      fieldComments,
     });
 
     return NextResponse.json({
@@ -289,6 +311,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       requestedAt: new Date().toISOString(),
       requestedFields: fields,
       requestMessage: comment,
+      fieldComments,
       requesterReturnedAt: null,
       requesterDiff: [],
     };
@@ -332,6 +355,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       admin,
       comment,
       fields,
+      fieldComments,
     });
 
     return NextResponse.json({

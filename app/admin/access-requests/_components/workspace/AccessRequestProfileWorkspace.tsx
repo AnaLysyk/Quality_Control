@@ -43,7 +43,9 @@ type AccessRequestProfileWorkspaceProps = {
   commentLoading: boolean;
   commentError: string | null;
   commentDraft: string;
+  sendingComment: boolean;
   onCommentDraftChange: (value: string) => void;
+  onSendComment: () => void;
 
   internalNotesDraft: string;
   onInternalNotesChange: (value: string) => void;
@@ -84,7 +86,9 @@ export function AccessRequestProfileWorkspace({
   commentLoading,
   commentError,
   commentDraft,
+  sendingComment,
   onCommentDraftChange,
+  onSendComment,
   internalNotesDraft,
   onInternalNotesChange,
   onSaveInternalNotes,
@@ -113,6 +117,18 @@ export function AccessRequestProfileWorkspace({
   const changedCount = useMemo(
     () => comparisonRows.filter((row) => row.changed).length,
     [comparisonRows],
+  );
+  const hasAdjustmentComment = useMemo(
+    () =>
+      adjustmentFieldsDraft.some((field) => (adjustmentFieldComments[field] ?? "").trim().length > 0) ||
+      commentDraft.trim().length > 0,
+    [adjustmentFieldComments, adjustmentFieldsDraft, commentDraft],
+  );
+  const hasAdjustmentFieldsWithoutNotes = useMemo(
+    () =>
+      adjustmentFieldsDraft.some((field) => (adjustmentFieldComments[field] ?? "").trim().length === 0) &&
+      commentDraft.trim().length === 0,
+    [adjustmentFieldComments, adjustmentFieldsDraft, commentDraft],
   );
 
   return (
@@ -150,6 +166,7 @@ export function AccessRequestProfileWorkspace({
           selectedFields={adjustmentFieldsDraft}
           fieldComments={adjustmentFieldComments}
           readOnly={readOnly || commentsLocked}
+          submittedAt={selected.createdAt}
           onToggleField={onToggleAdjustmentField}
           onFieldCommentChange={onAdjustmentFieldCommentChange}
         />
@@ -166,9 +183,9 @@ export function AccessRequestProfileWorkspace({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Ação com solicitante</p>
-            <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Mensagem, campos para ajuste e decisão</h3>
+            <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Conversa e decisão</h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Tudo que afeta o solicitante fica aqui: orientação, campos liberados e ação final.
+              Use o chat para conversa avulsa. A devolucao de campos ja foi preparada no formulario acima.
             </p>
           </div>
 
@@ -185,8 +202,9 @@ export function AccessRequestProfileWorkspace({
               error={commentError}
               locked={readOnly || commentsLocked}
               value={commentDraft}
-              selectedFieldCount={adjustmentFieldsDraft.length}
+              sending={sendingComment}
               onChange={onCommentDraftChange}
+              onSend={onSendComment}
             />
           </div>
 
@@ -201,6 +219,8 @@ export function AccessRequestProfileWorkspace({
             acceptDisabled={acceptDisabled}
             selectedIsPasswordReset={selectedIsPasswordReset}
             adjustmentFieldCount={adjustmentFieldsDraft.length}
+            adjustmentReady={hasAdjustmentComment}
+            hasAdjustmentFieldsWithoutNotes={hasAdjustmentFieldsWithoutNotes}
             commentDraft={commentDraft}
             rejectionReasonDraft={rejectionReasonDraft}
             rejectionReasons={rejectionReasons}

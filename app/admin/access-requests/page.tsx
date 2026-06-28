@@ -355,7 +355,7 @@ function buildAccessRequestComparisonRows(input: {
       field: "notes",
       label: "Observações",
       original: original?.notes || selected.notes,
-      current: draft.adminNotes ?? selected.adminNotes ?? "",
+      current: draft.notes ?? selected.notes,
     },
     {
       field: "password",
@@ -379,7 +379,17 @@ function buildAccessRequestComparisonRows(input: {
 function adjustmentFieldLabel(field: AccessRequestAdjustmentEntry["field"], fallback: string) {
   if (field === "profileType") return "Perfil";
   if (field === "company") return "Empresa";
+  if (field === "companyName") return "Razao social";
+  if (field === "companyTaxId") return "CNPJ";
+  if (field === "companyZip") return "CEP";
+  if (field === "companyAddress") return "Endereco";
+  if (field === "companyPhone") return "Telefone da empresa";
+  if (field === "companyWebsite") return "Website";
+  if (field === "companyLinkedin") return "LinkedIn";
+  if (field === "companyDescription") return "Descricao da empresa";
+  if (field === "companyNotes") return "Observacoes da empresa";
   if (field === "fullName") return "Nome completo";
+  if (field === "name") return "Nome";
   if (field === "username") return "Usuário";
   if (field === "email") return "E-mail";
   if (field === "phone") return "Telefone";
@@ -390,51 +400,6 @@ function adjustmentFieldLabel(field: AccessRequestAdjustmentEntry["field"], fall
   if (field === "password") return "Senha";
   return fallback || "Campo";
 }
-
-function adjustmentFieldBadgeClass(field: AccessRequestAdjustmentEntry["field"]) {
-  if (field === "profileType" || field === "company") {
-    return "border-sky-200 bg-sky-50 text-sky-700";
-  }
-  if (field === "password") {
-    return "border-violet-200 bg-violet-50 text-violet-700";
-  }
-  if (field === "title" || field === "description" || field === "notes" || field === "jobRole") {
-    return "border-amber-200 bg-amber-50 text-amber-700";
-  }
-  return "border-emerald-200 bg-emerald-50 text-emerald-700";
-}
-
-type AdjustmentFieldOption = {
-  field: AccessRequestAdjustmentField;
-  label: string;
-  hint: string;
-};
-
-const BASE_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
-  { field: "profileType", label: "Perfil", hint: "Perfil ou tipo de acesso" },
-  { field: "company", label: "Empresa", hint: "Empresa vinculada ou selecionada" },
-  { field: "fullName", label: "Nome completo", hint: "Nome principal do solicitante" },
-  { field: "username", label: "Usuário sugerido", hint: "Login/usuário sugerido" },
-  { field: "email", label: "E-mail", hint: "Endereço de e-mail" },
-  { field: "phone", label: "Telefone", hint: "Telefone de contato" },
-  { field: "jobRole", label: "Cargo", hint: "Cargo ou função" },
-  { field: "title", label: "Título", hint: "Título da solicitação" },
-  { field: "description", label: "Descrição", hint: "Descrição detalhada" },
-  { field: "notes", label: "Observações", hint: "Observações complementares" },
-  { field: "password", label: "Senha", hint: "Senha informada na solicitação" },
-];
-
-const COMPANY_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
-  { field: "companyName", label: "Razão social", hint: "Nome da empresa" },
-  { field: "companyTaxId", label: "CNPJ", hint: "Documento principal da empresa" },
-  { field: "companyZip", label: "CEP", hint: "CEP cadastrado" },
-  { field: "companyAddress", label: "Endereço", hint: "Endereço principal" },
-  { field: "companyPhone", label: "Telefone da empresa", hint: "Telefone institucional" },
-  { field: "companyWebsite", label: "Website", hint: "Website oficial" },
-  { field: "companyLinkedin", label: "LinkedIn", hint: "LinkedIn institucional" },
-  { field: "companyDescription", label: "Descrição da empresa", hint: "Descrição institucional" },
-  { field: "companyNotes", label: "Observações da empresa", hint: "Observações da empresa" },
-];
 
 const inputBase =
   "mt-1 w-full rounded-[16px] border border-(--tc-border) bg-(--tc-surface) px-3.5 py-2.5 text-sm font-medium text-(--tc-text-primary) shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:outline-none focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]";
@@ -451,6 +416,20 @@ const sectionMuted =
   "rounded-3xl border border-(--tc-border) bg-(--tc-surface-2) p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
 const PROFILE_EMOJI_OPTIONS = ["👤", "🧑‍💻", "🧪", "🛡️", "🏢", "📊", "🚀", "⭐"] as const;
+const ADJUSTABLE_PROFILE_FIELDS = new Set<AccessRequestAdjustmentField>([
+  "profileType",
+  "company",
+  "fullName",
+  "username",
+  "email",
+  "phone",
+  "jobRole",
+  "password",
+]);
+
+function isAdjustableProfileField(field: AccessRequestAdjustmentField) {
+  return ADJUSTABLE_PROFILE_FIELDS.has(field);
+}
 
 type StatusFilter = "all" | "open" | "in_progress" | "closed" | "rejected";
 type DateFilter = "all" | "today" | "week" | "month";
@@ -550,15 +529,6 @@ function calculateStatusCounters(items: AccessRequestItem[]): StatusCounters {
     },
     { total: 0, open: 0, inReview: 0, inProgress: 0, approved: 0, rejected: 0 },
   );
-}
-
-function getAdjustmentFieldOptions(
-  selected?: AccessRequestItem | null,
-  selectedOriginal?: AccessRequestSnapshot | null,
-) {
-  return selectedOriginal?.companyProfile || selected?.companyProfile
-    ? [...BASE_ADJUSTMENT_FIELD_OPTIONS, ...COMPANY_ADJUSTMENT_FIELD_OPTIONS]
-    : BASE_ADJUSTMENT_FIELD_OPTIONS;
 }
 
 function isAccessRequestDraftDirty(input: {
@@ -743,6 +713,7 @@ function AccessRequestsPage() {
   const [saving, setSaving] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [requestingAdjustment, setRequestingAdjustment] = useState(false);
+  const [sendingComment, setSendingComment] = useState(false);
   const [comments, setComments] = useState<AccessRequestComment[]>([]);
   const [commentDraft, setCommentDraft] = useState("");
   const [rejectionReasonDraft, setRejectionReasonDraft] = useState("");
@@ -757,7 +728,7 @@ function AccessRequestsPage() {
   const [profileAvatarKind, setProfileAvatarKind] = useState<"emoji" | "gif" | "default" | "image">("default");
   const [profileAvatarLabel, setProfileAvatarLabel] = useState("Perfil sem foto");
   const [internalNotesDraft, setInternalNotesDraft] = useState("");
-// Track whether the user has modified the draft form since the last selection change.
+  // Track whether the user has modified the draft form since the last selection change.
   // Prevents React Strict Mode double-invoke of load() from resetting user edits.
   const draftTouchedRef = useRef(false);
 
@@ -773,14 +744,7 @@ function AccessRequestsPage() {
 
   const statusCounters = useMemo(() => calculateStatusCounters(items), [items]);
 
-  const selectedAdjustmentDiff = selected?.lastAdjustmentDiff ?? [];
-  const selectedHasRequesterAdjustment = Boolean(selected?.lastAdjustmentAt && selectedAdjustmentDiff.length > 0);
   const selectedOriginal = selected?.originalRequest ?? null;
-  const latestAdjustmentRound = selected?.adjustmentHistory?.[selected.adjustmentHistory.length - 1] ?? null;
-  const adjustmentFieldOptions = useMemo(
-    () => getAdjustmentFieldOptions(selected, selectedOriginal),
-    [selected, selectedOriginal],
-  );
   const dirty = useMemo(
     () => isAccessRequestDraftDirty({ draft, existingLogins, selected }),
     [draft, existingLogins, selected],
@@ -792,7 +756,13 @@ function AccessRequestsPage() {
   const requiresCompany = requestProfileTypeNeedsCompany(draftProfileType);
   const commentsLocked = selected?.status === "closed" || selected?.status === "rejected";
   const missingRequiredFields = hasMissingRequiredFields(draft, draftIsPasswordReset);
-  const acceptDisabled = !selected || !draft || accepting || missingRequiredFields || (requiresCompany && !draft.clientId);
+  const acceptDisabled =
+    !selected ||
+    !draft ||
+    accepting ||
+    missingRequiredFields ||
+    adjustmentFieldsDraft.length > 0 ||
+    (requiresCompany && !draft.clientId);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -902,7 +872,7 @@ function AccessRequestsPage() {
   }, [selectedId]);
 
   useEffect(() => {
-    setAdjustmentFieldsDraft(selected?.adjustmentRequestedFields ?? []);
+    setAdjustmentFieldsDraft((selected?.adjustmentRequestedFields ?? []).filter(isAdjustableProfileField));
     setAdjustmentFieldComments({});
   }, [selected]);
 
@@ -1021,12 +991,64 @@ function AccessRequestsPage() {
       setSaving(false);
     }
   }
+  async function sendApplicantMessage() {
+    if (!selected || commentsLocked) return;
+    const body = commentDraft.trim();
+    if (!body) {
+      setCommentError("Escreva uma mensagem antes de enviar.");
+      return;
+    }
+
+    setSendingComment(true);
+    setCommentError(null);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const res = await fetchWithToken(`/api/admin/access-requests/${selected.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: body }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setCommentError(json?.error || "Falha ao enviar mensagem.");
+        return;
+      }
+      setCommentDraft("");
+      setSuccessMessage("Mensagem enviada ao solicitante.");
+      await loadComments(selected.id);
+    } finally {
+      setSendingComment(false);
+    }
+  }
+
   async function requestAdjustment() {
     if (!selected) return;
-    const body = commentDraft.trim();
-    if (!body) return;
     if (adjustmentFieldsDraft.length === 0) {
       setCommentError("Selecione pelo menos um campo para devolucao de ajuste.");
+      return;
+    }
+
+    const selectedFieldComments = adjustmentFieldsDraft.reduce<Record<string, string>>((acc, field) => {
+      const value = adjustmentFieldComments[field]?.trim();
+      if (value) acc[field] = value;
+      return acc;
+    }, {});
+    const fieldCommentLines = adjustmentFieldsDraft
+      .map((field) => {
+        const note = selectedFieldComments[field];
+        if (!note) return null;
+        return `${adjustmentFieldLabel(field, "Campo")}: ${note}`;
+      })
+      .filter((line): line is string => Boolean(line));
+    const generalMessage = commentDraft.trim();
+    const fieldsMessage = fieldCommentLines.length
+      ? `Campos para ajuste:\n${fieldCommentLines.map((line) => `- ${line}`).join("\n")}`
+      : "";
+    const body = [generalMessage, fieldsMessage].filter(Boolean).join("\n\n");
+
+    if (!body) {
+      setCommentError("Informe uma observacao em pelo menos um campo marcado ou escreva uma mensagem geral.");
       return;
     }
 
@@ -1041,7 +1063,7 @@ function AccessRequestsPage() {
         body: JSON.stringify({
           comment: body,
           fields: adjustmentFieldsDraft,
-          fieldComments: adjustmentFieldComments,
+          fieldComments: selectedFieldComments,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
@@ -1318,7 +1340,9 @@ function AccessRequestsPage() {
                 commentLoading={commentLoading}
                 commentError={commentError}
                 commentDraft={commentDraft}
+                sendingComment={sendingComment}
                 onCommentDraftChange={setCommentDraft}
+                onSendComment={sendApplicantMessage}
                 internalNotesDraft={internalNotesDraft}
                 onInternalNotesChange={setInternalNotesDraft}
                 onSaveInternalNotes={(value) => void persistVisualReview({ internalNotes: value })}
@@ -1327,6 +1351,7 @@ function AccessRequestsPage() {
                 onToggleAdjustmentField={(field) =>
                   setAdjustmentFieldsDraft((current) => {
                     const typedField = field as AccessRequestAdjustmentField;
+                    if (!isAdjustableProfileField(typedField)) return current;
                     if (current.includes(typedField)) {
                       setAdjustmentFieldComments((comments) => {
                         const next = { ...comments };

@@ -1,0 +1,1246 @@
+﻿"use client";
+
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
+import type { AssistantAction, AssistantConversationTurn, AssistantOpenEventDetail, AssistantPanelMode, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
+import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
+import { fetchApi } from "@/lib/api";
+import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import styles from "./ChatButton.module.css";
+import ConfirmDialog from "./ConfirmDialog";
+import UserAvatar from "./UserAvatar";
+
+type ChatMessage = {
+  id: string;
+  from: "user" | "assistant";
+  text: string;
+  ts: number;
+  tool?: string | null;
+  actions?: AssistantAction[];
+  agentMeta?: {
+    agentMode?: string | null;
+    agentName?: string | null;
+    agentIcon?: string | null;
+    agentColor?: string | null;
+  } | null;
+};
+
+type ConfirmState =
+  | { open: false }
+  | { open: true; kind: "tool"; action: AssistantToolAction; label: string }
+  | { open: true; kind: "clearAll" };
+
+type ChatButtonProps = {
+  defaultOpen?: boolean;
+};
+
+type AgentMode = "qa" | "debug" | "playwright" | "memory";
+
+const ASSISTANT_AGENTS: Array<{ mode: AgentMode; icon: string; name: string }> = [
+  { mode: "qa", icon: "ðŸ”", name: "QA" },
+  { mode: "debug", icon: "ðŸ›", name: "Debug" },
+  { mode: "playwright", icon: "ðŸŽ­", name: "Playwright" },
+  { mode: "memory", icon: "ðŸ§ ", name: "Memory" },
+];
+
+const HISTORY_KEY_PREFIX = "assistant_history_v2";
+const PANEL_MODE_KEY = "assistant_panel_mode_v1";
+const SIDE_PANEL_WIDTH_KEY = "assistant_side_panel_width_v1";
+const DEFAULT_SIDE_PANEL_WIDTH = 460;
+const MIN_SIDE_PANEL_WIDTH = 340;
+const MAX_SIDE_PANEL_WIDTH = 760;
+
+function sanitizePromptList(value: unknown, fallback: string[]) {
+  if (!Array.isArray(value)) return fallback;
+  const next = value
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .slice(0, 8);
+  return next.length > 0 ? next : fallback;
+}
+
+function sanitizeMetadata(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function mergeAssistantContext(base: AssistantScreenContext, incoming?: Partial<AssistantScreenContext> | null): AssistantScreenContext {
+  if (!incoming) return base;
+  return {
+    ...base,
+    ...incoming,
+    route: typeof incoming.route === "string" && incoming.route.trim() ? incoming.route : base.route,
+    screenLabel: typeof incoming.screenLabel === "string" && incoming.screenLabel.trim() ? incoming.screenLabel : base.screenLabel,
+    screenSummary: typeof incoming.screenSummary === "string" && incoming.screenSummary.trim() ? incoming.screenSummary : base.screenSummary,
+    suggestedPrompts: sanitizePromptList(incoming.suggestedPrompts, base.suggestedPrompts),
+    metadata: sanitizeMetadata(incoming.metadata) ?? base.metadata ?? null,
+  };
+}
+
+function getContextCard(context: AssistantScreenContext) {
+  if (context.module !== "operations") return null;
+  const metadata = sanitizeMetadata(context.metadata);
+  if (!metadata) return null;
+
+  const filters = sanitizeMetadata(metadata.filters);
+  const metrics = sanitizeMetadata(metadata.metrics);
+  const risks = Array.isArray(metadata.risks) ? metadata.risks : [];
+
+  const companyNames = Array.isArray(filters?.companyNames)
+    ? filters.companyNames.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+
+  const companyCount = Array.isArray(filters?.companyIds) ? filters.companyIds.length : companyNames.length;
+  const periodLabel = typeof filters?.periodLabel === "string" && filters.periodLabel.trim()
+    ? filters.periodLabel
+    : typeof filters?.period === "string" && filters.period.trim()
+      ? filters.period
+      : "Ãšltimas 24h";
+
+  return {
+    title: context.screenLabel,
+    subtitle: `${companyCount > 1 ? `${companyCount} empresas selecionadas` : companyNames[0] ?? "Escopo operacional"} Â· ${periodLabel}`,
+    metrics: [
+      { label: "Falhas", value: typeof metrics?.failedRuns === "number" ? String(metrics.failedRuns) : "0" },
+      { label: "Bloqueadas", value: typeof metrics?.blockedRuns === "number" ? String(metrics.blockedRuns) : "0" },
+      { label: "Defeitos", value: typeof metrics?.openDefects === "number" ? String(metrics.openDefects) : "0" },
+      { label: "Sem responsável", value: typeof metrics?.itemsWithoutOwner === "number" ? String(metrics.itemsWithoutOwner) : "0" },
+    ],
+    risk: typeof risks[0] === "object" && risks[0] !== null && typeof (risks[0] as { title?: unknown }).title === "string"
+      ? String((risks[0] as { title: string }).title)
+      : null,
+  };
+}
+
+function formatTime(ts: number) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(ts));
+}
+
+function makeId(prefix: string) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function TCLogoSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
+  const dims = size === "sm" ? "h-7 w-7" : size === "lg" ? "h-12 w-12" : "h-9 w-9";
+  return (
+    <div className={`relative shrink-0 ${dims}`}>
+      <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,#011848_0%,#ef0001_100%)] shadow-md" />
+      <div className="absolute inset-0.5 rounded-full bg-transparent flex items-center justify-center overflow-hidden">
+        <div className="relative w-[88%] h-[88%]">
+          <Image
+            src="/images/tc.png"
+            alt="Testing Company"
+            fill
+            sizes="48px"
+            className="select-none pointer-events-none object-contain animate-spin-slower"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatToolLabel(tool?: string | null) {
+  switch (tool) {
+    case "get_screen_context":
+      return "Contexto da tela";
+    case "list_available_actions":
+      return "A\u00e7\u00f5es dispon\u00edveis";
+    case "search_internal_records":
+      return "Busca interna";
+    case "summarize_entity":
+      return "Resumo";
+    case "draft_test_case":
+      return "Caso de teste";
+    case "create_test_case":
+      return "Criacao de caso";
+    case "explain_permission":
+      return "Permiss\u00f5es";
+    case "create_ticket":
+      return "Rascunho de chamado";
+    case "create_comment":
+      return "Coment\u00e1rio";
+    case "suggest_next_step":
+      return "Pr\u00f3ximo passo";
+    case "use_brain":
+      return "Brain";
+    case "system":
+      return "Brain";
+    default:
+      return "Brain";
+  }
+}
+
+function buildBrainQuickActions(context?: AssistantOpenEventDetail | null): AssistantAction[] | undefined {
+  if (!context?.nodeId && context?.source !== "brain") return undefined;
+
+  const nodeName = context?.nodeLabel?.trim() || "este nó";
+  const nodeType = context?.nodeType?.trim() || "Brain";
+  return [
+    {
+      kind: "prompt",
+      label: "Resumo completo",
+      prompt: `Resuma o contexto completo do nó "${nodeName}" (${nodeType}), incluindo descrição, conexões de entrada e saída, memórias, impacto e próximos passos.`,
+    },
+    {
+      kind: "prompt",
+      label: "Mapa de impacto",
+      prompt: `Mapeie o impacto do nó "${nodeName}" (${nodeType}): dependências, descendentes, riscos de mudança e pontos que precisam de validação.`,
+    },
+    {
+      kind: "prompt",
+      label: "Riscos QA",
+      prompt: `Analise os riscos QA do nó "${nodeName}" (${nodeType}) com base em defeitos, runs, releases, memórias e lacunas de cobertura.`,
+    },
+    {
+      kind: "prompt",
+      label: "Gerar testes",
+      prompt: `Sugira casos de teste e, se houver rota suficiente, um spec Playwright para validar o nó "${nodeName}" (${nodeType}).`,
+    },
+    {
+      kind: "prompt",
+      label: "Memórias",
+      prompt: `Liste as memórias, decisões, regras e notas técnicas ligadas ao nó "${nodeName}" (${nodeType}) e diga o que ainda falta documentar.`,
+    },
+  ];
+}
+
+function parseTableLine(line: string) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function isTableSeparator(line: string) {
+  const compact = line.replace(/\s+/g, "").trim();
+  return /^\|?[-:|]+\|?$/.test(compact);
+}
+
+function ChatRichText({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const blocks: Array<{ type: string; value?: string; items?: string[]; rows?: string[][] }> = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const raw = lines[i] ?? "";
+    const line = raw.trim();
+
+    if (!line) {
+      blocks.push({ type: "space" });
+      continue;
+    }
+
+    if (line.startsWith("```") ) {
+      const codeLines: string[] = [];
+      i += 1;
+      while (i < lines.length && !(lines[i] ?? "").trim().startsWith("```")) {
+        codeLines.push(lines[i] ?? "");
+        i += 1;
+      }
+      blocks.push({ type: "code", value: codeLines.join("\n") });
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      blocks.push({ type: "h2", value: line.slice(3).trim() });
+      continue;
+    }
+
+    if (line.startsWith("### ")) {
+      blocks.push({ type: "h3", value: line.slice(4).trim() });
+      continue;
+    }
+
+    if (line.startsWith("> ")) {
+      blocks.push({ type: "quote", value: line.slice(2).trim() });
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      const items = [line.replace(/^[-*]\s+/, "")];
+      while (i + 1 < lines.length && /^\s*[-*]\s+/.test(lines[i + 1] ?? "")) {
+        i += 1;
+        items.push((lines[i] ?? "").trim().replace(/^[-*]\s+/, ""));
+      }
+      blocks.push({ type: "ul", items });
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(line)) {
+      const items = [line.replace(/^\d+\.\s+/, "")];
+      while (i + 1 < lines.length && /^\s*\d+\.\s+/.test(lines[i + 1] ?? "")) {
+        i += 1;
+        items.push((lines[i] ?? "").trim().replace(/^\d+\.\s+/, ""));
+      }
+      blocks.push({ type: "ol", items });
+      continue;
+    }
+
+    if (line.startsWith("|") && line.endsWith("|")) {
+      const tableLines = [line];
+      while (i + 1 < lines.length) {
+        const next = (lines[i + 1] ?? "").trim();
+        if (!(next.startsWith("|") && next.endsWith("|"))) break;
+        i += 1;
+        tableLines.push(next);
+      }
+
+      const rows = tableLines
+        .filter((tableLine) => !isTableSeparator(tableLine))
+        .map((tableLine) => parseTableLine(tableLine));
+
+      if (rows.length > 0) {
+        blocks.push({ type: "table", rows });
+        continue;
+      }
+    }
+
+    blocks.push({ type: "p", value: line });
+  }
+
+  return (
+    <div className="space-y-2">
+      {blocks.map((block, index) => {
+        if (block.type === "space") {
+          return <div key={`space-${index}`} className="h-1" />;
+        }
+
+        if (block.type === "h2") {
+          return (
+            <div key={`h2-${index}`} className="rounded-2xl border border-[rgba(239,0,1,0.18)] bg-[linear-gradient(135deg,rgba(1,24,72,0.08)_0%,rgba(239,0,1,0.08)_100%)] px-3 py-2.5 dark:border-[#ff8a8a44] dark:bg-[linear-gradient(135deg,rgba(35,85,196,0.22)_0%,rgba(239,0,1,0.2)_100%)]">
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001) dark:text-[#ffb4b4]">Insight</p>
+              <p className="mt-1 text-[0.96rem] font-extrabold leading-6 tracking-[-0.015em] text-[#011848] dark:text-[#f2f7ff]">{block.value}</p>
+            </div>
+          );
+        }
+
+        if (block.type === "h3") {
+          return (
+            <p key={`h3-${index}`} className="mt-2 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-(--tc-primary,#011848) dark:text-[#d7e5ff]">
+              {block.value}
+            </p>
+          );
+        }
+
+        if (block.type === "quote") {
+          return (
+            <div key={`quote-${index}`} className="rounded-xl border-l-4 border-(--tc-accent,#ef0001) bg-[rgba(239,0,1,0.06)] px-3 py-2 text-[0.85rem] text-[#20304f] dark:bg-[rgba(239,0,1,0.14)] dark:text-[#f0f5ff]">
+              {block.value}
+            </div>
+          );
+        }
+
+        if (block.type === "ul") {
+          return (
+            <ul key={`ul-${index}`} className="space-y-1 pl-4 text-[0.9rem] text-[#20304f] dark:text-[#e6efff]">
+              {(block.items ?? []).map((item, itemIndex) => (
+                <li key={`ul-item-${itemIndex}`} className="list-disc marker:text-(--tc-accent,#ef0001)">{item}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        if (block.type === "ol") {
+          return (
+            <ol key={`ol-${index}`} className="space-y-1 pl-4 text-[0.9rem] text-[#20304f] dark:text-[#e6efff]">
+              {(block.items ?? []).map((item, itemIndex) => (
+                <li key={`ol-item-${itemIndex}`} className="list-decimal marker:font-semibold marker:text-(--tc-primary,#011848) dark:marker:text-[#c7dcff]">{item}</li>
+              ))}
+            </ol>
+          );
+        }
+
+        if (block.type === "table") {
+          const rows = block.rows ?? [];
+          const [header, ...body] = rows;
+          return (
+            <div key={`table-${index}`} className="overflow-hidden rounded-2xl border border-(--tc-border,#d7dff1) bg-[#ffffff] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-[#36507f] dark:bg-[#0f192d]">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left text-[0.82rem]">
+                  {header ? (
+                    <thead className="bg-[linear-gradient(180deg,#f6f9ff_0%,#edf3ff_100%)] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#122038_100%)]">
+                      <tr>
+                        {header.map((cell, cellIndex) => (
+                          <th key={`thead-${cellIndex}`} className="border-b border-(--tc-border,#d7dff1) px-3 py-2 font-bold text-(--tc-primary,#011848) dark:border-[#36507f] dark:text-[#d7e5ff]">
+                            {cell}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                  ) : null}
+                  <tbody>
+                    {body.map((row, rowIndex) => (
+                      <tr key={`row-${rowIndex}`} className="odd:bg-black/1.5 dark:odd:bg-white/3">
+                        {row.map((cell, cellIndex) => (
+                          <td key={`cell-${rowIndex}-${cellIndex}`} className="border-b border-(--tc-border,#eef2fb) px-3 py-2 text-[#26334f] last:border-b-0 dark:border-[#263e66] dark:text-[#e6efff]">
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        }
+
+        if (block.type === "code") {
+          return (
+            <pre key={`code-${index}`} className="overflow-x-auto rounded-xl border border-[#1f355e] bg-[#081327] px-3 py-2.5 text-[0.78rem] leading-5 text-[#d5e7ff]">
+              <code>{block.value}</code>
+            </pre>
+          );
+        }
+
+        return (
+          <p key={`p-${index}`} className="whitespace-pre-wrap text-[0.9rem] leading-6 text-[#20304f] dark:text-[#e6efff]">
+            {block.value}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
+  const pathname = usePathname() || "/";
+  const screenContext = useMemo(() => resolveAssistantScreenContext(pathname), [pathname]);
+  const { user, can } = usePermissionAccess();
+  const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
+  const [open, setOpen] = useState(defaultOpen);
+  const [panelMode, setPanelMode] = useState<AssistantPanelMode>("compact");
+  const [sidePanelWidth, setSidePanelWidth] = useState(DEFAULT_SIDE_PANEL_WIDTH);
+  const [resizingSidePanel, setResizingSidePanel] = useState(false);
+  const isExpandedMode = panelMode === "expanded";
+  const isSideMode = panelMode === "side";
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [assistantContext, setAssistantContext] = useState<AssistantScreenContext>(screenContext);
+  const [brainOpenContext, setBrainOpenContext] = useState<AssistantOpenEventDetail | null>(null);
+  const [activeAgentMode, setActiveAgentMode] = useState<AgentMode | null>(null);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    function close(e: MouseEvent) {
+      if (panelMode !== "compact") return;
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function esc(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open, panelMode]);
+
+  useEffect(() => {
+    try {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    } catch {
+      // ignore scroll errors
+    }
+  }, [messages, open]);
+
+  useEffect(() => {
+    try {
+      const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
+      const raw = localStorage.getItem(key);
+      if (!raw) {
+        setMessages([]);
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        setMessages(parsed.slice(-120));
+      }
+    } catch {
+      setMessages([]);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    try {
+      const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
+      localStorage.setItem(key, JSON.stringify(messages.slice(-120)));
+    } catch {
+      // ignore storage errors
+    }
+  }, [messages, user?.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const updateViewportHeight = () => {
+      setViewportHeight(Math.round(window.visualViewport?.height ?? window.innerHeight ?? 0));
+    };
+
+    updateViewportHeight();
+    window.addEventListener("resize", updateViewportHeight);
+    window.visualViewport?.addEventListener("resize", updateViewportHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateViewportHeight);
+      window.visualViewport?.removeEventListener("resize", updateViewportHeight);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    setAssistantContext(screenContext);
+  }, [screenContext]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleAssistantContext(e: Event) {
+      const detail = (e as CustomEvent<AssistantOpenEventDetail>).detail ?? {};
+      const detailRoute = detail.route ?? pathname;
+      if (detailRoute !== pathname) return;
+      const resolvedContext = resolveAssistantScreenContext(detailRoute);
+      setAssistantContext(mergeAssistantContext(resolvedContext, detail.context ?? null));
+    }
+
+    window.addEventListener("assistant:context", handleAssistantContext);
+    return () => {
+      window.removeEventListener("assistant:context", handleAssistantContext);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(PANEL_MODE_KEY);
+      if (stored === "compact" || stored === "side" || stored === "expanded") {
+        setPanelMode(stored);
+      }
+
+      const storedWidth = Number(window.localStorage.getItem(SIDE_PANEL_WIDTH_KEY));
+      if (Number.isFinite(storedWidth) && storedWidth > 0) {
+        const maxWidth = Math.min(MAX_SIDE_PANEL_WIDTH, Math.max(MIN_SIDE_PANEL_WIDTH, window.innerWidth - 420));
+        setSidePanelWidth(Math.min(maxWidth, Math.max(MIN_SIDE_PANEL_WIDTH, storedWidth)));
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(PANEL_MODE_KEY, panelMode);
+    } catch {
+      // ignore storage errors
+    }
+  }, [panelMode]);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => {
+      inputRef.current?.focus();
+    }, 40);
+    return () => window.clearTimeout(timer);
+  }, [open, panelMode]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const shouldReserveSpace = open && isSideMode;
+
+    document.body.classList.toggle("qc-brain-side-open", shouldReserveSpace);
+    document.documentElement.style.setProperty("--qc-brain-side-width", `${sidePanelWidth}px`);
+
+    return () => {
+      document.body.classList.remove("qc-brain-side-open");
+    };
+  }, [open, isSideMode, sidePanelWidth]);
+
+  // Listen for assistant:open events dispatched by Brain or other screens
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleAssistantOpen(e: Event) {
+      const detail = (e as CustomEvent<AssistantOpenEventDetail>).detail ?? {};
+      const nextRoute = detail.route ?? pathname;
+      const resolvedContext = resolveAssistantScreenContext(nextRoute);
+      setBrainOpenContext(detail);
+      if (detail.agentMode && (["qa", "debug", "playwright", "memory"] as string[]).includes(detail.agentMode)) {
+        setActiveAgentMode(detail.agentMode as AgentMode);
+      }
+      setAssistantContext(mergeAssistantContext(resolvedContext, detail.context ?? null));
+      setPanelMode(detail.panelMode ?? "compact");
+      setOpen(true);
+      if (detail.initialMessage) {
+        setInput(detail.initialMessage);
+      }
+      if (detail.focusInput !== false) {
+        window.setTimeout(() => {
+          inputRef.current?.focus();
+        }, 60);
+      }
+    }
+
+    window.addEventListener("assistant:open", handleAssistantOpen);
+    return () => {
+      window.removeEventListener("assistant:open", handleAssistantOpen);
+    };
+  }, [pathname]);
+
+  if (!assistantEnabled) return null;
+  if (!user) return null;
+  const isGlobalAdmin = user.isGlobalAdmin === true || (user as { is_global_admin?: boolean }).is_global_admin === true;
+  if (!isGlobalAdmin && (!can("ai", "view") || !can("ai", "use"))) return null;
+
+  const roleLabel = user.permissionRole ?? user.role ?? user.companyRole ?? "usu\u00e1rio";
+  const activeCompanyScope = assistantContext.companySlug ?? user.clientSlug ?? user.defaultClientSlug ?? "global";
+  const activeModule = assistantContext.module ?? screenContext.module;
+  const activeScreenLabel = assistantContext.screenLabel ?? screenContext.screenLabel;
+  const hasConversation = messages.length > 0;
+  const compactViewport = viewportHeight > 0 && viewportHeight <= 860;
+  const denseViewport = viewportHeight > 0 && viewportHeight <= 740;
+  const ultraDenseViewport = viewportHeight > 0 && viewportHeight <= 680;
+  const showQuickPrompts = !hasConversation;
+  const contextCard = getContextCard(assistantContext);
+  const visiblePrompts = hasConversation
+    ? ultraDenseViewport
+      ? 1
+      : compactViewport
+        ? 1
+        : 2
+    : ultraDenseViewport
+      ? 2
+      : compactViewport
+        ? 3
+        : 4;
+  const compactConversationChrome = hasConversation || compactViewport;
+  const summaryText = denseViewport
+    ? `Brain contextual de ${assistantContext.screenLabel.toLowerCase()}.`
+    : compactViewport && hasConversation
+      ? `Contexto: ${activeScreenLabel}.`
+      : assistantContext.screenSummary;
+
+  async function pushAssistantResponse(payload: { message?: string; action?: AssistantToolAction | null }, optimisticText?: string) {
+    if (sending) return;
+    if (!user) return;
+    const trimmedOptimistic = optimisticText?.trim() ?? "";
+    if (!payload.action && !trimmedOptimistic) return;
+
+    const requestHistory: AssistantConversationTurn[] = messages.slice(-12).map((message) => ({
+      from: message.from,
+      text: message.text,
+      tool: (message.tool ?? null) as AssistantConversationTurn["tool"],
+      ts: message.ts,
+      actionLabels: message.actions?.map((action) => action.label) ?? [],
+    }));
+
+    setSending(true);
+
+    if (trimmedOptimistic) {
+      setMessages((current) => [
+        ...current,
+        { id: makeId("user"), from: "user", text: trimmedOptimistic, ts: Date.now() },
+      ]);
+    }
+
+    if (payload.message) setInput("");
+
+    // Usa endpoint unificado para garantir memória persistente de todas as conversas.
+    const apiRoute = "/api/assistant/ask";
+
+    try {
+      const response = await fetchApi(apiRoute, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          context: assistantContext,
+          brainContext: (brainOpenContext || activeAgentMode)
+            ? { ...(brainOpenContext ?? {}), ...(activeAgentMode ? { agentMode: activeAgentMode } : {}) }
+            : undefined,
+          actor: {
+            userId: user.id,
+            permissionRole: user.permissionRole ?? null,
+            role: user.role ?? null,
+            companyRole: user.companyRole ?? null,
+            companySlug: user.clientSlug ?? null,
+            companySlugs: Array.isArray(user.clientSlugs) ? user.clientSlugs : null,
+            userOrigin: user.userOrigin ?? user.user_origin ?? null,
+            isGlobalAdmin: Boolean(user.isGlobalAdmin ?? user.is_global_admin),
+          },
+          history: requestHistory,
+        }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as AssistantReplyPayload & { error?: string };
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Sua sessão expirou. Faça login novamente para o brain acessar o Brain.");
+        }
+        throw new Error(data?.error || response.statusText || `Erro ${response.status}`);
+      }
+
+      if (data.context) {
+        setAssistantContext(data.context);
+      }
+
+      if (data.meta?.agentMode && (["qa", "debug", "playwright", "memory"] as string[]).includes(String(data.meta.agentMode))) {
+        setActiveAgentMode(data.meta.agentMode as AgentMode);
+      }
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: makeId("assistant"),
+          from: "assistant",
+          text: String(data.reply ?? "Sem resposta"),
+          ts: Date.now(),
+          tool: data.tool ?? null,
+          actions: Array.isArray(data.actions) ? data.actions : undefined,
+          agentMeta: data.meta ? {
+            agentMode: data.meta.agentMode ?? null,
+            agentName: data.meta.agentName ?? null,
+            agentIcon: data.meta.agentIcon ?? null,
+            agentColor: data.meta.agentColor ?? null,
+          } : null,
+        },
+      ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao processar o agente";
+      setMessages((current) => [
+        ...current,
+        {
+          id: makeId("assistant"),
+          from: "assistant",
+          text: `Erro: ${message}`,
+          ts: Date.now(),
+          tool: "system",
+        },
+      ]);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function sendMessage(textOverride?: string) {
+    const text = (textOverride ?? input).trim();
+    if (!text) return;
+
+    const numericChoice = Number(text);
+    if (Number.isInteger(numericChoice) && numericChoice >= 1) {
+      const lastAssistantWithActions = [...messages]
+        .reverse()
+        .find((message) => message.from === "assistant" && Array.isArray(message.actions) && message.actions.length > 0);
+
+      const selectedAction = lastAssistantWithActions?.actions?.[numericChoice - 1];
+      if (selectedAction) {
+        setInput("");
+        handleAction(selectedAction);
+        return;
+      }
+    }
+
+    await pushAssistantResponse({ message: text }, text);
+  }
+
+  function queueAction(action: AssistantToolAction, label: string) {
+    setConfirmState({ open: true, kind: "tool", action, label });
+  }
+
+  function handleAction(action: AssistantAction) {
+    if (action.kind === "prompt") {
+      void sendMessage(action.prompt);
+      return;
+    }
+    queueAction(action, action.label);
+  }
+
+  function confirmTitle() {
+    if (!confirmState.open) return "";
+    switch (confirmState.kind) {
+      case "tool":
+        return confirmState.label;
+      case "clearAll":
+        return "Limpar conversa";
+      default:
+        return "";
+    }
+  }
+
+  function confirmDescription() {
+    if (!confirmState.open) return "";
+    switch (confirmState.kind) {
+      case "tool":
+        return "A a\u00e7\u00e3o ser\u00e1 executada dentro do seu perfil atual e respeitando o RBAC da sess\u00e3o.";
+      case "clearAll":
+        return "Isso remove o hist\u00f3rico local desta conversa para o seu usu\u00e1rio.";
+      default:
+        return "";
+    }
+  }
+
+  function startSidePanelResize(event: PointerEvent<HTMLButtonElement>) {
+    if (!isSideMode || typeof window === "undefined") return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    setResizingSidePanel(true);
+
+    const startX = event.clientX;
+    const startWidth = sidePanelWidth;
+
+    const getMaxWidth = () => Math.min(MAX_SIDE_PANEL_WIDTH, Math.max(MIN_SIDE_PANEL_WIDTH, window.innerWidth - 420));
+
+    const onPointerMove = (moveEvent: globalThis.PointerEvent) => {
+      const delta = startX - moveEvent.clientX;
+      const nextWidth = startWidth + delta;
+      const maxWidth = getMaxWidth();
+
+      setSidePanelWidth(Math.min(maxWidth, Math.max(MIN_SIDE_PANEL_WIDTH, nextWidth)));
+    };
+
+    const onPointerUp = () => {
+      setResizingSidePanel(false);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  }
+
+  async function executeConfirm() {
+    if (!confirmState.open) return;
+    if (confirmState.kind === "clearAll") {
+      setMessages([]);
+      try {
+        const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
+        localStorage.removeItem(key);
+      } catch {
+        // ignore storage errors
+      }
+      setConfirmState({ open: false });
+      return;
+    }
+    if (confirmState.kind !== "tool") {
+      setConfirmState({ open: false });
+      return;
+    }
+
+    const { action, label } = confirmState;
+    setConfirmState({ open: false });
+    await pushAssistantResponse({ action }, `Executar: ${label}`);
+  }
+
+  return (
+    <div className="relative">
+      {open ? (
+        <div
+          ref={boxRef}
+          style={isSideMode ? { width: sidePanelWidth } : undefined}
+          className={`fixed z-50 m-0 transition-all duration-300 ease-in-out ${
+            isExpandedMode
+              ? "left-1/2 top-[5vh] -translate-x-1/2"
+              : isSideMode
+                ? "inset-y-0 right-0 m-0"
+                : "bottom-6 right-24"
+          }`}
+        >
+          {isSideMode ? (
+            <button
+              type="button"
+              aria-label="Redimensionar Brain"
+              title="Arraste para ajustar o tamanho do Brain"
+              onPointerDown={startSidePanelResize}
+              className={`absolute inset-y-0 left-0 z-20 flex w-3 translate-x-0 cursor-ew-resize items-center justify-center bg-transparent text-transparent shadow-none transition ${resizingSidePanel ? "" : ""}`}
+            >
+              ↔
+            </button>
+          ) : null}
+
+          <div
+            className={`flex flex-col overflow-hidden border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 transition-[width,height,border-radius] duration-300 ease-in-out ${
+              isExpandedMode
+                ? "h-[85vh] w-[min(68.75rem,90vw)] rounded-4xl"
+                : isSideMode
+                  ? "h-screen w-full rounded-none border-y-0 border-r-0"
+                  : denseViewport
+                    ? "h-[min(74dvh,calc(100dvh-0.75rem))] max-h-[calc(100dvh-0.75rem)] w-[min(27.5rem,calc(100vw-5.5rem))] rounded-4xl"
+                    : compactViewport
+                      ? "h-[min(76dvh,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)] w-[min(27.5rem,calc(100vw-5.5rem))] rounded-4xl"
+                      : "h-170 max-h-[calc(100dvh-1.5rem)] w-110 max-w-[calc(100vw-5.5rem)] rounded-4xl"
+            }`}
+          >
+              <div
+                className={`relative overflow-hidden border-b border-[rgba(15,23,42,0.1)] [background-image:var(--tc-brand-gradient-strong)] text-white ${denseViewport ? "px-4 py-3" : "px-5 py-4"}`}
+              >
+                <div className="absolute inset-0 [background-image:var(--tc-brand-overlay)]" aria-hidden />
+                <div className="absolute inset-x-0 bottom-0 h-px [background-image:var(--tc-brand-divider)]" aria-hidden />
+                <div className="relative flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`flex items-center justify-center ${denseViewport ? "h-10 w-10" : "h-12 w-12"}`}>
+                      <TCLogoSpinner size="md" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[0.58rem] font-semibold uppercase tracking-[0.34em] text-white/72">Testing Company</p>
+                      <div>
+                        <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} font-black tracking-[-0.03em] text-white`}>
+                          {brainOpenContext?.source === "brain" ? "Brain" : "Brain"}
+                        </h3>
+                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>
+                          {brainOpenContext?.nodeLabel ? `${brainOpenContext.nodeLabel} — ${brainOpenContext.nodeType ?? "nó"}` : activeScreenLabel}
+                        </p>
+                      </div>
+                      <div className={`flex flex-wrap gap-2 pt-1 text-[0.68rem] uppercase tracking-[0.26em] text-white/72 ${compactConversationChrome ? "hidden" : ""}`}>
+                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{roleLabel}</span>
+                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">{activeModule}</span>
+                        <span className="rounded-full border border-white/18 bg-white/10 px-2.5 py-1">escopo {activeCompanyScope}</span>
+                      </div>
+                      {brainOpenContext?.source === "brain" ? (
+                        <div className="flex flex-wrap gap-1.5 pt-1.5">
+                          {ASSISTANT_AGENTS.map(({ mode, icon, name }) => {
+                            const isActive = (activeAgentMode ?? (brainOpenContext?.agentMode as AgentMode | undefined) ?? "qa") === mode;
+                            return (
+                              <button
+                                key={mode}
+                                type="button"
+                                onClick={() => setActiveAgentMode(mode)}
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold transition ${
+                                  isActive
+                                    ? "border-white/35 bg-white/22 text-white"
+                                    : "border-white/12 bg-white/5 text-white/55 hover:bg-white/14 hover:text-white/80"
+                                }`}
+                                aria-pressed={isActive}
+                              >
+                                <span>{icon}</span>
+                                <span>{name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {panelMode === "compact" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("expanded")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Expandir chat"
+                          title="Expandir"
+                        >
+                          Expandir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("side")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Fixar lateralmente"
+                          title="Lateral"
+                        >
+                          Lateral
+                        </button>
+                      </>
+                    ) : null}
+                    {panelMode === "side" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("expanded")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Expandir chat"
+                          title="Expandir"
+                        >
+                          Expandir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("compact")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Voltar ao modo compacto"
+                          title="Normal"
+                        >
+                          Normal
+                        </button>
+                      </>
+                    ) : null}
+                    {panelMode === "expanded" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("compact")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Voltar ao modo compacto"
+                          title="Normal"
+                        >
+                          Normal
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPanelMode("side")}
+                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          aria-label="Fixar lateralmente"
+                          title="Lateral"
+                        >
+                          Lateral
+                        </button>
+                      </>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className={`rounded-full border border-white/15 bg-white/8 text-white/85 transition hover:bg-white/16 ${denseViewport ? "p-1.5" : "p-2"}`}
+                      aria-label="Fechar brain"
+                      title="Fechar brain"
+                    >
+                      <FiX size={denseViewport ? 13 : 15} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {showQuickPrompts ? (
+                <div className={`border-b border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f7faff_0%,#fff9fb_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#13213a_0%,#17253f_100%)] ${denseViewport ? "px-4 py-2.5" : "px-5 py-4"}`}>
+                  <p className={`${denseViewport ? "text-[0.9rem] leading-5" : "text-base leading-6"} font-semibold text-[#011848] dark:text-[#e7efff]`}>{summaryText}</p>
+                  {contextCard ? (
+                    <div className="mt-3 rounded-[1.4rem] border border-[rgba(239,0,1,0.16)] bg-white/88 p-3 shadow-[0_12px_24px_rgba(1,24,72,0.06)] dark:border-[#ff8a8a44] dark:bg-[#13213add]">
+                      <p className="text-[0.66rem] font-black uppercase tracking-[0.24em] text-(--tc-accent,#ef0001)">{contextCard.title}</p>
+                      <p className="mt-1 text-sm font-semibold text-[#011848] dark:text-[#e7efff]">{contextCard.subtitle}</p>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {contextCard.metrics.map((metric) => (
+                          <div key={metric.label} className="rounded-2xl border border-(--tc-border,#d7dff1) bg-white px-3 py-2 dark:border-[#36507f] dark:bg-[#0f192d]">
+                            <p className="text-[0.65rem] uppercase tracking-[0.2em] text-[#8b98b1] dark:text-[#94abd6]">{metric.label}</p>
+                            <p className="mt-1 text-lg font-black text-[#011848] dark:text-[#f2f7ff]">{metric.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {contextCard.risk ? (
+                        <p className="mt-3 rounded-2xl border border-[rgba(239,0,1,0.14)] bg-[rgba(239,0,1,0.06)] px-3 py-2 text-xs font-medium text-[#7d1d1d] dark:border-[#ff8a8a44] dark:bg-[rgba(239,0,1,0.12)] dark:text-[#ffd7d7]">
+                          {contextCard.risk}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className={`${compactViewport ? "mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "mt-3 flex flex-wrap gap-2"}`}>
+                  {(buildBrainQuickActions(brainOpenContext) ?? assistantContext.suggestedPrompts.slice(0, visiblePrompts).map((p) => ({ kind: "prompt" as const, label: p, prompt: p }))).map((action) => (
+                    <button
+                      key={action.label}
+                      type="button"
+                      onClick={() => void sendMessage(action.kind === "prompt" ? action.prompt : action.label)}
+                      className={`inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7dff1) bg-white/95 font-semibold text-(--tc-primary,#011848) shadow-[0_8px_18px_rgba(1,24,72,0.06)] transition hover:border-[rgba(239,0,1,0.24)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#122038] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4] ${compactViewport ? "shrink-0 px-3 py-1.5 text-[0.68rem]" : "px-3 py-2 text-xs"}`}
+                    >
+                      <FiZap size={12} />
+                      {action.label}
+                    </button>
+                  ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className={`min-h-0 flex-1 ${hasConversation ? "overflow-y-auto" : "overflow-y-hidden"} bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.04),transparent_26%),linear-gradient(180deg,#f6f9ff_0%,#ffffff_28%,#ffffff_100%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.08),transparent_26%),linear-gradient(180deg,#0e182b_0%,#111d33_34%,#0b1424_100%)] ${denseViewport ? "space-y-4 px-4 py-4" : hasConversation ? "space-y-4 px-4 py-4" : "space-y-5 px-5 py-5"}`}>
+                {messages.length === 0 ? (
+                  <div className={`rounded-[1.6rem] border border-[#dfe6f3] bg-[#ffffff] shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-[#36507f] dark:bg-[#13213a] dark:shadow-[0_18px_40px_rgba(0,0,0,0.28)] ${denseViewport ? "p-4" : "p-5"}`}>
+                    {brainOpenContext?.nodeId ? (
+                      <>
+                        <p className="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-[#ef0001] dark:text-[#ff8a8a]">
+                          Contexto do Brain — {brainOpenContext.nodeType ?? "Nó"}
+                        </p>
+                        <p className="mt-1 text-base font-bold text-[#011848] dark:text-[#f2f7ff]">
+                          {brainOpenContext.nodeLabel ?? "Nó selecionado"}
+                        </p>
+                        <p className="mt-1 text-sm text-[#4a5568] dark:text-[#a0b4d0]">
+                          Agente: {activeAgentMode ?? brainOpenContext.agentMode ?? "qa"} Â· escopo {brainOpenContext.companySlug ?? "global"}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-base font-bold text-[#ef0001] dark:text-[#ff8a8a]">Pronto para atuar dentro do seu perfil.</p>
+                        <p className="mt-2 text-base leading-7 text-[#011848] dark:text-[#d7e5ff]">
+                          Uso a sessão atual, enxergo apenas o que o seu perfil pode ver e executo ações somente dentro do seu RBAC.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                ) : null}
+                {messages.map((message, index) => {
+                  const isUser = message.from === "user";
+                  return (
+                    <div
+                      key={message.id}
+                      className={`${styles.msgEnter} flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}
+                      data-delay={Math.min(index, 10)}
+                    >
+                      {!isUser ? (
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[rgba(1,24,72,0.08)] bg-[linear-gradient(135deg,#ffffff_0%,#eef3ff_62%,#fff6f8_100%)] shadow-[0_10px_24px_rgba(1,24,72,0.1)] dark:border-[#31476f] dark:bg-[linear-gradient(135deg,#13213a_0%,#182742_62%,#221729_100%)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+                          <TCLogoSpinner size="sm" />
+                        </div>
+                      ) : null}
+
+                      <div className={`max-w-[82%] space-y-2 ${isUser ? "items-end" : "items-start"}`}>
+                        <div
+                          className={`rounded-[1.35rem] border px-4 py-3 text-sm leading-6 shadow-[0_12px_28px_rgba(15,23,42,0.06)] ${
+                            isUser
+                              ? "border-[rgba(239,0,1,0.16)] bg-[linear-gradient(135deg,var(--tc-accent,#ef0001)_0%,#c90000_100%)] text-white"
+                              : "border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] text-[#011848] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:text-[#e6efff] [&_p]:text-base"
+                          }`}
+                        >
+                          {!isUser && message.tool ? (
+                            <div className="mb-2 inline-flex rounded-full border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#f7faff_0%,#fff7f8_100%)] px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-(--tc-primary,#011848) dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#241a2d_100%)] dark:text-[#d7e5ff]">
+                              {formatToolLabel(message.tool)}
+                            </div>
+                          ) : null}
+                          {isUser ? (
+                            <p className="whitespace-pre-wrap">{message.text}</p>
+                          ) : (
+                            <ChatRichText text={message.text} />
+                          )}
+                        </div>
+
+                        {message.actions?.length ? (
+                          <div className={`flex flex-wrap gap-2 ${isUser ? "justify-end" : "justify-start"}`}>
+                            {message.actions.map((action, index) => (
+                              <button
+                                key={`${message.id}-${index}-${action.label}`}
+                                type="button"
+                                onClick={() => handleAction(action)}
+                                disabled={sending}
+                                data-delay={index}
+                                className={`${styles.actionEnter} inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${
+                                  action.kind === "tool"
+                                    ? "border border-[rgba(1,24,72,0.12)] bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#173a88_100%)] text-white hover:bg-[linear-gradient(135deg,#132a63_0%,#214ca8_100%)]"
+                                    : "border border-(--tc-border,#d7dff1) bg-[#ffffff] text-(--tc-primary,#011848) hover:border-[rgba(239,0,1,0.2)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#13213a] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4]"
+                                } disabled:opacity-60`}
+                              >
+                                {action.kind === "tool" ? <FiZap size={12} /> : <FiChevronRight size={12} />}
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        <div className={`flex items-center gap-2 text-[0.68rem] text-[#8a96ad] dark:text-[#94abd6] ${isUser ? "justify-end" : "justify-start"}`}>
+                          <span>{formatTime(message.ts)}</span>
+                        </div>
+                      </div>
+
+                      {isUser ? <UserAvatar src={user.avatarUrl} name={user.name} size="sm" className="h-11 w-11 shrink-0" /> : null}
+                    </div>
+                  );
+                })}
+
+                <div ref={endRef} />
+              </div>
+
+              <div className={`border-t border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0f192d_0%,#13213a_100%)] ${denseViewport ? "px-4 py-2.5" : hasConversation ? "px-4 py-3" : "px-5 py-4.5"}`}>
+                <div className={`rounded-3xl border border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f8fbff_0%,#fff7fa_100%)] shadow-[0_14px_28px_rgba(15,23,42,0.05)] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.24)] ${denseViewport ? "p-2.5" : hasConversation ? "p-2.5" : "p-3.5"}`}>
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(event) => setInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        void sendMessage();
+                      }
+                    }}
+                    placeholder={`Escreva o que você precisa em ${assistantContext.screenLabel.toLowerCase()}...`}
+                    className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
+                  />
+                  <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : hasConversation ? "mt-2" : "mt-3"}`}>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmState({ open: true, kind: "clearAll" })}
+                      className={`font-semibold uppercase tracking-[0.24em] text-[#8b98b1] transition hover:text-(--tc-accent,#ef0001) dark:text-[#94abd6] dark:hover:text-[#ff8a8a] ${hasConversation ? "text-[0.65rem]" : "text-xs"}`}
+                    >
+                      Limpar tudo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void sendMessage()}
+                      disabled={sending || !input.trim()}
+                      className={`inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#1f4aa3_100%)] font-semibold text-white shadow-[0_14px_28px_rgba(11,26,60,0.2)] transition hover:-translate-y-px hover:bg-[linear-gradient(135deg,var(--tc-accent,#ef0001)_0%,#c70000_100%)] disabled:cursor-not-allowed disabled:opacity-60 ${hasConversation ? "px-3.5 py-2 text-[0.85rem]" : "px-4 py-2.5 text-sm"}`}
+                    >
+                      <FiSend size={15} />
+                      {sending ? "Processando..." : "Enviar"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="fixed bottom-6 right-6 z-50">
+          <button
+            type="button"
+            onClick={() => {
+              if (open) {
+                setOpen(false);
+                return;
+              }
+              setPanelMode("compact");
+              setOpen(true);
+            }}
+            aria-label="Abrir brain da plataforma"
+            title="Brain Testing Company — clique para abrir"
+            className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105"
+          >
+            {/* spinning logo with gradient background */}
+            <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,#011848_0%,#6b0000_55%,#ef0001_100%)] shadow-[0_8px_24px_rgba(1,24,72,0.4)]" />
+            <div className="absolute inset-0.75 rounded-full overflow-hidden flex items-center justify-center">
+              <div className="relative w-full h-full">
+                <Image
+                  src="/images/tc.png"
+                  alt="Brain Testing Company"
+                  fill
+                  sizes="56px"
+                  className="select-none pointer-events-none object-contain animate-spin-slower"
+                />
+              </div>
+              {/* tooltip */}
+              <span className="pointer-events-none absolute bottom-[calc(100%+0.5rem)] right-0 whitespace-nowrap rounded-xl bg-[#011848] px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                Brain Testing Company
+                <span className="absolute -bottom-1.25 right-5 h-2.5 w-2.5 rotate-45 bg-[#011848]" />
+              </span>
+            </div>
+          </button>
+      </div>
+
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmTitle()}
+        description={confirmDescription()}
+        onCancel={() => setConfirmState({ open: false })}
+        onConfirm={() => {
+          void executeConfirm();
+        }}
+        confirmLabel={confirmState.open && confirmState.kind === "tool" ? "Executar" : "Confirmar"}
+        cancelLabel="Cancelar"
+      />
+    </div>
+  );
+}
+
+

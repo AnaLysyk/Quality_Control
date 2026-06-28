@@ -1,18 +1,10 @@
 import type { AssistantContextEntityType, AssistantModule, AssistantScreenContext } from "@/lib/assistant/types";
 
-/* ──────────────────── Helpers ──────────────────── */
-
 function extractCompanySlug(route: string) {
   const match = route.match(/^\/empresas\/([^/]+)/);
   return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 
-/* ──────────────────── Declarative screen context map ──────────────────── */
-
-/**
- * Each entry is tested in order — first match wins.
- * To add a new screen just append (or insert) an entry here.
- */
 type ScreenContextRule = {
   match: RegExp | ((route: string) => boolean);
   module: AssistantModule;
@@ -29,16 +21,16 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "support",
     screenLabel: "Kanban global de suporte",
     screenSummary: [
-      "Você está em: Kanban global de suporte.",
-      "Aqui você prioriza, atribui responsável e avança status dos chamados.",
-      "Dica: cite o código do chamado (SP-000123) para localizar rapidamente."
+      "Voce esta em: Kanban global de suporte.",
+      "Aqui voce prioriza, atribui responsavel, acompanha SLA e avanca status dos chamados.",
+      "Como agente, posso localizar chamados, explicar bloqueios, sugerir prioridade e preparar a proxima acao conforme seu RBAC.",
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
-      "Buscar chamado por código (ex: SP-000123)",
-      "Atribuir responsável ao chamado",
-      "Avançar status de um chamado",
-      "Listar chamados pendentes"
+      "Buscar chamado por codigo",
+      "Explicar o que posso fazer nesta tela",
+      "Sugerir proxima acao como agente",
+      "Listar chamados pendentes",
     ],
   },
   {
@@ -46,60 +38,63 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "support",
     screenLabel: "Meus chamados",
     screenSummary: [
-      "Você está em: Meus chamados.",
-      "Aqui você acompanha status, comenta e pede ajustes nos seus chamados.",
-      "Dica: diga o objetivo e o impacto do problema para agilizar o atendimento."
+      "Voce esta em: Meus chamados.",
+      "Aqui voce acompanha status, comenta e pede ajustes nos seus chamados.",
+      "Como agente, posso resumir andamento, preparar comentario e orientar o melhor proximo passo.",
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
-      "Buscar meu chamado por código",
-      "Comentar em chamado aberto",
-      "Pedir ajuste em chamado",
-      "Listar chamados em andamento"
+      "Buscar meu chamado por codigo",
+      "Explicar o que posso fazer nesta tela",
+      "Preparar comentario para chamado",
+      "Listar chamados em andamento",
     ],
   },
   {
     match: /^\/admin\/users\/permissions/,
     module: "permissions",
-    screenLabel: "Gestão de permissões por usuário",
+    screenLabel: "Gestao de permissoes por usuario",
     screenSummary: [
-      "Você está em: Gestão de permissões por usuário.",
-      "Aqui você gerencia permissões e acessos por perfil/usuário.",
-      "Dica: posso explicar o motivo de bloqueios e o que precisa mudar."
+      "Voce esta em: Gestao de permissoes por usuario.",
+      "Aqui voce gerencia permissoes, perfis e escopos de acesso.",
+      "Como agente, posso explicar por que alguem nao ve uma tela, comparar perfis e sugerir ajustes seguros.",
     ].join(" "),
     entityType: "permission_profile",
     suggestedPrompts: [
-      "Explicar por que este perfil não vê uma tela",
-      "Comparar permissões entre usuários",
-      "Listar usuários com acesso a este módulo",
-      "Resumir permissões do perfil atual"
+      "Explicar bloqueio de permissao",
+      "Comparar permissoes entre usuarios",
+      "Sugerir ajuste seguro de acesso",
+      "Resumir permissoes do perfil atual",
     ],
   },
   {
-    match: (r) => /^\/empresas\/[^/]+\/planos-de-teste/.test(r) || r.startsWith("/planos-de-teste") || r.startsWith("/casos-de-teste"),
+    match: (route) =>
+      /^\/empresas\/[^/]+\/planos-de-teste/.test(route) ||
+      route.startsWith("/planos-de-teste") ||
+      route.startsWith("/casos-de-teste"),
     module: "test_plans",
     screenLabel: "Planos e casos de teste",
     screenSummary: [
-      "Você está em: Planos e casos de teste.",
-      "Aqui você cria e organiza casos de teste: pré-condições, passos e resultado esperado.",
-      "Dica: cole o bug/ticket que eu rascunho o teste."
+      "Voce esta em: Planos e casos de teste.",
+      "Aqui voce cria e organiza casos de teste com pre-condicoes, passos e resultado esperado.",
+      "Como agente, posso transformar bug, requisito ou conversa em caso de teste estruturado.",
     ].join(" "),
     entityType: "test_plan",
     suggestedPrompts: [
       "Gerar caso de teste a partir de bug",
       "Montar passos e resultado esperado",
-      "Resumir ticket para virar teste",
-      "Listar casos de teste pendentes"
+      "Explicar o que posso fazer nesta tela",
+      "Listar casos de teste pendentes",
     ],
   },
   {
-    match: (r) => /^\/empresas\/[^/]+/.test(r) || r.startsWith("/admin/clients") || r.startsWith("/empresas"),
+    match: (route) => /^\/empresas\/[^/]+/.test(route) || route.startsWith("/admin/clients") || route.startsWith("/empresas"),
     module: "company",
     screenLabel: "Empresas e contexto da conta",
     screenSummary: [
-      "Você está em: Empresas e contexto da conta.",
-      "Aqui você acompanha status, chamados, defeitos e planos de teste da empresa.",
-      "Dica: pergunte sobre defeitos ativos, chamados abertos ou métricas de qualidade."
+      "Voce esta em: Empresas e contexto da conta.",
+      "Aqui voce acompanha status, chamados, defeitos, usuarios e planos de teste da empresa.",
+      "Como agente, posso resumir a empresa, apontar riscos, buscar registros e sugerir proximas acoes.",
     ].join(" "),
     entityType: "company",
     entityId: (slug) => slug,
@@ -107,7 +102,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
       "Resumir status atual da empresa",
       "Buscar chamados abertos desta empresa",
       "Ver defeitos e bugs ativos",
-      "Consultar planos de teste em andamento"
+      "Sugerir proxima acao como agente",
     ],
   },
   {
@@ -117,31 +112,48 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     screenSummary: [
       "Voce esta em: Dashboard contextual.",
       "Aqui a visao se monta por perfil, permissoes, empresas, aplicacoes, modulos, filtros e dados reais.",
-      "Dica: posso explicar graficos, comparar empresas, resumir riscos e priorizar acoes."
+      "Como agente, posso explicar graficos, comparar empresas, resumir riscos e priorizar acoes.",
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
       "Resumir dashboard atual",
       "O que esta mais critico?",
       "Comparar empresas selecionadas",
-      "Gerar resumo executivo"
+      "Gerar resumo executivo",
     ],
   },
   {
     match: /^\/operacao/,
     module: "operations",
-    screenLabel: "Central de Operações",
+    screenLabel: "Central de Operacoes",
     screenSummary: [
-      "Você está em: Central de Operações.",
-      "Aqui você acompanha a saúde operacional, runs, defeitos, automações, integrações e riscos em andamento.",
-      "Dica: posso resumir riscos, priorizar ações, analisar runs bloqueadas e gerar um resumo do recorte atual."
+      "Voce esta em: Central de Operacoes.",
+      "Aqui voce acompanha saude operacional, runs, defeitos, automacoes, integracoes e riscos.",
+      "Como agente, posso resumir riscos, priorizar acoes, analisar runs bloqueadas e sugerir o proximo movimento.",
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
-      "Resumir operação atual",
-      "O que está mais crítico?",
-      "Priorizar próximas ações",
-      "Analisar runs bloqueadas"
+      "Resumir operacao atual",
+      "O que esta mais critico?",
+      "Priorizar proximas acoes",
+      "Analisar runs bloqueadas",
+    ],
+  },
+  {
+    match: /^\/admin\/access-requests/,
+    module: "dashboard",
+    screenLabel: "Solicitacoes de acesso",
+    screenSummary: [
+      "Voce esta em: Solicitacoes de acesso.",
+      "Aqui voce revisa perfis solicitados, compara alteracoes, acompanha historico e decide aprovar, recusar ou pedir ajuste.",
+      "Como agente, posso explicar o fluxo, apontar pendencias, sugerir decisao e orientar quais campos devolver para ajuste.",
+    ].join(" "),
+    entityType: "screen",
+    suggestedPrompts: [
+      "Explicar o fluxo desta solicitacao",
+      "O que falta para aprovar?",
+      "Sugerir decisao como agente",
+      "Listar acoes que posso executar aqui",
     ],
   },
   {
@@ -149,16 +161,16 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "dashboard",
     screenLabel: "Painel administrativo",
     screenSummary: [
-      "Você está em: Painel administrativo.",
-      "Aqui você faz operação e gestão: visão macro e acesso rápido a módulos.",
-      "Dica: me diga o que quer destravar e eu aponto o caminho."
+      "Voce esta em: Painel administrativo.",
+      "Aqui voce gerencia a operacao da plataforma: solicitacoes, usuarios, permissoes, empresas, chamados, metricas e logs.",
+      "Como agente, posso explicar o que da para fazer, sugerir uma acao, buscar registros, preparar textos e executar fluxos permitidos pelo seu RBAC.",
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
-      "Resumir esta tela",
-      "Acessar módulo de suporte",
-      "Buscar indicador de desempenho",
-      "Listar módulos disponíveis"
+      "Explicar o que posso fazer aqui",
+      "Sugerir proxima acao como agente",
+      "Listar modulos administrativos",
+      "Buscar registro por palavra-chave",
     ],
   },
 ];
@@ -167,20 +179,18 @@ const GENERAL_CONTEXT: Omit<ScreenContextRule, "match"> = {
   module: "general",
   screenLabel: "Plataforma Quality Control",
   screenSummary: [
-    "Você está em: Plataforma Quality Control.",
-    "Aqui você navega, busca registros, cria chamados ou entende seu contexto.",
-    "Dica: peça um resumo ou diga o que deseja fazer."
+    "Voce esta em: Plataforma Quality Control.",
+    "Aqui voce navega, busca registros, cria chamados ou entende seu contexto.",
+    "Como agente, posso explicar a tela, sugerir proximas acoes e executar fluxos permitidos pelo seu RBAC.",
   ].join(" "),
   entityType: "screen",
   suggestedPrompts: [
     "Resumir esta tela",
+    "Explicar o que posso fazer aqui",
     "Buscar registro por palavra-chave",
-    "Criar novo chamado",
-    "Listar módulos disponíveis"
+    "Sugerir proxima acao como agente",
   ],
 };
-
-/* ──────────────────── Resolver ──────────────────── */
 
 export function resolveAssistantScreenContext(route: string): AssistantScreenContext {
   const normalizedRoute = (route || "/").trim() || "/";

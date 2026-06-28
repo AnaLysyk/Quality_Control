@@ -2,15 +2,18 @@ import { NextResponse } from "next/server";
 
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import {
   composeAccessRequestMessage,
   parseAccessRequestMessage,
   type AccessRequestAdjustmentField,
   type AccessRequestAdjustmentRound,
 } from "@/lib/accessRequestMessage";
+import { notifyAccessRequestAdjustmentRequested } from "@/lib/notificationService";
 import { prisma } from "@/lib/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import { resolveReviewQueue } from "@/lib/requestRouting";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { getAccessRequestV2ById } from "@/lib/accessRequestsV2/repository";
 import { transitionAccessRequest } from "@/lib/accessRequestsV2/service";
@@ -23,6 +26,42 @@ type AdjustmentBody = {
 
 function isFinalStatus(status: string | null | undefined) {
   return status === "closed" || status === "rejected";
+}
+
+async function notifyAndAuditAdjustment(input: {
+  id: string;
+  email: string;
+  message: string;
+  admin: { id?: string | null; email?: string | null };
+  comment: string;
+  fields: AccessRequestAdjustmentField[];
+}) {
+  const parsed = parseAccessRequestMessage(input.message, input.email);
+  await notifyAccessRequestAdjustmentRequested({
+    requestId: input.id,
+    requesterName: parsed.fullName || parsed.name || input.email,
+    reviewerName: input.admin.email || "Admin",
+    profileType: parsed.profileType,
+    reviewQueue: resolveReviewQueue(parsed.profileType),
+    fields: input.fields,
+    clientId: parsed.clientId,
+  }).catch((error) => {
+    console.error("[ACCESS_REQUEST_NOTIFICATION][legacy-adjustment]", error);
+  });
+
+  addAuditLogSafe({
+    action: "access_request.updated",
+    entityType: "access_request",
+    entityId: input.id,
+    entityLabel: input.email ?? null,
+    actorUserId: input.admin.id ?? null,
+    actorEmail: input.admin.email ?? null,
+    metadata: {
+      event: "adjustment_requested",
+      fields: input.fields,
+      comment: input.comment,
+    },
+  });
 }
 
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -137,6 +176,14 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       authorId: admin.id || null,
       body: comment,
     });
+    await notifyAndAuditAdjustment({
+      id,
+      email: existing.email,
+      message,
+      admin,
+      comment,
+      fields,
+    });
 
     return NextResponse.json({
       ok: true,
@@ -206,6 +253,14 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       authorId: admin.id || null,
       body: comment,
     });
+    await notifyAndAuditAdjustment({
+      id,
+      email: existing.email,
+      message,
+      admin,
+      comment,
+      fields,
+    });
 
     return NextResponse.json({
       ok: true,
@@ -269,6 +324,14 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       authorEmail: admin.email || null,
       authorId: admin.id || null,
       body: comment,
+    });
+    await notifyAndAuditAdjustment({
+      id,
+      email: existing.email,
+      message,
+      admin,
+      comment,
+      fields,
     });
 
     return NextResponse.json({

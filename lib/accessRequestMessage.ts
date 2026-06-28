@@ -106,7 +106,7 @@ export type ParsedAccessRequest = {
   lastAdjustmentAt: string | null;
   lastAdjustmentDiff: AccessRequestAdjustmentEntry[];
   visualProfile?: {
-    avatarKind?: "emoji" | "gif" | "default";
+    avatarKind?: "emoji" | "gif" | "default" | "image";
     avatarValue?: string;
     avatarLabel?: string;
   } | null;
@@ -147,7 +147,7 @@ type ComposeAccessRequestInput = {
   lastAdjustmentAt?: string | null;
   lastAdjustmentDiff?: AccessRequestAdjustmentEntry[];
   visualProfile?: {
-    avatarKind?: "emoji" | "gif" | "default";
+    avatarKind?: "emoji" | "gif" | "default" | "image";
     avatarValue?: string;
     avatarLabel?: string;
   } | null;

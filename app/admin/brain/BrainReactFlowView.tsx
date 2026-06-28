@@ -20,6 +20,7 @@ import {
 import { FiCommand, FiGitBranch, FiList, FiMessageCircle, FiShare2, FiTable, FiUsers } from "react-icons/fi";
 
 import { useBrainGraph } from "@/hooks/useBrain";
+import { BRAIN_GRAPH_NODE_COLORS, getBrainGraphNodeDefinition } from "@/lib/brain/graph";
 import styles from "./Brain.module.css";
 
 type BrainNodeApi = {
@@ -89,20 +90,7 @@ const fetcher = (url: string) =>
     return res.json();
   });
 
-const NODE_COLORS: Record<string, string> = {
-  Company: "#011848",
-  Application: "#7b1fa2",
-  Module: "#e65100",
-  Ticket: "#ff8f00",
-  Defect: "#ef0001",
-  User: "#00a862",
-  Screen: "#c2185b",
-  TestRun: "#1976d2",
-  Release: "#388e3c",
-  ReleaseManual: "#388e3c",
-  Integration: "#ab47bc",
-  Note: "#ffa000",
-};
+const NODE_COLORS: Record<string, string> = BRAIN_GRAPH_NODE_COLORS;
 
 function toRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -131,12 +119,14 @@ function resolveNodePosition(node: BrainNodeApi, index: number, total: number) {
 function mapGraphToFlow(nodes: BrainNodeApi[], edges: BrainEdgeApi[]) {
   const flowNodes: Node[] = nodes.map((node, index) => {
     const color = NODE_COLORS[node.type] ?? "#455a64";
+    const nodeDefinition = getBrainGraphNodeDefinition(node.type);
     return {
       id: node.id,
       position: resolveNodePosition(node, index, nodes.length),
       data: {
         label: `${node.label}`,
         type: node.type,
+        typeLabel: nodeDefinition?.label ?? node.type,
       },
       style: {
         borderRadius: 16,
@@ -392,6 +382,7 @@ export default function BrainReactFlowView() {
             {typeOptions.map((type) => (
               <option key={type} value={type}>
                 {type === "all" ? "Todos os tipos" : type}
+                {type !== "all" && getBrainGraphNodeDefinition(type)?.label ? ` (${getBrainGraphNodeDefinition(type)?.label})` : ""}
               </option>
             ))}
           </select>

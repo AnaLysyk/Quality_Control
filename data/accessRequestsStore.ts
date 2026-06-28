@@ -186,3 +186,17 @@ export async function updateAccessRequest(
   await writeStore(store);
   return updated;
 }
+
+export async function deleteAccessRequest(id: string) {
+  if (shouldUsePostgresStore()) {
+    const prisma = await getPrisma();
+    const result = await prisma.accessRequest.deleteMany({ where: { id } });
+    return result.count > 0;
+  }
+
+  const store = await readStore();
+  const nextItems = store.items.filter((item) => item.id !== id);
+  if (nextItems.length === store.items.length) return false;
+  await writeStore({ items: nextItems });
+  return true;
+}

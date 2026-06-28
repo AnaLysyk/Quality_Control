@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AccessRequests.module.css";
+import { AccessRequestProfileWorkspace, AccessRequestsTableExperience } from "./_components";
 import { FiCheckCircle, FiClock, FiRefreshCw, FiSearch, FiSlash } from "react-icons/fi";
 import { RequireAccessRequestReviewer } from "@/core/auth/RequireAccessRequestReviewer";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -70,7 +71,7 @@ type AccessRequestItem = {
   requestKind: "access_request" | "password_reset";
   linkedRequestId: string | null;
   visualProfile?: {
-    avatarKind?: "emoji" | "gif" | "default";
+    avatarKind?: "emoji" | "gif" | "default" | "image";
     avatarValue?: string;
     avatarLabel?: string;
   } | null;
@@ -425,7 +426,7 @@ const inputBase =
 const readOnlyInputBase =
   "mt-1 w-full rounded-[16px] border border-(--tc-border) bg-(--tc-surface-2) px-3.5 py-2.5 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
-const labelBase = "text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent)";
+const labelBase = "text-[11px] font-black uppercase tracking-[0.22em] text-slate-500";
 const formLabelBase = "text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted)";
 
 const sectionCard =
@@ -737,6 +738,8 @@ function AccessRequestsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [dateFilter, setDateFilter] = useState<DateFilter>("month");
   const [profileEmoji, setProfileEmoji] = useState<string>(PROFILE_EMOJI_OPTIONS[0]);
+  const [profileAvatarKind, setProfileAvatarKind] = useState<"emoji" | "gif" | "default" | "image">("default");
+  const [profileAvatarLabel, setProfileAvatarLabel] = useState("Perfil sem foto");
   const [internalNotesDraft, setInternalNotesDraft] = useState("");
 // Track whether the user has modified the draft form since the last selection change.
   // Prevents React Strict Mode double-invoke of load() from resetting user edits.
@@ -822,6 +825,29 @@ function AccessRequestsPage() {
     [],
   );
 
+  const deleteRequest = useCallback(async (id: string) => {
+    setError(null);
+    setSuccessMessage(null);
+
+    const res = await fetchWithToken(`/api/admin/access-requests/${id}`, {
+      method: "DELETE",
+    });
+    const json = await readJsonBody(res);
+
+    if (!res.ok || getEnvelopeRecord(json)?.ok === false) {
+      const message = getResponseErrorMessage(json, res, "Falha ao remover solicitação");
+      setError(message);
+      throw new Error(message);
+    }
+
+    setItems((current) => {
+      const next = current.filter((item) => item.id !== id);
+      setSelectedId((previous) => getNextSelectedAccessRequestId(previous === id ? null : previous, next));
+      return next;
+    });
+    setSuccessMessage("Solicitação removida e registrada nos logs do sistema.");
+  }, []);
+
   useEffect(() => {
     load();
   }, [load]);
@@ -865,7 +891,9 @@ function AccessRequestsPage() {
   }, [selected]);
 
   useEffect(() => {
-    setProfileEmoji(selected?.visualProfile?.avatarValue || PROFILE_EMOJI_OPTIONS[0]);
+    setProfileEmoji(selected?.visualProfile?.avatarValue || "");
+    setProfileAvatarKind(selected?.visualProfile?.avatarKind || "default");
+    setProfileAvatarLabel(selected?.visualProfile?.avatarLabel || "Perfil sem foto");
     setInternalNotesDraft(selected?.reviewSummary?.internalNotes || selected?.adminNotes || "");
   }, [selectedId, selected]);
 
@@ -902,9 +930,9 @@ function AccessRequestsPage() {
           admin_notes: internalNotesDraft || draft.adminNotes || "",
           title: draft.title,
           description: draft.description,
-          avatarKind: "emoji",
+          avatarKind: profileAvatarKind,
           avatarValue: profileEmoji,
-          avatarLabel: "Perfil do solicitante",
+          avatarLabel: profileAvatarLabel,
           internalNotes: internalNotesDraft,
           visualStatus: missingRequiredFields ? "needs_adjustment" : "ready",
         }),
@@ -925,10 +953,15 @@ function AccessRequestsPage() {
     }
   }
 
-  async function persistVisualReview(next?: { emoji?: string; internalNotes?: string }) {
+  async function persistVisualReview(next?: {
+    avatar?: { avatarKind: "emoji" | "gif" | "default" | "image"; avatarValue: string; avatarLabel: string };
+    internalNotes?: string;
+  }) {
     if (!selected || !draft) return;
 
-    const nextEmoji = next?.emoji ?? profileEmoji;
+    const nextAvatarKind = next?.avatar?.avatarKind ?? profileAvatarKind;
+    const nextAvatarValue = next?.avatar?.avatarValue ?? profileEmoji;
+    const nextAvatarLabel = next?.avatar?.avatarLabel ?? profileAvatarLabel;
     const nextInternalNotes = next?.internalNotes ?? internalNotesDraft;
 
     setSaving(true);
@@ -952,9 +985,9 @@ function AccessRequestsPage() {
           admin_notes: nextInternalNotes,
           title: draft.title,
           description: draft.description,
-          avatarKind: "emoji",
-          avatarValue: nextEmoji,
-          avatarLabel: "Perfil do solicitante",
+          avatarKind: nextAvatarKind,
+          avatarValue: nextAvatarValue,
+          avatarLabel: nextAvatarLabel,
           internalNotes: nextInternalNotes,
           visualStatus: missingRequiredFields ? "needs_adjustment" : "ready",
         }),
@@ -1057,11 +1090,11 @@ function AccessRequestsPage() {
     const rejectionReason = ACCESS_REQUEST_REJECTION_REASONS.find(
       (item) => item.value === rejectionReasonDraft,
     );
-    if (!rejectionReason) {
-      setError("Selecione o motivo da rejeição.");
+    if (!rejectionReason && !commentDraft.trim()) {
+      setError("Informe um motivo da rejeição ou escreva um comentário antes de recusar.");
       return;
     }
-    const rejectionText = [rejectionReason.label, commentDraft.trim()]
+    const rejectionText = [rejectionReason?.label, commentDraft.trim()]
       .filter(Boolean)
       .join("\n");
 
@@ -1098,9 +1131,9 @@ function AccessRequestsPage() {
 
   return (
     <div className="min-h-screen bg-transparent text-(--tc-text-primary)">
-      <div className="mx-auto flex w-full max-w-480 flex-col gap-5 px-2.5 py-5 sm:px-3 sm:py-6 lg:px-4 xl:px-5 2xl:px-6">
+      <div className="mx-auto flex w-full max-w-none flex-col gap-3 px-1.5 py-3 sm:px-2 lg:px-3 xl:px-4">
         <section
-          className={`relative overflow-hidden rounded-[26px] border border-(--tc-border) px-4 py-3 text-white shadow-[0_18px_44px_rgba(15,23,42,0.12)] sm:px-5 sm:py-4 ${styles.headerCard}`}
+          className={`relative overflow-hidden rounded-[24px] border border-(--tc-border) px-4 py-3 text-white shadow-[0_18px_44px_rgba(15,23,42,0.12)] sm:px-5 ${styles.headerCard}`}
         >
           <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
           <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
@@ -1178,9 +1211,9 @@ function AccessRequestsPage() {
         </section>
 
         {(error || successMessage) ? (
-          <div className="fixed right-4 top-4 z-[80] flex w-[min(420px,calc(100vw-2rem))] flex-col gap-3">
+          <div className="pointer-events-none fixed right-4 top-28 z-[2147483647] flex w-[min(420px,calc(100vw-2rem))] flex-col gap-3 sm:right-8">
             {error ? (
-              <div className="animate-in fade-in slide-in-from-top-2 rounded-3xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 shadow-[0_22px_50px_rgba(15,23,42,0.18)]">
+              <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 rounded-3xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 shadow-[0_22px_50px_rgba(15,23,42,0.18)]">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-base">!</div>
                   <div className="min-w-0 flex-1">
@@ -1200,7 +1233,7 @@ function AccessRequestsPage() {
             ) : null}
 
             {successMessage ? (
-              <div className="animate-in fade-in slide-in-from-top-2 rounded-3xl border border-emerald-200 bg-white px-4 py-3 text-sm text-emerald-800 shadow-[0_22px_50px_rgba(15,23,42,0.18)]">
+              <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 rounded-3xl border border-emerald-200 bg-white px-4 py-3 text-sm text-emerald-800 shadow-[0_22px_50px_rgba(15,23,42,0.18)]">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-base">✓</div>
                   <div className="min-w-0 flex-1">
@@ -1221,634 +1254,84 @@ function AccessRequestsPage() {
           </div>
         ) : null}
 
-        <div className="grid items-stretch grid-cols-1 gap-5 xl:grid-cols-[minmax(300px,350px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(330px,390px)_minmax(0,1fr)]">
-          <aside className="flex min-h-170 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-5.2rem)] xl:min-h-0 2xl:sticky 2xl:top-4">
-            <div className={`border-b border-(--tc-border) p-5 ${styles.asideHeader}`}>
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-[20px] font-semibold tracking-tight text-(--tc-text-primary)">Fila de solicitações</h2><p className="mt-1 text-sm text-(--tc-text-muted)">{filteredItems.length} item(ns) no filtro atual</p>
-                </div>
-                <div className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-semibold text-(--tc-text-muted)">
-                  {statusCounters.total} total
-                </div>
-              </div>
-
-            <div className="relative mt-5">
-              <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-accent)" />
-              <input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por nome, e-mail, empresa, perfil ou cargo"
-                data-testid="access-requests-search-input"
-                className="w-full rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) py-3 pl-10 pr-4 text-sm font-medium text-(--tc-text-primary) shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.12)]"
+        <AccessRequestsTableExperience
+          items={filteredItems}
+          loading={loading}
+          total={statusCounters.total}
+          selectedId={selectedId}
+          onSelect={(id) => setSelectedId(id)}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={(value) => setStatusFilter(value as StatusFilter)}
+          dateFilter={dateFilter}
+          onDateFilterChange={(value) => setDateFilter(value as DateFilter)}
+          onDelete={deleteRequest}
+          detail={(mode) =>
+            selected && draft ? (
+              <AccessRequestProfileWorkspace
+                selected={selected}
+                draft={draft}
+                comparisonRows={buildAccessRequestComparisonRows({ selected, selectedOriginal, draft })}
+                profileEmoji={profileEmoji}
+                saving={saving}
+                readOnly={mode === "view"}
+                profileAvatarKind={profileAvatarKind}
+                onSaveVisualProfile={() =>
+                  void persistVisualReview({
+                    avatar: {
+                      avatarKind: profileAvatarKind,
+                      avatarValue: profileEmoji,
+                      avatarLabel: profileAvatarLabel,
+                    },
+                  })
+                }
+                onAvatarChange={(choice) => {
+                  setProfileAvatarKind(choice.avatarKind);
+                  setProfileEmoji(choice.avatarValue);
+                  setProfileAvatarLabel(choice.avatarLabel);
+                }}
+                missingRequiredFields={missingRequiredFields}
+                requiresCompany={requiresCompany}
+                acceptDisabled={acceptDisabled}
+                accepting={accepting}
+                requestingAdjustment={requestingAdjustment}
+                selectedIsPasswordReset={Boolean(selectedIsPasswordReset)}
+                commentsLocked={commentsLocked}
+                comments={comments}
+                commentLoading={commentLoading}
+                commentError={commentError}
+                commentDraft={commentDraft}
+                onCommentDraftChange={setCommentDraft}
+                internalNotesDraft={internalNotesDraft}
+                onInternalNotesChange={setInternalNotesDraft}
+                onSaveInternalNotes={() => void persistVisualReview({ internalNotes: internalNotesDraft })}
+                adjustmentFieldOptions={adjustmentFieldOptions}
+                adjustmentFieldsDraft={adjustmentFieldsDraft}
+                adjustmentFieldComments={adjustmentFieldComments}
+                onToggleAdjustmentField={(field) =>
+                  setAdjustmentFieldsDraft((current) =>
+                    current.includes(field as AccessRequestAdjustmentField)
+                      ? current.filter((item) => item !== field)
+                      : [...current, field as AccessRequestAdjustmentField],
+                  )
+                }
+                onAdjustmentFieldCommentChange={(field, value) =>
+                  setAdjustmentFieldComments((current) => ({
+                    ...current,
+                    [field]: value,
+                  }))
+                }
+                rejectionReasons={ACCESS_REQUEST_REJECTION_REASONS}
+                rejectionReasonDraft={rejectionReasonDraft}
+                onRejectionReasonChange={setRejectionReasonDraft}
+                onRequestAdjustment={requestAdjustment}
+                onReject={rejectRequest}
+                onApprove={acceptRequest}
               />
-            </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-black uppercase tracking-[0.18em] text-(--tc-text-muted)">
-                  Status
-                  <select
-                    value={statusFilter}
-                    onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-                    className="mt-2 w-full rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5 text-sm font-semibold normal-case tracking-normal text-(--tc-text-primary) outline-none transition focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
-                  >
-                    <option value="all">Todos os status</option>
-                    <option value="open">Novas</option>
-                    <option value="in_progress">Aguardando ajuste</option>
-                    <option value="closed">Aprovadas</option>
-                    <option value="rejected">Recusadas</option>
-                  </select>
-                </label>
-
-                <label className="text-xs font-black uppercase tracking-[0.18em] text-(--tc-text-muted)">
-                  Período
-                  <select
-                    value={dateFilter}
-                    onChange={(event) => setDateFilter(event.target.value as DateFilter)}
-                    className="mt-2 w-full rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5 text-sm font-semibold normal-case tracking-normal text-(--tc-text-primary) outline-none transition focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
-                  >
-                    <option value="all">Todo o histórico</option>
-                    <option value="today">Hoje</option>
-                    <option value="week">Últimos 7 dias</option>
-                    <option value="month">Últimos 30 dias</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 pr-3 [scrollbar-width:none] sm:p-5 sm:pr-4 [&::-webkit-scrollbar]:hidden" data-testid="access-requests-list">
-              {loading ? (
-                <div className={`${sectionMuted} text-sm text-(--tc-text-muted)`}>Carregando solicitações...</div>
-              ) : filteredItems.length === 0 ? (
-                <div className={`${sectionMuted} text-sm text-(--tc-text-muted)`}>
-                  Nenhuma solicitação encontrada para o filtro atual.
-                </div>
-              ) : (
-                filteredItems.map((it) => {
-                  const selectedRow = selectedId === it.id;
-                  const displayName = getPersonDisplayName(it);
-                  const initials = getPersonInitials(displayName);
-                  const subtitle = getRequestPersonaSubtitle(it);
-
-                  return (
-                    <article
-                      key={it.id}
-                      data-testid="access-request-row"
-                      className={`group rounded-[26px] border p-3.5 transition focus-within:ring-2 focus-within:ring-[rgba(239,0,1,0.22)] ${
-                        selectedRow
-                          ? `border-transparent text-white shadow-[0_20px_44px_rgba(1,24,72,0.18)] ${styles.rowSelected}`
-                          : "border-(--tc-border) bg-(--tc-surface) shadow-[0_14px_34px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-[rgba(1,24,72,0.14)] hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]"
-                      }`}
-                    >
-                      <button type="button" onClick={() => setSelectedId(it.id)} className="w-full text-left">
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl font-black shadow-[0_12px_26px_rgba(15,23,42,0.12)] ${
-                              selectedRow
-                                ? "border border-white/20 bg-white/15 text-white"
-                                : "border border-(--tc-border) bg-[linear-gradient(135deg,var(--tc-primary)_0%,rgba(239,0,1,0.82)_160%)] text-white"
-                            }`}
-                          >
-                            {it.visualProfile?.avatarValue || initials}
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex min-w-0 items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className={`truncate text-base font-black leading-5 ${selectedRow ? "text-white" : "text-(--tc-text-primary)"}`}>
-                                  {displayName}
-                                </p>
-                                <p className={`mt-1 truncate text-xs font-semibold ${selectedRow ? "text-white/78" : "text-(--tc-text-secondary)"}`}>
-                                  {it.email}
-                                </p>
-                              </div>
-
-                              <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
-                                selectedRow ? "border-white/20 bg-white/15 text-white" : getStatusTone(it.status)
-                              }`}>
-                                {statusLabel(it.status)}
-                              </span>
-                            </div>
-
-                            <p className={`mt-3 line-clamp-2 text-xs font-semibold leading-5 ${selectedRow ? "text-white/82" : "text-(--tc-text-muted)"}`}>
-                              {subtitle}
-                            </p>
-
-                            <div className={`mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3 ${selectedRow ? "border-white/12" : "border-(--tc-border)"}`}>
-                              <span className={`text-[11px] font-semibold ${selectedRow ? "text-white/72" : "text-(--tc-text-muted)"}`}>
-                                {formatDateTime(it.createdAt)}
-                              </span>
-                              <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${
-                                selectedRow ? "border-white/20 bg-white/10 text-white" : accessTypeBadgeClass(it.accessType)
-                              }`}>
-                                {it.accessType}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    </article>
-                  );
-                })
-              )}
-            </div>
-          </aside>
-
-          <section className="flex min-h-170 flex-col overflow-hidden rounded-[28px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_20px_48px_rgba(15,23,42,0.08)] xl:h-[calc(100vh-5.2rem)] xl:min-h-0">
-            {!selected || !draft ? (
-              <div className={`${sectionMuted} flex min-h-105 flex-1 items-center justify-center p-6 sm:p-8`}>
-                <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,var(--tc-primary)_0%,rgba(239,0,1,0.82)_180%)] text-white shadow-[0_18px_38px_rgba(1,24,72,0.16)]">
-                    <FiClock size={24} />
-                  </div>
-                  <div className="mt-5 space-y-2">
-                    <h3 className="text-[1.6rem] font-black tracking-[-0.04em] text-(--tc-text-primary)">
-                      Selecione uma pessoa para analisar
-                    </h3>
-                    <p className="max-w-2xl text-sm leading-7 text-(--tc-text-muted)">
-                      Escolha uma solicitação na fila para abrir o perfil em análise, comparar os dados enviados,
-                      revisar ajustes e concluir a decisão com contexto completo.
-                    </p>
-                  </div>
-
-                  <div className="mt-6 grid w-full gap-3 sm:grid-cols-3">
-                    <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Abertas</div>
-                      <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.open}</div>
-                      <div className="mt-2 text-sm text-(--tc-text-muted)">Solicitações aguardando primeira leitura.</div>
-                    </div>
-                    <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Em análise</div>
-                      <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.inReview}</div>
-                      <div className="mt-2 text-sm text-(--tc-text-muted)">Fila administrativa ativa para válidação.</div>
-                    </div>
-                    <div className="rounded-[20px] border border-(--tc-border) bg-(--tc-surface) px-4 py-4 text-left shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Ajustes</div>
-                      <div className="mt-2 text-3xl font-black text-(--tc-text-primary)">{statusCounters.inProgress}</div>
-                      <div className="mt-2 text-sm text-(--tc-text-muted)">Retornos esperando correção do solicitante.</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-3 [scrollbar-width:none] sm:p-4 xl:p-5 2xl:p-6 [&::-webkit-scrollbar]:hidden">
-                <section className="overflow-hidden rounded-[30px] border border-(--tc-border) bg-white p-5 shadow-[0_20px_54px_rgba(15,23,42,0.08)]">
-                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)]">
-                    <div className="flex min-w-0 gap-5">
-                      <div className="flex min-w-[132px] flex-col items-center">
-                        <div className="flex h-28 w-28 items-center justify-center rounded-[34px] border border-sky-100 bg-[linear-gradient(135deg,#eff6ff_0%,#dbeafe_100%)] text-6xl shadow-[0_20px_42px_rgba(37,99,235,0.14)]">
-                          {profileEmoji || selected.visualProfile?.avatarValue || getPersonInitials(selected.fullName || selected.name || selected.email)}
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap justify-center gap-2">
-                          {PROFILE_EMOJI_OPTIONS.slice(0, 6).map((emoji) => {
-                            const activeEmoji = profileEmoji === emoji;
-                            return (
-                              <button
-                                key={`profile-emoji-${emoji}`}
-                                type="button"
-                                onClick={() => {
-                                  setProfileEmoji(emoji);
-                                  void persistVisualReview({ emoji });
-                                }}
-                                className={`flex h-9 w-9 items-center justify-center rounded-2xl border text-lg transition ${
-                                  activeEmoji
-                                    ? "border-sky-300 bg-sky-50 shadow-[0_10px_22px_rgba(37,99,235,0.12)]"
-                                    : "border-(--tc-border) bg-white hover:bg-(--tc-surface-2)"
-                                }`}
-                                aria-label={`Usar emoji ${emoji} no perfil`}
-                              >
-                                {emoji}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-black ${statusBadgeClass(selected.status)}`}>
-                            {statusLabel(selected.status)}
-                          </span>
-                          <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-black ${accessTypeBadgeClass(selected.accessType)}`}>
-                            {selected.accessType}
-                          </span>
-                        </div>
-
-                        <p className="mt-4 text-[11px] font-black uppercase tracking-[0.24em] text-sky-700">Perfil que será criado</p>
-                        <h2 className="mt-1 break-words text-3xl font-black tracking-tight text-(--tc-text-primary)">
-                          {draft.fullName || selected.fullName || selected.name || "(sem nome)"}
-                        </h2>
-
-                        <div className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text-secondary) sm:grid-cols-2">
-                          <p className="truncate">E-mail: {draft.email || selected.email}</p>
-                          <p className="truncate">Telefone: {draft.phone || selected.phone || "Não informado"}</p>
-                          <p className="truncate">Usuário: @{draft.username || selected.username || "a-definir"}</p>
-                          <p className="truncate">Cargo: {draft.jobRole || selected.jobRole || "Não informado"}</p>
-                          <p className="truncate">Empresa: {draft.company || selected.company || "Sem empresa"}</p>
-                          <p className="truncate">Recebida: {formatDateTime(selected.createdAt)}</p>
-                        </div>
-
-                        <p className="mt-4 max-w-3xl text-sm leading-6 text-(--tc-text-secondary)">
-                          Este é o cadastro que será liberado no sistema. Revise os dados finais, confira as alterações do solicitante e conclua a decisão.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-[26px] border border-(--tc-border) bg-(--tc-surface-2) p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-(--tc-text-muted)">Resumo da análise</p>
-                          <h3 className="mt-1 text-lg font-black text-(--tc-text-primary)">Pronto para decisão</h3>
-                        </div>
-                        <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${
-                          acceptDisabled
-                            ? "border-amber-200 bg-amber-50 text-amber-800"
-                            : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        }`}>
-                          {acceptDisabled ? "Pendências" : "Pronto para aprovação"}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 grid gap-3">
-                        <div className="flex items-center justify-between rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5">
-                          <span className="text-sm font-semibold text-(--tc-text-secondary)">Senha definida</span>
-                          <span className={`text-sm font-black ${draft.passwordProvided ? "text-emerald-700" : "text-rose-700"}`}>
-                            {draft.passwordProvided ? "Sim" : "Não"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5">
-                          <span className="text-sm font-semibold text-(--tc-text-secondary)">Campos obrigatórios</span>
-                          <span className={`text-sm font-black ${missingRequiredFields ? "text-amber-700" : "text-emerald-700"}`}>
-                            {missingRequiredFields ? "Pendentes" : "OK"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5">
-                          <span className="text-sm font-semibold text-(--tc-text-secondary)">Alterações do solicitante</span>
-                          <span className="text-sm font-black text-amber-700">
-                            {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).filter((row) => row.changed).length}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between rounded-2xl border border-(--tc-border) bg-white px-3 py-2.5">
-                          <span className="text-sm font-semibold text-(--tc-text-secondary)">Última análise</span>
-                          <span className="text-sm font-black text-(--tc-text-primary)">
-                            {selected.reviewSummary?.lastReviewedAt ? formatDateTime(selected.reviewSummary.lastReviewedAt) : "Ainda não analisada"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-                <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.9fr)]">
-                  <div className={`${sectionCard} overflow-hidden border-0 bg-[linear-gradient(135deg,#fff7ed_0%,#ffffff_46%,#eff6ff_100%)]`}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-700">Alterações do solicitante</p>
-                        <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">O que mudou antes de virar perfil</h3>
-                        <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary)">
-                          Cada card mostra o valor original e o valor atual que será usado na criação do usuário.
-                        </p>
-                      </div>
-
-                      <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800">
-                        {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).filter((row) => row.changed).length} alteração(ões)
-                      </span>
-                    </div>
-
-                    <div className="mt-5 grid gap-3">
-                      {buildAccessRequestComparisonRows({ selected, selectedOriginal, draft }).filter((row) => row.changed).length > 0 ? (
-                        buildAccessRequestComparisonRows({ selected, selectedOriginal, draft })
-                          .filter((row) => row.changed)
-                          .map((row) => (
-                            <article
-                              key={`visual-change-${row.label}`}
-                              className="overflow-hidden rounded-[24px] border border-amber-200 bg-white shadow-[0_16px_34px_rgba(217,119,6,0.10)]"
-                            >
-                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-100 bg-amber-50 px-4 py-3">
-                                <h4 className="font-black text-(--tc-text-primary)">{row.label}</h4>
-                                <span className="rounded-full border border-amber-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-800">
-                                  Alterado
-                                </span>
-                              </div>
-
-                              <div className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)] md:items-stretch">
-                                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-3">
-                                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-700">Antes</p>
-                                  <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-rose-900">{row.originalText}</p>
-                                </div>
-
-                                <div className="hidden items-center justify-center text-xl font-black text-(--tc-text-muted) md:flex">→</div>
-
-                                <div className="rounded-2xl border border-sky-200 bg-sky-50 px-3 py-3 ring-2 ring-sky-100">
-                                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-700">Agora / perfil</p>
-                                  <p className="mt-2 whitespace-pre-wrap break-words text-sm font-black leading-6 text-sky-950">{row.currentText}</p>
-                                </div>
-                              </div>
-                            </article>
-                          ))
-                      ) : (
-                        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-5 text-emerald-800">
-                          <p className="font-black">Nenhuma alteração identificada.</p>
-                          <p className="mt-1 text-sm leading-6">Os dados atuais estão iguais ao envio original.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={`${sectionCard} overflow-hidden`}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-sky-700">Dados que serão salvos no perfil</p>
-                        <h3 className="mt-1 text-xl font-black tracking-tight text-(--tc-text-primary)">Cadastro final</h3>
-                      </div>
-                      <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-black text-(--tc-text-muted)">
-                        Prévia
-                      </span>
-                    </div>
-
-                    <div className="mt-5 divide-y divide-(--tc-border) rounded-[24px] border border-(--tc-border) bg-white">
-                      {[
-                        { label: "Nome completo", value: draft.fullName || selected.fullName || selected.name || "Não informado" },
-                        { label: "Usuário", value: draft.username || selected.username || "A definir" },
-                        { label: "E-mail", value: draft.email || selected.email || "Não informado" },
-                        { label: "Telefone", value: draft.phone || selected.phone || "Não informado" },
-                        { label: "Empresa", value: draft.company || selected.company || "Sem empresa" },
-                        { label: "Cargo", value: draft.jobRole || selected.jobRole || "Não informado" },
-                        { label: "Perfil de acesso", value: draft.accessType || selected.accessType || "Não informado" },
-                        { label: "Senha", value: draft.passwordProvided ? "Senha informada" : "Senha pendente" },
-                      ].map((field) => (
-                        <div key={`profile-final-${field.label}`} className="grid gap-2 px-4 py-3 sm:grid-cols-[150px_minmax(0,1fr)]">
-                          <span className="text-[11px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted)">{field.label}</span>
-                          <span className="break-words text-sm font-black text-(--tc-text-primary)">{field.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </section>
-                <section className="rounded-3xl border border-dashed border-(--tc-border) bg-(--tc-surface-2) px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Dados técnicos completos</p>
-                      <h3 className="mt-1 text-lg font-black tracking-tight text-(--tc-text-primary)">Base original e edição administrativa</h3>
-                      <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
-                        Área técnica mantida como apoio interno. A decisão principal deve ser feita pelos cards de perfil, resumo e alterações acima.
-                      </p>
-                    </div>
-
-                    <span className="rounded-full border border-(--tc-border) bg-white px-3 py-1.5 text-xs font-black text-(--tc-text-muted)">
-                      Oculto no fluxo principal
-                    </span>
-                  </div>
-                </section>
-                <section className={`${sectionCard} overflow-hidden`}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Observações internas</p>
-                      <h3 className="mt-1 text-lg font-black tracking-tight text-(--tc-text-primary)">Notas da análise</h3>
-                      <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
-                        Informação visível apenas para administradores/revisores. Não será enviada para o solicitante.
-                      </p>
-                    </div>
-                    <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1.5 text-xs font-black text-(--tc-text-muted)">
-                      Interno
-                    </span>
-                  </div>
-
-                  <textarea
-                    value={internalNotesDraft}
-                    onChange={(event) => setInternalNotesDraft(event.target.value)}
-                    onBlur={() => void persistVisualReview({ internalNotes: internalNotesDraft })}
-                    placeholder="Registre contexto, validação do gestor, motivo da decisão ou ressalvas internas..."
-                    rows={4}
-                    className="mt-4 w-full resize-none rounded-[22px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3 text-sm font-medium leading-6 text-(--tc-text-primary) outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
-                  />
-                </section>
-
-                <section className={sectionMuted}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-(--tc-accent)">Linha do tempo e conversa</p>
-                      <h3 className="mt-2 text-lg font-semibold text-(--tc-text-primary)">Linha do tempo e conversa</h3>
-                      <p className="mt-1 text-sm text-(--tc-text-secondary)">
-                        Acompanhe o histórico, registre mensagens e mantenha a comunicação com o solicitante.
-                      </p>
-                    </div>
-                    {commentLoading ? <span className="text-sm font-medium text-(--tc-text-muted)">Carregando...</span> : null}
-                  </div>
-
-                  {commentError ? (
-                    <div className="mt-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
-                      {commentError}
-                    </div>
-                  ) : null}
-
-                  {selected.adjustmentHistory.length > 0 ? (
-                    <div className="mt-5 rounded-[20px] border border-(--tc-border) bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className={labelBase}>Rodadas de ajuste</p>
-                          <p className="mt-2 text-sm text-(--tc-text-secondary)">
-                            Histórico de devoluções, retorno do solicitante e campos marcados por rodada.
-                          </p>
-                        </div>
-                        <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
-                          {selected.adjustmentHistory.length} rodada(s)
-                        </span>
-                      </div>
-
-                      <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                        {[...selected.adjustmentHistory].reverse().map((round) => (
-                          <div key={`round-${round.round}`} className="rounded-[18px] border border-(--tc-border) bg-(--tc-surface-2) px-4 py-4">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="text-sm font-semibold text-(--tc-text-primary)">{round.round}º ajuste</span>
-                              <span className="text-xs font-medium text-(--tc-text-muted)">
-                                {formatDateTime(round.requestedAt)}
-                              </span>
-                            </div>
-                            <p className="mt-2 text-sm text-(--tc-text-secondary)">
-                              {round.requestMessage?.trim() || "Sem mensagem registrada nesta rodada."}
-                            </p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {round.requestedFields.map((field) => (
-                                <span
-                                  key={`round-field-${round.round}-${field}`}
-                                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${adjustmentFieldBadgeClass(field)}`}
-                                >
-                                  {adjustmentFieldLabel(field, field)}
-                                </span>
-                              ))}
-                            </div>
-                            <p className="mt-3 text-xs font-medium text-(--tc-text-muted)">
-                              {round.requesterReturnedAt
-                                ? `Respondida em ${formatDateTime(round.requesterReturnedAt)}`
-                                : "Ainda aguardando retorno do solicitante."}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  <div className="mt-5 comments-chat">
-                    <div className="comments-chat-list" aria-live="polite">
-                      {comments.length === 0 ? (
-                        <p className="comments-chat-empty">Nenhuma interação registrada ainda.</p>
-                      ) : (
-                        comments.map((comment) => {
-                          const mine = comment.authorRole === "leader_tc";
-                          return (
-                            <div key={comment.id} className={`comments-chat-message ${mine ? "mine" : "other"}`}>
-                              <div className="comments-chat-author">
-                                {comment.authorRole === "leader_tc" ? "Admin" : "Solicitante"}: {comment.authorName}
-                              </div>
-                              <div className="comments-chat-bubble whitespace-pre-wrap">{comment.body}</div>
-                              <div className="comments-chat-meta">{formatDateTime(comment.createdAt)}</div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-
-                    <div className="comments-chat-input">
-                      <textarea
-                        className={`${inputBase} mt-0 min-h-30 resize-none`}
-                        rows={4}
-                        placeholder={commentsLocked ? "Solicitação finalizada" : "Descreva o ajuste, a observação interna ou o motivo da decisão"}
-                        value={commentDraft}
-                        onChange={(e) => setCommentDraft(e.target.value)}
-                        disabled={commentsLocked}
-                      />
-                    </div>
-                  </div>
-
-                  {!commentsLocked ? (
-                    <div className="mt-4 rounded-[20px] border border-(--tc-border) bg-white px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className={labelBase}>Campos para correção</p>
-                          <p className="mt-2 text-sm text-(--tc-text-secondary)">
-                            Ao solicitar ajuste, marque os campos que o solicitante pode corrigir. Os demais permanecem somente leitura.
-                          </p>
-                        </div>
-                        <span className="rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary)">
-                          {adjustmentFieldsDraft.length} campo(s)
-                        </span>
-                      </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {adjustmentFieldOptions.map((option) => {
-                          const selectedField = adjustmentFieldsDraft.includes(option.field);
-                          return (
-                            <button
-                              key={`adjustment-field-${option.field}`}
-                              type="button"
-                              onClick={() =>
-                                setAdjustmentFieldsDraft((current) =>
-                                  current.includes(option.field)
-                                    ? current.filter((field) => field !== option.field)
-                                    : [...current, option.field],
-                                )
-                              }
-                              className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                                selectedField
-                                  ? "border-rose-300 bg-rose-50 text-rose-700 shadow-[0_8px_18px_rgba(225,29,72,0.1)]"
-                                  : "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-secondary) hover:border-[rgba(239,0,1,0.28)] hover:text-(--tc-text-primary)"
-                              }`}
-                              title={option.hint}
-                            >
-                              {option.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {adjustmentFieldsDraft.length > 0 ? (
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          {adjustmentFieldsDraft.map((field) => {
-                            const option = adjustmentFieldOptions.find((item) => item.field === field);
-                            return (
-                              <label key={`adjustment-comment-${field}`} className="text-xs font-semibold text-(--tc-text-secondary)">
-                                Observacao para {option?.label ?? field}
-                                <input
-                                  type="text"
-                                  value={adjustmentFieldComments[field] ?? ""}
-                                  onChange={(event) =>
-                                    setAdjustmentFieldComments((current) => ({
-                                      ...current,
-                                      [field]: event.target.value,
-                                    }))
-                                  }
-                                  className="mt-2 w-full rounded-xl border border-(--tc-border) bg-white px-3 py-2 text-sm text-(--tc-text-primary)"
-                                  data-testid={`access-request-adjustment-comment-${field}`}
-                                />
-                              </label>
-                            );
-                          })}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <div className="sticky bottom-0 z-20 mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-(--tc-border) bg-white/95 px-4 py-4 shadow-[0_-18px_42px_rgba(15,23,42,0.10)] backdrop-blur-md">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${draft.passwordProvided ? "border border-emerald-300 bg-emerald-100 text-emerald-800" : "border border-rose-300 bg-rose-100 text-rose-800"}`}>
-                        {draft.passwordProvided ? "Senha válida" : "Senha ausente"}
-                      </span>
-                      {requiresCompany && !draft.clientId ? (
-                        <span className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-800">
-                          Empresa obrigatória
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                    <select
-                      value={rejectionReasonDraft}
-                      onChange={(event) => setRejectionReasonDraft(event.target.value)}
-                      disabled={commentsLocked}
-                      className="min-h-10 rounded-full border border-rose-300 bg-white px-4 text-xs font-semibold text-rose-700 disabled:opacity-60"
-                      data-testid="access-request-rejection-reason"
-                      aria-label="Motivo da rejeição"
-                    >
-                      <option value="">Motivo da rejeição</option>
-                      {ACCESS_REQUEST_REJECTION_REASONS.map((reason) => (
-                        <option key={reason.value} value={reason.value}>
-                          {reason.label}
-                        </option>
-                      ))}
-                    </select>
-<button
-                      type="button"
-                      onClick={requestAdjustment}
-                      disabled={requestingAdjustment || selectedIsPasswordReset || !commentDraft.trim() || commentsLocked || adjustmentFieldsDraft.length === 0}
-                      className="rounded-[20px] border border-amber-300 bg-amber-50 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-amber-800 transition hover:-translate-y-0.5 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {requestingAdjustment ? "Enviando..." : "Solicitar ajuste"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={rejectRequest}
-                      aria-label="Recusar solicitação"
-                      disabled={accepting || !rejectionReasonDraft || commentsLocked}
-                      className="rounded-[20px] border border-rose-300 bg-rose-50 px-5 py-3 text-xs font-black uppercase tracking-[0.22em] text-rose-700 transition hover:-translate-y-0.5 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {accepting ? "Processando..." : "Recusar"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={acceptRequest}
-                      aria-label="Aprovar solicitação"
-                      disabled={acceptDisabled}
-                      className="rounded-[22px] bg-(--tc-primary) px-7 py-3 text-xs font-black uppercase tracking-[0.24em] text-white shadow-[0_18px_38px_rgba(1,24,72,0.26)] transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {accepting ? "Aprovando..." : selectedIsPasswordReset ? "Aprovar reset" : "Aprovar acesso"}
-                    </button>
-                    </div>
-                  </div>
-                </section>
-              </div>
-            )}
-          </section>
-        </div>
+            ) : null
+          }
+        />
       </div>
     </div>
   );

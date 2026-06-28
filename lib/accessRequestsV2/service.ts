@@ -19,7 +19,13 @@ import type { AuthUser } from "@/lib/jwtAuth";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { composeAccessRequestMessage } from "@/lib/accessRequestMessage";
 import { normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
-import { toInternalAccessType } from "@/lib/requestRouting";
+import { resolveReviewQueue, toInternalAccessType } from "@/lib/requestRouting";
+import {
+  notifyAccessRequestAccepted,
+  notifyAccessRequestAdjustmentRequested,
+  notifyAccessRequestCreated,
+  notifyAccessRequestRejected,
+} from "@/lib/notificationService";
 import {
   resolveEditableProfileUserState,
   toStoredEditableUserRole,
@@ -40,7 +46,6 @@ import {
   type AccessRequestV2,
   type AccessRequestV2Priority,
   type AccessRequestV2Status,
-  type AccessRequestV2Type,
   type AccessRequestVisualProfile,
   type AccessRequestReviewSummary,
   getEffectiveUserRole,
@@ -180,16 +185,18 @@ function normalizeVisualProfileFromPayload(
   if (!avatarKind && !avatarValue && !avatarLabel) return current;
 
   const safeKind =
-    avatarKind === "gif" || avatarKind === "emoji" || avatarKind === "default"
+    avatarKind === "gif" || avatarKind === "emoji" || avatarKind === "default" || avatarKind === "image"
       ? avatarKind
       : avatarValue
-        ? "emoji"
+        ? avatarValue.startsWith("data:image/")
+          ? "image"
+          : "emoji"
         : "default";
 
   return {
     avatarKind: safeKind,
-    avatarValue: avatarValue || current?.avatarValue || "👤",
-    avatarLabel: avatarLabel || current?.avatarLabel || "Perfil",
+    avatarValue: avatarValue || current?.avatarValue || "",
+    avatarLabel: avatarLabel || current?.avatarLabel || "Perfil sem foto",
   };
 }
 
@@ -234,31 +241,6 @@ function normalizeReviewSummaryFromPayload(input: {
 
 function asEmail(value: unknown) {
   return asText(value, 255).toLowerCase();
-}
-
-function buildSafeAccessRequestDetails(payload: Record<string, unknown>) {
-  const blocked = new Set([
-    "password",
-    "senha",
-    "userPassword",
-    "accessPassword",
-    "requestPassword",
-    "requestedPassword",
-    "confirmPassword",
-    "passwordConfirmation",
-    "captcha",
-    "token",
-    "accessKey",
-  ]);
-
-  return Object.fromEntries(
-    Object.entries(payload).filter(([key, value]) => {
-      if (blocked.has(key)) return false;
-      if (value === null || value === undefined || value === "") return false;
-      if (typeof value === "object") return false;
-      return true;
-    }),
-  );
 }
 
 function resolveRequestTypeFromPayload(payload: Record<string, unknown>) {
@@ -408,7 +390,7 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
     requestedPasswordHash,
     reason,
     priority: resolvePriorityFromPayload(payload),
-    details: persistedDetails,
+    details,
   });
 
   const companyDetailsForReceivedEmail = buildCompanyDetailsForEmail(payload);
@@ -444,6 +426,20 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
       ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
       userAgent: req.headers.get("user-agent") ?? null,
     },
+  });
+
+  const createdNotificationProfile =
+    normalizeAccessRequestProfileType(created.requestedRole) ?? requestedRole;
+
+  await notifyAccessRequestCreated({
+    requestId: created.id,
+    requesterName: created.requesterName ?? requesterName ?? created.requesterEmail,
+    profileType: createdNotificationProfile,
+    reviewQueue: resolveReviewQueue(createdNotificationProfile),
+    companySlug: created.requestedCompanySlug ?? null,
+    clientId: created.requestedCompanyId ?? null,
+  }).catch((error) => {
+    console.error("[ACCESS_REQUEST_NOTIFICATION][created]", error);
   });
 
   return { status: 201 as const, body: { item: created } };
@@ -508,6 +504,13 @@ export async function updateAccessRequestDetailsForReviewer(
     company: request.details?.company,
   };
 
+  const companyId =
+    readTextFromPayload(payload, ["client_id", "requestedCompanyId"], 120) ||
+    request.requestedCompanyId;
+  const companySlug =
+    readTextFromPayload(payload, ["company", "requestedCompanySlug"], 255) ||
+    request.requestedCompanySlug;
+
   const nextVisualProfile = normalizeVisualProfileFromPayload(payload, request.details?.visualProfile);
   const nextReviewSummary = normalizeReviewSummaryFromPayload({
     payload,
@@ -531,13 +534,6 @@ export async function updateAccessRequestDetailsForReviewer(
     ...(nextVisualProfile ? { visualProfile: nextVisualProfile } : {}),
     ...(nextReviewSummary ? { reviewSummary: nextReviewSummary } : {}),
   };
-
-  const companyId =
-    readTextFromPayload(payload, ["client_id", "requestedCompanyId"], 120) ||
-    request.requestedCompanyId;
-  const companySlug =
-    readTextFromPayload(payload, ["company", "requestedCompanySlug"], 255) ||
-    request.requestedCompanySlug;
 
   if (accessRequestProfileNeedsCompany(profile)) {
     const company = await findCompanyByIdSlugOrName(companyId, companySlug);
@@ -905,6 +901,50 @@ export async function transitionAccessRequest(
     entityLabel: `${updated.requesterName ?? "Solicitante"} (${updated.requesterEmail})`,
     metadata: { action, nextStatus, comment: comment ?? null },
   });
+
+  const notificationProfile =
+    normalizeAccessRequestProfileType(updated.requestedRole) ??
+    normalizeAccessRequestProfileType(request.requestedRole);
+
+  if (notificationProfile && action === "approve") {
+    await notifyAccessRequestAccepted({
+      requestId: updated.id,
+      requesterName: updated.requesterName ?? updated.requesterEmail,
+      approverName: reviewer.email || "Admin",
+      profileType: notificationProfile,
+      reviewQueue: resolveReviewQueue(notificationProfile),
+      companySlug: updated.requestedCompanySlug ?? null,
+      clientId: updated.requestedCompanyId ?? null,
+    }).catch((error) => {
+      console.error("[ACCESS_REQUEST_NOTIFICATION][accepted]", error);
+    });
+  } else if (notificationProfile && action === "reject") {
+    await notifyAccessRequestRejected({
+      requestId: updated.id,
+      requesterName: updated.requesterName ?? updated.requesterEmail,
+      rejectorName: reviewer.email || "Admin",
+      profileType: notificationProfile,
+      reviewQueue: resolveReviewQueue(notificationProfile),
+      reason: comment ?? null,
+      companySlug: updated.requestedCompanySlug ?? null,
+      clientId: updated.requestedCompanyId ?? null,
+    }).catch((error) => {
+      console.error("[ACCESS_REQUEST_NOTIFICATION][rejected]", error);
+    });
+  } else if (notificationProfile && action === "request-info") {
+    await notifyAccessRequestAdjustmentRequested({
+      requestId: updated.id,
+      requesterName: updated.requesterName ?? updated.requesterEmail,
+      reviewerName: reviewer.email || "Admin",
+      profileType: notificationProfile,
+      reviewQueue: resolveReviewQueue(notificationProfile),
+      fields: adjustmentFields.map((field) => ACCESS_REQUEST_ADJUSTMENT_FIELD_LABELS[field] ?? field),
+      companySlug: updated.requestedCompanySlug ?? null,
+      clientId: updated.requestedCompanyId ?? null,
+    }).catch((error) => {
+      console.error("[ACCESS_REQUEST_NOTIFICATION][adjustment]", error);
+    });
+  }
 
   // Enviar e-mails conforme aÃ§Ã£o
   const recipientEmail = request.requesterEmail;

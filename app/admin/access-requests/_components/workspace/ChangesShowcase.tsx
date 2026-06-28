@@ -1,54 +1,96 @@
-﻿import type { AccessRequestComparisonRow } from "../../_types/accessRequests.types";
+import type { AccessRequestComparisonRow } from "../../_types/accessRequests.types";
+
+function ChangeBadge({ changed }: { changed: boolean }) {
+  return (
+    <span
+      className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+        changed
+          ? "border-amber-200 bg-amber-50 text-amber-800"
+          : "border-slate-200 bg-slate-50 text-slate-500"
+      }`}
+    >
+      {changed ? "Alterado" : "Igual"}
+    </span>
+  );
+}
+
+function CellText({ value, strong = false }: { value: string; strong?: boolean }) {
+  return (
+    <p className={`whitespace-pre-wrap break-words text-sm leading-6 ${strong ? "font-bold text-slate-950" : "font-medium text-slate-600"}`}>
+      {value || "Não informado"}
+    </p>
+  );
+}
 
 export function ChangesShowcase({ rows }: { rows: AccessRequestComparisonRow[] }) {
   const changed = rows.filter((row) => row.changed);
 
   return (
-    <section className="self-start rounded-[26px] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#ffffff_48%,#eff6ff_100%)] p-5 shadow-[0_18px_46px_rgba(15,23,42,0.08)]">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-700">Alterações do solicitante</p>
-          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950">O que mudou antes de virar perfil</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Comparativo entre envio original e dados atuais.</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Revisão dos dados</p>
+          <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Origem recebida → como vai ficar</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Compare campo a campo antes de decidir. Alterações ficam destacadas.
+          </p>
         </div>
 
-        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800">
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600">
           {changed.length} alteração(ões)
         </span>
       </div>
 
-      <div className="mt-5 grid max-h-[360px] gap-3 overflow-y-auto pr-1">
-        {changed.length > 0 ? (
-          changed.map((row) => (
-            <article key={`visual-change-${row.label}`} className="overflow-hidden rounded-[22px] border border-amber-200 bg-white shadow-[0_14px_30px_rgba(217,119,6,0.08)]">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-100 bg-amber-50 px-4 py-3">
-                <h4 className="font-black text-slate-950">{row.label}</h4>
-                <span className="rounded-full border border-amber-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-amber-800">
-                  Alterado
-                </span>
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left">
+          <thead>
+            <tr className="bg-slate-50 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+              <th className="w-[18%] px-5 py-3">Campo</th>
+              <th className="w-[34%] px-5 py-3">Origem recebida</th>
+              <th className="w-[34%] px-5 py-3">Como vai ficar</th>
+              <th className="w-[14%] px-5 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={`change-row-${row.label}`} className="border-t border-slate-100">
+                <td className="border-t border-slate-100 px-5 py-4 align-top text-sm font-black text-slate-800">
+                  {row.label}
+                </td>
+                <td className="border-t border-slate-100 px-5 py-4 align-top">
+                  <CellText value={row.originalText} />
+                </td>
+                <td className={`border-t border-slate-100 px-5 py-4 align-top ${row.changed ? "bg-amber-50/45" : ""}`}>
+                  <CellText value={row.currentText} strong={row.changed} />
+                </td>
+                <td className="border-t border-slate-100 px-5 py-4 align-top">
+                  <ChangeBadge changed={row.changed} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="grid gap-3 p-4 lg:hidden">
+        {rows.map((row) => (
+          <article key={`change-card-${row.label}`} className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <h4 className="font-black text-slate-900">{row.label}</h4>
+              <ChangeBadge changed={row.changed} />
+            </div>
+            <div className="mt-3 grid gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Origem recebida</p>
+                <CellText value={row.originalText} />
               </div>
-
-              <div className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)]">
-                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-3 py-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-700">Antes</p>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-rose-900">{row.originalText}</p>
-                </div>
-
-                <div className="hidden items-center justify-center text-lg font-black text-slate-400 md:flex">→</div>
-
-                <div className="rounded-2xl border border-sky-200 bg-sky-50 px-3 py-3 ring-2 ring-sky-100">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-700">Agora / perfil</p>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-sm font-black leading-6 text-sky-950">{row.currentText}</p>
-                </div>
+              <div className={row.changed ? "rounded-xl bg-amber-50 p-3" : ""}>
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Como vai ficar</p>
+                <CellText value={row.currentText} strong={row.changed} />
               </div>
-            </article>
-          ))
-        ) : (
-          <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800">
-            <p className="font-black">Nenhuma alteração identificada.</p>
-            <p className="mt-1 text-sm leading-6">Os dados atuais estão iguais ao envio original.</p>
-          </div>
-        )}
+            </div>
+          </article>
+        ))}
       </div>
     </section>
   );

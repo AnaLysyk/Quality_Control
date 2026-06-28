@@ -10,7 +10,6 @@ import { AdjustmentFieldsPanel } from "./AdjustmentFieldsPanel";
 import { ChangesShowcase } from "./ChangesShowcase";
 import { ConversationPanel } from "./ConversationPanel";
 import { DecisionPanel } from "./DecisionPanel";
-import { FinalProfilePreview } from "./FinalProfilePreview";
 import { NotesPanel } from "./NotesPanel";
 import { OutcomeBanner } from "./OutcomeBanner";
 import { ProfileHero } from "./ProfileHero";
@@ -123,7 +122,7 @@ export function AccessRequestProfileWorkspace({
   return (
     <div
       ref={containerRef}
-      className="flex flex-col gap-4 bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.07),transparent_28%),radial-gradient(circle_at_top_left,rgba(14,165,233,0.10),transparent_30%)] p-3 sm:p-4 xl:p-5 2xl:p-6"
+      className="flex flex-col gap-4 bg-slate-50 p-3 sm:p-4 xl:p-5 2xl:p-6"
     >
       <ProfileHero
         profile={previewProfile}
@@ -149,9 +148,8 @@ export function AccessRequestProfileWorkspace({
         requestingAdjustment={requestingAdjustment}
       />
 
-      <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.72fr)]">
-        <FinalProfilePreview profile={previewProfile} />
-
+      <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.42fr)]">
+        <ChangesShowcase rows={comparisonRows} />
         <NotesPanel
           value={internalNotesDraft}
           locked={readOnly || commentsLocked}
@@ -161,24 +159,22 @@ export function AccessRequestProfileWorkspace({
         />
       </div>
 
-      <section className="rounded-[30px] border border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_48%,#fff7ed_100%)] p-4 shadow-[0_22px_60px_rgba(15,23,42,0.10)] sm:p-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-700">Fluxo de alteração e decisão</p>
-            <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Devolver, recusar ou aprovar</h3>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Ação com solicitante</p>
+            <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Mensagem, campos para ajuste e decisão</h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Revise o que mudou, escreva a mensagem ao solicitante, marque campos liberados e então escolha a decisão. Tudo que afeta o solicitante fica neste bloco.
+              Tudo que afeta o solicitante fica aqui: orientação, campos liberados e ação final.
             </p>
           </div>
 
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600">
             {adjustmentFieldsDraft.length} campo(s) para ajuste
           </span>
         </div>
 
         <div className="mt-5 grid gap-4">
-          <ChangesShowcase rows={comparisonRows} />
-
           <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.86fr)]">
             <ConversationPanel
               comments={comments}

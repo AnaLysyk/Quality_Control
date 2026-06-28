@@ -1,4 +1,4 @@
-﻿import type { AdjustmentFieldOptionView } from "../../_types/accessRequests.types";
+import type { AdjustmentFieldOptionView } from "../../_types/accessRequests.types";
 
 export function AdjustmentFieldsPanel({
   options,
@@ -14,20 +14,22 @@ export function AdjustmentFieldsPanel({
   onCommentChange: (field: string, value: string) => void;
 }) {
   return (
-    <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_46px_rgba(15,23,42,0.08)]">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Campos para correção</p>
-          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950">O que o solicitante pode alterar</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Marque os campos liberados. O botão Solicitar ajuste usa esta seleção e a mensagem ao lado.</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Campos liberados</p>
+          <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">O que pode ser corrigido</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Necessário para Solicitar ajuste.
+          </p>
         </div>
 
         <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600">
-          {selectedFields.length} campo(s)
+          {selectedFields.length} selecionado(s)
         </span>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="grid gap-2 p-5">
         {options.map((option) => {
           const selected = selectedFields.includes(option.field);
           return (
@@ -35,36 +37,42 @@ export function AdjustmentFieldsPanel({
               key={`adjustment-field-${option.field}`}
               type="button"
               onClick={() => onToggle(option.field)}
-              className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-black transition ${
+              className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left transition ${
                 selected
-                  ? "border-rose-300 bg-rose-50 text-rose-700 shadow-[0_8px_18px_rgba(225,29,72,0.1)]"
-                  : "border-slate-200 bg-slate-50 text-slate-600 hover:border-[rgba(239,0,1,0.28)] hover:text-slate-950"
+                  ? "border-slate-950 bg-slate-950 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
               }`}
               title={option.hint}
+              aria-pressed={selected}
             >
-              {option.label}
+              <span className="text-sm font-bold">{option.label}</span>
+              <span className={`h-4 w-4 rounded-full border ${selected ? "border-white bg-white" : "border-slate-300"}`} />
             </button>
           );
         })}
       </div>
 
       {selectedFields.length > 0 ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {selectedFields.map((field) => {
-            const option = options.find((item) => item.field === field);
-            return (
-              <label key={`adjustment-comment-${field}`} className="text-xs font-black text-slate-600">
-                Observação para {option?.label ?? field}
-                <input
-                  type="text"
-                  value={comments[field] ?? ""}
-                  onChange={(event) => onCommentChange(field, event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950"
-                  data-testid={`access-request-adjustment-comment-${field}`}
-                />
-              </label>
-            );
-          })}
+        <div className="border-t border-slate-100 p-5 pt-4">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Observações por campo</p>
+          <div className="mt-3 grid gap-3">
+            {selectedFields.map((field) => {
+              const option = options.find((item) => item.field === field);
+              return (
+                <label key={`adjustment-comment-${field}`} className="block">
+                  <span className="text-xs font-bold text-slate-500">{option?.label ?? field}</span>
+                  <input
+                    type="text"
+                    value={comments[field] ?? ""}
+                    onChange={(event) => onCommentChange(field, event.target.value)}
+                    placeholder="Instrução específica para este campo"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-400"
+                    data-testid={`access-request-adjustment-comment-${field}`}
+                  />
+                </label>
+              );
+            })}
+          </div>
         </div>
       ) : null}
     </section>

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { FiEdit3, FiUser } from "react-icons/fi";
 import { AvatarLibraryDialog } from "@/components/AvatarLibraryDialog";
 import type { AccessRequestProfilePreview, AvatarChoice } from "../../_types/accessRequests.types";
@@ -32,30 +32,6 @@ function AvatarPreview({
   const value = avatarValue || profile.visualProfile?.avatarValue || "";
 
   if ((kind === "gif" || kind === "image") && isVisualImage(value) && !broken) {
-    if (kind === "gif") {
-      return (
-        <div className="relative h-full w-full overflow-hidden rounded-full bg-slate-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={value}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full scale-125 rounded-full object-cover object-center opacity-35 blur-md"
-            onError={() => setBroken(true)}
-          />
-          <span className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden rounded-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={value}
-              alt={profile.visualProfile?.avatarLabel || "Imagem do perfil"}
-              className="h-full w-full scale-110 object-cover object-center"
-              onError={() => setBroken(true)}
-            />
-          </span>
-        </div>
-      );
-    }
-
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
@@ -69,16 +45,25 @@ function AvatarPreview({
 
   if (kind === "emoji" && value) {
     return (
-      <div className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)]">
-        <span className="block translate-y-[1px] text-6xl leading-none">{value}</span>
+      <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50">
+        <span className="block translate-y-[1px] text-3xl leading-none">{value}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary)">
-      <FiUser className="h-18 w-18" aria-hidden="true" />
+    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50 text-slate-500">
+      <FiUser className="h-7 w-7" aria-hidden="true" />
       <span className="sr-only">Sem foto</span>
+    </div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-slate-700">{value}</p>
     </div>
   );
 }
@@ -87,76 +72,62 @@ export function ProfileHero({ profile, avatarValue, avatarKind, saving, readOnly
   const [avatarLibraryOpen, setAvatarLibraryOpen] = useState(false);
 
   return (
-    <section className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.10)]">
-      <div className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(239,0,1,0.09),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.13),transparent_30%),linear-gradient(135deg,#ffffff_0%,#f8fafc_58%,#eef4ff_100%)] p-5">
-        <div className="pointer-events-none absolute right-10 top-4 h-24 w-24 rounded-full bg-sky-200/50 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 left-1/2 h-20 w-20 rounded-full bg-rose-200/40 blur-3xl" />
-
-        <div className="relative flex min-w-0 flex-col gap-5 sm:flex-row">
-          <div className="flex shrink-0 flex-col items-center sm:items-start">
-            <div className="relative h-34 w-34">
-              <div className="h-full w-full overflow-hidden rounded-full border border-slate-200 bg-white shadow-[0_24px_54px_rgba(37,99,235,0.16)]">
-                <AvatarPreview profile={profile} avatarValue={avatarValue} avatarKind={avatarKind} />
-              </div>
-              {!readOnly ? (
-                <button
-                  type="button"
-                  onClick={() => setAvatarLibraryOpen(true)}
-                  className="absolute -right-2 -top-2 z-30 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-(--tc-primary) text-white shadow-[0_14px_28px_rgba(1,24,72,0.36)] ring-2 ring-white/90 transition hover:-translate-y-0.5 hover:bg-[rgba(1,24,72,0.88)]"
-                  aria-label="Abrir biblioteca de avatar"
-                  title="Alterar avatar"
-                >
-                  <FiEdit3 className="h-4 w-4" />
-                </button>
-              ) : null}
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex min-w-0 flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 gap-4">
+          <div className="relative h-18 w-18 shrink-0">
+            <div className="h-full w-full overflow-hidden rounded-full border border-slate-200 bg-white">
+              <AvatarPreview profile={profile} avatarValue={avatarValue} avatarKind={avatarKind} />
             </div>
-
-            <span className={`mt-3 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] ${statusTone(profile.status)}`}>
-              {statusLabel(profile.status)}
-            </span>
-
             {!readOnly ? (
               <button
                 type="button"
-                onClick={onSaveVisual}
-                disabled={saving || !onSaveVisual}
-                className="mt-2 rounded-full border border-sky-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-sky-700 shadow-[0_10px_22px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={() => setAvatarLibraryOpen(true)}
+                className="absolute -right-1.5 -top-1.5 flex h-8 w-8 items-center justify-center rounded-full border border-white bg-slate-950 text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800"
+                aria-label="Alterar avatar"
+                title="Alterar avatar"
               >
-                {saving ? "Salvando..." : "Salvar prévia"}
+                <FiEdit3 className="h-3.5 w-3.5" />
               </button>
             ) : null}
           </div>
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-sky-700">Prévia do perfil</p>
-              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
-                {readOnly ? "Somente leitura" : saving ? "Salvando visual" : "Visual profissional"}
+              <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${statusTone(profile.status)}`}>
+                {statusLabel(profile.status)}
+              </span>
+              <span className="text-xs font-semibold text-slate-500">
+                Recebida em {safeDate(profile.createdAt)}
               </span>
             </div>
 
-            <h2 className="mt-1 wrap-break-word text-3xl font-black tracking-tight text-slate-950 qc-profile-hero-title !text-slate-950">
+            <h2 className="mt-2 break-words text-2xl font-black tracking-tight text-slate-950">
               {displayName(profile)}
             </h2>
-
-            <p className="mt-2 text-sm font-semibold text-slate-600">
+            <p className="mt-1 text-sm font-semibold text-slate-600">
               {profile.accessType || "Perfil não informado"} · {profile.jobRole || "Cargo não informado"}
-            </p>
-
-            <div className="mt-4 grid gap-2 text-sm font-semibold text-slate-600 sm:grid-cols-2 lg:grid-cols-3">
-              <p className="truncate">E-mail: {profile.email || "Não informado"}</p>
-              <p className="truncate">Telefone: {profile.phone || "Não informado"}</p>
-              <p className="truncate">Usuário: @{profile.username || "a-definir"}</p>
-              <p className="truncate">Empresa: {profile.company || "Sem empresa"}</p>
-              <p className="truncate">Recebida: {safeDate(profile.createdAt)}</p>
-              <p className="truncate">Senha: {profile.passwordProvided ? "Informada" : "Pendente"}</p>
-            </div>
-
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">
-              Esta prévia representa o cadastro que será criado ou atualizado após a aprovação.
             </p>
           </div>
         </div>
+
+        {!readOnly ? (
+          <button
+            type="button"
+            onClick={onSaveVisual}
+            disabled={saving || !onSaveVisual}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-black uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "Salvando..." : "Salvar visual"}
+          </button>
+        ) : null}
+      </div>
+
+      <div className="mt-5 grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2 xl:grid-cols-4">
+        <DetailItem label="E-mail" value={profile.email || "Não informado"} />
+        <DetailItem label="Telefone" value={profile.phone || "Não informado"} />
+        <DetailItem label="Usuário" value={profile.username ? `@${profile.username}` : "A definir"} />
+        <DetailItem label="Empresa" value={profile.company || "Sem empresa"} />
       </div>
 
       {!readOnly ? (
@@ -171,4 +142,3 @@ export function ProfileHero({ profile, avatarValue, avatarKind, saving, readOnly
     </section>
   );
 }
-

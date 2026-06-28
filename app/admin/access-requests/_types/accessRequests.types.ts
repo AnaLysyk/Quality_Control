@@ -1,5 +1,5 @@
 ﻿export type AccessRequestVisualProfile = {
-  avatarKind?: "emoji" | "gif" | "default";
+  avatarKind?: "emoji" | "gif" | "default" | "image";
   avatarValue?: string;
   avatarLabel?: string;
 } | null;
@@ -62,7 +62,7 @@ export type AdjustmentFieldOptionView = {
 };
 
 export type AvatarChoice = {
-  avatarKind: "emoji" | "gif" | "default";
+  avatarKind: "emoji" | "gif" | "default" | "image";
   avatarValue: string;
   avatarLabel: string;
 };

@@ -10,6 +10,8 @@
 
 import { prisma } from "@/lib/prismaClient";
 import { upsertNode, connectNodes } from "@/lib/brain";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 import type { Prisma } from "@prisma/client";
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
@@ -81,6 +83,47 @@ function sanitizeIntegrationConfig(config: Prisma.JsonValue | null | undefined) 
       jsonString(record.qase_token),
     ),
   };
+}
+
+const ROLE_LABELS: Record<SystemRole, string> = {
+  [SYSTEM_ROLES.EMPRESA]: "Administrador de empresa",
+  [SYSTEM_ROLES.COMPANY_USER]: "Usuario de empresa",
+  [SYSTEM_ROLES.TESTING_COMPANY_USER]: "Usuario Testing Company",
+  [SYSTEM_ROLES.LEADER_TC]: "Lider Testing Company",
+  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: "Suporte tecnico",
+};
+
+function resolveBrainProfileRole(input: {
+  role?: string | null;
+  globalRole?: string | null;
+  isGlobalAdmin?: boolean | null;
+}): SystemRole {
+  if (input.isGlobalAdmin === true || String(input.globalRole ?? "").toLowerCase() === "global_admin") {
+    return SYSTEM_ROLES.LEADER_TC;
+  }
+
+  return (
+    normalizeLegacyRole(input.role ?? null) ??
+    normalizeLegacyRole(input.globalRole ?? null) ??
+    SYSTEM_ROLES.TESTING_COMPANY_USER
+  );
+}
+
+async function ensureBrainPermissionProfiles() {
+  for (const role of Object.values(SYSTEM_ROLES)) {
+    await upsertNode({
+      type: "Profile",
+      label: ROLE_LABELS[role],
+      refType: "PermissionProfile",
+      refId: role,
+      description: `Perfil RBAC ${ROLE_LABELS[role]} usado para resolver permissoes efetivas no Brain Graph.`,
+      metadata: {
+        source: "roleDefaults",
+        roleKey: role,
+        permissions: resolveRoleDefaults(role),
+      },
+    });
+  }
 }
 
 /* ─── Company ─────────────────────────────────────────────────────────────── */
@@ -183,9 +226,17 @@ export async function syncUserToBrain(user: {
   name: string;
   email?: string | null;
   role?: string | null;
+  globalRole?: string | null;
+  isGlobalAdmin?: boolean | null;
   job_title?: string | null;
 }): Promise<void> {
   try {
+    const profileRole = resolveBrainProfileRole({
+      role: user.role,
+      globalRole: user.globalRole,
+      isGlobalAdmin: user.isGlobalAdmin,
+    });
+    await ensureBrainPermissionProfiles();
     await upsertNode({
       type: "User",
       label: user.name,
@@ -194,9 +245,12 @@ export async function syncUserToBrain(user: {
       metadata: {
         email: user.email ?? null,
         role: user.role ?? "user",
+        profileRole,
+        globalRole: user.globalRole ?? null,
         jobTitle: user.job_title ?? null,
       },
     });
+    await safeConnect("User", user.id, "PermissionProfile", profileRole, "HAS_PROFILE");
   } catch (err) {
     console.error("[brain-sync] syncUserToBrain error:", err);
   }
@@ -468,8 +522,17 @@ export async function syncBrain() {
     log(`Created ${applications.length} Application nodes`)
 
     // ── Users
+    await ensureBrainPermissionProfiles()
+    nodeCount += Object.values(SYSTEM_ROLES).length
+    log(`Created ${Object.values(SYSTEM_ROLES).length} permission profile nodes`)
+
     const users = await prisma.user.findMany()
     for (const user of users) {
+      const profileRole = resolveBrainProfileRole({
+        role: user.role,
+        globalRole: user.globalRole,
+        isGlobalAdmin: user.is_global_admin,
+      })
       await upsertNode({
         type: 'User',
         label: user.name,
@@ -478,8 +541,10 @@ export async function syncBrain() {
         metadata: {
           email: user.email,
           role: user.role,
+          profileRole,
           status: user.status,
           active: user.active,
+          isGlobalAdmin: user.is_global_admin,
           globalRole: user.globalRole ?? null,
           defaultCompanySlug: user.default_company_slug ?? null,
           userOrigin: user.user_origin,
@@ -579,6 +644,38 @@ export async function syncBrain() {
 
     // ── UserNotes
     const notes = await prisma.userNote.findMany({ take: 500 })
+    for (const role of Object.values(SYSTEM_ROLES)) {
+      const matrix = resolveRoleDefaults(role)
+      for (const [moduleId, actions] of Object.entries(matrix)) {
+        if (!actions.length) continue
+        await safeConnectNodes('PermissionProfile', role, 'PermissionModule', moduleId, 'GRANTS_MODULE_ACCESS', {
+          role,
+          actions,
+        })
+        for (const action of actions) {
+          await safeConnectNodes('PermissionProfile', role, 'PermissionAction', `${moduleId}:${action}`, 'GRANTS_ACTION', {
+            role,
+            moduleId,
+            action,
+          })
+        }
+      }
+    }
+
+    for (const user of users) {
+      const profileRole = resolveBrainProfileRole({
+        role: user.role,
+        globalRole: user.globalRole,
+        isGlobalAdmin: user.is_global_admin,
+      })
+      await safeConnectNodes('User', user.id, 'PermissionProfile', profileRole, 'HAS_PROFILE', {
+        role: user.role,
+        profileRole,
+        globalRole: user.globalRole ?? null,
+        isGlobalAdmin: user.is_global_admin,
+      })
+    }
+
     for (const note of notes) {
       await upsertNode({
         type: 'Note',

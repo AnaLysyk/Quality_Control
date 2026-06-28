@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessRequestById } from "@/data/accessRequestsStore";
 import {
   createAccessRequestComment,
@@ -196,7 +197,20 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       commentId: record.id,
       authorName: admin.email || "Admin",
       body: comment,
+      reviewQueue: "admin_and_global",
+      companySlug: v2Request.requestedCompanySlug ?? null,
+      clientId: v2Request.requestedCompanyId ?? null,
     }).catch((err) => console.error("Falha ao notificar comentario V2:", err));
+
+    addAuditLogSafe({
+      action: "access_request.commented",
+      entityType: "access_request",
+      entityId: id,
+      entityLabel: v2Request.requesterEmail ?? null,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: { commentId: record.id },
+    });
 
     return NextResponse.json({ item: record }, { status: 200 });
   }
@@ -232,7 +246,18 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     commentId: record.id,
     authorName: admin.email || "Admin",
     body: comment,
+    reviewQueue: resolveAccessRequestQueue(request.message, request.email),
   }).catch((err) => console.error("Falha ao notificar comentario:", err));
+
+  addAuditLogSafe({
+    action: "access_request.commented",
+    entityType: "access_request",
+    entityId: id,
+    entityLabel: request.email ?? null,
+    actorUserId: admin.id ?? null,
+    actorEmail: admin.email ?? null,
+    metadata: { commentId: record.id },
+  });
 
   return NextResponse.json({ item: record }, { status: 200 });
 }

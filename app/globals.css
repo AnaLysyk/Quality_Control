@@ -9793,3 +9793,122 @@ video {
 
 /* Wiki sidebar invisible scrollbar */
 .wiki-nav-scroll::-webkit-scrollbar { display: none; }
+
+
+/* qc-access-profile-color-fix */
+[role="dialog"] .qc-profile-hero-title,
+[role="dialog"] [data-qc-profile-title="true"] {
+  color: #020617 !important;
+  text-shadow: none !important;
+}
+
+[role="dialog"] .qc-profile-hero-subtitle,
+[role="dialog"] [data-qc-profile-subtitle="true"] {
+  color: #334155 !important;
+}
+
+
+
+
+
+
+/* qc-brain-side-final-no-gap */
+:root {
+  --qc-brain-side-width: 460px;
+}
+
+body.qc-brain-side-open {
+  overflow-x: hidden;
+}
+
+/* reserva espaço só no main. Não aplicar em filhos, senão soma padding e cria faixa branca */
+body.qc-brain-side-open main {
+  margin-right: var(--qc-brain-side-width, 460px) !important;
+  padding-right: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+  transition: margin-right 180ms ease;
+}
+
+/* filhos ocupam o espaço disponível até encostar no painel */
+body.qc-brain-side-open [data-qc-page],
+body.qc-brain-side-open [data-testid="access-requests-page"],
+body.qc-brain-side-open .app-shell-content,
+body.qc-brain-side-open .app-shell-main {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* remove centralização/max-width que deixa buraco antes do Brain */
+body.qc-brain-side-open [data-testid="access-requests-page"] > *,
+body.qc-brain-side-open [data-qc-page] > * {
+  margin-right: 0 !important;
+}
+
+/* painel lateral grudado na viewport */
+body.qc-brain-side-open [class*="fixed"][class*="right-0"] {
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  margin: 0 !important;
+}
+
+body.qc-brain-side-open table {
+  min-width: max-content;
+}
+
+@media (max-width: 1179px) {
+  body.qc-brain-side-open main {
+    margin-right: 0 !important;
+  }
+}
+
+
+/* qc-brain-tight-side-layout */
+body.qc-brain-side-open .qc-brain-launcher {
+  display: none !important;
+}
+
+body.qc-brain-side-open main {
+  margin-right: var(--qc-brain-side-width, 460px) !important;
+  padding-right: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+}
+
+body.qc-brain-side-open main > *,
+body.qc-brain-side-open [data-qc-page],
+body.qc-brain-side-open [data-testid="access-requests-page"],
+body.qc-brain-side-open [data-testid="access-requests-page"] > *,
+body.qc-brain-side-open .app-shell-content,
+body.qc-brain-side-open .app-shell-main {
+  max-width: none !important;
+  width: 100% !important;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+body.qc-brain-side-open section,
+body.qc-brain-side-open article {
+  max-width: none !important;
+}
+
+body.qc-brain-side-open [class*="max-w-"] {
+  max-width: none !important;
+}
+
+body.qc-brain-side-open [class*="mx-auto"] {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.qc-brain-side-open [class*="fixed"][class*="right-0"] {
+  right: 0 !important;
+  margin: 0 !important;
+}

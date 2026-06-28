@@ -366,33 +366,13 @@ export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
   {
     id: "requests",
+    routeId: "solicitacoes.listagem",
     label: "Solicitações",
     iconKey: "clipboard",
+    href: "/solicitacoes",
     allowedRoles: LEADER_AND_SUPPORT,
     testId: "nav-requests",
-    items: [
-      {
-        id: "requests-list",
-        routeId: "solicitacoes.listagem",
-        label: "Listagem",
-        iconKey: "list",
-        module: "requests",
-        href: "/solicitacoes",
-        favoriteEnabled: true,
-        testId: "nav-requests-list",
-      },
-      {
-        id: "requests-search",
-        routeId: "solicitacoes.buscar",
-        label: "Buscar solicitação",
-        iconKey: "search",
-        module: "requests",
-        href: "/solicitacoes?focus=search",
-        action: "focusSearch",
-        favoriteEnabled: true,
-        testId: "nav-requests-search",
-      },
-    ],
+    items: [],
   },
 
   // ============================================

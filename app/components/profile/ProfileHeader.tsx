@@ -4,6 +4,7 @@
  * Profile Header — mostra entidade + status
  */
 
+import { FiUser } from "react-icons/fi";
 import { cn } from "@/lib/cn";
 
 export type ProfileHeaderProps = {
@@ -40,13 +41,14 @@ export function ProfileHeader({
   return (
     <div className="flex items-start justify-between gap-6">
       <div className="flex items-start gap-4">
-        {avatar && (
-          <img
-            src={avatar}
-            alt={title}
-            className="h-16 w-16 rounded-lg object-cover"
-          />
-        )}
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary,#011848) shadow-[0_14px_28px_rgba(1,24,72,0.12)]">
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatar} alt={title} className="h-full w-full object-cover" />
+          ) : (
+            <FiUser className="h-8 w-8" aria-hidden="true" />
+          )}
+        </div>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-tc-text-primary">{title}</h1>

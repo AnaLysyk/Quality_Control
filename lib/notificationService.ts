@@ -873,6 +873,35 @@ export async function notifyAccessRequestAccepted(input: {
   });
 }
 
+export async function notifyAccessRequestAdjustmentRequested(input: {
+  requestId: string;
+  requesterName: string;
+  reviewerName: string;
+  profileType: RequestProfileType;
+  reviewQueue: ReviewQueue;
+  fields?: string[] | null;
+  companySlug?: string | null;
+  clientId?: string | null;
+}) {
+  const recipients = await resolveAccessRequestRecipientIds({
+    reviewQueue: input.reviewQueue,
+    companySlug: input.companySlug ?? null,
+    clientId: input.clientId ?? null,
+  });
+  if (!recipients.length) return;
+
+  const fieldsLabel = input.fields?.length ? ` Campos: ${input.fields.join(", ")}.` : "";
+  await createNotificationsForUsers(recipients, {
+    type: "ACCESS_REQUEST_ADJUSTMENT_REQUESTED",
+    title: "Ajuste solicitado em acesso",
+    description: `${input.reviewerName} solicitou ajuste para ${input.requesterName} (${toRequestProfileTypeLabel(input.profileType)}).${fieldsLabel}`,
+    requestId: input.requestId,
+    link: "/admin/access-requests",
+    companySlug: input.companySlug ?? null,
+    dedupeKey: `access-request:${input.requestId}:adjustment:${Date.now()}`,
+  });
+}
+
 export async function notifyAccessRequestRejected(input: {
   requestId: string;
   requesterName: string;
@@ -1006,5 +1035,4 @@ export async function notifyTicketUpdated(input: {
     dedupeKey: `suporte:${suporte.id}:updated:${Date.now()}`,
   });
 }
-
 

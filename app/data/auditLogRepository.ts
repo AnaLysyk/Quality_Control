@@ -62,6 +62,7 @@ export type AuditAction =
   | "access_request.rejected"
   | "access_request.updated"
   | "access_request.commented"
+  | "access_request.deleted"
   // Self-service requests
   | "request.email_change"
   | "request.profile_deletion"

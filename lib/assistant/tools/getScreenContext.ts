@@ -159,6 +159,31 @@ function buildPermissionLine(user: AuthUser) {
 
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
   const currentUser = await getLocalUserById(user.id);
+
+  if (context.route.startsWith("/admin/access-requests")) {
+    return {
+      tool: "get_screen_context",
+      success: true,
+      summary: "Solicitacoes de acesso",
+      reply: compactMultiline([
+        `Estou com voce aqui em Solicitacoes de acesso, ${firstName(displayName(currentUser))}.`,
+        "",
+        "Meu papel aqui e te ajudar a transformar uma solicitacao em uma decisao segura: aprovar, recusar ou devolver para ajuste sem perder historico.",
+        "",
+        "O fluxo que eu sigo contigo:",
+        "1. Encontrar a pessoa na fila por busca ou filtro.",
+        "2. Abrir pelo olho quando voce quiser apenas conferir.",
+        "3. Abrir pelo lapis quando precisar analisar ou editar.",
+        "4. Comparar o que o solicitante enviou com o perfil que sera criado.",
+        "5. Se faltar algo, sugerir os campos para ajuste e uma mensagem objetiva.",
+        "6. Se estiver tudo certo, revisar senha, empresa e obrigatorios antes da aprovacao.",
+        "7. Se for recusar, garantir motivo/comentario e rastreabilidade em historico/logs.",
+        "",
+        "Se voce quiser, posso agir agora: buscar alguem, filtrar a fila, abrir a primeira solicitacao ou explicar o que falta para aprovar a solicitacao selecionada.",
+      ].join("\n")),
+    };
+  }
+
   const actions = buildImmediateActions(context, user);
   const moduleEmoji = getModuleEmoji(context.module);
   const prompts = context.suggestedPrompts.slice(0, 4);

@@ -14,7 +14,6 @@
 import "server-only";
 
 import { appendAssistantAuditEntry } from "@/lib/assistantAuditLog";
-import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import type {
   AssistantAction,
@@ -28,8 +27,8 @@ import type {
 import type { AuthUser } from "@/lib/jwtAuth";
 
 import { normalizePromptText, normalizeSearch, normalizeText, compactMultiline, sanitizeRoute } from "./helpers";
-import { REPEATED_REPLY_MESSAGES, CLARIFY_REPLY } from "./messages";
-import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload, analyzeIntent, getConversationMomentum } from "./router";
+import { REPEATED_REPLY_MESSAGES } from "./messages";
+import { chooseTool, isAwaitingTicketPayload, isAwaitingTestCasePayload, analyzeIntent } from "./router";
 import { buildPromptActions } from "./data";
 import { extractTicketReference } from "./pure/parsing";
 import { extractNarrativePayload, isTicketTemplateRequest, parseStructuredTicketDraft } from "./tools/ticketHelpers";
@@ -136,6 +135,10 @@ function isLowSignalMessage(message: string, context: AssistantScreenContext) {
   return false;
 }
 
+function isGreetingMessage(message: string) {
+  return /^(oi+|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí|hello|hi)\b/i.test(normalizeSearch(message));
+}
+
 /* ──────────────────── Repeat / collapse guards ──────────────────── */
 
 function shouldShortCircuitRepeatedPrompt(
@@ -175,6 +178,22 @@ function maybeCollapseRepeatedActions(actions: AssistantAction[] | undefined, hi
   return actions;
 }
 
+function chooseAccessRequestsTool(message: string, context: AssistantScreenContext): AssistantToolName | null {
+  if (!context.route.startsWith("/admin/access-requests")) return null;
+
+  const normalized = normalizeSearch(message);
+
+  if (/\b(acoes|acao|posso fazer|executar|comandos|funcoes|função|funcao)\b/.test(normalized)) {
+    return "list_available_actions";
+  }
+
+  if (/\b(explica|explicar|fluxo|solicitacao|solicitacoes|aprovar|aprovacao|recusar|rejeitar|ajuste|pendencia|pendencias|decisao|falta|historico|histórico)\b/.test(normalized)) {
+    return "get_screen_context";
+  }
+
+  return null;
+}
+
 /* ──────────────────── Shortcut replies ──────────────────── */
 
 function buildRecentDuplicateReply(tool: AssistantToolName, context: AssistantScreenContext): AssistantExecutorResult {
@@ -197,12 +216,62 @@ function buildClarifyReply(
     ? `Entendi que estamos falando sobre "${topic}". `
     : "";
 
+  if (context.route.startsWith("/admin/access-requests")) {
+    if (isGreetingMessage(message ?? "")) {
+      return {
+        tool: "suggest_next_step",
+        success: true,
+        summary: "saudacao contextual",
+        reply: compactMultiline([
+          "Oi. Estou contigo na tela de Solicitacoes de acesso.",
+          "",
+          "Me fala o que voce quer resolver agora: encontrar uma pessoa, entender uma solicitacao, aprovar, recusar, pedir ajuste ou revisar o historico?",
+          "",
+          "Se voce ainda estiver decidindo, eu posso primeiro olhar o fluxo contigo e te dizer o melhor proximo passo.",
+        ].join("\n")),
+      };
+    }
+
+    return {
+      tool: "suggest_next_step",
+      success: true,
+      summary: "saudacao contextual",
+      reply: compactMultiline([
+        `${prefix}Oi. Estou contigo na tela de Solicitacoes de acesso.`,
+        "",
+        "Pode falar do seu jeito, sem escolher menu. Eu observo essa tela, entendo a fila e consigo te ajudar a decidir ou executar o que for seguro aqui.",
+        "",
+        "Por exemplo: posso buscar uma pessoa, filtrar recusadas, abrir a primeira solicitacao, explicar o que falta para aprovar, orientar um pedido de ajuste ou acionar o PDF quando o botao estiver disponivel.",
+      ].join("\n")),
+    };
+  }
+
+  if (isGreetingMessage(message ?? "")) {
+    return {
+      tool: "suggest_next_step",
+      success: true,
+      summary: "saudacao",
+      reply: compactMultiline([
+        `Oi. Estou aqui com voce em ${context.screenLabel}.`,
+        "",
+        "Me conta o que voce quer fazer agora. Pode ser uma frase simples, tipo buscar algo, entender a tela, revisar um registro, criar uma acao ou me pedir para sugerir o caminho.",
+        "",
+        "Se preferir, eu começo resumindo o que estou vendo nesta tela.",
+      ].join("\n")),
+    };
+  }
+
   return {
     tool: "suggest_next_step",
     success: true,
     summary: "pedido pouco claro",
-    actions: buildPromptActions(context),
-    reply: compactMultiline(CLARIFY_REPLY),
+    reply: compactMultiline([
+      `${prefix}Ainda preciso entender melhor o que voce quer que eu faca.`,
+      "",
+      `Estou em ${context.screenLabel}. Me diga o objetivo em uma frase e eu sigo contigo passo a passo.`,
+      "",
+      "Pode ser algo como: buscar um registro, explicar esta tela, revisar uma pendencia, montar uma acao ou sugerir o proximo passo.",
+    ].join("\n")),
   };
 }
 
@@ -304,7 +373,6 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
   const action = request.action;
   const message = normalizePromptText(request.message, 3000);
   const history = normalizeConversationHistory(request.history);
-  const brainNodeId = request.brainContext?.nodeId ?? null;
 
   let result: AssistantExecutorResult;
 
@@ -327,10 +395,12 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
   if (action?.kind === "tool") {
     result = await executeToolAction(user, context, action);
   } else {
-    if (!isAwaitingTicketPayload(history) && !isAwaitingTestCasePayload(history) && isLowSignalMessage(message, context)) {
-      result = buildClarifyReply(context);
+    if (!isAwaitingTicketPayload(history) && !isAwaitingTestCasePayload(history) && isGreetingMessage(message)) {
+      result = buildClarifyReply(context, history, message);
+    } else if (!isAwaitingTicketPayload(history) && !isAwaitingTestCasePayload(history) && isLowSignalMessage(message, context)) {
+      result = buildClarifyReply(context, history, message);
     } else {
-      const tool = chooseTool(message, context, history);
+      const tool = chooseAccessRequestsTool(message, context) ?? chooseTool(message, context, history);
       result = shouldShortCircuitRepeatedPrompt(history, tool, message)
         ? buildRecentDuplicateReply(tool, context)
         : await executeTool(user, context, tool, enrichedMessage);

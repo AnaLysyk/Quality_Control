@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiBell, FiX } from "react-icons/fi";
+import { FiBell, FiExternalLink, FiRefreshCw, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { fetchApi } from "@/lib/api";
 import { getTicketStatusLabel, TICKET_STATUS_OPTIONS, type TicketStatus } from "@/lib/ticketsStatus";
@@ -268,7 +268,7 @@ export default function NotificationsButton({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Abrir notificações"
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white text-(--tc-primary,#011848) shadow-[0_12px_30px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
       >
         <FiBell size={18} />
         {unreadCount > 0 && (
@@ -279,28 +279,29 @@ export default function NotificationsButton({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_20px_45px_rgba(15,23,42,0.2)]">
-          <div className="flex items-center justify-between gap-3 border-b border-(--tc-border,#e5e7eb) px-4 py-3">
+        <div className="absolute right-0 z-[110] mt-2 w-[min(30rem,calc(100vw-2rem))] overflow-hidden rounded-[26px] border border-white/80 bg-(--tc-surface,#ffffff) shadow-[0_26px_70px_rgba(15,23,42,0.24)]">
+          <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#071a44_52%,rgba(239,0,1,0.78)_150%)] px-4 py-4 text-white">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">
+              <p className="text-xs uppercase tracking-[0.3em] text-white/65">
                 Notificações
               </p>
-              <p className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+              <p className="text-sm font-semibold text-white">
                 {unreadCount > 0 ? `${unreadCount} não lida(s)` : "Tudo em dia"}
               </p>
             </div>
             <button
               type="button"
               onClick={() => loadNotifications()}
-              className="rounded-lg border border-(--tc-border,#e5e7eb) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text,#0f172a) hover:border-(--tc-accent,#ef0001)/50"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-white transition hover:bg-white/20"
             >
+              <FiRefreshCw className="h-3.5 w-3.5" />
               Atualizar
             </button>
           </div>
 
           <div
             ref={listRef}
-            className="max-h-[70vh] overflow-auto px-4 py-3 space-y-3"
+            className="max-h-[70vh] space-y-3 overflow-auto px-4 py-3"
           >
             {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando...</p>}
             {!loading && items.length === 0 && (
@@ -351,9 +352,9 @@ export default function NotificationsButton({
       )}
 
       {detailsOpen && selected && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4">
-          <div className="my-auto w-full max-w-2xl rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-[0_30px_60px_rgba(15,23,42,0.35)] max-h-[calc(100dvh-2rem)] overflow-y-auto">
-            <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) px-5 py-4">
+        <div className="fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl overflow-hidden rounded-[30px] border border-white/80 bg-(--tc-surface,#ffffff) shadow-[0_34px_90px_rgba(15,23,42,0.36)]">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.34),transparent_34%),linear-gradient(135deg,var(--tc-primary,#011848)_0%,#071a44_58%,rgba(239,0,1,0.82)_150%)] px-5 py-5 text-white">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Notificação</p>
                 <p className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">{selected.title}</p>
@@ -361,15 +362,15 @@ export default function NotificationsButton({
               <button
                 type="button"
                 onClick={() => setDetailsOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#e5e7eb) text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
                 aria-label="Fechar"
               >
                 <FiX className="h-5 w-5" />
               </button>
             </div>
-            <div className="px-5 py-4 space-y-4">
+            <div className="max-h-[calc(100dvh-13rem)] space-y-4 overflow-y-auto px-5 py-5">
               {selected.description && (
-                <p className="text-sm whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
+                <p className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-6 whitespace-pre-wrap text-(--tc-text-secondary,#4b5563)">
                   {selected.description}
                 </p>
               )}
@@ -415,8 +416,9 @@ export default function NotificationsButton({
                     setDetailsOpen(false);
                     setOpen(false);
                   }}
-                  className="inline-flex items-center gap-2 rounded-lg border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-sm transition hover:bg-(--tc-accent-hover,#d00001)"
+                  className="inline-flex items-center gap-2 rounded-2xl border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) px-4 py-3 text-xs font-black uppercase tracking-[0.22em] text-white shadow-[0_16px_34px_rgba(239,0,1,0.22)] transition hover:-translate-y-0.5 hover:bg-(--tc-accent-hover,#d00001)"
                 >
+                  <FiExternalLink className="h-4 w-4" />
                   Abrir link
                 </button>
               )}

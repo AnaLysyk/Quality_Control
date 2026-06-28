@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import { deleteAccessRequest, getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
+import { addAuditLogSafe } from "@/data/auditLogRepository";
 import {
   composeAccessRequestMessage,
   normalizeAccessType,
@@ -10,6 +11,7 @@ import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { prisma } from "@/lib/prismaClient";
 import { requireAccessRequestReviewerWithStatus } from "@/lib/rbac/requireAccessRequestReviewer";
 import { canReviewerAccessQueue, isGlobalReviewer, resolveAccessRequestQueue } from "@/lib/requestReviewAccess";
+import { appendAccessRequestRemovalHistory } from "@/lib/accessRequestRemovalHistory";
 import {
   normalizeRequestProfileType,
   resolveReviewQueue,
@@ -269,4 +271,122 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       },
     });
   }
+}
+
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
+  const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
+  if (!admin) {
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+  }
+
+  const { id } = await context.params;
+  const v2Request = await getAccessRequestV2ById(id);
+
+  if (v2Request) {
+    const normalizedRole = normalizeRequestProfileType(v2Request.requestedRole) ?? "testing_company_user";
+
+    await appendAccessRequestRemovalHistory({
+      requestId: v2Request.id,
+      requesterEmail: v2Request.requesterEmail,
+      requesterName: v2Request.requesterName ?? null,
+      requestStatus: v2Request.status,
+      requestType: v2Request.requestType,
+      requestedRole: v2Request.requestedRole ?? normalizedRole,
+      requestedCompanyId: v2Request.requestedCompanyId ?? null,
+      requestedCompanySlug: v2Request.requestedCompanySlug ?? null,
+      removedByUserId: admin.id ?? null,
+      removedByEmail: admin.email ?? null,
+      source: "admin_access_requests",
+    });
+
+    addAuditLogSafe({
+      action: "access_request.deleted",
+      entityType: "access_request",
+      entityId: v2Request.id,
+      entityLabel: `${v2Request.requesterName ?? "Solicitante"} (${v2Request.requesterEmail})`,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: {
+        source: "admin_access_requests",
+        status: v2Request.status,
+        requestType: v2Request.requestType,
+        requestedRole: v2Request.requestedRole ?? null,
+        requesterEmail: v2Request.requesterEmail,
+        requestedCompanyId: v2Request.requestedCompanyId ?? null,
+        requestedCompanySlug: v2Request.requestedCompanySlug ?? null,
+      },
+    });
+
+    if (!shouldUseJsonStore()) {
+      const removed = await prisma.accessRequest.deleteMany({ where: { id } });
+      return NextResponse.json({ ok: removed.count > 0 });
+    }
+
+    const removed = await deleteAccessRequest(id);
+    return NextResponse.json({ ok: removed });
+  }
+
+  if (shouldUseJsonStore()) {
+    const existing = await getAccessRequestById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+    }
+
+    await appendAccessRequestRemovalHistory({
+      requestId: existing.id,
+      requesterEmail: existing.email,
+      requestStatus: existing.status,
+      removedByUserId: admin.id ?? null,
+      removedByEmail: admin.email ?? null,
+      source: "admin_access_requests_legacy",
+    });
+
+    addAuditLogSafe({
+      action: "access_request.deleted",
+      entityType: "access_request",
+      entityId: existing.id,
+      entityLabel: existing.email,
+      actorUserId: admin.id ?? null,
+      actorEmail: admin.email ?? null,
+      metadata: {
+        source: "admin_access_requests_legacy",
+        status: existing.status,
+        requesterEmail: existing.email,
+      },
+    });
+
+    const removed = await deleteAccessRequest(id);
+    return NextResponse.json({ ok: removed });
+  }
+
+  const existing = await prisma.supportRequest.findUnique({ where: { id } });
+  if (!existing) {
+    return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+  }
+
+  await appendAccessRequestRemovalHistory({
+    requestId: existing.id,
+    requesterEmail: existing.email,
+    requestStatus: existing.status,
+    removedByUserId: admin.id ?? null,
+    removedByEmail: admin.email ?? null,
+    source: "admin_access_requests_support_request",
+  });
+
+  addAuditLogSafe({
+    action: "access_request.deleted",
+    entityType: "access_request",
+    entityId: existing.id,
+    entityLabel: existing.email,
+    actorUserId: admin.id ?? null,
+    actorEmail: admin.email ?? null,
+    metadata: {
+      source: "admin_access_requests_support_request",
+      status: existing.status,
+      requesterEmail: existing.email,
+    },
+  });
+
+  const removed = await prisma.supportRequest.deleteMany({ where: { id } });
+  return NextResponse.json({ ok: removed.count > 0 });
 }

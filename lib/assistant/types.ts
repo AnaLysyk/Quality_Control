@@ -9,6 +9,7 @@ export type AssistantModule =
   | "releases"
   | "integrations"
   | "admin"
+  | "brain"
   | "general";
 
 export type AssistantPanelMode = "compact" | "side" | "expanded";

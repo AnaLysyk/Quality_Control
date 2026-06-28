@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import { Component, useCallback, useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { FiBell, FiEdit3, FiMessageSquare, FiMoon, FiSun } from "react-icons/fi";
@@ -17,6 +18,7 @@ import { fetchApi } from "@/lib/api";
 
 type ToolComponentProps = {
   defaultOpen?: boolean;
+  defaultPanelMode?: "compact" | "side" | "expanded";
 };
 
 type NotificationsToolComponentProps = ToolComponentProps & {
@@ -51,7 +53,7 @@ function ToolbarLoadingBubble({ icon: Icon, ariaLabel }: { icon: IconType; ariaL
 
 function ChatLoadingBubble() {
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="qc-brain-launcher fixed bottom-6 right-6 z-50">
       <button
         type="button"
         aria-label="Carregando assistente da plataforma"
@@ -358,16 +360,29 @@ export function DeferredNotesButton({ className }: { className?: string }) {
 export function DeferredChatButton() {
   const { user, can } = usePermissionAccess();
   const { mounted, defaultOpen, prime, open } = useDeferredShellTool();
+  const pathname = usePathname() || "/";
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const isGlobalAdmin = user?.isGlobalAdmin === true || (user as { is_global_admin?: boolean } | null)?.is_global_admin === true;
+  const isBrainAskRoute = pathname === "/brain/perguntar";
+
+  useEffect(() => {
+    if (!isBrainAskRoute || mounted) return;
+    open();
+  }, [isBrainAskRoute, mounted, open]);
 
   if (!assistantEnabled || !user) return null;
   if (!isGlobalAdmin && (!can("ai", "view") || !can("ai", "use"))) return null;
 
-  if (mounted) return <ChunkErrorBoundary><LazyChatButtonInner defaultOpen={defaultOpen} /></ChunkErrorBoundary>;
+  if (mounted) {
+    return (
+      <ChunkErrorBoundary>
+        <LazyChatButtonInner defaultOpen={defaultOpen || isBrainAskRoute} defaultPanelMode={isBrainAskRoute ? "side" : undefined} />
+      </ChunkErrorBoundary>
+    );
+  }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="qc-brain-launcher fixed bottom-6 right-6 z-50">
       <button
         type="button"
         onClick={open}

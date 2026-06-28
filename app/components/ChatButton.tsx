@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { FiChevronRight, FiSend, FiX, FiZap } from "react-icons/fi";
+import { FiChevronRight, FiMaximize2, FiMinimize2, FiSend, FiSidebar, FiTrash2, FiX, FiZap } from "react-icons/fi";
 import type { AssistantAction, AssistantConversationTurn, AssistantOpenEventDetail, AssistantPanelMode, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
@@ -35,6 +35,7 @@ type ConfirmState =
 
 type ChatButtonProps = {
   defaultOpen?: boolean;
+  defaultPanelMode?: AssistantPanelMode;
 };
 
 type AgentMode = "qa" | "debug" | "playwright" | "memory";
@@ -345,13 +346,13 @@ function ChatRichText({ text }: { text: string }) {
   );
 }
 
-export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
+export default function ChatButton({ defaultOpen = false, defaultPanelMode }: ChatButtonProps) {
   const pathname = usePathname() || "/";
   const screenContext = useMemo(() => resolveAssistantScreenContext(pathname), [pathname]);
   const { user, can } = usePermissionAccess();
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(defaultOpen);
-  const [panelMode, setPanelMode] = useState<AssistantPanelMode>("compact");
+  const [panelMode, setPanelMode] = useState<AssistantPanelMode>(defaultPanelMode ?? "compact");
   const [sidePanelWidth, setSidePanelWidth] = useState(DEFAULT_SIDE_PANEL_WIDTH);
   const [resizingSidePanel, setResizingSidePanel] = useState(false);
   const isExpandedMode = panelMode === "expanded";
@@ -462,9 +463,13 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const stored = window.localStorage.getItem(PANEL_MODE_KEY);
-      if (stored === "compact" || stored === "side" || stored === "expanded") {
-        setPanelMode(stored);
+      if (defaultPanelMode) {
+        setPanelMode(defaultPanelMode);
+      } else {
+        const stored = window.localStorage.getItem(PANEL_MODE_KEY);
+        if (stored === "compact" || stored === "side" || stored === "expanded") {
+          setPanelMode(stored);
+        }
       }
 
       const storedWidth = Number(window.localStorage.getItem(SIDE_PANEL_WIDTH_KEY));
@@ -475,7 +480,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     } catch {
       // ignore storage errors
     }
-  }, [pathname]);
+  }, [defaultPanelMode, pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -548,6 +553,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
   const compactViewport = viewportHeight > 0 && viewportHeight <= 860;
   const denseViewport = viewportHeight > 0 && viewportHeight <= 740;
   const compactConversationChrome = hasConversation || compactViewport;
+  const panelControlClass = `inline-flex ${denseViewport ? "h-7 w-7" : "h-8 w-8"} shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/8 text-white/90 transition hover:-translate-y-0.5 hover:bg-white/16`;
 
   async function pushAssistantResponse(payload: { message?: string; action?: AssistantToolAction | null }, optimisticText?: string) {
     if (sending) return;
@@ -796,7 +802,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               ? "left-1/2 top-[5vh] -translate-x-1/2"
               : isSideMode
                 ? "inset-y-0 right-0 m-0"
-                : "bottom-6 right-24"
+                : "bottom-6 right-6"
           }`}
         >
           {isSideMode ? (
@@ -829,18 +835,18 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
               >
                 <div className="absolute inset-0 [background-image:var(--tc-brand-overlay)]" aria-hidden />
                 <div className="absolute inset-x-0 bottom-0 h-px [background-image:var(--tc-brand-divider)]" aria-hidden />
-                <div className="relative flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className={`flex items-center justify-center ${denseViewport ? "h-10 w-10" : "h-12 w-12"}`}>
+                <div className="relative flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <div className={`flex shrink-0 items-center justify-center ${denseViewport ? "h-10 w-10" : "h-12 w-12"}`}>
                       <TCLogoSpinner size="md" />
                     </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[0.58rem] font-semibold uppercase tracking-[0.34em] text-white/72">Testing Company</p>
-                      <div>
-                        <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} font-black tracking-[-0.03em] text-white`}>
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="truncate text-[0.58rem] font-semibold uppercase tracking-[0.34em] text-white/72">Testing Company</p>
+                      <div className="min-w-0">
+                        <h3 className={`${denseViewport ? "text-[1rem]" : hasConversation ? "text-[1.05rem]" : "text-[1.35rem]"} truncate font-black tracking-[-0.03em] text-white`}>
                           {brainOpenContext?.source === "brain" ? "Brain" : "Brain"}
                         </h3>
-                        <p className={`max-w-[20rem] ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>
+                        <p className={`max-w-[20rem] truncate ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>
                           {brainOpenContext?.nodeLabel ? `${brainOpenContext.nodeLabel} — ${brainOpenContext.nodeType ?? "nó"}` : activeScreenLabel}
                         </p>
                       </div>
@@ -848,7 +854,7 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                         Eu acompanho o que voce esta fazendo, explico o caminho e executo acoes seguras quando a tela permitir.
                       </div>
                       {brainOpenContext?.source === "brain" ? (
-                        <div className="flex flex-wrap gap-1.5 pt-1.5">
+                        <div className="flex max-w-full flex-wrap gap-1.5 pt-1.5">
                           {ASSISTANT_AGENTS.map(({ mode, icon, name }) => {
                             const isActive = (activeAgentMode ?? (brainOpenContext?.agentMode as AgentMode | undefined) ?? "qa") === mode;
                             return (
@@ -872,26 +878,26 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                       ) : null}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-1.5">
                     {panelMode === "compact" ? (
                       <>
                         <button
                           type="button"
                           onClick={() => setPanelMode("expanded")}
-                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:-translate-y-0.5 hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          className={panelControlClass}
                           aria-label="Expandir Brain"
                           title="Expandir Brain"
                         >
-                          Expandir
+                          <FiMaximize2 size={denseViewport ? 13 : 15} aria-hidden />
                         </button>
                         <button
                           type="button"
                           onClick={() => setPanelMode("side")}
-                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:-translate-y-0.5 hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          className={panelControlClass}
                           aria-label="Fixar Brain na lateral"
                           title="Fixar na lateral"
                         >
-                          Lateral
+                          <FiSidebar size={denseViewport ? 13 : 15} aria-hidden />
                         </button>
                       </>
                     ) : null}
@@ -900,20 +906,20 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                         <button
                           type="button"
                           onClick={() => setPanelMode("expanded")}
-                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:-translate-y-0.5 hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          className={panelControlClass}
                           aria-label="Expandir Brain"
                           title="Expandir Brain"
                         >
-                          Expandir
+                          <FiMaximize2 size={denseViewport ? 13 : 15} aria-hidden />
                         </button>
                         <button
                           type="button"
                           onClick={() => setPanelMode("compact")}
-                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:-translate-y-0.5 hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          className={panelControlClass}
                           aria-label="Voltar Brain ao modo normal"
                           title="Modo normal"
                         >
-                          Normal
+                          <FiMinimize2 size={denseViewport ? 13 : 15} aria-hidden />
                         </button>
                       </>
                     ) : null}
@@ -922,31 +928,31 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                         <button
                           type="button"
                           onClick={() => setPanelMode("side")}
-                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:-translate-y-0.5 hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          className={panelControlClass}
                           aria-label="Fixar Brain na lateral"
                           title="Fixar na lateral"
                         >
-                          Lateral
+                          <FiSidebar size={denseViewport ? 13 : 15} aria-hidden />
                         </button>
                         <button
                           type="button"
                           onClick={() => setPanelMode("compact")}
-                          className={`rounded-full border border-white/15 bg-white/8 text-[11px] font-semibold text-white/90 transition hover:-translate-y-0.5 hover:bg-white/16 ${denseViewport ? "px-2 py-1" : "px-2.5 py-1.5"}`}
+                          className={panelControlClass}
                           aria-label="Voltar Brain ao modo normal"
                           title="Modo normal"
                         >
-                          Normal
+                          <FiMinimize2 size={denseViewport ? 13 : 15} aria-hidden />
                         </button>
                       </>
                     ) : null}
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
-                      className={`rounded-full border border-white/15 bg-white/8 text-white/85 transition hover:bg-white/16 ${denseViewport ? "p-1.5" : "p-2"}`}
-                      aria-label="Fechar brain"
-                      title="Fechar brain"
+                      className={panelControlClass}
+                      aria-label="Fechar Brain"
+                      title="Fechar Brain"
                     >
-                      <FiX size={denseViewport ? 13 : 15} />
+                      <FiX size={denseViewport ? 13 : 15} aria-hidden />
                     </button>
                   </div>
                 </div>
@@ -1068,18 +1074,22 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
                     <button
                       type="button"
                       onClick={() => setConfirmState({ open: true, kind: "clearAll" })}
-                      className={`font-semibold uppercase tracking-[0.24em] text-[#8b98b1] transition hover:text-(--tc-accent,#ef0001) dark:text-[#94abd6] dark:hover:text-[#ff8a8a] ${hasConversation ? "text-[0.65rem]" : "text-xs"}`}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#dfe6f3) bg-white text-[#8b98b1] transition hover:border-[rgba(239,0,1,0.24)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#94abd6] dark:hover:text-[#ff8a8a]"
+                      aria-label="Limpar conversa"
+                      title="Limpar conversa"
                     >
-                      Limpar tudo
+                      <FiTrash2 size={15} aria-hidden />
                     </button>
                     <button
                       type="button"
                       onClick={() => void sendMessage()}
                       disabled={sending || !input.trim()}
-                      className={`inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#1f4aa3_100%)] font-semibold text-white shadow-[0_14px_28px_rgba(11,26,60,0.2)] transition hover:-translate-y-px hover:bg-[linear-gradient(135deg,var(--tc-accent,#ef0001)_0%,#c70000_100%)] disabled:cursor-not-allowed disabled:opacity-60 ${hasConversation ? "px-3.5 py-2 text-[0.85rem]" : "px-4 py-2.5 text-sm"}`}
+                      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#1f4aa3_100%)] text-white shadow-[0_14px_28px_rgba(11,26,60,0.2)] transition hover:-translate-y-px hover:bg-[linear-gradient(135deg,var(--tc-accent,#ef0001)_0%,#c70000_100%)] disabled:cursor-not-allowed disabled:opacity-60 ${sending ? "animate-pulse" : ""}`}
+                      aria-label={sending ? "Enviando mensagem" : "Enviar mensagem"}
+                      aria-busy={sending}
+                      title={sending ? "Enviando" : "Enviar"}
                     >
-                      <FiSend size={15} />
-                      {sending ? "Processando..." : "Enviar"}
+                      <FiSend size={16} aria-hidden />
                     </button>
                   </div>
                 </div>
@@ -1138,5 +1148,3 @@ export default function ChatButton({ defaultOpen = false }: ChatButtonProps) {
     </div>
   );
 }
-
-

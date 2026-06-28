@@ -17,6 +17,23 @@ type ScreenContextRule = {
 
 const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
   {
+    match: /^\/brain(?:\/|$)/,
+    module: "brain",
+    screenLabel: "Brain",
+    screenSummary: [
+      "Voce esta em: Brain.",
+      "Aqui voce consulta o grafo de conhecimento e conversa com agentes especializados sobre a plataforma Quality Control.",
+      "Como agente, posso explicar relacoes do grafo, orientar proximas acoes e buscar contexto permitido pelo seu RBAC.",
+    ].join(" "),
+    entityType: "screen",
+    suggestedPrompts: [
+      "Resumir o Brain",
+      "Explicar o que posso fazer aqui",
+      "Buscar contexto no Brain",
+      "Sugerir proxima acao como agente",
+    ],
+  },
+  {
     match: /^\/(?:admin\/support|kanban-it)/,
     module: "support",
     screenLabel: "Kanban global de suporte",

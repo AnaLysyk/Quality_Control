@@ -1,7 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 
 let adapter: PrismaPg | undefined;
-const DEPRECATED_SSL_MODES = new Set(["prefer", "verify-ca"]);
+const DEPRECATED_SSL_MODES = new Set(["prefer", "require", "verify-ca"]);
 
 function normalizeDatabaseUrl(databaseUrl: string) {
   const trimmed = databaseUrl.trim();

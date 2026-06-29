@@ -7,7 +7,10 @@ import { FiChevronRight, FiMaximize2, FiMinimize2, FiSend, FiSidebar, FiTrash2, 
 import type { AssistantAction, AssistantConversationTurn, AssistantOpenEventDetail, AssistantPanelMode, AssistantReplyPayload, AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 import { fetchApi } from "@/lib/api";
-import { runAccessRequestsClientAgentCommand } from "@/lib/assistant/accessRequestsClientAgent";
+import {
+  runAccessRequestsBrainCommand,
+  type AccessRequestsBrainPendingAction,
+} from "@/admin/access-requests/_assistant";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import styles from "./ChatButton.module.css";
 import ConfirmDialog from "./ConfirmDialog";
@@ -349,7 +352,11 @@ function ChatRichText({ text }: { text: string }) {
 export default function ChatButton({ defaultOpen = false, defaultPanelMode }: ChatButtonProps) {
   const pathname = usePathname() || "/";
   const screenContext = useMemo(() => resolveAssistantScreenContext(pathname), [pathname]);
-  const { user, can } = usePermissionAccess();
+  const { user, can, permissions } = usePermissionAccess();
+  const conversationStorageKey = useMemo(
+    () => `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}:${pathname}`,
+    [pathname, user?.id],
+  );
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
   const [open, setOpen] = useState(defaultOpen);
   const [panelMode, setPanelMode] = useState<AssistantPanelMode>(defaultPanelMode ?? "compact");
@@ -363,6 +370,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
   const [assistantContext, setAssistantContext] = useState<AssistantScreenContext>(screenContext);
   const [brainOpenContext, setBrainOpenContext] = useState<AssistantOpenEventDetail | null>(null);
   const [activeAgentMode, setActiveAgentMode] = useState<AgentMode | null>(null);
+  const [accessRequestsPendingAction, setAccessRequestsPendingAction] = useState<AccessRequestsBrainPendingAction | null>(null);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false });
   const boxRef = useRef<HTMLDivElement | null>(null);
@@ -398,8 +406,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
   useEffect(() => {
     try {
-      const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(conversationStorageKey);
       if (!raw) {
         setMessages([]);
         return;
@@ -411,16 +418,15 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     } catch {
       setMessages([]);
     }
-  }, [user?.id]);
+  }, [conversationStorageKey]);
 
   useEffect(() => {
     try {
-      const key = `${HISTORY_KEY_PREFIX}:${user?.id ?? "anon"}`;
-      localStorage.setItem(key, JSON.stringify(messages.slice(-120)));
+      localStorage.setItem(conversationStorageKey, JSON.stringify(messages.slice(-120)));
     } catch {
       // ignore storage errors
     }
-  }, [messages, user?.id]);
+  }, [messages, conversationStorageKey]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -441,7 +447,12 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
   useEffect(() => {
     setAssistantContext(screenContext);
-  }, [screenContext]);
+
+    if (!pathname.startsWith("/brain")) {
+      setBrainOpenContext(null);
+      setActiveAgentMode(null);
+    }
+  }, [screenContext, pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -582,6 +593,12 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     // Usa endpoint unificado para garantir memória persistente de todas as conversas.
     const apiRoute = "/api/assistant/ask";
+    const shouldSendBrainContext =
+      pathname.startsWith("/brain") ||
+      Boolean(
+        brainOpenContext?.source === "brain" &&
+        (brainOpenContext.route ?? pathname).startsWith("/brain"),
+      );
 
     try {
       const response = await fetchApi(apiRoute, {
@@ -590,7 +607,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
         body: JSON.stringify({
           ...payload,
           context: assistantContext,
-          brainContext: (brainOpenContext || activeAgentMode)
+          brainContext: shouldSendBrainContext
             ? { ...(brainOpenContext ?? {}), ...(activeAgentMode ? { agentMode: activeAgentMode } : {}) }
             : undefined,
           actor: {
@@ -657,12 +674,90 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     }
   }
 
+  function runLocalNavigationAgentCommand(rawText: string): string | null {
+    if (typeof window === "undefined") return null;
+
+    const normalized = rawText
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[!?.,;]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!normalized) return null;
+
+    const go = (path: string, reply: string) => {
+      window.location.assign(path);
+      return reply;
+    };
+
+    if (/\b(abrir|abre|ir|vai|entrar|entra|mostrar|mostra)\b.*\b(brain|brian)\b/.test(normalized)) {
+      return go("/brain", "Pronto, estou abrindo o Brain.");
+    }
+
+    if (/\b(abrir|abre|ir|vai|entrar|entra|mostrar|mostra)\b.*\b(solicitacoes|solicitacao|acessos?|acesso)\b/.test(normalized)) {
+      return go("/admin/access-requests", "Pronto, estou abrindo Solicitações de acesso.");
+    }
+
+    if (/\b(abrir|abre|ir|vai|entrar|entra|mostrar|mostra)\b.*\b(perfil|meu perfil|configuracoes|configuracao)\b/.test(normalized)) {
+      return go("/settings/profile", "Pronto, estou abrindo seu perfil.");
+    }
+
+    if (/\b(trocar|alterar|mudar|atualizar)\b.*\b(senha)\b/.test(normalized)) {
+      return go("/settings/profile", "Pronto, abri seu perfil. Por segurança, a troca de senha precisa confirmar a senha atual e a nova senha na área do perfil.");
+    }
+
+    return null;
+  }
+
   async function sendMessage(textOverride?: string) {
     const text = (textOverride ?? input).trim();
     if (!text) return;
 
-    const localAgentResult = runAccessRequestsClientAgentCommand(pathname, text);
-    if (localAgentResult) {
+    if (pathname.startsWith("/admin/access-requests")) {
+      setInput("");
+      const now = Date.now();
+      const assistantMessageId = makeId("assistant");
+      setMessages((current) => [
+        ...current,
+        { id: makeId("user"), from: "user", text, ts: now },
+        {
+          id: assistantMessageId,
+          from: "assistant",
+          text: "Estou olhando o painel de solicitações e interpretando seu pedido...",
+          ts: now + 1,
+          tool: "use_brain",
+        },
+      ]);
+
+      const viewer = user ? { ...(user as Record<string, unknown>), permissions } : null;
+      const localResult = await runAccessRequestsBrainCommand({
+        pathname,
+        text,
+        user: viewer,
+        pendingAction: accessRequestsPendingAction,
+      });
+
+      if (localResult.handled) {
+        if (localResult.pendingAction !== undefined) {
+          setAccessRequestsPendingAction(localResult.pendingAction);
+        }
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantMessageId
+              ? { ...message, text: localResult.reply ?? "Pronto, cuidei disso na tela.", tool: "use_brain" }
+              : message,
+          ),
+        );
+        return;
+      }
+
+      setMessages((current) => current.filter((message) => message.id !== assistantMessageId && !(message.from === "user" && message.text === text && message.ts === now)));
+    }
+
+    const navigationAgentResult = runLocalNavigationAgentCommand(text);
+    if (navigationAgentResult) {
       setInput("");
       setMessages((current) => [
         ...current,
@@ -675,14 +770,13 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
         {
           id: makeId("assistant"),
           from: "assistant",
-          text: localAgentResult,
+          text: navigationAgentResult,
           ts: Date.now(),
           tool: "system",
         },
       ]);
       return;
     }
-
 
     const numericChoice = Number(text);
     if (Number.isInteger(numericChoice) && numericChoice >= 1) {

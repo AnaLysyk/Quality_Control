@@ -472,30 +472,10 @@ export const NAV_CATALOG: NavModuleDef[] = [
     id: "brain",
     label: "Brain",
     iconKey: "cpu",
+    href: "/brain",
     allowedRoles: ALL_USERS,
     testId: "nav-brain",
-    items: [
-      { 
-        id: "brain-graph", 
-        routeId: "brain.grafo",
-        label: "Gráfico do Brain", 
-        iconKey: "network", 
-        module: "brain", 
-        href: "/brain",
-        favoriteEnabled: true,
-        testId: "nav-brain-graph",
-      },
-      { 
-        id: "brain-ask", 
-        routeId: "assistente.perguntar",
-        label: "Perguntar ao assistente", 
-        iconKey: "help-circle", 
-        module: "brain", 
-        href: "/brain/perguntar",
-        favoriteEnabled: true,
-        testId: "nav-brain-ask",
-      },
-    ],
+    items: [],
   },
 
   // ============================================

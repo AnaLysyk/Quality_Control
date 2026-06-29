@@ -90,6 +90,7 @@ const RESERVED_APP_ROOTS = new Set([
   "issues",
   "metrics",
   "brand-identity",
+  "brain",
   "applications-hub",
   "applications-panel",
   "painel-releases-manuais",

@@ -1,38 +1,38 @@
-export const dynamic = "force-dynamic";
-
-import BrainPageClient from "@/admin/brain/BrainPageClient";
+import { BrainDashboard } from "./_components/BrainDashboard";
 import { registerScreen } from "@/lib/brain/registry";
 
+export const dynamic = "force-dynamic";
+
 registerScreen({
-  id: "brain-graph",
+  id: "brain-dashboard",
   title: "Brain",
-  description: "Grafo de conhecimento, agentes e contexto operacional do sistema.",
+  description: "Mapa de conhecimento e acoes do Quality Control com recorte de Solicitacoes de acesso.",
   module: "brain",
   entity: "graph",
-  permissions: ["brain:read"],
+  permissions: ["brain:read", "brain:use"],
   actions: [
     {
-      id: "open-agent-panel",
-      label: "Abrir agente",
-      description: "Abre a experiencia de agente sobre o no selecionado.",
-      kind: "open-modal",
+      id: "open-access-requests",
+      label: "Abrir Solicitacoes de acesso",
+      description: "Navega para a central administrativa de solicitacoes de acesso.",
+      kind: "navigate",
+      route: "/admin/access-requests",
     },
   ],
-  workflows: ["graph-exploration", "agent-analysis", "memory-review"],
-  documentation: [
-    "docs/brian/brain-architecture-roadmap.md",
-    "docs/brain/brain-knowledge-platform-prd.md",
-  ],
+  workflows: ["access-request-graph", "brain-dashboard", "knowledge-gap-review"],
+  documentation: ["docs/brain/brain-knowledge-platform-prd.md"],
   examples: [
-    "Analise o no selecionado e sugira proximos passos.",
-    "Explique o contexto da tela atual.",
+    "Tem no para todas as solicitacoes?",
+    "O que falta mapear?",
+    "Mostrar logs das solicitacoes.",
   ],
 });
 
 export const metadata = {
-  title: "Brain - Cerebro do QA",
+  title: "Brain",
+  description: "Mapa de conhecimento e acoes do Quality Control",
 };
 
 export default function BrainPage() {
-  return <BrainPageClient />;
+  return <BrainDashboard />;
 }

@@ -11,15 +11,17 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState, type ReactNode, type MouseEvent } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   FiChevronLeft,
   FiChevronRight,
   FiCircle,
+  FiClock,
   FiDownload,
   FiEdit3,
   FiEye,
   FiFileText,
+  FiMoreVertical,
   FiSearch,
   FiTrash2,
   FiUser,
@@ -51,6 +53,15 @@ type AccessRequestTableItem = {
     avatarValue?: string;
     avatarLabel?: string;
   } | null;
+};
+
+type QueueHistoryItem = {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  sortDate: string;
+  tone: "ok" | "warn" | "danger" | "neutral";
 };
 
 type AccessRequestsTableExperienceProps = {
@@ -93,41 +104,21 @@ function RequestAvatar({ item, size = "md" }: { item: AccessRequestTableItem; si
   const visual = item.visualProfile;
   const value = visual?.avatarValue?.trim() ?? "";
   const isLarge = size === "lg";
-  const boxClass = isLarge ? "h-12 w-12 rounded-full" : "h-11 w-11 rounded-full";
+  const boxClass = isLarge ? "h-12 w-12 rounded-full" : "h-9 w-9 rounded-full";
 
   if ((visual?.avatarKind === "image" || visual?.avatarKind === "gif") && isImageAvatar(value) && !broken) {
-    if (visual.avatarKind === "gif") {
-      return (
-        <div className={`relative flex shrink-0 items-center justify-center overflow-hidden border border-(--tc-border) bg-white shadow-[0_12px_26px_rgba(1,24,72,0.18)] ${boxClass}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={value}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full scale-125 rounded-full object-cover object-center opacity-35 blur-sm"
-            onError={() => setBroken(true)}
-          />
-          <span className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden rounded-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={value}
-              alt={visual.avatarLabel || "Foto do solicitante"}
-              className="h-full w-full scale-110 object-cover object-center"
-              onError={() => setBroken(true)}
-            />
-          </span>
-        </div>
-      );
-    }
-
     return (
-      <div className={`flex shrink-0 items-center justify-center overflow-hidden border border-(--tc-border) bg-white shadow-[0_12px_26px_rgba(1,24,72,0.18)] ${boxClass}`}>
+      <div
+        className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-(--tc-border) bg-white shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
+        style={{ lineHeight: 0 }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={value}
           alt={visual.avatarLabel || "Foto do solicitante"}
-          className="h-full w-full rounded-full object-cover object-center"
+          className="block h-full w-full rounded-full object-cover object-center"
           onError={() => setBroken(true)}
+          draggable={false}
         />
       </div>
     );
@@ -135,19 +126,22 @@ function RequestAvatar({ item, size = "md" }: { item: AccessRequestTableItem; si
 
   if (visual?.avatarKind === "emoji" && value) {
     return (
-      <div className={`flex shrink-0 items-center justify-center overflow-hidden border border-(--tc-border) bg-white shadow-[0_12px_26px_rgba(1,24,72,0.12)] ${boxClass}`}>
-        <span className="block translate-y-[1px] text-xl leading-none">{value}</span>
+      <div
+        className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-(--tc-border) bg-white text-base shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
+        style={{ lineHeight: 1 }}
+      >
+        <span className="block text-lg leading-none">{value}</span>
       </div>
     );
   }
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary) shadow-[0_12px_26px_rgba(1,24,72,0.12)] ${boxClass}`}
+      className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary) shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
       title="Perfil sem foto"
       aria-label="Perfil sem foto"
     >
-      <FiUser className={isLarge ? "h-5 w-5" : "h-4.5 w-4.5"} />
+      <FiUser className={isLarge ? "h-5 w-5" : "h-4 w-4"} />
     </div>
   );
 }
@@ -171,40 +165,6 @@ function statusDotClass(status: string) {
   if (status === "rejected") return "bg-rose-500";
   if (status === "in_progress") return "bg-amber-500";
   return "bg-sky-500";
-}
-
-function IconButton({
-  label,
-  children,
-  onClick,
-  tone = "neutral",
-}: {
-  label: string;
-  children: ReactNode;
-  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
-  tone?: "neutral" | "primary" | "danger";
-}) {
-  const toneClass =
-    tone === "primary"
-      ? "border-(--tc-primary) bg-(--tc-primary) text-white shadow-[0_10px_22px_rgba(1,24,72,0.18)] hover:-translate-y-0.5"
-      : tone === "danger"
-        ? "border-rose-200 bg-rose-50 text-rose-700 hover:-translate-y-0.5 hover:bg-rose-100"
-        : "border-(--tc-border) bg-(--tc-surface) text-(--tc-text-secondary) hover:-translate-y-0.5 hover:bg-(--tc-surface-2)";
-
-  return (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick(event);
-      }}
-      title={label}
-      aria-label={label}
-      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-base transition ${toneClass}`}
-    >
-      {children}
-    </button>
-  );
 }
 
 async function downloadRequestPdf(item: AccessRequestTableItem) {
@@ -338,10 +298,99 @@ export function AccessRequestsTableExperience({
   const [modalMode, setModalMode] = useState<"view" | "edit">("view");
   const [removeCandidate, setRemoveCandidate] = useState<AccessRequestTableItem | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [queueHistoryOpen, setQueueHistoryOpen] = useState(false);
+  const [expandedQueueHistoryId, setExpandedQueueHistoryId] = useState<string | null>(null);
+  const [queueDeletedHistory, setQueueDeletedHistory] = useState<QueueHistoryItem[]>([]);
   const selectedItem = useMemo(
     () => (selectedId ? items.find((item) => item.id === selectedId) ?? null : null),
     [items, selectedId],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleAssistantAction(event: Event) {
+      const detail = (event as CustomEvent<{
+        action?: "view" | "pdf" | "remove" | "approve" | "reject" | "request_adjustment";
+        requestId?: string;
+        mode?: "view" | "edit";
+      }>).detail ?? {};
+      const item = items.find((candidate) => candidate.id === detail.requestId);
+      if (!item) return;
+
+      onSelect(item.id);
+      setOpenActionMenuId(null);
+
+      if (detail.action === "pdf") {
+        setModalMode("view");
+        setOpen(true);
+        void downloadRequestPdf(item);
+        return;
+      }
+
+      if (detail.action === "remove") {
+        setRemoveCandidate(item);
+        return;
+      }
+
+      setModalMode(detail.mode ?? (detail.action === "view" ? "view" : "edit"));
+      setOpen(true);
+    }
+
+    window.addEventListener("access-requests:assistant-action", handleAssistantAction);
+    return () => window.removeEventListener("access-requests:assistant-action", handleAssistantAction);
+  }, [items, onSelect]);
+
+  const queueHistoryItems = useMemo<QueueHistoryItem[]>(() => {
+    const events: QueueHistoryItem[] = [];
+
+    items.forEach((item) => {
+      const name = displayName(item);
+      const date = item.lastAdjustmentAt || item.createdAt;
+
+      if (item.status === "closed") {
+        events.push({
+          id: "approved-" + item.id,
+          title: "Solicitação aceita",
+          description: name + " foi aprovado(a).",
+          date: formatDate(date),
+          sortDate: date,
+          tone: "ok",
+        });
+        return;
+      }
+
+      if (item.status === "rejected") {
+        events.push({
+          id: "rejected-" + item.id,
+          title: "Solicitação recusada",
+          description: name + " foi recusado(a).",
+          date: formatDate(date),
+          sortDate: date,
+          tone: "danger",
+        });
+        return;
+      }
+
+      if (item.status === "in_progress") {
+        events.push({
+          id: "adjustment-" + item.id,
+          title: "Ajuste solicitado",
+          description: name + " está aguardando correção do solicitante.",
+          date: formatDate(date),
+          sortDate: date,
+          tone: "warn",
+        });
+      }
+    });
+
+    events.push(...queueDeletedHistory);
+
+    return events.sort((left, right) =>
+      String(right.sortDate).localeCompare(String(left.sortDate)),
+    );
+  }, [items, queueDeletedHistory]);
 
   const columns = useMemo<ColumnDef<AccessRequestTableItem>[]>(
     () => [
@@ -354,7 +403,7 @@ export function AccessRequestsTableExperience({
           const name = displayName(item);
 
           return (
-            <div className="flex min-w-75 items-center gap-3">
+            <div className="relative z-0 flex min-w-75 items-center gap-3 overflow-hidden py-1">
               <RequestAvatar item={item} />
 
               <div className="min-w-0">
@@ -381,7 +430,7 @@ export function AccessRequestsTableExperience({
         header: "Perfil",
         accessorFn: (row) => row.accessType || "",
         cell: ({ row }) => (
-          <span className="inline-flex max-w-42.5 items-center whitespace-normal rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-black leading-4 text-violet-700">
+          <span className="inline-flex max-w-46 items-center whitespace-nowrap rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-black leading-none text-violet-700">
             {row.original.accessType || "Não informado"}
           </span>
         ),
@@ -391,7 +440,7 @@ export function AccessRequestsTableExperience({
         header: "Status",
         accessorFn: (row) => row.status,
         cell: ({ row }) => (
-          <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusClass(row.original.status)}`}>
+          <span className={`inline-flex min-w-max items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-black leading-none ${statusClass(row.original.status)}`}>
             {statusLabel(row.original.status)}
           </span>
         ),
@@ -419,13 +468,7 @@ export function AccessRequestsTableExperience({
         cell: ({ row }) => {
           const count = row.original.lastAdjustmentDiff?.length ?? 0;
           return (
-            <span
-              className={`rounded-full border px-3 py-1 text-xs font-black ${
-                count > 0
-                  ? "border-amber-200 bg-amber-50 text-amber-800"
-                  : "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-muted)"
-              }`}
-            >
+            <span className="inline-flex min-w-6 justify-center text-sm font-black text-(--tc-text-primary)">
               {count}
             </span>
           );
@@ -445,53 +488,100 @@ export function AccessRequestsTableExperience({
         id: "actions",
         header: "Ações",
         enableSorting: false,
+        size: 76,
         cell: ({ row }) => {
           const item = row.original;
+          const isFinal = item.status === "closed" || item.status === "rejected";
+          const menuOpen = openActionMenuId === item.id;
+
+          const closeMenu = () => setOpenActionMenuId(null);
+
           return (
-            <div className="flex justify-end gap-2">
-              <IconButton
-                label="Visualizar solicitação"
-                tone="primary"
-                onClick={() => {
-                  onSelect(item.id);
-                  setModalMode("view");
-                  setOpen(true);
+            <div className="relative flex justify-end">
+              <button
+                type="button"
+                aria-label="Abrir ações da solicitação"
+                title="Ações"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setOpenActionMenuId(menuOpen ? null : item.id);
                 }}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-secondary) shadow-[0_10px_22px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:bg-(--tc-surface-2)"
               >
-                <FiEye />
-              </IconButton>
+                <FiMoreVertical />
+              </button>
 
-              <IconButton
-                label="Editar/analisar solicitação"
-                onClick={() => {
-                  onSelect(item.id);
-                  setModalMode("edit");
-                  setOpen(true);
-                }}
-              >
-                <FiEdit3 />
-              </IconButton>
+              {menuOpen ? (
+                <div
+                  className="absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-(--tc-border) bg-white text-left shadow-[0_22px_60px_rgba(15,23,42,0.18)]"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    data-brain-action="view"
+                    onClick={() => {
+                      onSelect(item.id);
+                      setModalMode("view");
+                      setOpen(true);
+                      closeMenu();
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-(--tc-text-primary) transition hover:bg-(--tc-surface-2)"
+                  >
+                    <FiEye />
+                    Visualizar
+                  </button>
 
-              <IconButton
-                label="Baixar solicitação em PDF"
-                onClick={() => void downloadRequestPdf(item)}
-              >
-                <FiDownload />
-              </IconButton>
+                  {!isFinal ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelect(item.id);
+                        setModalMode("edit");
+                        setOpen(true);
+                        closeMenu();
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-(--tc-text-primary) transition hover:bg-(--tc-surface-2)"
+                    >
+                      <FiEdit3 />
+                      Analisar / editar
+                    </button>
+                  ) : null}
 
-              <IconButton
-                label="Remover solicitação"
-                tone="danger"
-                onClick={() => setRemoveCandidate(item)}
-              >
-                <FiTrash2 />
-              </IconButton>
+                  <button
+                    type="button"
+                    data-brain-action="pdf"
+                    onClick={() => {
+                      void downloadRequestPdf(item);
+                      closeMenu();
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-(--tc-text-primary) transition hover:bg-(--tc-surface-2)"
+                  >
+                    <FiDownload />
+                    Baixar PDF
+                  </button>
+
+                  {!isFinal ? (
+                    <button
+                      type="button"
+                      data-brain-action="remove"
+                      onClick={() => {
+                        setRemoveCandidate(item);
+                        closeMenu();
+                      }}
+                      className="flex w-full items-center gap-3 border-t border-(--tc-border) px-4 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-50"
+                    >
+                      <FiTrash2 />
+                      Remover da fila
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           );
         },
       },
     ],
-    [onSelect],
+    [onSelect, openActionMenuId],
   );
 
   // TanStack Table intentionally returns non-memoizable helpers.
@@ -507,13 +597,116 @@ export function AccessRequestsTableExperience({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  useEffect(() => {
+    table.setPageIndex(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, statusFilter, dateFilter]);
+
   const sortedColumnId = sorting[0]?.id ?? null;
 
   return (
     <>
+      {queueHistoryOpen ? (
+        <section className="mb-4 overflow-hidden rounded-[26px] border border-slate-200 bg-white text-slate-950 shadow-[0_22px_70px_rgba(15,23,42,0.12)] [color-scheme:light]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] px-5 py-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white shadow-[0_14px_32px_rgba(15,23,42,0.18)]">
+                <FiClock className="h-4 w-4" />
+              </span>
+
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Histórico da fila</p>
+                <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Movimentações de solicitações</h3>
+                <p className="mt-0.5 text-sm font-semibold text-slate-500">
+                  Aceites, recusas, ajustes solicitados e remoções.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setQueueHistoryOpen(false)}
+              aria-label="Fechar histórico"
+              title="Fechar"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+            >
+              <FiX className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="max-h-86 overflow-y-auto bg-slate-50/70 px-5 py-4">
+            {queueHistoryItems.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-5 text-center">
+                <p className="text-sm font-black text-slate-800">Nenhuma movimentação registrada</p>
+                <p className="mt-1 text-sm font-semibold text-slate-500">
+                  As ações feitas na fila aparecem aqui.
+                </p>
+              </div>
+            ) : (
+              <ol className="relative space-y-3 before:absolute before:left-4 before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-slate-200">
+                {queueHistoryItems.map((event) => {
+                  const expanded = expandedQueueHistoryId === event.id;
+
+                  const toneClasses =
+                    event.tone === "ok"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                      : event.tone === "danger"
+                        ? "border-rose-200 bg-rose-50 text-rose-800"
+                        : event.tone === "warn"
+                          ? "border-amber-200 bg-amber-50 text-amber-800"
+                          : "border-slate-200 bg-slate-100 text-slate-700";
+
+                  const dotClasses =
+                    event.tone === "ok"
+                      ? "bg-emerald-500"
+                      : event.tone === "danger"
+                        ? "bg-rose-500"
+                        : event.tone === "warn"
+                          ? "bg-amber-500"
+                          : "bg-slate-400";
+
+                  return (
+                    <li key={event.id} className="relative pl-10">
+                      <span className={"absolute left-2.5 top-4 h-3 w-3 rounded-full border-2 border-white shadow-sm " + dotClasses} />
+
+                      <button
+                        type="button"
+                        onClick={() => setExpandedQueueHistoryId(expanded ? null : event.id)}
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)]"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-black text-slate-950">{event.title}</p>
+                            <p className="mt-1 line-clamp-1 text-sm font-semibold text-slate-500">
+                              {event.description}
+                            </p>
+                          </div>
+
+                          <span className={"shrink-0 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] " + toneClasses}>
+                            {event.date}
+                          </span>
+                        </div>
+
+                        {expanded ? (
+                          <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                            <p className="text-sm font-semibold leading-6 text-slate-700">
+                              {event.description}
+                            </p>
+                          </div>
+                        ) : null}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </div>
+        </section>
+      ) : null}
+
       <section className="overflow-hidden rounded-[24px] border border-(--tc-border) bg-white text-slate-950 shadow-[0_18px_54px_rgba(15,23,42,0.09)] [--tc-accent:#ef0001] [--tc-border:#e2e8f0] [--tc-primary:#011848] [--tc-surface:#ffffff] [--tc-surface-2:#f8fafc] [--tc-text-muted:#64748b] [--tc-text-primary:#0f172a] [--tc-text-secondary:#475569] [color-scheme:light]">
         <div className="border-b border-(--tc-border) bg-[linear-gradient(135deg,var(--tc-surface)_0%,var(--tc-surface-2)_55%,rgba(239,0,1,0.06)_130%)] p-3 sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[11px] font-black uppercase tracking-[0.24em] text-(--tc-text-muted)">Fila de análise</p>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-(--tc-text-secondary)">
@@ -521,19 +714,29 @@ export function AccessRequestsTableExperience({
               </p>
             </div>
 
-            <div className="grid min-w-50 grid-cols-2 gap-2 sm:min-w-62">
-              <div className="rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-3 py-2.5 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted)">Total</p>
-                <p className="mt-1 text-2xl font-black text-(--tc-text-primary)">{total}</p>
-              </div>
-              <div className="rounded-2xl border border-sky-200 bg-sky-50 px-3 py-2.5 shadow-[0_12px_28px_rgba(14,165,233,0.10)]">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700">Fila ativa</p>
-                <p className="mt-1 text-2xl font-black text-sky-900">{items.length}</p>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setQueueHistoryOpen((current) => !current)}
+                aria-label="Abrir histórico da fila"
+                title="Histórico da fila"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border) bg-white text-(--tc-text-secondary) shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-[rgba(239,0,1,0.28)] hover:bg-(--tc-surface-2)"
+              >
+                <FiClock className="h-4 w-4" />
+              </button>
+
+              <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border) bg-white px-3.5 text-(--tc-text-primary) shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                <span className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted)">
+                  Total
+                </span>
+                <span className="text-base font-black leading-none text-(--tc-primary)">
+                  {total}
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-2 xl:grid-cols-[minmax(260px,1fr)_180px_180px]">
+          <div className="mt-3 grid gap-2 xl:grid-cols-[minmax(260px,1fr)_180px_180px]">
             <label className="relative">
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted)" />
               <input
@@ -575,7 +778,8 @@ export function AccessRequestsTableExperience({
               className="h-12 rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 text-sm font-black text-(--tc-text-primary) outline-none transition focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
             >
               <option value="all">Todo o histórico</option>
-              <option value="today">Hoje</option>
+              <option value="two_hours">Data: últimas 2 horas</option>
+              <option value="today">Data: hoje</option>
               <option value="week">Últimos 7 dias</option>
               <option value="month">Últimos 30 dias</option>
             </select>
@@ -667,6 +871,15 @@ export function AccessRequestsTableExperience({
                     return (
                       <tr
                         key={row.id}
+                        data-brain-row="access-request"
+                        data-brain-id={row.original.id}
+                        data-brain-name={displayName(row.original)}
+                        data-brain-email={row.original.email}
+                        data-brain-status={statusLabel(row.original.status)}
+                        data-brain-status-value={row.original.status}
+                        data-brain-profile={row.original.accessType || "Não informado"}
+                        data-brain-company={row.original.company || "Não informada"}
+                        data-brain-changes={row.original.lastAdjustmentDiff?.length ?? 0}
                         onClick={() => {
                           onSelect(row.original.id);
                           setModalMode("view");
@@ -788,7 +1001,7 @@ export function AccessRequestsTableExperience({
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[100] bg-slate-950/45 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] flex max-h-[calc(100dvh-24px)] w-[min(1500px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[30px] border border-white/70 bg-(--tc-surface) shadow-[0_34px_100px_rgba(15,23,42,0.35)] [--tc-accent:#ef0001] [--tc-border:#e2e8f0] [--tc-primary:#011848] [--tc-surface:#ffffff] [--tc-surface-2:#f8fafc] [--tc-text-muted:#64748b] [--tc-text-primary:#0f172a] [--tc-text-secondary:#475569] [color-scheme:light] sm:max-h-[calc(100dvh-40px)] sm:w-[min(1500px,calc(100vw-40px))]">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] flex max-h-[calc(100dvh-12px)] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[30px] border border-white/70 bg-(--tc-surface) shadow-[0_34px_100px_rgba(15,23,42,0.35)] [--tc-accent:#ef0001] [--tc-border:#e2e8f0] [--tc-primary:#011848] [--tc-surface:#ffffff] [--tc-surface-2:#f8fafc] [--tc-text-muted:#64748b] [--tc-text-primary:#0f172a] [--tc-text-secondary:#475569] [color-scheme:light] sm:max-h-[calc(100dvh-8px)] sm:w-[min(1720px,calc(100vw-24px))]">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 bg-[linear-gradient(135deg,var(--tc-primary)_0%,#071a44_48%,rgba(239,0,1,0.74)_150%)] px-6 py-4 text-white">
               <div>
                 <Dialog.Title className="text-xl font-black tracking-tight !text-white">
@@ -804,17 +1017,16 @@ export function AccessRequestsTableExperience({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  data-brain-action="pdf"
                   onClick={() => selectedItem && void downloadRequestPdf(selectedItem)}
                   disabled={!selectedItem}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-black text-white transition hover:bg-white/20"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-sm font-black text-white transition hover:bg-white/20"
                 >
                   <FiFileText />
-                  PDF
                 </button>
 
-                <Dialog.Close className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-black text-white transition hover:bg-white/20">
+                <Dialog.Close className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-sm font-black text-white transition hover:bg-white/20">
                   <FiX />
-                  Fechar
                 </Dialog.Close>
               </div>
             </div>
@@ -829,7 +1041,7 @@ export function AccessRequestsTableExperience({
       <Dialog.Root open={Boolean(removeCandidate)} onOpenChange={(value) => !value && setRemoveCandidate(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[105] bg-slate-950/45 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[106] w-[min(520px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-rose-100 bg-(--tc-surface) p-6 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[106] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-rose-100 bg-(--tc-surface) p-6 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <Dialog.Title className="text-xl font-black text-(--tc-text-primary)">Remover solicitação?</Dialog.Title>
             <Dialog.Description className="mt-3 text-sm leading-6 text-(--tc-text-secondary)">
               Essa solicitação será removida da listagem principal e a movimentação deverá ficar registrada nos logs.
@@ -853,7 +1065,19 @@ export function AccessRequestsTableExperience({
                   if (!removeCandidate) return;
                   setRemoving(true);
                   try {
-                    await onDelete(removeCandidate.id);
+                    const removed = removeCandidate;
+                    await onDelete(removed.id);
+                    setQueueDeletedHistory((current) => [
+                      {
+                        id: "deleted-" + removed.id + "-" + Date.now(),
+                        title: "Solicitação removida",
+                        description: displayName(removed) + " foi removido(a) da fila.",
+                        date: formatDate(new Date().toISOString()),
+                        sortDate: new Date().toISOString(),
+                        tone: "neutral",
+                      },
+                      ...current,
+                    ]);
                     setRemoveCandidate(null);
                   } catch {
                     // The page-level handler surfaces the error in the visible toast.
@@ -873,5 +1097,3 @@ export function AccessRequestsTableExperience({
     </>
   );
 }
-
-

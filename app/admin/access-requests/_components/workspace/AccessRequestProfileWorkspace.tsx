@@ -8,10 +8,7 @@ import type {
 import { ChangesShowcase } from "./ChangesShowcase";
 import { ConversationPanel } from "./ConversationPanel";
 import { DecisionPanel } from "./DecisionPanel";
-import { NotesPanel } from "./NotesPanel";
-import { OutcomeBanner } from "./OutcomeBanner";
-import { ProfileHero } from "./ProfileHero";
-import { StatusBubbles } from "./StatusBubbles";
+import { ProfileHero, type ProfileTimelineItem } from "./ProfileHero";
 import { buildPreviewProfile } from "./workspace.helpers";
 
 type RejectionReasonOption = {
@@ -65,6 +62,13 @@ type AccessRequestProfileWorkspaceProps = {
   onApprove: () => void;
 };
 
+function safeTimelineDate(value: string) {
+  if (!value) return "Sem data";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Sem data";
+  return date.toLocaleString("pt-BR");
+}
+
 export function AccessRequestProfileWorkspace({
   selected,
   draft,
@@ -75,7 +79,6 @@ export function AccessRequestProfileWorkspace({
   onSaveVisualProfile,
   readOnly = false,
   onAvatarChange,
-  missingRequiredFields,
   requiresCompany,
   acceptDisabled,
   accepting,
@@ -114,27 +117,77 @@ export function AccessRequestProfileWorkspace({
     [selected, draft],
   );
 
-  const changedCount = useMemo(
-    () => comparisonRows.filter((row) => row.changed).length,
-    [comparisonRows],
-  );
-  const hasAdjustmentComment = useMemo(
+  const adjustmentReady = useMemo(
     () =>
-      adjustmentFieldsDraft.some((field) => (adjustmentFieldComments[field] ?? "").trim().length > 0) ||
-      commentDraft.trim().length > 0,
-    [adjustmentFieldComments, adjustmentFieldsDraft, commentDraft],
+      adjustmentFieldsDraft.length > 0 &&
+      adjustmentFieldsDraft.every((field) => (adjustmentFieldComments[field] ?? "").trim().length > 0),
+    [adjustmentFieldComments, adjustmentFieldsDraft],
   );
+
   const hasAdjustmentFieldsWithoutNotes = useMemo(
-    () =>
-      adjustmentFieldsDraft.some((field) => (adjustmentFieldComments[field] ?? "").trim().length === 0) &&
-      commentDraft.trim().length === 0,
-    [adjustmentFieldComments, adjustmentFieldsDraft, commentDraft],
+    () => adjustmentFieldsDraft.some((field) => (adjustmentFieldComments[field] ?? "").trim().length === 0),
+    [adjustmentFieldComments, adjustmentFieldsDraft],
   );
+
+  const timelineItems = useMemo<ProfileTimelineItem[]>(() => {
+    const events: ProfileTimelineItem[] = [
+      {
+        id: "created",
+        title: "Solicitação recebida",
+        side: "Solicitante",
+        date: safeTimelineDate(selected.createdAt),
+        summary: "Pedido entrou na fila de análise.",
+        details: `Solicitação de ${previewProfile.fullName || previewProfile.name || previewProfile.email}.`,
+        tone: "neutral",
+      },
+    ];
+
+    adjustmentFieldsDraft.forEach((field) => {
+      const row = comparisonRows.find((item) => item.field === field);
+      events.push({
+        id: "adjustment-" + field,
+        title: "Ajuste solicitado",
+        side: "Revisor",
+        date: "Agora",
+        summary: row?.label ?? field,
+        details: adjustmentFieldComments[field] || "Campo marcado para ajuste, ainda sem orientação.",
+        tone: "warn",
+      });
+    });
+
+    comparisonRows
+      .filter((row) => row.changed)
+      .forEach((row) => {
+        events.push({
+          id: "changed-" + row.field,
+          title: row.label + " alterado",
+          side: "Cadastro",
+          date: "Durante análise",
+          summary: `${row.originalText || "Não informado"} → ${row.currentText || "Não informado"}`,
+          details: `Valor recebido: ${row.originalText || "Não informado"}\nValor atual: ${row.currentText || "Não informado"}`,
+          tone: "ok",
+        });
+      });
+
+    comments.forEach((comment) => {
+      events.push({
+        id: "comment-" + comment.id,
+        title: comment.authorRole === "leader_tc" ? "Mensagem do revisor" : "Mensagem do solicitante",
+        side: comment.authorRole === "leader_tc" ? "Revisor" : "Solicitante",
+        date: safeTimelineDate(comment.createdAt),
+        summary: comment.body,
+        details: comment.body,
+        tone: "neutral",
+      });
+    });
+
+    return events;
+  }, [adjustmentFieldComments, adjustmentFieldsDraft, comments, comparisonRows, previewProfile.email, previewProfile.fullName, previewProfile.name, selected.createdAt]);
 
   return (
     <div
       ref={containerRef}
-      className="flex flex-col gap-4 bg-slate-50 p-3 sm:p-4 xl:p-5 2xl:p-6"
+      className="relative flex flex-col gap-3 bg-slate-50 p-3 sm:p-4 xl:p-5"
     >
       <ProfileHero
         profile={previewProfile}
@@ -144,93 +197,57 @@ export function AccessRequestProfileWorkspace({
         readOnly={readOnly}
         onSaveVisual={onSaveVisualProfile}
         onAvatarChange={onAvatarChange}
+        internalNotesValue={internalNotesDraft}
+        notesLocked={readOnly || commentsLocked}
+        onInternalNotesChange={onInternalNotesChange}
+        onSaveInternalNotes={onSaveInternalNotes}
+        timelineItems={timelineItems}
       />
 
-      <StatusBubbles
-        profile={previewProfile}
-        missingRequiredFields={missingRequiredFields}
-        requiresCompany={requiresCompany}
-        changedCount={changedCount}
-        commentsLocked={commentsLocked}
+      <ChangesShowcase
+        rows={comparisonRows}
+        selectedFields={adjustmentFieldsDraft}
+        fieldComments={adjustmentFieldComments}
+        readOnly={readOnly || commentsLocked}
+        submittedAt={selected.createdAt}
+        onToggleField={onToggleAdjustmentField}
+        onFieldCommentChange={onAdjustmentFieldCommentChange}
       />
 
-      <OutcomeBanner
+      <ConversationPanel
+        comments={comments}
+        loading={commentLoading}
+        error={commentError}
+        locked={readOnly || commentsLocked}
+        value={commentDraft}
+        sending={sendingComment}
+        onChange={onCommentDraftChange}
+        onSend={onSendComment}
+      />
+
+      <DecisionPanel
         status={selected.status}
+        passwordProvided={Boolean(previewProfile.passwordProvided)}
+        requiresCompany={requiresCompany}
+        hasCompany={Boolean(previewProfile.clientId)}
         accepting={accepting}
         requestingAdjustment={requestingAdjustment}
+        commentsLocked={readOnly || commentsLocked}
+        acceptDisabled={acceptDisabled}
+        selectedIsPasswordReset={selectedIsPasswordReset}
+        adjustmentFieldCount={adjustmentFieldsDraft.length}
+        adjustmentReady={adjustmentReady}
+        hasAdjustmentFieldsWithoutNotes={hasAdjustmentFieldsWithoutNotes}
+        commentDraft={commentDraft}
+        rejectionReasonDraft={rejectionReasonDraft}
+        rejectionReasons={rejectionReasons}
+        onRejectionReasonChange={onRejectionReasonChange}
+        onRequestAdjustment={onRequestAdjustment}
+        onReject={onReject}
+        onApprove={onApprove}
       />
-
-      <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.42fr)]">
-        <ChangesShowcase
-          rows={comparisonRows}
-          selectedFields={adjustmentFieldsDraft}
-          fieldComments={adjustmentFieldComments}
-          readOnly={readOnly || commentsLocked}
-          submittedAt={selected.createdAt}
-          onToggleField={onToggleAdjustmentField}
-          onFieldCommentChange={onAdjustmentFieldCommentChange}
-        />
-        <NotesPanel
-          value={internalNotesDraft}
-          locked={readOnly || commentsLocked}
-          saving={saving}
-          onChange={onInternalNotesChange}
-          onSave={onSaveInternalNotes}
-        />
-      </div>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Ação com solicitante</p>
-            <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Conversa e decisão</h3>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Use o chat para conversa avulsa. A devolucao de campos ja foi preparada no formulario acima.
-            </p>
-          </div>
-
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600">
-            {adjustmentFieldsDraft.length} campo(s) para ajuste
-          </span>
-        </div>
-
-        <div className="mt-5 grid gap-4">
-          <div className="grid items-start gap-4">
-            <ConversationPanel
-              comments={comments}
-              loading={commentLoading}
-              error={commentError}
-              locked={readOnly || commentsLocked}
-              value={commentDraft}
-              sending={sendingComment}
-              onChange={onCommentDraftChange}
-              onSend={onSendComment}
-            />
-          </div>
-
-          <DecisionPanel
-            status={selected.status}
-            passwordProvided={Boolean(previewProfile.passwordProvided)}
-            requiresCompany={requiresCompany}
-            hasCompany={Boolean(previewProfile.clientId)}
-            accepting={accepting}
-            requestingAdjustment={requestingAdjustment}
-            commentsLocked={readOnly || commentsLocked}
-            acceptDisabled={acceptDisabled}
-            selectedIsPasswordReset={selectedIsPasswordReset}
-            adjustmentFieldCount={adjustmentFieldsDraft.length}
-            adjustmentReady={hasAdjustmentComment}
-            hasAdjustmentFieldsWithoutNotes={hasAdjustmentFieldsWithoutNotes}
-            commentDraft={commentDraft}
-            rejectionReasonDraft={rejectionReasonDraft}
-            rejectionReasons={rejectionReasons}
-            onRejectionReasonChange={onRejectionReasonChange}
-            onRequestAdjustment={onRequestAdjustment}
-            onReject={onReject}
-            onApprove={onApprove}
-          />
-        </div>
-      </section>
     </div>
   );
 }
+
+

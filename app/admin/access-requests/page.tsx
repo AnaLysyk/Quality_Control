@@ -432,7 +432,7 @@ function isAdjustableProfileField(field: AccessRequestAdjustmentField) {
 }
 
 type StatusFilter = "all" | "open" | "in_progress" | "closed" | "rejected";
-type DateFilter = "all" | "today" | "week" | "month";
+type DateFilter = "all" | "today" | "week" | "month" | "two_hours";
 type StatusCounters = {
   approved: number;
   inProgress: number;
@@ -467,6 +467,9 @@ function isWithinDateFilter(value: string, dateFilter: DateFilter) {
   const now = new Date();
   const start = new Date(now);
 
+  if (dateFilter === "two_hours") {
+    start.setHours(now.getHours() - 2, now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+  }
   if (dateFilter === "today") {
     start.setHours(0, 0, 0, 0);
   }
@@ -484,18 +487,27 @@ function isWithinDateFilter(value: string, dateFilter: DateFilter) {
   return createdAt >= start;
 }
 
+function normalizeAccessRequestSearch(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function filterAccessRequestItems(
   items: AccessRequestItem[],
   searchTerm: string,
   statusFilter: StatusFilter,
   dateFilter: DateFilter,
 ) {
-  const query = searchTerm.trim().toLowerCase();
+  const query = normalizeAccessRequestSearch(searchTerm);
   return items.filter((item) => {
     if (statusFilter !== "all" && item.status !== statusFilter) return false;
     if (!isWithinDateFilter(item.createdAt, dateFilter)) return false;
     if (!query) return true;
-    return [
+    const searchableText = normalizeAccessRequestSearch([
       item.fullName,
       item.name,
       item.email,
@@ -504,10 +516,12 @@ function filterAccessRequestItems(
       item.jobRole,
       item.title,
       item.status,
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(query);
+    ].join(" "));
+
+    return query
+      .split(" ")
+      .filter(Boolean)
+      .every((token) => searchableText.includes(token));
   });
 }
 
@@ -764,6 +778,32 @@ function AccessRequestsPage() {
     adjustmentFieldsDraft.length > 0 ||
     (requiresCompany && !draft.clientId);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    function handleAssistantFilter(event: Event) {
+      const detail = (event as CustomEvent<{
+        searchTerm?: string;
+        statusFilter?: StatusFilter;
+        dateFilter?: DateFilter;
+      }>).detail ?? {};
+
+      if (typeof detail.searchTerm === "string") {
+        setSearchTerm(detail.searchTerm);
+      }
+
+      if (detail.statusFilter) {
+        setStatusFilter(detail.statusFilter);
+      }
+
+      if (detail.dateFilter) {
+        setDateFilter(detail.dateFilter);
+      }
+    }
+
+    window.addEventListener("access-requests:assistant-filter", handleAssistantFilter);
+    return () => window.removeEventListener("access-requests:assistant-filter", handleAssistantFilter);
+  }, []);
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -1391,3 +1431,6 @@ export default function AccessRequestsPageWithGuard() {
     </RequireAccessRequestReviewer>
   );
 }
+
+
+

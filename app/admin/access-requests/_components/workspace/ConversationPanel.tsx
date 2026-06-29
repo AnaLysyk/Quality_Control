@@ -1,5 +1,43 @@
+﻿import Image from "next/image";
+import { FiSend } from "react-icons/fi";
 import type { AccessRequestCommentView } from "../../_types/accessRequests.types";
 import { safeDate } from "./workspace.helpers";
+
+function classNames(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function initials(name: string) {
+  return (
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "?"
+  );
+}
+
+function authorLabel(comment: AccessRequestCommentView) {
+  return comment.authorRole === "leader_tc" ? "Revisor" : "Solicitante";
+}
+
+function TestingCompanySpinner({ size = 28 }: { size?: number }) {
+  return (
+    <span className="relative grid shrink-0 place-items-center rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] shadow-sm" style={{ width: size + 12, height: size + 12 }}>
+      <span className="relative block" style={{ width: size, height: size }}>
+        <Image
+          src="/images/tc.png"
+          alt="Testing Company"
+          fill
+          sizes={`${size}px`}
+          className="animate-spin-slower pointer-events-none select-none object-contain object-center motion-reduce:animate-none"
+        />
+      </span>
+    </span>
+  );
+}
 
 export function ConversationPanel({
   comments,
@@ -21,81 +59,119 @@ export function ConversationPanel({
   onSend: () => void;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Chat da solicitacao</p>
-          <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Conversa com o solicitante</h3>
-          <p className="mt-1 text-sm leading-6 text-slate-500">
-            Use para perguntas ou contexto adicional. Se clicar em Solicitar ajuste, este texto entra como mensagem geral da devolucao.
-          </p>
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-3.5">
+        <div className="flex min-w-0 items-center gap-3">
+          <TestingCompanySpinner size={24} />
+
+          <div className="min-w-0">
+            <p className="truncate text-base font-black text-slate-950">conversa-com-solicitante</p>
+            <p className="mt-0.5 text-xs font-semibold text-slate-500">
+              {comments.length > 0
+                ? `${comments.length} mensagem(ns) registrada(s)`
+                : "Nenhuma conversa iniciada"}
+            </p>
+          </div>
         </div>
-        {loading ? <span className="text-sm font-medium text-slate-500">Carregando...</span> : null}
+
+        {loading ? (
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">
+            Carregando...
+          </span>
+        ) : null}
       </div>
 
-      <div className="p-5">
+      <div className="bg-white px-4 py-3">
         {error ? (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">{error}</div>
+          <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
+            {error}
+          </div>
         ) : null}
 
-        <div className="max-h-56 space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <div className="max-h-56 space-y-1 overflow-y-auto">
           {comments.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-500">
-              Nenhuma interacao registrada.
-            </p>
+            <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-2.5 text-center">
+              <div>
+                <p className="text-sm font-black text-slate-800">Nenhuma conversa ainda</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">
+                  Escreva abaixo para iniciar o contato com o solicitante.
+                </p>
+              </div>
+            </div>
           ) : (
             comments.map((comment) => {
               const mine = comment.authorRole === "leader_tc";
+
               return (
-                <div key={comment.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[82%] rounded-xl border px-4 py-3 ${mine ? "border-slate-300 bg-white" : "border-slate-200 bg-white"}`}>
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">
-                      {mine ? "Revisor" : "Solicitante"} - {comment.authorName}
+                <article
+                  key={comment.id}
+                  className="group flex gap-3 rounded-xl px-2 py-2.5 transition hover:bg-slate-50"
+                >
+                  <span
+                    className={classNames(
+                      "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl text-xs font-black shadow-sm",
+                      mine ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700",
+                    )}
+                  >
+                    {initials(comment.authorName)}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <p className="text-sm font-black text-slate-950">
+                        {authorLabel(comment)}
+                      </p>
+                      <p className="text-xs font-semibold text-slate-400">
+                        {comment.authorName}
+                      </p>
+                      <p className="text-xs font-semibold text-slate-400">
+                        {safeDate(comment.createdAt)}
+                      </p>
+                    </div>
+
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm font-medium leading-6 text-slate-800">
+                      {comment.body}
                     </p>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">{comment.body}</p>
-                    <p className="mt-2 text-[11px] font-semibold text-slate-400">{safeDate(comment.createdAt)}</p>
                   </div>
-                </div>
+                </article>
               );
             })
           )}
         </div>
 
-        {locked ? (
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500">
-            Solicitacao finalizada. Conversa bloqueada.
-          </div>
-        ) : (
-          <div className="mt-4">
-            <label className="block">
-              <span className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                Nova mensagem
-              </span>
-              <textarea
-                className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
-                rows={4}
-                placeholder="Ex.: Ana, preciso confirmar um detalhe antes de concluir sua solicitacao."
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-              />
-            </label>
+        {!locked ? (
+          <div className="mt-3 rounded-xl border border-slate-300 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.05)] focus-within:border-slate-500">
+            <textarea
+              className="min-h-12 w-full resize-none border-0 bg-transparent px-3 py-2 text-sm font-medium leading-6 text-slate-950 outline-none placeholder:text-slate-400"
+              rows={2}
+              placeholder="Enviar mensagem para o solicitante..."
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+            />
 
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs font-semibold text-slate-500">
-                Enviar mensagem nao muda o status. Solicitar ajuste muda o status e envia campos marcados.
+            <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2">
+              <p className="text-xs font-semibold text-slate-400">
+                Mensagem livre. Não altera o status da solicitação.
               </p>
+
               <button
                 type="button"
                 onClick={onSend}
                 disabled={sending || value.trim().length === 0}
-                className="h-10 rounded-xl bg-slate-950 px-4 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 items-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-45"
               >
-                {sending ? "Enviando..." : "Enviar mensagem"}
+                <FiSend className="h-3.5 w-3.5" />
+                {sending ? "Enviando..." : "Enviar"}
               </button>
             </div>
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500">
+            Conversa bloqueada porque a solicitação foi finalizada.
           </div>
         )}
       </div>
     </section>
   );
 }
+

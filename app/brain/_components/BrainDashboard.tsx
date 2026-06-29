@@ -217,6 +217,7 @@ function buildProgressiveGraphView(options: {
   edges: BrainEdge[];
   selectedNode: BrainNode | null;
   activeModule: string | null;
+  hasActiveFilter: boolean;
   companies: BrainContextCompany[];
   projects: BrainContextProject[];
   selectedCompanyId: string | null;
@@ -228,6 +229,7 @@ function buildProgressiveGraphView(options: {
     edges,
     selectedNode,
     activeModule,
+    hasActiveFilter,
     companies,
     projects,
     selectedCompanyId,
@@ -271,7 +273,7 @@ function buildProgressiveGraphView(options: {
   const focusNode = selectedNode ?? coreByModule ?? null;
   const focusModules = focusNode ? modulesForNode(focusNode) : [];
   const focusCore = focusNode && isCoreNode(focusNode) ? focusNode : visibleCores.find((core) => focusModules.includes(core.label) || modulesForNode(core).includes(focusNode?.module ?? ""));
-  const shouldExpand = Boolean(focusNode || activeModule);
+  const shouldExpand = Boolean(focusNode || activeModule || hasActiveFilter);
   const coreIds = new Set([...contextNodes, ...visibleCores].map((node) => node.id));
   const detailCandidates = shouldExpand
     ? nodes.filter((node) => !coreIds.has(node.id) && node.type !== "module" && (focusModules.length ? focusModules.includes(node.module) : true))
@@ -284,6 +286,7 @@ function buildProgressiveGraphView(options: {
       if (edge.target === focusNode.id) directIds.add(edge.source);
     });
   }
+  const detailLimit = hasActiveFilter ? 18 : 10;
   const prioritizedDetails = uniqueById(
     [...detailCandidates.filter((node) => directIds.has(node.id)), ...detailCandidates]
       .filter((node) => !isCoreNode(node))
@@ -291,7 +294,7 @@ function buildProgressiveGraphView(options: {
         ...node,
         metadata: { ...node.metadata, isDetailNode: true },
       })),
-  ).slice(0, 10);
+  ).slice(0, detailLimit);
   const remainingCount = Math.max(0, detailCandidates.length - prioritizedDetails.length);
   const aggregateNode: BrainNode | null = shouldExpand && remainingCount
     ? {
@@ -307,7 +310,7 @@ function buildProgressiveGraphView(options: {
       }
     : null;
   const expandedNodes = aggregateNode ? [...prioritizedDetails, aggregateNode] : prioritizedDetails;
-  const displayCores = shouldExpand && focusCore ? [focusCore] : visibleCores;
+  const displayCores = shouldExpand && focusCore ? [focusCore] : hasActiveFilter ? [] : visibleCores;
   const viewNodes = [...contextNodes, ...displayCores, ...expandedNodes];
   const viewIds = new Set(viewNodes.map((node) => node.id));
   const contextEdges: BrainEdge[] = [
@@ -463,7 +466,7 @@ export function BrainNeuralDashboard() {
       getVisibleGraph(graph.nodes, graph.edges, {
         companyId: selectedCompanyId,
         projectId: selectedProjectId,
-        moduleFilter: null,
+        moduleFilter: activeModule,
         showOrphansOnly,
         showPendingOnly,
         searchText,
@@ -473,7 +476,7 @@ export function BrainNeuralDashboard() {
         nodeStatus,
         period,
       }),
-    [graph.edges, graph.nodes, localGraphOnly, nodeStatus, nodeType, period, searchText, selectedCompanyId, selectedNode?.id, selectedProjectId, showOrphansOnly, showPendingOnly],
+    [activeModule, graph.edges, graph.nodes, localGraphOnly, nodeStatus, nodeType, period, searchText, selectedCompanyId, selectedNode?.id, selectedProjectId, showOrphansOnly, showPendingOnly],
   );
   const contextCompanies = useMemo(() => mergeContextCompanies(brainContext, graph.nodes), [brainContext, graph.nodes]);
   const contextProjects = useMemo(() => mergeContextProjects(brainContext, graph.nodes), [brainContext, graph.nodes]);
@@ -484,13 +487,14 @@ export function BrainNeuralDashboard() {
         edges: filteredGraph.edges,
         selectedNode,
         activeModule,
+        hasActiveFilter: Boolean(searchText.trim() || nodeType !== "all" || nodeStatus !== "all" || period !== "all" || showOrphansOnly || showPendingOnly),
         companies: contextCompanies,
         projects: contextProjects,
         selectedCompanyId,
         selectedProjectId,
         canViewSupport: Boolean(brainContext?.permissions.canViewGlobalBrain || brainContext?.permissions.canViewLogs || graph.nodes.some((node) => ["Suporte", "Chamados"].includes(node.module))),
       }),
-    [activeModule, brainContext?.permissions.canViewGlobalBrain, brainContext?.permissions.canViewLogs, contextCompanies, contextProjects, filteredGraph.edges, filteredGraph.nodes, graph.nodes, selectedCompanyId, selectedNode, selectedProjectId],
+    [activeModule, brainContext?.permissions.canViewGlobalBrain, brainContext?.permissions.canViewLogs, contextCompanies, contextProjects, filteredGraph.edges, filteredGraph.nodes, graph.nodes, nodeStatus, nodeType, period, searchText, selectedCompanyId, selectedNode, selectedProjectId, showOrphansOnly, showPendingOnly],
   );
 
   const pendingCount = graph.summary.pendingNodes ?? graph.nodes.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status)).length;
@@ -807,7 +811,7 @@ function handleSelectNode(node: BrainNode) {
   }
 
   const filterHud = (
-    <div className="pointer-events-auto absolute left-1/2 top-6 z-30 w-[min(760px,calc(100%-48px))] -translate-x-1/2">
+    <div className="brain-filter-hud pointer-events-auto absolute left-1/2 top-6 z-30 w-[min(760px,calc(100%-48px))] -translate-x-1/2">
       <BrainContextSelector
           nodes={graph.nodes}
           companies={contextCompanies}
@@ -823,7 +827,7 @@ function handleSelectNode(node: BrainNode) {
           showPendingOnly={showPendingOnly}
           visibleNodeCount={visibleGraph.nodes.length}
           visibleEdgeCount={visibleGraph.edges.length}
-          pendingCount={pendingCount}
+          pendingCount={visiblePendingNodes.length}
           source={graphSource}
           onCompanyChange={handleSelectCompany}
           onProjectChange={handleSelectProject}

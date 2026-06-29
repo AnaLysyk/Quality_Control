@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
-import { FiRefreshCw, FiRotateCcw, FiSearch } from "react-icons/fi";
+import { FiChevronDown, FiRefreshCw, FiRotateCcw, FiSearch, FiSliders } from "react-icons/fi";
 import type {
   BrainContextCompany,
   BrainContextProject,
@@ -10,7 +8,7 @@ import type {
   BrainNodeStatus,
   BrainNodeType,
 } from "../_types/brain.types";
-import { nodeStatusLabel } from "../_utils/brainGraphFormatters";
+import { nodeStatusLabel, nodeTypeLabel } from "../_utils/brainGraphFormatters";
 
 type BrainContextSelectorProps = {
   nodes: BrainNode[];
@@ -43,12 +41,52 @@ type BrainContextSelectorProps = {
   source?: "database" | "fallback" | "partial";
 };
 
+const MODULE_LABELS: Record<string, string> = {
+  Automacao: "Automação",
+  Chat: "Chat",
+  "Chat/Brain": "Chat / Brain",
+  Contexto: "Contexto",
+  Defeitos: "Defeitos",
+  Documentos: "Documentos",
+  Execucoes: "Execuções",
+  Logs: "Logs",
+  Permissoes: "Permissões",
+  "Plano de Teste": "Plano de teste",
+  "Repositorio de Testes": "Repositório de testes",
+  Runs: "Runs",
+  Solicitacoes: "Solicitações",
+  Suporte: "Suporte",
+  Usuarios: "Usuários",
+};
+
 function unique(values: Array<string | undefined>) {
-  return Array.from(new Set(values.filter((value): value is string => Boolean(value)))).sort();
+  return Array.from(new Set(values.filter((value): value is string => Boolean(value)))).sort((a, b) =>
+    displayModule(a).localeCompare(displayModule(b), "pt-BR"),
+  );
 }
 
-function moduleLabel(value: string | null) {
-  return value ?? "Todos os modulos";
+function displayModule(value: string) {
+  return MODULE_LABELS[value] ?? value;
+}
+
+function contextLabel(company: string, project: string, area: string | null) {
+  return `${company} / ${project} / ${area ? displayModule(area) : "Todas as áreas"}`;
+}
+
+function belongsToSelectedCompany(node: BrainNode, selectedCompanyId: string | null) {
+  if (!selectedCompanyId) return true;
+  if (node.companyId) return node.companyId === selectedCompanyId;
+  return node.type === "company" || node.metadata?.isBrainCore === true || node.metadata?.isContextCore === true;
+}
+
+function belongsToSelectedProject(node: BrainNode, selectedProjectId: string | null) {
+  if (!selectedProjectId) return true;
+  if (node.projectId) return node.projectId === selectedProjectId;
+  return node.type === "company" || node.type === "project" || node.metadata?.isBrainCore === true || node.metadata?.isContextCore === true;
+}
+
+function resetDependentFilters(callback: () => void) {
+  callback();
 }
 
 export function BrainContextSelector({
@@ -59,6 +97,7 @@ export function BrainContextSelector({
   selectedProjectId,
   activeModule,
   searchText,
+  nodeType,
   nodeStatus,
   period,
   showOrphansOnly,
@@ -70,6 +109,7 @@ export function BrainContextSelector({
   onProjectChange,
   onModuleChange,
   onSearchTextChange,
+  onNodeTypeChange,
   onNodeStatusChange,
   onPeriodChange,
   onClear,
@@ -78,215 +118,172 @@ export function BrainContextSelector({
   onRefresh,
   source = "fallback",
 }: BrainContextSelectorProps) {
-  const companyNodes = selectedCompanyId
-    ? nodes.filter((node) => !node.companyId || node.companyId === selectedCompanyId)
-    : nodes;
-
-  const projectNodes = selectedProjectId
-    ? companyNodes.filter((node) => !node.projectId || node.projectId === selectedProjectId)
-    : companyNodes;
-
-  const moduleNodes = activeModule
-    ? projectNodes.filter((node) => node.module === activeModule)
-    : projectNodes;
-
+  const companyNodes = nodes.filter((node) => belongsToSelectedCompany(node, selectedCompanyId));
   const projectOptions = selectedCompanyId
     ? projects.filter((project) => !project.companyId || project.companyId === selectedCompanyId)
     : projects;
+  const projectNodes = companyNodes.filter((node) => belongsToSelectedProject(node, selectedProjectId));
+  const areaNodes = activeModule ? projectNodes.filter((node) => node.module === activeModule) : projectNodes;
+  const typeNodes = nodeType === "all" ? areaNodes : areaNodes.filter((node) => node.type === nodeType);
 
   const modules = unique(projectNodes.map((node) => node.module));
-  const statuses = unique(moduleNodes.map((node) => node.status)) as BrainNodeStatus[];
+  const types = unique(areaNodes.map((node) => node.type)) as BrainNodeType[];
+  const statuses = unique(typeNodes.map((node) => node.status)) as BrainNodeStatus[];
+  const currentCompany = companies.find((company) => company.id === selectedCompanyId)?.name ?? "Todas as empresas";
+  const currentProject = projectOptions.find((project) => project.id === selectedProjectId)?.name ?? "Todos os projetos";
+  const hasAnyFilter = Boolean(activeModule || searchText || nodeType !== "all" || nodeStatus !== "all" || period !== "all" || showOrphansOnly || showPendingOnly);
 
-  const currentCompany =
-    companies.find((company) => company.id === selectedCompanyId)?.name ?? "Todas as empresas";
-
-  const currentProject =
-    projectOptions.find((project) => project.id === selectedProjectId)?.name ?? "Todos os projetos";
-
-
-  const panelStyle = {
-    background: "linear-gradient(145deg, rgba(4, 13, 29, 0.98), rgba(8, 19, 34, 0.96))",
-    border: "1px solid rgba(125, 211, 252, 0.22)",
-    color: "#e5eefc",
-    boxShadow: "0 22px 70px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-    backdropFilter: "blur(18px) saturate(1.18)",
-    WebkitBackdropFilter: "blur(18px) saturate(1.18)",
-  } as const;
-
-  const controlStyle = {
-    background: "rgba(7, 17, 32, 0.96)",
-    borderColor: "rgba(148, 163, 184, 0.28)",
-    color: "#e5eefc",
-  } as const;
-  // QC_BRAIN_FORCE_DARK_DOM_START
-  const filterRootRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const root = filterRootRef.current;
-
-    if (!root) return;
-
-    root.style.setProperty("background", "linear-gradient(145deg, rgba(4, 13, 29, 0.98), rgba(8, 19, 34, 0.96))", "important");
-    root.style.setProperty("border", "1px solid rgba(125, 211, 252, 0.22)", "important");
-    root.style.setProperty("color", "#e5eefc", "important");
-    root.style.setProperty("box-shadow", "0 22px 70px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05)", "important");
-    root.style.setProperty("backdrop-filter", "blur(18px) saturate(1.18)", "important");
-    root.style.setProperty("-webkit-backdrop-filter", "blur(18px) saturate(1.18)", "important");
-
-    root.querySelectorAll<HTMLElement>("select, input, button, label").forEach((element) => {
-      element.style.setProperty("background", "rgba(7, 17, 32, 0.96)", "important");
-      element.style.setProperty("border-color", "rgba(148, 163, 184, 0.28)", "important");
-      element.style.setProperty("color", "#e5eefc", "important");
-      element.style.setProperty("box-shadow", "none", "important");
-    });
-
-    root.querySelectorAll<HTMLElement>("p, span").forEach((element) => {
-      element.style.setProperty("color", "rgba(226, 232, 240, 0.68)", "important");
-    });
-
-    root.querySelectorAll<HTMLElement>("svg").forEach((element) => {
-      element.style.setProperty("color", "#a5f3fc", "important");
-      element.style.setProperty("stroke", "#a5f3fc", "important");
-    });
-  });
-  // QC_BRAIN_FORCE_DARK_DOM_END
   return (
-    <section ref={filterRootRef} style={panelStyle} className="qc-brain-filter-panel rounded-[22px] p-3 text-white">
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-[1.1fr_1fr_1fr_1fr_auto_auto]">
-        <select
-          aria-label="Empresa"
-          value={selectedCompanyId ?? "all"}
-          onChange={(event) => onCompanyChange(event.target.value === "all" ? null : event.target.value)}
-          style={controlStyle} className="h-10 rounded-xl border px-3 text-xs font-black outline-none"
-        >
-          <option value="all">Todas as empresas</option>
-          {companies.map((company) => (
-            <option key={company.id} value={company.id}>
-              {company.name}
-            </option>
-          ))}
-        </select>
+    <section className="qc-brain-filter-panel">
+      <div className="qc-brain-filter-header">
+        <div className="qc-brain-filter-title">
+          <FiSliders aria-hidden />
+          <span>Recorte do Brain</span>
+        </div>
 
-        <select
-          aria-label="Projeto"
-          value={selectedProjectId ?? "all"}
-          onChange={(event) => onProjectChange(event.target.value === "all" ? null : event.target.value)}
-          style={controlStyle} className="h-10 rounded-xl border px-3 text-xs font-black outline-none"
-        >
-          <option value="all">Todos os projetos</option>
-          {projectOptions.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          aria-label="Modulo"
-          value={activeModule ?? "all"}
-          onChange={(event) => onModuleChange(event.target.value === "all" ? null : event.target.value)}
-          style={controlStyle} className="h-10 rounded-xl border px-3 text-xs font-black outline-none"
-        >
-          <option value="all">Todos os modulos</option>
-          {modules.map((moduleName) => (
-            <option key={moduleName} value={moduleName}>
-              {moduleName}
-            </option>
-          ))}
-        </select>
-
-        <select
-          aria-label="Status"
-          value={nodeStatus}
-          onChange={(event) => onNodeStatusChange(event.target.value as BrainNodeStatus | "all")}
-          style={controlStyle} className="h-10 rounded-xl border px-3 text-xs font-black outline-none"
-        >
-          <option value="all">Todos os status</option>
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {nodeStatusLabel(status)}
-            </option>
-          ))}
-        </select>
-
-        <button
-          type="button"
-          onClick={onTogglePending}
-          className={`h-10 rounded-xl border px-3 text-xs font-black ${
-            showPendingOnly
-              ? "border-yellow-200/60 bg-yellow-200/18 text-yellow-50"
-              : "border-white/10 bg-black/20 text-white/75 hover:border-yellow-200/50"
-          }`}
-        >
-          Pendencias
-        </button>
-
-        <button
-          type="button"
-          onClick={onToggleOrphans}
-          className={`h-10 rounded-xl border px-3 text-xs font-black ${
-            showOrphansOnly
-              ? "border-rose-200/60 bg-rose-200/18 text-rose-50"
-              : "border-white/10 bg-black/20 text-white/75 hover:border-rose-200/50"
-          }`}
-        >
-          Orfaos
-        </button>
+        <div className="qc-brain-filter-stats" aria-label="Resumo do grafo filtrado">
+          <span>{visibleNodeCount} nós visíveis</span>
+          <span>{visibleEdgeCount} conexões</span>
+          <span>{pendingCount} pendências no recorte</span>
+          {source !== "database" ? <span>dados parciais</span> : null}
+        </div>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <label style={controlStyle} className="flex h-10 min-w-[260px] flex-1 items-center gap-2 rounded-xl border px-3 text-xs font-bold">
-          <FiSearch className="h-4 w-4 shrink-0 text-cyan-100" />
+      <div className="qc-brain-filter-grid">
+        <label className="qc-brain-filter-field">
+          <span>Empresa</span>
+          <select
+            aria-label="Empresa"
+            value={selectedCompanyId ?? "all"}
+            onChange={(event) => onCompanyChange(event.target.value === "all" ? null : event.target.value)}
+          >
+            <option value="all">Todas as empresas</option>
+            {companies.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.name}
+              </option>
+            ))}
+          </select>
+          <FiChevronDown aria-hidden />
+        </label>
+
+        <label className="qc-brain-filter-field">
+          <span>Projeto</span>
+          <select
+            aria-label="Projeto"
+            value={selectedProjectId ?? "all"}
+            onChange={(event) => onProjectChange(event.target.value === "all" ? null : event.target.value)}
+          >
+            <option value="all">Todos os projetos</option>
+            {projectOptions.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+          <FiChevronDown aria-hidden />
+        </label>
+
+        <label className="qc-brain-filter-field">
+          <span>Área</span>
+          <select
+            aria-label="Área"
+            value={activeModule ?? "all"}
+            onChange={(event) => onModuleChange(event.target.value === "all" ? null : event.target.value)}
+          >
+            <option value="all">Todas as áreas</option>
+            {modules.map((moduleName) => (
+              <option key={moduleName} value={moduleName}>
+                {displayModule(moduleName)}
+              </option>
+            ))}
+          </select>
+          <FiChevronDown aria-hidden />
+        </label>
+
+        <label className="qc-brain-filter-field">
+          <span>Tipo de nó</span>
+          <select
+            aria-label="Tipo de nó"
+            value={nodeType}
+            onChange={(event) => resetDependentFilters(() => onNodeTypeChange(event.target.value as BrainNodeType | "all"))}
+          >
+            <option value="all">Todos os tipos</option>
+            {types.map((type) => (
+              <option key={type} value={type}>
+                {nodeTypeLabel(type)}
+              </option>
+            ))}
+          </select>
+          <FiChevronDown aria-hidden />
+        </label>
+
+        <label className="qc-brain-filter-field">
+          <span>Status do nó</span>
+          <select
+            aria-label="Status do nó"
+            value={nodeStatus}
+            onChange={(event) => onNodeStatusChange(event.target.value as BrainNodeStatus | "all")}
+          >
+            <option value="all">Todos os status</option>
+            {statuses.map((status) => (
+              <option key={status} value={status}>
+                {nodeStatusLabel(status)}
+              </option>
+            ))}
+          </select>
+          <FiChevronDown aria-hidden />
+        </label>
+      </div>
+
+      <div className="qc-brain-filter-row">
+        <label className="qc-brain-filter-search">
+          <FiSearch aria-hidden />
           <input
             value={searchText}
             onChange={(event) => onSearchTextChange(event.target.value)}
-            placeholder="Buscar no contexto selecionado..."
-            className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-white/35"
+            placeholder="Buscar nó, usuário, empresa, defeito, suporte, caso, plano ou nota..."
           />
         </label>
 
-        <select
-          aria-label="Periodo"
-          value={period}
-          onChange={(event) => onPeriodChange(event.target.value as "all" | "today" | "7d" | "30d")}
-          style={controlStyle} className="h-10 rounded-xl border px-3 text-xs font-black outline-none"
-        >
-          <option value="all">Todo periodo</option>
-          <option value="today">Hoje</option>
-          <option value="7d">7 dias</option>
-          <option value="30d">30 dias</option>
-        </select>
+        <label className="qc-brain-filter-field qc-brain-filter-period">
+          <span>Período</span>
+          <select
+            aria-label="Período"
+            value={period}
+            onChange={(event) => onPeriodChange(event.target.value as "all" | "today" | "7d" | "30d")}
+          >
+            <option value="all">Todo período</option>
+            <option value="today">Hoje</option>
+            <option value="7d">7 dias</option>
+            <option value="30d">30 dias</option>
+          </select>
+          <FiChevronDown aria-hidden />
+        </label>
 
-        <button
-          type="button"
-          onClick={onRefresh}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/75 hover:border-cyan-200/50"
-          aria-label="Atualizar Brain"
-        >
-          <FiRefreshCw className="h-4 w-4" />
-        </button>
+        <div className="qc-brain-filter-actions">
+          <button type="button" onClick={onTogglePending} data-active={showPendingOnly ? "true" : "false"} className="qc-brain-filter-chip qc-brain-filter-chip-pending">
+            Só pendências
+          </button>
 
-        <button
-          type="button"
-          onClick={onClear}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/75 hover:border-white/35"
-          aria-label="Limpar filtros"
-        >
-          <FiRotateCcw className="h-4 w-4" />
-        </button>
+          <button type="button" onClick={onToggleOrphans} data-active={showOrphansOnly ? "true" : "false"} className="qc-brain-filter-chip qc-brain-filter-chip-orphan">
+            Só órfãos
+          </button>
+
+          <button type="button" onClick={onRefresh} className="qc-brain-filter-icon-button" aria-label="Atualizar Brain" title="Atualizar Brain">
+            <FiRefreshCw aria-hidden />
+          </button>
+
+          <button type="button" onClick={onClear} className="qc-brain-filter-icon-button" aria-label="Limpar filtros" title="Limpar filtros">
+            <FiRotateCcw aria-hidden />
+          </button>
+        </div>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold text-white/58">
-        <span>
-          Brain / {currentCompany} / {currentProject} / {moduleLabel(activeModule)}
-        </span>
-
-        <span>
-          {visibleNodeCount} nos · {visibleEdgeCount} conexoes · {pendingCount} pendencias
-          {source !== "database" ? " · dados parciais" : ""}
-        </span>
+      <div className="qc-brain-filter-breadcrumb">
+        <span>Brain / {contextLabel(currentCompany, currentProject, activeModule)}</span>
+        {hasAnyFilter ? <strong>Filtro aplicado ao mapa</strong> : null}
       </div>
     </section>
   );
 }
-

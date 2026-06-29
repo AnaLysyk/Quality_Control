@@ -56,6 +56,18 @@ function normalize(value: string) {
     .trim();
 }
 
+function belongsToSelectedCompany(node: BrainNode, companyId: string | null) {
+  if (!companyId) return true;
+  if (node.companyId) return node.companyId === companyId;
+  return node.type === "company" || node.metadata?.isBrainCore === true || node.metadata?.isContextCore === true;
+}
+
+function belongsToSelectedProject(node: BrainNode, projectId: string | null) {
+  if (!projectId) return true;
+  if (node.projectId) return node.projectId === projectId;
+  return node.type === "company" || node.type === "project" || node.metadata?.isBrainCore === true || node.metadata?.isContextCore === true;
+}
+
 export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options: VisibleGraphOptions) {
   const {
     moduleFilter,
@@ -85,8 +97,8 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
   const query = normalize(searchText);
 
   const visibleNodes = nodes.filter((node) => {
-    if (companyId && node.companyId && node.companyId !== companyId) return false;
-    if (projectId && node.projectId && node.projectId !== projectId) return false;
+    if (!belongsToSelectedCompany(node, companyId)) return false;
+    if (!belongsToSelectedProject(node, projectId)) return false;
     if (moduleFilter && node.module !== moduleFilter) return false;
     if (nodeType !== "all" && node.type !== nodeType) return false;
     if (nodeStatus !== "all" && node.status !== nodeStatus) return false;

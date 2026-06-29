@@ -129,6 +129,44 @@ export type BrainVisibleContext = {
   canExecuteActions: boolean;
 };
 
+export type BrainContextCompany = {
+  id: string;
+  name: string;
+  slug?: string | null;
+};
+
+export type BrainContextProject = {
+  id: string;
+  name: string;
+  companyId?: string | null;
+};
+
+export type BrainContextResponse = {
+  user: {
+    id: string;
+    email: string;
+    name?: string | null;
+    role?: string | null;
+    companyRole?: string | null;
+  } | null;
+  companies: BrainContextCompany[];
+  projects: BrainContextProject[];
+  modules: string[];
+  permissions: {
+    canViewGlobalBrain: boolean;
+    canViewLogs: boolean;
+    canViewAudit: boolean;
+    canExecuteActions: boolean;
+  };
+  defaultContext: {
+    companyId: string | null;
+    projectId: string | null;
+    module: string | null;
+  };
+  source: "database" | "fallback";
+  warning?: string;
+};
+
 export type BrainEvent = {
   id: string;
   companyId?: string;
@@ -224,6 +262,8 @@ export type BrainGraphBuildInput = {
   requests: BrainAccessRequestRow[];
   removalHistory?: BrainAccessRequestRemovalHistoryItem[];
   auditLogs?: BrainAuditLogItem[];
+  domainNodes?: BrainNode[];
+  domainEdges?: BrainEdge[];
   realBrainNodes?: Array<{
     id: string;
     label: string;
@@ -248,11 +288,4 @@ export type BuiltBrainGraph = {
   requests: BrainAccessRequestRow[];
   removalHistory: BrainAccessRequestRemovalHistoryItem[];
   auditLogs: BrainAuditLogItem[];
-};
-
-export type BrainChatMessage = {
-  id: string;
-  from: "user" | "brain";
-  text: string;
-  ts: number;
 };

@@ -391,35 +391,47 @@ export async function getSubgraph(
   root: BrainNode | null
 }> {
   try {
+    const maxNodes = 500
+    const maxEdges = 1000
     const visited = new Set<string>([nodeId])
-    const nodes: BrainNode[] = []
-    const edges: BrainEdge[] = []
+    const nodeMap = new Map<string, BrainNode>()
+    const edgeMap = new Map<string, BrainEdge>()
 
     const queue: string[] = [nodeId]
     let currentDepth = 0
 
     while (queue.length > 0 && currentDepth < depth) {
+      const currentIds = Array.from(new Set(queue)).slice(0, maxNodes - nodeMap.size)
+      if (currentIds.length === 0) break
+
+      const [outgoing, incoming, currentNodes] = await Promise.all([
+        prisma.brainEdge.findMany({
+          where: { fromId: { in: currentIds } },
+          take: maxEdges,
+        }),
+        prisma.brainEdge.findMany({
+          where: { toId: { in: currentIds } },
+          take: maxEdges,
+        }),
+        prisma.brainNode.findMany({
+          where: { id: { in: currentIds } },
+        }),
+      ])
+
+      currentNodes.forEach((node) => nodeMap.set(node.id, node))
+
       const nextQueue: string[] = []
+      const allEdges = [...outgoing, ...incoming]
 
-      for (const id of queue) {
-        const [outgoing, incoming, node] = await Promise.all([
-          prisma.brainEdge.findMany({ where: { fromId: id } }),
-          prisma.brainEdge.findMany({ where: { toId: id } }),
-          prisma.brainNode.findUnique({ where: { id } }),
-        ])
+      for (const edge of allEdges) {
+        if (edgeMap.size >= maxEdges) break
+        edgeMap.set(edge.id, edge)
 
-        if (node) nodes.push(node)
-
-        const allEdges = [...outgoing, ...incoming]
-        allEdges.forEach(edge => {
-          edges.push(edge)
-          const otherId = edge.fromId === id ? edge.toId : edge.fromId
-
-          if (!visited.has(otherId)) {
-            visited.add(otherId)
-            nextQueue.push(otherId)
-          }
-        })
+        const otherId = currentIds.includes(edge.fromId) ? edge.toId : edge.fromId
+        if (!visited.has(otherId) && nodeMap.size + nextQueue.length < maxNodes) {
+          visited.add(otherId)
+          nextQueue.push(otherId)
+        }
       }
 
       queue.length = 0
@@ -427,9 +439,21 @@ export async function getSubgraph(
       currentDepth++
     }
 
-    const root = await prisma.brainNode.findUnique({ where: { id: nodeId } })
+    const missingNodeIds = Array.from(visited).filter((id) => !nodeMap.has(id)).slice(0, maxNodes - nodeMap.size)
+    const [root, frontierNodes] = await Promise.all([
+      prisma.brainNode.findUnique({ where: { id: nodeId } }),
+      missingNodeIds.length > 0
+        ? prisma.brainNode.findMany({ where: { id: { in: missingNodeIds } } })
+        : Promise.resolve([]),
+    ])
 
-    return { nodes, edges, root }
+    frontierNodes.forEach((node) => nodeMap.set(node.id, node))
+
+    return {
+      nodes: Array.from(nodeMap.values()),
+      edges: Array.from(edgeMap.values()),
+      root,
+    }
   } catch (error) {
     console.error('Error in getSubgraph:', error)
     throw error

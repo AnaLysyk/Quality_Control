@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
-/* Área de hover para menu mobile */
+/* Ãrea de hover para menu mobile */
 .menu-hover-area {
   cursor: pointer;
 }
 .menu-hover-area--disabled {
   pointer-events: none;
 }
-/* Animação spin mais lenta para o logo da Testing Company */
+/* AnimaÃ§Ã£o spin mais lenta para o logo da Testing Company */
 .animate-spin-slower {
   animation: spin 18s linear infinite;
 }
@@ -124,7 +124,7 @@ input[type="password"]::-ms-clear {
   --tc-watermark-opacity: 0.03;
   --tc-watermark-image: url("/images/tc.png");
 
-  /* STATUS / MÉTRICAS */
+  /* STATUS / MÃ‰TRICAS */
   --stat-pass: #7cd343;
   --stat-fail: #ef0001;
   --stat-blocked: #ffa73a;
@@ -345,8 +345,8 @@ input[type="password"]::-ms-clear {
 /* Paper-like surfaces */
 .bg-white {
   background-color: var(--tc-surface) !important;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+-webkit-backdrop-filter: none;
+backdrop-filter: none;
 }
 
 html {
@@ -625,7 +625,7 @@ video {
   color: #0b1220 !important;
 }
 
-/* Note color tokens — refined modern palette (white cards + left accent) */
+/* Note color tokens â€” refined modern palette (white cards + left accent) */
 .note-color-amber   { background: #fffbeb; border-color: #f59e0b; color: #78350f; }
 .note-color-sky     { background: #f0f9ff; border-color: #0ea5e9; color: #0c4a6e; }
 .note-color-emerald { background: #f0fdf4; border-color: #10b981; color: #064e3b; }
@@ -642,7 +642,7 @@ video {
 
 .notes-panel-header { background: #111827; }
 
-/* Notes Widget — clean modern dark */
+/* Notes Widget â€” clean modern dark */
 .notes-widget {
   border-radius: 14px;
   background: #111827;
@@ -4054,7 +4054,7 @@ video {
   filter: brightness(0.96);
 }
 
-/* tarefa — blue */
+/* tarefa â€” blue */
 .tickets-priority-btn[data-tickettype="tarefa"][data-active] {
   background: #dbeafe;
   border-color: #93c5fd;
@@ -4066,7 +4066,7 @@ video {
   color: #1e40af;
 }
 
-/* bug — red */
+/* bug â€” red */
 .tickets-priority-btn[data-tickettype="bug"][data-active] {
   background: #fee2e2;
   border-color: #fca5a5;
@@ -4078,7 +4078,7 @@ video {
   color: #991b1b;
 }
 
-/* melhoria — purple */
+/* melhoria â€” purple */
 .tickets-priority-btn[data-tickettype="melhoria"][data-active] {
   background: #ede9fe;
   border-color: #c4b5fd;
@@ -4090,7 +4090,7 @@ video {
   color: #5b21b6;
 }
 
-/* low — green */
+/* low â€” green */
 .tickets-priority-btn[data-priority="low"][data-active] {
   background: #dcfce7;
   border-color: #86efac;
@@ -4102,7 +4102,7 @@ video {
   color: #166534;
 }
 
-/* medium — amber */
+/* medium â€” amber */
 .tickets-priority-btn[data-priority="medium"][data-active] {
   background: #fef9c3;
   border-color: #fde047;
@@ -4114,7 +4114,7 @@ video {
   color: #854d0e;
 }
 
-/* high — red */
+/* high â€” red */
 .tickets-priority-btn[data-priority="high"][data-active] {
   background: #fee2e2;
   border-color: #fca5a5;
@@ -5088,7 +5088,7 @@ video {
   }
 
   button {
-    display: none !important; /* Remove botões no PDF */
+    display: none !important; /* Remove botÃµes no PDF */
   }
 
   a {
@@ -5138,7 +5138,7 @@ video {
   text-decoration: none !important;
 }
 
-/* Cores estatísticas (evita inline styles) */
+/* Cores estatÃ­sticas (evita inline styles) */
 .text-stat-pass { color: var(--stat-pass) !important; }
 .text-stat-fail { color: var(--stat-fail) !important; }
 .text-stat-blocked { color: var(--stat-blocked) !important; }
@@ -5150,7 +5150,7 @@ video {
 .legend-dot-blocked { background-color: var(--stat-blocked) !important; }
 .legend-dot-not-run { background-color: var(--stat-notrun) !important; }
 
-/* UTILITÁRIOS DE TEMA */
+/* UTILITÃRIOS DE TEMA */
 .btn-tc {
   background: var(--tc-accent);
   color: #fff;
@@ -5575,7 +5575,7 @@ video {
   background: currentColor;
 }
 
-/* ─── Small-phone overrides (Galaxy A14 ≈ 360 px) ───────────── */
+/* â”€â”€â”€ Small-phone overrides (Galaxy A14 â‰ˆ 360 px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 480px) {
   .tc-page-shell {
     gap: 12px;
@@ -5720,17 +5720,17 @@ video {
   }
 }
 
-/* ─── Layout tokens (used by MainWrapper & floating buttons) ──── */
+/* â”€â”€â”€ Layout tokens (used by MainWrapper & floating buttons) â”€â”€â”€â”€ */
 :root {
-  --topbar-h: 3.5rem;    /* clearance for fixed top bar — mobile */
-  --content-pr: 3.5rem;  /* right padding to clear floating action strip — mobile */
+  --topbar-h: 3.5rem;    /* clearance for fixed top bar â€” mobile */
+  --content-pr: 3.5rem;  /* right padding to clear floating action strip â€” mobile */
 }
 @media (min-width: 640px)  { :root { --topbar-h: 4rem; --content-pr: 5.5rem; } }
 @media (min-width: 1024px) { :root { --content-pr: 5rem; } }
 @media (min-width: 1280px) { :root { --content-pr: 5.5rem; } }
 @media (min-width: 1536px) { :root { --content-pr: 6.5rem; } }
 
-/* ─── Sidebar hover expand ──────────────────────────────────── */
+/* â”€â”€â”€ Sidebar hover expand â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .app-shell {
   --sidebar-collapsed: 88px;
   --sidebar-expanded: 304px;
@@ -5738,11 +5738,11 @@ video {
   isolation: isolate;
 }
 
-/* ─── Zoom-responsive sidebar ────────────────────────────────
+/* â”€â”€â”€ Zoom-responsive sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    At 1024-1200 px (either small screen or ~120%+ browser zoom)
    use a slightly thinner collapsed sidebar so the content area
    retains usable width without triggering the mobile layout.
-   ──────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (min-width: 1024px) and (max-width: 1200px) {
   .app-shell {
     --sidebar-collapsed: 80px;
@@ -5972,7 +5972,7 @@ video {
     margin-left: var(--sidebar-collapsed);
   }
 }
-/* CENTRALIZAR GRAFICOS NA IMPRESSÃO */
+/* CENTRALIZAR GRAFICOS NA IMPRESSÃƒO */
 @media print {
   /* qualquer container que tenha charts */
   .chart-container,
@@ -6165,11 +6165,11 @@ video {
   justify-content: flex-end;
 }
 
-/* ─── Generic zoom-adaptive modal utilities ────────────────────────────────
+/* â”€â”€â”€ Generic zoom-adaptive modal utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Use .tc-modal-overlay on the backdrop wrapper and .tc-modal-panel on the
    dialog box itself. Works at any browser zoom level. z-index left to the
    consumer (add a Tailwind z-* class alongside).
-   ────────────────────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tc-modal-overlay {
   position: fixed;
   inset: 0;
@@ -6198,8 +6198,8 @@ video {
   overflow-y: auto;            /* overlay scrolls when content taller than viewport */
   padding: clamp(0.5rem, 2vh, 1.25rem) clamp(0.5rem, 2vw, 1.25rem);
   background: rgba(2, 6, 23, 0.62);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+-webkit-backdrop-filter: blur(6px);
+backdrop-filter: blur(6px);
 }
 
 .ticket-detail-modal-shell {
@@ -6501,7 +6501,7 @@ video {
 }
 
 .ticket-detail-requester-meta span:not(:last-child)::after {
-  content: "•";
+  content: "â€¢";
   margin-left: 0.6rem;
   color: rgba(100, 116, 139, 0.7);
 }
@@ -7561,8 +7561,8 @@ video {
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.12);
   box-shadow: 0 18px 36px rgba(1, 24, 72, 0.24);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+-webkit-backdrop-filter: blur(14px);
+backdrop-filter: blur(14px);
 }
 
 .support-board-hero-logo :where(img) {
@@ -7643,8 +7643,8 @@ video {
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
   box-shadow: 0 16px 36px rgba(1, 24, 72, 0.18);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+backdrop-filter: blur(12px);
 }
 
 .support-board-ghost-btn:hover,
@@ -7682,8 +7682,8 @@ video {
   background: rgba(255, 255, 255, 0.12);
   padding: 0.7rem 0.78rem;
   box-shadow: 0 16px 36px rgba(1, 24, 72, 0.18);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+-webkit-backdrop-filter: blur(14px);
+backdrop-filter: blur(14px);
 }
 
 .support-board-stat-label {
@@ -9196,7 +9196,7 @@ video {
   color: #f8fbff;
 }
 
-/* Collapse ticket-detail 2-col grid at 1100 px — covers ~115%+ browser zoom */
+/* Collapse ticket-detail 2-col grid at 1100 px â€” covers ~115%+ browser zoom */
 @media (max-width: 1100px) {
   .ticket-detail-modal-grid {
     grid-template-columns: 1fr;
@@ -9589,8 +9589,8 @@ video {
   border: 1px solid var(--shell-glass-border);
   background: var(--shell-glass-bg);
   box-shadow: var(--shell-glass-shadow);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+-webkit-backdrop-filter: blur(14px);
+backdrop-filter: blur(14px);
 }
 
 .app-page-cover-logo :where(img) {
@@ -9821,7 +9821,7 @@ body.qc-brain-side-open {
   overflow-x: hidden;
 }
 
-/* reserva espaço só no main. Não aplicar em filhos, senão soma padding e cria faixa branca */
+/* reserva espaÃ§o sÃ³ no main. NÃ£o aplicar em filhos, senÃ£o soma padding e cria faixa branca */
 body.qc-brain-side-open main {
   margin-right: var(--qc-brain-side-width, 460px) !important;
   padding-right: 0 !important;
@@ -9831,7 +9831,7 @@ body.qc-brain-side-open main {
   transition: margin-right 180ms ease;
 }
 
-/* filhos ocupam o espaço disponível até encostar no painel */
+/* filhos ocupam o espaÃ§o disponÃ­vel atÃ© encostar no painel */
 body.qc-brain-side-open [data-qc-page],
 body.qc-brain-side-open [data-testid="access-requests-page"],
 body.qc-brain-side-open .app-shell-content,
@@ -9843,7 +9843,7 @@ body.qc-brain-side-open .app-shell-main {
   box-sizing: border-box !important;
 }
 
-/* remove centralização/max-width que deixa buraco antes do Brain */
+/* remove centralizaÃ§Ã£o/max-width que deixa buraco antes do Brain */
 body.qc-brain-side-open [data-testid="access-requests-page"] > *,
 body.qc-brain-side-open [data-qc-page] > * {
   margin-right: 0 !important;
@@ -9912,3 +9912,1412 @@ body.qc-brain-side-open [class*="fixed"][class*="right-0"] {
   right: 0 !important;
   margin: 0 !important;
 }
+
+/* /brain usa o chat global como overlay, sem reservar coluna nem empurrar o universo neural. */
+body.qc-brain-route.qc-brain-side-open main,
+body.qc-brain-route.qc-brain-side-open [data-qc-page],
+body.qc-brain-route.qc-brain-side-open .app-shell-content,
+body.qc-brain-route.qc-brain-side-open .app-shell-main {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+
+/* ===== Brain definitivo: universo Ãºnico, sem scroll, sem capa ===== */
+
+body:has(.brain-universe-canvas) {
+  overflow: hidden !important;
+}
+
+body:has(.brain-universe-canvas) main {
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+body:has(.brain-universe-canvas) main > div:first-child:not(:has(.brain-universe-canvas)) {
+  display: none !important;
+}
+
+body:has(.brain-universe-canvas) main > div:has(.brain-universe-canvas) {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  gap: 0 !important;
+}
+
+.brain-universe-canvas {
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(34, 211, 238, 0.18), transparent 20%),
+    radial-gradient(circle at 22% 46%, rgba(220, 38, 38, 0.18), transparent 28%),
+    radial-gradient(circle at 76% 48%, rgba(16, 185, 129, 0.12), transparent 24%),
+    linear-gradient(135deg, #020817 0%, #06111f 48%, #020817 100%) !important;
+}
+
+.brain-universe-canvas .react-flow,
+.brain-universe-canvas .react-flow__renderer,
+.brain-universe-canvas .react-flow__pane,
+.brain-universe-canvas .react-flow__viewport {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.brain-universe-canvas .react-flow__pane {
+  cursor: grab !important;
+}
+
+.brain-universe-canvas .react-flow__pane:active {
+  cursor: grabbing !important;
+}
+
+.brain-universe-canvas .react-flow__node {
+  cursor: grab !important;
+}
+
+.brain-universe-canvas .react-flow__node:active {
+  cursor: grabbing !important;
+}
+
+/* HUD dos filtros: dentro do universo, centralizado, sem ocupar a tela inteira */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type {
+  position: absolute !important;
+  z-index: 40 !important;
+  top: 14px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  width: min(1040px, calc(100vw - 360px)) !important;
+  margin: 0 !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(103, 232, 249, 0.16) !important;
+  background: rgba(2, 8, 23, 0.64) !important;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+backdrop-filter: blur(20px) !important;
+}
+
+/* KPIs leves abaixo do HUD */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):nth-of-type(2) {
+  position: absolute !important;
+  z-index: 39 !important;
+  top: 82px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  width: min(720px, calc(100vw - 420px)) !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Light mode colorido e legÃ­vel */
+html:not(.dark) .brain-universe-canvas {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(14, 165, 233, 0.28), transparent 22%),
+    radial-gradient(circle at 22% 46%, rgba(220, 38, 38, 0.16), transparent 28%),
+    radial-gradient(circle at 76% 48%, rgba(16, 185, 129, 0.16), transparent 24%),
+    linear-gradient(135deg, #dcecff 0%, #eef6ff 44%, #d7e7fb 100%) !important;
+}
+
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(14, 116, 144, 0.22) !important;
+  color: #06111f !important;
+}
+
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type input,
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type select,
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type button {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #06111f !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+/* Overlay do nÃ³ */
+.brain-node-overlay {
+  max-width: calc(100vw - 150px);
+  max-height: calc(100dvh - 120px);
+}
+
+.brain-node-overlay-content {
+  scrollbar-width: thin;
+}
+
+/* Resize invisÃ­vel em todos os lados */
+.brain-resize-handle {
+  position: absolute;
+  z-index: 5;
+  opacity: 0;
+  background: transparent;
+}
+
+.brain-resize-n {
+  top: -5px;
+  left: 18px;
+  right: 18px;
+  height: 10px;
+  cursor: ns-resize;
+}
+
+.brain-resize-s {
+  bottom: -5px;
+  left: 18px;
+  right: 18px;
+  height: 10px;
+  cursor: ns-resize;
+}
+
+.brain-resize-e {
+  top: 18px;
+  right: -5px;
+  bottom: 18px;
+  width: 10px;
+  cursor: ew-resize;
+}
+
+.brain-resize-w {
+  top: 18px;
+  left: -5px;
+  bottom: 18px;
+  width: 10px;
+  cursor: ew-resize;
+}
+
+.brain-resize-ne {
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  cursor: nesw-resize;
+}
+
+.brain-resize-nw {
+  top: -6px;
+  left: -6px;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+}
+
+.brain-resize-se {
+  right: -6px;
+  bottom: -6px;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+}
+
+.brain-resize-sw {
+  left: -6px;
+  bottom: -6px;
+  width: 22px;
+  height: 22px;
+  cursor: nesw-resize;
+}
+
+/* ===== Brain polish: HUD leve e light mode vivo ===== */
+
+/* HUD compacto: o destaque Ã© o grafo, nÃ£o o filtro */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type {
+  top: 16px !important;
+  width: min(860px, calc(100vw - 420px)) !important;
+  min-height: auto !important;
+  padding: 10px 12px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(103, 232, 249, 0.18) !important;
+  background: rgba(2, 8, 23, 0.46) !important;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.25) !important;
+backdrop-filter: blur(18px) saturate(1.25) !important;
+}
+
+/* reduz qualquer wrapper interno do HUD */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type > div {
+  gap: 8px !important;
+}
+
+/* deixa os campos menores e mais finos */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type select,
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type input,
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type button {
+  min-height: 32px !important;
+  height: 32px !important;
+  border-radius: 12px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  border-width: 1px !important;
+  box-shadow: none !important;
+}
+
+/* input de busca nÃ£o precisa virar bloco gigante */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type input {
+  min-width: 220px !important;
+}
+
+/* breadcrumb e textos pequenos mais discretos */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type p,
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type span {
+  font-size: 9px !important;
+}
+
+/* KPIs mais apagados: informam, mas nÃ£o competem com neurÃ´nios */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):nth-of-type(2) {
+  top: 72px !important;
+  opacity: 0.82 !important;
+  transform: translateX(-50%) scale(0.88) !important;
+  transform-origin: top center !important;
+}
+
+/* BotÃ£o grafo local menor e sem competir com Ã­cones globais */
+.brain-universe-canvas button[class*="right-"] {
+  opacity: 0.78;
+}
+
+/* Universo light mais bonito e menos branco estourado */
+html:not(.dark) .brain-universe-canvas {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(14, 165, 233, 0.42), transparent 22%),
+    radial-gradient(circle at 24% 44%, rgba(244, 63, 94, 0.28), transparent 30%),
+    radial-gradient(circle at 76% 48%, rgba(16, 185, 129, 0.30), transparent 26%),
+    radial-gradient(circle at 50% 78%, rgba(168, 85, 247, 0.18), transparent 32%),
+    linear-gradient(135deg, #e9f6ff 0%, #dff1ff 42%, #f4edff 100%) !important;
+}
+
+/* HUD no claro: translÃºcido, nÃ£o bloco branco pesado */
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type {
+  background: rgba(255, 255, 255, 0.58) !important;
+  border-color: rgba(14, 116, 144, 0.20) !important;
+  color: #06111f !important;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.14) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.35) !important;
+backdrop-filter: blur(22px) saturate(1.35) !important;
+}
+
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type select,
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type input,
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type button {
+  background: rgba(255, 255, 255, 0.72) !important;
+  color: #071827 !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type input::placeholder {
+  color: rgba(15, 23, 42, 0.46) !important;
+}
+
+/* NeurÃ´nios: mais vivos no claro e no escuro */
+.brain-orb-node {
+  filter: saturate(1.18) contrast(1.04);
+}
+
+html:not(.dark) .brain-orb-node {
+  color: #ffffff !important;
+  filter: saturate(1.55) contrast(1.12);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.38);
+  border-width: 2px !important;
+}
+
+/* Cores por status no modo claro */
+html:not(.dark) .brain-orb-node[data-brain-node-status="ok"] {
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.42), rgba(16,185,129,.62) 34%, rgba(6,95,70,.72) 100%) !important;
+  border-color: rgba(20,184,166,.95) !important;
+  box-shadow: 0 0 44px rgba(20,184,166,.50), 0 0 120px rgba(20,184,166,.18) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="pending"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="warning"] {
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.42), rgba(250,204,21,.70) 34%, rgba(161,98,7,.74) 100%) !important;
+  border-color: rgba(250,204,21,.98) !important;
+  box-shadow: 0 0 44px rgba(250,204,21,.56), 0 0 120px rgba(250,204,21,.20) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="missing"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="error"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="orphan"] {
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.42), rgba(251,113,133,.70) 34%, rgba(136,19,55,.78) 100%) !important;
+  border-color: rgba(251,113,133,.98) !important;
+  box-shadow: 0 0 44px rgba(251,113,133,.58), 0 0 120px rgba(251,113,133,.20) !important;
+}
+
+/* NÃºcleos maiores ficam ainda mais fortes */
+html:not(.dark) .brain-orb-node[data-brain-node-type="company"],
+html:not(.dark) .brain-orb-node[data-brain-node-type="project"],
+html:not(.dark) .brain-orb-node[data-brain-node-type="module"] {
+  box-shadow:
+    0 0 50px rgba(34,211,238,.42),
+    0 0 130px rgba(34,211,238,.16),
+    inset 0 0 26px rgba(255,255,255,.20) !important;
+}
+
+/* Labels das conexÃµes no claro mais legÃ­veis */
+html:not(.dark) .react-flow__edge-text,
+html:not(.dark) .react-flow__edge-textbg {
+  filter: drop-shadow(0 2px 5px rgba(255,255,255,.8));
+}
+
+/* Overlay no claro sem perder contraste */
+html:not(.dark) .brain-node-overlay {
+  background: rgba(255, 255, 255, 0.86) !important;
+  color: #06111f !important;
+  border-color: rgba(14, 116, 144, 0.22) !important;
+  box-shadow: 0 20px 70px rgba(15, 23, 42, 0.18), 0 0 70px rgba(14, 165, 233, 0.18) !important;
+}
+
+html:not(.dark) .brain-node-overlay h3,
+html:not(.dark) .brain-node-overlay p,
+html:not(.dark) .brain-node-overlay dt,
+html:not(.dark) .brain-node-overlay dd {
+  color: #06111f !important;
+}
+
+html:not(.dark) .brain-node-overlay section,
+html:not(.dark) .brain-node-overlay button {
+  background: rgba(255, 255, 255, 0.62) !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+  color: #06111f !important;
+}
+
+/* quando chat lateral abrir, reduz o HUD para nÃ£o sobrepor */
+body:has(.brain-universe-canvas):has([class*="chat"][class*="open"]) main section:not(.brain-universe-canvas):first-of-type,
+body:has(.brain-universe-canvas):has(.qc-chat-open) main section:not(.brain-universe-canvas):first-of-type,
+body:has(.brain-universe-canvas):has([data-qc-chat-open="true"]) main section:not(.brain-universe-canvas):first-of-type {
+  width: min(720px, calc(100vw - 560px)) !important;
+}
+
+/* ===== Brain fix definitivo: remover capa e priorizar universo ===== */
+
+/* A rota Brain nunca deve mostrar capa/header antes do universo */
+body.qc-brain-active-route {
+  overflow: hidden !important;
+}
+
+/* Esconde a capa grande com logo que aparece antes do grafo */
+body.qc-brain-active-route main > div > div:first-child:not(:has(.brain-universe-canvas)),
+body.qc-brain-active-route main > div > section:first-child:not(:has(select)):not(.brain-universe-canvas),
+body.qc-brain-active-route [data-app-shell-cover],
+body.qc-brain-active-route .app-shell-cover,
+body.qc-brain-active-route .cover-slot,
+body.qc-brain-active-route [class*="Cover"],
+body.qc-brain-active-route [class*="cover"],
+body.qc-brain-active-route [class*="Hero"],
+body.qc-brain-active-route [class*="hero"] {
+  display: none !important;
+}
+
+/* O conteÃºdo da rota Brain deve comeÃ§ar no universo, sem faixa branca */
+body.qc-brain-active-route main,
+body.qc-brain-active-route main > div:has(.brain-universe-canvas) {
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* HUD menor e mais fino */
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type {
+  top: 14px !important;
+  width: min(760px, calc(100vw - 440px)) !important;
+  padding: 8px 10px !important;
+  border-radius: 18px !important;
+  background: rgba(2, 8, 23, 0.34) !important;
+  border: 1px solid rgba(103, 232, 249, 0.16) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
+backdrop-filter: blur(18px) saturate(1.2) !important;
+}
+
+/* Campos do HUD mais discretos */
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type select,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type input,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type button {
+  height: 30px !important;
+  min-height: 30px !important;
+  border-radius: 11px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+}
+
+/* Light mode: universo colorido sem parecer tela branca */
+html:not(.dark) body.qc-brain-active-route {
+  background: #dfefff !important;
+}
+
+html:not(.dark) body.qc-brain-active-route .brain-universe-canvas {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(14, 165, 233, 0.44), transparent 22%),
+    radial-gradient(circle at 24% 44%, rgba(244, 63, 94, 0.30), transparent 30%),
+    radial-gradient(circle at 76% 48%, rgba(16, 185, 129, 0.34), transparent 27%),
+    radial-gradient(circle at 50% 78%, rgba(168, 85, 247, 0.22), transparent 32%),
+    linear-gradient(135deg, #dbeeff 0%, #eaf7ff 42%, #f1eaff 100%) !important;
+}
+
+/* HUD no claro: vidro leve, nÃ£o bloco branco bruto */
+html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type {
+  background: rgba(255, 255, 255, 0.46) !important;
+  border-color: rgba(14, 116, 144, 0.18) !important;
+  color: #06111f !important;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.12) !important;
+}
+
+html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type select,
+html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type input,
+html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type button {
+  background: rgba(255, 255, 255, 0.62) !important;
+  color: #06111f !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Overlay: legÃ­vel, sem transparÃªncia estourada no claro */
+.brain-node-overlay {
+  background: #06111f !important;
+  color: #ffffff !important;
+}
+
+html:not(.dark) .brain-node-overlay {
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: #06111f !important;
+  border-color: rgba(14, 116, 144, 0.24) !important;
+}
+
+html:not(.dark) .brain-node-overlay * {
+  color: inherit;
+}
+
+html:not(.dark) .brain-node-overlay section,
+html:not(.dark) .brain-node-overlay button {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* garante que os neurÃ´nios fiquem acima do fundo e abaixo do HUD/overlay */
+.brain-universe-canvas .react-flow__node {
+  z-index: 10 !important;
+  visibility: visible !important;
+}
+
+.brain-node-overlay {
+  z-index: 55 !important;
+}
+
+/* ===== Brain professional theme: cleaner SaaS palette ===== */
+.brain-universe-canvas {
+  background:
+    radial-gradient(circle at 52% 34%, rgba(14, 165, 233, 0.12), transparent 24%),
+    radial-gradient(circle at 28% 62%, rgba(15, 118, 110, 0.10), transparent 28%),
+    radial-gradient(circle at 78% 58%, rgba(100, 116, 139, 0.10), transparent 30%),
+    linear-gradient(135deg, #0b1220 0%, #111827 48%, #0f172a 100%) !important;
+}
+
+html:not(.dark) .brain-universe-canvas,
+html:not(.dark) body.qc-brain-active-route .brain-universe-canvas {
+  background:
+    radial-gradient(circle at 50% 32%, rgba(14, 165, 233, 0.16), transparent 24%),
+    radial-gradient(circle at 22% 58%, rgba(15, 118, 110, 0.10), transparent 30%),
+    radial-gradient(circle at 78% 54%, rgba(71, 85, 105, 0.10), transparent 30%),
+    linear-gradient(135deg, #f8fafc 0%, #eef4f8 46%, #f4f7fb 100%) !important;
+}
+
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type {
+  background: rgba(15, 23, 42, 0.76) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type,
+html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(100, 116, 139, 0.34) !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16), 0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type select,
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type input,
+html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type button,
+html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type select,
+html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type input,
+html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type button {
+  background: rgba(248, 250, 252, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  color: #0f172a !important;
+}
+
+.brain-orb-node {
+  border-width: 1px !important;
+  text-shadow: none !important;
+  filter: saturate(1.02) contrast(1.01) !important;
+}
+
+html:not(.dark) .brain-orb-node {
+  color: #f8fafc !important;
+  text-shadow: 0 1px 3px rgba(15, 23, 42, 0.28) !important;
+  border-width: 1px !important;
+  filter: saturate(1.08) contrast(1.03) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="ok"] {
+  background: linear-gradient(145deg, #0f766e 0%, #14b8a6 100%) !important;
+  border-color: rgba(15, 118, 110, 0.58) !important;
+  box-shadow: 0 16px 42px rgba(15, 118, 110, 0.22), inset 0 1px 18px rgba(255, 255, 255, 0.22) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="pending"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="warning"] {
+  background: linear-gradient(145deg, #92400e 0%, #d97706 100%) !important;
+  border-color: rgba(180, 83, 9, 0.58) !important;
+  box-shadow: 0 16px 42px rgba(180, 83, 9, 0.22), inset 0 1px 18px rgba(255, 255, 255, 0.18) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="missing"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="error"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="orphan"] {
+  background: linear-gradient(145deg, #9f1239 0%, #e11d48 100%) !important;
+  border-color: rgba(190, 18, 60, 0.54) !important;
+  box-shadow: 0 16px 42px rgba(190, 18, 60, 0.20), inset 0 1px 18px rgba(255, 255, 255, 0.18) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-type="company"],
+html:not(.dark) .brain-orb-node[data-brain-node-type="project"] {
+  background: linear-gradient(145deg, #1e3a8a 0%, #2563eb 100%) !important;
+  border-color: rgba(37, 99, 235, 0.48) !important;
+  box-shadow: 0 18px 46px rgba(37, 99, 235, 0.22), inset 0 1px 18px rgba(255, 255, 255, 0.20) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-type="module"][data-brain-node-status="ok"] {
+  background: linear-gradient(145deg, #0f766e 0%, #0ea5e9 100%) !important;
+}
+
+.brain-orb-node > span[class*="absolute"] {
+  opacity: 0.38 !important;
+}
+
+.brain-universe-canvas .react-flow__handle {
+  background: #38bdf8 !important;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.brain-universe-canvas button[class*="right-"] {
+  background: rgba(15, 23, 42, 0.68) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14) !important;
+}
+
+html:not(.dark) .brain-universe-canvas button[class*="right-"] {
+  background: rgba(255, 255, 255, 0.78) !important;
+  color: #334155 !important;
+}
+
+.brain-node-overlay,
+html:not(.dark) .brain-node-overlay {
+  background: rgba(248, 250, 252, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.38) !important;
+  color: #0f172a !important;
+  box-shadow: 0 24px 72px rgba(15, 23, 42, 0.22) !important;
+}
+
+.brain-node-overlay * {
+  color: inherit;
+}
+
+.brain-node-overlay > div:first-child {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.04), rgba(14, 165, 233, 0.08)) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+.brain-node-overlay > div:first-child p {
+  color: #64748b !important;
+}
+
+.brain-node-overlay > div:first-child h3 {
+  color: #0f172a !important;
+}
+
+.brain-node-overlay > div:first-child span {
+  background: rgba(241, 245, 249, 0.86) !important;
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  color: #334155 !important;
+}
+
+.brain-node-overlay > div:first-child button {
+  background: rgba(15, 23, 42, 0.06) !important;
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  color: #334155 !important;
+}
+
+.brain-node-overlay > div:first-child button:hover {
+  background: rgba(15, 23, 42, 0.10) !important;
+  color: #0f172a !important;
+}
+
+.brain-node-overlay section,
+.brain-node-overlay button,
+html:not(.dark) .brain-node-overlay section,
+html:not(.dark) .brain-node-overlay button {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #0f172a !important;
+}
+
+.brain-node-overlay-content {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.62), rgba(241, 245, 249, 0.92)) !important;
+}
+
+.brain-universe-canvas .react-flow__controls {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Brain filters must stay readable and pinned above the canvas */
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type {
+  position: fixed !important;
+  top: 104px !important;
+  left: calc(50% + 120px) !important;
+  right: auto !important;
+  z-index: 80 !important;
+  width: min(920px, calc(100vw - 360px)) !important;
+  min-height: 112px !important;
+  padding: 12px !important;
+  transform: translateX(-50%) !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(100, 116, 139, 0.32) !important;
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.18) !important;
+  color: #0f172a !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.15) !important;
+backdrop-filter: blur(16px) saturate(1.15) !important;
+}
+
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type > div,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type > div {
+  gap: 8px !important;
+}
+
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type select,
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type input,
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type button,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type select,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type input,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type button {
+  height: 34px !important;
+  min-height: 34px !important;
+  border-radius: 10px !important;
+  background: #f8fafc !important;
+  border-color: rgba(100, 116, 139, 0.34) !important;
+  color: #0f172a !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  opacity: 1 !important;
+}
+
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type label,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type label {
+  height: 34px !important;
+  min-height: 34px !important;
+  background: #f1f5f9 !important;
+  border-color: rgba(100, 116, 139, 0.28) !important;
+  color: #0f172a !important;
+}
+
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type p,
+body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type span,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type p,
+body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type span {
+  color: #475569 !important;
+  font-size: 10px !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):first-of-type,
+  body.qc-brain-active-route main section:not(.brain-universe-canvas):first-of-type {
+    left: 50% !important;
+    top: 88px !important;
+    width: calc(100vw - 24px) !important;
+  }
+}
+
+/* Brain light mode: visible map controls and floating buttons */
+html:not(.dark) .brain-universe-canvas .react-flow__controls,
+.theme-light .brain-universe-canvas .react-flow__controls {
+  overflow: hidden !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(100, 116, 139, 0.34) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16) !important;
+}
+
+html:not(.dark) .brain-universe-canvas .react-flow__controls-button,
+.theme-light .brain-universe-canvas .react-flow__controls-button {
+  width: 38px !important;
+  height: 38px !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.22) !important;
+  color: #0f172a !important;
+  fill: #0f172a !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) .brain-universe-canvas .react-flow__controls-button:hover,
+.theme-light .brain-universe-canvas .react-flow__controls-button:hover {
+  background: #eef2f7 !important;
+}
+
+html:not(.dark) .brain-universe-canvas .react-flow__controls-button svg,
+html:not(.dark) .brain-universe-canvas .react-flow__controls-button path,
+.theme-light .brain-universe-canvas .react-flow__controls-button svg,
+.theme-light .brain-universe-canvas .react-flow__controls-button path {
+  color: #0f172a !important;
+  fill: #0f172a !important;
+  stroke: #0f172a !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) .brain-universe-canvas button,
+.theme-light .brain-universe-canvas button {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .brain-universe-canvas > button,
+.theme-light .brain-universe-canvas > button {
+  background: #ffffff !important;
+  border: 1px solid rgba(100, 116, 139, 0.34) !important;
+  color: #334155 !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14) !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) .brain-universe-canvas > div.absolute.bottom-5,
+.theme-light .brain-universe-canvas > div.absolute.bottom-5 {
+  background: rgba(15, 23, 42, 0.62) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #ffffff !important;
+}
+
+/* Brain map controls: balanced contrast in both themes. */
+body.qc-brain-active-route .brain-universe-canvas .react-flow__controls {
+  overflow: hidden !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(125, 211, 252, 0.22) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.34) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.15) !important;
+backdrop-filter: blur(14px) saturate(1.15) !important;
+}
+
+body.qc-brain-active-route .brain-universe-canvas .react-flow__controls-button {
+  width: 38px !important;
+  height: 38px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18) !important;
+  color: #dbeafe !important;
+  fill: #dbeafe !important;
+  opacity: 1 !important;
+}
+
+body.qc-brain-active-route .brain-universe-canvas .react-flow__controls-button:hover {
+  background: rgba(56, 189, 248, 0.16) !important;
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+body.qc-brain-active-route .brain-universe-canvas .react-flow__controls-button svg,
+body.qc-brain-active-route .brain-universe-canvas .react-flow__controls-button path {
+  color: currentColor !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) body.qc-brain-active-route .brain-universe-canvas .react-flow__controls,
+.theme-light body.qc-brain-active-route .brain-universe-canvas .react-flow__controls {
+  background: rgba(248, 250, 252, 0.94) !important;
+  border-color: rgba(71, 85, 105, 0.24) !important;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.15) !important;
+}
+
+html:not(.dark) body.qc-brain-active-route .brain-universe-canvas .react-flow__controls-button,
+.theme-light body.qc-brain-active-route .brain-universe-canvas .react-flow__controls-button {
+  color: #0f172a !important;
+  fill: #0f172a !important;
+  border-bottom-color: rgba(100, 116, 139, 0.22) !important;
+}
+
+html:not(.dark) body.qc-brain-active-route .brain-universe-canvas .react-flow__controls-button:hover,
+.theme-light body.qc-brain-active-route .brain-universe-canvas .react-flow__controls-button:hover {
+  background: rgba(14, 165, 233, 0.12) !important;
+  color: #075985 !important;
+  fill: #075985 !important;
+}
+
+/* Brain node memory modal: polished readable surface for light and dark themes. */
+body.qc-brain-active-route .brain-node-overlay-shell {
+  border-radius: 24px !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  background: rgba(248, 250, 252, 0.97) !important;
+  color: #0f172a !important;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.24), 0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-shell,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-shell {
+  border-color: rgba(125, 211, 252, 0.22) !important;
+  background: rgba(8, 15, 28, 0.96) !important;
+  color: #e5eefc !important;
+  box-shadow: 0 30px 92px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(125, 211, 252, 0.08) inset !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-header {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(14, 165, 233, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(226, 232, 240, 0.82)) !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-header,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-header {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(56, 189, 248, 0.18), transparent 34%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.82)) !important;
+  border-color: rgba(125, 211, 252, 0.16) !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-kicker,
+body.qc-brain-active-route .brain-node-overlay-section-title,
+body.qc-brain-active-route .brain-node-overlay-detail-label {
+  color: #64748b !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-kicker,
+html.dark body.qc-brain-active-route .brain-node-overlay-section-title,
+html.dark body.qc-brain-active-route .brain-node-overlay-detail-label,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-kicker,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-section-title,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-detail-label {
+  color: #8fb5d8 !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-title,
+body.qc-brain-active-route .brain-node-overlay-metric,
+body.qc-brain-active-route .brain-node-overlay-detail-value {
+  color: #0f172a !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-title,
+html.dark body.qc-brain-active-route .brain-node-overlay-metric,
+html.dark body.qc-brain-active-route .brain-node-overlay-detail-value,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-title,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-metric,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-detail-value {
+  color: #f8fbff !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-content {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.98)) !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-content,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-content {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.10), transparent 28%),
+    linear-gradient(180deg, rgba(8, 15, 28, 0.96), rgba(15, 23, 42, 0.98)) !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-card,
+body.qc-brain-active-route .brain-node-overlay-detail,
+body.qc-brain-active-route .brain-node-overlay-relation {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: #0f172a !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-card,
+html.dark body.qc-brain-active-route .brain-node-overlay-detail,
+html.dark body.qc-brain-active-route .brain-node-overlay-relation,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-card,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-detail,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-relation {
+  background: rgba(15, 23, 42, 0.68) !important;
+  border-color: rgba(125, 211, 252, 0.14) !important;
+  color: #e5eefc !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-card-primary {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.10), rgba(255, 255, 255, 0.86)) !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-card-primary,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-card-primary {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(15, 23, 42, 0.74)) !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-info,
+body.qc-brain-active-route .brain-node-overlay-subtle {
+  color: #334155 !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-info,
+html.dark body.qc-brain-active-route .brain-node-overlay-subtle,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-info,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-subtle {
+  color: #c7d9ee !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-pill,
+body.qc-brain-active-route .brain-node-overlay-action {
+  background: rgba(241, 245, 249, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  color: #334155 !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-pill,
+html.dark body.qc-brain-active-route .brain-node-overlay-action,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-pill,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-action {
+  background: rgba(15, 23, 42, 0.74) !important;
+  border-color: rgba(125, 211, 252, 0.18) !important;
+  color: #dbeafe !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-status-ok {
+  background: rgba(20, 184, 166, 0.14) !important;
+  border-color: rgba(20, 184, 166, 0.32) !important;
+  color: #0f766e !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-status-warning {
+  background: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(245, 158, 11, 0.34) !important;
+  color: #92400e !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-status-danger {
+  background: rgba(225, 29, 72, 0.14) !important;
+  border-color: rgba(225, 29, 72, 0.32) !important;
+  color: #be123c !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-status-ok,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-status-ok {
+  color: #5eead4 !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-status-warning,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-status-warning {
+  color: #fcd34d !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-status-danger,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-status-danger {
+  color: #fda4af !important;
+}
+
+body.qc-brain-active-route .brain-node-overlay-relation:hover {
+  border-color: rgba(14, 165, 233, 0.42) !important;
+  background: rgba(224, 242, 254, 0.86) !important;
+}
+
+html.dark body.qc-brain-active-route .brain-node-overlay-relation:hover,
+.theme-dark body.qc-brain-active-route .brain-node-overlay-relation:hover {
+  border-color: rgba(125, 211, 252, 0.42) !important;
+  background: rgba(14, 165, 233, 0.16) !important;
+}
+
+
+
+/* QC BRAIN NODE OVERLAY - START */
+.qc-brain-overlay-root {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  color: #ffffff !important;
+  background: rgba(2, 6, 23, 0.72) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.qc-brain-overlay-backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.qc-brain-overlay-modal {
+  position: relative !important;
+  isolation: isolate !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(980px, calc(100vw - 48px)) !important;
+  max-height: calc(100vh - 48px) !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(165, 243, 252, 0.2) !important;
+  border-radius: 32px !important;
+  color: #ffffff !important;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(34, 211, 238, 0.16), transparent 32%),
+    radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.16), transparent 34%),
+    linear-gradient(145deg, rgba(3, 10, 24, 0.98), rgba(5, 18, 34, 0.98) 52%, rgba(8, 13, 29, 0.98)) !important;
+  box-shadow: 0 34px 130px rgba(0, 0, 0, 0.78), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.qc-brain-overlay-modal *,
+.qc-brain-overlay-modal section,
+.qc-brain-overlay-modal div,
+.qc-brain-overlay-modal header,
+.qc-brain-overlay-modal main,
+.qc-brain-overlay-modal footer {
+  box-sizing: border-box !important;
+}
+
+.qc-brain-overlay-header,
+.qc-brain-overlay-footer {
+  position: relative !important;
+  flex-shrink: 0 !important;
+  padding: 22px 24px !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(2, 6, 23, 0.34) !important;
+}
+
+.qc-brain-overlay-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.qc-brain-overlay-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.qc-brain-overlay-content {
+  position: relative !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 20px 24px !important;
+  background: transparent !important;
+}
+
+.qc-brain-overlay-badges {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.qc-brain-overlay-status,
+.qc-brain-overlay-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 26px !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+}
+
+.qc-brain-overlay-status.is-ok {
+  border-color: rgba(110, 231, 183, 0.35) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #bbf7d0 !important;
+}
+
+.qc-brain-overlay-status.is-warning,
+.qc-brain-overlay-status.is-pending {
+  border-color: rgba(103, 232, 249, 0.32) !important;
+  background: rgba(34, 211, 238, 0.1) !important;
+  color: #cffafe !important;
+}
+
+.qc-brain-overlay-status.is-error {
+  border-color: rgba(253, 164, 175, 0.35) !important;
+  background: rgba(244, 63, 94, 0.12) !important;
+  color: #ffe4e6 !important;
+}
+
+.qc-brain-overlay-pill {
+  color: rgba(207, 250, 254, 0.78) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.qc-brain-overlay-eyebrow,
+.qc-brain-overlay-panel-title p,
+.qc-brain-overlay-info p,
+.qc-brain-overlay-card-head p,
+.qc-brain-overlay-data p {
+  margin: 0 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.2em !important;
+  text-transform: uppercase !important;
+  color: rgba(207, 250, 254, 0.5) !important;
+}
+
+.qc-brain-overlay-header h2 {
+  margin: 4px 0 0 !important;
+  font-size: 26px !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  color: #ffffff !important;
+}
+
+.qc-brain-overlay-description {
+  max-width: 760px !important;
+  margin: 8px 0 0 !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  font-weight: 650 !important;
+  color: rgba(226, 232, 240, 0.82) !important;
+}
+
+.qc-brain-overlay-close {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  flex-shrink: 0 !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.78) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.qc-brain-overlay-info,
+.qc-brain-overlay-card,
+.qc-brain-overlay-panel,
+.qc-brain-overlay-data,
+.qc-brain-overlay-relation,
+.qc-brain-overlay-empty,
+.qc-brain-overlay-warning-item {
+  color: #ffffff !important;
+  background: rgba(8, 18, 36, 0.78) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.qc-brain-overlay-info {
+  display: flex !important;
+  gap: 14px !important;
+  padding: 16px !important;
+  border-radius: 24px !important;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(8, 18, 36, 0.88)) !important;
+}
+
+.qc-brain-overlay-info-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  flex-shrink: 0 !important;
+  border-radius: 18px !important;
+  color: #cffafe !important;
+  background: rgba(34, 211, 238, 0.12) !important;
+  border: 1px solid rgba(165, 243, 252, 0.18) !important;
+}
+
+.qc-brain-overlay-info strong {
+  display: block !important;
+  margin-top: 6px !important;
+  color: rgba(240, 253, 250, 0.9) !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+}
+
+.qc-brain-overlay-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+}
+
+.qc-brain-overlay-card,
+.qc-brain-overlay-data {
+  padding: 14px !important;
+  border-radius: 18px !important;
+}
+
+.qc-brain-overlay-card-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  color: rgba(207, 250, 254, 0.58) !important;
+}
+
+.qc-brain-overlay-card strong,
+.qc-brain-overlay-data strong {
+  display: block !important;
+  margin-top: 7px !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  font-weight: 900 !important;
+  word-break: break-word !important;
+}
+
+.qc-brain-overlay-two-columns {
+  display: grid !important;
+  grid-template-columns: 1.08fr 0.92fr !important;
+  gap: 16px !important;
+  margin-top: 16px !important;
+}
+
+.qc-brain-overlay-panel {
+  padding: 16px !important;
+  border-radius: 24px !important;
+}
+
+.qc-brain-overlay-panel.is-warning-panel {
+  margin-top: 16px !important;
+  background: rgba(120, 53, 15, 0.26) !important;
+  border-color: rgba(253, 230, 138, 0.22) !important;
+}
+
+.qc-brain-overlay-panel-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  color: rgba(207, 250, 254, 0.58) !important;
+  margin-bottom: 12px !important;
+}
+
+.qc-brain-overlay-panel-title h3 {
+  margin: 4px 0 0 !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 950 !important;
+}
+
+.qc-brain-overlay-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.qc-brain-overlay-relation {
+  width: 100% !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 13px !important;
+  border-radius: 18px !important;
+  text-align: left !important;
+}
+
+.qc-brain-overlay-relation strong {
+  display: block !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+}
+
+.qc-brain-overlay-relation small {
+  display: block !important;
+  margin-top: 4px !important;
+  color: rgba(207, 250, 254, 0.5) !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+.qc-brain-overlay-date-grid,
+.qc-brain-overlay-meta-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.qc-brain-overlay-meta-grid {
+  margin-top: 10px !important;
+}
+
+.qc-brain-overlay-empty,
+.qc-brain-overlay-warning-item {
+  padding: 14px !important;
+  border-radius: 18px !important;
+  color: rgba(226, 232, 240, 0.78) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.qc-brain-overlay-footer button {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 40px !important;
+  padding: 9px 16px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.78) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.qc-brain-overlay-footer button.is-primary {
+  border-color: rgba(165, 243, 252, 0.35) !important;
+  color: #ecfeff !important;
+  background: rgba(34, 211, 238, 0.12) !important;
+}
+
+@media (max-width: 860px) {
+  .qc-brain-overlay-root {
+    padding: 12px !important;
+  }
+
+  .qc-brain-overlay-modal {
+    width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 24px) !important;
+    border-radius: 24px !important;
+  }
+
+  .qc-brain-overlay-grid,
+  .qc-brain-overlay-two-columns,
+  .qc-brain-overlay-date-grid,
+  .qc-brain-overlay-meta-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* QC BRAIN NODE OVERLAY - END */

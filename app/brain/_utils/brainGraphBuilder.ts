@@ -107,6 +107,8 @@ export function buildAccessRequestsBrainGraph(input: BrainGraphBuildInput): Buil
   const nodes: BrainNode[] = [];
   const edges: BrainEdge[] = [];
   const requests = input.requests;
+  const domainNodes = input.domainNodes ?? [];
+  const domainEdges = input.domainEdges ?? [];
   const realNodes = input.realBrainNodes ?? [];
   const realEdges = input.realBrainEdges ?? [];
   const auditLogs = input.auditLogs ?? [];
@@ -329,8 +331,8 @@ export function buildAccessRequestsBrainGraph(input: BrainGraphBuildInput): Buil
     });
   }
 
-  const uniqueNodes = uniqueById(nodes);
-  const uniqueEdges = uniqueById(edges);
+  const uniqueNodes = uniqueById([...domainNodes, ...nodes]);
+  const uniqueEdges = uniqueById([...domainEdges, ...edges]);
   const connected = new Set(uniqueEdges.flatMap((edge) => [edge.source, edge.target]));
   const orphanNodes = uniqueNodes.filter((node) => !connected.has(node.id));
   const requestsWithoutNode = requests.filter((request) => !requestHasRealNode(request, realNodes));

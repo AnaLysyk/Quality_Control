@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveBrainAccess } from "@/lib/brain/access";
+import { prisma } from "@/lib/prismaClient";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);
@@ -29,6 +30,30 @@ export async function GET(req: Request) {
   const { context } = accessResult;
   const user = context.user;
   const canViewLogs = context.hasGlobalVisibility || context.canManage;
+  const allowedCompanyIds = Array.from(context.allowedCompanyIds);
+  const companies = await prisma.company.findMany({
+    where: context.hasGlobalVisibility
+      ? { active: true }
+      : {
+          id: { in: allowedCompanyIds },
+          active: true,
+        },
+    select: { id: true, name: true, company_name: true, slug: true },
+    orderBy: { name: "asc" },
+  });
+  const scopedCompanyIds = companies.map((company) => company.id);
+  const projects = scopedCompanyIds.length
+    ? await prisma.project.findMany({
+        where: {
+          companyId: { in: scopedCompanyIds },
+          archivedAt: null,
+        },
+        select: { id: true, name: true, companyId: true },
+        orderBy: { name: "asc" },
+      })
+    : [];
+  const defaultCompanyId = user.companyId && scopedCompanyIds.includes(user.companyId) ? user.companyId : scopedCompanyIds[0] ?? null;
+  const defaultProjectId = projects.find((project) => project.companyId === defaultCompanyId)?.id ?? projects[0]?.id ?? null;
 
   return NextResponse.json({
     user: {
@@ -38,8 +63,12 @@ export async function GET(req: Request) {
       role: user.role,
       companyRole: user.companyRole,
     },
-    companies: Array.from(context.allowedCompanyIds).map((id) => ({ id, name: "Empresa permitida" })),
-    projects: [{ id: "project_qc", name: "Quality Control", companyId: Array.from(context.allowedCompanyIds)[0] ?? null }],
+    companies: companies.map((company) => ({
+      id: company.id,
+      name: company.company_name || company.name,
+      slug: company.slug,
+    })),
+    projects,
     modules: ["Solicitacoes", "Defeitos", "Automacao", "Documentos", "Usuarios", "Permissoes", ...(canViewLogs ? ["Logs"] : [])],
     permissions: {
       canViewGlobalBrain: context.hasGlobalVisibility,
@@ -48,8 +77,8 @@ export async function GET(req: Request) {
       canExecuteActions: context.canManage,
     },
     defaultContext: {
-      companyId: Array.from(context.allowedCompanyIds)[0] ?? null,
-      projectId: "project_qc",
+      companyId: defaultCompanyId,
+      projectId: defaultProjectId,
       module: null,
     },
     source: "database",

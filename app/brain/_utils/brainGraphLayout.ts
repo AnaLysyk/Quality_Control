@@ -1,4 +1,4 @@
-import type { BrainEdge, BrainNode } from "../_types/brain.types";
+﻿import type { BrainEdge, BrainNode } from "../_types/brain.types";
 import type { BrainNodeStatus, BrainNodeType } from "../_types/brain.types";
 
 export type BrainLayoutNode = BrainNode & {
@@ -44,6 +44,8 @@ type VisibleGraphOptions = {
   nodeType?: BrainNodeType | "all";
   nodeStatus?: BrainNodeStatus | "all";
   period?: "all" | "today" | "7d" | "30d";
+  companyId?: string | null;
+  projectId?: string | null;
 };
 
 function normalize(value: string) {
@@ -65,9 +67,13 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
     nodeType = "all",
     nodeStatus = "all",
     period = "all",
+    companyId = null,
+    projectId = null,
   } = options;
+
   const connected = getConnectedNodeIds(edges);
   const localIds = new Set<string>();
+
   if (localGraphOnly && focusNodeId) {
     localIds.add(focusNodeId);
     edges.forEach((edge) => {
@@ -75,23 +81,31 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
       if (edge.target === focusNodeId) localIds.add(edge.source);
     });
   }
+
   const query = normalize(searchText);
+
   const visibleNodes = nodes.filter((node) => {
+    if (companyId && node.companyId && node.companyId !== companyId) return false;
+    if (projectId && node.projectId && node.projectId !== projectId) return false;
     if (moduleFilter && node.module !== moduleFilter) return false;
     if (nodeType !== "all" && node.type !== nodeType) return false;
     if (nodeStatus !== "all" && node.status !== nodeStatus) return false;
     if (localGraphOnly && focusNodeId && !localIds.has(node.id)) return false;
     if (showOrphansOnly && connected.has(node.id)) return false;
     if (showPendingOnly && !["pending", "missing", "warning", "error"].includes(node.status)) return false;
+
     if (period !== "all" && node.createdAt) {
       const createdAt = new Date(node.createdAt).getTime();
+
       if (Number.isFinite(createdAt)) {
         const ageMs = Date.now() - createdAt;
+
         if (period === "today" && new Date(node.createdAt).toDateString() !== new Date().toDateString()) return false;
         if (period === "7d" && ageMs > 7 * 24 * 60 * 60 * 1000) return false;
         if (period === "30d" && ageMs > 30 * 24 * 60 * 60 * 1000) return false;
       }
     }
+
     if (query) {
       const haystack = normalize(
         [
@@ -101,17 +115,23 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
           node.information,
           node.status,
           node.type,
+          node.companyName,
+          node.projectName,
           ...(node.missingKnowledge ?? []),
         ]
           .filter(Boolean)
           .join(" "),
       );
+
       if (!haystack.includes(query)) return false;
     }
+
     return true;
   });
+
   const ids = new Set(visibleNodes.map((node) => node.id));
   const visibleEdges = edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target));
+
   return { nodes: visibleNodes, edges: visibleEdges };
 }
 
@@ -131,6 +151,7 @@ export function layoutBrainGraph(nodes: BrainNode[], edges: BrainEdge[]): BrainL
 
   modules.forEach((moduleName, index) => {
     const angle = (-95 + index * moduleStep) * (Math.PI / 180);
+
     modulePositions.set(moduleName, {
       x: stablePercent(centerX + Math.cos(angle) * 31),
       y: stablePercent(centerY + Math.sin(angle) * 31),
@@ -139,6 +160,7 @@ export function layoutBrainGraph(nodes: BrainNode[], edges: BrainEdge[]): BrainL
 
   return nodes.map((node, index) => {
     const modulePosition = modulePositions.get(node.module) ?? { x: centerX, y: centerY };
+
     if (node.type === "module") {
       return {
         ...node,
@@ -167,7 +189,7 @@ export function layoutBrainGraph(nodes: BrainNode[], edges: BrainEdge[]): BrainL
 }
 
 export function describeInformation(node: BrainNode | null, nodes: BrainNode[], edges: BrainEdge[]) {
-  if (!node) return "Selecione um no para ver a informacao formada.";
+  if (!node) return "Selecione um nó para ver a informação formada.";
   if (node.information) return node.information;
 
   const related = edges
@@ -178,6 +200,7 @@ export function describeInformation(node: BrainNode | null, nodes: BrainNode[], 
       return other ? `${edge.label} ${other.label}` : edge.label;
     });
 
-  if (!related.length) return `${node.label} e um conhecimento isolado. Ainda nao forma informacao completa com outros nos.`;
-  return `${node.label} forma informacao ao se conectar com: ${related.slice(0, 5).join("; ")}.`;
+  if (!related.length) return `${node.label} é um conhecimento isolado. Ainda não forma informação completa com outros nós.`;
+
+  return `${node.label} forma informação ao se conectar com: ${related.slice(0, 5).join("; ")}.`;
 }

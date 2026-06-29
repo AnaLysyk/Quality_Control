@@ -9,6 +9,9 @@ import type {
   BrainAccessRequestRemovalHistoryItem,
   BrainAccessRequestRow,
   BrainAuditLogItem,
+  BrainContextResponse,
+  BrainEdge,
+  BrainNode,
 } from "../_types/brain.types";
 
 type RawSupportRequest = {
@@ -41,6 +44,12 @@ type BrainGraphApiResponse = {
   nodes?: BrainGraphApiNode[];
   edges?: BrainGraphApiEdge[];
   root?: BrainGraphApiNode | null;
+  error?: string;
+};
+
+type BrainDomainApiResponse = {
+  nodes?: BrainNode[];
+  edges?: BrainEdge[];
   error?: string;
 };
 
@@ -145,6 +154,18 @@ export async function fetchBrainGraphForDashboard() {
   };
 }
 
+export async function fetchBrainDomainGraphForDashboard() {
+  const graph = await fetchJson<BrainDomainApiResponse>("/api/brain/domain", 12000);
+  return {
+    nodes: Array.isArray(graph.nodes) ? graph.nodes : [],
+    edges: Array.isArray(graph.edges) ? graph.edges : [],
+  };
+}
+
+export async function fetchBrainContextForDashboard() {
+  return fetchJson<BrainContextResponse>("/api/brain/context");
+}
+
 export async function fetchAccessRequestsForBrainDashboard() {
   const json = await fetchJson<AccessRequestsApiResponse>("/api/admin/access-requests");
   return getItemsFromEnvelope(json).map(mapRawAccessRequest);
@@ -161,20 +182,26 @@ export async function fetchAccessRequestAuditLogsForBrainDashboard() {
 }
 
 export async function fetchBrainDashboardData() {
-  const [graphResult, requestsResult, removalHistoryResult, auditLogsResult] = await Promise.allSettled([
+  const [contextResult, graphResult, domainResult, requestsResult, removalHistoryResult, auditLogsResult] = await Promise.allSettled([
+    fetchBrainContextForDashboard(),
     fetchBrainGraphForDashboard(),
+    fetchBrainDomainGraphForDashboard(),
     fetchAccessRequestsForBrainDashboard(),
     fetchAccessRequestRemovalHistoryForBrainDashboard(),
     fetchAccessRequestAuditLogsForBrainDashboard(),
   ]);
 
   return {
+    context: contextResult.status === "fulfilled" ? contextResult.value : null,
     graph: graphResult.status === "fulfilled" ? graphResult.value : { nodes: [], edges: [] },
+    domainGraph: domainResult.status === "fulfilled" ? domainResult.value : { nodes: [], edges: [] },
     requests: requestsResult.status === "fulfilled" ? requestsResult.value : [],
     removalHistory: removalHistoryResult.status === "fulfilled" ? removalHistoryResult.value : [],
     auditLogs: auditLogsResult.status === "fulfilled" ? auditLogsResult.value : [],
     errors: [
+      contextResult.status === "rejected" ? contextResult.reason instanceof Error ? contextResult.reason.message : "Erro ao carregar contexto" : "",
       graphResult.status === "rejected" ? graphResult.reason instanceof Error ? graphResult.reason.message : "Erro ao carregar grafo" : "",
+      domainResult.status === "rejected" ? domainResult.reason instanceof Error ? domainResult.reason.message : "Erro ao carregar mapa completo do Brain" : "",
       requestsResult.status === "rejected" ? requestsResult.reason instanceof Error ? requestsResult.reason.message : "Erro ao carregar solicitacoes" : "",
       removalHistoryResult.status === "rejected" ? removalHistoryResult.reason instanceof Error ? removalHistoryResult.reason.message : "Historico de remocao indisponivel" : "",
       auditLogsResult.status === "rejected" ? auditLogsResult.reason instanceof Error ? `Audit logs pendentes: ${auditLogsResult.reason.message}` : "Audit logs pendentes" : "",

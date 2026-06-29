@@ -12015,3 +12015,67 @@ body.qc-brain-route.qc-brain-chat-side-open .brain-universe-canvas .react-flow__
     width: calc(100vw - 24px) !important;
   }
 }
+
+/* QC BRAIN CHAT GAP FIX - START */
+body.qc-brain-side-open:has(.brain-universe-canvas),
+body.qc-brain-side-open:has(.brain-universe-canvas) .app-shell,
+body.qc-brain-side-open:has(.brain-universe-canvas) .app-main,
+body.qc-brain-side-open:has(.brain-universe-canvas) .app-stage {
+  background: #020713 !important;
+}
+
+body.qc-brain-side-open:has(.brain-universe-canvas) main,
+body.qc-brain-side-open main:has(.brain-universe-canvas) {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  background: #020713 !important;
+}
+
+body.qc-brain-side-open:has(.brain-universe-canvas) .app-page-cover,
+body.qc-brain-side-open:has(.brain-universe-canvas) [class*="app-page-cover"] {
+  display: none !important;
+}
+
+body.qc-brain-side-open:has(.brain-universe-canvas) main > div:has(.brain-universe-canvas),
+body.qc-brain-side-open:has(.brain-universe-canvas) .brain-universe-canvas {
+  width: 100% !important;
+  max-width: none !important;
+}
+/* QC BRAIN CHAT GAP FIX - END */
+
+/* QC BRAIN FILTER WHEN CHAT SIDE OPEN - START */
+body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud {
+  left: calc(50% - (var(--qc-brain-side-width, 460px) / 2)) !important;
+  width: min(760px, calc(100vw - var(--qc-brain-side-width, 460px) - 330px)) !important;
+  max-width: calc(100vw - var(--qc-brain-side-width, 460px) - 330px) !important;
+}
+
+body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud .qc-brain-filter-panel {
+  padding: 10px !important;
+}
+
+body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud .qc-brain-filter-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud .qc-brain-filter-row {
+  flex-wrap: wrap !important;
+}
+
+body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud .qc-brain-filter-search {
+  flex: 1 1 420px !important;
+}
+
+@media (max-width: 1180px) {
+  body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud {
+    left: 50% !important;
+    width: min(620px, calc(100vw - var(--qc-brain-side-width, 420px) - 280px)) !important;
+  }
+
+  body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud .qc-brain-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+/* QC BRAIN FILTER WHEN CHAT SIDE OPEN - END */

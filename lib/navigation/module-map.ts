@@ -53,7 +53,7 @@ export const SYSTEM_MODULES = [
     id: "assistente",
     name: "Assistente",
     description: "Consulta assistida e ações apoiadas por IA.",
-    mainRoute: "/brain/perguntar",
+    mainRoute: "/brain",
     basePermission: { moduleId: "ai", action: "use" },
     status: "parcial",
   },

@@ -1,4 +1,4 @@
-import type { AssistantContextEntityType, AssistantModule, AssistantScreenContext } from "@/lib/assistant/types";
+﻿import type { AssistantContextEntityType, AssistantModule, AssistantScreenContext } from "@/lib/assistant/types";
 
 function extractCompanySlug(route: string) {
   const match = route.match(/^\/empresas\/([^/]+)/);
@@ -17,7 +17,7 @@ type ScreenContextRule = {
 
 const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
   {
-    match: /^\/brain(?:\/|$)/,
+    match: /^\/(?:admin\/brain|brain)(?:\/|$)/,
     module: "brain",
     screenLabel: "Brain",
     screenSummary: [
@@ -158,7 +158,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
   },
   {
     match: /^\/admin\/access-requests/,
-    module: "dashboard",
+    module: "admin",
     screenLabel: "Solicitacoes de acesso",
     screenSummary: [
       "Voce esta em: Solicitacoes de acesso.",
@@ -171,6 +171,25 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
       "O que falta para aprovar?",
       "Sugerir decisao como agente",
       "Listar acoes que posso executar aqui",
+    ],
+  },
+  {
+    match: /^\/admin\/access-requests/,
+    module: "permissions",
+    screenLabel: "Solicitações de acesso",
+    screenSummary: [
+      "Você está em: Fila administrativa de solicitações de acesso.",
+      "Aqui você busca, filtra, visualiza, baixa PDF, confere dados e decide aprovação, recusa ou ajuste.",
+      "Comandos rápidos: procure por nome, filtre por status, hoje, últimos 7 dias, últimas 2 horas ou últimos 30 dias."
+    ].join(" "),
+    entityType: "screen",
+    suggestedPrompts: [
+      "Buscar uma pessoa na fila de solicitações",
+      "Filtrar status rejeitado",
+      "Filtrar status em aberto",
+      "Filtrar nas últimas 2 horas",
+      "Filtrar nos últimos 7 dias",
+      "Abrir ou baixar o PDF da solicitação visível"
     ],
   },
   {
@@ -230,3 +249,4 @@ export function resolveAssistantScreenContext(route: string): AssistantScreenCon
     suggestedPrompts: rule.suggestedPrompts,
   };
 }
+

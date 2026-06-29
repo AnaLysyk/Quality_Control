@@ -139,6 +139,14 @@ function isGreetingMessage(message: string) {
   return /^(oi+|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí|hello|hi)\b/i.test(normalizeSearch(message));
 }
 
+function isHumanSmallTalk(message: string) {
+  const normalized = normalizeSearch(message)
+    .replace(/[!?.,;]/g, "")
+    .trim();
+
+  return /^(tudo|tudo bem|td|td bem|beleza|blz|ok|okay|certo|show|fechou|sim|ss|aham|uhum|tranquilo|de boa|e vc|e voce|e você)$/.test(normalized);
+}
+
 /* ──────────────────── Repeat / collapse guards ──────────────────── */
 
 function shouldShortCircuitRepeatedPrompt(
@@ -215,6 +223,36 @@ function buildClarifyReply(
   const prefix = topic
     ? `Entendi que estamos falando sobre "${topic}". `
     : "";
+
+  if (isHumanSmallTalk(message ?? "")) {
+    if (context.route.startsWith("/brain") || context.route.startsWith("/admin/brain") || context.module === "brain") {
+      return {
+        tool: "suggest_next_step",
+        success: true,
+        summary: "conversa curta contextual no Brain",
+        reply: compactMultiline([
+          "Tudo bem por aqui. Estou no Brain contigo.",
+          "",
+          "Pode me mandar uma frase solta mesmo. Eu tento entender a intenção antes de responder.",
+          "",
+          "Posso resumir o Brain, explicar o grafo, buscar contexto, sugerir próximo passo ou te ajudar a transformar uma ideia em ação dentro da plataforma.",
+        ].join("\n")),
+      };
+    }
+
+    if (context.route.startsWith("/admin/access-requests")) {
+      return {
+        tool: "suggest_next_step",
+        success: true,
+        summary: "conversa curta contextual em solicitações",
+        reply: compactMultiline([
+          "Tudo certo. Continuo na tela de Solicitações de acesso.",
+          "",
+          "Pode falar do seu jeito. Eu consigo buscar pessoa, filtrar status, abrir solicitação, acionar PDF, explicar o fluxo ou orientar aprovação, recusa e ajuste.",
+        ].join("\n")),
+      };
+    }
+  }
 
   if (context.route.startsWith("/admin/access-requests")) {
     if (isGreetingMessage(message ?? "")) {

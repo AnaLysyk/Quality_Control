@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/prismaClient";
+import { prisma, reconnectPrisma } from "@/lib/prismaClient";
 import {
   assertUserCanLinkToCompany,
   normalizeUserOrigin,
@@ -104,6 +104,18 @@ function isPrismaConnectionClosedError(error: unknown): boolean {
 
 async function sleepMs(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withPrismaConnectionRetry<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (!isPrismaConnectionClosedError(error)) throw error;
+
+    reconnectPrisma();
+    await sleepMs(120);
+    return operation();
+  }
 }
 
 function toLocalUser(u: PrismaUser): LocalAuthUser {
@@ -245,19 +257,19 @@ function isPrismaUniqueViolation(err: unknown, field?: string): boolean {
 
 export async function pgFindLocalUserByEmailOrId(identifier: string): Promise<LocalAuthUser | null> {
   const n = nl(identifier);
-  const user = await prisma.user.findFirst({
+  const user = await withPrismaConnectionRetry(() => prisma.user.findFirst({
     where: { OR: [{ email: n }, { user: n }, { id: identifier }] },
-  });
+  }));
   return user ? toLocalUser(user) : null;
 }
 
 export async function pgGetLocalUserById(id: string): Promise<LocalAuthUser | null> {
-  const user = await prisma.user.findUnique({ where: { id } });
+  const user = await withPrismaConnectionRetry(() => prisma.user.findUnique({ where: { id } }));
   return user ? toLocalUser(user) : null;
 }
 
 export async function pgListLocalUsers(): Promise<LocalAuthUser[]> {
-  const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
+  const users = await withPrismaConnectionRetry(() => prisma.user.findMany({ orderBy: { createdAt: "asc" } }));
   return users.map(toLocalUser);
 }
 
@@ -398,27 +410,19 @@ export async function pgUpdateLocalUser(
 // ── Company ───────────────────────────────────────────────────────────────────
 
 export async function pgFindLocalCompanyById(id: string): Promise<LocalAuthCompany | null> {
-  const c = await prisma.company.findUnique({ where: { id }, include: { integrations: true } });
+  const c = await withPrismaConnectionRetry(() => prisma.company.findUnique({ where: { id }, include: { integrations: true } }));
   return c ? toLocalCompany(c) : null;
 }
 
 export async function pgFindLocalCompanyBySlug(slug: string): Promise<LocalAuthCompany | null> {
   const normalized = pgNormalizeSlug(slug);
-  const c = await prisma.company.findUnique({ where: { slug: normalized }, include: { integrations: true } });
+  const c = await withPrismaConnectionRetry(() => prisma.company.findUnique({ where: { slug: normalized }, include: { integrations: true } }));
   return c ? toLocalCompany(c) : null;
 }
 
 export async function pgListLocalCompanies(): Promise<LocalAuthCompany[]> {
-  try {
-    const companies = await prisma.company.findMany({ orderBy: { name: "asc" }, include: { integrations: true } });
-    return companies.map(toLocalCompany);
-  } catch (error) {
-    if (!isPrismaConnectionClosedError(error)) throw error;
-
-    await sleepMs(120);
-    const companies = await prisma.company.findMany({ orderBy: { name: "asc" }, include: { integrations: true } });
-    return companies.map(toLocalCompany);
-  }
+  const companies = await withPrismaConnectionRetry(() => prisma.company.findMany({ orderBy: { name: "asc" }, include: { integrations: true } }));
+  return companies.map(toLocalCompany);
 }
 
 export async function pgCreateLocalCompany(
@@ -636,28 +640,28 @@ export async function pgRemoveLocalLink(userId: string, companyId: string): Prom
 }
 
 export async function pgListLocalLinksForUser(userId: string): Promise<LocalAuthMembership[]> {
-  const memberships = await prisma.membership.findMany({ where: { userId } });
+  const memberships = await withPrismaConnectionRetry(() => prisma.membership.findMany({ where: { userId } }));
   return memberships.map(toLocalMembership);
 }
 
 export async function pgListLocalLinksForCompany(companyId: string): Promise<LocalAuthMembership[]> {
-  const memberships = await prisma.membership.findMany({ where: { companyId } });
+  const memberships = await withPrismaConnectionRetry(() => prisma.membership.findMany({ where: { companyId } }));
   return memberships.map(toLocalMembership);
 }
 
 export async function pgListLocalMemberships(): Promise<LocalAuthMembership[]> {
-  const memberships = await prisma.membership.findMany();
+  const memberships = await withPrismaConnectionRetry(() => prisma.membership.findMany());
   return memberships.map(toLocalMembership);
 }
 
 // ── Full store read (used by resolveUserCompanies etc.) ───────────────────────
 
 export async function pgReadLocalAuthStore(): Promise<LocalAuthStore> {
-  const [users, companies, memberships] = await Promise.all([
+  const [users, companies, memberships] = await withPrismaConnectionRetry(() => Promise.all([
     prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
     prisma.company.findMany({ orderBy: { name: "asc" } }),
     prisma.membership.findMany(),
-  ]);
+  ]));
   return {
     users: users.map(toLocalUser),
     companies: companies.map(toLocalCompany),

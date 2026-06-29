@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
-import BrainPageClient from "./BrainPageClient";
 import { registerScreen } from "@/lib/brain/registry";
+import { BrainDashboard } from "../../brain/_components/BrainDashboard";
 
 registerScreen({
   id: "admin-brain",
@@ -34,5 +34,5 @@ export const metadata = {
 };
 
 export default function BrainPage() {
-  return <BrainPageClient />;
+  return <BrainDashboard />;
 }

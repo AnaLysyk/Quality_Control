@@ -1,3 +1,7 @@
+import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { FiAlertTriangle, FiCheckCircle, FiEdit3, FiSend, FiX, FiXCircle } from "react-icons/fi";
+
 type RejectionReasonOption = {
   value: string;
   label: string;
@@ -21,38 +25,18 @@ type DecisionPanelProps = {
   rejectionReasons: readonly RejectionReasonOption[];
   onRejectionReasonChange: (value: string) => void;
   onRequestAdjustment: () => void;
-  onReject: () => void;
-  onApprove: () => void;
+  onReject: () => void | Promise<void>;
+  onApprove: () => void | Promise<void>;
 };
 
 function finalTitle(status: string) {
-  if (status === "closed") return "Solicitacao aprovada";
-  if (status === "rejected") return "Solicitacao recusada";
-  return "Solicitacao finalizada";
-}
-
-function finalDescription(status: string) {
-  if (status === "closed") return "Acesso liberado. As acoes ficam bloqueadas para preservar o historico.";
-  if (status === "rejected") return "Solicitacao encerrada sem liberacao de acesso. As acoes ficam bloqueadas para preservar o historico.";
-  return "Fluxo encerrado. As acoes ficam bloqueadas.";
-}
-
-function StatusPill({ children, tone }: { children: string; tone: "ok" | "warn" | "neutral" | "danger" }) {
-  const className =
-    tone === "ok"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : tone === "danger"
-        ? "border-red-200 bg-red-50 text-red-800"
-        : tone === "warn"
-          ? "border-amber-200 bg-amber-50 text-amber-800"
-          : "border-slate-200 bg-slate-50 text-slate-600";
-
-  return <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${className}`}>{children}</span>;
+  if (status === "closed") return "Solicitação aprovada";
+  if (status === "rejected") return "Solicitação recusada";
+  return "Solicitação finalizada";
 }
 
 export function DecisionPanel({
   status,
-  passwordProvided,
   requiresCompany,
   hasCompany,
   accepting,
@@ -71,13 +55,14 @@ export function DecisionPanel({
   onReject,
   onApprove,
 }: DecisionPanelProps) {
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [pendingDecision, setPendingDecision] = useState<"approve" | "reject" | null>(null);
+
   if (commentsLocked) {
     return (
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Decisao</p>
-        <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">{finalTitle(status)}</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">{finalDescription(status)}</p>
-      </section>
+      <div className="sticky bottom-0 z-30 rounded-2xl border border-slate-200 bg-white/98 px-4 py-3 shadow-[0_-10px_36px_rgba(15,23,42,0.10)] backdrop-blur">
+        <p className="text-sm font-black text-slate-700">{finalTitle(status)}</p>
+      </div>
     );
   }
 
@@ -88,79 +73,163 @@ export function DecisionPanel({
     adjustmentFieldCount > 0 &&
     adjustmentReady;
   const canReject = !accepting && (Boolean(rejectionReasonDraft) || commentDraft.trim().length > 0);
+  const approvalBlocked = acceptDisabled || companyPending || hasAdjustmentFieldsWithoutNotes;
+  const selectedRejectionReason =
+    rejectionReasons.find((reason) => reason.value === rejectionReasonDraft)?.label ?? "";
+  const rejectionSummary = selectedRejectionReason || commentDraft.trim();
+  const isRejecting = pendingDecision === "reject";
+  const isApproving = pendingDecision === "approve" || (accepting && pendingDecision !== "reject");
+
+  async function confirmReject() {
+    if (!canReject || isRejecting) return;
+    setPendingDecision("reject");
+    try {
+      await onReject();
+      setRejectOpen(false);
+    } finally {
+      setPendingDecision(null);
+    }
+  }
+
+  async function confirmApprove() {
+    if (approvalBlocked || isApproving) return;
+    setPendingDecision("approve");
+    try {
+      await onApprove();
+    } finally {
+      setPendingDecision(null);
+    }
+  }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Decisao</p>
-          <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Concluir analise</h3>
-          <p className="mt-1 text-sm leading-6 text-slate-500">
-            Use os campos marcados para devolver ajustes ou aprove quando nao houver pendencia no cadastro.
+    <section className="sticky bottom-0 z-30 rounded-xl border border-slate-200 bg-white/98 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Ações da solicitação</p>
+          <p className="mt-0.5 text-sm font-semibold text-slate-600">
+            {adjustmentFieldCount > 0
+              ? `${adjustmentFieldCount} campo(s) marcados para ajuste`
+              : "Nenhum ajuste marcado"}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <StatusPill tone={passwordProvided ? "ok" : "warn"}>{passwordProvided ? "Senha OK" : "Senha pendente"}</StatusPill>
-          {companyPending ? <StatusPill tone="warn">Empresa obrigatoria</StatusPill> : <StatusPill tone="ok">Empresa OK</StatusPill>}
-          {adjustmentFieldCount > 0 ? <StatusPill tone="danger">{`${adjustmentFieldCount} campo(s) para ajuste`}</StatusPill> : null}
-          {hasAdjustmentFieldsWithoutNotes ? <StatusPill tone="warn">Observacao pendente</StatusPill> : null}
-          {acceptDisabled ? <StatusPill tone="warn">Aprovacao bloqueada</StatusPill> : <StatusPill tone="ok">Pronto para aprovar</StatusPill>}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onRequestAdjustment}
+            disabled={!canRequestAdjustment}
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FiEdit3 />
+            {requestingAdjustment ? "Enviando..." : "Solicitar ajuste"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRejectOpen(true)}
+            aria-label="Recusar solicitação"
+            disabled={accepting || isRejecting}
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FiXCircle />
+            {isRejecting ? "Recusando..." : "Recusar"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void confirmApprove()}
+            aria-label="Aprovar solicitação"
+            disabled={approvalBlocked || isRejecting}
+            className="inline-flex h-9 items-center gap-2 rounded-xl bg-slate-950 px-5 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FiCheckCircle />
+            {isApproving ? "Aprovando..." : selectedIsPasswordReset ? "Aprovar reset" : "Aprovar"}
+          </button>
         </div>
       </div>
 
-      <div className="grid gap-4 p-5 xl:grid-cols-[minmax(220px,0.8fr)_auto_auto_auto] xl:items-end">
-        <label className="block">
-          <span className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Motivo da recusa</span>
-          <select
-            value={rejectionReasonDraft}
-            onChange={(event) => onRejectionReasonChange(event.target.value)}
-            className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400"
-            data-testid="access-request-rejection-reason"
-            aria-label="Motivo da rejeicao"
-          >
-            <option value="">Selecionar se for recusar</option>
-            {rejectionReasons.map((reason) => (
-              <option key={reason.value} value={reason.value}>
-                {reason.label}
-              </option>
-            ))}
-          </select>
-        </label>
+      <Dialog.Root open={rejectOpen} onOpenChange={(open) => !isRejecting && setRejectOpen(open)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[220] bg-slate-950/55 backdrop-blur-sm" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[221] w-[min(560px,calc(100vw-28px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-rose-100 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.35)]">
+            <div className="bg-[linear-gradient(135deg,#7f1d1d_0%,#be123c_60%,#ef4444_130%)] px-6 py-5 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/20 bg-white/15">
+                    <FiAlertTriangle className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <Dialog.Title className="text-xl font-black tracking-tight text-white">
+                      Você tem certeza?
+                    </Dialog.Title>
+                    <Dialog.Description className="mt-1 text-sm font-semibold leading-6 text-white/82">
+                      A solicitação será marcada como recusada e o motivo ficará registrado no histórico.
+                    </Dialog.Description>
+                  </div>
+                </div>
 
-        <button
-          type="button"
-          onClick={onRequestAdjustment}
-          disabled={!canRequestAdjustment}
-          className="h-11 rounded-xl border border-amber-300 bg-amber-50 px-5 text-xs font-black uppercase tracking-[0.14em] text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {requestingAdjustment ? "Enviando..." : "Solicitar ajuste"}
-        </button>
+                <Dialog.Close
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+                  aria-label="Fechar confirmação de recusa"
+                >
+                  <FiX className="h-4 w-4" />
+                </Dialog.Close>
+              </div>
+            </div>
 
-        <button
-          type="button"
-          onClick={onReject}
-          aria-label="Recusar solicitacao"
-          disabled={!canReject}
-          className="h-11 rounded-xl border border-rose-300 bg-rose-50 px-5 text-xs font-black uppercase tracking-[0.14em] text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {accepting ? "Processando..." : "Recusar"}
-        </button>
+            <div className="space-y-4 px-6 py-5">
+              <label className="block">
+                <span className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">
+                  Motivo da recusa
+                </span>
+                <select
+                  value={rejectionReasonDraft}
+                  onChange={(event) => onRejectionReasonChange(event.target.value)}
+                  className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+                  data-testid="access-request-rejection-reason"
+                  aria-label="Motivo da rejeição"
+                >
+                  <option value="">Selecionar motivo</option>
+                  {rejectionReasons.map((reason) => (
+                    <option key={reason.value} value={reason.value}>
+                      {reason.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-        <button
-          type="button"
-          onClick={onApprove}
-          aria-label="Aprovar solicitacao"
-          disabled={acceptDisabled}
-          className="h-11 rounded-xl bg-slate-950 px-6 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {accepting ? "Aprovando..." : selectedIsPasswordReset ? "Aprovar reset" : "Aprovar acesso"}
-        </button>
-      </div>
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-rose-700">
+                  O que será enviado
+                </p>
+                <p className="mt-1 text-sm font-bold leading-6 text-rose-950">
+                  {rejectionSummary || "Selecione um motivo ou escreva uma justificativa na conversa antes de confirmar."}
+                </p>
+              </div>
 
-      <div className="border-t border-slate-100 px-5 py-3 text-xs font-semibold text-slate-500">
-        Solicitar ajuste envia os campos marcados e suas observacoes. O chat pode ser usado separadamente e nao e obrigatorio para ajuste.
-      </div>
+              <p className="text-sm font-semibold leading-6 text-slate-600">
+                Para justificar por mensagem, escreva no chat da solicitação antes de confirmar a recusa.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
+              <Dialog.Close className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-100">
+                Cancelar
+              </Dialog.Close>
+
+              <button
+                type="button"
+                onClick={() => void confirmReject()}
+                disabled={!canReject || isRejecting}
+                className="inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-5 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(225,29,72,0.24)] transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                <FiSend className="h-4 w-4" />
+                {isRejecting ? "Recusando..." : "Sim, recusar solicitação"}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </section>
   );
 }

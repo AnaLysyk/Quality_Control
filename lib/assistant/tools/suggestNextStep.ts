@@ -43,6 +43,27 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
     // Brain optional
   }
 
+  // Sugestões contextuais por rota/tela antes do módulo genérico
+  const isAccessRequestsContext = context.route.startsWith("/admin/access-requests");
+  const isBrainContext =
+    context.module === "brain" ||
+    context.route.startsWith("/brain") ||
+    context.route.startsWith("/admin/brain");
+
+  if (isAccessRequestsContext) {
+    suggestions.push("🔎 Buscar uma pessoa na fila de solicitações");
+    suggestions.push("🧭 Explicar o que falta para aprovar uma solicitação");
+    suggestions.push("📝 Orientar quais campos devolver para ajuste");
+    suggestions.push("📄 Abrir ou baixar o PDF da solicitação visível");
+  }
+
+  if (isBrainContext) {
+    suggestions.push("🧠 Resumir o Brain e o que ele já sabe");
+    suggestions.push("🕸️ Explicar relações do grafo de conhecimento");
+    suggestions.push("🔎 Buscar contexto em memórias, telas e entidades");
+    suggestions.push("➡️ Sugerir o próximo passo como agente");
+  }
+
   // Sugestões contextuais por módulo
   if (context.module === "support") {
     suggestions.push("🔍 Buscar tickets de alta prioridade sem responsável");
@@ -65,7 +86,7 @@ export async function toolSuggestNextStep(user: AuthUser, context: AssistantScre
     suggestions.push("✅ Validar cobertura de testes existente");
   }
 
-  if (context.module === "dashboard") {
+  if (context.module === "dashboard" && !isAccessRequestsContext && !isBrainContext) {
     suggestions.push("📈 Analisar métricas de qualidade do período");
     suggestions.push("🎯 Identificar tendências nos indicadores");
     suggestions.push("⚠️ Listar áreas que precisam de atenção");

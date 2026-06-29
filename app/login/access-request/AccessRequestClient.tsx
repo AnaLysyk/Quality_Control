@@ -16,6 +16,7 @@ import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/hooks/useI18n";
 import { normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
+import { ACCESS_REQUEST_BASE_ADJUSTMENT_OPTIONS, ACCESS_REQUEST_COMPANY_ADJUSTMENT_OPTIONS } from "@/lib/accessRequestAdjustmentFields";
 
 const ACCESS_OPTIONS = [
   {
@@ -115,31 +116,9 @@ type AdjustmentFieldOption = {
   label: string;
 };
 
-const BASE_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
-  { field: "profileType", label: "Perfil" },
-  { field: "company", label: "Empresa" },
-  { field: "fullName", label: "Nome completo" },
-  { field: "username", label: "Usuário sugerido" },
-  { field: "email", label: "E-mail" },
-  { field: "phone", label: "Telefone" },
-  { field: "jobRole", label: "Cargo" },
-  { field: "title", label: "Título" },
-  { field: "description", label: "Descrição" },
-  { field: "notes", label: "Observações" },
-  { field: "password", label: "Senha" },
-];
+const BASE_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [...ACCESS_REQUEST_BASE_ADJUSTMENT_OPTIONS];
 
-const COMPANY_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [
-  { field: "companyName", label: "Razão social" },
-  { field: "companyTaxId", label: "CNPJ" },
-  { field: "companyZip", label: "CEP" },
-  { field: "companyAddress", label: "Endereço" },
-  { field: "companyPhone", label: "Telefone da empresa" },
-  { field: "companyWebsite", label: "Website" },
-  { field: "companyLinkedin", label: "LinkedIn" },
-  { field: "companyDescription", label: "Descrição da empresa" },
-  { field: "companyNotes", label: "Observações da empresa" },
-];
+const COMPANY_ADJUSTMENT_FIELD_OPTIONS: AdjustmentFieldOption[] = [...ACCESS_REQUEST_COMPANY_ADJUSTMENT_OPTIONS];
 
 type LookupDraft = {
   fullName: string;

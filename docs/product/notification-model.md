@@ -118,7 +118,6 @@ Criar evento critico na agenda
   -> RELEASE_CALENDAR_CRITICAL
   -> gera NotificationEvent
   -> cria NotificationDelivery para ator e Brain
-  -> evento obrigatorio nao respeita opt-out
 
 Mudar evento para at_risk
   -> RELEASE_CALENDAR_RISK
@@ -128,8 +127,7 @@ Mudar evento para at_risk
 
 Mudar evento para blocked
   -> RELEASE_CALENDAR_BLOCKED
-  -> gera NotificationEvent
-  -> evento obrigatorio nao respeita opt-out
+  -> gera NotificationEvent obrigatorio
   -> Brain recebe contexto
 ```
 
@@ -154,6 +152,8 @@ Criar NotificationEvent auditavel
 Criar NotificationDelivery por destinatario/canal
 Expor eventos e entregas no GET /api/notification-model
 Agenda de release gerando evento critico, risco e bloqueio
+UI /notificacoes exibindo eventos reais e entregas por canal
+Resumo de delivered/suppressed na central de notificacoes
 ```
 
 ## Proxima implementacao tecnica

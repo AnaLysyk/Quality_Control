@@ -2,6 +2,7 @@ import "server-only";
 
 import { getRedis } from "@/lib/redis";
 import { getNotificationOperationModel, type NotificationChannel } from "@/data/notificationOperationModel";
+import { notificationWorkflowExtensions } from "@/data/notificationWorkflowExtensions";
 
 export type NotificationPreferenceTarget = "company" | "profile" | "user";
 export type NotificationPreferenceDecision = "enabled" | "disabled";
@@ -110,7 +111,8 @@ export async function resolveNotificationDeliveryDecision(input: {
   userId?: string | null;
 }): Promise<{ decision: NotificationDeliveryDecision; reason: string }> {
   const model = getNotificationOperationModel();
-  const workflow = model.workflows.find((item) => item.id === input.workflowId || item.eventType === input.workflowId);
+  const workflows = [...model.workflows, ...notificationWorkflowExtensions];
+  const workflow = workflows.find((item) => item.id === input.workflowId || item.eventType === input.workflowId);
   if (!workflow) return { decision: "delivered", reason: "Workflow nao configurado; entrega liberada por padrao." };
   if (workflow.mandatory) return { decision: "mandatory_override", reason: "Evento obrigatorio: preferencias nao bloqueiam recebimento." };
 

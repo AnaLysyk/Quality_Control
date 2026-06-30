@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "Quality Control API RBAC",
+    "description": "Coleção base da Quality Control organizada para uso por empresa, projeto e módulo. Deve apoiar o Brain, API Lab, Newman e automação Playwright.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Sistema",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Autenticação",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": \"{{login}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login retorna sucesso ou ambiente sem auth real', function () {",
+                  "  pm.expect([200, 204, 401, 404, 405]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('me responde sem erro crítico', function () { pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Empresa > Projeto",
+      "item": [
+        {
+          "name": "Empresas",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/companies"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('empresas protegida ou disponível', function () { pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Projetos da empresa",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/test-projects?companySlug={{company_slug}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('projetos por empresa', function () { pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Brain",
+      "item": [
+        {
+          "name": "Converter texto para PDF",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filename\": \"brain-text.txt\",\n  \"mimeType\": \"text/plain\",\n  \"text\": \"Resumo de qualidade gerado pelo Brain\",\n  \"targetFormat\": \"pdf\"\n}"
+            },
+            "url": "{{base_url}}/api/brain/convert"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('conversão retorna arquivo', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "  pm.expect(json.contentBase64).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Automação",
+      "item": [
+        {
+          "name": "Scripts Playwright por empresa",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/automations/scripts?companySlug={{company_slug}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('scripts protegidos ou disponíveis', function () { pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:3100" },
+    { "key": "company_slug", "value": "quality-control" },
+    { "key": "project_id", "value": "quality-control-platform" },
+    { "key": "login", "value": "admin@demo.test" },
+    { "key": "password", "value": "Demo@123" }
+  ]
+}

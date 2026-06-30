@@ -133,7 +133,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
       {activeClientSlug && (
         <div className="pt-2">
-          <ProjectSelector collapsed={collapsed} />
+          <ProjectSelector collapsed={collapsed} showCompanySelector={false} />
           <div className="mx-3 border-t border-white/10" />
         </div>
       )}

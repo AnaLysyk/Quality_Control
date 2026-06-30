@@ -10,30 +10,76 @@ import { NAV_CATALOG, type NavItemDef, type NavModuleDef } from "@/lib/navigatio
 import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/navigationPermissions";
 import type { SystemRole } from "@/lib/auth/roles";
 
-function resolveItemHref(
-  item: NavItemDef,
+const DISABLED_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
+const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+]);
+const COMPANY_DASHBOARD_ROLES = new Set<SystemRole>([
+  SYSTEM_ROLES.EMPRESA,
+  SYSTEM_ROLES.COMPANY_USER,
+]);
+const ENABLED_NAV_CATALOG = NAV_CATALOG.filter((module) => !DISABLED_MODULE_IDS.has(module.id));
+
+function resolveCompanyRouteHref(
+  mappedPath: string | undefined,
+  fallbackHref: string | undefined,
   companySlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
 ): string | undefined {
-  const mappedPath = getNavigationRoute(item)?.path;
   if (mappedPath?.includes("/empresas/[slug]/")) {
-    if (!companySlug) return item.href;
+    if (!companySlug) return fallbackHref;
     const companyRoute = mappedPath.split("/empresas/[slug]/")[1]?.split("?")[0];
     if (companyRoute) {
       return buildCompanyPathForAccess(companySlug, companyRoute, companyRouteInput);
     }
   }
-  return mappedPath ?? item.href;
+
+  return mappedPath ?? fallbackHref;
+}
+
+function resolveItemHref(
+  item: NavItemDef,
+  companySlug: string | null,
+  companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
+): string | undefined {
+  return resolveCompanyRouteHref(getNavigationRoute(item)?.path, item.href, companySlug, companyRouteInput);
+}
+
+function resolveModuleHref(
+  mod: NavModuleDef,
+  companySlug: string | null,
+  companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
+  effectiveRole: SystemRole | null,
+): string | undefined {
+  if (mod.id === "home") {
+    if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
+      return "/dashboard";
+    }
+
+    if (companySlug && effectiveRole && COMPANY_DASHBOARD_ROLES.has(effectiveRole)) {
+      return buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput);
+    }
+  }
+
+  return resolveCompanyRouteHref(getNavigationRoute(mod)?.path, mod.href, companySlug, companyRouteInput);
 }
 
 function resolveModuleItems(
   mod: NavModuleDef,
   companySlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
+  effectiveRole: SystemRole | null,
 ): NavModuleDef {
+  const usesDashboardHome =
+    mod.id === "home" &&
+    effectiveRole != null &&
+    (INTERNAL_DASHBOARD_ROLES.has(effectiveRole) || COMPANY_DASHBOARD_ROLES.has(effectiveRole));
+
   return {
     ...mod,
-    href: getNavigationRoute(mod)?.path ?? mod.href,
+    label: usesDashboardHome ? "Dashboard" : mod.label,
+    href: resolveModuleHref(mod, companySlug, companyRouteInput, effectiveRole),
     items: mod.items.map((item) => ({
       ...item,
       href: resolveItemHref(item, companySlug, companyRouteInput),
@@ -85,7 +131,7 @@ export function useNavigationItems() {
           : typeof (user as { user_origin?: string | null } | null)?.user_origin === "string"
             ? (user as { user_origin?: string | null }).user_origin
             : null,
-      clientSlug: typeof user?.clientSlug === "string" ? user.clientSlug : activeClientSlug ?? null,
+      clientSlug: activeClientSlug ?? (typeof user?.clientSlug === "string" ? user.clientSlug : null),
     }),
     [activeClientSlug, isGlobalAdmin, user],
   );
@@ -101,7 +147,6 @@ export function useNavigationItems() {
       effectiveRole === SYSTEM_ROLES.COMPANY_USER
     ) {
       // They can see: home, quality, support, brain, documents
-      // (not companies/operations/automation/admin since those are TC-internal)
       return null; // will be handled below by isInstitutional
     }
     return effectiveRole;
@@ -123,16 +168,16 @@ export function useNavigationItems() {
       // Client profiles: home, quality, support, brain, documents only
       const CLIENT_MODULES = new Set(["home", "quality", "support", "brain", "documents"]);
       filtered = buildNavigationForUser(
-        NAV_CATALOG.filter((m) => CLIENT_MODULES.has(m.id)),
+        ENABLED_NAV_CATALOG.filter((m) => CLIENT_MODULES.has(m.id)),
         effectiveRole ?? SYSTEM_ROLES.COMPANY_USER,
         permissions,
         accessContext,
       );
     } else {
-      filtered = buildNavigationForUser(NAV_CATALOG, roleForFiltering, permissions, accessContext);
+      filtered = buildNavigationForUser(ENABLED_NAV_CATALOG, roleForFiltering, permissions, accessContext);
     }
 
-    return filtered.map((mod) => resolveModuleItems(mod, companySlug, companyRouteInput));
+    return filtered.map((mod) => resolveModuleItems(mod, companySlug, companyRouteInput, effectiveRole));
   }, [user, isClientProfile, effectiveRole, roleForFiltering, permissions, accessContext, companySlug, companyRouteInput]);
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };

@@ -82,9 +82,9 @@ export async function POST(request: Request) {
   const user = await authenticateRequest(request);
   if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  // Only admins/leaders can create projects
+  // Líder TC, suporte técnico e empresa podem cadastrar projetos no contexto permitido.
   const role = (user.role ?? "").toLowerCase();
-  const canCreate = ["admin", "leader_tc", "company_admin", "it_dev"].includes(role);
+  const canCreate = ["admin", "leader_tc", "technical_support", "support", "company_admin", "empresa", "it_dev"].includes(role);
   if (!canCreate) return NextResponse.json({ error: "Sem permissão para criar projetos" }, { status: 403 });
 
   const body = await request.json().catch(() => null);

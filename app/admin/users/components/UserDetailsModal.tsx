@@ -203,6 +203,11 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     : "Somente Lider TC pode alterar este perfil.";
   const linkedCompanyName =
     clients?.find((client) => client.id === clientId)?.name ?? (clientId ? "Empresa vinculada" : "Sem empresa");
+  const lockCompanyLink = Boolean(
+    user?.id &&
+      initial.clientId &&
+      (role === "company_user" || role === "empresa")
+  );
   const displayName = name.trim() || user?.name || "Usuário";
   const displayLogin = login.trim() || user?.user || "sem-login";
   const displayEmail = email.trim() || user?.email || "Sem e-mail";
@@ -307,7 +312,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         email: email.trim(),
         phone: phone.trim() || null,
         role,
-        client_id: clientId,
+        client_id: lockCompanyLink ? initial.clientId : clientId,
         job_title: jobTitle.trim() || undefined,
         linkedin_url: linkedin.trim() || undefined,
         avatar_url: avatarUrl.trim() || null,
@@ -497,6 +502,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     value={clientId ?? ""}
                     onChange={(event) => setClientId(event.target.value || null)}
                     aria-label="Empresa vinculada ao usuário"
+                    disabled={lockCompanyLink}
                   >
                     <option value="">{requiresClient ? "Selecione" : "Sem empresa vinculada"}</option>
                     {clients?.map((client) => (
@@ -505,6 +511,11 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       </option>
                     ))}
                   </select>
+                  {lockCompanyLink ? (
+                    <span className="mt-2 block text-xs font-semibold text-[#5f77a2]">
+                      Empresa travada após aceite/cadastro. Para trocar a empresa, crie uma nova solicitação/vínculo.
+                    </span>
+                  ) : null}
                 </label>
 
                 <label className="block text-sm">

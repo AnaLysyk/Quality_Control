@@ -106,8 +106,18 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   const [activeClientSlug, setActiveClientSlugState] = useState<string | null>(null);
   const [loading, setLoading] = useState(authLoading);
   const [error, setError] = useState<string | null>(null);
+  const globalContextRoles = [
+    user?.role,
+    user?.permissionRole,
+    user?.companyRole,
+    user?.globalRole,
+  ]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim().toLowerCase());
+
   const isGlobalAdmin =
-    user?.isGlobalAdmin === true || (typeof user?.role === "string" && (user.role.toLowerCase() === "admin" || user.role.toLowerCase() === "leader_tc"));
+    user?.isGlobalAdmin === true ||
+    globalContextRoles.some((role) => role === "admin" || role === "leader_tc" || role === "technical_support");
 
   const normalizedClients = useMemo(
     () =>

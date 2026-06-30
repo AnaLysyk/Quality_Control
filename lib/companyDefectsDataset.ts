@@ -43,6 +43,12 @@ type CompanyDefectsDatasetGlobal = typeof globalThis & {
   __qcCompanyDefectsDatasetCache?: Map<string, CompanyDefectsDatasetCacheEntry>;
 };
 
+type CompanyDefectsDatasetOptions = {
+  forceRefresh?: boolean;
+  project?: string | null;
+  projectId?: string | null;
+};
+
 const DATASET_TTL_MS = 60_000;
 
 function normalizeString(value: unknown) {
@@ -64,6 +70,43 @@ function normalizeProjectKey(value: unknown) {
 function normalizeKey(value: unknown) {
   const normalized = normalizeString(value);
   return normalized ? normalized.toLowerCase() : null;
+}
+
+function normalizeScopeKey(value: unknown) {
+  const normalized = normalizeString(value);
+  return normalized
+    ? normalized
+        .normalize("NFD")
+        .replace(/[\\u0300-\\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "")
+    : null;
+}
+
+function matchesOperationalProjectScope(
+  item: Awaited<ReturnType<typeof getCompanyDefects>>["items"][number],
+  options?: CompanyDefectsDatasetOptions,
+) {
+  const projectId = normalizeScopeKey(options?.projectId);
+  const project = normalizeScopeKey(options?.project);
+
+  if (!projectId && !project) return true;
+
+  const record = item as typeof item & { projectId?: unknown };
+  const candidates = [
+    record.projectId,
+    item.projectCode,
+    item.applicationName,
+    item.runSlug,
+    item.runName,
+  ]
+    .map((value) => normalizeScopeKey(value))
+    .filter((value): value is string => Boolean(value));
+
+  return Boolean(
+    (projectId && candidates.includes(projectId)) ||
+      (project && candidates.includes(project)),
+  );
 }
 
 function mergeCatalogSource(current: CatalogSource | undefined, next: "manual" | "qase"): CatalogSource {
@@ -100,15 +143,25 @@ export function invalidateCompanyDefectsDataset(companySlug?: string | null) {
     cache.clear();
     return;
   }
-  cache.delete(companySlug);
+
+  for (const key of Array.from(cache.keys())) {
+    if (key === companySlug || key.startsWith(`${companySlug}:`)) {
+      cache.delete(key);
+    }
+  }
 }
 
 export async function getCompanyDefectsDataset(
   companySlug: string,
-  options?: { forceRefresh?: boolean },
+  options?: CompanyDefectsDatasetOptions,
 ): Promise<CompanyDefectsDataset> {
   const cache = getDatasetCache();
-  const cached = cache.get(companySlug);
+  const scopeKey = [
+    companySlug,
+    normalizeScopeKey(options?.project) ?? "__all_projects__",
+    normalizeScopeKey(options?.projectId) ?? "__no_project_id__",
+  ].join(":");
+  const cached = cache.get(scopeKey);
   if (!options?.forceRefresh && cached && cached.expiresAt > Date.now()) {
     return cached.value;
   }
@@ -125,7 +178,10 @@ export async function getCompanyDefectsDataset(
   }
 
   const [payload, applications, responsibleOptions, companyRecord] = await Promise.all([
-    getCompanyDefects(companySlug, { forceRefresh: options?.forceRefresh }),
+    getCompanyDefects(companySlug, {
+      forceRefresh: options?.forceRefresh,
+      project: options?.project,
+    }),
     listApplications({ companySlug }),
     listManualReleaseResponsibleOptions(companySlug),
     findLocalCompanyBySlug(companySlug),
@@ -160,7 +216,9 @@ export async function getCompanyDefectsDataset(
   }
 
   const historiesBySlug = await listDefectHistories(payload.items.map((item) => item.slug));
-  const items = payload.items.map((item) => {
+  const items = payload.items
+    .filter((item) => matchesOperationalProjectScope(item, options))
+    .map((item) => {
     const activity = summarizeDefectActivity(historiesBySlug[item.slug] ?? []);
     const projectCode = normalizeProjectCode(item.projectCode);
     const projectKey = normalizeProjectKey(item.projectCode);
@@ -242,7 +300,7 @@ export async function getCompanyDefectsDataset(
     responsibleOptions,
   };
 
-  cache.set(companySlug, {
+  cache.set(scopeKey, {
     expiresAt: Date.now() + DATASET_TTL_MS,
     value,
   });

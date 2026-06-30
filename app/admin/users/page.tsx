@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -331,6 +331,7 @@ function UserManagementQueueExperience({
   emptyTitle,
   emptyDescription,
   searchInputRef,
+  profileBadgeMode = "profile",
 }: {
   title: string;
   description: string;
@@ -346,6 +347,7 @@ function UserManagementQueueExperience({
   emptyTitle: string;
   emptyDescription: string;
   searchInputRef?: RefObject<HTMLInputElement | null>;
+  profileBadgeMode?: "profile" | "company";
 }) {
   const [statusFilter, setStatusFilter] = useState<UserStatusFilter>("all");
   const [sortMode, setSortMode] = useState<UserSortMode>("name_asc");
@@ -540,7 +542,7 @@ function UserManagementQueueExperience({
                     </td>
                     <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
                       <span className={`inline-flex max-w-52 rounded-full border px-3 py-1.5 text-xs font-black ${roleTone(user)}`}>
-                        <span className="truncate">{profileLabel(user)}</span>
+                        <span className="truncate">{profileBadgeMode === "company" ? user.company_names?.[0] || "Sem empresa" : profileLabel(user)}</span>
                       </span>
                     </td>
                     <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
@@ -583,7 +585,7 @@ function UserManagementQueueExperience({
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${statusTone(user)}`}>{statusLabel(user)}</span>
                     </div>
                     <p className="mt-1 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{user.email}</p>
-                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{profileLabel(user)} · {user.company_names?.[0] || "Sem empresa"}</p>
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{profileBadgeMode === "company" ? user.company_names?.[0] || "Sem empresa" : profileLabel(user)} · {user.company_names?.[0] || "Sem empresa"}</p>
                   </div>
                 </div>
               </button>
@@ -660,6 +662,7 @@ export default function AdminUsersPage() {
     () => resolveUserTabParam(searchParams.get("tab")) ?? resolveUserTabFromRole(searchParams.get("role")) ?? "company",
   );
   const [search, setSearch] = useState("");
+  const [companyUserCompanyFilter, setCompanyUserCompanyFilter] = useState("all");
   const [openCreate, setOpenCreate] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
   const openCreateTokenRef = useRef<string | null>(null);
@@ -786,6 +789,33 @@ export default function AdminUsersPage() {
     [searchedUsers, sortUsers],
   );
 
+  const companyUserCompanyFilterOptions = useMemo(() => {
+    const options = companies
+      .map((company) => ({
+        value: company.id,
+        label: company.name,
+        count: companyProfileUsers.filter((user) => (user.company_ids ?? []).includes(company.id)).length,
+      }))
+      .filter((option) => option.count > 0)
+      .sort((left, right) => left.label.localeCompare(right.label, "pt-BR", { sensitivity: "base" }));
+
+    return [
+      {
+        value: "all",
+        label: "Todas as empresas",
+        count: companyProfileUsers.length,
+      },
+      ...options,
+    ];
+  }, [companies, companyProfileUsers]);
+
+  useEffect(() => {
+    if (companyUserCompanyFilter === "all") return;
+
+    const exists = companyUserCompanyFilterOptions.some((option) => option.value === companyUserCompanyFilter);
+    if (!exists) setCompanyUserCompanyFilter("all");
+  }, [companyUserCompanyFilter, companyUserCompanyFilterOptions]);
+
   const testingCompanyUsers = useMemo(
     () => sortUsers(searchedUsers.filter((user) => normalizeProfileKind(user) === "testing_company_user")),
     [searchedUsers, sortUsers],
@@ -871,7 +901,7 @@ export default function AdminUsersPage() {
   );
 
   const totalUsersCount = users.length;
-  const companyAccountsCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "empresa").length, [users]);
+  const companyAccountsCount = 0;
   const companyUsersCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "company_user").length, [users]);
   const testingUsersCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "testing_company_user").length, [users]);
   const adminUsersCount = useMemo(() => users.filter((user) => normalizeProfileKind(user) === "leader_tc").length, [users]);
@@ -946,7 +976,7 @@ export default function AdminUsersPage() {
 
   const currentTabTotal =
     activeTab === "company"
-      ? companyAccounts.length + companyProfileUsers.length
+      ? companyProfileUsers.length
       : activeTab === "testing"
         ? testingCompanyUsers.length
         : activeTab === "support"
@@ -954,11 +984,14 @@ export default function AdminUsersPage() {
           : adminUsers.length;
   const hasSearch = !!search.trim();
   const currentTabUsers = useMemo(() => {
-    if (activeTab === "company") return sortUsers([...companyAccounts, ...companyProfileUsers]);
+    if (activeTab === "company") {
+      if (companyUserCompanyFilter === "all") return companyProfileUsers;
+      return companyProfileUsers.filter((user) => (user.company_ids ?? []).includes(companyUserCompanyFilter));
+    }
     if (activeTab === "testing") return testingCompanyUsers;
     if (activeTab === "support") return supportUsers;
     return adminUsers;
-  }, [activeTab, adminUsers, companyAccounts, companyProfileUsers, sortUsers, supportUsers, testingCompanyUsers]);
+  }, [activeTab, adminUsers, companyProfileUsers, companyUserCompanyFilter, supportUsers, testingCompanyUsers]);
   const currentTabCopy = useMemo(() => {
     if (activeTab === "testing") {
       return {
@@ -985,9 +1018,9 @@ export default function AdminUsersPage() {
       };
     }
     return {
-      title: "Fila de empresa e usuários",
-      description: "Listagem de empresas institucionais e usuários da empresa, no mesmo padrão da fila de solicitações.",
-      emptyTitle: "Nenhum perfil da empresa encontrado",
+      title: "Fila de usuários da empresa",
+      description: "Listagem apenas dos usuários vinculados às empresas. Empresas institucionais ficam em Gestão de Empresas.",
+      emptyTitle: "Nenhum usuário da empresa encontrado",
       emptyDescription: "Ajuste os filtros ou crie um usuário da empresa direto nesta tela.",
     };
   }, [activeTab]);
@@ -1013,8 +1046,7 @@ export default function AdminUsersPage() {
         <Breadcrumb
           items={[
             { label: "Admin", href: "/admin/dashboard" },
-            { label: "Empresas", href: "/admin/clients" },
-            { label: "Gestao de usuários" },
+            { label: "Gestão de usuários" },
           ]}
         />
 
@@ -1024,15 +1056,12 @@ export default function AdminUsersPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuários</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuários da plataforma</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                Gerencie usuários por contexto: empresa, usuários TC, lideranca e suporte técnico.
+                Gerencie usuários por contexto: usuários da empresa, usuários TC, liderança e suporte técnico.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visíveis
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiHome className="h-4 w-4" /> {companyAccountsCount} Empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiUsers className="h-4 w-4" /> {companyUsersCount} Usuário da empresa
@@ -1063,7 +1092,7 @@ export default function AdminUsersPage() {
               <div className="mt-4">
                 <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                   <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Empresa e usuários da empresa
+                    Usuários da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                     Usuários TC
@@ -1105,6 +1134,30 @@ export default function AdminUsersPage() {
 
             {error ? <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div> : null}
 
+            {activeTab === "company" ? (
+              <div className="mt-5 rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-4">
+                <label className="block text-xs font-black uppercase tracking-[0.18em] text-(--tc-accent,#ef0001)">
+                  Empresa do usuário
+                </label>
+                <select
+                  value={companyUserCompanyFilter}
+                  onChange={(event) => setCompanyUserCompanyFilter(event.target.value)}
+                  className="mt-2 h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+                  data-testid="company-user-company-filter"
+                  aria-label="Filtrar usuários da empresa por empresa"
+                >
+                  {companyUserCompanyFilterOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label} ({option.count})
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs font-semibold text-(--tc-text-secondary,#4b5563)">
+                  Usuários da empresa precisam ficar separados pela empresa onde trabalham. Empresa institucional fica em Gestão de Empresas.
+                </p>
+              </div>
+            ) : null}
+
             <UserManagementQueueExperience
               title={currentTabCopy.title}
               description={currentTabCopy.description}
@@ -1124,6 +1177,7 @@ export default function AdminUsersPage() {
               emptyTitle={currentTabCopy.emptyTitle}
               emptyDescription={currentTabCopy.emptyDescription}
               searchInputRef={searchInputRef}
+              profileBadgeMode={activeTab === "company" ? "company" : "profile"}
             />
 
             {false ? (
@@ -1152,8 +1206,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
                       <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum perfil da empresa encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou empresa institucional nem usuários da empresa.</p>
+                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuário da empresa encontrado</h3>
+                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou usuários da empresa.</p>
                       </div>
                     </div>
                   ) : (
@@ -1382,7 +1436,7 @@ export default function AdminUsersPage() {
       {userAccess.canCreateUsers ? (
         <CreateUserModal
           open={openCreate}
-          clientId={null}
+          clientId={activeTab === "company" && companyUserCompanyFilter !== "all" ? companyUserCompanyFilter : null}
           clients={companies}
           companyOptional={createModalConfig.companyOptional}
           showCompanyField={createModalConfig.showCompanyField}

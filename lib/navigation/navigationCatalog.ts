@@ -557,14 +557,14 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "users-create-company-user-internal",
         routeId: "usuarios.criar-usuario-empresa",
-        label: "Criar Usuário da Empresa",
+        label: "Criar usuário da empresa",
         iconKey: "user-plus",
         module: "users",
         href: "/admin/users?tab=company&modal=create&role=company_user",
         action: "openCreateModal",
         allowedRoles: PRIVILEGED,
         favoriteEnabled: true,
-        group: "Empresas",
+        group: "Usuários da empresa",
         testId: "nav-users-create-company-user-internal",
       },
       {

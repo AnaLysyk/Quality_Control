@@ -1,0 +1,969 @@
+===== GATE ECOSSISTEMA AVATAR / CADASTROS =====
+Gerado em: 06/29/2026 18:30:28
+
+===== 1) Status local =====
+ M app/components/UserAvatar.tsx
+ M app/login/access-request/AccessRequestClient.tsx
+ M app/settings/profile/page.tsx
+ M lib/accessRequestsV2/service.ts
+?? gate-ecossistema-avatar-cadastros.txt
+
+
+===== 2) Meu Perfil - AvatarLibraryDialog =====
+
+  app\settings\profile\page.tsx:14:import { FiAlertCircle, FiCheckCircle, FiChevronDown, FiEye, FiEyeOff, FiSearch, FiTrash2, FiUpload } from "react-icons/fi";
+  app\settings\profile\page.tsx:15:import Breadcrumb from "@/components/Breadcrumb";
+  app\settings\profile\page.tsx:16:import ConfirmDialog from "@/components/ConfirmDialog";
+  app\settings\profile\page.tsx:17:import UserAvatar from "@/components/UserAvatar";
+> app\settings\profile\page.tsx:18:import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";
+  app\settings\profile\page.tsx:19:import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  app\settings\profile\page.tsx:20:import { publishAuthUser, useAuthUser } from "@/hooks/useAuthUser";
+  app\settings\profile\page.tsx:21:import { useI18n } from "@/hooks/useI18n";
+  app\settings\profile\page.tsx:22:import { useAppSettings, type Language, type Theme } from "@/context/AppSettingsContext";
+  app\settings\profile\page.tsx:23:import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+  app\settings\profile\page.tsx:24:import { fetchApi } from "@/lib/api";
+  app\settings\profile\page.tsx:25:import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
+  app\settings\profile\page.tsx:26:import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
+  app\settings\profile\page.tsx:27:import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
+  app\settings\profile\page.tsx:28:import { hasPermissionAccess, normalizePermissionMatrix, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
+  app\settings\profile\page.tsx:499:function isBlobAvatarUrl(value?: string | null) {
+  app\settings\profile\page.tsx:500:  return typeof value === "string" && value.startsWith("blob:");
+  app\settings\profile\page.tsx:501:}
+  app\settings\profile\page.tsx:502:
+> app\settings\profile\page.tsx:503:function resolveProfileAvatarLibraryKind(value?: string | null): AvatarLibraryChoice["avatarKind"] {
+  app\settings\profile\page.tsx:504:  const normalized = typeof value === "string" ? value.trim() : "";
+  app\settings\profile\page.tsx:505:  if (!normalized) return "default";
+  app\settings\profile\page.tsx:506:  if (!/^(https?:\/\/|\/|blob:|data:)/i.test(normalized)) return "emoji";
+  app\settings\profile\page.tsx:507:  if (/\.gif(?:$|\?)/i.test(normalized) || normalized.includes("media.giphy.com")) return "gif";
+  app\settings\profile\page.tsx:508:  return "image";
+  app\settings\profile\page.tsx:509:}
+  app\settings\profile\page.tsx:510:
+  app\settings\profile\page.tsx:511:function PanelHeader({
+  app\settings\profile\page.tsx:512:  title,
+  app\settings\profile\page.tsx:513:  description,
+  app\settings\profile\page.tsx:708:  const [profileUploadedAvatarUrl, setProfileUploadedAvatarUrl] = useState("");
+  app\settings\profile\page.tsx:709:  const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
+  app\settings\profile\page.tsx:710:  const [profileAvatarSource, setProfileAvatarSource] = useState<AvatarSource>(null);
+  app\settings\profile\page.tsx:711:  const [profileAvatarDirty, setProfileAvatarDirty] = useState(false);
+> app\settings\profile\page.tsx:712:  const [profileAvatarLibraryOpen, setProfileAvatarLibraryOpen] = useState(false);
+  app\settings\profile\page.tsx:713:  const [profileError, setProfileError] = useState<string | null>(null);
+  app\settings\profile\page.tsx:714:  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
+  app\settings\profile\page.tsx:715:  const [profileSummary, setProfileSummary] = useState<ProfileSummary | null>(null);
+  app\settings\profile\page.tsx:716:  const [profileSummaryLoading, setProfileSummaryLoading] = useState(false);
+  app\settings\profile\page.tsx:717:  const [profileLoading, setProfileLoading] = useState(false);
+  app\settings\profile\page.tsx:718:  const [avatarUploading, setAvatarUploading] = useState(false);
+  app\settings\profile\page.tsx:719:  const [generatingUsername, setGeneratingUsername] = useState(false);
+  app\settings\profile\page.tsx:720:  const [generatedUsernameHistory, setGeneratedUsernameHistory] = useState<string[]>([]);
+  app\settings\profile\page.tsx:721:  const [deleteUserLoading, setDeleteUserLoading] = useState(false);
+  app\settings\profile\page.tsx:722:  const [deleteUserError, setDeleteUserError] = useState<string | null>(null);
+  app\settings\profile\page.tsx:1643:      setDeleteRequestLoading(false);
+  app\settings\profile\page.tsx:1644:    }
+  app\settings\profile\page.tsx:1645:  }
+  app\settings\profile\page.tsx:1646:
+> app\settings\profile\page.tsx:1647:  function handleProfileAvatarLibraryChoice(choice: AvatarLibraryChoice) {
+  app\settings\profile\page.tsx:1648:    setProfileError(null);
+  app\settings\profile\page.tsx:1649:    setProfileSuccess(null);
+  app\settings\profile\page.tsx:1650:
+  app\settings\profile\page.tsx:1651:    if (choice.avatarKind === "default") {
+  app\settings\profile\page.tsx:1652:      setProfileAvatarSource(null);
+  app\settings\profile\page.tsx:1653:      setProfileAvatarUrlInput("");
+  app\settings\profile\page.tsx:1654:      setProfileAvatarFile(null);
+  app\settings\profile\page.tsx:1655:      setProfileUploadedAvatarUrl("");
+  app\settings\profile\page.tsx:1656:      setProfileAvatarDirty(true);
+  app\settings\profile\page.tsx:1657:      setProfileSuccess("Avatar removido. Salve para aplicar no perfil.");
+  app\settings\profile\page.tsx:2970:                  name={heroName}
+  app\settings\profile\page.tsx:2971:                  showFallback={!avatarLoadingPlaceholder}
+  app\settings\profile\page.tsx:2972:                  size="lg"
+  app\settings\profile\page.tsx:2973:                  editable
+> app\settings\profile\page.tsx:2974:                  onEdit={() => setProfileAvatarLibraryOpen(true)}
+  app\settings\profile\page.tsx:2975:                  className="h-24 w-24 shrink-0 sm:h-28 sm:w-28"
+  app\settings\profile\page.tsx:2976:                  frameClassName={heroAvatarUrl ? "border-0 bg-transparent ring-0 shadow-[0_16px_34px_rgba(1,24,72,0.22)]" : "border 
+border-white/28 bg-white/10 text-white shadow-[0_16px_34px_rgba(1,24,72,0.18)]"}
+  app\settings\profile\page.tsx:2977:                  fallbackClassName="text-xl font-bold tracking-[0.18em] text-white"
+  app\settings\profile\page.tsx:2978:                  buttonClassName="bg-(--tc-primary) text-white hover:bg-(--tc-accent)"
+  app\settings\profile\page.tsx:2979:                />
+  app\settings\profile\page.tsx:2980:
+  app\settings\profile\page.tsx:2981:                <div className="min-w-0 space-y-3">
+  app\settings\profile\page.tsx:2982:                  <div className="space-y-2">
+  app\settings\profile\page.tsx:2983:                    <p className="tc-hero-kicker">Usuário</p>
+  app\settings\profile\page.tsx:2984:                    <h1 className="tc-hero-title">{heroName}</h1>
+  app\settings\profile\page.tsx:3245:                  name={heroName}
+  app\settings\profile\page.tsx:3246:                  showFallback={!avatarLoadingPlaceholder}
+  app\settings\profile\page.tsx:3247:                  size="xl"
+  app\settings\profile\page.tsx:3248:                  editable
+> app\settings\profile\page.tsx:3249:                  onEdit={() => setProfileAvatarLibraryOpen(true)}
+  app\settings\profile\page.tsx:3250:                  frameClassName="border-4 border-white bg-transparent shadow-[0_20px_44px_rgba(15,23,42,0.16)] ring-1 ring-slate-200/80 
+dark:ring-white/10"
+  app\settings\profile\page.tsx:3251:                  fallbackClassName="text-2xl font-bold tracking-[0.18em] text-slate-600 dark:text-white"
+  app\settings\profile\page.tsx:3252:                  buttonClassName="bg-(--tc-primary) text-white hover:bg-(--tc-accent)"
+  app\settings\profile\page.tsx:3253:                />
+  app\settings\profile\page.tsx:3254:                <div className="space-y-1">
+  app\settings\profile\page.tsx:3255:                  <div className="text-xs font-semibold text-(--tc-accent) dark:text-[#ff8a8a]">
+  app\settings\profile\page.tsx:3256:                    {avatarUploading ? "Enviando foto..." : profileAvatarDirty ? "O novo avatar aparece aqui antes de salvar." : "Use upload, 
+GIF, emoji ou URL como foto do perfil."}
+  app\settings\profile\page.tsx:3257:                  </div>
+  app\settings\profile\page.tsx:3258:                </div>
+  app\settings\profile\page.tsx:3259:                <input
+  app\settings\profile\page.tsx:3471:          </div>
+  app\settings\profile\page.tsx:3472:        </section>
+  app\settings\profile\page.tsx:3473:
+  app\settings\profile\page.tsx:3474:
+> app\settings\profile\page.tsx:3475:        <AvatarLibraryDialog
+> app\settings\profile\page.tsx:3476:          open={profileAvatarLibraryOpen}
+> app\settings\profile\page.tsx:3477:          onOpenChange={setProfileAvatarLibraryOpen}
+  app\settings\profile\page.tsx:3478:          value={profileAvatarDirty ? activeAvatarUrl : persistedAvatarUrl}
+> app\settings\profile\page.tsx:3479:          kind={resolveProfileAvatarLibraryKind(profileAvatarDirty ? activeAvatarUrl : persistedAvatarUrl)}
+> app\settings\profile\page.tsx:3480:          onSelect={handleProfileAvatarLibraryChoice}
+  app\settings\profile\page.tsx:3481:        />
+  app\settings\profile\page.tsx:3482:        <ConfirmDialog
+  app\settings\profile\page.tsx:3483:          open={!!usernameReplacementDialog}
+  app\settings\profile\page.tsx:3484:          title="Trocar login da conta"
+  app\settings\profile\page.tsx:3485:          description={
+  app\settings\profile\page.tsx:3486:            usernameReplacementDialog
+  app\settings\profile\page.tsx:3487:              ? usernameReplacementDialog.mode === "generate"
+  app\settings\profile\page.tsx:3488:                ? `O login atual @${usernameReplacementDialog.currentUsername} sera substituido por @${usernameReplacementDialog.nextUsername}. 
+O login atual deixara de funcionar.`
+  app\settings\profile\page.tsx:3489:                : `Salvar com o campo de usuario em branco vai substituir o login atual @${usernameReplacementDialog.currentUsername} por um 
+novo login gerado automaticamente. O login atual deixara de funcionar.`
+  app\settings\profile\page.tsx:3490:              : undefined
+
+
+
+
+===== 3) Solicitar Acesso - AvatarLibraryDialog =====
+
+  app\login\access-request\AccessRequestClient.tsx:14:import { normalizeRequestProfileType, requestProfileTypeNeedsCompany, type RequestProfileType } from "@/lib/requestRouting";
+  app\login\access-request\AccessRequestClient.tsx:15:import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
+  app\login\access-request\AccessRequestClient.tsx:16:import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  app\login\access-request\AccessRequestClient.tsx:17:import UserAvatar from "@/components/UserAvatar";
+> app\login\access-request\AccessRequestClient.tsx:18:import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";
+  app\login\access-request\AccessRequestClient.tsx:19:import { useI18n } from "@/hooks/useI18n";
+  app\login\access-request\AccessRequestClient.tsx:20:import { normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
+  app\login\access-request\AccessRequestClient.tsx:21:import { ACCESS_REQUEST_BASE_ADJUSTMENT_OPTIONS, ACCESS_REQUEST_COMPANY_ADJUSTMENT_OPTIONS } from 
+"@/lib/accessRequestAdjustmentFields";
+  app\login\access-request\AccessRequestClient.tsx:22:
+  app\login\access-request\AccessRequestClient.tsx:23:const ACCESS_OPTIONS = [
+  app\login\access-request\AccessRequestClient.tsx:24:  {
+  app\login\access-request\AccessRequestClient.tsx:25:    value: "empresa",
+  app\login\access-request\AccessRequestClient.tsx:26:    label: "Empresa",
+  app\login\access-request\AccessRequestClient.tsx:27:    hint: "Cadastro institucional de uma nova empresa.",
+  app\login\access-request\AccessRequestClient.tsx:28:  },
+  app\login\access-request\AccessRequestClient.tsx:212:  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  app\login\access-request\AccessRequestClient.tsx:213:  const [lookupSaving, setLookupSaving] = useState(false);
+  app\login\access-request\AccessRequestClient.tsx:214:  const [isLookupOpen, setIsLookupOpen] = useState(false);
+  app\login\access-request\AccessRequestClient.tsx:215:  const [isRequestOpen, setIsRequestOpen] = useState(false);
+> app\login\access-request\AccessRequestClient.tsx:216:  const [requestAvatarLibraryOpen, setRequestAvatarLibraryOpen] = useState(false);
+> app\login\access-request\AccessRequestClient.tsx:217:  const [requestAvatarKind, setRequestAvatarKind] = useState<AvatarLibraryChoice["avatarKind"]>("default");
+> app\login\access-request\AccessRequestClient.tsx:218:  const [requestAvatarValue, setRequestAvatarValue] = useState("");
+  app\login\access-request\AccessRequestClient.tsx:219:  const [requestAvatarLabel, setRequestAvatarLabel] = useState("Perfil sem foto");
+  app\login\access-request\AccessRequestClient.tsx:220:
+  app\login\access-request\AccessRequestClient.tsx:221:  const requestAvatarPreviewName =
+  app\login\access-request\AccessRequestClient.tsx:222:    accessType === "empresa"
+  app\login\access-request\AccessRequestClient.tsx:223:      ? companyDraft.companyName || fullName || email || "Novo cadastro"
+  app\login\access-request\AccessRequestClient.tsx:224:      : fullName || email || requestedUser || "Novo perfil";
+  app\login\access-request\AccessRequestClient.tsx:225:
+> app\login\access-request\AccessRequestClient.tsx:226:  const requestAvatarPreviewSrc = requestAvatarKind === "default" ? null : requestAvatarValue || null;
+  app\login\access-request\AccessRequestClient.tsx:227:
+  app\login\access-request\AccessRequestClient.tsx:228:  function handleRequestAvatarChoice(choice: AvatarLibraryChoice) {
+  app\login\access-request\AccessRequestClient.tsx:229:    setError(null);
+  app\login\access-request\AccessRequestClient.tsx:230:
+> app\login\access-request\AccessRequestClient.tsx:231:    if (choice.avatarValue.startsWith("data:image/") && choice.avatarValue.length > 500000) {
+  app\login\access-request\AccessRequestClient.tsx:232:      setError("Imagem muito grande para salvar na solicitação. Use um GIF por URL, emoji, ícone ou uma imagem menor.");
+  app\login\access-request\AccessRequestClient.tsx:233:      return;
+  app\login\access-request\AccessRequestClient.tsx:234:    }
+  app\login\access-request\AccessRequestClient.tsx:235:
+> app\login\access-request\AccessRequestClient.tsx:236:    setRequestAvatarKind(choice.avatarKind);
+> app\login\access-request\AccessRequestClient.tsx:237:    setRequestAvatarValue(choice.avatarValue);
+  app\login\access-request\AccessRequestClient.tsx:238:    setRequestAvatarLabel(choice.avatarLabel || "Avatar do cadastro");
+  app\login\access-request\AccessRequestClient.tsx:239:  }
+  app\login\access-request\AccessRequestClient.tsx:240:
+  app\login\access-request\AccessRequestClient.tsx:241:  function clearRequestAvatar() {
+> app\login\access-request\AccessRequestClient.tsx:242:    setRequestAvatarKind("default");
+> app\login\access-request\AccessRequestClient.tsx:243:    setRequestAvatarValue("");
+  app\login\access-request\AccessRequestClient.tsx:244:    setRequestAvatarLabel("Perfil sem foto");
+  app\login\access-request\AccessRequestClient.tsx:245:  }
+  app\login\access-request\AccessRequestClient.tsx:246:
+  app\login\access-request\AccessRequestClient.tsx:247:  const generateRequestedUser = () => {
+  app\login\access-request\AccessRequestClient.tsx:248:    const source =
+  app\login\access-request\AccessRequestClient.tsx:249:      accessType === "empresa"
+  app\login\access-request\AccessRequestClient.tsx:250:        ? companyDraft.companyName || fullName || email
+  app\login\access-request\AccessRequestClient.tsx:251:        : fullName || companyDraft.companyName || email;
+  app\login\access-request\AccessRequestClient.tsx:252:
+  app\login\access-request\AccessRequestClient.tsx:253:    const suggested = normalizeSuggestedUser(source);
+  app\login\access-request\AccessRequestClient.tsx:532:          name: normalizedFullName,
+  app\login\access-request\AccessRequestClient.tsx:533:          user: normalizedRequestedUser || undefined,
+  app\login\access-request\AccessRequestClient.tsx:534:          email: normalizedEmail,
+  app\login\access-request\AccessRequestClient.tsx:535:          password: normalizedPassword,
+> app\login\access-request\AccessRequestClient.tsx:536:          avatarKind: requestAvatarKind,
+> app\login\access-request\AccessRequestClient.tsx:537:          avatarValue: requestAvatarValue,
+  app\login\access-request\AccessRequestClient.tsx:538:          avatarLabel: requestAvatarLabel,
+  app\login\access-request\AccessRequestClient.tsx:539:          companyDetails: {
+  app\login\access-request\AccessRequestClient.tsx:540:            companyName: normalizedCompanyDraft.companyName,
+  app\login\access-request\AccessRequestClient.tsx:541:            cnpj: normalizedCompanyDraft.companyTaxId,
+  app\login\access-request\AccessRequestClient.tsx:542:            companyTaxId: normalizedCompanyDraft.companyTaxId,
+  app\login\access-request\AccessRequestClient.tsx:543:            cep: normalizedCompanyDraft.companyZip,
+  app\login\access-request\AccessRequestClient.tsx:544:            address: normalizedCompanyDraft.companyAddress,
+  app\login\access-request\AccessRequestClient.tsx:545:            phone: normalizedCompanyDraft.companyPhone,
+  app\login\access-request\AccessRequestClient.tsx:546:            website: normalizedCompanyDraft.companyWebsite,
+  app\login\access-request\AccessRequestClient.tsx:547:            linkedin: normalizedCompanyDraft.companyLinkedin,
+  app\login\access-request\AccessRequestClient.tsx:586:      setTitulo("");
+  app\login\access-request\AccessRequestClient.tsx:587:      setDescricao("");
+  app\login\access-request\AccessRequestClient.tsx:588:      setPassword("");
+  app\login\access-request\AccessRequestClient.tsx:589:      setAccessType("testing_company_user");
+> app\login\access-request\AccessRequestClient.tsx:590:      setRequestAvatarLibraryOpen(false);
+> app\login\access-request\AccessRequestClient.tsx:591:      setRequestAvatarKind("default");
+> app\login\access-request\AccessRequestClient.tsx:592:      setRequestAvatarValue("");
+  app\login\access-request\AccessRequestClient.tsx:593:      setRequestAvatarLabel("Perfil sem foto");
+  app\login\access-request\AccessRequestClient.tsx:594:    } catch (err) {
+  app\login\access-request\AccessRequestClient.tsx:595:      const message = err instanceof Error ? err.message : t("login.unexpectedError");
+  app\login\access-request\AccessRequestClient.tsx:596:      setError(message);
+  app\login\access-request\AccessRequestClient.tsx:597:    } finally {
+  app\login\access-request\AccessRequestClient.tsx:598:      setLoading(false);
+  app\login\access-request\AccessRequestClient.tsx:599:    }
+  app\login\access-request\AccessRequestClient.tsx:600:  };
+  app\login\access-request\AccessRequestClient.tsx:601:
+  app\login\access-request\AccessRequestClient.tsx:602:  const statusLabel = (status: string) => {
+  app\login\access-request\AccessRequestClient.tsx:1126:                  <p className="text-xs font-medium text-[#64748b]">{selectedAccessOption.hint}</p>
+  app\login\access-request\AccessRequestClient.tsx:1127:                </div>
+  app\login\access-request\AccessRequestClient.tsx:1128:
+  app\login\access-request\AccessRequestClient.tsx:1129:                <div
+> app\login\access-request\AccessRequestClient.tsx:1130:                  data-testid="request-access-avatar-card"
+  app\login\access-request\AccessRequestClient.tsx:1131:                  className="rounded-2xl border border-[#011848]/10 bg-white px-4 py-4 
+shadow-[0_14px_34px_rgba(1,24,72,0.08)]"
+  app\login\access-request\AccessRequestClient.tsx:1132:                >
+  app\login\access-request\AccessRequestClient.tsx:1133:                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+  app\login\access-request\AccessRequestClient.tsx:1134:                    <UserAvatar
+  app\login\access-request\AccessRequestClient.tsx:1135:                      src={requestAvatarPreviewSrc}
+  app\login\access-request\AccessRequestClient.tsx:1136:                      name={requestAvatarPreviewName}
+  app\login\access-request\AccessRequestClient.tsx:1137:                      size="lg"
+  app\login\access-request\AccessRequestClient.tsx:1138:                      editable
+> app\login\access-request\AccessRequestClient.tsx:1139:                      onEdit={() => setRequestAvatarLibraryOpen(true)}
+  app\login\access-request\AccessRequestClient.tsx:1140:                      frameClassName="border-4 border-white bg-slate-100 shadow-[0_16px_34px_rgba(15,23,42,0.14)] ring-1 
+ring-[#011848]/10"
+  app\login\access-request\AccessRequestClient.tsx:1141:                      fallbackClassName="text-xl font-black tracking-[0.18em] text-slate-600"
+  app\login\access-request\AccessRequestClient.tsx:1142:                      buttonClassName="bg-[#011848] text-white hover:bg-[#ef0001]"
+  app\login\access-request\AccessRequestClient.tsx:1143:                      buttonLabel="Escolher foto, GIF ou emoji do perfil"
+  app\login\access-request\AccessRequestClient.tsx:1144:                    />
+  app\login\access-request\AccessRequestClient.tsx:1145:
+  app\login\access-request\AccessRequestClient.tsx:1146:                    <div className="min-w-0 flex-1 space-y-2">
+  app\login\access-request\AccessRequestClient.tsx:1147:                      <div>
+  app\login\access-request\AccessRequestClient.tsx:1148:                        <p className="text-sm font-black text-[#011848]">Foto do perfil</p>
+  app\login\access-request\AccessRequestClient.tsx:1149:                        <p className="mt-1 text-xs font-semibold leading-5 text-[#64748b]">
+  app\login\access-request\AccessRequestClient.tsx:1153:
+  app\login\access-request\AccessRequestClient.tsx:1154:                      <div className="flex flex-wrap items-center gap-2">
+  app\login\access-request\AccessRequestClient.tsx:1155:                        <button
+  app\login\access-request\AccessRequestClient.tsx:1156:                          type="button"
+> app\login\access-request\AccessRequestClient.tsx:1157:                          onClick={() => setRequestAvatarLibraryOpen(true)}
+  app\login\access-request\AccessRequestClient.tsx:1158:                          className="rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-2 text-xs font-black 
+uppercase tracking-[0.14em] text-white shadow-sm transition hover:scale-[1.02]"
+  app\login\access-request\AccessRequestClient.tsx:1159:                        >
+  app\login\access-request\AccessRequestClient.tsx:1160:                          Escolher avatar
+  app\login\access-request\AccessRequestClient.tsx:1161:                        </button>
+  app\login\access-request\AccessRequestClient.tsx:1162:
+> app\login\access-request\AccessRequestClient.tsx:1163:                        {requestAvatarKind !== "default" ? (
+  app\login\access-request\AccessRequestClient.tsx:1164:                          <button
+  app\login\access-request\AccessRequestClient.tsx:1165:                            type="button"
+  app\login\access-request\AccessRequestClient.tsx:1166:                            onClick={clearRequestAvatar}
+  app\login\access-request\AccessRequestClient.tsx:1167:                            className="rounded-xl border border-[#011848]/15 bg-white px-4 py-2 text-xs font-black uppercase 
+tracking-[0.14em] text-[#011848] transition hover:bg-[#011848]/5"
+  app\login\access-request\AccessRequestClient.tsx:1168:                          >
+  app\login\access-request\AccessRequestClient.tsx:1169:                            Remover
+  app\login\access-request\AccessRequestClient.tsx:1170:                          </button>
+  app\login\access-request\AccessRequestClient.tsx:1171:                        ) : null}
+  app\login\access-request\AccessRequestClient.tsx:1172:                      </div>
+  app\login\access-request\AccessRequestClient.tsx:1173:
+  app\login\access-request\AccessRequestClient.tsx:1177:                    </div>
+  app\login\access-request\AccessRequestClient.tsx:1178:                  </div>
+  app\login\access-request\AccessRequestClient.tsx:1179:                </div>
+  app\login\access-request\AccessRequestClient.tsx:1180:
+> app\login\access-request\AccessRequestClient.tsx:1181:                <AvatarLibraryDialog
+> app\login\access-request\AccessRequestClient.tsx:1182:                  open={requestAvatarLibraryOpen}
+> app\login\access-request\AccessRequestClient.tsx:1183:                  onOpenChange={setRequestAvatarLibraryOpen}
+> app\login\access-request\AccessRequestClient.tsx:1184:                  value={requestAvatarValue}
+> app\login\access-request\AccessRequestClient.tsx:1185:                  kind={requestAvatarKind}
+  app\login\access-request\AccessRequestClient.tsx:1186:                  onSelect={handleRequestAvatarChoice}
+  app\login\access-request\AccessRequestClient.tsx:1187:                />
+  app\login\access-request\AccessRequestClient.tsx:1188:
+  app\login\access-request\AccessRequestClient.tsx:1189:                {requestProfileTypeNeedsCompany(accessType) ? (
+  app\login\access-request\AccessRequestClient.tsx:1190:                  <label className={labelClass}>
+  app\login\access-request\AccessRequestClient.tsx:1191:                    Empresa vinculada
+  app\login\access-request\AccessRequestClient.tsx:1192:                    <select
+  app\login\access-request\AccessRequestClient.tsx:1193:                      data-testid="request-access-company-input"
+  app\login\access-request\AccessRequestClient.tsx:1194:                      value={clientId}
+  app\login\access-request\AccessRequestClient.tsx:1195:                      onChange={(event) => setClientId(event.target.value)}
+
+
+
+
+===== 4) Criar/visualizar usuário =====
+
+  app\admin\users\components\CreateUserModal.tsx:30:    email?: string | null;
+  app\admin\users\components\CreateUserModal.tsx:31:    phone?: string | null;
+  app\admin\users\components\CreateUserModal.tsx:32:    role?: string | null;
+  app\admin\users\components\CreateUserModal.tsx:33:    jobTitle?: string | null;
+  app\admin\users\components\CreateUserModal.tsx:34:    linkedin?: string | null;
+> app\admin\users\components\CreateUserModal.tsx:35:    avatarUrl?: string | null;
+  app\admin\users\components\CreateUserModal.tsx:36:    clientId?: string | null;
+  app\admin\users\components\CreateUserModal.tsx:37:    active?: boolean | null;
+  app\admin\users\components\CreateUserModal.tsx:38:  };
+  app\admin\users\components\CreateUserModal.tsx:39:  onClose: () => void;
+  app\admin\users\components\CreateUserModal.tsx:40:  onCreated?: () => void | Promise<void>;
+  app\admin\users\components\CreateUserModal.tsx:41:  onUpdated?: () => void | Promise<void>;
+  app\admin\users\components\CreateUserModal.tsx:42:  onUpdate?: (userId: string, payload: Record<string, unknown>) => void | Promise<void>;
+  app\admin\users\components\CreateUserModal.tsx:43:  initialRole?: string;
+  app\admin\users\components\CreateUserModal.tsx:44:  lockRole?: boolean;
+  app\admin\users\components\CreateUserModal.tsx:45:  companyOptional?: boolean;
+  app\admin\users\components\CreateUserModal.tsx:46:  showCompanyField?: boolean;
+  app\admin\users\components\CreateUserModal.tsx:47:  requireCompanySelection?: boolean;
+  app\admin\users\components\CreateUserModal.tsx:49:  subtitle?: string;
+  app\admin\users\components\CreateUserModal.tsx:50:  submitLabel?: string;
+  app\admin\users\components\CreateUserModal.tsx:51:  allowedRoles?: FixedProfileKind[];
+  app\admin\users\components\CreateUserModal.tsx:52:};
+  app\admin\users\components\CreateUserModal.tsx:53:
+> app\admin\users\components\CreateUserModal.tsx:54:const ROLE_OPTIONS: Array<{ value: FixedProfileKind; label: string }> = [
+  app\admin\users\components\CreateUserModal.tsx:55:  { value: "empresa", label: "Admin da empresa" },
+> app\admin\users\components\CreateUserModal.tsx:56:  { value: "company_user", label: "Usuário da empresa" },
+> app\admin\users\components\CreateUserModal.tsx:57:  { value: "testing_company_user", label: "Usuário TC" },
+> app\admin\users\components\CreateUserModal.tsx:58:  { value: "leader_tc", label: "Lider TC" },
+> app\admin\users\components\CreateUserModal.tsx:59:  { value: "technical_support", label: "Suporte Técnico" },
+  app\admin\users\components\CreateUserModal.tsx:60:];
+  app\admin\users\components\CreateUserModal.tsx:61:const EMPTY_JOB_TITLE = "__empty_job_title__";
+  app\admin\users\components\CreateUserModal.tsx:62:type RoleValue = FixedProfileKind;
+  app\admin\users\components\CreateUserModal.tsx:63:
+  app\admin\users\components\CreateUserModal.tsx:64:function isValidEmailAddress(value?: string | null) {
+  app\admin\users\components\CreateUserModal.tsx:65:  const source = (value ?? "").trim();
+  app\admin\users\components\CreateUserModal.tsx:66:  if (!source) return false;
+  app\admin\users\components\CreateUserModal.tsx:67:  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(source);
+  app\admin\users\components\CreateUserModal.tsx:68:}
+  app\admin\users\components\CreateUserModal.tsx:69:
+  app\admin\users\components\CreateUserModal.tsx:70:export function CreateUserModal({
+  app\admin\users\components\CreateUserModal.tsx:71:  open,
+  app\admin\users\components\CreateUserModal.tsx:76:  initialData,
+  app\admin\users\components\CreateUserModal.tsx:77:  onClose,
+  app\admin\users\components\CreateUserModal.tsx:78:  onCreated,
+  app\admin\users\components\CreateUserModal.tsx:79:  onUpdated,
+  app\admin\users\components\CreateUserModal.tsx:80:  onUpdate,
+> app\admin\users\components\CreateUserModal.tsx:81:  initialRole = "testing_company_user",
+  app\admin\users\components\CreateUserModal.tsx:82:  lockRole = false,
+  app\admin\users\components\CreateUserModal.tsx:83:  showCompanyField = true,
+  app\admin\users\components\CreateUserModal.tsx:84:  requireCompanySelection = false,
+  app\admin\users\components\CreateUserModal.tsx:85:  title = "Criar usuário",
+  app\admin\users\components\CreateUserModal.tsx:86:  subtitle = "Um convite será enviado por email.",
+  app\admin\users\components\CreateUserModal.tsx:87:  submitLabel = "Criar usuário",
+  app\admin\users\components\CreateUserModal.tsx:88:  allowedRoles,
+  app\admin\users\components\CreateUserModal.tsx:89:}: Props) {
+  app\admin\users\components\CreateUserModal.tsx:90:  const router = useRouter();
+  app\admin\users\components\CreateUserModal.tsx:91:  const [name, setName] = useState("");
+  app\admin\users\components\CreateUserModal.tsx:92:  const [login, setLogin] = useState("");
+  app\admin\users\components\CreateUserModal.tsx:93:  const [password, setPassword] = useState("");
+  app\admin\users\components\CreateUserModal.tsx:94:  const [email, setEmail] = useState("");
+  app\admin\users\components\CreateUserModal.tsx:95:  const [phone, setPhone] = useState("");
+  app\admin\users\components\CreateUserModal.tsx:96:  const [role, setRole] = useState<RoleValue>(() => normalizeEditableProfileRole(initialRole));
+  app\admin\users\components\CreateUserModal.tsx:97:  const [jobTitle, setJobTitle] = useState("");
+  app\admin\users\components\CreateUserModal.tsx:98:  const [linkedin, setLinkedin] = useState("");
+> app\admin\users\components\CreateUserModal.tsx:99:  const [avatarUrl, setAvatarUrl] = useState("");
+  app\admin\users\components\CreateUserModal.tsx:100:  const [theme, setTheme] = useState<Theme>("system");
+  app\admin\users\components\CreateUserModal.tsx:101:  const [language, setLanguage] = useState<Language>("pt-BR");
+  app\admin\users\components\CreateUserModal.tsx:102:  const [message, setMessage] = useState<string | null>(null);
+  app\admin\users\components\CreateUserModal.tsx:103:  const [error, setError] = useState<string | null>(null);
+  app\admin\users\components\CreateUserModal.tsx:104:  const [loading, setLoading] = useState(false);
+  app\admin\users\components\CreateUserModal.tsx:105:  const [generatingLogin, setGeneratingLogin] = useState(false);
+  app\admin\users\components\CreateUserModal.tsx:106:  const [isEditing, setIsEditing] = useState(mode !== "view");
+  app\admin\users\components\CreateUserModal.tsx:107:  const [active, setActive] = useState(true);
+  app\admin\users\components\CreateUserModal.tsx:108:  const [localClientId, setLocalClientId] = useState<string | null>(() => {
+  app\admin\users\components\CreateUserModal.tsx:109:    if (initialData?.clientId) return initialData.clientId;
+  app\admin\users\components\CreateUserModal.tsx:110:    if (clientId) return clientId;
+  app\admin\users\components\CreateUserModal.tsx:111:    if (clients && clients.length === 1) return clients[0].id;
+  app\admin\users\components\CreateUserModal.tsx:118:
+  app\admin\users\components\CreateUserModal.tsx:119:  const normalizedRole = useMemo(() => normalizeEditableProfileRole(role), [role]);
+  app\admin\users\components\CreateUserModal.tsx:120:  const roleOptions = useMemo(
+  app\admin\users\components\CreateUserModal.tsx:121:    () =>
+  app\admin\users\components\CreateUserModal.tsx:122:      allowedRoles?.length
+> app\admin\users\components\CreateUserModal.tsx:123:        ? ROLE_OPTIONS.filter((option) => allowedRoles.includes(option.value))
+> app\admin\users\components\CreateUserModal.tsx:124:        : ROLE_OPTIONS,
+  app\admin\users\components\CreateUserModal.tsx:125:    [allowedRoles],
+  app\admin\users\components\CreateUserModal.tsx:126:  );
+  app\admin\users\components\CreateUserModal.tsx:127:  const requiresClient = useMemo(
+  app\admin\users\components\CreateUserModal.tsx:128:    () =>
+  app\admin\users\components\CreateUserModal.tsx:129:      showCompanyField &&
+  app\admin\users\components\CreateUserModal.tsx:130:      (requireCompanySelection ||
+  app\admin\users\components\CreateUserModal.tsx:131:        (editableProfileNeedsCompany(normalizedRole) &&
+  app\admin\users\components\CreateUserModal.tsx:132:          !editableProfileUsesAutomaticCompany(normalizedRole))),
+  app\admin\users\components\CreateUserModal.tsx:133:    [showCompanyField, requireCompanySelection, normalizedRole],
+  app\admin\users\components\CreateUserModal.tsx:134:  );
+  app\admin\users\components\CreateUserModal.tsx:135:  const requiresPassword = useMemo(
+> app\admin\users\components\CreateUserModal.tsx:136:    () => isCreateMode && normalizedRole === "leader_tc",
+  app\admin\users\components\CreateUserModal.tsx:137:    [isCreateMode, normalizedRole],
+  app\admin\users\components\CreateUserModal.tsx:138:  );
+  app\admin\users\components\CreateUserModal.tsx:139:  const canSubmit = useMemo(
+  app\admin\users\components\CreateUserModal.tsx:140:    () =>
+  app\admin\users\components\CreateUserModal.tsx:141:      !!open &&
+  app\admin\users\components\CreateUserModal.tsx:142:      (!requiresClient || !!localClientId) &&
+  app\admin\users\components\CreateUserModal.tsx:143:      !!name.trim() &&
+  app\admin\users\components\CreateUserModal.tsx:144:      isValidEmailAddress(email) &&
+  app\admin\users\components\CreateUserModal.tsx:145:      (!requiresPassword || password.trim().length >= 8),
+  app\admin\users\components\CreateUserModal.tsx:146:    [open, requiresClient, localClientId, name, email, requiresPassword, password],
+  app\admin\users\components\CreateUserModal.tsx:147:  );
+  app\admin\users\components\CreateUserModal.tsx:148:
+  app\admin\users\components\CreateUserModal.tsx:272:        name: name.trim(),
+  app\admin\users\components\CreateUserModal.tsx:273:        ...(login.trim() ? { user: login.trim() } : {}),
+  app\admin\users\components\CreateUserModal.tsx:274:        ...(isCreateMode && password.trim() ? { password: password.trim() } : {}),
+  app\admin\users\components\CreateUserModal.tsx:275:        email: email.trim(),
+  app\admin\users\components\CreateUserModal.tsx:276:        phone: phone.trim() || undefined,
+> app\admin\users\components\CreateUserModal.tsx:277:        avatar_url: avatarUrl.trim() || undefined,
+  app\admin\users\components\CreateUserModal.tsx:278:        role,
+  app\admin\users\components\CreateUserModal.tsx:279:        client_id: localClientId,
+  app\admin\users\components\CreateUserModal.tsx:280:        job_title: jobTitle.trim() || undefined,
+  app\admin\users\components\CreateUserModal.tsx:281:        linkedin_url: linkedin.trim() || undefined,
+  app\admin\users\components\CreateUserModal.tsx:282:        active,
+  app\admin\users\components\CreateUserModal.tsx:283:      };
+  app\admin\users\components\CreateUserModal.tsx:284:      if (isCreateMode) {
+  app\admin\users\components\CreateUserModal.tsx:285:        const res = await fetch("/api/admin/users", {
+  app\admin\users\components\CreateUserModal.tsx:286:          method: "POST",
+  app\admin\users\components\CreateUserModal.tsx:287:          headers: { "Content-Type": "application/json" },
+  app\admin\users\components\CreateUserModal.tsx:288:          credentials: "include",
+  app\admin\users\components\CreateUserModal.tsx:289:          body: JSON.stringify(payload),
+  app\admin\users\components\CreateUserModal.tsx:369:    setPassword("");
+  app\admin\users\components\CreateUserModal.tsx:370:    setEmail("");
+  app\admin\users\components\CreateUserModal.tsx:371:    setPhone("");
+  app\admin\users\components\CreateUserModal.tsx:372:    setJobTitle("");
+  app\admin\users\components\CreateUserModal.tsx:373:    setLinkedin("");
+> app\admin\users\components\CreateUserModal.tsx:374:    setAvatarUrl("");
+  app\admin\users\components\CreateUserModal.tsx:375:    setTheme("system");
+  app\admin\users\components\CreateUserModal.tsx:376:    setLanguage("pt-BR");
+  app\admin\users\components\CreateUserModal.tsx:377:    setRole(normalizeEditableProfileRole(initialRole));
+  app\admin\users\components\CreateUserModal.tsx:378:    setActive(true);
+  app\admin\users\components\CreateUserModal.tsx:379:    if (clientId) setLocalClientId(clientId);
+  app\admin\users\components\CreateUserModal.tsx:380:    else if (clients && clients.length === 1) setLocalClientId(clients[0].id);
+  app\admin\users\components\CreateUserModal.tsx:381:    setMessage(null);
+  app\admin\users\components\CreateUserModal.tsx:382:    setError(null);
+  app\admin\users\components\CreateUserModal.tsx:383:  }
+  app\admin\users\components\CreateUserModal.tsx:384:
+  app\admin\users\components\CreateUserModal.tsx:385:  function applyInitialForm() {
+  app\admin\users\components\CreateUserModal.tsx:386:    setMessage(null);
+  app\admin\users\components\CreateUserModal.tsx:394:    setPassword("");
+  app\admin\users\components\CreateUserModal.tsx:395:    setEmail(initialData?.email ?? "");
+  app\admin\users\components\CreateUserModal.tsx:396:    setPhone(initialData?.phone ?? "");
+  app\admin\users\components\CreateUserModal.tsx:397:    setJobTitle(initialData?.jobTitle ?? "");
+  app\admin\users\components\CreateUserModal.tsx:398:    setLinkedin(initialData?.linkedin ?? "");
+> app\admin\users\components\CreateUserModal.tsx:399:    setAvatarUrl(initialData?.avatarUrl ?? "");
+  app\admin\users\components\CreateUserModal.tsx:400:    setTheme("system");
+  app\admin\users\components\CreateUserModal.tsx:401:    setLanguage("pt-BR");
+  app\admin\users\components\CreateUserModal.tsx:402:    setRole(normalizeEditableProfileRole(initialData?.role ?? initialRole));
+  app\admin\users\components\CreateUserModal.tsx:403:    setActive(initialData?.active ?? true);
+  app\admin\users\components\CreateUserModal.tsx:404:    if (initialData?.clientId) setLocalClientId(initialData.clientId);
+  app\admin\users\components\CreateUserModal.tsx:405:    else if (clientId) setLocalClientId(clientId);
+  app\admin\users\components\CreateUserModal.tsx:406:    else if (clients && clients.length === 1) setLocalClientId(clients[0].id);
+  app\admin\users\components\CreateUserModal.tsx:407:    else setLocalClientId(null);
+  app\admin\users\components\CreateUserModal.tsx:408:  }
+  app\admin\users\components\CreateUserModal.tsx:409:
+  app\admin\users\components\CreateUserModal.tsx:410:  function handleCloseOrCancel() {
+  app\admin\users\components\CreateUserModal.tsx:411:    // From view->edit, cancel returns to read-only view.
+  app\admin\users\components\CreateUserModal.tsx:585:                  placeholder="https://www.linkedin.com/in/usuário"
+  app\admin\users\components\CreateUserModal.tsx:586:                  disabled={isViewMode}
+  app\admin\users\components\CreateUserModal.tsx:587:                />
+  app\admin\users\components\CreateUserModal.tsx:588:              </label>
+  app\admin\users\components\CreateUserModal.tsx:589:              <label className="block text-sm">
+> app\admin\users\components\CreateUserModal.tsx:590:                Foto (URL)
+  app\admin\users\components\CreateUserModal.tsx:591:                <input
+  app\admin\users\components\CreateUserModal.tsx:592:                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 
+focus:outline-none"
+> app\admin\users\components\CreateUserModal.tsx:593:                  value={avatarUrl}
+> app\admin\users\components\CreateUserModal.tsx:594:                  onChange={(e) => setAvatarUrl(e.target.value)}
+  app\admin\users\components\CreateUserModal.tsx:595:                  placeholder="https://example.com/avatar.jpg"
+  app\admin\users\components\CreateUserModal.tsx:596:                  disabled={isViewMode}
+  app\admin\users\components\CreateUserModal.tsx:597:                />
+  app\admin\users\components\CreateUserModal.tsx:598:              </label>
+  app\admin\users\components\CreateUserModal.tsx:599:              <div className="block text-sm">
+> app\admin\users\components\CreateUserModal.tsx:600:                Foto atual
+  app\admin\users\components\CreateUserModal.tsx:601:                <div className="mt-1 flex h-10.5 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3">
+> app\admin\users\components\CreateUserModal.tsx:602:                  {avatarUrl.trim() ? (
+  app\admin\users\components\CreateUserModal.tsx:603:                    // eslint-disable-next-line @next/next/no-img-element
+> app\admin\users\components\CreateUserModal.tsx:604:                    <img src={avatarUrl.trim()} alt="Preview da foto" className="h-8 w-8 rounded-full object-cover" />
+  app\admin\users\components\CreateUserModal.tsx:605:                  ) : (
+  app\admin\users\components\CreateUserModal.tsx:606:                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold 
+text-gray-600">
+  app\admin\users\components\CreateUserModal.tsx:607:                      {name.trim().slice(0, 1).toUpperCase() || "U"}
+  app\admin\users\components\CreateUserModal.tsx:608:                    </div>
+  app\admin\users\components\CreateUserModal.tsx:609:                  )}
+  app\admin\users\components\CreateUserModal.tsx:610:                  <span className="text-xs text-gray-500">
+> app\admin\users\components\CreateUserModal.tsx:611:                    {avatarUrl.trim() ? "Preview da foto informada" : "Nenhuma foto informada"}
+  app\admin\users\components\CreateUserModal.tsx:612:                  </span>
+  app\admin\users\components\CreateUserModal.tsx:613:                </div>
+  app\admin\users\components\CreateUserModal.tsx:614:              </div>
+  app\admin\users\components\CreateUserModal.tsx:615:              <label className="flex items-center gap-2 text-sm">
+  app\admin\users\components\CreateUserModal.tsx:616:                <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} disabled={isViewMode} />
+  app\admin\users\components\CreateUserModal.tsx:617:                Ativo
+  app\admin\users\components\CreateUserModal.tsx:618:              </label>
+  app\admin\users\components\CreateUserModal.tsx:619:              <label className="block text-sm">
+  app\admin\users\components\CreateUserModal.tsx:620:                Tema
+  app\admin\users\components\CreateUserModal.tsx:621:                <select
+  app\admin\users\components\CreateUserModal.tsx:622:                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 
+focus:outline-none"
+  app\admin\users\components\CreateUserModal.tsx:623:                  value={theme}
+
+
+
+
+===== 5) Criar/visualizar empresa =====
+
+  app\clients\components\CreateClientModal.tsx:15:  address?: string;
+  app\clients\components\CreateClientModal.tsx:16:  addressNumber?: string;
+  app\clients\components\CreateClientModal.tsx:17:  addressDetail?: string;
+  app\clients\components\CreateClientModal.tsx:18:  phone?: string;
+  app\clients\components\CreateClientModal.tsx:19:  website?: string;
+> app\clients\components\CreateClientModal.tsx:20:  logoUrl?: string;
+  app\clients\components\CreateClientModal.tsx:21:  linkedin?: string;
+  app\clients\components\CreateClientModal.tsx:22:  docsLink?: string;
+  app\clients\components\CreateClientModal.tsx:23:  notificationsFanoutEnabled?: boolean;
+> app\clients\components\CreateClientModal.tsx:24:  companyUsername?: string;
+  app\clients\components\CreateClientModal.tsx:25:  notes?: string;
+  app\clients\components\CreateClientModal.tsx:26:  description?: string;
+> app\clients\components\CreateClientModal.tsx:27:  adminEmail?: string;
+  app\clients\components\CreateClientModal.tsx:28:  active: boolean;
+  app\clients\components\CreateClientModal.tsx:29:  integrationMode: ClientIntegrationMode;
+  app\clients\components\CreateClientModal.tsx:30:  qaseToken?: string;
+  app\clients\components\CreateClientModal.tsx:31:  qaseProjectCode?: string;
+  app\clients\components\CreateClientModal.tsx:32:  qaseProjectCodes?: string[];
+  app\clients\components\CreateClientModal.tsx:33:  qase_projects?: { code: string; title?: string; imageUrl?: string | null; status?: "unknown" | "valid" | "invalid" }[];
+  app\clients\components\CreateClientModal.tsx:34:  integrations?: { type: string; config?: Record<string, unknown> }[];
+  app\clients\components\CreateClientModal.tsx:35:  jiraBaseUrl?: string;
+  app\clients\components\CreateClientModal.tsx:36:  jiraEmail?: string;
+  app\clients\components\CreateClientModal.tsx:37:  jiraApiToken?: string;
+  app\clients\components\CreateClientModal.tsx:38:};
+  app\clients\components\CreateClientModal.tsx:39:
+  app\clients\components\CreateClientModal.tsx:90:  const [address, setAddress] = useState("");
+  app\clients\components\CreateClientModal.tsx:91:  const [addressNumber, setAddressNumber] = useState("");
+  app\clients\components\CreateClientModal.tsx:92:  const [addressDetail, setAddressDetail] = useState("");
+  app\clients\components\CreateClientModal.tsx:93:  const [phone, setPhone] = useState("");
+  app\clients\components\CreateClientModal.tsx:94:  const [website, setWebsite] = useState("");
+> app\clients\components\CreateClientModal.tsx:95:  const [logoUrl, setLogoUrl] = useState("");
+  app\clients\components\CreateClientModal.tsx:96:  const [logoFileName, setLogoFileName] = useState("");
+  app\clients\components\CreateClientModal.tsx:97:  const [logoPreviewObjectUrl, setLogoPreviewObjectUrl] = useState<string | null>(null);
+  app\clients\components\CreateClientModal.tsx:98:  const [linkedin, setLinkedin] = useState("");
+  app\clients\components\CreateClientModal.tsx:99:  const [notes, setNotes] = useState("");
+  app\clients\components\CreateClientModal.tsx:100:  const [description, setDescription] = useState("");
+  app\clients\components\CreateClientModal.tsx:101:  const [notificationsFanoutEnabled, setNotificationsFanoutEnabled] = useState(false);
+> app\clients\components\CreateClientModal.tsx:102:  const [companyUsername, setCompanyUsername] = useState("");
+  app\clients\components\CreateClientModal.tsx:103:  const [generatingUsername, setGeneratingUsername] = useState(false);
+  app\clients\components\CreateClientModal.tsx:104:  const [active, setActive] = useState(false);
+> app\clients\components\CreateClientModal.tsx:105:  const [adminEmail, setAdminEmail] = useState("");
+  app\clients\components\CreateClientModal.tsx:106:  // integrationMode removed: Qase fields are always visible
+  app\clients\components\CreateClientModal.tsx:107:  const [qaseToken, setQaseToken] = useState("");
+  app\clients\components\CreateClientModal.tsx:108:  const [showQaseToken, setShowQaseToken] = useState(false);
+  app\clients\components\CreateClientModal.tsx:109:  const [qaseProjectCode, setQaseProjectCode] = useState("");
+  app\clients\components\CreateClientModal.tsx:110:  const [qaseProjects, setQaseProjects] = useState<QaseProjectOption[]>([]);
+  app\clients\components\CreateClientModal.tsx:111:  const [selectedQaseProjectCodes, setSelectedQaseProjectCodes] = useState<string[]>([]);
+  app\clients\components\CreateClientModal.tsx:112:  const [loadingQaseProjects, setLoadingQaseProjects] = useState(false);
+  app\clients\components\CreateClientModal.tsx:113:  const [qaseProjectsError, setQaseProjectsError] = useState<string | null>(null);
+  app\clients\components\CreateClientModal.tsx:114:  const [testingQase, setTestingQase] = useState(false);
+  app\clients\components\CreateClientModal.tsx:115:  const [qaseTestStatus, setQaseTestStatus] = useState<"idle" | "ok" | "error">("idle");
+  app\clients\components\CreateClientModal.tsx:116:  const [qaseTestMessage, setQaseTestMessage] = useState<string | null>(null);
+  app\clients\components\CreateClientModal.tsx:117:  const [searchProjects, setSearchProjects] = useState("");
+  app\clients\components\CreateClientModal.tsx:308:        setAddressNumber((data.address_number as string) ?? "");
+  app\clients\components\CreateClientModal.tsx:309:        setAddressDetail((data.address_detail as string) ?? "");
+  app\clients\components\CreateClientModal.tsx:310:        setAddressTouched(false);
+  app\clients\components\CreateClientModal.tsx:311:        setPhone((data.phone as string) ?? "");
+  app\clients\components\CreateClientModal.tsx:312:        setWebsite((data.website as string) ?? "");
+> app\clients\components\CreateClientModal.tsx:313:        setLogoUrl((data.logo_url as string) ?? "");
+  app\clients\components\CreateClientModal.tsx:314:        setLinkedin((data.linkedin_url as string) ?? "");
+  app\clients\components\CreateClientModal.tsx:315:        setNotes((data.notes as string) ?? "");
+  app\clients\components\CreateClientModal.tsx:316:        setDescription((data.short_description as string) ?? "");
+  app\clients\components\CreateClientModal.tsx:317:        setNotificationsFanoutEnabled(typeof data.notifications_fanout_enabled === "boolean" ? data.notifications_fanout_enabled 
+: false);
+  app\clients\components\CreateClientModal.tsx:318:        setActive(typeof data.active === "boolean" ? data.active : false);
+  app\clients\components\CreateClientModal.tsx:319:        setQaseToken((data.qase_token as string) ?? "");
+  app\clients\components\CreateClientModal.tsx:320:        const codes = Array.isArray(data.qase_project_codes) ? data.qase_project_codes.map((c: any) => (typeof c === "string" ? c 
+: String(c))) : [];
+  app\clients\components\CreateClientModal.tsx:321:        setSelectedQaseProjectCodes(codes.map((c: string) => c.trim().toUpperCase()));
+  app\clients\components\CreateClientModal.tsx:322:        setQaseProjectCode((data.qase_project_code as string) ?? (codes?.[0] ?? ""));
+  app\clients\components\CreateClientModal.tsx:323:      } catch {
+  app\clients\components\CreateClientModal.tsx:324:        // ignore
+  app\clients\components\CreateClientModal.tsx:325:      } finally {
+  app\clients\components\CreateClientModal.tsx:355:            setAddress((current) => current.trim() || (typeof data.address === "string" ? data.address : ""));
+  app\clients\components\CreateClientModal.tsx:356:            setAddressNumber((current) => current.trim() || (typeof data.address_number === "string" ? data.address_number : ""));
+  app\clients\components\CreateClientModal.tsx:357:            setAddressDetail((current) => current.trim() || (typeof data.address_detail === "string" ? data.address_detail : ""));
+  app\clients\components\CreateClientModal.tsx:358:            setPhone((current) => current.trim() || (typeof data.phone === "string" ? data.phone : ""));
+  app\clients\components\CreateClientModal.tsx:359:            setWebsite((current) => current.trim() || (typeof data.website === "string" ? data.website : ""));
+> app\clients\components\CreateClientModal.tsx:360:            setLogoUrl((current) => current.trim() || (typeof data.logo_url === "string" ? data.logo_url : ""));
+  app\clients\components\CreateClientModal.tsx:361:            setLinkedin((current) => current.trim() || (typeof data.linkedin_url === "string" ? data.linkedin_url : ""));
+  app\clients\components\CreateClientModal.tsx:362:            setNotificationsFanoutEnabled(typeof data.notifications_fanout_enabled === "boolean" ? 
+data.notifications_fanout_enabled : false);
+  app\clients\components\CreateClientModal.tsx:363:          }
+  app\clients\components\CreateClientModal.tsx:364:        }
+  app\clients\components\CreateClientModal.tsx:365:
+  app\clients\components\CreateClientModal.tsx:366:        if (meRes && meRes.ok) {
+  app\clients\components\CreateClientModal.tsx:367:          const me = (await meRes.json().catch(() => null)) as { user?: { user?: string; username?: string } } | null;
+  app\clients\components\CreateClientModal.tsx:368:          const login = me?.user?.username || me?.user?.user || "";
+  app\clients\components\CreateClientModal.tsx:369:          if (login) {
+> app\clients\components\CreateClientModal.tsx:370:            setCompanyUsername((current) => current.trim() || login);
+  app\clients\components\CreateClientModal.tsx:371:          }
+  app\clients\components\CreateClientModal.tsx:372:        }
+  app\clients\components\CreateClientModal.tsx:373:      } catch {
+  app\clients\components\CreateClientModal.tsx:374:        // keep modal working even without profile endpoint access
+  app\clients\components\CreateClientModal.tsx:375:      }
+  app\clients\components\CreateClientModal.tsx:376:    })();
+  app\clients\components\CreateClientModal.tsx:377:
+  app\clients\components\CreateClientModal.tsx:378:    return () => {
+  app\clients\components\CreateClientModal.tsx:379:      mounted = false;
+  app\clients\components\CreateClientModal.tsx:380:    };
+  app\clients\components\CreateClientModal.tsx:381:  }, [open, syncWithMyProfile, mode, clientId]);
+  app\clients\components\CreateClientModal.tsx:382:
+> app\clients\components\CreateClientModal.tsx:383:  async function handleGenerateCompanyUsername() {
+  app\clients\components\CreateClientModal.tsx:384:    const seed = (name || taxId || "empresa").trim();
+  app\clients\components\CreateClientModal.tsx:385:    if (!seed) return;
+  app\clients\components\CreateClientModal.tsx:386:    setGeneratingUsername(true);
+  app\clients\components\CreateClientModal.tsx:387:    try {
+  app\clients\components\CreateClientModal.tsx:388:      const response = await fetch("/api/me/username-suggestion", {
+  app\clients\components\CreateClientModal.tsx:389:        method: "POST",
+  app\clients\components\CreateClientModal.tsx:390:        headers: { "Content-Type": "application/json" },
+  app\clients\components\CreateClientModal.tsx:391:        credentials: "include",
+> app\clients\components\CreateClientModal.tsx:392:        body: JSON.stringify({ seed, avoid: companyUsername ? [companyUsername] : [] }),
+  app\clients\components\CreateClientModal.tsx:393:      });
+  app\clients\components\CreateClientModal.tsx:394:      const payload = (await response.json().catch(() => null)) as { username?: string; error?: string } | null;
+  app\clients\components\CreateClientModal.tsx:395:      if (!response.ok) {
+  app\clients\components\CreateClientModal.tsx:396:        throw new Error(payload?.error || "Não foi possível gerar o usuário da empresa.");
+  app\clients\components\CreateClientModal.tsx:397:      }
+  app\clients\components\CreateClientModal.tsx:398:      const generated = (payload?.username ?? "").trim().toLowerCase();
+> app\clients\components\CreateClientModal.tsx:399:      if (generated) setCompanyUsername(generated);
+  app\clients\components\CreateClientModal.tsx:400:    } catch (err) {
+  app\clients\components\CreateClientModal.tsx:401:      const message = err instanceof Error ? err.message : "Não foi possível gerar o usuário da empresa.";
+  app\clients\components\CreateClientModal.tsx:402:      toast.error(message);
+  app\clients\components\CreateClientModal.tsx:403:    } finally {
+  app\clients\components\CreateClientModal.tsx:404:      setGeneratingUsername(false);
+  app\clients\components\CreateClientModal.tsx:405:    }
+  app\clients\components\CreateClientModal.tsx:406:  }
+  app\clients\components\CreateClientModal.tsx:407:
+  app\clients\components\CreateClientModal.tsx:408:  async function syncInstitutionalProfile() {
+  app\clients\components\CreateClientModal.tsx:409:    if (!syncWithMyProfile) return;
+  app\clients\components\CreateClientModal.tsx:410:    if (!profileSyncDetected) return;
+  app\clients\components\CreateClientModal.tsx:411:
+  app\clients\components\CreateClientModal.tsx:423:          address_number: addressNumber.trim() || null,
+  app\clients\components\CreateClientModal.tsx:424:          address_detail: addressDetail.trim() || null,
+  app\clients\components\CreateClientModal.tsx:425:          phone: phone.trim() || null,
+  app\clients\components\CreateClientModal.tsx:426:          website: website.trim() || null,
+  app\clients\components\CreateClientModal.tsx:427:          linkedin_url: linkedin.trim() || null,
+> app\clients\components\CreateClientModal.tsx:428:          logo_url: logoUrl.trim() || null,
+  app\clients\components\CreateClientModal.tsx:429:          notifications_fanout_enabled: notificationsFanoutEnabled,
+  app\clients\components\CreateClientModal.tsx:430:          qase_token: qaseToken.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:431:          qase_project_codes: uniqCodes(selectedQaseProjectCodes),
+  app\clients\components\CreateClientModal.tsx:432:          integration_mode: uniqCodes(selectedQaseProjectCodes).length || qaseToken.trim() ? "qase" : "manual",
+  app\clients\components\CreateClientModal.tsx:433:        }),
+  app\clients\components\CreateClientModal.tsx:434:      }).catch(() => null);
+  app\clients\components\CreateClientModal.tsx:435:
+> app\clients\components\CreateClientModal.tsx:436:      if (companyUsername.trim()) {
+  app\clients\components\CreateClientModal.tsx:437:        await fetch("/api/me", {
+  app\clients\components\CreateClientModal.tsx:438:          method: "PATCH",
+  app\clients\components\CreateClientModal.tsx:439:          headers: { "Content-Type": "application/json" },
+  app\clients\components\CreateClientModal.tsx:440:          credentials: "include",
+> app\clients\components\CreateClientModal.tsx:441:          body: JSON.stringify({ user: companyUsername.trim().toLowerCase() }),
+  app\clients\components\CreateClientModal.tsx:442:        }).catch(() => null);
+  app\clients\components\CreateClientModal.tsx:443:      }
+  app\clients\components\CreateClientModal.tsx:444:    } catch {
+  app\clients\components\CreateClientModal.tsx:445:      // silent: profile sync is best-effort
+  app\clients\components\CreateClientModal.tsx:446:    }
+  app\clients\components\CreateClientModal.tsx:447:  }
+  app\clients\components\CreateClientModal.tsx:448:
+  app\clients\components\CreateClientModal.tsx:449:  // close projects dropdown when clicking outside or pressing Escape
+  app\clients\components\CreateClientModal.tsx:450:  useEffect(() => {
+  app\clients\components\CreateClientModal.tsx:451:    function onClick(e: MouseEvent) {
+  app\clients\components\CreateClientModal.tsx:452:      if (!projectsOpen) return;
+  app\clients\components\CreateClientModal.tsx:453:      const el = projectsRef.current;
+  app\clients\components\CreateClientModal.tsx:486:    setAddressNumber("");
+  app\clients\components\CreateClientModal.tsx:487:    setAddressDetail("");
+  app\clients\components\CreateClientModal.tsx:488:    setAddressTouched(false);
+  app\clients\components\CreateClientModal.tsx:489:    setPhone("");
+  app\clients\components\CreateClientModal.tsx:490:    setWebsite("");
+> app\clients\components\CreateClientModal.tsx:491:    setLogoUrl("");
+  app\clients\components\CreateClientModal.tsx:492:    setLogoFileName("");
+  app\clients\components\CreateClientModal.tsx:493:    setLinkedin("");
+  app\clients\components\CreateClientModal.tsx:494:    setNotes("");
+  app\clients\components\CreateClientModal.tsx:495:    setDescription("");
+  app\clients\components\CreateClientModal.tsx:496:    setNotificationsFanoutEnabled(false);
+> app\clients\components\CreateClientModal.tsx:497:    setCompanyUsername("");
+  app\clients\components\CreateClientModal.tsx:498:    setActive(false);
+  app\clients\components\CreateClientModal.tsx:499:    setQaseToken("");
+  app\clients\components\CreateClientModal.tsx:500:    resetQaseSelection();
+  app\clients\components\CreateClientModal.tsx:501:    if (logoPreviewObjectUrl) {
+  app\clients\components\CreateClientModal.tsx:502:      URL.revokeObjectURL(logoPreviewObjectUrl);
+  app\clients\components\CreateClientModal.tsx:503:      setLogoPreviewObjectUrl(null);
+  app\clients\components\CreateClientModal.tsx:504:    }
+  app\clients\components\CreateClientModal.tsx:505:    setError(null);
+  app\clients\components\CreateClientModal.tsx:506:    setCnpjLoading(false);
+  app\clients\components\CreateClientModal.tsx:507:    setCnpjMessage(null);
+  app\clients\components\CreateClientModal.tsx:508:  }
+  app\clients\components\CreateClientModal.tsx:509:
+  app\clients\components\CreateClientModal.tsx:728:        address: address.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:729:        addressNumber: addressNumber.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:730:        addressDetail: addressDetail.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:731:        phone: phone.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:732:        website: website.trim() || undefined,
+> app\clients\components\CreateClientModal.tsx:733:        logoUrl: logoUrl.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:734:        linkedin: linkedin.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:735:        notificationsFanoutEnabled,
+> app\clients\components\CreateClientModal.tsx:736:        companyUsername: companyUsername.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:737:        notes: notes.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:738:        description: description.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:739:        active,
+  app\clients\components\CreateClientModal.tsx:740:        integrationMode: selectedCodes.length || qaseToken.trim() ? "qase" : "manual",
+> app\clients\components\CreateClientModal.tsx:741:        adminEmail: adminEmail.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:742:        qaseToken: qaseToken.trim() || undefined,
+  app\clients\components\CreateClientModal.tsx:743:        qaseProjectCode: selectedCodes.length ? (selectedCodes[0] || "").trim().toUpperCase() : undefined,
+  app\clients\components\CreateClientModal.tsx:744:        qaseProjectCodes: Array.isArray(selectedCodes) ? selectedCodes : [],
+  app\clients\components\CreateClientModal.tsx:745:        qase_projects: qaseProjectsPayload.length ? qaseProjectsPayload : undefined,
+  app\clients\components\CreateClientModal.tsx:746:        integrations: integrationsPayload.length ? integrationsPayload : undefined,
+  app\clients\components\CreateClientModal.tsx:747:      };
+  app\clients\components\CreateClientModal.tsx:748:
+  app\clients\components\CreateClientModal.tsx:749:      // Handle UPDATE mode
+  app\clients\components\CreateClientModal.tsx:750:      if ((mode === 'edit' || (mode === 'view' && isEditing)) && clientId && onUpdate) {
+  app\clients\components\CreateClientModal.tsx:751:        await onUpdate(clientId, formData);
+  app\clients\components\CreateClientModal.tsx:752:        await syncInstitutionalProfile();
+  app\clients\components\CreateClientModal.tsx:753:        toast.success("Empresa atualizada com sucesso");
+  app\clients\components\CreateClientModal.tsx:873:          <label className="block text-sm">
+  app\clients\components\CreateClientModal.tsx:874:            E-mail do administrador{mode === 'create' ? <span className="ml-1 text-(--tc-accent)">*</span> : null}
+  app\clients\components\CreateClientModal.tsx:875:            <input
+  app\clients\components\CreateClientModal.tsx:876:              type="email"
+  app\clients\components\CreateClientModal.tsx:877:              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm 
+text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+> app\clients\components\CreateClientModal.tsx:878:              value={adminEmail}
+> app\clients\components\CreateClientModal.tsx:879:              onChange={(e) => setAdminEmail(e.target.value)}
+  app\clients\components\CreateClientModal.tsx:880:              placeholder="admin@empresa.com"
+  app\clients\components\CreateClientModal.tsx:881:              required={mode === 'create'}
+  app\clients\components\CreateClientModal.tsx:882:              disabled={isViewMode}
+  app\clients\components\CreateClientModal.tsx:883:              autoComplete="email"
+  app\clients\components\CreateClientModal.tsx:884:            />
+  app\clients\components\CreateClientModal.tsx:885:            {mode === 'create' && (
+  app\clients\components\CreateClientModal.tsx:886:              <span className="mt-1 block text-xs text-(--tc-text-muted)">Usado para envio das credenciais de acesso.</span>
+  app\clients\components\CreateClientModal.tsx:887:            )}
+  app\clients\components\CreateClientModal.tsx:888:          </label>
+  app\clients\components\CreateClientModal.tsx:889:
+  app\clients\components\CreateClientModal.tsx:890:          <label className="block text-sm">
+  app\clients\components\CreateClientModal.tsx:891:            Status da empresa
+  app\clients\components\CreateClientModal.tsx:998:              disabled={isViewMode}
+  app\clients\components\CreateClientModal.tsx:999:            />
+  app\clients\components\CreateClientModal.tsx:1000:          </label>
+  app\clients\components\CreateClientModal.tsx:1001:
+  app\clients\components\CreateClientModal.tsx:1002:          <label className="block text-sm">
+> app\clients\components\CreateClientModal.tsx:1003:            Logo da empresa
+  app\clients\components\CreateClientModal.tsx:1004:            <input
+  app\clients\components\CreateClientModal.tsx:1005:              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm 
+text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+> app\clients\components\CreateClientModal.tsx:1006:              value={logoUrl}
+> app\clients\components\CreateClientModal.tsx:1007:              onChange={(e) => setLogoUrl(e.target.value)}
+  app\clients\components\CreateClientModal.tsx:1008:              placeholder="https://exemplo.com/logo.png"
+  app\clients\components\CreateClientModal.tsx:1009:              disabled={isViewMode}
+  app\clients\components\CreateClientModal.tsx:1010:            />
+  app\clients\components\CreateClientModal.tsx:1011:          </label>
+  app\clients\components\CreateClientModal.tsx:1012:
+  app\clients\components\CreateClientModal.tsx:1013:          <label className="block text-sm">
+> app\clients\components\CreateClientModal.tsx:1014:            Escolher logo
+  app\clients\components\CreateClientModal.tsx:1015:            <input
+  app\clients\components\CreateClientModal.tsx:1016:              type="file"
+  app\clients\components\CreateClientModal.tsx:1017:              accept="image/*"
+  app\clients\components\CreateClientModal.tsx:1018:              className="mt-1 w-full text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+  app\clients\components\CreateClientModal.tsx:1019:              onChange={(e) => {
+  app\clients\components\CreateClientModal.tsx:1020:                const file = e.target.files?.[0];
+  app\clients\components\CreateClientModal.tsx:1021:                setLogoFileName(file?.name ?? "");
+  app\clients\components\CreateClientModal.tsx:1022:                if (logoPreviewObjectUrl) {
+  app\clients\components\CreateClientModal.tsx:1023:                  URL.revokeObjectURL(logoPreviewObjectUrl);
+  app\clients\components\CreateClientModal.tsx:1024:                  setLogoPreviewObjectUrl(null);
+  app\clients\components\CreateClientModal.tsx:1025:                }
+  app\clients\components\CreateClientModal.tsx:1026:                if (file) {
+  app\clients\components\CreateClientModal.tsx:1031:            />
+  app\clients\components\CreateClientModal.tsx:1032:            {logoFileName ? <p className="mt-1 text-xs text-(--tc-text-muted)">Selecionado: {logoFileName}</p> : null}
+  app\clients\components\CreateClientModal.tsx:1033:          </label>
+  app\clients\components\CreateClientModal.tsx:1034:
+  app\clients\components\CreateClientModal.tsx:1035:          <div className="md:col-span-2 rounded-lg border border-(--tc-border) bg-(--tc-surface-2) p-3">
+> app\clients\components\CreateClientModal.tsx:1036:            <p className="text-xs font-semibold uppercase tracking-wide text-(--tc-text-muted)">Preview da logo</p>
+> app\clients\components\CreateClientModal.tsx:1037:            {logoPreviewObjectUrl || logoUrl.trim() ? (
+  app\clients\components\CreateClientModal.tsx:1038:              // eslint-disable-next-line @next/next/no-img-element
+  app\clients\components\CreateClientModal.tsx:1039:              <img
+> app\clients\components\CreateClientModal.tsx:1040:                src={logoPreviewObjectUrl ?? logoUrl.trim()}
+> app\clients\components\CreateClientModal.tsx:1041:                alt="Preview da logo da empresa"
+  app\clients\components\CreateClientModal.tsx:1042:                className="mt-2 h-20 w-20 rounded-md border border-(--tc-border) object-contain bg-white"
+  app\clients\components\CreateClientModal.tsx:1043:              />
+  app\clients\components\CreateClientModal.tsx:1044:            ) : (
+  app\clients\components\CreateClientModal.tsx:1045:              <p className="mt-2 text-xs text-(--tc-text-muted)">Informe a URL da logo ou selecione um arquivo para visualizar o 
+preview.</p>
+  app\clients\components\CreateClientModal.tsx:1046:            )}
+  app\clients\components\CreateClientModal.tsx:1047:          </div>
+  app\clients\components\CreateClientModal.tsx:1048:
+  app\clients\components\CreateClientModal.tsx:1049:          <div className="md:col-span-2 rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-3">
+  app\clients\components\CreateClientModal.tsx:1050:            <label className="flex items-start gap-3 text-sm">
+  app\clients\components\CreateClientModal.tsx:1051:              <input
+  app\clients\components\CreateClientModal.tsx:1052:                type="checkbox"
+  app\clients\components\CreateClientModal.tsx:1053:                checked={notificationsFanoutEnabled}
+  app\clients\components\CreateClientModal.tsx:1067:          <label className="block text-sm md:col-span-2">
+  app\clients\components\CreateClientModal.tsx:1068:            Usuário da empresa
+  app\clients\components\CreateClientModal.tsx:1069:            <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+  app\clients\components\CreateClientModal.tsx:1070:              <input
+  app\clients\components\CreateClientModal.tsx:1071:                className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm 
+text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+> app\clients\components\CreateClientModal.tsx:1072:                value={companyUsername}
+> app\clients\components\CreateClientModal.tsx:1073:                onChange={(e) => setCompanyUsername(e.target.value)}
+  app\clients\components\CreateClientModal.tsx:1074:                placeholder="login institucional"
+  app\clients\components\CreateClientModal.tsx:1075:                disabled={isViewMode}
+  app\clients\components\CreateClientModal.tsx:1076:              />
+  app\clients\components\CreateClientModal.tsx:1077:              <button
+  app\clients\components\CreateClientModal.tsx:1078:                type="button"
+> app\clients\components\CreateClientModal.tsx:1079:                onClick={() => void handleGenerateCompanyUsername()}
+  app\clients\components\CreateClientModal.tsx:1080:                className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm font-semibold 
+text-(--tc-text) disabled:opacity-60"
+  app\clients\components\CreateClientModal.tsx:1081:                disabled={isViewMode || generatingUsername || !name.trim()}
+  app\clients\components\CreateClientModal.tsx:1082:              >
+  app\clients\components\CreateClientModal.tsx:1083:                {generatingUsername ? "Gerando..." : "Gerar usuário"}
+  app\clients\components\CreateClientModal.tsx:1084:              </button>
+  app\clients\components\CreateClientModal.tsx:1085:            </div>
+  app\clients\components\CreateClientModal.tsx:1086:            <span className="mt-1 block text-xs text-(--tc-text-muted)">
+  app\clients\components\CreateClientModal.tsx:1087:              Login único do perfil institucional. A sugestão usa o nome da empresa e evita duplicidade.
+  app\clients\components\CreateClientModal.tsx:1088:            </span>
+  app\clients\components\CreateClientModal.tsx:1089:          </label>
+  app\clients\components\CreateClientModal.tsx:1090:
+  app\clients\components\CreateClientModal.tsx:1091:          <fieldset className="md:col-span-2 rounded-xl border-2 border-(--tc-accent)/20 
+bg-[linear-gradient(180deg,var(--tc-surface-2)_0%,rgba(239,0,1,0.03)_100%)] p-4" disabled={isViewMode}>
+
+
+
+
+===== 6) Backends que salvam avatar/logo =====
+
+  app\api\admin\users\route.ts:17:} from "@/lib/editableProfileRoles";
+  app\api\admin\users\route.ts:18:import { isUserScopeLockedError } from "@/lib/companyUserScope";
+  app\api\admin\users\route.ts:19:import {
+> app\api\admin\users\route.ts:20:  createLocalUser,
+  app\api\admin\users\route.ts:21:  findLocalCompanyById,
+  app\api\admin\users\route.ts:22:  findLocalCompanyBySlug,
+  app\api\admin\users\route.ts:23:  listLocalLinksForUser,
+  app\api\admin\users\route.ts:24:  listLocalUsers,
+  app\api\admin\users\route.ts:25:  removeLocalLink,
+> app\api\admin\users\route.ts:26:  updateLocalUser,
+  app\api\admin\users\route.ts:27:  upsertLocalLink,
+  app\api\admin\users\route.ts:28:} from "@/lib/auth/localStore";
+  app\api\admin\users\route.ts:29:import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+  app\api\admin\users\route.ts:30:import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
+> app\api\admin\users\route.ts:31:import { readSyncedUserProfileFields, sanitizeUserProfileText } from "@/lib/userProfileData";
+  app\api\admin\users\route.ts:32:import { emailService } from "@/lib/email";
+  app\api\admin\users\route.ts:33:
+  app\api\admin\users\route.ts:34:export const runtime = "nodejs";
+  app\api\admin\users\route.ts:35:export const revalidate = 0;
+  app\api\admin\users\route.ts:36:
+  app\api\admin\users\route.ts:37:function hasOwn(obj: Record<string, unknown> | null, key: string) {
+  app\api\admin\users\route.ts:38:  return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+  app\api\admin\users\route.ts:39:}
+  app\api\admin\users\route.ts:137:  const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
+  app\api\admin\users\route.ts:138:
+  app\api\admin\users\route.ts:139:  const body = await req.json().catch(() => null);
+> app\api\admin\users\route.ts:140:  const profileFields = readSyncedUserProfileFields(body);
+  app\api\admin\users\route.ts:141:  const fullName = profileFields.fullName;
+  app\api\admin\users\route.ts:142:  const name = profileFields.name;
+  app\api\admin\users\route.ts:143:  const email = profileFields.email;
+  app\api\admin\users\route.ts:144:  const rawLogin = profileFields.login ?? "";
+  app\api\admin\users\route.ts:145:  const rawClientId = typeof body?.client_id === "string" ? body.client_id.trim() : "";
+  app\api\admin\users\route.ts:146:  const rawClientSlug =
+  app\api\admin\users\route.ts:147:    (typeof body?.clientSlug === "string" ? body.clientSlug.trim() : "") ||
+  app\api\admin\users\route.ts:148:    (typeof body?.companySlug === "string" ? body.companySlug.trim() : "");
+  app\api\admin\users\route.ts:155:  const password = typeof body?.password === "string" ? body.password : null;
+  app\api\admin\users\route.ts:156:  const jobTitle = profileFields.jobTitle;
+  app\api\admin\users\route.ts:157:  const linkedinUrl = profileFields.linkedinUrl;
+> app\api\admin\users\route.ts:158:  const avatarUrl = profileFields.avatarUrl;
+  app\api\admin\users\route.ts:159:  const rawRole = typeof body?.role === "string" ? body.role : "";
+  app\api\admin\users\route.ts:160:  const profileRole = resolveEditableProfileRole(rawRole) ?? "testing_company_user";
+  app\api\admin\users\route.ts:161:  const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
+  app\api\admin\users\route.ts:162:  const role = toStoredEditableUserRole(profileRole);
+  app\api\admin\users\route.ts:163:  const capabilities = Array.isArray(body?.capabilities)
+  app\api\admin\users\route.ts:164:    ? body.capabilities.filter((item: unknown) => typeof item === "string")
+  app\api\admin\users\route.ts:165:    : null;
+  app\api\admin\users\route.ts:166:
+  app\api\admin\users\route.ts:220:  const passwordHash = hashPasswordSha256(plainPasswordToSend);
+  app\api\admin\users\route.ts:221:  let user = null;
+  app\api\admin\users\route.ts:222:  try {
+> app\api\admin\users\route.ts:223:    user = await createLocalUser({
+  app\api\admin\users\route.ts:224:      full_name: fullName ?? name,
+  app\api\admin\users\route.ts:225:      name,
+  app\api\admin\users\route.ts:226:      email,
+  app\api\admin\users\route.ts:227:      user: login,
+  app\api\admin\users\route.ts:228:      password_hash: passwordHash,
+  app\api\admin\users\route.ts:229:      active: true,
+  app\api\admin\users\route.ts:230:      role,
+  app\api\admin\users\route.ts:231:      globalRole: wantsGlobalAdmin ? "global_admin" : null,
+  app\api\admin\users\route.ts:233:      ...resolveEditableProfileUserState(profileRole, clientId),
+  app\api\admin\users\route.ts:234:      job_title: jobTitle || null,
+  app\api\admin\users\route.ts:235:      linkedin_url: linkedinUrl || null,
+> app\api\admin\users\route.ts:236:      avatar_url: avatarUrl || null,
+  app\api\admin\users\route.ts:237:      phone,
+  app\api\admin\users\route.ts:238:    });
+  app\api\admin\users\route.ts:239:  } catch (err) {
+  app\api\admin\users\route.ts:240:    const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
+  app\api\admin\users\route.ts:241:    if (code === "DUPLICATE_EMAIL") {
+  app\api\admin\users\route.ts:242:      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+  app\api\admin\users\route.ts:243:    }
+  app\api\admin\users\route.ts:244:    if (code === "DUPLICATE_USER") {
+  app\api\admin\users\route.ts:314:  const jobTitle = hasJobTitle ? sanitizeUserProfileText(body?.job_title ?? body?.jobTitle, 120) : undefined;
+  app\api\admin\users\route.ts:315:  const hasLinkedinUrl = hasOwn(body as Record<string, unknown> | null, "linkedin_url") || hasOwn(body as Record<string, unknown> | null, 
+"linkedinUrl");
+  app\api\admin\users\route.ts:316:  const linkedinUrl = hasLinkedinUrl ? sanitizeUserProfileText(body?.linkedin_url ?? body?.linkedinUrl, 255) : undefined;
+> app\api\admin\users\route.ts:317:  const hasAvatarUrl = hasOwn(body as Record<string, unknown> | null, "avatar_url");
+> app\api\admin\users\route.ts:318:  const avatarUrl = hasAvatarUrl
+> app\api\admin\users\route.ts:319:    ? typeof body?.avatar_url === "string"
+> app\api\admin\users\route.ts:320:      ? body.avatar_url.trim() || null
+  app\api\admin\users\route.ts:321:      : null
+  app\api\admin\users\route.ts:322:    : undefined;
+  app\api\admin\users\route.ts:323:  const rawRole = typeof body?.role === "string" ? body.role : "";
+  app\api\admin\users\route.ts:324:  const profileRole = resolveEditableProfileRole(rawRole) ?? "testing_company_user";
+  app\api\admin\users\route.ts:325:  const wantsGlobalAdmin = isGlobalPrivilegeProfileRole(profileRole);
+  app\api\admin\users\route.ts:326:  const role = toStoredEditableUserRole(profileRole);
+  app\api\admin\users\route.ts:327:  const fullName =
+  app\api\admin\users\route.ts:328:    typeof body?.full_name === "string"
+  app\api\admin\users\route.ts:360:  }
+  app\api\admin\users\route.ts:361:  let updated = null;
+  app\api\admin\users\route.ts:362:  try {
+> app\api\admin\users\route.ts:363:    updated = await updateLocalUser(userId, {
+  app\api\admin\users\route.ts:364:      ...(fullName !== undefined ? { full_name: fullName } : {}),
+  app\api\admin\users\route.ts:365:      ...(name ? { name } : {}),
+  app\api\admin\users\route.ts:366:      ...(email ? { email } : {}),
+  app\api\admin\users\route.ts:367:      ...(hasLogin ? { user: login ?? "" } : {}),
+  app\api\admin\users\route.ts:368:      ...(active !== null ? { active } : {}),
+  app\api\admin\users\route.ts:369:      ...(hasJobTitle ? { job_title: jobTitle ?? null } : {}),
+  app\api\admin\users\route.ts:370:      ...(hasLinkedinUrl ? { linkedin_url: linkedinUrl ?? null } : {}),
+> app\api\admin\users\route.ts:371:      ...(hasAvatarUrl ? { avatar_url: avatarUrl ?? null } : {}),
+  app\api\admin\users\route.ts:372:      ...(hasPhone ? { phone: phone ?? null } : {}),
+  app\api\admin\users\route.ts:373:      ...(rawRole
+  app\api\admin\users\route.ts:374:        ? {
+  app\api\admin\users\route.ts:375:            role,
+  app\api\admin\users\route.ts:376:            globalRole: wantsGlobalAdmin ? "global_admin" : null,
+  app\api\admin\users\route.ts:377:            is_global_admin: wantsGlobalAdmin,
+  app\api\admin\users\route.ts:378:            ...resolveEditableProfileUserState(profileRole, clientId),
+  app\api\admin\users\route.ts:379:            ...(editableProfileNeedsCompany(profileRole) && selectedCompany
+  lib\userProfileData.ts:8:  phone: string | null;
+  lib\userProfileData.ts:9:  jobTitle: string | null;
+  lib\userProfileData.ts:10:  linkedinUrl: string | null;
+> lib\userProfileData.ts:11:  avatarUrl: string | null;
+  lib\userProfileData.ts:12:};
+  lib\userProfileData.ts:13:
+  lib\userProfileData.ts:14:function asRecord(input: unknown): InputRecord {
+  lib\userProfileData.ts:15:  return input && typeof input === "object" ? (input as Record<string, unknown>) : null;
+  lib\userProfileData.ts:16:}
+  lib\userProfileData.ts:17:
+  lib\userProfileData.ts:18:function readFirstString(record: InputRecord, keys: string[]) {
+  lib\userProfileData.ts:19:  if (!record) return null;
+  lib\userProfileData.ts:46:  return trimmed || null;
+  lib\userProfileData.ts:47:}
+  lib\userProfileData.ts:48:
+> lib\userProfileData.ts:49:export function readSyncedUserProfileFields(input: unknown): SyncedUserProfileFields {
+  lib\userProfileData.ts:50:  const record = asRecord(input);
+  lib\userProfileData.ts:51:  const fullName = sanitizeUserProfileText(readFirstString(record, ["full_name", "fullName", "name"]), 160);
+  lib\userProfileData.ts:52:
+  lib\userProfileData.ts:53:  return {
+  lib\userProfileData.ts:54:    fullName,
+  lib\userProfileData.ts:55:    name: fullName ?? "",
+  lib\userProfileData.ts:56:    email: normalizeUserProfileEmail(readFirstString(record, ["email"])) ?? "",
+  lib\userProfileData.ts:57:    login: normalizeUserProfileLogin(readFirstString(record, ["user", "username", "login"])),
+  lib\userProfileData.ts:58:    phone: sanitizeUserProfileText(readFirstString(record, ["phone"]), 80),
+  lib\userProfileData.ts:59:    jobTitle: sanitizeUserProfileText(readFirstString(record, ["job_title", "jobTitle"]), 120),
+  lib\userProfileData.ts:60:    linkedinUrl: sanitizeUserProfileText(readFirstString(record, ["linkedin_url", "linkedinUrl", "linkedin"]), 255),
+> lib\userProfileData.ts:61:    avatarUrl: sanitizeUserProfileText(readFirstString(record, ["avatar_url", "avatarUrl"]), 2048),
+  lib\userProfileData.ts:62:  };
+  lib\userProfileData.ts:63:}
+
+
+

@@ -46,7 +46,7 @@ export const SYSTEM_MODULES = [
     name: "Brain",
     description: "Grafo de conhecimento e recursos internos do Brain.",
     mainRoute: "/brain",
-    basePermission: { moduleId: "ai", action: "view" },
+    basePermission: { moduleId: "brain", action: "view" },
     status: "parcial",
   },
   {
@@ -86,12 +86,12 @@ export const SYSTEM_MODULES = [
     name: "Documentos",
     description: "Central, repositório e documentação da plataforma.",
     mainRoute: "/documentos",
-    basePermission: { moduleId: "notes", action: "view" },
+    basePermission: { moduleId: "documents", action: "view" },
     status: "parcial",
   },
   {
     id: "dashboards",
-    name: "Dashboards",
+    name: "Visão Geral",
     description: "Indicadores globais, administrativos e de empresa.",
     mainRoute: "/dashboard",
     basePermission: { moduleId: "dashboard", action: "view" },
@@ -102,7 +102,7 @@ export const SYSTEM_MODULES = [
     name: "Operação",
     description: "Visões operacionais, busca e métricas consolidadas.",
     mainRoute: "/operacoes",
-    basePermission: { moduleId: "dashboard", action: "view" },
+    basePermission: { moduleId: "operations", action: "view" },
     status: "parcial",
   },
   {

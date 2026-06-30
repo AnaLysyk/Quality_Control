@@ -130,7 +130,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       { 
         id: "ops-dashboard", 
         routeId: "operacao.dashboard",
-        label: "Dashboard", 
+        label: "Painel operacional", 
         iconKey: "compass", 
         module: "operations", 
         companyRoute: "dashboard", 
@@ -461,6 +461,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
   {
     id: "brain",
+    routeId: "brain.grafo",
     label: "Brain",
     iconKey: "cpu",
     href: "/brain",
@@ -608,11 +609,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       { 
         id: "admin-permissions", 
-        routeId: "permissoes.atalho-admin",
-        label: "Gestão de permissões", 
+        routeId: "permissoes.matriz",
+        label: "Gestão de Perfis", 
         iconKey: "lock", 
         module: "admin", 
-        href: "/admin/permissoes",
+        href: "/admin/users/permissions",
         favoriteEnabled: true,
         testId: "nav-admin-permissions",
       },

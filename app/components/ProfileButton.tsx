@@ -6,7 +6,6 @@ import {
   FiCheck,
   FiChevronRight,
   FiCopy,
-  FiFolder,
   FiLogOut,
   FiSettings,
   FiX,
@@ -18,7 +17,6 @@ import { useAppSettings } from "@/context/AppSettingsContext";
 import { useClientContext } from "@/context/ClientContext";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
-import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { useI18n } from "@/hooks/useI18n";
 
 type ToastState =
@@ -95,7 +93,7 @@ type ProfileButtonProps = {
 export default function ProfileButton({ defaultOpen = false }: ProfileButtonProps) {
   const router = useRouter();
   const pathname = usePathname() || "/";
-  const { user, loading, logout, normalizedUser } = useAuthUser();
+  const { user, loading, logout } = useAuthUser();
   const { resolvedTheme } = useAppSettings();
   const { activeClient, clients } = useClientContext();
   const { t } = useI18n();
@@ -104,7 +102,6 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
     | {
         isGlobalAdmin?: boolean;
         roleGlobal?: string;
-        companyResources?: unknown;
         company?: { name?: string; slug?: string };
       }
     | null;
@@ -166,36 +163,6 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
         : activeIdentity.showCompanyTag
           ? activeIdentity.companyTagLabel
           : null;
-
-  const companySlug = activeClient?.slug ?? normalizedUser.primaryCompanySlug ?? normalizedUser.defaultCompanySlug ?? undefined;
-
-  const companyResources = Array.isArray(legacyUser?.companyResources) ? legacyUser.companyResources : [];
-  const companyCount =
-    (Array.isArray(clients) ? clients.length : 0) ||
-    (Array.isArray(companyResources) ? companyResources.length : 0);
-  const hasCompanies = companyCount > 0;
-  const docsRoute = hasCompanies
-    ? companyCount > 1 || !companySlug
-      ? "/documentos"
-      : buildCompanyPathForAccess(companySlug, "documentos", {
-          isGlobalAdmin: user?.isGlobalAdmin === true,
-          permissionRole: user?.permissionRole ?? null,
-          role: user?.role ?? null,
-          companyRole: user?.companyRole ?? null,
-          userOrigin:
-            (user as { userOrigin?: string | null } | null)?.userOrigin ??
-            (user as { user_origin?: string | null } | null)?.user_origin ??
-            null,
-          companyCount,
-          clientSlug: companySlug,
-          defaultClientSlug: user?.defaultClientSlug ?? null,
-        })
-    : "/docs";
-  const docsLabel = hasCompanies
-    ? companyCount > 1
-      ? t("profile.documentsHint").replace("{count}", String(companyCount))
-      : t("profile.companyFilesHint")
-    : t("profile.docsHubHint");
 
   useEffect(() => {
     if (!open) return undefined;
@@ -456,26 +423,6 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
                   router.push("/settings/profile");
                 }}
                 autoFocus
-              />
-            </ul>
-          </div>
-
-          <div className={`h-px ${isDarkTheme ? "bg-[linear-gradient(90deg,rgba(255,138,156,0)_0%,rgba(255,138,156,0.16)_18%,rgba(132,170,255,0.24)_50%,rgba(255,138,156,0.16)_82%,rgba(255,138,156,0)_100%)]" : "bg-[linear-gradient(90deg,rgba(239,0,1,0)_0%,rgba(239,0,1,0.10)_18%,rgba(10,31,82,0.14)_50%,rgba(239,0,1,0.10)_82%,rgba(239,0,1,0)_100%)]"}`} />
-
-          <div className="px-3.5 py-3">
-            <p className={`text-[11px] font-extrabold uppercase tracking-[0.2em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>
-              {t("profile.documentations")}
-            </p>
-            <ul className="mt-2 space-y-2" aria-label={t("profile.materials")}>
-              <MenuItem
-                isDarkTheme={isDarkTheme}
-                icon={<FiFolder aria-hidden />}
-                label={t("profile.documentations")}
-                hint={docsLabel}
-                onClick={() => {
-                  setOpen(false);
-                  router.push(docsRoute);
-                }}
               />
             </ul>
           </div>

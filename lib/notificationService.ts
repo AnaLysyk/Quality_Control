@@ -22,8 +22,12 @@ import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
-function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null }) {
-  return user.is_global_admin === true || normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.LEADER_TC;
+function isAdminUser(user: { is_global_admin?: boolean; globalRole?: string | null; role?: string | null }) {
+  return (
+    user.is_global_admin === true ||
+    normalizeLegacyRole(user.globalRole) === SYSTEM_ROLES.LEADER_TC ||
+    normalizeLegacyRole(user.role) === SYSTEM_ROLES.LEADER_TC
+  );
 }
 
 function canReviewAccessRequestsByRole(role?: string | null) {
@@ -957,6 +961,29 @@ export async function notifyUserAccessUpdated(input: {
   });
 }
 
+export async function notifyProfilePermissionsChanged(input: {
+  profileRole: string;
+  actorEmail?: string | null;
+  changedSummary?: string | null;
+  updatedAt?: string | null;
+}) {
+  const recipients = await resolveAdminUserIds();
+  if (!recipients.length) return;
+
+  const roleLabel = describePermissionRole(input.profileRole);
+  const actorLabel = input.actorEmail?.trim() || "administrador";
+  const summary = input.changedSummary?.trim() || "permissoes, modulos ou telas do perfil foram atualizados";
+  const updatedAt = input.updatedAt ?? new Date().toISOString();
+
+  await createNotificationsForUsers(recipients, {
+    type: "USER_ACCESS_UPDATED",
+    title: "Permissoes de perfil atualizadas",
+    description: `${actorLabel} alterou o perfil ${roleLabel}. ${summary}.`,
+    link: "/admin/users/permissions",
+    dedupeKey: `profile-permissions:${input.profileRole}:${updatedAt}`,
+  });
+}
+
 // Backwards-compatible wrappers for ticket-named notifications (map { ticket } -> { suporte })
 import type { TicketRecord } from "@/lib/ticketsStore";
 
@@ -1035,4 +1062,3 @@ export async function notifyTicketUpdated(input: {
     dedupeKey: `suporte:${suporte.id}:updated:${Date.now()}`,
   });
 }
-

@@ -1,12 +1,16 @@
 import "server-only";
 
-import { getUserOverride, effectivePermissions, type UserPermissionsOverride } from "./store/permissionsStore";
-import { resolveRoleDefaults, type Role } from "./permissions/roleDefaults";
+import { getUserOverride, type UserPermissionsOverride } from "./store/permissionsStore";
+import { type Role } from "./permissions/roleDefaults";
 import { listLocalLinksForUser, listLocalUsers } from "@/lib/auth/localStore";
 import { resolvePermissionRoleForUser } from "@/lib/adminUsers";
 import { hasForcedGlobalAccessForUser } from "@/lib/auth/specialAccess";
 import { SYSTEM_ROLES } from "@/lib/auth/roles";
-import { normalizePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
+import { type PermissionMatrix } from "@/lib/permissionMatrix";
+import {
+  resolvePermissionsFromDefaults,
+  resolveProfilePermissionDefaults,
+} from "@/lib/store/profilePermissionsStore";
 
 export type RoleKey = Role;
 
@@ -52,15 +56,8 @@ export async function resolveRoleKeyForUser(userId: string): Promise<RoleKey> {
 export async function resolvePermissionAccessForUser(userId: string): Promise<ResolvedPermissionAccess> {
   const { roleKey } = await resolvePermissionSourceForUser(userId);
   const override = await getUserOverride(userId);
-  const roleDefaults = resolveRoleDefaults(roleKey);
-  const permissions = normalizePermissionMatrix(
-    Object.fromEntries(
-      Object.entries(effectivePermissions(roleKey, override ?? undefined)).map(([moduleId, actions]) => [
-        moduleId,
-        Array.from(actions),
-      ]),
-    ),
-  );
+  const roleDefaults = await resolveProfilePermissionDefaults(roleKey);
+  const permissions = resolvePermissionsFromDefaults(roleDefaults, override ?? undefined);
 
   return {
     userId,

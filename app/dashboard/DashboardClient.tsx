@@ -3,7 +3,23 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FiArrowRight, FiCompass, FiLogOut, FiSettings } from "react-icons/fi";
+import {
+  FiActivity,
+  FiAlertCircle,
+  FiArrowRight,
+  FiBarChart2,
+  FiBriefcase,
+  FiCheckCircle,
+  FiClock,
+  FiCompass,
+  FiDatabase,
+  FiLayers,
+  FiLogOut,
+  FiSettings,
+  FiShield,
+  FiTrendingUp,
+  FiUsers,
+} from "react-icons/fi";
 import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
 import { hasCapability, type Capability } from "@/lib/permissions";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
@@ -16,11 +32,122 @@ import { useDashboardFilters } from "@/hooks/useDashboardFilters";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
+type CompanyRisk = "critical" | "warning" | "stable" | "empty";
+
+type CompanyQuality = {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  runs: number;
+  projects: number;
+  qaseProjects: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  skipped: number;
+  totalTests: number;
+  passRate: number;
+  openDefects: number;
+  risk: CompanyRisk;
+  lastActivityAt: string | null;
+};
+
+type SystemMetrics = {
+  overview: {
+    totalUsers: number;
+    totalCompanies: number;
+    totalReleases: number;
+    totalTestRuns: number;
+    activeSessions: number;
+  };
+  testStats: {
+    total: number;
+    passed: number;
+    failed: number;
+    blocked: number;
+    skipped: number;
+  };
+  releaseStats: {
+    draft: number;
+    published: number;
+    archived: number;
+  };
+  companyQuality?: CompanyQuality[];
+  consultingStats?: {
+    averagePassRate: number;
+    criticalCompanies: number;
+    attentionCompanies: number;
+    stableCompanies: number;
+    companiesWithoutRuns: number;
+    openDefects: number;
+    totalProjects: number;
+    qaseProjects: number;
+  };
+  lastUpdated?: string;
+};
+
+function formatNumber(value: unknown) {
+  const numberValue = Number(value) || 0;
+  return new Intl.NumberFormat("pt-BR").format(numberValue);
+}
+
+function formatPercent(value: unknown) {
+  const numberValue = Math.round(Number(value) || 0);
+  return `${numberValue}%`;
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return "Sem atividade";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Sem atividade";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function riskMeta(risk: CompanyRisk) {
+  if (risk === "critical") {
+    return {
+      label: "Crítico",
+      className: "border-red-200 bg-red-50 text-red-700",
+      bar: "bg-red-500",
+      description: "precisa de atuação consultiva",
+    };
+  }
+  if (risk === "warning") {
+    return {
+      label: "Atenção",
+      className: "border-amber-200 bg-amber-50 text-amber-700",
+      bar: "bg-amber-500",
+      description: "acompanhar evolução",
+    };
+  }
+  if (risk === "stable") {
+    return {
+      label: "Estável",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      bar: "bg-emerald-500",
+      description: "qualidade controlada",
+    };
+  }
+  return {
+    label: "Sem dados",
+    className: "border-slate-200 bg-slate-50 text-slate-600",
+    bar: "bg-slate-300",
+    description: "sem execução registrada",
+  };
+}
+
 export default function DashboardClient() {
   const { user, loading: userLoading } = useAuthUser();
   const { activeClient, activeClientSlug } = useClientContext();
   const router = useRouter();
   const { metrics, loading: metricsLoading, error: metricsError } = useSystemMetrics();
+  const metricsData = (metrics ?? null) as SystemMetrics | null;
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -83,7 +210,7 @@ export default function DashboardClient() {
   const displayAvatarUrl = activeIdentity.avatarUrl;
   const companyDisplayValue = isCompanyIdentity
     ? activeIdentity.companyName ?? companySlug ?? "Sem empresa"
-    : companySlug ?? activeIdentity.companyName ?? "Sem empresa";
+    : companySlug ?? activeIdentity.companyName ?? "Portfólio TC";
   const avatarFallback = (() => {
     const value = displayName.trim();
     const parts = value.split(/\s+/).filter(Boolean);
@@ -121,26 +248,55 @@ export default function DashboardClient() {
     userOrigin,
   ]);
 
+  const companyQuality = Array.isArray(metricsData?.companyQuality) ? metricsData.companyQuality : [];
+  const consultingStats = metricsData?.consultingStats ?? {
+    averagePassRate: 0,
+    criticalCompanies: 0,
+    attentionCompanies: 0,
+    stableCompanies: 0,
+    companiesWithoutRuns: 0,
+    openDefects: 0,
+    totalProjects: 0,
+    qaseProjects: 0,
+  };
+  const priorityCompanies = companyQuality.slice(0, 5);
+  const criticalCompanies = companyQuality.filter((company) => company.risk === "critical");
+  const attentionCompanies = companyQuality.filter((company) => company.risk === "warning");
+  const stableCompanies = companyQuality.filter((company) => company.risk === "stable");
+  const emptyCompanies = companyQuality.filter((company) => company.risk === "empty");
+  const totalTests = metricsData?.testStats.total ?? 0;
+  const passRate = totalTests > 0 ? Math.round(((metricsData?.testStats.passed ?? 0) / totalTests) * 100) : 0;
+
   const quickLinks = [
     {
-      title: isCompanyIdentity ? "Perfil da empresa" : "Minha conta",
-      description: isCompanyIdentity
-        ? "Atualize os dados institucionais, login de acesso e integração da empresa."
-        : "Atualize dados, senha e preferencias do usuário.",
-      href: "/settings/profile",
-      kicker: isCompanyIdentity ? "Empresa" : "Conta",
+      title: "Empresas atendidas",
+      description: "Abra a carteira de empresas e acompanhe o contexto de cada cliente.",
+      href: "/admin/clients",
+      kicker: "Carteira",
     },
     {
       title: "Solicitações",
-      description: "Abra pedidos de troca de e-mail ou empresa.",
+      description: "Revise pedidos de acesso, ajustes e entrada de novos clientes.",
       href: "/requests",
-      kicker: "Fluxo",
+      kicker: "Operação",
     },
     {
-      title: "Contexto da empresa",
-      description: "Acesse o painel principal do cliente ativo.",
-      href: companyHomeHref,
-      kicker: "Empresa",
+      title: "Gestão de Perfis",
+      description: "Valide a regra fixa de visibilidade por perfil e módulo.",
+      href: "/admin/users/permissions",
+      kicker: "Governança",
+    },
+    {
+      title: "Audit Logs",
+      description: "Consulte eventos técnicos e rastros importantes da plataforma.",
+      href: "/admin/audit-logs",
+      kicker: "Auditoria",
+    },
+    {
+      title: "Mapa do Sistema",
+      description: "Use o Brain para entender módulos, rotas e dependências do produto.",
+      href: "/admin/sistema/mapa",
+      kicker: "Brain",
     },
   ];
 
@@ -153,20 +309,7 @@ export default function DashboardClient() {
     });
   }
 
-  if (canViewSystemMetrics) {
-    quickLinks.push({
-      title: "Administração",
-      description: "Abra o painel para empresas, usuários e gestao.",
-      href: "/admin/dashboard",
-      kicker: "Admin",
-    });
-    quickLinks.push({
-      title: "Empresas",
-      description: "Veja a base de empresas cadastradas na plataforma.",
-      href: "/admin/clients",
-      kicker: "Cadastro",
-    });
-  } else if (hasCapability(capabilities, "company:write")) {
+  if (!canViewSystemMetrics && hasCapability(capabilities, "company:write")) {
     quickLinks.push({
       title: "Empresas",
       description: "Consulte a carteira de empresas com acesso permitido.",
@@ -177,47 +320,58 @@ export default function DashboardClient() {
 
   const overviewCards = [
     {
-      label: "Perfil",
-      value: roleLabel,
-      note: canViewSystemMetrics ? "Acesso administrativo ativo." : "Permissões conforme o contexto atual.",
+      label: "Empresas",
+      value: metricsData && canViewSystemMetrics ? formatNumber(metricsData.overview.totalCompanies) : "--",
+      note: "clientes acompanhados pela Testing Company.",
     },
     {
-      label: "Empresa",
-      value: companyDisplayValue,
-      note: companySlug ? "Contexto principal carregado na sessao." : "Sem vínculo ativo na sessao.",
+      label: "Saúde média",
+      value: metricsData && canViewSystemMetrics ? formatPercent(consultingStats.averagePassRate || passRate) : "--",
+      note: "pass rate médio no portfólio consultivo.",
     },
     {
-      label: "Usuários",
-      value: metrics && canViewSystemMetrics ? String(metrics.overview.totalUsers) : "--",
-      note: "Base total visivel no painel.",
+      label: "Empresas críticas",
+      value: metricsData && canViewSystemMetrics ? formatNumber(consultingStats.criticalCompanies) : "--",
+      note: "precisam de priorização da consultoria.",
     },
     {
-      label: "Runs 30d",
-      value: metrics && canViewSystemMetrics ? String(metrics.overview.totalTestRuns) : "--",
-      note: "Volume de execuções no periodo.",
+      label: "Projetos",
+      value: metricsData && canViewSystemMetrics ? formatNumber(consultingStats.totalProjects) : "--",
+      note: "operações/projetos sob controle de qualidade.",
+    },
+    {
+      label: "Defeitos abertos",
+      value: metricsData && canViewSystemMetrics ? formatNumber(consultingStats.openDefects) : "--",
+      note: "risco ativo distribuído entre empresas.",
+    },
+    {
+      label: "Qase",
+      value: metricsData && canViewSystemMetrics ? formatNumber(consultingStats.qaseProjects) : "--",
+      note: "projetos integrados ou configurados.",
     },
   ];
 
-  const systemCards = metrics
+  const systemCards = metricsData
     ? [
-        { label: "Usuários", value: metrics.overview.totalUsers, note: "Contas cadastradas na plataforma." },
-        { label: "Empresas", value: metrics.overview.totalCompanies, note: "Empresas com cadastro ativo." },
-        { label: "Runs", value: metrics.overview.totalReleases, note: "Execuções registradas no sistema." },
-        { label: "Testes 30d", value: metrics.overview.totalTestRuns, note: "Execuções consideradas no recorte." },
-        { label: "Sessoes", value: metrics.overview.activeSessions, note: "Sessoes autenticadas ativas." },
+        { label: "Usuários", value: metricsData.overview.totalUsers, note: "Contas cadastradas na plataforma." },
+        { label: "Empresas", value: metricsData.overview.totalCompanies, note: "Empresas na carteira TC." },
+        { label: "Runs", value: metricsData.overview.totalReleases, note: "Execuções registradas no sistema." },
+        { label: "Testes", value: metricsData.testStats.total, note: "Casos computados nos ciclos." },
+        { label: "Sessões", value: metricsData.overview.activeSessions, note: "Sessões autenticadas ativas." },
       ]
     : [];
+
   const dashboardContext = useDashboardContext({
     user: user ?? undefined,
-    companies: companySlug ? [{ slug: companySlug, name: companyDisplayValue }] : [],
-    fixedCompanySlug: isCompanyIdentity ? companySlug : null,
+    companies: companyQuality.map((company) => ({ slug: company.slug, name: company.name })).slice(0, 8),
+    fixedCompanySlug: null,
     labels: {
-      companyLabel: isCompanyIdentity ? companyDisplayValue : undefined,
-      periodLabel: canViewSystemMetrics ? "Últimos 30 dias" : null,
+      companyLabel: "Testing Company",
+      periodLabel: canViewSystemMetrics ? "Gestão consultiva" : null,
     },
   });
   const dashboardFilters = useDashboardFilters({
-    chips: [roleLabel, companyDisplayValue, canViewSystemMetrics ? "Últimos 30 dias" : null],
+    chips: [roleLabel, "Testing Company", canViewSystemMetrics ? "Qualidade por empresa" : null],
   });
 
   if (userLoading) {
@@ -235,12 +389,12 @@ export default function DashboardClient() {
   return (
     <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className="tc-page-shell py-4 sm:py-6">
-        <Breadcrumb items={[{ label: "Painel" }]} />
+        <Breadcrumb items={[{ label: "Painel" }, { label: "Visão geral TC" }]} />
 
         <DashboardHeader
-          kicker="Base unificada"
-          title="Dashboard contextual"
-          subtitle="Entrada única para indicadores, qualidade e execução, respeitando perfil, empresa ativa e escopo permitido."
+          kicker="Testing Company"
+          title="Visão geral de qualidade por empresa"
+          subtitle="Painel consultivo para Líder TC e Suporte Técnico acompanharem saúde, risco e execução das empresas atendidas."
           contextLabel={dashboardContext.contextLabel}
           chips={dashboardFilters.compactChips}
           hiddenChipCount={dashboardFilters.hiddenChipCount}
@@ -257,7 +411,7 @@ export default function DashboardClient() {
                     source: "dashboard",
                     agentMode: "qa",
                     panelMode: "side",
-                    initialMessage: "Analise o dashboard: indicadores de qualidade, cobertura, runs recentes e pontos críticos que precisam de atenção.",
+                    initialMessage: "Analise a visão geral da Testing Company: empresas críticas, qualidade por cliente, riscos, runs, defeitos e próximos passos consultivos.",
                   },
                 }));
               }
@@ -282,10 +436,10 @@ export default function DashboardClient() {
                 </div>
 
                 <div className="tc-hero-copy">
-                  <p className="tc-hero-kicker">Painel inicial</p>
-                  <h1 className="tc-hero-title">Visão geral da liderança</h1>
+                  <p className="tc-hero-kicker">Gestão e consultoria</p>
+                  <h1 className="tc-hero-title">Controle de qualidade da carteira</h1>
                   <p className="tc-hero-description">
-                    Base inicial para liderança TC e suporte técnico acompanharem indicadores globais, qualidade e execução.
+                    Acompanhe onde atuar primeiro, quais empresas estão em risco e quais operações precisam de atenção técnica.
                   </p>
                 </div>
               </div>
@@ -296,18 +450,27 @@ export default function DashboardClient() {
                 </span>
                 {displayUsername ? (
                   <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
-                    {isCompanyIdentity ? `Login @${displayUsername}` : `@${displayUsername}`}
+                    @{displayUsername}
                   </span>
                 ) : null}
                 <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
                   {safeUser.email ?? "Sem e-mail"}
                 </span>
+                {companySlug ? (
+                  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
+                    Empresa ativa: {companyDisplayValue}
+                  </span>
+                ) : null}
               </div>
 
               <div className="tc-hero-actions">
-                <Link href="/settings/profile" className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
-                  <FiSettings size={14} />
-                  Minha conta
+                <Link href="/admin/clients" className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
+                  <FiBriefcase size={14} />
+                  Carteira de empresas
+                </Link>
+                <Link href="/requests" className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
+                  <FiShield size={14} />
+                  Solicitações
                 </Link>
                 <button type="button" onClick={() => void handleLogout()} className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
                   <FiLogOut size={14} />
@@ -329,66 +492,179 @@ export default function DashboardClient() {
         </section>
 
         {metricsError ? (
-          <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{metricsError}</div>
-        ) : null}
-
-        {canViewSystemMetrics ? (
-          <section className="tc-panel">
-            <div className="tc-panel-header">
-              <div>
-                <p className="tc-panel-kicker">Métricas do sistema</p>
-                <h2 className="tc-panel-title">Panorama administrativo</h2>
-                <p className="tc-panel-description">Leitura rápida dos principais números do sistema para o perfil global.</p>
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-              {metricsLoading && !metrics
-                ? Array.from({ length: 5 }).map((_, index) => (
-                    <div key={index} className="tc-panel-muted min-h-30 animate-pulse" />
-                  ))
-                : systemCards.map((card) => (
-                    <div key={card.label} className="tc-kv">
-                      <div className="tc-kv-label">{card.label}</div>
-                      <div className="tc-kv-value">{card.value}</div>
-                      <div className="tc-kv-note">{card.note}</div>
-                    </div>
-                  ))}
-            </div>
-
-            {metrics ? (
-              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div className="tc-panel-muted">
-                  <div className="tc-kv-label">Aprovados</div>
-                  <div className="tc-kv-value">{metrics.testStats.passed}</div>
-                  <div className="tc-kv-note">Resultados aprovados no periodo.</div>
-                </div>
-                <div className="tc-panel-muted">
-                  <div className="tc-kv-label">Falharam</div>
-                  <div className="tc-kv-value">{metrics.testStats.failed}</div>
-                  <div className="tc-kv-note">Casos com falha registrada.</div>
-                </div>
-                <div className="tc-panel-muted">
-                  <div className="tc-kv-label">Bloqueados</div>
-                  <div className="tc-kv-value">{metrics.testStats.blocked}</div>
-                  <div className="tc-kv-note">Execuções impedidas por dependencia.</div>
-                </div>
-                <div className="tc-panel-muted">
-                  <div className="tc-kv-label">Não executados</div>
-                  <div className="tc-kv-value">{metrics.testStats.skipped}</div>
-                  <div className="tc-kv-note">Itens fora da execução no recorte.</div>
-                </div>
-              </div>
-            ) : null}
-          </section>
+          <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            {metricsError instanceof Error ? metricsError.message : String(metricsError)}
+          </div>
         ) : null}
 
         <section className="tc-panel">
           <div className="tc-panel-header">
             <div>
-              <p className="tc-panel-kicker">Ações</p>
-              <h2 className="tc-panel-title">Navegacao principal</h2>
-              <p className="tc-panel-description">Entradas principais do sistema em cards mais limpos e consistentes com o resto do produto.</p>
+              <p className="tc-panel-kicker">Gestão consultiva</p>
+              <h2 className="tc-panel-title">Prioridade de atuação por empresa</h2>
+              <p className="tc-panel-description">
+                Ranking do portfólio pela saúde de qualidade, defeitos abertos, execuções e presença de projetos integrados.
+              </p>
+            </div>
+            <FiTrendingUp size={20} className="text-(--tc-text-muted,#6b7280)" />
+          </div>
+
+          {metricsLoading && !metricsData ? (
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="tc-panel-muted min-h-40 animate-pulse" />
+              ))}
+            </div>
+          ) : priorityCompanies.length === 0 ? (
+            <div className="tc-empty-state mt-5 min-h-44">
+              Sem empresas com dados suficientes. Configure empresas, projetos ou integrações para montar a visão consultiva.
+            </div>
+          ) : (
+            <div className="mt-5 grid gap-4 xl:grid-cols-2">
+              {priorityCompanies.map((company) => {
+                const meta = riskMeta(company.risk);
+                return (
+                  <article key={company.slug} className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="truncate text-lg font-black text-(--tc-text-primary,#0b1a3c)">{company.name}</h3>
+                          <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${meta.className}`}>{meta.label}</span>
+                        </div>
+                        <p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#64748b)">/{company.slug} · {meta.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-black tracking-[-0.05em] text-(--tc-text-primary,#0b1a3c)">{formatPercent(company.passRate)}</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#64748b)">saúde</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
+                      <div className={`h-full rounded-full ${meta.bar}`} style={{ width: `${Math.max(company.passRate, company.runs > 0 ? 8 : 0)}%` }} />
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
+                        <div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">Runs</div>
+                        <div className="mt-1 text-lg font-black">{formatNumber(company.runs)}</div>
+                      </div>
+                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
+                        <div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">Projetos</div>
+                        <div className="mt-1 text-lg font-black">{formatNumber(company.projects)}</div>
+                      </div>
+                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
+                        <div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">Defeitos</div>
+                        <div className="mt-1 text-lg font-black">{formatNumber(company.openDefects)}</div>
+                      </div>
+                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
+                        <div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">Última ação</div>
+                        <div className="mt-1 text-sm font-black">{formatDateTime(company.lastActivityAt)}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Link href={`/empresas/${encodeURIComponent(company.slug)}/dashboard`} className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-white">
+                        Dashboard <FiArrowRight size={14} />
+                      </Link>
+                      <Link href={`/empresas/${encodeURIComponent(company.slug)}/projetos`} className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-(--tc-text-primary,#0b1a3c)">
+                        Projetos
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="tc-panel">
+            <div className="tc-panel-header">
+              <div>
+                <p className="tc-panel-kicker">Portfólio</p>
+                <h2 className="tc-panel-title">Resumo da carteira</h2>
+                <p className="tc-panel-description">Distribuição executiva para reunião de gestão, suporte e consultoria.</p>
+              </div>
+              <FiBarChart2 size={20} className="text-(--tc-text-muted,#6b7280)" />
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <div className="tc-panel-muted">
+                <div className="flex items-center gap-3">
+                  <FiAlertCircle className="text-red-500" />
+                  <div>
+                    <div className="tc-kv-label">Críticas</div>
+                    <div className="tc-kv-value">{formatNumber(criticalCompanies.length)}</div>
+                    <div className="tc-kv-note">empresa(s) para atuação imediata.</div>
+                  </div>
+                </div>
+              </div>
+              <div className="tc-panel-muted">
+                <div className="flex items-center gap-3">
+                  <FiActivity className="text-amber-500" />
+                  <div>
+                    <div className="tc-kv-label">Em atenção</div>
+                    <div className="tc-kv-value">{formatNumber(attentionCompanies.length)}</div>
+                    <div className="tc-kv-note">empresa(s) com risco moderado.</div>
+                  </div>
+                </div>
+              </div>
+              <div className="tc-panel-muted">
+                <div className="flex items-center gap-3">
+                  <FiCheckCircle className="text-emerald-500" />
+                  <div>
+                    <div className="tc-kv-label">Estáveis</div>
+                    <div className="tc-kv-value">{formatNumber(stableCompanies.length)}</div>
+                    <div className="tc-kv-note">empresa(s) com qualidade controlada.</div>
+                  </div>
+                </div>
+              </div>
+              <div className="tc-panel-muted">
+                <div className="flex items-center gap-3">
+                  <FiClock className="text-slate-500" />
+                  <div>
+                    <div className="tc-kv-label">Sem dados</div>
+                    <div className="tc-kv-value">{formatNumber(emptyCompanies.length)}</div>
+                    <div className="tc-kv-note">precisam de onboarding operacional.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {canViewSystemMetrics ? (
+            <section className="tc-panel">
+              <div className="tc-panel-header">
+                <div>
+                  <p className="tc-panel-kicker">Base da plataforma</p>
+                  <h2 className="tc-panel-title">Números administrativos</h2>
+                  <p className="tc-panel-description">Indicadores técnicos que sustentam a operação da Testing Company.</p>
+                </div>
+                <FiDatabase size={20} className="text-(--tc-text-muted,#6b7280)" />
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {metricsLoading && !metricsData
+                  ? Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} className="tc-panel-muted min-h-28 animate-pulse" />
+                    ))
+                  : systemCards.map((card) => (
+                      <div key={card.label} className="tc-kv">
+                        <div className="tc-kv-label">{card.label}</div>
+                        <div className="tc-kv-value">{formatNumber(card.value)}</div>
+                        <div className="tc-kv-note">{card.note}</div>
+                      </div>
+                    ))}
+              </div>
+            </section>
+          ) : null}
+        </section>
+
+        <section className="tc-panel">
+          <div className="tc-panel-header">
+            <div>
+              <p className="tc-panel-kicker">Ações de gestão</p>
+              <h2 className="tc-panel-title">Atalhos para liderança e suporte</h2>
+              <p className="tc-panel-description">Entradas principais para operação consultiva, governança e sustentação técnica.</p>
             </div>
             <FiCompass size={20} className="text-(--tc-text-muted,#6b7280)" />
           </div>

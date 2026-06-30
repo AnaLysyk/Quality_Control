@@ -116,8 +116,18 @@ function notificationWorkflowId(type: NotificationType) {
   if (type === "RUN_CREATED") return "run-created";
   if (type === "TEST_FAILED") return "test-failed";
   if (type === "DEFECT_ASSIGNED") return "defect-assigned";
+  if (type === "DEFECT_STATUS_CHANGED" || type === "DEFECT_COMMENT_ADDED") return "defect-updated";
+  if (type === "TICKET_CREATED") return "ticket-created";
+  if (type === "TICKET_COMMENT_ADDED") return "ticket-comment";
+  if (type === "TICKET_STATUS_CHANGED" || type === "TICKET_REACTION_ADDED" || type === "TICKET_ASSIGNED") return "ticket-updated";
+  if (type === "DOC_PUBLISHED") return "doc-published";
+  if (type === "ACCESS_REQUEST_CREATED") return "access-request-created";
+  if (type === "ACCESS_REQUEST_COMMENT" || type === "ACCESS_REQUEST_ADJUSTMENT_REQUESTED") return "access-request-updated";
+  if (type === "ACCESS_REQUEST_ACCEPTED" || type === "ACCESS_REQUEST_REJECTED") return "access-request-decision";
   if (type === "USER_ACCESS_UPDATED" || type === "USER_ACCESS_RESTORED") return "access-updated";
   if (type.startsWith("PASSWORD_RESET")) return "password-reset";
+  if (type === "PROFILE_DELETION_REQUEST" || type === "PROFILE_DELETION_PENDING") return "profile-deletion-request";
+  if (type === "PROFILE_DELETION_APPROVED" || type === "PROFILE_DELETION_REJECTED") return "profile-deletion-decision";
   return type;
 }
 

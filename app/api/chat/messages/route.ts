@@ -9,6 +9,7 @@ import {
   listChatThreadMessages,
   type ChatAttachment,
 } from "@/lib/chatStore";
+import { recordConversationBrainSignal } from "@/lib/conversationBrainFeed";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 
 export const runtime = "nodejs";
@@ -16,6 +17,18 @@ export const revalidate = 0;
 
 function readPeerId(url: URL) {
   return (url.searchParams.get("peerId") ?? url.searchParams.get("peer_id") ?? "").trim();
+}
+
+function readOptionalString(input: Record<string, unknown>, key: string) {
+  const value = input[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function firstNonEmpty(...values: Array<string | null | undefined>) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
 }
 
 export async function GET(req: NextRequest) {
@@ -61,9 +74,13 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => null);
-  const peerId = typeof body?.peerId === "string" ? body.peerId.trim() : "";
-  const text = typeof body?.text === "string" ? body.text.trim() : "";
-  const attachments = Array.isArray(body?.attachments) ? (body.attachments as ChatAttachment[]) : [];
+  const payload = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  const peerId = readOptionalString(payload, "peerId") ?? "";
+  const text = readOptionalString(payload, "text") ?? "";
+  const attachments = Array.isArray(payload.attachments) ? (payload.attachments as ChatAttachment[]) : [];
+  const projectId = readOptionalString(payload, "projectId");
+  const projectSlug = readOptionalString(payload, "projectSlug");
+  const forceBrainCandidate = payload.remember === true || payload.feedBrain === true;
 
   if (!peerId) {
     return NextResponse.json({ error: "peerId obrigatorio" }, { status: 400 });
@@ -106,10 +123,35 @@ export async function POST(req: NextRequest) {
     attachments,
   });
 
+  const accessRecord = access as unknown as Record<string, unknown>;
+  const companyName = firstNonEmpty(
+    readOptionalString(payload, "companyName"),
+    peerContact.company_name,
+    Array.isArray(peerContact.company_names) ? peerContact.company_names[0] : null,
+  );
+
+  const brainSignal = await recordConversationBrainSignal({
+    messageId: message.id,
+    threadKey: message.threadKey,
+    text: message.text,
+    actorId: sender.id,
+    actorName: message.senderName,
+    peerId: peerContact.id,
+    peerName: peerContact.name,
+    companyId: firstNonEmpty(readOptionalString(payload, "companyId"), readOptionalString(accessRecord, "companyId")),
+    companySlug: firstNonEmpty(readOptionalString(payload, "companySlug"), readOptionalString(accessRecord, "companySlug")),
+    companyName,
+    projectId,
+    projectSlug,
+    profileKind: peerContact.profile_kind ?? peerContact.permission_role ?? null,
+    forceCandidate: forceBrainCandidate,
+  });
+
   return NextResponse.json(
     {
       ok: true,
       message,
+      brainSignal,
     },
     { headers: NO_STORE_HEADERS },
   );

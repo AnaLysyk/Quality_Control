@@ -36,9 +36,8 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const { activeModuleId, isModuleActive, isItemActive } = useActiveNavigation(modules, pathname);
   const { favorites, removeFavorite } = useFavorites();
   const { user } = usePermissionAccess();
-  const { activeClientSlug } = useClientContext();
+  const { clients, activeClientSlug, setActiveClientSlug } = useClientContext();
 
-  // Auto-open the active section when pathname changes
   useEffect(() => {
     if (activeModuleId) openSection(activeModuleId);
   }, [activeModuleId, openSection]);
@@ -112,7 +111,26 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         onClose={onClose}
       />
 
-      {/* Project selector — visible when a company is active */}
+      {clients.length > 0 && !collapsed ? (
+        <div className="px-3 pt-2">
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-white/35">
+            Empresa
+          </label>
+          <select
+            value={activeClientSlug ?? ""}
+            onChange={(event) => setActiveClientSlug(event.target.value || null)}
+            className="w-full rounded-md border border-white/15 bg-white/10 px-2 py-1.5 text-[11px] font-medium text-white outline-none transition hover:bg-white/20"
+          >
+            <option value="" className="text-slate-900">Selecionar empresa</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.slug} className="text-slate-900">
+                {client.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
       {activeClientSlug && (
         <div className="pt-2">
           <ProjectSelector collapsed={collapsed} />
@@ -121,7 +139,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       )}
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {/* Favorites */}
         {visibleFavorites.length > 0 && (
           <>
             <div className="pt-3">
@@ -138,7 +155,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           </>
         )}
 
-        {/* Navigation — expanded */}
         {!collapsed && (
           <nav className="px-3 py-2">
             <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">
@@ -161,7 +177,6 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           </nav>
         )}
 
-        {/* Navigation — collapsed (flyout on hover) */}
         {collapsed && (
           <nav className="px-1.5 py-1">
             <div className="space-y-0.5">

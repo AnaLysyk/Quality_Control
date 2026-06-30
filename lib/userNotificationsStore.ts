@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 import { createNotificationEvent, type NotificationEventSourceType } from "@/lib/notificationEventsStore";
+import { buildNotificationOperationalMetadata } from "@/lib/notificationOperationalMetadata";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
@@ -149,8 +150,22 @@ function notificationSourceId(input: NotificationInput) {
 }
 
 function notificationPayload(input: NotificationInput) {
+  const operationalMetadata = buildNotificationOperationalMetadata({
+    type: input.type,
+    title: input.title,
+    description: input.description ?? null,
+    link: input.link ?? null,
+    companySlug: input.companySlug ?? null,
+    projectSlug: input.projectSlug ?? null,
+    requestId: input.requestId ?? null,
+    ticketId: input.ticketId ?? null,
+    dedupeKey: input.dedupeKey ?? null,
+    sourceId: input.sourceId ?? null,
+  });
+
   return {
     ...(input.payload ?? {}),
+    ...operationalMetadata,
     notificationType: input.type,
     link: input.link ?? null,
     requestId: input.requestId ?? null,

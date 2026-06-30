@@ -55,7 +55,12 @@ export const QUALITY_PROJECT_MATCHES = {
     "**/health-score.spec.ts",
     "**/trend-dashboard.spec.ts",
   ],
-  "quality-ui": ["**/mobile-menu.spec.ts", "**/responsive.spec.ts", "**/theme-visibility.spec.ts"],
+  "quality-ui": [
+    "**/mobile-menu.spec.ts",
+    "**/playwright-inspired-shell.spec.ts",
+    "**/responsive.spec.ts",
+    "**/theme-visibility.spec.ts",
+  ],
 } as const;
 
 const groupedTestMatches = Array.from(new Set(Object.values(QUALITY_PROJECT_MATCHES).flat()));

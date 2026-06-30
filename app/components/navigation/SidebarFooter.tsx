@@ -28,39 +28,38 @@ export default function SidebarFooter({ collapsed }: SidebarFooterProps) {
 
   if (collapsed) {
     return (
-      <div className="border-t border-white/10 px-1.5 py-2 flex flex-col items-center gap-1.5">
+      <div className="flex flex-col items-center gap-1.5 border-t border-slate-200 bg-white px-1.5 py-2">
         <button
           type="button"
           onClick={handleToggle}
           aria-label={label}
           title={label}
-          className="flex h-8 w-8 items-center justify-center rounded-xl text-white/50 transition hover:bg-white/10 hover:text-white"
+          className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
         >
           {mounted ? <Icon size={14} /> : <FiMoon size={14} />}
         </button>
-        <span className="text-[9px] font-mono text-white/20 leading-none select-none">{APP_VERSION}</span>
+        <span className="select-none font-mono text-[9px] leading-none text-slate-400">{APP_VERSION}</span>
       </div>
     );
   }
 
   return (
-    <div className="border-t border-white/10 px-3 py-2.5 flex items-center justify-between gap-2">
+    <div className="flex items-center justify-between gap-2 border-t border-slate-200 bg-white px-3 py-2.5">
       <div className="flex min-w-0 flex-col">
         <Link
           href="https://www.testingcompany.com.br/"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60 truncate hover:text-white/90 transition"
+          className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 transition hover:text-slate-950"
         >
           Testing Company
         </Link>
-        <span className="text-[10px] font-mono text-white/30 leading-tight select-none">
+        <span className="select-none font-mono text-[10px] leading-tight text-slate-400">
           {APP_VERSION}
         </span>
       </div>
 
-      {/* Theme toggle: pill com claro/escuro */}
-      <div className="shrink-0 flex items-center gap-0.5 rounded-full border border-white/15 bg-white/8 p-0.5">
+      <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-slate-200 bg-slate-50 p-0.5">
         <button
           type="button"
           onClick={() => setTheme("light")}
@@ -68,8 +67,8 @@ export default function SidebarFooter({ collapsed }: SidebarFooterProps) {
           title="Modo claro"
           className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
             mounted && !isDark
-              ? "bg-white/90 text-[#011848] shadow-sm"
-              : "text-white/50 hover:text-white"
+              ? "bg-white text-slate-950 shadow-sm"
+              : "text-slate-500 hover:text-slate-950"
           }`}
         >
           <FiSun size={12} />
@@ -81,8 +80,8 @@ export default function SidebarFooter({ collapsed }: SidebarFooterProps) {
           title="Modo escuro"
           className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
             mounted && isDark
-              ? "bg-white/20 text-white shadow-sm"
-              : "text-white/50 hover:text-white"
+              ? "bg-slate-950 text-white shadow-sm"
+              : "text-slate-500 hover:text-slate-950"
           }`}
         >
           <FiMoon size={12} />

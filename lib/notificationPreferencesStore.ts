@@ -2,6 +2,7 @@ import "server-only";
 
 import { getRedis } from "@/lib/redis";
 import { getNotificationOperationModel, type NotificationChannel } from "@/data/notificationOperationModel";
+import { notificationWorkflowExtensions } from "@/data/notificationWorkflowExtensions";
 
 export type NotificationPreferenceTarget = "company" | "profile" | "user";
 export type NotificationPreferenceDecision = "enabled" | "disabled";
@@ -23,6 +24,7 @@ type NotificationPreferencesStore = {
 };
 
 const STORE_KEY = "qc:notification_preferences:v1";
+let memoryStore: NotificationPreferencesStore = emptyStore();
 
 function emptyStore(): NotificationPreferencesStore {
   return { preferences: [] };
@@ -58,26 +60,36 @@ function normalizePreference(input: Partial<NotificationPreference> | null | und
   };
 }
 
+function normalizeStore(store: Partial<NotificationPreferencesStore> | null | undefined): NotificationPreferencesStore {
+  if (!store || typeof store !== "object" || !Array.isArray(store.preferences)) return emptyStore();
+  return {
+    preferences: store.preferences
+      .map((item) => normalizePreference(item))
+      .filter((item): item is NotificationPreference => Boolean(item)),
+  };
+}
+
 async function readStore(): Promise<NotificationPreferencesStore> {
   try {
     const redis = getRedis();
     const raw = await redis.get<string>(STORE_KEY);
-    if (!raw) return emptyStore();
+    if (!raw) return memoryStore;
     const parsed = JSON.parse(raw) as Partial<NotificationPreferencesStore> | null;
-    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.preferences)) return emptyStore();
-    return {
-      preferences: parsed.preferences
-        .map((item) => normalizePreference(item))
-        .filter((item): item is NotificationPreference => Boolean(item)),
-    };
+    memoryStore = normalizeStore(parsed);
+    return memoryStore;
   } catch {
-    return emptyStore();
+    return memoryStore;
   }
 }
 
 async function writeStore(store: NotificationPreferencesStore) {
-  const redis = getRedis();
-  await redis.set(STORE_KEY, JSON.stringify(store));
+  memoryStore = normalizeStore(store);
+  try {
+    const redis = getRedis();
+    await redis.set(STORE_KEY, JSON.stringify(memoryStore));
+  } catch {
+    // fallback em memoria para ambiente local sem Redis
+  }
 }
 
 export async function listNotificationPreferences() {
@@ -110,7 +122,8 @@ export async function resolveNotificationDeliveryDecision(input: {
   userId?: string | null;
 }): Promise<{ decision: NotificationDeliveryDecision; reason: string }> {
   const model = getNotificationOperationModel();
-  const workflow = model.workflows.find((item) => item.id === input.workflowId || item.eventType === input.workflowId);
+  const workflows = [...model.workflows, ...notificationWorkflowExtensions];
+  const workflow = workflows.find((item) => item.id === input.workflowId || item.eventType === input.workflowId);
   if (!workflow) return { decision: "delivered", reason: "Workflow nao configurado; entrega liberada por padrao." };
   if (workflow.mandatory) return { decision: "mandatory_override", reason: "Evento obrigatorio: preferencias nao bloqueiam recebimento." };
 

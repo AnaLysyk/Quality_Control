@@ -59,6 +59,7 @@ type NotificationEventsStore = {
 const STORE_KEY = "qc:notification_events:v1";
 const MAX_EVENTS = 500;
 const MAX_DELIVERIES = 1500;
+let memoryStore: NotificationEventsStore = emptyStore();
 
 function emptyStore(): NotificationEventsStore {
   return { events: [], deliveries: [] };
@@ -132,28 +133,39 @@ function normalizeDelivery(input: Partial<NotificationDeliveryRecord> | null | u
   };
 }
 
+function normalizeStore(store: Partial<NotificationEventsStore> | null | undefined): NotificationEventsStore {
+  if (!store || typeof store !== "object") return emptyStore();
+  return {
+    events: Array.isArray(store.events) ? store.events.map((item) => normalizeEvent(item)).filter((item): item is NotificationEventRecord => Boolean(item)) : [],
+    deliveries: Array.isArray(store.deliveries) ? store.deliveries.map((item) => normalizeDelivery(item)).filter((item): item is NotificationDeliveryRecord => Boolean(item)) : [],
+  };
+}
+
 async function readStore(): Promise<NotificationEventsStore> {
   try {
     const redis = getRedis();
     const raw = await redis.get<string>(STORE_KEY);
-    if (!raw) return emptyStore();
+    if (!raw) return memoryStore;
     const parsed = JSON.parse(raw) as Partial<NotificationEventsStore> | null;
-    if (!parsed || typeof parsed !== "object") return emptyStore();
-    return {
-      events: Array.isArray(parsed.events) ? parsed.events.map((item) => normalizeEvent(item)).filter((item): item is NotificationEventRecord => Boolean(item)) : [],
-      deliveries: Array.isArray(parsed.deliveries) ? parsed.deliveries.map((item) => normalizeDelivery(item)).filter((item): item is NotificationDeliveryRecord => Boolean(item)) : [],
-    };
+    memoryStore = normalizeStore(parsed);
+    return memoryStore;
   } catch {
-    return emptyStore();
+    return memoryStore;
   }
 }
 
 async function writeStore(store: NotificationEventsStore) {
-  const redis = getRedis();
-  await redis.set(STORE_KEY, JSON.stringify({
+  const next = {
     events: store.events.slice(0, MAX_EVENTS),
     deliveries: store.deliveries.slice(0, MAX_DELIVERIES),
-  }));
+  };
+  memoryStore = next;
+  try {
+    const redis = getRedis();
+    await redis.set(STORE_KEY, JSON.stringify(next));
+  } catch {
+    // fallback em memoria para ambiente local sem Redis
+  }
 }
 
 export async function createNotificationEvent(input: {

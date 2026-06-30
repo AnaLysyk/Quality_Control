@@ -1,6 +1,8 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
+import { createNotificationEvent, type NotificationEventSourceType } from "@/lib/notificationEventsStore";
+import { buildNotificationOperationalMetadata } from "@/lib/notificationOperationalMetadata";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
@@ -54,6 +56,25 @@ export type UserNotification = {
   dedupeKey?: string | null;
 };
 
+type NotificationInput = {
+  type: NotificationType;
+  title: string;
+  description?: string | null;
+  status?: NotificationStatus;
+  link?: string | null;
+  companySlug?: string | null;
+  companyName?: string | null;
+  projectSlug?: string | null;
+  actorId?: string | null;
+  actorName?: string | null;
+  requestId?: string | null;
+  ticketId?: string | null;
+  dedupeKey?: string | null;
+  sourceType?: NotificationEventSourceType;
+  sourceId?: string | null;
+  payload?: Record<string, unknown>;
+};
+
 type NotificationsStore = Record<string, UserNotification[]>;
 
 const STORE_KEY = "qc:user_notifications:v1";
@@ -99,20 +120,99 @@ function sanitizeText(value: unknown, max: number, fallback = "") {
   return trimmed.length ? trimmed.slice(0, max) : fallback;
 }
 
+function notificationWorkflowId(type: NotificationType) {
+  if (type === "RUN_CREATED") return "run-created";
+  if (type === "TEST_FAILED") return "test-failed";
+  if (type === "DEFECT_ASSIGNED") return "defect-assigned";
+  if (type === "DEFECT_STATUS_CHANGED" || type === "DEFECT_COMMENT_ADDED") return "defect-updated";
+  if (type === "TICKET_CREATED") return "ticket-created";
+  if (type === "TICKET_COMMENT_ADDED") return "ticket-comment";
+  if (type === "TICKET_STATUS_CHANGED" || type === "TICKET_REACTION_ADDED" || type === "TICKET_ASSIGNED") return "ticket-updated";
+  if (type === "DOC_PUBLISHED") return "doc-published";
+  if (type === "ACCESS_REQUEST_CREATED") return "access-request-created";
+  if (type === "ACCESS_REQUEST_COMMENT" || type === "ACCESS_REQUEST_ADJUSTMENT_REQUESTED") return "access-request-updated";
+  if (type === "ACCESS_REQUEST_ACCEPTED" || type === "ACCESS_REQUEST_REJECTED") return "access-request-decision";
+  if (type === "USER_ACCESS_UPDATED" || type === "USER_ACCESS_RESTORED") return "access-updated";
+  if (type.startsWith("PASSWORD_RESET")) return "password-reset";
+  if (type === "PROFILE_DELETION_REQUEST" || type === "PROFILE_DELETION_PENDING") return "profile-deletion-request";
+  if (type === "PROFILE_DELETION_APPROVED" || type === "PROFILE_DELETION_REJECTED") return "profile-deletion-decision";
+  return type;
+}
+
+function defaultSourceType(type: NotificationType): NotificationEventSourceType {
+  if (type === "RUN_CREATED" || type === "TEST_FAILED" || type.startsWith("DEFECT_")) return "qa_operation";
+  if (type.startsWith("TICKET_")) return "qa_operation";
+  return "manual";
+}
+
+function notificationSourceId(input: NotificationInput) {
+  return input.sourceId ?? input.requestId ?? input.ticketId ?? input.dedupeKey ?? null;
+}
+
+function notificationPayload(input: NotificationInput) {
+  const operationalMetadata = buildNotificationOperationalMetadata({
+    type: input.type,
+    title: input.title,
+    description: input.description ?? null,
+    link: input.link ?? null,
+    companySlug: input.companySlug ?? null,
+    projectSlug: input.projectSlug ?? null,
+    requestId: input.requestId ?? null,
+    ticketId: input.ticketId ?? null,
+    dedupeKey: input.dedupeKey ?? null,
+    sourceId: input.sourceId ?? null,
+  });
+
+  return {
+    ...(input.payload ?? {}),
+    ...operationalMetadata,
+    notificationType: input.type,
+    link: input.link ?? null,
+    requestId: input.requestId ?? null,
+    ticketId: input.ticketId ?? null,
+    dedupeKey: input.dedupeKey ?? null,
+    companySlug: input.companySlug ?? null,
+    projectSlug: input.projectSlug ?? null,
+  };
+}
+
+async function shouldDeliverInAppNotification(userId: string, input: NotificationInput) {
+  const result = await createNotificationEvent({
+    workflowId: notificationWorkflowId(input.type),
+    title: input.title,
+    description: input.description ?? "",
+    companySlug: input.companySlug ?? null,
+    companyName: input.companyName ?? null,
+    projectSlug: input.projectSlug ?? null,
+    actorId: input.actorId ?? null,
+    actorName: input.actorName ?? null,
+    sourceType: input.sourceType ?? defaultSourceType(input.type),
+    sourceId: notificationSourceId(input),
+    payload: notificationPayload(input),
+    recipients: [
+      {
+        recipientId: userId,
+        recipientName: null,
+        profileKind: null,
+        channels: ["in_app"],
+      },
+      {
+        recipientId: "brain",
+        recipientName: "Brain",
+        profileKind: "brain",
+        channels: ["brain"],
+      },
+    ],
+  });
+
+  const delivery = result.deliveries.find((item) => item.recipientId === userId && item.channel === "in_app");
+  return delivery?.status !== "suppressed";
+}
+
 function appendNotification(
   store: NotificationsStore,
   userId: string,
-  input: {
-    type: NotificationType;
-    title: string;
-    description?: string | null;
-    status?: NotificationStatus;
-    link?: string | null;
-    companySlug?: string | null;
-    requestId?: string | null;
-    ticketId?: string | null;
-    dedupeKey?: string | null;
-  },
+  input: NotificationInput,
 ) {
   const items = Array.isArray(store[userId]) ? store[userId] : [];
   if (input.dedupeKey) {
@@ -170,17 +270,7 @@ export async function countUnreadUserNotifications(userId: string) {
 
 export async function createUserNotification(
   userId: string,
-  input: {
-    type: NotificationType;
-    title: string;
-    description?: string | null;
-    status?: NotificationStatus;
-    link?: string | null;
-    companySlug?: string | null;
-    requestId?: string | null;
-    ticketId?: string | null;
-    dedupeKey?: string | null;
-  },
+  input: NotificationInput,
 ) {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
@@ -188,10 +278,22 @@ export async function createUserNotification(
       const existing = await prisma.userNotification.findFirst({ where: { userId, dedupeKey: input.dedupeKey } });
       if (existing) return pgToRecord(existing);
     }
+    const shouldDeliver = await shouldDeliverInAppNotification(userId, input);
+    if (!shouldDeliver) return null;
     const r = await prisma.userNotification.create({ data: { userId, type: input.type, title: sanitizeText(input.title, 120, "Notificacao"), description: sanitizeText(input.description ?? "", 400), status: input.status ?? "unread", link: input.link ?? null, companySlug: input.companySlug ?? null, requestId: input.requestId ?? null, ticketId: input.ticketId ?? null, dedupeKey: input.dedupeKey ?? null } });
     return pgToRecord(r);
   }
+
   const store = await readStore();
+  const items = Array.isArray(store[userId]) ? store[userId] : [];
+  if (input.dedupeKey) {
+    const existing = items.find((item) => item.dedupeKey === input.dedupeKey);
+    if (existing) return existing;
+  }
+
+  const shouldDeliver = await shouldDeliverInAppNotification(userId, input);
+  if (!shouldDeliver) return null;
+
   const { item, created } = appendNotification(store, userId, input);
   if (created) {
     await writeStore(store);
@@ -201,35 +303,13 @@ export async function createUserNotification(
 
 export async function createNotificationsForUsers(
   userIds: string[],
-  input: {
-    type: NotificationType;
-    title: string;
-    description?: string | null;
-    status?: NotificationStatus;
-    link?: string | null;
-    companySlug?: string | null;
-    requestId?: string | null;
-    ticketId?: string | null;
-    dedupeKey?: string | null;
-  },
+  input: NotificationInput,
 ) {
   const unique = Array.from(new Set(userIds.filter(Boolean)));
-  if (USE_POSTGRES) {
-    const created: UserNotification[] = [];
-    for (const userId of unique) {
-      const n = await createUserNotification(userId, input);
-      created.push(n);
-    }
-    return created;
-  }
-  const store = await readStore();
   const created: UserNotification[] = [];
   for (const userId of unique) {
-    const { item, created: wasCreated } = appendNotification(store, userId, input);
-    if (wasCreated) created.push(item);
-  }
-  if (created.length) {
-    await writeStore(store);
+    const notification = await createUserNotification(userId, input);
+    if (notification) created.push(notification);
   }
   return created;
 }
@@ -263,69 +343,18 @@ export async function updateNotificationStatus(
 export async function closeNotificationsByDedupeKey(userId: string, dedupeKey: string) {
   if (USE_POSTGRES) {
     const prisma = await getPrisma();
-    const result = await prisma.userNotification.updateMany({ where: { userId, dedupeKey, status: "unread" }, data: { status: "closed" } });
-    return result.count > 0;
+    await prisma.userNotification.updateMany({ where: { userId, dedupeKey }, data: { status: "closed" } });
+    return;
   }
   const store = await readStore();
-  const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
+  const items = Array.isArray(store[userId]) ? store[userId] : [];
   let changed = false;
-  const nextItems = items.map<UserNotification>((item) => {
+  store[userId] = items.map((item) => {
     if (item.dedupeKey === dedupeKey && item.status !== "closed") {
       changed = true;
       return { ...item, status: "closed", updatedAt: new Date().toISOString() };
     }
     return item;
   });
-  if (changed) {
-    const nextStore: NotificationsStore = { ...store, [userId]: nextItems };
-    await writeStore(nextStore);
-  }
-  return changed;
-}
-
-export async function closeNotificationsByTicketId(userId: string, ticketId: string) {
-  if (!ticketId) return false;
-  if (USE_POSTGRES) {
-    const prisma = await getPrisma();
-    const result = await prisma.userNotification.updateMany({ where: { userId, ticketId, status: "unread" }, data: { status: "closed" } });
-    return result.count > 0;
-  }
-  const store = await readStore();
-  const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
-  let changed = false;
-  const nextItems = items.map<UserNotification>((item) => {
-    if (item.ticketId === ticketId && item.status !== "closed") {
-      changed = true;
-      return { ...item, status: "closed", updatedAt: new Date().toISOString() };
-    }
-    return item;
-  });
-  if (changed) {
-    const nextStore: NotificationsStore = { ...store, [userId]: nextItems };
-    await writeStore(nextStore);
-  }
-  return changed;
-}
-
-export async function closeAllNotifications(userId: string) {
-  if (USE_POSTGRES) {
-    const prisma = await getPrisma();
-    const result = await prisma.userNotification.updateMany({ where: { userId, status: "unread" }, data: { status: "closed" } });
-    return result.count > 0;
-  }
-  const store = await readStore();
-  const items = (Array.isArray(store[userId]) ? store[userId] : []) as UserNotification[];
-  let changed = false;
-  const nextItems = items.map<UserNotification>((item) => {
-    if (item.status !== "closed") {
-      changed = true;
-      return { ...item, status: "closed", updatedAt: new Date().toISOString() };
-    }
-    return item;
-  });
-  if (changed) {
-    const nextStore: NotificationsStore = { ...store, [userId]: nextItems };
-    await writeStore(nextStore);
-  }
-  return changed;
+  if (changed) await writeStore(store);
 }

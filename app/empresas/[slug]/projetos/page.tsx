@@ -3,8 +3,8 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
-import { FiFolder, FiLink, FiPlus, FiRefreshCw, FiSearch } from "react-icons/fi";
+import { useParams, useRouter } from "next/navigation";
+import { FiBarChart2, FiClipboard, FiFolder, FiLink, FiPlus, FiRefreshCw, FiSearch } from "react-icons/fi";
 import Breadcrumb from "@/components/Breadcrumb";
 import { fetchApi } from "@/lib/api";
 import { useProjectContext } from "@/lib/core/project/ProjectContext";
@@ -50,9 +50,16 @@ function makeProjectKey(project: ProjectItem) {
   return project.qaseProjectCode ? `qase:${project.qaseProjectCode.toUpperCase()}` : `manual:${project.slug}`;
 }
 
+function operationUrl(companySlug: string, project: ProjectItem, route = "dashboard") {
+  const params = new URLSearchParams({ companySlug, projectSlug: project.slug });
+  if (project.qaseProjectCode) params.set("projectCode", project.qaseProjectCode);
+  return `/empresas/${companySlug}/${route}?${params.toString()}`;
+}
+
 export default function CompanyProjectsPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { refreshProjects } = useProjectContext();
+  const router = useRouter();
+  const { refreshProjects, setActiveProject } = useProjectContext();
   const companySlug = String(slug ?? "");
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +145,17 @@ export default function CompanyProjectsPage() {
   const manualCount = projects.filter((project) => !project.qaseProjectCode && String(project.source ?? "manual").toLowerCase() !== "qase").length;
   const qaseCount = projects.filter((project) => project.qaseProjectCode || String(project.source ?? "").toLowerCase() === "qase").length;
 
+  async function syncQase() {
+    await loadProjects(true);
+    await refreshProjects();
+  }
+
+  async function openOperation(project: ProjectItem, route = "dashboard") {
+    await refreshProjects();
+    setActiveProject(project.qaseProjectCode ?? project.slug);
+    router.push(operationUrl(companySlug, project, route));
+  }
+
   async function createProject() {
     const name = draft.name.trim();
     const slugValue = normalizeSlug(draft.slug || draft.name);
@@ -184,7 +202,7 @@ export default function CompanyProjectsPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Operacional da empresa</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Projetos</h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-white/82">
-                A antiga tela de aplicações volta como Projetos: cadastro manual para empresas sem integração e sincronização com Qase quando configurado.
+                Cada aplicação/projeto abre uma operação própria de qualidade: dashboard, casos, defeitos, planos e runs ficam escopados pelo projeto selecionado.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
@@ -202,7 +220,7 @@ export default function CompanyProjectsPage() {
               <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, slug ou código Qase" className="h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10" />
             </label>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => void loadProjects(true)} disabled={syncing} className="inline-flex h-12 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-xs font-black uppercase tracking-[0.12em] text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-alt,#f8fafc) disabled:opacity-60">
+              <button type="button" onClick={() => void syncQase()} disabled={syncing} className="inline-flex h-12 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-xs font-black uppercase tracking-[0.12em] text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-alt,#f8fafc) disabled:opacity-60">
                 <FiRefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} /> Sincronizar Qase
               </button>
               <button type="button" onClick={() => setCreateOpen(true)} className="inline-flex h-12 items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,var(--tc-primary,#011848)_0%,var(--tc-accent,#ef0001)_100%)] px-4 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.22)] transition hover:-translate-y-0.5 hover:opacity-95">
@@ -229,6 +247,10 @@ export default function CompanyProjectsPage() {
                     <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${sourceClass(project)}`}>{sourceLabel(project)}</span>
                   </div>
                   <p className="mt-4 min-h-12 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{project.description || "Sem descrição operacional cadastrada."}</p>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => void openOperation(project, "dashboard")} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:opacity-90"><FiBarChart2 /> Abrir operação</button>
+                    <button type="button" onClick={() => void openOperation(project, "defeitos")} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.08em] text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface,#f8fafc)"><FiClipboard /> Defeitos</button>
+                  </div>
                 </article>
               ))}
             </div>

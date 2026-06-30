@@ -24,8 +24,8 @@
     "test:e2e:projects": "cross-env E2E_USE_JSON=1 playwright test --list",
     "test:e2e:headed": "cross-env E2E_USE_JSON=1 PLAYWRIGHT_HEADED=1 PLAYWRIGHT_TRACE=on PLAYWRIGHT_VIDEO=on PLAYWRIGHT_SCREENSHOT=on playwright test --headed",
     "test:e2e:ui": "cross-env E2E_USE_JSON=1 PLAYWRIGHT_HEADED=1 PLAYWRIGHT_TRACE=on PLAYWRIGHT_VIDEO=on PLAYWRIGHT_SCREENSHOT=on playwright test --ui",
-    "test:e2e:debug": "cross-env E2E_USE_JSON=1 PLAYWRIGHT_HEADED=1 PLAYWRIGHT_TRACE=on PLAYWRIGHT_VIDEO=on PLAYWRIGHT_SCREENSHOT=on PWDEBUG=1 playwright test --debug",
-    "test:e2e:edge": "cross-env E2E_USE_JSON=1 PLAYWRIGHT_HEADED=1 PLAYWRIGHT_CHANNEL=msedge PLAYWRIGHT_TRACE=on PLAYWRIGHT_VIDEO=on PLAYWRIGHT_SCREENSHOT=on playwright test --headed",
+    "test:e2e:debug": "cross-env E2E_USE_JSON=1 PLAYWRIGHT_HEADED=1 PLAYWRIGHT_TRACE=on PLAYWRIGHT_VIDEO=on PWDEBUG=1 playwright test --debug",
+    "test:e2e:edge": "cross-env E2E_USE_JSON=1 PLAYWRIGHT_HEADED=1 PLAYWRIGHT_CHANNEL=msedge PLAYWRIGHT_TRACE=on PLAYWRIGHT_VIDEO=on playwright test --headed",
     "test:e2e:trace": "playwright show-trace",
     "backfill:company-integrations": "tsx support/functions/banco-de-dados/migracoes/integracoes/preencher-integracoes-existentes.ts",
     "test:e2e:smoke": "cross-env E2E_USE_JSON=1 playwright test --project=quality-smoke",
@@ -109,7 +109,8 @@
     "recharts": "^3.5.1",
     "server-only": "^0.0.1",
     "sharp": "^0.34.5",
-    "swr": "^2.4.1"
+    "swr": "^2.4.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",

@@ -26,6 +26,12 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const requestedCompanySlug = normalizeString(url.searchParams.get("companySlug"));
+  const requestedProjectScope =
+    normalizeString(url.searchParams.get("project")) ??
+    normalizeString(url.searchParams.get("projectCode")) ??
+    normalizeString(url.searchParams.get("projectSlug")) ??
+    normalizeString(url.searchParams.get("application"));
+  const requestedProjectId = normalizeString(url.searchParams.get("projectId"));
   const refreshRequested = url.searchParams.get("refresh") === "1";
   const companySlug = user.isGlobalAdmin
     ? requestedCompanySlug
@@ -41,7 +47,11 @@ export async function GET(request: Request) {
   }
 
   const role = await resolveDefectRole(user, companySlug);
-  const dataset = await getCompanyDefectsDataset(companySlug, { forceRefresh: refreshRequested });
+  const dataset = await getCompanyDefectsDataset(companySlug, {
+    forceRefresh: refreshRequested,
+    project: requestedProjectScope,
+    projectId: requestedProjectId,
+  });
   const items = dataset.items.map((item) => ({
     ...item,
     canEdit: item.sourceType === "manual" && canEditManualDefect(role),

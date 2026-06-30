@@ -122,6 +122,22 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     [projects, activeProjectSlug]
   );
 
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (activeProjectSlug) {
+      root.dataset.project = activeProjectSlug;
+    } else {
+      delete root.dataset.project;
+    }
+
+    if (activeProject?.id) {
+      root.dataset.projectId = activeProject.id;
+    } else {
+      delete root.dataset.projectId;
+    }
+  }, [activeProjectSlug, activeProject?.id]);
+
   const value = useMemo<ProjectContextValue>(
     () => ({
       projects,

@@ -236,7 +236,11 @@ export async function GET(request: Request) {
   const companySlug = normalizeCompanySlug(url.searchParams.get("companySlug"));
   const applicationId = url.searchParams.get("applicationId")?.trim() || "";
   const projectId = url.searchParams.get("projectId")?.trim() || "";
-  const requestedProjectCode = normalizeProjectCode(url.searchParams.get("project"));
+  const requestedProjectCode = normalizeProjectCode(
+    url.searchParams.get("project") ??
+      url.searchParams.get("projectCode") ??
+      url.searchParams.get("projectSlug"),
+  );
   const planId = url.searchParams.get("planId")?.trim() || "";
   const source = normalizeSource(url.searchParams.get("source"));
 

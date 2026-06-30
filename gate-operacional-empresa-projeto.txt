@@ -1,0 +1,30 @@
+﻿# Gate operacional — Empresa > Projeto
+
+Regra funcional:
+
+1. Usuário TC
+   - vê somente empresas onde está vinculado;
+   - dentro da empresa selecionada, troca o projeto.
+
+2. Líder TC
+   - vê todas as empresas;
+   - dentro da empresa selecionada, vê todos os projetos.
+
+3. Suporte Técnico
+   - vê todas as empresas;
+   - dentro da empresa selecionada, vê todos os projetos.
+
+4. Empresa
+   - empresa fica fixa na própria instituição;
+   - troca apenas projeto da própria empresa.
+
+5. Usuário da empresa
+   - empresa fica fixa na própria instituição;
+   - troca apenas projeto da própria empresa.
+
+Escopo operacional:
+- Repositório de casos: empresa + projeto.
+- Planos de teste: empresa + projeto.
+- Runs: empresa + projeto.
+- Defeitos: empresa + projeto/aplicação/código Qase.
+- Documentação/link/anexo/repositório: próximo gate com migration, porque WikiDoc/WikiCategory hoje só possuem companySlug.

@@ -5,6 +5,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from "next/navigat
 import { FiChevronDown, FiMaximize2, FiMessageSquare, FiPaperclip, FiSearch, FiSend, FiX } from "react-icons/fi";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useI18n } from "@/hooks/useI18n";
+import { useProjectContext } from "@/lib/core/project/ProjectContext";
 import { fetchApi } from "@/lib/api";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
@@ -1441,6 +1442,7 @@ export default function CompanyDefectsPage() {
   const router = useRouter();
   const { user } = useAuthUser();
   const { language } = useI18n();
+  const { activeProject } = useProjectContext();
   const locale = normalizeLocale(language);
   const copy = useMemo(() => DEFECTS_COPY[locale], [locale]);
   const collator = useMemo(() => new Intl.Collator(locale, { sensitivity: "base" }), [locale]);
@@ -1681,6 +1683,11 @@ export default function CompanyDefectsPage() {
       setPageError(null);
       try {
         const params = new URLSearchParams({ companySlug });
+        if (activeProject?.id) params.set("projectId", activeProject.id);
+        if (activeProject?.slug) {
+          params.set("project", activeProject.slug);
+          params.set("projectCode", activeProject.slug);
+        }
         if (options?.forceRefresh) {
           params.set("refresh", "1");
         }
@@ -1764,7 +1771,7 @@ export default function CompanyDefectsPage() {
         setLoading(false);
       }
     },
-    [companySlug, copy.fallbackErrors.loadDefects, localizeApiMessage, localizeClientError],
+    [activeProject?.id, activeProject?.slug, companySlug, copy.fallbackErrors.loadDefects, localizeApiMessage, localizeClientError],
   );
 
   useEffect(() => {
@@ -1782,12 +1789,23 @@ export default function CompanyDefectsPage() {
 
     async function loadRunCatalog() {
       try {
+        const runParams = new URLSearchParams({
+          all: "true",
+          limit: String(200),
+          companySlug: currentCompanySlug,
+        });
+        if (activeProject?.id) runParams.set("projectId", activeProject.id);
+        if (activeProject?.slug) {
+          runParams.set("project", activeProject.slug);
+          runParams.set("projectCode", activeProject.slug);
+        }
+
         const [manualResponse, integratedResponse] = await Promise.all([
           fetchApi(`/api/releases-manual?clientSlug=${encodeURIComponent(currentCompanySlug)}&kind=run`, {
             cache: "no-store",
             credentials: "include",
           }),
-          fetchApi(`/api/v1/runs?all=true&limit=${encodeURIComponent(String(200))}&companySlug=${encodeURIComponent(currentCompanySlug)}`, {
+          fetchApi(`/api/v1/runs?${runParams.toString()}`, {
             cache: "no-store",
             credentials: "include",
           }),
@@ -1828,7 +1846,7 @@ export default function CompanyDefectsPage() {
     return () => {
       active = false;
     };
-  }, [collator, companySlug]);
+  }, [activeProject?.id, activeProject?.slug, collator, companySlug]);
 
   const upsertDefectLocally = useCallback(
     (nextDefect: CompanyDefect) => {

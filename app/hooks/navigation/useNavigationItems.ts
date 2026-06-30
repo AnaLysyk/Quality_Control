@@ -12,7 +12,7 @@ import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/nav
 import type { SystemRole } from "@/lib/auth/roles";
 
 const DISABLED_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
-const DISABLED_ITEM_IDS = new Set(["admin-permissions"]);
+const DISABLED_ITEM_IDS = new Set(["admin-permissions", "admin-system-map"]);
 const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
@@ -21,7 +21,7 @@ const COMPANY_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.EMPRESA,
   SYSTEM_ROLES.COMPANY_USER,
 ]);
-const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents", "brain"]);
+const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "home",
   "quality",
@@ -127,6 +127,40 @@ function resolveModuleHref(
   return resolveCompanyRouteHref(getNavigationRoute(mod)?.path, mod.href, companySlug, companyRouteInput);
 }
 
+function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string | null): NavItemDef[] {
+  if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
+    return [
+      {
+        id: "brain-system-map",
+        routeId: "brain.mapa-sistema",
+        label: "Mapa do Sistema",
+        iconKey: "map",
+        module: "brain",
+        href: "/admin/sistema/mapa",
+        favoriteEnabled: true,
+        testId: "nav-brain-system-map",
+      },
+    ];
+  }
+
+  if (companySlug) {
+    return [
+      {
+        id: "brain-company",
+        routeId: "brain.empresa",
+        label: "Brain da empresa",
+        iconKey: "cpu",
+        module: "brain",
+        href: withScopeQuery("/brain", companySlug, null, false),
+        favoriteEnabled: true,
+        testId: "nav-brain-company",
+      },
+    ];
+  }
+
+  return [];
+}
+
 function resolveModuleItems(
   mod: NavModuleDef,
   companySlug: string | null,
@@ -138,12 +172,13 @@ function resolveModuleItems(
     mod.id === "home" &&
     effectiveRole != null &&
     (INTERNAL_DASHBOARD_ROLES.has(effectiveRole) || COMPANY_DASHBOARD_ROLES.has(effectiveRole));
+  const dynamicItems = mod.id === "brain" ? buildBrainItems(effectiveRole, companySlug) : mod.items;
 
   return {
     ...mod,
     label: usesDashboardHome ? "Dashboard" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
-    items: mod.items
+    items: dynamicItems
       .filter((item) => {
         if (DISABLED_ITEM_IDS.has(item.id)) return false;
         if (PROJECT_SCOPED_ITEM_IDS.has(item.id)) return Boolean(projectSlug);

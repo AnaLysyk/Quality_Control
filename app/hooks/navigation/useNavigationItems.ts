@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
+import { useProjectContext } from "@/lib/core/project/ProjectContext";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
@@ -19,7 +20,36 @@ const COMPANY_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.EMPRESA,
   SYSTEM_ROLES.COMPANY_USER,
 ]);
+const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents", "brain"]);
+const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
+  "home",
+  "quality",
+  "automation",
+  "support",
+  "brain",
+  "documents",
+]);
+const PROJECT_SCOPED_ITEM_IDS = new Set(["quality-cases", "docs-central", "docs-repository"]);
 const ENABLED_NAV_CATALOG = NAV_CATALOG.filter((module) => !DISABLED_MODULE_IDS.has(module.id));
+
+function withScopeQuery(
+  href: string | undefined,
+  companySlug: string | null,
+  projectSlug: string | null,
+  includeProject = false,
+): string | undefined {
+  if (!href || !companySlug) return href;
+
+  const [path, query = ""] = href.split("?");
+  const params = new URLSearchParams(query);
+  params.set("companySlug", companySlug);
+  if (includeProject && projectSlug) {
+    params.set("projectSlug", projectSlug);
+  }
+
+  const serialized = params.toString();
+  return serialized ? `${path}?${serialized}` : path;
+}
 
 function resolveCompanyRouteHref(
   mappedPath: string | undefined,
@@ -41,18 +71,45 @@ function resolveCompanyRouteHref(
 function resolveItemHref(
   item: NavItemDef,
   companySlug: string | null,
+  projectSlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
 ): string | undefined {
-  return resolveCompanyRouteHref(getNavigationRoute(item)?.path, item.href, companySlug, companyRouteInput);
+  const includeProject = PROJECT_SCOPED_ITEM_IDS.has(item.id);
+
+  if (item.companyRoute && companySlug) {
+    const href = buildCompanyPathForAccess(companySlug, item.companyRoute, companyRouteInput);
+    return withScopeQuery(href, companySlug, projectSlug, includeProject);
+  }
+
+  const mappedHref = resolveCompanyRouteHref(getNavigationRoute(item)?.path, item.href, companySlug, companyRouteInput);
+
+  if (item.id === "quality-cases") {
+    return withScopeQuery("/casos-de-teste", companySlug, projectSlug, true);
+  }
+
+  if (item.id === "docs-central") {
+    return withScopeQuery("/documentos", companySlug, projectSlug, true);
+  }
+
+  if (item.id === "docs-repository") {
+    return withScopeQuery("/documentos/repositorio", companySlug, projectSlug, true);
+  }
+
+  return withScopeQuery(mappedHref, companySlug, projectSlug, false);
 }
 
 function resolveModuleHref(
   mod: NavModuleDef,
   companySlug: string | null,
+  projectSlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
   effectiveRole: SystemRole | null,
 ): string | undefined {
   if (mod.id === "home") {
+    if (companySlug) {
+      return buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput);
+    }
+
     if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
       return "/dashboard";
     }
@@ -62,12 +119,17 @@ function resolveModuleHref(
     }
   }
 
+  if (mod.id === "brain") {
+    return withScopeQuery("/brain", companySlug, projectSlug, false);
+  }
+
   return resolveCompanyRouteHref(getNavigationRoute(mod)?.path, mod.href, companySlug, companyRouteInput);
 }
 
 function resolveModuleItems(
   mod: NavModuleDef,
   companySlug: string | null,
+  projectSlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
   effectiveRole: SystemRole | null,
 ): NavModuleDef {
@@ -79,17 +141,39 @@ function resolveModuleItems(
   return {
     ...mod,
     label: usesDashboardHome ? "Dashboard" : mod.label,
-    href: resolveModuleHref(mod, companySlug, companyRouteInput, effectiveRole),
-    items: mod.items.map((item) => ({
-      ...item,
-      href: resolveItemHref(item, companySlug, companyRouteInput),
-    })),
+    href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
+    items: mod.items
+      .filter((item) => {
+        if (PROJECT_SCOPED_ITEM_IDS.has(item.id)) return Boolean(projectSlug);
+        return true;
+      })
+      .map((item) => ({
+        ...item,
+        href: resolveItemHref(item, companySlug, projectSlug, companyRouteInput),
+      })),
   };
+}
+
+function buildClientCatalog(effectiveRole: SystemRole | null) {
+  return ENABLED_NAV_CATALOG
+    .filter((module) => CLIENT_BASE_MODULES.has(module.id))
+    .map((module) => {
+      if (module.id === "automation") {
+        return { ...module, allowedRoles: [SYSTEM_ROLES.EMPRESA, SYSTEM_ROLES.COMPANY_USER] };
+      }
+      return module;
+    });
+}
+
+function filterByActiveContext(modules: NavModuleDef[], companySlug: string | null) {
+  if (companySlug) return modules;
+  return modules.filter((module) => !OPERATIONAL_MODULE_IDS.has(module.id));
 }
 
 export function useNavigationItems() {
   const { user, loading, permissions, accessContext } = usePermissionAccess();
   const { activeClientSlug } = useClientContext();
+  const { activeProjectSlug } = useProjectContext();
 
   const normalizedRole = useMemo<SystemRole | null>(() => {
     const r =
@@ -136,21 +220,7 @@ export function useNavigationItems() {
     [activeClientSlug, isGlobalAdmin, user],
   );
 
-  // For company-role users (empresa/company_user), override to show all-access modules
-  // since role filtering in catalog is for internal TC users
-  const roleForFiltering = useMemo<SystemRole | null>(() => {
-    if (!effectiveRole) return null;
-    // empresa and company_user are "client" profiles - they can see most modules
-    // but the catalog's allowedRoles gate is for TC-internal only
-    if (
-      effectiveRole === SYSTEM_ROLES.EMPRESA ||
-      effectiveRole === SYSTEM_ROLES.COMPANY_USER
-    ) {
-      // They can see: home, quality, support, brain, documents
-      return null; // will be handled below by isInstitutional
-    }
-    return effectiveRole;
-  }, [effectiveRole]);
+  const roleForFiltering = useMemo<SystemRole | null>(() => effectiveRole, [effectiveRole]);
 
   const isInstitutional = useMemo(
     () => isInstitutionalCompanyAccount(user),
@@ -162,23 +232,24 @@ export function useNavigationItems() {
   const modules = useMemo<NavModuleDef[]>(() => {
     if (!user) return [];
 
-    let filtered: NavModuleDef[];
+    const catalog = isClientProfile ? buildClientCatalog(effectiveRole) : ENABLED_NAV_CATALOG;
+    const contextCatalog = filterByActiveContext(catalog, companySlug);
+    const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
 
-    if (isClientProfile) {
-      // Client profiles: home, quality, support, brain, documents only
-      const CLIENT_MODULES = new Set(["home", "quality", "support", "brain", "documents"]);
-      filtered = buildNavigationForUser(
-        ENABLED_NAV_CATALOG.filter((m) => CLIENT_MODULES.has(m.id)),
-        effectiveRole ?? SYSTEM_ROLES.COMPANY_USER,
-        permissions,
-        accessContext,
-      );
-    } else {
-      filtered = buildNavigationForUser(ENABLED_NAV_CATALOG, roleForFiltering, permissions, accessContext);
-    }
-
-    return filtered.map((mod) => resolveModuleItems(mod, companySlug, companyRouteInput, effectiveRole));
-  }, [user, isClientProfile, effectiveRole, roleForFiltering, permissions, accessContext, companySlug, companyRouteInput]);
+    return filtered.map((mod) =>
+      resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole),
+    );
+  }, [
+    user,
+    isClientProfile,
+    effectiveRole,
+    roleForFiltering,
+    permissions,
+    accessContext,
+    companySlug,
+    activeProjectSlug,
+    companyRouteInput,
+  ]);
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }

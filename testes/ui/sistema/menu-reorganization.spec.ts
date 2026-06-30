@@ -10,7 +10,7 @@ type MenuProfileCase = {
 
 const profileCases: MenuProfileCase[] = [
   {
-    title: "leader_tc visualiza menus administrativos e operacionais",
+    title: "leader_tc visualiza menus administrativos sem operações",
     auth: {
       role: "leader_tc",
       permissionRole: "leader_tc",
@@ -22,7 +22,6 @@ const profileCases: MenuProfileCase[] = [
     visible: [
       "nav-home",
       "nav-companies",
-      "nav-operations",
       "nav-test-repository",
       "nav-automation",
       "nav-requests",
@@ -33,10 +32,10 @@ const profileCases: MenuProfileCase[] = [
       "nav-users",
       "nav-admin",
     ],
-    hidden: [],
+    hidden: ["nav-operations"],
   },
   {
-    title: "technical_support visualiza menus de suporte sem ações internas de líder",
+    title: "technical_support visualiza menus de suporte sem operações e ações internas de líder",
     auth: {
       role: "technical_support",
       permissionRole: "technical_support",
@@ -47,7 +46,6 @@ const profileCases: MenuProfileCase[] = [
     visible: [
       "nav-home",
       "nav-companies",
-      "nav-operations",
       "nav-test-repository",
       "nav-automation",
       "nav-requests",
@@ -59,13 +57,14 @@ const profileCases: MenuProfileCase[] = [
       "nav-admin",
     ],
     hidden: [
+      "nav-operations",
       "nav-users-create-leader-tc",
       "nav-users-create-support",
       "nav-users-create-user-tc",
     ],
   },
   {
-    title: "testing_company_user não visualiza usuários, admin e solicitações",
+    title: "testing_company_user não visualiza operações, usuários, admin e solicitações",
     auth: {
       role: "testing_company_user",
       permissionRole: "testing_company_user",
@@ -76,7 +75,6 @@ const profileCases: MenuProfileCase[] = [
     visible: [
       "nav-home",
       "nav-companies",
-      "nav-operations",
       "nav-test-repository",
       "nav-automation",
       "nav-support",
@@ -85,6 +83,7 @@ const profileCases: MenuProfileCase[] = [
       "nav-documents",
     ],
     hidden: [
+      "nav-operations",
       "nav-requests",
       "nav-users",
       "nav-admin",

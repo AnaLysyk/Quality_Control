@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -17,6 +17,7 @@ import SidebarFooter from "./navigation/SidebarFooter";
 import ProjectSelector from "./ProjectSelector";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
+const REMOVED_MODULE_IDS = new Set(["operations"]);
 
 type SidebarProps = {
   pathname: string;
@@ -27,7 +28,11 @@ type SidebarProps = {
 
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const { collapsed, toggleCollapsed, openSections, toggleSection, openSection } = useSidebarState();
-  const { modules, loading, companySlug } = useMenuLateral();
+  const { modules: navigationModules, loading, companySlug } = useMenuLateral();
+  const modules = useMemo(
+    () => navigationModules.filter((mod) => !REMOVED_MODULE_IDS.has(mod.id)),
+    [navigationModules],
+  );
   const { activeModuleId, isModuleActive, isItemActive } = useActiveNavigation(modules, pathname);
   const { favorites, removeFavorite } = useFavorites();
   const { user } = usePermissionAccess();

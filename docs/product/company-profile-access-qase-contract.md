@@ -17,6 +17,30 @@ Empresa não é só nome e CNPJ. O cadastro precisa manter:
 - Aplicações geradas a partir dos projetos Qase.
 - Vínculo com solicitações de acesso.
 
+## Regra de integração Qase completa
+
+Qase não é apenas um vínculo de projeto. Quando a empresa integra Qase, ela deve poder escolher como quer sincronizar os artefatos de QA:
+
+| Modo | Comportamento |
+| --- | --- |
+| `disabled` | Qase configurado parcialmente ou sem projeto/token. Nada é enviado. |
+| `selected` | Envia apenas os escopos escolhidos pela empresa/admin. |
+| `everything` | Envia tudo que o Quality Control suporta para o Qase. |
+
+Quando o modo for `everything`, o sistema deve permitir sincronizar:
+
+- Casos de teste.
+- Planos de teste.
+- Execuções / runs.
+- Resultados de execução.
+- Defeitos.
+- Evidências.
+- Anexos.
+- Marcos / releases.
+- Status de automação.
+
+A empresa precisa enxergar essa escolha no modal. Não pode ficar implícito.
+
 ## Campos mínimos da empresa
 
 | Campo | Origem | Observação |
@@ -41,7 +65,46 @@ Empresa não é só nome e CNPJ. O cadastro precisa manter:
 | `qase_project_code` | Modal | Projeto principal. |
 | `qase_project_codes` | Modal / Meu Perfil | Lista de projetos vinculados. |
 | `qase_projects` | Modal | Lista detalhada para criar aplicações. |
+| `qase_sync_mode` | Modal / Meu Perfil | `disabled`, `selected` ou `everything`. |
+| `qase_sync_scopes` | Modal / Meu Perfil | Lista de escopos habilitados. |
+| `send_everything_to_qase` | Modal / Meu Perfil | Atalho booleano para sincronização completa. |
 | `integrations` | Modal | Payload futuro para multi-integração. |
+
+## Payload esperado para Qase completo
+
+```json
+{
+  "integrationMode": "qase",
+  "qaseToken": "<token>",
+  "qaseProjectCode": "SFQ",
+  "qaseProjectCodes": ["SFQ", "CID"],
+  "qaseSyncMode": "everything",
+  "qaseSyncScopes": [
+    "test_cases",
+    "test_plans",
+    "test_runs",
+    "test_results",
+    "defects",
+    "evidence",
+    "attachments",
+    "milestones",
+    "automation_status"
+  ],
+  "sendEverythingToQase": true,
+  "integrations": [
+    {
+      "type": "QASE",
+      "config": {
+        "token": "<token>",
+        "projects": ["SFQ", "CID"],
+        "syncMode": "everything",
+        "syncScopes": ["test_cases", "test_plans", "test_runs", "test_results", "defects", "evidence", "attachments", "milestones", "automation_status"],
+        "sendEverything": true
+      }
+    }
+  ]
+}
+```
 
 ## Comportamento esperado no modal do menu
 
@@ -52,8 +115,9 @@ Empresa não é só nome e CNPJ. O cadastro precisa manter:
    - Visual da empresa.
    - Integração Qase.
    - Aplicações que serão criadas.
+   - Modo de sincronização Qase.
 3. Se `syncWithMyProfile=true`, pré-preencher dados de `/api/me/company-profile`.
-4. Preservar `qase_project_codes` e `qase_token` vindos do Meu Perfil.
+4. Preservar `qase_project_codes`, `qase_token`, `qase_sync_mode` e `qase_sync_scopes` vindos do Meu Perfil.
 5. Ao salvar, enviar:
    - Dados cadastrais.
    - `companyUsername`.
@@ -63,6 +127,9 @@ Empresa não é só nome e CNPJ. O cadastro precisa manter:
    - `qaseProjectCode`.
    - `qaseProjectCodes`.
    - `qase_projects`.
+   - `qaseSyncMode`.
+   - `qaseSyncScopes`.
+   - `sendEverythingToQase`.
    - `integrations`.
 6. Após salvar, sincronizar de volta com Meu Perfil quando for fluxo institucional.
 
@@ -84,11 +151,11 @@ O fluxo de Solicitar Acesso não deve obrigar Qase no primeiro pedido, mas deve 
 
 ## Diferença entre os fluxos
 
-| Fluxo | Pode criar empresa? | Pode configurar Qase? | Pode gerar aplicações? |
-| --- | --- | --- | --- |
-| Modal do menu | Sim | Sim | Sim, a partir dos projetos Qase selecionados. |
-| Meu Perfil empresa | Atualiza empresa institucional | Sim | Não deve criar aplicações automaticamente sem ação explícita. |
-| Solicitar Acesso | Solicita criação de empresa | Não obrigatório | Não, fica para aprovação/admin. |
+| Fluxo | Pode criar empresa? | Pode configurar Qase? | Pode gerar aplicações? | Pode definir sync Qase? |
+| --- | --- | --- | --- | --- |
+| Modal do menu | Sim | Sim | Sim, a partir dos projetos Qase selecionados. | Sim. |
+| Meu Perfil empresa | Atualiza empresa institucional | Sim | Não deve criar aplicações automaticamente sem ação explícita. | Sim. |
+| Solicitar Acesso | Solicita criação de empresa | Não obrigatório | Não, fica para aprovação/admin. | Não no primeiro pedido. |
 
 ## Brian e notificações
 
@@ -118,6 +185,21 @@ Para empresa criada pelo modal:
 }
 ```
 
+Para alteração de sync Qase:
+
+```json
+{
+  "operationalArea": "integration",
+  "entityType": "qase_sync_policy",
+  "sourceAction": "updated",
+  "sourceId": "<companyId>",
+  "companySlug": "<empresa>",
+  "qaseSyncMode": "everything",
+  "sendEverythingToQase": true,
+  "route": "/clients"
+}
+```
+
 ## Próximos ajustes de UI
 
 - Melhorar cabeçalho do modal com resumo: empresa, responsável, Qase, aplicações.
@@ -125,4 +207,6 @@ Para empresa criada pelo modal:
 - Exibir aviso quando Qase estiver configurado no Meu Perfil e sendo reutilizado no modal.
 - Exibir contador de projetos Qase selecionados.
 - Exibir lista das aplicações que serão criadas.
+- Exibir seletor de modo Qase: `disabled`, `selected`, `everything`.
+- Exibir opção explícita: Enviar tudo ao Qase.
 - No Solicitar Acesso, reforçar que perfil `Empresa` vira solicitação de criação de empresa.

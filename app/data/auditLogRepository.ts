@@ -22,6 +22,8 @@ export type AuditAction =
   | "user.deleted"
   | "user.permissions.updated"
   | "user.permissions.reset"
+  | "profile.permissions.updated"
+  | "profile.permissions.reset"
   | "user.activated"
   | "user.deactivated"
   | "user.role.changed"
@@ -80,7 +82,7 @@ export type AuditAction =
   | "system.error"
   | "audit.purged";
 
-export type AuditEntityType = "user" | "client" | "run" | "ticket" | "access_request" | "defect" | "integration" | "export" | "request" | "system";
+export type AuditEntityType = "user" | "profile" | "client" | "run" | "ticket" | "access_request" | "defect" | "integration" | "export" | "request" | "system";
 
 export type AuditLogRow = {
   id: string;

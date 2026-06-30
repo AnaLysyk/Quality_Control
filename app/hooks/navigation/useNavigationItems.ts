@@ -11,7 +11,6 @@ import { NAV_CATALOG, type NavItemDef, type NavModuleDef } from "@/lib/navigatio
 import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/navigationPermissions";
 import type { SystemRole } from "@/lib/auth/roles";
 
-const DISABLED_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
 const DISABLED_ITEM_IDS = new Set(["admin-system-map"]);
 const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,
@@ -24,6 +23,7 @@ const COMPANY_DASHBOARD_ROLES = new Set<SystemRole>([
 const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "home",
+  "operations",
   "quality",
   "automation",
   "support",
@@ -38,7 +38,7 @@ const PROJECT_SCOPED_ITEM_IDS = new Set([
   "docs-central",
   "docs-repository",
 ]);
-const ENABLED_NAV_CATALOG = NAV_CATALOG.filter((module) => !DISABLED_MODULE_IDS.has(module.id));
+const ENABLED_NAV_CATALOG = NAV_CATALOG;
 
 function withScopeQuery(
   href: string | undefined,
@@ -198,10 +198,10 @@ function resolveModuleItems(
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
   effectiveRole: SystemRole | null,
 ): NavModuleDef {
-  const usesDashboardHome =
-    mod.id === "home" &&
-    effectiveRole != null &&
-    (INTERNAL_DASHBOARD_ROLES.has(effectiveRole) || COMPANY_DASHBOARD_ROLES.has(effectiveRole));
+  const usesInternalOverview =
+    mod.id === "home" && effectiveRole != null && INTERNAL_DASHBOARD_ROLES.has(effectiveRole);
+  const usesCompanyCentral =
+    mod.id === "home" && effectiveRole != null && COMPANY_DASHBOARD_ROLES.has(effectiveRole);
   const dynamicItems =
     mod.id === "brain"
       ? buildBrainItems(effectiveRole, companySlug, projectSlug)
@@ -211,7 +211,7 @@ function resolveModuleItems(
 
   return {
     ...mod,
-    label: usesDashboardHome ? "Dashboard" : mod.label,
+    label: usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {
@@ -222,14 +222,13 @@ function resolveModuleItems(
       .map((item) => ({
         ...item,
         label: item.id === "admin-permissions" ? "Gestão de Perfis" : item.label,
-        routeId: item.id === "admin-permissions" ? "perfis.gestao" : item.routeId,
         href: resolveItemHref(item, companySlug, projectSlug, companyRouteInput),
         testId: item.id === "admin-permissions" ? "nav-admin-profiles" : item.testId,
       })),
   };
 }
 
-function buildClientCatalog(effectiveRole: SystemRole | null) {
+function buildClientCatalog() {
   return ENABLED_NAV_CATALOG
     .filter((module) => CLIENT_BASE_MODULES.has(module.id))
     .map((module) => {
@@ -307,7 +306,7 @@ export function useNavigationItems() {
   const modules = useMemo<NavModuleDef[]>(() => {
     if (!user) return [];
 
-    const catalog = isClientProfile ? buildClientCatalog(effectiveRole) : ENABLED_NAV_CATALOG;
+    const catalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
     const contextCatalog = filterByActiveContext(catalog, companySlug);
     const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
 

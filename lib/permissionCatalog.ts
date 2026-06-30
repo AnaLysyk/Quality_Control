@@ -14,11 +14,15 @@ export type PermissionModule = {
 };
 
 export const ACTION_LABELS: Record<string, string> = {
+  read: "Ler",
   view: "Visualizar",
   create: "Criar",
+  update: "Atualizar",
   edit: "Editar",
   delete: "Excluir",
+  import: "Importar",
   export: "Exportar",
+  execute: "Executar",
   assign: "Atribuir responsável",
   status: "Alterar status",
   comment: "Comentar",
@@ -29,18 +33,43 @@ export const ACTION_LABELS: Record<string, string> = {
   reject: "Rejeitar",
   reset: "Restaurar padrão",
   clone: "Clonar permissões",
+  block: "Bloquear",
   view_all: "Ver todos",
   view_company: "Ver da empresa",
   view_own: "Ver próprios",
+  global_overview: "Visão global",
+  switch_company: "Trocar empresa",
+  switch_project: "Trocar projeto",
+  view_all_companies: "Ver todas as empresas",
+  view_linked_companies: "Ver empresas vinculadas",
+  view_own_company: "Ver própria empresa",
+  view_all_projects: "Ver todos os projetos",
+  view_linked_projects: "Ver projetos vinculados",
 };
 
 export const PERMISSION_MODULES: PermissionModule[] = [
   {
     id: "dashboard",
-    label: "Dashboard",
-    description: "Página inicial administrativa e indicadores gerais.",
+    label: "Visão Geral",
+    description: "Visão global, executiva ou contextual conforme o perfil.",
     category: "Módulos e páginas",
     actions: ["view"],
+  },
+  {
+    id: "context",
+    label: "Troca de contexto",
+    description: "Controle de visão global, troca de empresa e troca de projeto.",
+    category: "Módulos e páginas",
+    actions: [
+      "global_overview",
+      "switch_company",
+      "switch_project",
+      "view_all_companies",
+      "view_linked_companies",
+      "view_own_company",
+      "view_all_projects",
+      "view_linked_projects",
+    ],
   },
   {
     id: "applications",
@@ -48,6 +77,13 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     description: "Cadastro e consulta de empresas, clientes e aplicações.",
     category: "Módulos e páginas",
     actions: ["view", "create", "edit", "delete", "export"],
+  },
+  {
+    id: "operations",
+    label: "Operacional",
+    description: "Exibição da opção Operacional e das telas operacionais do menu.",
+    category: "Operação",
+    actions: ["view"],
   },
   {
     id: "metrics",
@@ -62,6 +98,48 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     description: "Planos, campanhas e cobertura de teste por aplicação.",
     category: "Operação",
     actions: ["view", "create", "edit", "delete"],
+  },
+  {
+    id: "test_repository",
+    label: "Casos de teste",
+    description: "Repositório central de casos e artefatos de teste.",
+    category: "Operação",
+    actions: ["read", "create", "update", "delete", "import"],
+  },
+  {
+    id: "test_plan",
+    label: "Planos por empresa",
+    description: "Planejamento e cobertura de ciclos de teste no contexto da empresa.",
+    category: "Operação",
+    actions: ["read", "create", "update", "delete"],
+  },
+  {
+    id: "test_run",
+    label: "Runs por empresa",
+    description: "Execuções manuais, automatizadas e regressivas por empresa/projeto.",
+    category: "Operação",
+    actions: ["read", "create", "update", "delete"],
+  },
+  {
+    id: "playwright",
+    label: "Automação Playwright",
+    description: "Criação, leitura e execução de automações.",
+    category: "Operação",
+    actions: ["read", "execute"],
+  },
+  {
+    id: "defect_tracking",
+    label: "Gestão de defeitos",
+    description: "Defeitos, responsáveis, status e criticidade por contexto permitido.",
+    category: "Operação",
+    actions: ["read", "create", "update", "delete", "assign", "status"],
+  },
+  {
+    id: "release_management",
+    label: "Gestão de releases",
+    description: "Releases, decisões de qualidade e bloqueios de entrega.",
+    category: "Operação",
+    actions: ["read", "create", "approve", "block"],
   },
   {
     id: "releases",
@@ -160,6 +238,13 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     description: "Chat e automações assistidas por IA.",
     category: "Produtividade",
     actions: ["view", "use"],
+  },
+  {
+    id: "brain",
+    label: "Brain",
+    description: "Grafo de conhecimento e leitura contextual permitida para o perfil.",
+    category: "Produtividade",
+    actions: ["view", "read", "use"],
   },
 ];
 

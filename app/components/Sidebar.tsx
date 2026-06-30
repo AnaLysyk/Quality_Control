@@ -18,7 +18,7 @@ import SidebarFooter from "./navigation/SidebarFooter";
 import ProjectSelector from "./ProjectSelector";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
-const REMOVED_MODULE_IDS = new Set(["operations"]);
+const REMOVED_MODULE_IDS = new Set<string>();
 
 type SidebarProps = {
   pathname: string;

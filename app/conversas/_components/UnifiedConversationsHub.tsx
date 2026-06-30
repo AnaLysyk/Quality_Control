@@ -1,8 +1,9 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import useSWR from "swr";
-import { FiBarChart2, FiBrain, FiCheckCircle, FiLayers, FiMessageCircle, FiRefreshCw, FiShield, FiUsers } from "react-icons/fi";
+import { FiBarChart2, FiBrain, FiMessageCircle, FiRefreshCw, FiShield, FiUsers } from "react-icons/fi";
 
 import { fetchApi } from "@/lib/api";
 
@@ -65,7 +66,7 @@ function StatCard({ label, value, note }: { label: string; value: string | numbe
   );
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
+function Badge({ children }: { children: ReactNode }) {
   return <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[11px] font-bold text-(--tc-text-muted,#6b7280)">{children}</span>;
 }
 
@@ -83,7 +84,7 @@ export function UnifiedConversationsHub() {
             <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
               <FiMessageCircle className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Conversas unificadas
             </span>
-            <h1 className="mt-3 text-2xl font-black text-(--tc-text,#0b1a3c)\">Um lugar único para empresa, projeto, perfil e Brain</h1>
+            <h1 className="mt-3 text-2xl font-black text-(--tc-text,#0b1a3c)">Um lugar único para empresa, projeto, perfil e Brain</h1>
             <p className="mt-2 max-w-4xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
               Todas as conversas continuam acontecendo no mesmo chat, mas agora cada mensagem pode carregar contexto de empresa, projeto e perfil para alimentar memória, métricas e ações do Brian.
             </p>

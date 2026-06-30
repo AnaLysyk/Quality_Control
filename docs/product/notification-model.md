@@ -131,12 +131,32 @@ Mudar evento para blocked
   -> Brain recebe contexto
 ```
 
+## Explicacao do Brian
+
+```txt
+NotificationEvent + NotificationDelivery
+  -> Brian gera resumo auditavel
+  -> explica quem recebeu
+  -> explica quem nao recebeu
+  -> mostra decisionReason
+  -> sugere acao operacional
+```
+
+Exemplos de resposta esperada:
+
+```txt
+Release em risco: 2 entregas liberadas e 1 suprimida por preferencia.
+Usuario Ana recebeu pelo canal in_app porque nenhuma preferencia bloqueou.
+Empresa testing-company nao recebeu pelo canal chat porque desativou esse canal para release-calendar-risk.
+```
+
 ## Implementado nesta camada
 
 ```txt
 data/notificationOperationModel.ts
 lib/notificationPreferencesStore.ts
 lib/notificationEventsStore.ts
+lib/notificationBrianInsights.ts
 app/api/notification-model/route.ts
 app/notificacoes/page.tsx
 app/notificacoes/_components/NotificationOperationPanel.tsx
@@ -156,12 +176,14 @@ UI /notificacoes exibindo eventos reais e entregas por canal
 Resumo de delivered/suppressed na central de notificacoes
 UI /notificacoes permite ativar/desativar canal por empresa, perfil ou usuario
 UI /notificacoes lista preferencias cadastradas
+Brian explica por que recebeu ou nao recebeu
+Brian sugere acao operacional baseada no evento
 ```
 
 ## Proxima implementacao tecnica
 
 1. Adaptar createUserNotification para passar por resolveNotificationDeliveryDecision.
-2. Fazer Brain responder por que alguem recebeu ou nao recebeu.
-3. Integrar eventos de conversa, run, caso, defeito e acesso.
-4. Persistir NotificationEvent e NotificationDelivery no banco real.
-5. Criar filtros avancados na central de notificacoes.
+2. Integrar eventos de conversa, run, caso, defeito e acesso.
+3. Persistir NotificationEvent e NotificationDelivery no banco real.
+4. Criar filtros avancados na central de notificacoes.
+5. Trocar explicacao deterministica do Brian por memoria/raciocinio conectado ao contexto da empresa.

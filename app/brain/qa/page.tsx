@@ -1,4 +1,4 @@
-import { BrainQaCommandCenter } from "./_components/BrainQaCommandCenter";
+import { BrainQaCenter } from "./_components/BrainQaCenter";
 
 export const dynamic = "force-dynamic";
 
@@ -8,5 +8,5 @@ export const metadata = {
 };
 
 export default function BrainQaPage() {
-  return <BrainQaCommandCenter />;
+  return <BrainQaCenter />;
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getReleaseCalendarModel } from "@/data/releaseCalendarModel";
+import { getReleaseCalendarModel, type ReleaseCalendarEvent } from "@/data/releaseCalendarModel";
+import { createNotificationEvent } from "@/lib/notificationEventsStore";
 import { getReleaseCalendarSummary, listReleaseCalendarEvents, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
@@ -16,6 +17,60 @@ function normalizeStatus(value: unknown): ReleaseStatus | null {
   return typeof value === "string" && VALID_STATUSES.includes(value as ReleaseStatus) ? (value as ReleaseStatus) : null;
 }
 
+function actorName(user: { name?: string | null; email?: string | null; id: string }) {
+  return user.name ?? user.email ?? user.id;
+}
+
+function buildRecipients(user: { name?: string | null; email?: string | null; id: string }, event: ReleaseCalendarEvent) {
+  return [
+    {
+      recipientId: user.id,
+      recipientName: actorName(user),
+      profileKind: "release_actor",
+      channels: event.criticality === "critical" ? ["in_app", "brain" as const] : ["in_app" as const, "brain" as const],
+    },
+    {
+      recipientId: "brain",
+      recipientName: "Brain",
+      profileKind: "brain",
+      channels: ["brain" as const],
+    },
+  ];
+}
+
+async function recordCalendarNotification(input: {
+  workflowId: "release-calendar-critical" | "release-calendar-risk" | "release-calendar-blocked";
+  event: ReleaseCalendarEvent;
+  user: { name?: string | null; email?: string | null; id: string };
+  title: string;
+  description: string;
+}) {
+  return createNotificationEvent({
+    workflowId: input.workflowId,
+    title: input.title,
+    description: input.description,
+    companyId: input.event.companyId,
+    companySlug: input.event.companySlug,
+    companyName: input.event.companyName,
+    projectId: input.event.projectId,
+    projectSlug: input.event.projectSlug,
+    actorId: input.user.id,
+    actorName: actorName(input.user),
+    sourceType: "release_calendar",
+    sourceId: input.event.id,
+    payload: {
+      releaseId: input.event.releaseId,
+      releaseName: input.event.releaseName,
+      calendarEventType: input.event.type,
+      calendarStatus: input.event.status,
+      calendarCriticality: input.event.criticality,
+      startAt: input.event.startAt,
+      endAt: input.event.endAt,
+    },
+    recipients: buildRecipients(input.user, input.event),
+  });
+}
+
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const companySlug = url.searchParams.get("companySlug")?.trim() || null;
@@ -24,21 +79,12 @@ export async function GET(req: NextRequest) {
   const status = normalizeStatus(url.searchParams.get("status")?.trim() || null);
 
   const [events, summary] = await Promise.all([
-    listReleaseCalendarEvents({
-      companySlug,
-      projectSlug,
-      releaseId,
-      status,
-    }),
+    listReleaseCalendarEvents({ companySlug, projectSlug, releaseId, status }),
     getReleaseCalendarSummary(),
   ]);
 
   return NextResponse.json(
-    {
-      ...getReleaseCalendarModel(),
-      events,
-      calendarSummary: summary,
-    },
+    { ...getReleaseCalendarModel(), events, calendarSummary: summary },
     { headers: NO_STORE_HEADERS },
   );
 }
@@ -53,10 +99,20 @@ export async function POST(req: NextRequest) {
   const event = await upsertReleaseCalendarEvent({
     ...body,
     ownerId: body?.ownerId ?? user.id,
-    ownerName: body?.ownerName ?? user.name ?? user.email,
+    ownerName: body?.ownerName ?? actorName(user),
   });
 
-  return NextResponse.json({ event }, { status: 201, headers: NO_STORE_HEADERS });
+  const notification = event.criticality === "critical"
+    ? await recordCalendarNotification({
+        workflowId: "release-calendar-critical",
+        event,
+        user,
+        title: `Evento critico criado: ${event.title}`,
+        description: `Evento critico da release ${event.releaseName} foi cadastrado na agenda.`,
+      })
+    : null;
+
+  return NextResponse.json({ event, notification }, { status: 201, headers: NO_STORE_HEADERS });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -78,5 +134,23 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Evento de agenda nao encontrado." }, { status: 404, headers: NO_STORE_HEADERS });
   }
 
-  return NextResponse.json({ event }, { status: 200, headers: NO_STORE_HEADERS });
+  const notification = status === "blocked"
+    ? await recordCalendarNotification({
+        workflowId: "release-calendar-blocked",
+        event,
+        user,
+        title: `Release bloqueada: ${event.title}`,
+        description: `Evento da release ${event.releaseName} mudou para bloqueado.`,
+      })
+    : status === "at_risk"
+      ? await recordCalendarNotification({
+          workflowId: "release-calendar-risk",
+          event,
+          user,
+          title: `Release em risco: ${event.title}`,
+          description: `Evento da release ${event.releaseName} mudou para em risco.`,
+        })
+      : null;
+
+  return NextResponse.json({ event, notification }, { status: 200, headers: NO_STORE_HEADERS });
 }

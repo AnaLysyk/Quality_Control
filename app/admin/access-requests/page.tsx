@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -1208,7 +1208,7 @@ function AccessRequestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-(--tc-text-primary)">
+    <div className="min-h-screen bg-[#eef3f8] text-(--tc-text-primary) transition-colors dark:bg-[#081323]">
       <div className="mx-auto flex w-full max-w-none flex-col gap-3 px-1.5 py-3 sm:px-2 lg:px-3 xl:px-4">
         <section
           className={`relative overflow-hidden rounded-[24px] border border-(--tc-border) px-4 py-3 text-white shadow-[0_18px_44px_rgba(15,23,42,0.12)] sm:px-5 ${styles.headerCard}`}
@@ -1336,6 +1336,7 @@ function AccessRequestsPage() {
           items={filteredItems}
           loading={loading}
           total={statusCounters.total}
+          statusCounts={statusCounters}
           selectedId={selectedId}
           onSelect={(id) => setSelectedId(id)}
           searchTerm={searchTerm}
@@ -1431,6 +1432,4 @@ export default function AccessRequestsPageWithGuard() {
     </RequireAccessRequestReviewer>
   );
 }
-
-
 

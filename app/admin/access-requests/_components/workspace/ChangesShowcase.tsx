@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { FiCheckCircle, FiMessageSquare, FiMoreVertical, FiX } from "react-icons/fi";
 import type { AccessRequestComparisonRow } from "../../_types/accessRequests.types";
 
@@ -34,14 +34,14 @@ function OriginalRequestSection({ rows }: { rows: AccessRequestComparisonRow[] }
   if (visibleRows.length === 0) return null;
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm dark:border-slate-700/60 dark:bg-[#0d1b2f]">
       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Solicitação</p>
 
       <div className="mt-3 grid gap-4">
         {visibleRows.map((row) => (
-          <div key={row.field} className="border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
-            <p className="text-sm font-black text-slate-950">{row.label}</p>
-            <p className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-600">
+          <div key={row.field} className="border-b border-slate-100 pb-3 last:border-b-0 last:pb-0 dark:border-slate-700/60">
+            <p className="text-sm font-black text-slate-950 dark:text-slate-50">{row.label}</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-600 dark:text-slate-300">
               {displayValue(row.originalText)}
             </p>
           </div>
@@ -77,8 +77,8 @@ function RegistrationFieldRow({
     <div
       className={classNames(
         "relative rounded-2xl border px-4 py-3 transition",
-        selected ? "border-amber-300 bg-amber-50/60" : "border-slate-200 bg-white",
-        changed && !selected ? "border-emerald-200 bg-emerald-50/60" : null,
+        selected ? "border-amber-300 bg-amber-50/60 dark:border-amber-400/60 dark:bg-amber-950/30" : "border-slate-200 bg-white dark:border-slate-700/60 dark:bg-[#071426]",
+        changed && !selected ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-400/40 dark:bg-emerald-950/25" : null,
       )}
       data-testid={"access-request-review-field-" + row.field}
     >
@@ -88,20 +88,20 @@ function RegistrationFieldRow({
             {changed ? <FiCheckCircle className="h-4 w-4 text-emerald-600" /> : null}
             <p className="truncate text-sm font-black text-slate-950">{row.label}</p>
           </div>
-          <p className="mt-1 text-xs font-semibold text-slate-500">
+          <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
             {selected ? (hasComment ? "Ajuste orientado" : "Ajuste sem orientação") : changed ? "Alterado após ajuste" : "Sem ajuste"}
           </p>
         </div>
 
         <div className="grid min-w-0 gap-2 md:grid-cols-2">
-          <div className="min-w-0 border-l border-slate-200 pl-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Origem</p>
-            <p className="mt-1 truncate text-sm font-semibold text-slate-800">{displayValue(row.originalText)}</p>
+          <div className="min-w-0 border-l border-slate-200 pl-3 dark:border-slate-700/60">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Origem</p>
+            <p className="mt-1 truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{displayValue(row.originalText)}</p>
           </div>
 
-          <div className="min-w-0 border-l border-slate-200 pl-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Cadastro</p>
-            <p className={classNames("mt-1 truncate text-sm font-semibold", changed ? "text-emerald-700" : "text-slate-800")}>
+          <div className="min-w-0 border-l border-slate-200 pl-3 dark:border-slate-700/60">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Cadastro</p>
+            <p className={classNames("mt-1 truncate text-sm font-semibold", changed ? "text-emerald-700 dark:text-emerald-300" : "text-slate-800 dark:text-slate-200")}>
               {displayValue(row.currentText)}
             </p>
           </div>
@@ -112,7 +112,7 @@ function RegistrationFieldRow({
             type="button"
             disabled={readOnly}
             onClick={onMenuToggle}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700/60 dark:bg-[#0d1b2f] dark:text-slate-300 dark:hover:bg-[#13243b]"
             aria-label={"Abrir ações de " + row.label}
             title="Ações"
           >
@@ -120,11 +120,11 @@ function RegistrationFieldRow({
           </button>
 
           {menuOpen ? (
-            <div className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.18)]">
+            <div className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.18)] dark:border-slate-700/60 dark:bg-[#0d1b2f]">
               <button
                 type="button"
                 onClick={onToggle}
-                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-[#13243b]"
               >
                 {selected ? <FiX /> : <FiMessageSquare />}
                 {selected ? "Remover ajuste" : "Solicitar ajuste"}
@@ -135,7 +135,7 @@ function RegistrationFieldRow({
       </div>
 
       {selected ? (
-        <div className="mt-3 rounded-xl border border-amber-200 bg-white p-3">
+        <div className="mt-3 rounded-xl border border-amber-200 bg-white p-3 dark:border-amber-400/40 dark:bg-[#071426]">
           <label className="block">
             <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
               Orientação ao solicitante
@@ -146,7 +146,7 @@ function RegistrationFieldRow({
               rows={3}
               onChange={(event) => onCommentChange(event.target.value)}
               placeholder="Ex.: confirme a empresa correta para seguir com o cadastro."
-              className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-amber-300 focus:bg-white disabled:bg-slate-100 disabled:text-slate-600"
+              className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-amber-300 focus:bg-white disabled:bg-slate-100 disabled:text-slate-600 dark:border-slate-700/60 dark:bg-[#020817] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-[#020817] dark:disabled:bg-[#0d1b2f] dark:disabled:text-slate-400"
               data-testid={"access-request-adjustment-comment-" + row.field}
             />
           </label>
@@ -180,11 +180,11 @@ export function ChangesShowcase({
     <div className="grid gap-4">
       <OriginalRequestSection rows={contextRows} />
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-5 py-4">
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700/60 dark:bg-[#0d1b2f]">
+        <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-700/60">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Dados cadastrais</p>
-          <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Campos que formarão o perfil</h3>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+          <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950 dark:text-slate-50">Campos que formarão o perfil</h3>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">
             Estes são os dados que entram no cadastro. Use os três pontinhos para solicitar ajuste somente quando necessário.
           </p>
         </div>

@@ -152,7 +152,6 @@ export async function POST(req: NextRequest) {
     clientId = companyBySlug?.id ?? null;
   }
   const phone = profileFields.phone;
-  const password = typeof body?.password === "string" ? body.password : null;
   const jobTitle = profileFields.jobTitle;
   const linkedinUrl = profileFields.linkedinUrl;
   const avatarUrl = profileFields.avatarUrl;
@@ -195,9 +194,6 @@ export async function POST(req: NextRequest) {
   if (editableProfileNeedsCompany(profileRole) && !clientId) {
     return NextResponse.json({ error: "Empresa obrigatória para este perfil" }, { status: 400 });
   }
-  if (wantsGlobalAdmin && (!password || password.trim().length < 8)) {
-    return NextResponse.json({ error: "Senha obrigatória com pelo menos 8 caracteres para criar Lider TC" }, { status: 400 });
-  }
 
   const users = await listLocalUsers();
   const login = buildUniqueLogin(
@@ -216,8 +212,7 @@ export async function POST(req: NextRequest) {
   // Generate a readable temporary password for new users
   const rawTemp = randomUUID().replace(/-/g, '');
   const plainTempPassword = rawTemp.charAt(0).toUpperCase() + rawTemp.slice(1, 9) + '!';
-  const plainPasswordToSend = password && password.trim() ? password.trim() : plainTempPassword;
-  const passwordHash = hashPasswordSha256(plainPasswordToSend);
+  const passwordHash = hashPasswordSha256(plainTempPassword);
   let user = null;
   try {
     user = await createLocalUser({
@@ -278,7 +273,7 @@ export async function POST(req: NextRequest) {
   // Send welcome email with credentials
   if (user.email) {
     emailService
-      .sendWelcomeEmail(user.email, login, plainPasswordToSend, fullName ?? name)
+      .sendWelcomeEmail(user.email, login, plainTempPassword, fullName ?? name)
       .catch((err) => console.error('[ADMIN-USERS][POST] welcome-email-error', err));
   }
 

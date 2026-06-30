@@ -12,6 +12,8 @@ import {
 import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { JOB_TITLE_OPTIONS } from "@/lib/jobTitles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import UserAvatar from "@/components/UserAvatar";
+import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";
 
 type Theme = "light" | "dark" | "system";
 type Language = "pt-BR" | "en-US";
@@ -67,6 +69,14 @@ function isValidEmailAddress(value?: string | null) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(source);
 }
 
+function resolveAvatarLibraryKind(value?: string | null): AvatarLibraryChoice["avatarKind"] {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  if (!normalized) return "default";
+  if (!/^(https?:\/\/|\/|blob:|data:)/i.test(normalized)) return "emoji";
+  if (/\.gif(?:$|\?)/i.test(normalized) || normalized.includes("media.giphy.com")) return "gif";
+  return "image";
+}
+
 export function CreateUserModal({
   open,
   clientId,
@@ -83,20 +93,21 @@ export function CreateUserModal({
   showCompanyField = true,
   requireCompanySelection = false,
   title = "Criar usuário",
-  subtitle = "Um convite será enviado por email.",
+  subtitle = "O acesso sera confirmado por e-mail com senha temporaria.",
   submitLabel = "Criar usuário",
   allowedRoles,
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<RoleValue>(() => normalizeEditableProfileRole(initialRole));
   const [jobTitle, setJobTitle] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarLibraryOpen, setAvatarLibraryOpen] = useState(false);
+  const [avatarLabel, setAvatarLabel] = useState("Sem foto");
   const [theme, setTheme] = useState<Theme>("system");
   const [language, setLanguage] = useState<Language>("pt-BR");
   const [message, setMessage] = useState<string | null>(null);
@@ -132,19 +143,40 @@ export function CreateUserModal({
           !editableProfileUsesAutomaticCompany(normalizedRole))),
     [showCompanyField, requireCompanySelection, normalizedRole],
   );
-  const requiresPassword = useMemo(
-    () => isCreateMode && normalizedRole === "leader_tc",
-    [isCreateMode, normalizedRole],
-  );
   const canSubmit = useMemo(
     () =>
       !!open &&
       (!requiresClient || !!localClientId) &&
       !!name.trim() &&
-      isValidEmailAddress(email) &&
-      (!requiresPassword || password.trim().length >= 8),
-    [open, requiresClient, localClientId, name, email, requiresPassword, password],
+      isValidEmailAddress(email),
+    [open, requiresClient, localClientId, name, email],
   );
+
+  const avatarKind = useMemo(() => resolveAvatarLibraryKind(avatarUrl), [avatarUrl]);
+  const avatarPreviewName = name || email || login || "Usuário";
+
+  function handleAvatarLibraryChoice(choice: AvatarLibraryChoice) {
+    setError(null);
+
+    if (choice.avatarValue.startsWith("data:image/") && choice.avatarValue.length > 1800) {
+      setError("Imagem muito grande para salvar direto no cadastro. Use GIF por URL, emoji, ícone ou uma imagem menor.");
+      return;
+    }
+
+    if (choice.avatarKind === "default") {
+      setAvatarUrl("");
+      setAvatarLabel("Sem foto");
+      return;
+    }
+
+    setAvatarUrl(choice.avatarValue);
+    setAvatarLabel(choice.avatarLabel || "Avatar do usuário");
+  }
+
+  function clearAvatarLibraryChoice() {
+    setAvatarUrl("");
+    setAvatarLabel("Sem foto");
+  }
 
   useEffect(() => {
     if (clientId) {
@@ -271,7 +303,6 @@ export function CreateUserModal({
         full_name: name.trim(),
         name: name.trim(),
         ...(login.trim() ? { user: login.trim() } : {}),
-        ...(isCreateMode && password.trim() ? { password: password.trim() } : {}),
         email: email.trim(),
         phone: phone.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
@@ -306,7 +337,7 @@ export function CreateUserModal({
 
         await syncUserSettings(createdUserId);
 
-        const okMsg = "Usuário criado. Convite enviado.";
+        const okMsg = "Usuario criado. Senha temporaria e confirmacao enviadas por e-mail.";
         setMessage(okMsg);
         toast.success(okMsg);
         resetForm();
@@ -366,12 +397,13 @@ export function CreateUserModal({
   function resetForm() {
     setName("");
     setLogin("");
-    setPassword("");
     setEmail("");
     setPhone("");
     setJobTitle("");
     setLinkedin("");
     setAvatarUrl("");
+    setAvatarLibraryOpen(false);
+    setAvatarLabel("Sem foto");
     setTheme("system");
     setLanguage("pt-BR");
     setRole(normalizeEditableProfileRole(initialRole));
@@ -391,12 +423,13 @@ export function CreateUserModal({
     }
     setName(initialData?.name ?? "");
     setLogin(initialData?.login ?? "");
-    setPassword("");
     setEmail(initialData?.email ?? "");
     setPhone(initialData?.phone ?? "");
     setJobTitle(initialData?.jobTitle ?? "");
     setLinkedin(initialData?.linkedin ?? "");
     setAvatarUrl(initialData?.avatarUrl ?? "");
+    setAvatarLibraryOpen(false);
+    setAvatarLabel(initialData?.avatarUrl ? "Avatar salvo" : "Sem foto");
     setTheme("system");
     setLanguage("pt-BR");
     setRole(normalizeEditableProfileRole(initialData?.role ?? initialRole));
@@ -420,24 +453,30 @@ export function CreateUserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-3 py-4 overflow-y-auto" role="dialog" aria-modal="true" data-testid="create-user-modal">
-      <div className="my-auto w-full max-w-4xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <p className="text-xs uppercase text-indigo-600">Usuário</p>
-            <h3 className="text-lg font-semibold text-gray-900">{isViewMode ? "Visualizar usuário" : title}</h3>
-            <p className="text-sm text-gray-600">{subtitle}</p>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/55 px-3 py-4 backdrop-blur-sm" role="dialog" aria-modal="true" data-testid="create-user-modal">
+      <div className="my-auto w-full max-w-5xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[28px] border border-slate-200 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.34)]">
+        <div className="flex items-start justify-between gap-4 bg-[linear-gradient(135deg,#011848_0%,#102f6e_58%,rgba(239,0,1,0.82)_160%)] px-6 py-5 text-white">
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/60">Acesso e identidade</p>
+            <h3 className="mt-1 text-2xl font-black tracking-tight text-white">{isViewMode ? "Visualizar usuário" : title}</h3>
+            <p className="mt-1 max-w-2xl text-sm font-semibold leading-6 text-white/75">{isCreateMode ? "Cadastre o perfil. O sistema gera senha temporaria e envia a confirmacao de acesso para o e-mail informado." : subtitle}</p>
           </div>
-          <button type="button" className="text-sm text-gray-500" onClick={handleCloseOrCancel}>
+          <button type="button" className="inline-flex h-10 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/20" onClick={handleCloseOrCancel}>
             Fechar
           </button>
         </div>
 
         {requiresClient && !localClientId && (
-          <p className="text-sm text-red-600 mb-3">Selecione uma empresa para criar usuário.</p>
+          <p className="mx-5 mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">Selecione uma empresa para criar usuario.</p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3" data-testid="create-user-form">
+        <form onSubmit={handleSubmit} className="space-y-4 p-5" data-testid="create-user-form">
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Dados principais</p>
+              <p className="mt-1 text-sm font-semibold leading-6 text-slate-700">
+                Informe nome, e-mail e perfil. Login, senha temporaria e notificacao de acesso ficam sob responsabilidade do sistema.
+              </p>
+            </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {showCompanyField ? (
               <label className="block text-sm sm:col-span-2">
@@ -493,21 +532,15 @@ export function CreateUserModal({
                 </div>
                 <span className="mt-1 block text-xs text-gray-500">Único no sistema. Deixe em branco para o sistema gerar automaticamente.</span>
               </label>
-              {requiresPassword ? (
+              {isCreateMode ? (
                 <label className="block text-sm">
-                  Senha
-                  <input
-                    type="password"
-                    minLength={8}
-                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    data-testid="create-user-password"
-                    placeholder="Mínimo 8 caracteres"
-                    required
-                    disabled={isViewMode}
-                  />
-                  <span className="mt-1 block text-xs text-gray-500">Obrigatória para criar Lider TC.</span>
+                  Acesso
+                  <div className="mt-1 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
+                    <p className="text-sm font-black">Senha temporaria automatica</p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-sky-800">
+                      O usuario recebera a senha temporaria e a confirmacao de acesso no e-mail cadastrado.
+                    </p>
+                  </div>
                 </label>
               ) : null}
               <label className="block text-sm">
@@ -586,31 +619,76 @@ export function CreateUserModal({
                   disabled={isViewMode}
                 />
               </label>
-              <label className="block text-sm">
-                Foto (URL)
-                <input
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  disabled={isViewMode}
-                />
-              </label>
-              <div className="block text-sm">
-                Foto atual
-                <div className="mt-1 flex h-10.5 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3">
-                  {avatarUrl.trim() ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={avatarUrl.trim()} alt="Preview da foto" className="h-8 w-8 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-600">
-                      {name.trim().slice(0, 1).toUpperCase() || "U"}
+              <div className="block text-sm sm:col-span-2 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <UserAvatar
+                    src={avatarUrl.trim() || null}
+                    name={avatarPreviewName}
+                    size="lg"
+                    editable={!isViewMode}
+                    onEdit={() => setAvatarLibraryOpen(true)}
+                    frameClassName="border-4 border-white bg-slate-100 shadow-[0_16px_34px_rgba(15,23,42,0.14)] ring-1 ring-slate-200"
+                    fallbackClassName="text-xl font-black tracking-[0.18em] text-slate-600"
+                    buttonClassName="bg-indigo-600 text-white hover:bg-indigo-700"
+                    buttonLabel="Escolher foto, GIF ou emoji do usuário"
+                  />
+
+                  <div className="min-w-0 flex-1 space-y-3">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Foto do perfil</p>
+                      <p className="mt-1 text-xs leading-5 text-gray-500">
+                        Use o mesmo padrão do Meu Perfil e das Solicitações: imagem, GIF, emoji, ícone ou URL.
+                      </p>
                     </div>
-                  )}
-                  <span className="text-xs text-gray-500">
-                    {avatarUrl.trim() ? "Preview da foto informada" : "Nenhuma foto informada"}
-                  </span>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAvatarLibraryOpen(true)}
+                        disabled={isViewMode}
+                        className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Escolher avatar
+                      </button>
+
+                      {avatarUrl.trim() && !isViewMode ? (
+                        <button
+                          type="button"
+                          onClick={clearAvatarLibraryChoice}
+                          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-gray-700 transition hover:bg-gray-100"
+                        >
+                          Remover
+                        </button>
+                      ) : null}
+                    </div>
+
+                    <label className="block text-xs font-semibold text-gray-600">
+                      URL / valor salvo
+                      <input
+                        className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+                        value={avatarUrl}
+                        onChange={(e) => {
+                          setAvatarUrl(e.target.value);
+                          setAvatarLabel(e.target.value.trim() ? "Avatar informado manualmente" : "Sem foto");
+                        }}
+                        placeholder="https://exemplo.com/avatar.gif, emoji ou imagem"
+                        disabled={isViewMode}
+                      />
+                    </label>
+
+                    <p className="text-xs text-gray-500">
+                      Selecionado: {avatarUrl.trim() ? avatarLabel : "Sem foto"}
+                    </p>
+                  </div>
                 </div>
+
+                <AvatarLibraryDialog
+                  open={avatarLibraryOpen}
+                  onOpenChange={setAvatarLibraryOpen}
+                  value={avatarUrl}
+                  kind={avatarKind}
+                  onSelect={handleAvatarLibraryChoice}
+                />
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} disabled={isViewMode} />
@@ -669,7 +747,7 @@ export function CreateUserModal({
                   className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                   disabled={!canSubmit || loading}
                 >
-                  {loading ? (isCreateMode ? "Criando..." : "Salvando...") : (isCreateMode ? submitLabel : "Salvar mudanças")}
+                  {loading ? (isCreateMode ? "Criando e enviando..." : "Salvando...") : (isCreateMode ? submitLabel : "Salvar mudanças")}
                 </button>
               )}
             </div>

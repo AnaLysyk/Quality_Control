@@ -22,6 +22,15 @@ function compactText(input: string, max = 500) {
   return `${normalized.slice(0, max - 1)}...`;
 }
 
+function compactJson(value: unknown, max = 5000) {
+  if (!value || typeof value !== "object") return "";
+  try {
+    return compactText(JSON.stringify(value), max);
+  } catch {
+    return "";
+  }
+}
+
 function getLatestUserMessage(body: AssistantRequestBody) {
   const explicit = typeof body.message === "string" ? body.message.trim() : "";
   if (explicit) return explicit;
@@ -195,7 +204,10 @@ export async function POST(req: Request) {
     const shouldUseBrain = Boolean(
       brainContext?.source === "brain" ||
       brainContext?.nodeId ||
-      brainContext?.agentMode,
+      brainContext?.agentMode ||
+      body.context?.module === "brain" ||
+      body.context?.route?.startsWith("/brain") ||
+      brainContext?.route?.startsWith("/brain"),
     );
 
     if (!shouldUseBrain) {
@@ -222,6 +234,28 @@ export async function POST(req: Request) {
 
     // â”€â”€â”€ Fluxo principal: InternalBrainEngine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const messages = buildMessagesFromHistory(body);
+    const brainRuntimeSnapshot = compactJson(brainContext?.metadata ?? body.context?.metadata ?? null);
+    if (brainRuntimeSnapshot && messages.length > 0) {
+      let lastUserIndex = -1;
+      for (let index = messages.length - 1; index >= 0; index -= 1) {
+        if (messages[index]?.role === "user") {
+          lastUserIndex = index;
+          break;
+        }
+      }
+      if (lastUserIndex >= 0) {
+        messages[lastUserIndex] = {
+          ...messages[lastUserIndex],
+          content: [
+            messages[lastUserIndex].content,
+            "",
+            "---",
+            "[Brain runtime context]",
+            brainRuntimeSnapshot,
+          ].join("\n"),
+        };
+      }
+    }
     const lastUserContent = messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
 
     if (!lastUserContent.trim()) {

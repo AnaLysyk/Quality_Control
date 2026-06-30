@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -12,6 +12,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import styles from "../AccessRequests.module.css";
+
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -68,6 +70,13 @@ type AccessRequestsTableExperienceProps = {
   items: AccessRequestTableItem[];
   loading: boolean;
   total: number;
+  statusCounts?: {
+    approved: number;
+    inProgress: number;
+    open: number;
+    rejected: number;
+    total: number;
+  };
   selectedId: string | null;
   onSelect: (id: string) => void;
 
@@ -281,6 +290,7 @@ export function AccessRequestsTableExperience({
   items,
   loading,
   total,
+  statusCounts,
   selectedId,
   onSelect,
   searchTerm,
@@ -513,7 +523,7 @@ export function AccessRequestsTableExperience({
 
               {menuOpen ? (
                 <div
-                  className="absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-(--tc-border) bg-white text-left shadow-[0_22px_60px_rgba(15,23,42,0.18)]"
+                  className="absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-left shadow-[0_22px_60px_rgba(15,23,42,0.18)]"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <button
@@ -603,12 +613,22 @@ export function AccessRequestsTableExperience({
   }, [searchTerm, statusFilter, dateFilter]);
 
   const sortedColumnId = sorting[0]?.id ?? null;
+  const statusQuickFilters = useMemo(
+    () => [
+      { value: "all", label: "Todas", count: statusCounts?.total ?? items.length },
+      { value: "open", label: "Novas", count: statusCounts?.open ?? items.filter((item) => item.status === "open").length },
+      { value: "in_progress", label: "Em ajuste", count: statusCounts?.inProgress ?? items.filter((item) => item.status === "in_progress").length },
+      { value: "closed", label: "Aprovadas", count: statusCounts?.approved ?? items.filter((item) => item.status === "closed").length },
+      { value: "rejected", label: "Recusadas", count: statusCounts?.rejected ?? items.filter((item) => item.status === "rejected").length },
+    ],
+    [items, statusCounts],
+  );
 
   return (
     <>
       {queueHistoryOpen ? (
-        <section className="mb-4 overflow-hidden rounded-[26px] border border-slate-200 bg-white text-slate-950 shadow-[0_22px_70px_rgba(15,23,42,0.12)] [color-scheme:light]">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] px-5 py-4">
+        <section className={`${styles.queueShell} mb-4 overflow-hidden rounded-[26px] border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary) shadow-[0_22px_70px_rgba(15,23,42,0.12)]`}>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--tc-border) bg-(--tc-surface-2) px-5 py-4">
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white shadow-[0_14px_32px_rgba(15,23,42,0.18)]">
                 <FiClock className="h-4 w-4" />
@@ -628,13 +648,13 @@ export function AccessRequestsTableExperience({
               onClick={() => setQueueHistoryOpen(false)}
               aria-label="Fechar histórico"
               title="Fechar"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-(--tc-surface) text-(--tc-text-secondary) transition hover:bg-slate-50"
             >
               <FiX className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="max-h-86 overflow-y-auto bg-slate-50/70 px-5 py-4">
+          <div className="max-h-86 overflow-y-auto bg-(--tc-surface) px-5 py-4">
             {queueHistoryItems.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-5 text-center">
                 <p className="text-sm font-black text-slate-800">Nenhuma movimentação registrada</p>
@@ -672,7 +692,7 @@ export function AccessRequestsTableExperience({
                       <button
                         type="button"
                         onClick={() => setExpandedQueueHistoryId(expanded ? null : event.id)}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)]"
+                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)]"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
@@ -704,7 +724,7 @@ export function AccessRequestsTableExperience({
         </section>
       ) : null}
 
-      <section className="overflow-hidden rounded-[24px] border border-(--tc-border) bg-white text-slate-950 shadow-[0_18px_54px_rgba(15,23,42,0.09)] [--tc-accent:#ef0001] [--tc-border:#e2e8f0] [--tc-primary:#011848] [--tc-surface:#ffffff] [--tc-surface-2:#f8fafc] [--tc-text-muted:#64748b] [--tc-text-primary:#0f172a] [--tc-text-secondary:#475569] [color-scheme:light]">
+      <section className={`${styles.queueShell} overflow-hidden rounded-[24px] border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary) shadow-[0_18px_54px_rgba(15,23,42,0.09)]`}>
         <div className="border-b border-(--tc-border) bg-[linear-gradient(135deg,var(--tc-surface)_0%,var(--tc-surface-2)_55%,rgba(239,0,1,0.06)_130%)] p-3 sm:p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
@@ -715,6 +735,15 @@ export function AccessRequestsTableExperience({
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
+              {selectedItem ? (
+                <div className="hidden h-10 max-w-74 items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-3.5 text-sky-900 shadow-[0_10px_24px_rgba(14,165,233,0.10)] dark:border-sky-700/60 dark:bg-sky-950/40 dark:text-sky-100 sm:inline-flex">
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                  <span className="truncate text-xs font-black uppercase tracking-[0.12em]">
+                    Selecionada: {displayName(selectedItem)}
+                  </span>
+                </div>
+              ) : null}
+
               <button
                 type="button"
                 onClick={() => setQueueHistoryOpen((current) => !current)}
@@ -725,7 +754,7 @@ export function AccessRequestsTableExperience({
                 <FiClock className="h-4 w-4" />
               </button>
 
-              <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border) bg-white px-3.5 text-(--tc-text-primary) shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+              <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-3.5 text-(--tc-text-primary) shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
                 <span className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted)">
                   Total
                 </span>
@@ -786,28 +815,23 @@ export function AccessRequestsTableExperience({
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            {[
-              ["all", "Todas"],
-              ["open", "Novas"],
-              ["in_progress", "Em ajuste"],
-              ["closed", "Aprovadas"],
-              ["rejected", "Recusadas"],
-            ].map(([value, label]) => (
+            {statusQuickFilters.map((option) => (
               <button
-                key={value}
+                key={option.value}
                 type="button"
                 onClick={() => {
-                  onStatusFilterChange(value);
+                  onStatusFilterChange(option.value);
                   table.setPageIndex(0);
                 }}
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
-                  statusFilter === value
+                  statusFilter === option.value
                     ? "border-(--tc-primary) bg-(--tc-primary) text-white shadow-[0_12px_24px_rgba(1,24,72,0.18)]"
                     : "border-(--tc-border) bg-(--tc-surface) text-(--tc-text-secondary) hover:border-[rgba(239,0,1,0.25)] hover:text-(--tc-text-primary)"
                 }`}
               >
-                <FiCircle className={`h-2 w-2 ${statusFilter === value ? "text-white" : statusDotClass(value)}`} />
-                {label}
+                <FiCircle className={`h-2 w-2 ${statusFilter === option.value ? "text-white" : statusDotClass(option.value)}`} />
+                {option.label}
+                <span className="opacity-75">{option.count}</span>
               </button>
             ))}
           </div>
@@ -842,7 +866,7 @@ export function AccessRequestsTableExperience({
                             key={header.id}
                             className={`whitespace-nowrap border-b border-(--tc-border) px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] ${
                               active
-                                ? "bg-sky-50 text-sky-800"
+                                ? "bg-sky-50 text-sky-800 dark:bg-sky-950/55 dark:text-sky-200"
                                 : "text-(--tc-text-muted)"
                             }`}
                           >
@@ -853,7 +877,7 @@ export function AccessRequestsTableExperience({
                               className={`inline-flex items-center gap-2 ${canSort ? "cursor-pointer hover:text-(--tc-text-primary)" : "cursor-default"}`}
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
-                              <span className={active ? "text-sky-700" : "text-(--tc-text-muted)"}>
+                              <span className={active ? "text-sky-700 dark:text-sky-300" : "text-(--tc-text-muted)"}>
                                 {sorted === "asc" ? "↑" : sorted === "desc" ? "↓" : canSort ? "↕" : ""}
                               </span>
                             </button>
@@ -897,8 +921,8 @@ export function AccessRequestsTableExperience({
                         tabIndex={0}
                         className={`group cursor-pointer transition ${
                           active
-                            ? "bg-sky-50/80"
-                            : "odd:bg-(--tc-surface) even:bg-(--tc-surface-2) hover:bg-sky-50/50"
+                            ? "bg-sky-50/80 dark:bg-sky-950/40"
+                            : "odd:bg-(--tc-surface) even:bg-(--tc-surface-2) hover:bg-sky-50/50 dark:hover:bg-sky-950/25"
                         }`}
                       >
                         {row.getVisibleCells().map((cell) => (
@@ -974,7 +998,7 @@ export function AccessRequestsTableExperience({
               }}
               className={`w-full rounded-[26px] border p-4 text-left transition ${
                 active
-                  ? "border-sky-200 bg-sky-50 shadow-[0_18px_40px_rgba(14,165,233,0.12)]"
+                  ? "border-sky-200 bg-sky-50 shadow-[0_18px_40px_rgba(14,165,233,0.12)] dark:border-sky-700/60 dark:bg-sky-950/40"
                   : "border-(--tc-border) bg-(--tc-surface) hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]"
               }`}
             >
@@ -1001,7 +1025,10 @@ export function AccessRequestsTableExperience({
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[100] bg-slate-950/45 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] flex max-h-[calc(100dvh-12px)] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[30px] border border-white/70 bg-(--tc-surface) shadow-[0_34px_100px_rgba(15,23,42,0.35)] [--tc-accent:#ef0001] [--tc-border:#e2e8f0] [--tc-primary:#011848] [--tc-surface:#ffffff] [--tc-surface-2:#f8fafc] [--tc-text-muted:#64748b] [--tc-text-primary:#0f172a] [--tc-text-secondary:#475569] [color-scheme:light] sm:max-h-[calc(100dvh-8px)] sm:w-[min(1720px,calc(100vw-24px))]">
+          <Dialog.Content
+            data-access-requests-dialog="profile"
+            className={`${styles.queueShell} fixed left-1/2 top-1/2 z-[101] flex max-h-[calc(100dvh-12px)] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[30px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_34px_100px_rgba(15,23,42,0.35)] sm:max-h-[calc(100dvh-8px)] sm:w-[min(1720px,calc(100vw-24px))]`}
+          >
             <div className="flex items-center justify-between gap-4 border-b border-white/10 bg-[linear-gradient(135deg,var(--tc-primary)_0%,#071a44_48%,rgba(239,0,1,0.74)_150%)] px-6 py-4 text-white">
               <div>
                 <Dialog.Title className="text-xl font-black tracking-tight !text-white">
@@ -1041,7 +1068,10 @@ export function AccessRequestsTableExperience({
       <Dialog.Root open={Boolean(removeCandidate)} onOpenChange={(value) => !value && setRemoveCandidate(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[105] bg-slate-950/45 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[106] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-rose-100 bg-(--tc-surface) p-6 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
+          <Dialog.Content
+            data-access-requests-dialog="remove"
+            className="fixed left-1/2 top-1/2 z-[106] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-rose-100 bg-(--tc-surface) p-6 shadow-[0_30px_80px_rgba(15,23,42,0.28)]"
+          >
             <Dialog.Title className="text-xl font-black text-(--tc-text-primary)">Remover solicitação?</Dialog.Title>
             <Dialog.Description className="mt-3 text-sm leading-6 text-(--tc-text-secondary)">
               Essa solicitação será removida da listagem principal e a movimentação deverá ficar registrada nos logs.

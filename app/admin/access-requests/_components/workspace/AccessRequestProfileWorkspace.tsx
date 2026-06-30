@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type {
   AccessRequestCommentView,
   AccessRequestComparisonRow,
@@ -187,7 +187,7 @@ export function AccessRequestProfileWorkspace({
   return (
     <div
       ref={containerRef}
-      className="relative flex flex-col gap-3 bg-slate-50 p-3 sm:p-4 xl:p-5"
+      className="relative flex flex-col gap-3 bg-slate-50 p-3 transition-colors dark:bg-[#071426] sm:p-4 xl:p-5"
     >
       <ProfileHero
         profile={previewProfile}

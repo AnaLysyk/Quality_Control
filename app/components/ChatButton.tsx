@@ -451,6 +451,34 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     if (!pathname.startsWith("/brain")) {
       setBrainOpenContext(null);
       setActiveAgentMode(null);
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      const metadata = (window as unknown as { __QC_BRAIN_CONTEXT__?: unknown }).__QC_BRAIN_CONTEXT__;
+      if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
+        setBrainOpenContext({
+          source: "brain",
+          route: pathname,
+          agentMode: "qa",
+          metadata: metadata as Record<string, unknown>,
+        });
+        setAssistantContext(
+          mergeAssistantContext(screenContext, {
+            route: pathname,
+            module: "brain",
+            screenLabel: "Brain",
+            screenSummary: "Brain é o cérebro visual da plataforma Quality Control e fornece contexto vivo para o chat global.",
+            suggestedPrompts: [
+              "O que estou vendo?",
+              "Me explica esse nó",
+              "Mostra só pendências",
+              "Abre o núcleo de defeitos",
+            ],
+            metadata: metadata as Record<string, unknown>,
+          }),
+        );
+      }
     }
   }, [screenContext, pathname]);
 
@@ -463,6 +491,17 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
       if (detailRoute !== pathname) return;
       const resolvedContext = resolveAssistantScreenContext(detailRoute);
       setAssistantContext(mergeAssistantContext(resolvedContext, detail.context ?? null));
+      if (detail.source === "brain" || detailRoute.startsWith("/brain")) {
+        setBrainOpenContext((current) => ({
+          ...(current ?? {}),
+          ...detail,
+          route: detailRoute,
+          source: detail.source ?? "brain",
+        }));
+        if (detail.agentMode && (["qa", "debug", "playwright", "memory"] as string[]).includes(detail.agentMode)) {
+          setActiveAgentMode(detail.agentMode as AgentMode);
+        }
+      }
     }
 
     window.addEventListener("assistant:context", handleAssistantContext);
@@ -511,6 +550,12 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
   }, [open, panelMode]);
 
   useEffect(() => {
+    if (pathname.startsWith("/brain") && open && panelMode === "compact") {
+      setPanelMode("side");
+    }
+  }, [open, panelMode, pathname]);
+
+  useEffect(() => {
     if (typeof document === "undefined") return;
 
     const shouldReserveSpace = open && isSideMode;
@@ -521,7 +566,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     return () => {
       document.body.classList.remove("qc-brain-side-open");
     };
-  }, [open, isSideMode, sidePanelWidth]);
+  }, [open, isSideMode, pathname, sidePanelWidth]);
 
   // Listen for assistant:open events dispatched by Brain or other screens
   useEffect(() => {
@@ -711,6 +756,71 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     return null;
   }
 
+  function runLocalBrainMapCommand(rawText: string): string | null {
+    if (typeof window === "undefined" || !pathname.startsWith("/brain")) return null;
+
+    const normalized = rawText
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[!?.,;]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!normalized) return null;
+
+    const dispatchBrainCommand = (command: string, value?: string | null) => {
+      window.dispatchEvent(new CustomEvent("brain:command", { detail: { command, value: value ?? null } }));
+    };
+
+    if (/\b(mostra|mostrar|filtra|filtrar|exibe|exibir)\b.*\b(pendencias|pendentes|falta|faltando)\b/.test(normalized)) {
+      dispatchBrainCommand("show_pending");
+      return "Pronto. Filtrei o Brain para destacar pendências e lacunas de conhecimento.";
+    }
+
+    if (/\b(mostra|mostrar|filtra|filtrar|exibe|exibir)\b.*\b(orfaos|orfao|isolados|isolado)\b/.test(normalized)) {
+      dispatchBrainCommand("show_orphans");
+      return "Pronto. Estou mostrando os conhecimentos órfãos ou isolados no mapa.";
+    }
+
+    if (/\b(volta|voltar|limpa|limpar|principal|geral|raiz|root)\b/.test(normalized)) {
+      dispatchBrainCommand("clear_filters");
+      return "Voltei para a visão geral do Brain.";
+    }
+
+    if (/\b(centraliza|centralizar|recentraliza|foca|focar)\b/.test(normalized)) {
+      dispatchBrainCommand("center_graph");
+      return "Centralizei o mapa neural.";
+    }
+
+    if (/\b(expande|expandir|detalhes|detalhar)\b/.test(normalized)) {
+      dispatchBrainCommand("expand_node_details");
+      return "Expandi os detalhes do nó selecionado no overlay.";
+    }
+
+    const moduleAliases: Array<[RegExp, string]> = [
+      [/\b(defeitos|bugs?|qualidade)\b/, "Defeitos"],
+      [/\b(logs?|auditoria|eventos?)\b/, "Logs"],
+      [/\b(suporte|chamados?)\b/, "Suporte"],
+      [/\b(solicitacoes|solicitacao|acessos?|acesso)\b/, "Solicitações"],
+      [/\b(documentos?|evidencias?|anexos?)\b/, "Documentos"],
+      [/\b(automacao|automacoes|scripts?|execucoes?)\b/, "Automação"],
+      [/\b(repositorio|casos? de teste|testes?)\b/, "Repositório de Testes"],
+      [/\b(planos? de teste|plano)\b/, "Plano de Teste"],
+      [/\b(usuarios?|permissoes?|perfis?)\b/, "Usuários / Permissões"],
+    ];
+
+    if (/\b(abre|abrir|mostra|mostrar|foca|focar|expande|expandir|filtra|filtrar)\b/.test(normalized)) {
+      const moduleMatch = moduleAliases.find(([pattern]) => pattern.test(normalized));
+      if (moduleMatch) {
+        dispatchBrainCommand("select_module", moduleMatch[1]);
+        return `Abri o núcleo ${moduleMatch[1]} no Brain.`;
+      }
+    }
+
+    return null;
+  }
+
   async function sendMessage(textOverride?: string) {
     const text = (textOverride ?? input).trim();
     if (!text) return;
@@ -754,6 +864,28 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
       }
 
       setMessages((current) => current.filter((message) => message.id !== assistantMessageId && !(message.from === "user" && message.text === text && message.ts === now)));
+    }
+
+    const brainMapCommandResult = runLocalBrainMapCommand(text);
+    if (brainMapCommandResult) {
+      setInput("");
+      setMessages((current) => [
+        ...current,
+        {
+          id: makeId("user"),
+          from: "user",
+          text,
+          ts: Date.now(),
+        },
+        {
+          id: makeId("assistant"),
+          from: "assistant",
+          text: brainMapCommandResult,
+          ts: Date.now(),
+          tool: "use_brain",
+        },
+      ]);
+      return;
     }
 
     const navigationAgentResult = runLocalNavigationAgentCommand(text);

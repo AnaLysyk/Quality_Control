@@ -11,6 +11,8 @@ import type {
 import { formatDateTime, makeStableId, normalizeBrainText, statusLabel } from "./brainGraphFormatters";
 
 const ACCESS_REQUESTS_MODULE = "Solicitacoes";
+const COMPANIES_MODULE = "Empresas";
+const USERS_MODULE = "Usuarios";
 
 function uniqueById<T extends { id: string }>(items: T[]) {
   return Array.from(new Map(items.map((item) => [item.id, item])).values());
@@ -103,10 +105,114 @@ function addActionNodes(edges: BrainEdge[], nodes: BrainNode[], requestId: strin
   }
 }
 
+function isCompanyCreationRequest(request: BrainAccessRequestRow) {
+  const accessType = normalizeBrainText(request.accessType || "");
+  return accessType === "empresa" || accessType === "admin da empresa" || accessType.includes("cadastro institucional");
+}
+
+function targetScreenForRequest(request: BrainAccessRequestRow) {
+  return isCompanyCreationRequest(request) ? "screen:companies-management" : "screen:users-management";
+}
+
+function targetLabelForRequest(request: BrainAccessRequestRow) {
+  return isCompanyCreationRequest(request) ? "vira cadastro de empresa" : "vira cadastro de usuario";
+}
+
+function addOperationalScreenNodes(nodes: BrainNode[], edges: BrainEdge[]) {
+  addNode(nodes, {
+    id: "screen:access-request-public",
+    type: "screen",
+    module: ACCESS_REQUESTS_MODULE,
+    label: "Solicitar identidade",
+    description: "Tela publica onde o solicitante cria ou corrige uma solicitacao de acesso.",
+    status: "ok",
+    size: "lg",
+    information: "Solicitar identidade captura dados do solicitante, perfil desejado, empresa vinculada e dados institucionais quando a solicitacao cria uma empresa.",
+    actions: ["Abrir modulo relacionado", "Validar CNPJ pela BrasilAPI", "Consultar status da solicitacao"],
+    metadata: { route: "/login/access-request", stage: "origem", isOperationalFlow: true },
+  });
+
+  addNode(nodes, {
+    id: "screen:companies-management",
+    type: "screen",
+    module: COMPANIES_MODULE,
+    label: "Gestao de empresas",
+    description: "Listagem operacional de empresas com busca, ordenacao, destaque de selecao, BrasilAPI e integracoes.",
+    status: "ok",
+    size: "lg",
+    information: "Empresas recebe cadastros institucionais aprovados, organiza identidade da empresa e conecta Qase, Jira e notificacoes.",
+    actions: ["Criar empresa", "Abrir detalhes da empresa", "Configurar integracoes"],
+    metadata: { route: "/admin/clients", stage: "derivacao", isOperationalFlow: true },
+  });
+
+  addNode(nodes, {
+    id: "screen:users-management",
+    type: "screen",
+    module: USERS_MODULE,
+    label: "Gestao de usuarios",
+    description: "Listagem operacional de usuarios por contexto, com busca, ordenacao, destaque de selecao e criacao direta.",
+    status: "ok",
+    size: "lg",
+    information: "Usuarios recebe solicitacoes aprovadas para perfis de empresa, TC, lideranca e suporte, mantendo o cadastro no contexto correto.",
+    actions: ["Criar usuario", "Abrir detalhes do usuario", "Filtrar por perfil e status"],
+    metadata: { route: "/admin/users", stage: "derivacao", isOperationalFlow: true },
+  });
+
+  addNode(nodes, {
+    id: "integration:brasilapi-cnpj",
+    type: "integration",
+    module: COMPANIES_MODULE,
+    label: "BrasilAPI CNPJ",
+    description: "Consulta e valida CNPJ antes de preencher dados institucionais da empresa.",
+    status: "ok",
+    size: "md",
+    information: "BrasilAPI reduz cadastro manual ao preencher razao social, endereco, telefone e dados fiscais usados por solicitacoes e empresas.",
+    metadata: { provider: "BrasilAPI", entity: "cnpj", route: "/api/public/company-lookup/cnpj" },
+  });
+
+  addNode(nodes, {
+    id: "integration:qase-jira",
+    type: "integration",
+    module: COMPANIES_MODULE,
+    label: "Qase / Jira",
+    description: "Integracoes conectadas ao cadastro da empresa para projetos, runs, planos e evidencias.",
+    status: "pending",
+    size: "md",
+    information: "Qase e Jira dependem de configuracao por empresa para transformar cadastros em contexto operacional de qualidade.",
+    missingKnowledge: ["Mapear status real de cada integracao por empresa no Brain."],
+    metadata: { providers: ["Qase", "Jira"], stage: "integracao" },
+  });
+
+  addNode(nodes, {
+    id: "action:queue-listing-pattern",
+    type: "action",
+    module: ACCESS_REQUESTS_MODULE,
+    label: "Padrao de fila",
+    description: "Busca, filtros, ordenacao, paginacao e selecao destacada compartilhados entre solicitacoes, empresas e usuarios.",
+    status: "ok",
+    size: "md",
+    information: "O mesmo padrao de fila cria consistencia visual e operacional entre analise de solicitacoes e cadastros derivados.",
+    metadata: { pattern: "queue-listing", screens: ["/admin/access-requests", "/admin/clients", "/admin/users"] },
+  });
+
+  addEdge(edges, { id: "flow-public-access-requests", source: "screen:access-request-public", target: "screen:access-requests", label: "entra na fila", type: "generates", status: "ok" });
+  addEdge(edges, { id: "flow-access-requests-companies", source: "screen:access-requests", target: "screen:companies-management", label: "aprova empresa", type: "generates", status: "ok" });
+  addEdge(edges, { id: "flow-access-requests-users", source: "screen:access-requests", target: "screen:users-management", label: "aprova usuario", type: "generates", status: "ok" });
+  addEdge(edges, { id: "flow-companies-users", source: "screen:companies-management", target: "screen:users-management", label: "origina usuarios vinculados", type: "relation", status: "ok" });
+  addEdge(edges, { id: "flow-public-brasilapi", source: "screen:access-request-public", target: "integration:brasilapi-cnpj", label: "consulta CNPJ", type: "depends_on", status: "ok" });
+  addEdge(edges, { id: "flow-companies-brasilapi", source: "screen:companies-management", target: "integration:brasilapi-cnpj", label: "preenche identidade", type: "depends_on", status: "ok" });
+  addEdge(edges, { id: "flow-companies-integrations", source: "screen:companies-management", target: "integration:qase-jira", label: "configura integracoes", type: "depends_on", status: "pending" });
+  addEdge(edges, { id: "flow-queue-pattern-access", source: "action:queue-listing-pattern", target: "screen:access-requests", label: "padroniza", type: "forms_information", status: "ok" });
+  addEdge(edges, { id: "flow-queue-pattern-companies", source: "action:queue-listing-pattern", target: "screen:companies-management", label: "padroniza", type: "forms_information", status: "ok" });
+  addEdge(edges, { id: "flow-queue-pattern-users", source: "action:queue-listing-pattern", target: "screen:users-management", label: "padroniza", type: "forms_information", status: "ok" });
+}
+
 export function buildAccessRequestsBrainGraph(input: BrainGraphBuildInput): BuiltBrainGraph {
   const nodes: BrainNode[] = [];
   const edges: BrainEdge[] = [];
   const requests = input.requests;
+  const domainNodes = input.domainNodes ?? [];
+  const domainEdges = input.domainEdges ?? [];
   const realNodes = input.realBrainNodes ?? [];
   const realEdges = input.realBrainEdges ?? [];
   const auditLogs = input.auditLogs ?? [];
@@ -137,12 +243,16 @@ export function buildAccessRequestsBrainGraph(input: BrainGraphBuildInput): Buil
     metadata: { module: "access_requests", source: "permissoes efetivas do usuario" },
   });
 
+  addOperationalScreenNodes(nodes, edges);
+
   for (const request of requests) {
     const hasRealNode = requestHasRealNode(request, realNodes);
     const requestNodeId = `access_request:${request.id}`;
     const requesterNodeId = makeStableId("requester", request.email || request.name);
     const profileNodeId = makeStableId("profile", request.accessType);
     const statusNodeId = makeStableId("status", request.status || request.statusLabel);
+    const targetScreenId = targetScreenForRequest(request);
+    const companyNodeId = request.company ? makeStableId("company", request.company) : null;
     const requestLogs = auditLogsForRequest(auditLogs, request);
     const hasAdjustment = request.status === "in_progress" || Boolean(request.adjustmentRound) || Boolean(request.lastAdjustmentAt);
     const hasDecision = request.status === "closed" || request.status === "rejected" || requestLogs.some((log) => /accepted|rejected/.test(log.action));
@@ -168,8 +278,24 @@ export function buildAccessRequestsBrainGraph(input: BrainGraphBuildInput): Buil
         accessType: request.accessType,
         company: request.company,
         hasRealNode,
+        targetScreenId,
       },
     });
+
+    if (companyNodeId) {
+      addNode(nodes, {
+        id: companyNodeId,
+        type: "company",
+        module: COMPANIES_MODULE,
+        label: request.company,
+        description: "Empresa citada ou selecionada na solicitacao de acesso.",
+        status: "ok",
+        size: isCompanyCreationRequest(request) ? "md" : "sm",
+        companyName: request.company,
+        information: `${request.company} aparece como origem ou destino institucional da solicitacao ${request.name || request.email}.`,
+        metadata: { company: request.company, source: "access_request" },
+      });
+    }
 
     addNode(nodes, {
       id: requesterNodeId,
@@ -205,10 +331,16 @@ export function buildAccessRequestsBrainGraph(input: BrainGraphBuildInput): Buil
     });
 
     addEdge(edges, { id: `screen-contains-${request.id}`, source: "screen:access-requests", target: requestNodeId, label: "contem", type: "contains", status: "ok" });
+    addEdge(edges, { id: `${request.id}-public-origin`, source: "screen:access-request-public", target: requestNodeId, label: "origina pedido", type: "created_by", status: "ok" });
+    addEdge(edges, { id: `${request.id}-target-screen`, source: requestNodeId, target: targetScreenId, label: targetLabelForRequest(request), type: "generates", status: request.status === "closed" ? "ok" : "pending" });
     addEdge(edges, { id: `${request.id}-requester`, source: requestNodeId, target: requesterNodeId, label: "foi aberto por", type: "created_by", status: request.email ? "ok" : "warning" });
     addEdge(edges, { id: `${request.id}-profile`, source: requestNodeId, target: profileNodeId, label: "pede perfil", type: "belongs_to", status: request.accessType ? "ok" : "warning" });
     addEdge(edges, { id: `${request.id}-status`, source: requestNodeId, target: statusNodeId, label: "esta com status", type: "has_status", status: "ok" });
     addEdge(edges, { id: `${request.id}-permission`, source: profileNodeId, target: permissionNodeId, label: "depende de permissao", type: "permission" });
+    if (companyNodeId) {
+      addEdge(edges, { id: `${request.id}-company-context`, source: requestNodeId, target: companyNodeId, label: isCompanyCreationRequest(request) ? "define identidade" : "usa contexto", type: "belongs_to_company", status: "ok" });
+      addEdge(edges, { id: `${request.id}-company-management`, source: companyNodeId, target: "screen:companies-management", label: "aparece na listagem", type: "contains", status: "ok" });
+    }
 
     if (hasDecision) {
       const decisionNodeId = `decision:${request.id}`;
@@ -329,8 +461,8 @@ export function buildAccessRequestsBrainGraph(input: BrainGraphBuildInput): Buil
     });
   }
 
-  const uniqueNodes = uniqueById(nodes);
-  const uniqueEdges = uniqueById(edges);
+  const uniqueNodes = uniqueById([...domainNodes, ...nodes]);
+  const uniqueEdges = uniqueById([...domainEdges, ...edges]);
   const connected = new Set(uniqueEdges.flatMap((edge) => [edge.source, edge.target]));
   const orphanNodes = uniqueNodes.filter((node) => !connected.has(node.id));
   const requestsWithoutNode = requests.filter((request) => !requestHasRealNode(request, realNodes));

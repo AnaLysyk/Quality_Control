@@ -1,7 +1,6 @@
-// app/layout.tsx
+﻿// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import Script from "next/script";
 import AppShell from "@/components/AppShell";
 import ToasterProvider from "@/components/ToasterProvider";
 import { AuthProvider } from "@/context/AuthContext";
@@ -16,12 +15,13 @@ import {
   normalizeThemePreference,
 } from "@/lib/appSettingsCookies";
 import "./globals.css";
+import { ClientBootScripts } from "./_components/ClientBootScripts";
 
 export const metadata: Metadata = {
   title: "Quality Control",
   description: "Monitoramento inteligente de qualidade em tempo real.",
 };
-// Add default icons só browsers show the app logo in the tab
+// Add default icons sÃ³ browsers show the app logo in the tab
 metadata.icons = {
   icon: [
     { url: "/images/tc.png", type: "image/png" }
@@ -121,8 +121,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         suppressHydrationWarning
         className="min-h-screen w-full overflow-y-auto antialiased"
       >
-        <Script id="migrate-storage" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: migrateStorageScript }} />
-        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <ClientBootScripts migrateStorageScript={migrateStorageScript} themeInitScript={themeInitScript} />
         <AuthProvider>
           <LanguageProvider>
             <AppSettingsProvider>
@@ -141,3 +140,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     </html>
   );
 }
+
+
+

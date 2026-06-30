@@ -113,6 +113,7 @@ export type AssistantClientRequest = {
     entityId?: string | null;
     entityType?: string | null;
     agentMode?: string | null;
+    metadata?: Record<string, unknown>;
   } | null;
 };
 

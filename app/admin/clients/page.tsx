@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -11,7 +11,7 @@ import { hasAdminClientToolAccess } from "@/lib/adminClientAccess";
 import { fetchApi } from "@/lib/api";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, readApiError, unwrapEnvelopeData } from "@/lib/apiEnvelope";
-import { FiCheckCircle, FiExternalLink, FiEye, FiEyeOff, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle, FiCloudLightning, FiShield, FiTool, FiUser, FiUserPlus } from "react-icons/fi";
+import { FiCheckCircle, FiChevronLeft, FiChevronRight, FiCircle, FiExternalLink, FiEye, FiEyeOff, FiHome, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiUpload, FiUsers, FiX, FiXCircle, FiCloudLightning, FiShield, FiTool, FiUser, FiUserPlus } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -270,6 +270,15 @@ function resolveUserTabParam(value: string | null): UserTab | null {
   if (normalized === "testing" || normalized === "tc" || normalized === "usuario-tc") return "testing";
   if (normalized === "admin" || normalized === "leader" || normalized === "lider") return "admin";
   if (normalized === "support" || normalized === "suporte") return "support";
+  return null;
+}
+
+function resolveUserTabFromRole(value: string | null): UserTab | null {
+  const role = normalizeFixedProfileKind(value);
+  if (role === "empresa" || role === "company_user") return "company";
+  if (role === "testing_company_user") return "testing";
+  if (role === "leader_tc") return "admin";
+  if (role === "technical_support") return "support";
   return null;
 }
 
@@ -535,6 +544,475 @@ function CompanyUsersSection({
   );
 }
 
+type CompanyStatusFilter = "all" | "active" | "inactive";
+type CompanyIntegrationFilter = "all" | "integrated" | "manual";
+type CompanySortMode = "name_asc" | "name_desc" | "status_active_first" | "integration_first" | "updated_desc";
+type CompanyIntegrationBadge = { key: string; label: string; tone: "ok" | "warn" | "neutral" | "info" };
+
+function companyStatusDotClass(value: CompanyStatusFilter) {
+  if (value === "active") return "text-emerald-500";
+  if (value === "inactive") return "text-amber-500";
+  return "text-sky-500";
+}
+
+function companySortLabel(value: CompanySortMode) {
+  if (value === "name_desc") return "Nome Z-A";
+  if (value === "status_active_first") return "Ativas primeiro";
+  if (value === "integration_first") return "Integradas primeiro";
+  if (value === "updated_desc") return "Atualizadas primeiro";
+  return "Nome A-Z";
+}
+
+function compareCompanyText(left?: string | null, right?: string | null) {
+  return (left || "").localeCompare(right || "", "pt-BR", { sensitivity: "base" });
+}
+
+function companyTimestamp(value?: string | null) {
+  if (!value) return 0;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function getCompanyIntegrationBadges(company: Client): CompanyIntegrationBadge[] {
+  const badges: CompanyIntegrationBadge[] = [];
+  const qaseCodes = Array.isArray(company.qaseProjectCodes)
+    ? company.qaseProjectCodes.map((code) => String(code).trim()).filter(Boolean)
+    : [];
+  const hasQase = hasQaseTokenConfigured(company) || qaseCodes.length > 0 || Boolean(company.qaseProjectCode?.trim());
+  const hasJira = Boolean(company.jiraBaseUrl?.trim() || company.jiraEmail?.trim() || company.jiraApiToken?.trim());
+
+  if (hasQase) {
+    badges.push({
+      key: "qase",
+      label: qaseCodes.length > 0 ? `Qase ${qaseCodes.length}` : "Qase",
+      tone: hasQaseTokenConfigured(company) ? "ok" : "warn",
+    });
+  }
+  if (hasJira) badges.push({ key: "jira", label: "Jira", tone: "info" });
+  if (company.notificationsFanoutEnabled) badges.push({ key: "notifications", label: "Notificacoes", tone: "info" });
+  if (badges.length === 0) {
+    badges.push(company.integrationMode === "manual" ? { key: "manual", label: "Manual", tone: "neutral" } : { key: "none", label: "Sem integracao", tone: "warn" });
+  }
+
+  return badges;
+}
+
+function companyIntegrationBadgeClass(tone: CompanyIntegrationBadge["tone"]) {
+  if (tone === "ok") return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-950/35 dark:text-emerald-200";
+  if (tone === "warn") return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700/50 dark:bg-amber-950/35 dark:text-amber-200";
+  if (tone === "info") return "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-700/50 dark:bg-sky-950/35 dark:text-sky-200";
+  return "border-slate-200 bg-white text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-200";
+}
+
+function companyIntegrationRank(company: Client) {
+  return getCompanyIntegrationBadges(company).some((badge) => badge.key !== "manual" && badge.key !== "none") ? 0 : 1;
+}
+
+function companyHasRealIntegration(company: Client) {
+  return companyIntegrationRank(company) === 0;
+}
+
+function CompanyManagementQueueExperience({
+  companies,
+  loading,
+  search,
+  onSearchChange,
+  canCreate,
+  onCreate,
+  onRefresh,
+  onSelect,
+  selectedId,
+  searchInputRef,
+}: {
+  companies: Client[];
+  loading: boolean;
+  search: string;
+  onSearchChange: (value: string) => void;
+  canCreate: boolean;
+  onCreate: () => void;
+  onRefresh: () => void;
+  onSelect: (company: Client) => void;
+  selectedId?: string | null;
+  searchInputRef?: React.RefObject<HTMLInputElement | null>;
+}) {
+  const [statusFilter, setStatusFilter] = useState<CompanyStatusFilter>("all");
+  const [integrationFilter, setIntegrationFilter] = useState<CompanyIntegrationFilter>("all");
+  const [sortMode, setSortMode] = useState<CompanySortMode>("name_asc");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(12);
+  const activeCount = useMemo(() => companies.filter((company) => company.active).length, [companies]);
+  const inactiveCount = useMemo(() => companies.length - activeCount, [activeCount, companies.length]);
+  const normalizedSearch = normalize(search);
+  const filteredCompanies = useMemo(() => {
+    const next = companies.filter((company) => {
+      if (statusFilter === "active" && !company.active) return false;
+      if (statusFilter === "inactive" && company.active) return false;
+      if (integrationFilter === "integrated" && !companyHasRealIntegration(company)) return false;
+      if (integrationFilter === "manual" && companyHasRealIntegration(company)) return false;
+      if (!normalizedSearch) return true;
+      return [
+        company.name,
+        company.slug,
+        company.taxId,
+        company.website,
+        company.phone,
+        company.address,
+        company.description,
+        company.qaseProjectCode,
+        ...(company.qaseProjectCodes ?? []),
+        company.jiraBaseUrl,
+        ...getCompanyIntegrationBadges(company).map((badge) => badge.label),
+      ]
+        .map(normalize)
+        .join(" ")
+        .includes(normalizedSearch);
+    });
+
+    return next.sort((left, right) => {
+      if (sortMode === "name_desc") return compareCompanyText(right.name, left.name);
+      if (sortMode === "status_active_first") return Number(!right.active) - Number(!left.active) || compareCompanyText(left.name, right.name);
+      if (sortMode === "integration_first") return companyIntegrationRank(left) - companyIntegrationRank(right) || compareCompanyText(left.name, right.name);
+      if (sortMode === "updated_desc") {
+        return (
+          companyTimestamp(right.updatedAt ?? right.createdAt) -
+            companyTimestamp(left.updatedAt ?? left.createdAt) ||
+          compareCompanyText(left.name, right.name)
+        );
+      }
+      return compareCompanyText(left.name, right.name);
+    });
+  }, [companies, integrationFilter, normalizedSearch, sortMode, statusFilter]);
+  const pageCount = Math.max(1, Math.ceil(filteredCompanies.length / pageSize));
+  const visibleCompanies = useMemo(
+    () => filteredCompanies.slice(pageIndex * pageSize, pageIndex * pageSize + pageSize),
+    [filteredCompanies, pageIndex, pageSize],
+  );
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [search, statusFilter, integrationFilter, companies.length]);
+
+  useEffect(() => {
+    setPageIndex((current) => Math.min(current, Math.max(0, pageCount - 1)));
+  }, [pageCount]);
+
+  const statusOptions: Array<{ value: CompanyStatusFilter; label: string; count: number }> = [
+    { value: "all", label: "Todas", count: companies.length },
+    { value: "active", label: "Ativas", count: activeCount },
+    { value: "inactive", label: "Inativas", count: inactiveCount },
+  ];
+
+  return (
+    <section className="tc-queue-shell overflow-hidden rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) shadow-[0_18px_54px_rgba(15,23,42,0.09)]">
+      <div className="border-b border-(--tc-border,#d7deea) bg-[linear-gradient(135deg,var(--tc-surface,#ffffff)_0%,var(--tc-surface-2,#f8fafc)_58%,rgba(14,165,233,0.08)_100%)] p-3 sm:p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Fila de empresas</p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+              Use a busca e os filtros para encontrar empresas, abrir detalhes e manter o cadastro institucional.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {canCreate ? (
+              <button
+                type="button"
+                onClick={onCreate}
+                className="inline-flex h-10 items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,var(--tc-primary,#011848)_0%,var(--tc-accent,#ef0001)_100%)] px-4 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.22)] ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:opacity-95"
+              >
+                <FiPlus className="h-4 w-4" />
+                Cadastrar
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={loading}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-secondary,#4b5563) shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-[rgba(239,0,1,0.28)] hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-60"
+              aria-label="Atualizar empresas"
+              title="Atualizar"
+            >
+              <FiRefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
+
+            <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-(--tc-text-primary,#0b1a3c) shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Total</span>
+              <span className="text-base font-black leading-none text-(--tc-primary,#011848)">{companies.length}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-2 xl:grid-cols-[minmax(260px,1fr)_170px_190px_210px]">
+          <label className="relative">
+            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+            <input
+              ref={searchInputRef}
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Buscar por nome, slug, CNPJ, site ou telefone"
+              className="h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) pl-11 pr-4 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) outline-none transition placeholder:text-(--tc-text-muted,#94a3b8) focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+              data-testid="company-search-input"
+            />
+          </label>
+
+          <select
+            aria-label="Filtrar empresas por status"
+            title="Filtrar empresas por status"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as CompanyStatusFilter)}
+            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} ({option.count})
+              </option>
+            ))}
+          </select>
+
+          <select
+            aria-label="Ordenar empresas"
+            title="Ordenar empresas"
+            value={sortMode}
+            onChange={(event) => setSortMode(event.target.value as CompanySortMode)}
+            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+          >
+            <option value="name_asc">Nome A-Z</option>
+            <option value="name_desc">Nome Z-A</option>
+            <option value="status_active_first">Ativas primeiro</option>
+            <option value="integration_first">Integradas primeiro</option>
+            <option value="updated_desc">Atualizadas primeiro</option>
+          </select>
+
+          <select
+            aria-label="Filtrar empresas por integração"
+            title="Filtrar empresas por integração"
+            value={integrationFilter}
+            onChange={(event) => setIntegrationFilter(event.target.value as CompanyIntegrationFilter)}
+            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+          >
+            <option value="all">Todas integrações</option>
+            <option value="integrated">Com integração</option>
+            <option value="manual">Manual / sem integração</option>
+          </select>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {statusOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setStatusFilter(option.value)}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
+                statusFilter === option.value
+                  ? "border-sky-600 bg-sky-700 text-white shadow-[0_12px_24px_rgba(14,116,144,0.18)]"
+                  : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-secondary,#4b5563) hover:border-sky-300 hover:text-(--tc-text-primary,#0b1a3c)"
+              }`}
+            >
+              <FiCircle className={`h-2 w-2 ${statusFilter === option.value ? "text-white" : companyStatusDotClass(option.value)}`} />
+              {option.label}
+              <span className="opacity-75">{option.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="p-8 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Carregando empresas...</div>
+      ) : filteredCompanies.length === 0 ? (
+        <div className="flex min-h-90 items-center justify-center p-8 text-center">
+          <div className="max-w-md">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)">
+              <FiSearch className="h-7 w-7" />
+            </div>
+            <h3 className="mt-5 text-xl font-black text-(--tc-text-primary,#0b1a3c)">
+              {companies.length === 0 ? "Nenhuma empresa cadastrada" : "Nenhuma empresa encontrada"}
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+              {companies.length === 0 ? "Cadastre a primeira empresa para iniciar a base da plataforma." : "Ajuste os filtros ou busque por outra empresa."}
+            </p>
+            {canCreate && companies.length === 0 ? (
+              <button
+                type="button"
+                onClick={onCreate}
+                className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,#071e53_0%,#ef0001_100%)] px-5 py-3 text-sm font-black text-white shadow-[0_12px_30px_rgba(239,0,1,0.18)] transition hover:opacity-95"
+              >
+                <FiPlus className="h-4 w-4" />
+                Cadastrar empresa
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="hidden max-h-[calc(100vh-332px)] overflow-auto lg:block">
+            <table className="w-full min-w-230 border-separate border-spacing-0">
+              <thead className="sticky top-0 z-10 bg-(--tc-surface,#ffffff) shadow-[0_1px_0_var(--tc-border,#d7deea)]">
+                <tr>
+                  {["Empresa", "CNPJ", "Contato", "Integração", "Status", "Ação"].map((column) => (
+                    <th key={column} className="whitespace-nowrap border-b border-(--tc-border,#d7deea) px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                      {column}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleCompanies.map((company) => {
+                  const active = company.id === selectedId;
+                  const integrationBadges = getCompanyIntegrationBadges(company);
+
+                  return (
+                  <tr
+                    key={company.id}
+                    onClick={() => onSelect(company)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onSelect(company);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className={`group cursor-pointer transition ${
+                      active
+                        ? "bg-sky-50/90 shadow-[inset_4px_0_0_#0284c7] dark:bg-sky-950/35"
+                        : "odd:bg-(--tc-surface,#ffffff) even:bg-(--tc-surface-2,#f8fafc) hover:bg-sky-50/65 dark:hover:bg-sky-950/25"
+                    }`}
+                  >
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc)">
+                          <CompanyLogo logoUrl={company.logoUrl} slug={company.slug} website={company.website} name={company.name} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-(--tc-text-primary,#0b1a3c)">{company.name}</p>
+                          <p className="mt-0.5 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{company.slug ? `@${company.slug}` : "Sem slug"}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
+                      {company.taxId || "Não informado"}
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
+                      <div className="max-w-60 truncate">{company.website || company.phone || "Não informado"}</div>
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                      <div className="flex max-w-72 flex-wrap gap-1.5">
+                        {integrationBadges.map((badge) => (
+                          <span key={badge.key} className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-black ${companyIntegrationBadgeClass(badge.tone)}`}>
+                            {badge.label}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                      <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ${company.active ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                        {company.active ? "Ativa" : "Inativa"}
+                      </span>
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-(--tc-accent,#ef0001) align-middle">
+                      {active ? "Selecionada" : "Ver detalhes"}
+                    </td>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="space-y-3 p-4 lg:hidden">
+            {visibleCompanies.map((company) => {
+              const active = company.id === selectedId;
+              const integrationBadges = getCompanyIntegrationBadges(company);
+
+              return (
+              <button
+                key={`mobile-${company.id}`}
+                type="button"
+                onClick={() => onSelect(company)}
+                className={`w-full rounded-[24px] border p-4 text-left shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 ${
+                  active
+                    ? "border-sky-300 bg-sky-50 shadow-[inset_4px_0_0_#0284c7] dark:border-sky-700/60 dark:bg-sky-950/35"
+                    : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc)">
+                    <CompanyLogo logoUrl={company.logoUrl} slug={company.slug} website={company.website} name={company.name} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-black text-(--tc-text-primary,#0b1a3c)">{company.name}</p>
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${company.active ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                        {company.active ? "Ativa" : "Inativa"}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{company.slug ? `@${company.slug}` : company.taxId || "Sem slug"}</p>
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{company.website || company.phone || "Contato não informado"}</p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {integrationBadges.map((badge) => (
+                        <span key={`mobile-${company.id}-${badge.key}`} className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black ${companyIntegrationBadgeClass(badge.tone)}`}>
+                          {badge.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-5 py-4">
+            <p className="text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
+              Página {pageIndex + 1} de {pageCount} · {filteredCompanies.length} resultado(s) · {companySortLabel(sortMode)}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <select
+                aria-label="Quantidade de empresas por página"
+                title="Quantidade de empresas por página"
+                value={pageSize}
+                onChange={(event) => {
+                  setPageSize(Number(event.target.value));
+                  setPageIndex(0);
+                }}
+                className="h-10 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 text-sm font-bold text-(--tc-text-primary,#0b1a3c)"
+              >
+                {[10, 12, 20, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}/página
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
+                disabled={pageIndex === 0}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-40"
+                aria-label="Página anterior"
+              >
+                <FiChevronLeft />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
+                disabled={pageIndex >= pageCount - 1}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-40"
+                aria-label="Próxima página"
+              >
+                <FiChevronRight />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 // ============================================================================
 // MAIN PAGE COMPONENT
 // ============================================================================
@@ -547,7 +1025,7 @@ export default function AdminConsolidatedPage() {
   const canUseAdminClientTools = hasAdminClientToolAccess(user);
 
   // Main tab state (Companies | Users)
-  const [mainTab, setMainTab] = useState<AdminTab>(() => resolveAdminTabParam(searchParams.get("main")) ?? "companies");
+  const [mainTab, setMainTab] = useState<AdminTab>("companies");
 
   // ========================================================================
   // COMPANIES TAB STATE
@@ -574,7 +1052,9 @@ export default function AdminConsolidatedPage() {
   const [usersCompanies, setUsersCompanies] = useState<CompanyOption[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
-  const [activeUserTab, setActiveUserTab] = useState<UserTab>(() => resolveUserTabParam(searchParams.get("role")) ?? "company");
+  const [activeUserTab, setActiveUserTab] = useState<UserTab>(
+    () => resolveUserTabParam(searchParams.get("userTab") ?? searchParams.get("section")) ?? resolveUserTabFromRole(searchParams.get("role")) ?? "company",
+  );
   const [usersSearch, setUsersSearch] = useState("");
   const [openCreateUser, setOpenCreateUser] = useState(false);
   const [openUserDetail, setOpenUserDetail] = useState(false);
@@ -626,6 +1106,44 @@ export default function AdminConsolidatedPage() {
       setCompaniesLoading(false);
     }
   }, [router]);
+
+  async function createInstitutionalCompanyUser(company: Client, data: ClientFormValues) {
+    const adminEmail = data.adminEmail?.trim().toLowerCase();
+    if (!adminEmail) return;
+
+    const payload = {
+      full_name: data.name.trim(),
+      name: data.name.trim(),
+      email: adminEmail,
+      user: data.companyUsername?.trim().toLowerCase() || undefined,
+      phone: data.phone?.trim() || undefined,
+      avatar_url: data.logoUrl?.trim() || undefined,
+      role: "empresa",
+      client_id: company.id,
+      job_title: "Administrador da empresa",
+      linkedin_url: data.linkedin?.trim() || undefined,
+      active: true,
+    };
+
+    const res = await fetchApi("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.status === 409) {
+      toast.error("Empresa criada, mas já existe usuário com esse e-mail/login.");
+      return;
+    }
+
+    if (!res.ok) {
+      const err = await readApiError(res, "Empresa criada, mas não foi possível criar o usuário institucional.");
+      toast.error(err.displayMessage);
+      return;
+    }
+
+    toast.success("Usuário institucional da empresa criado e convite enviado.");
+  }
 
   const handleUpdateCompany = useCallback(
     async (companyId: string, data: ClientFormValues) => {
@@ -745,6 +1263,63 @@ export default function AdminConsolidatedPage() {
   useEffect(() => {
     loadCurrentTab();
   }, [loadCurrentTab]);
+
+  // URL ACTIONS - COMPANIES ONLY
+  useEffect(() => {
+    const modalParam = searchParams.get("modal");
+    const focusParam = searchParams.get("focus");
+    const roleParam = searchParams.get("role");
+    const rolePreset = normalizeFixedProfileKind(roleParam);
+    const roleTab = resolveUserTabFromRole(roleParam);
+    const userTabParam = resolveUserTabParam(searchParams.get("userTab") ?? searchParams.get("section"));
+    const adminTabParam = resolveAdminTabParam(searchParams.get("tab"));
+    const queryParam = (searchParams.get("q") ?? searchParams.get("search") ?? "").trim();
+
+    if (adminTabParam) {
+      setMainTab(adminTabParam);
+    }
+
+    if (userTabParam || roleTab) {
+      setMainTab("users");
+      setActiveUserTab(userTabParam ?? roleTab ?? "company");
+    }
+
+    if (queryParam) {
+      if ((adminTabParam ?? mainTab) !== "users" && !roleTab && !userTabParam) {
+        setMainTab("companies");
+      }
+      setCompaniesSearch(queryParam);
+    }
+
+    setCreateRolePreset(rolePreset);
+
+    if (modalParam === "create" && rolePreset) {
+      setMainTab("users");
+      setActiveUserTab(roleTab ?? "company");
+      setSelectedUser(null);
+      setOpenUserDetail(false);
+      setOpenCreateUser(true);
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+
+    if (modalParam === "create") {
+      setMainTab("companies");
+      setSelectedCompanyId(null);
+      setOpenCompanyDetail(false);
+      setOpenCreateCompany(true);
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+
+    if (focusParam === "search") {
+      setMainTab("companies");
+      window.setTimeout(() => {
+        companiesSearchInputRef.current?.focus();
+      }, 100);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [mainTab, searchParams]);
 
   // ========================================================================
   // COMPANIES TAB COMPUTED VALUES
@@ -926,7 +1501,7 @@ export default function AdminConsolidatedPage() {
         <Breadcrumb
           items={[
             { label: "Admin", href: "/admin/dashboard" },
-            { label: "Painel consolidado" },
+            { label: "Gestão de empresas" },
           ]}
         />
 
@@ -934,10 +1509,10 @@ export default function AdminConsolidatedPage() {
         <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
           <div className="flex flex-col gap-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Painel administrativo</p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Gestão unificada</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestão de empresas</p>
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Empresas</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                Gerencie empresas e usuários da plataforma em um único painel integrado.
+                Gerencie o cadastro, listagem e identidade institucional das empresas.
               </p>
             </div>
 
@@ -952,18 +1527,7 @@ export default function AdminConsolidatedPage() {
                     : "border border-white/12 bg-white/8 text-white/80 hover:bg-white/12"
                 }`}
               >
-                <FiHome className="h-4 w-4" /> Empresas ({companies.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setMainTab("users")}
-                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                  mainTab === "users"
-                    ? "border border-white/30 bg-white/15 text-white"
-                    : "border border-white/12 bg-white/8 text-white/80 hover:bg-white/12"
-                }`}
-              >
-                <FiUsers className="h-4 w-4" /> Usuários ({totalUsersCount})
+                <FiHome className="h-4 w-4" /> Listagem ({companies.length})
               </button>
             </div>
           </div>
@@ -978,7 +1542,27 @@ export default function AdminConsolidatedPage() {
               </p>
             )}
 
-            <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-5 xl:p-6">
+            <CompanyManagementQueueExperience
+              companies={companies}
+              loading={companiesLoading}
+              search={companiesSearch}
+              onSearchChange={setCompaniesSearch}
+              canCreate={canUseAdminClientTools}
+              onCreate={() => {
+                setSelectedCompanyId(null);
+                setOpenCompanyDetail(false);
+                setOpenCreateCompany(true);
+              }}
+              onRefresh={loadCompanies}
+              onSelect={(company) => {
+                setSelectedCompanyId(company.id);
+                setOpenCompanyDetail(true);
+              }}
+              selectedId={selectedCompanyId}
+              searchInputRef={companiesSearchInputRef}
+            />
+
+            <section className="hidden">
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:items-end">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Carteira de empresas</p>
@@ -1016,12 +1600,10 @@ export default function AdminConsolidatedPage() {
               <label className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
                 <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
                 <input
-                  ref={companiesSearchInputRef}
                   value={companiesSearch}
                   onChange={(event) => setCompaniesSearch(event.target.value)}
                   placeholder="Buscar por nome, slug, CNPJ, site ou telefone"
                   className="w-full bg-transparent outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
-                  data-testid="company-search-input"
                 />
               </label>
 
@@ -1399,7 +1981,9 @@ export default function AdminConsolidatedPage() {
             }
             const created = await res.json().catch(() => null);
             if (created) {
-              setCompanies((prev) => [mapClient(created), ...prev]);
+              const createdCompany = mapClient(created);
+              setCompanies((prev) => [createdCompany, ...prev]);
+              await createInstitutionalCompanyUser(createdCompany, data);
               await refreshUser();
               toast.success("Empresa cadastrada");
               setOpenCreateCompany(false);

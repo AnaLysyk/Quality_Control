@@ -1,4 +1,5 @@
-﻿import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
+import { randomBytes } from "crypto";
+import { createAccessRequestComment, listAccessRequestComments } from "@/data/accessRequestCommentsStore";
 import { addAuditLogSafe, listAuditLogs } from "@/data/auditLogRepository";
 import {
   createLocalCompany,
@@ -69,6 +70,10 @@ function readTextFromPayload(payload: Record<string, unknown>, keys: string[], m
   }
 
   return "";
+}
+
+function createPublicAccessRequestKey() {
+  return randomBytes(20).toString("hex");
 }
 
 function readRecordFromPayload(value: unknown): Record<string, unknown> {
@@ -1307,22 +1312,49 @@ export async function resendAccessRequestCode(input: { name: string; email: stri
       normalizeAccessRequestLookup(item.requesterEmail) === email,
   );
   if (!request?.accessKey) return false;
-  if (isAccessRequestLookupCodeExpired(request.accessKeyExpiresAt)) return false;
 
-  const sent = await emailService.sendAccessRequestReceivedEmail(request.requesterEmail, {
-    name: request.requesterName,
-    accessKey: request.accessKey,
-    email: request.requesterEmail,
-    username: (request as { username?: string | null; targetUserId?: string | null }).username ?? (request as { targetUserId?: string | null }).targetUserId ?? null,
-    phone: request.details?.phone,
-    passwordDefined: Boolean(request.requestedPasswordHash),
-    profileType: request.requestedRole,
-    companyName: request.requestedCompanySlug ?? request.details?.company?.companyName,
-    title: request.details?.title,
-    description: request.details?.description ?? request.reason,
-    status: request.status,
-    companyDetails: request.details?.company,
+  const nextAccessKey = createPublicAccessRequestKey();
+  const nextAccessKeyExpiresAt = createAccessRequestLookupCodeExpiresAt();
+  const wasExpired = isAccessRequestLookupCodeExpired(request.accessKeyExpiresAt) || request.status === "expired";
+  const updated = await updateAccessRequestV2(request.id, {
+    accessKey: nextAccessKey,
+    accessKeyExpiresAt: nextAccessKeyExpiresAt,
+    ...(request.status === "expired"
+      ? {
+          status: "under_review" as const,
+          reviewComment: "Novo código de consulta enviado ao solicitante.",
+          adjustmentFields: [],
+        }
+      : {}),
   });
+  if (!updated?.accessKey) return false;
+  const activeRequest = updated;
+
+  const sent = await emailService.sendAccessRequestReceivedEmail(activeRequest.requesterEmail, {
+    name: activeRequest.requesterName,
+    accessKey: activeRequest.accessKey ?? nextAccessKey,
+    email: activeRequest.requesterEmail,
+    username: (activeRequest as { username?: string | null; targetUserId?: string | null }).username ?? (activeRequest as { targetUserId?: string | null }).targetUserId ?? null,
+    phone: activeRequest.details?.phone,
+    passwordDefined: Boolean(activeRequest.requestedPasswordHash),
+    profileType: activeRequest.requestedRole,
+    companyName: activeRequest.requestedCompanySlug ?? activeRequest.details?.company?.companyName,
+    title: activeRequest.details?.title,
+    description: activeRequest.details?.description ?? activeRequest.reason,
+    status: activeRequest.status,
+    companyDetails: activeRequest.details?.company,
+  });
+
+  if (!sent) {
+    await updateAccessRequestV2(request.id, {
+      accessKey: request.accessKey,
+      accessKeyExpiresAt: request.accessKeyExpiresAt,
+      status: request.status,
+      reviewComment: request.reviewComment,
+      adjustmentFields: request.adjustmentFields,
+    });
+    return false;
+  }
 
   if (sent) {
     addAuditLogSafe({
@@ -1331,7 +1363,7 @@ export async function resendAccessRequestCode(input: { name: string; email: stri
       entityType: "access_request",
       entityId: request.id,
       entityLabel: request.requesterEmail,
-      metadata: { event: "code_resent", status: request.status },
+      metadata: { event: "code_resent", status: activeRequest.status, previousCodeExpired: wasExpired },
     });
   }
 
@@ -1462,5 +1494,3 @@ export function mapV2ToLegacySupportRow(request: AccessRequestV2) {
     admin_notes: request.reviewComment ?? null,
   };
 }
-
-

@@ -60,6 +60,7 @@ export default function UserAvatar({
   const initials = useMemo(() => getUserInitials(name), [name]);
   const normalizedSrc = typeof src === "string" ? src.trim() : "";
   const looksLikeUrl = /^(https?:\/\/|\/|blob:|data:)/i.test(normalizedSrc);
+  const looksLikeEmoji = Boolean(normalizedSrc && !looksLikeUrl);
   const showImage = looksLikeUrl && failedSrc !== normalizedSrc && !hasFailedImageSrc(normalizedSrc);
 
   return (
@@ -78,6 +79,14 @@ export default function UserAvatar({
               setFailedSrc(normalizedSrc);
             }}
           />
+        ) : looksLikeEmoji ? (
+          <span
+            className={`flex h-full w-full items-center justify-center bg-white text-center text-[2rem] leading-none dark:bg-slate-800 ${fallbackClassName}`}
+            aria-hidden
+            suppressHydrationWarning
+          >
+            {normalizedSrc}
+          </span>
         ) : showFallback ? (
           <span
             className={`flex h-full w-full items-center justify-center bg-transparent text-center text-sm font-bold tracking-[0.18em] text-slate-600 dark:text-slate-100 ${fallbackClassName}`}

@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { FiClock, FiEdit3, FiSave, FiTrash2, FiUser } from "react-icons/fi";
+import { FiClock, FiEdit3, FiExternalLink, FiSave, FiTrash2, FiUser } from "react-icons/fi";
 import { AvatarLibraryDialog } from "@/components/AvatarLibraryDialog";
 import type { AccessRequestProfilePreview, AvatarChoice } from "../../_types/accessRequests.types";
 import { displayName, safeDate, statusLabel } from "./workspace.helpers";
@@ -58,6 +58,55 @@ function toneClass(tone: ProfileTimelineItem["tone"]) {
   if (tone === "warn") return "border-amber-200 bg-amber-50 text-amber-800";
   if (tone === "danger") return "border-rose-200 bg-rose-50 text-rose-800";
   return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+function normalizeAccessLabel(value?: string | null) {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function buildManagementTarget(profile: AccessRequestProfilePreview) {
+  if (profile.status !== "closed" && profile.status !== "approved") return null;
+
+  const accessType = normalizeAccessLabel(profile.accessType);
+  const userQuery = encodeURIComponent(profile.email || profile.username || displayName(profile));
+  const companyQuery = encodeURIComponent(profile.company || profile.email || displayName(profile));
+
+  if (accessType === "empresa") {
+    return {
+      href: `/admin/clients?q=${companyQuery}`,
+      label: "Abrir em Empresas",
+    };
+  }
+
+  if (accessType.includes("suporte")) {
+    return {
+      href: `/admin/users?tab=support&q=${userQuery}`,
+      label: "Abrir em Usuários",
+    };
+  }
+
+  if (accessType.includes("lider")) {
+    return {
+      href: `/admin/users?tab=admin&q=${userQuery}`,
+      label: "Abrir em Usuários",
+    };
+  }
+
+  if (accessType.includes("tc")) {
+    return {
+      href: `/admin/users?tab=testing&q=${userQuery}`,
+      label: "Abrir em Usuários",
+    };
+  }
+
+  return {
+    href: `/admin/users?tab=company&q=${userQuery}`,
+    label: "Abrir em Usuários",
+  };
 }
 
 function AvatarPreview({
@@ -144,6 +193,7 @@ export function ProfileHero({
   const noteDirty = noteDraft !== resolvedNote;
   const canEditNote = !readOnly && !notesLocked && Boolean(onInternalNotesChange && onSaveInternalNotes);
   const noteText = resolvedNote.trim();
+  const managementTarget = buildManagementTarget(profile);
 
   function saveNote() {
     const value = noteDraft.slice(0, INTERNAL_NOTES_LIMIT);
@@ -210,6 +260,16 @@ export function ProfileHero({
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
+          {managementTarget ? (
+            <a
+              href={managementTarget.href}
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
+            >
+              <FiExternalLink className="h-4 w-4" />
+              {managementTarget.label}
+            </a>
+          ) : null}
+
           <button
             type="button"
             onClick={() => setTimelineOpen((current) => !current)}

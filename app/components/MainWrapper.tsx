@@ -17,10 +17,11 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
   const companySection = getCompanyRouteSection(pathname);
   const isDocumentosRoute = pathname.startsWith("/documentos");
   const isDocsRoute = pathname.startsWith("/docs") || companySection === "docs";
+  const isBrainRoute = pathname.startsWith("/brain") || pathname.startsWith("/admin/brain");
 
   // Left padding grows with viewport; right padding uses --content-pr to always
   // clear the fixed floating action strip regardless of breakpoint.
-  const leftPx = isDocumentosRoute || isDocsRoute
+  const leftPx = isBrainRoute || isDocumentosRoute || isDocsRoute
     ? "px-0"
     : isUsersPermissionsRoute
     ? "px-2 sm:px-2.5 lg:px-3 xl:px-4 2xl:px-5"
@@ -30,20 +31,29 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
     ? "px-2 sm:px-3 lg:px-4 xl:px-5 2xl:px-6"
     : "px-2.5 sm:px-4 lg:px-5 xl:px-6 2xl:px-8";
 
-  const bottomPb = isDocumentosRoute || isDocsRoute
+  const topPt = isBrainRoute ? "pt-0" : "pt-3 sm:pt-4";
+  const rightPr = isBrainRoute ? "pr-0" : "pr-(--content-pr)";
+
+  const bottomPb = isBrainRoute || isDocumentosRoute || isDocsRoute
     ? "pb-0"
     : isUsersPermissionsRoute
     ? "pb-4 sm:pb-5"
     : isUsersManagementRoute || isAccessRequestsRoute
     ? "pb-4 sm:pb-5 lg:pb-6"
     : "pb-8";
-  const beforeTopGap = isDocumentosRoute ? "mt-3 sm:mt-4 lg:mt-5" : isDocsRoute ? "mt-2 sm:mt-3" : "";
-  const beforeBottomGap = isDocumentosRoute || isDocsRoute ? "mb-0" : "mb-6 sm:mb-7 lg:mb-8";
-  const beforeHorizontalPad = isDocsRoute ? "px-3 sm:px-4 lg:px-5" : "";
+
+  const beforeTopGap = isBrainRoute ? "" : isDocumentosRoute ? "mt-3 sm:mt-4 lg:mt-5" : isDocsRoute ? "mt-2 sm:mt-3" : "";
+  const beforeBottomGap = isBrainRoute || isDocumentosRoute || isDocsRoute ? "mb-0" : "mb-6 sm:mb-7 lg:mb-8";
+  const beforeHorizontalPad = isBrainRoute || isDocsRoute ? "px-0" : "";
+  const heightMode = isBrainRoute
+    ? "h-full overflow-hidden flex flex-col"
+    : isDocsRoute
+    ? "h-full overflow-hidden flex flex-col"
+    : "min-h-full overflow-x-hidden";
 
   return (
     <main
-      className={`flex-1 w-full min-w-0 pt-3 sm:pt-4 pr-(--content-pr) ${leftPx} ${bottomPb} ${isDocsRoute ? "h-full overflow-hidden flex flex-col" : "min-h-full overflow-x-hidden"}`}
+      className={`flex-1 w-full min-w-0 ${topPt} ${rightPr} ${leftPx} ${bottomPb} ${heightMode}`}
     >
       {beforeContent ? <div className={`shrink-0 ${beforeTopGap} ${beforeBottomGap} ${beforeHorizontalPad}`}>{beforeContent}</div> : null}
       {children}

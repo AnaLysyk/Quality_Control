@@ -6,6 +6,7 @@ export const OFFICIAL_BRAIN_NODE_TYPES = [
   "Profile",
   "Application",
   "Module",
+  "Integration",
   "TestCase",
   "TestPlan",
   "TestRun",

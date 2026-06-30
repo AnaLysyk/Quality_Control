@@ -12,7 +12,7 @@ import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/nav
 import type { SystemRole } from "@/lib/auth/roles";
 
 const DISABLED_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
-const DISABLED_ITEM_IDS = new Set(["admin-permissions", "admin-system-map"]);
+const DISABLED_ITEM_IDS = new Set(["admin-system-map"]);
 const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
@@ -76,6 +76,10 @@ function resolveItemHref(
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
 ): string | undefined {
   const includeProject = PROJECT_SCOPED_ITEM_IDS.has(item.id);
+
+  if (item.id === "admin-permissions") {
+    return "/admin/users/permissions";
+  }
 
   if (item.companyRoute && companySlug) {
     const href = buildCompanyPathForAccess(companySlug, item.companyRoute, companyRouteInput);
@@ -186,7 +190,10 @@ function resolveModuleItems(
       })
       .map((item) => ({
         ...item,
+        label: item.id === "admin-permissions" ? "Gestão de Perfis" : item.label,
+        routeId: item.id === "admin-permissions" ? "perfis.gestao" : item.routeId,
         href: resolveItemHref(item, companySlug, projectSlug, companyRouteInput),
+        testId: item.id === "admin-permissions" ? "nav-admin-profiles" : item.testId,
       })),
   };
 }

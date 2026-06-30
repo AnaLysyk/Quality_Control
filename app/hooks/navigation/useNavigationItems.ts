@@ -12,6 +12,7 @@ import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/nav
 import type { SystemRole } from "@/lib/auth/roles";
 
 const DISABLED_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
+const DISABLED_ITEM_IDS = new Set(["admin-permissions"]);
 const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
@@ -144,6 +145,7 @@ function resolveModuleItems(
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: mod.items
       .filter((item) => {
+        if (DISABLED_ITEM_IDS.has(item.id)) return false;
         if (PROJECT_SCOPED_ITEM_IDS.has(item.id)) return Boolean(projectSlug);
         return true;
       })
@@ -236,9 +238,9 @@ export function useNavigationItems() {
     const contextCatalog = filterByActiveContext(catalog, companySlug);
     const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
 
-    return filtered.map((mod) =>
-      resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole),
-    );
+    return filtered
+      .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole))
+      .filter((mod) => mod.href || mod.items.length > 0);
   }, [
     user,
     isClientProfile,

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { useClientContext } from "@/context/ClientContext";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
@@ -26,6 +27,13 @@ type SidebarProps = {
   mobilePanelId?: string;
 };
 
+function normalizeSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const { collapsed, toggleCollapsed, openSections, toggleSection, openSection } = useSidebarState();
   const { modules: navigationModules, loading, companySlug } = useMenuLateral();
@@ -36,7 +44,9 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const { activeModuleId, isModuleActive, isItemActive } = useActiveNavigation(modules, pathname);
   const { favorites, removeFavorite } = useFavorites();
   const { user } = usePermissionAccess();
-  const { clients, activeClientSlug, setActiveClientSlug } = useClientContext();
+  const { clients, activeClient, activeClientSlug, setActiveClientSlug } = useClientContext();
+  const [companyOpen, setCompanyOpen] = useState(false);
+  const [companySearch, setCompanySearch] = useState("");
 
   useEffect(() => {
     if (activeModuleId) openSection(activeModuleId);
@@ -97,6 +107,15 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     [favorites, visibleFavoriteHrefs],
   );
 
+  const filteredCompanies = useMemo(() => {
+    const query = normalizeSearch(companySearch.trim());
+    if (!query) return clients;
+    return clients.filter((client) => {
+      const searchable = normalizeSearch(`${client.name} ${client.slug}`);
+      return searchable.includes(query);
+    });
+  }, [clients, companySearch]);
+
   const sidebarBody = (
     <aside
       className={`sidebar-theme text-white flex h-full flex-col border-r border-white/10 overflow-hidden bg-[linear-gradient(180deg,#011848_0%,#082457_42%,#3a1530_72%,#ef0001_100%)] backdrop-blur-xl transition-[width] duration-300 ease-in-out ${
@@ -112,22 +131,79 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       />
 
       {clients.length > 0 && !collapsed ? (
-        <div className="px-3 pt-2">
+        <div className="relative px-3 pt-2">
           <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-white/35">
             Empresa
           </label>
-          <select
-            value={activeClientSlug ?? ""}
-            onChange={(event) => setActiveClientSlug(event.target.value || null)}
-            className="w-full rounded-md border border-white/15 bg-white/10 px-2 py-1.5 text-[11px] font-medium text-white outline-none transition hover:bg-white/20"
+          <button
+            type="button"
+            onClick={() => {
+              setCompanyOpen((value) => !value);
+              setCompanySearch("");
+            }}
+            className="flex w-full items-center gap-2 rounded-md border border-white/15 bg-white/10 px-2 py-1.5 text-left text-[11px] font-medium text-white outline-none transition hover:bg-white/20"
+            data-testid="sidebar-company-combobox"
           >
-            <option value="" className="text-slate-900">Selecionar empresa</option>
-            {clients.map((client) => (
-              <option key={client.id} value={client.slug} className="text-slate-900">
-                {client.name}
-              </option>
-            ))}
-          </select>
+            <span className="min-w-0 flex-1 truncate">
+              {activeClient?.name ?? "Selecionar empresa"}
+            </span>
+            <FiChevronDown
+              size={13}
+              className={`shrink-0 text-white/65 transition-transform ${companyOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {companyOpen ? (
+            <div className="absolute left-3 right-3 top-full z-50 mt-1 overflow-hidden rounded-xl border border-white/15 bg-[#071b45] shadow-2xl">
+              <div className="border-b border-white/10 p-2">
+                <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-2 py-1.5">
+                  <FiSearch size={12} className="shrink-0 text-white/45" />
+                  <input
+                    value={companySearch}
+                    onChange={(event) => setCompanySearch(event.target.value)}
+                    autoFocus
+                    placeholder="Digite para buscar a empresa..."
+                    className="w-full bg-transparent text-[11px] text-white placeholder:text-white/35 outline-none"
+                    data-testid="sidebar-company-search"
+                  />
+                </div>
+              </div>
+
+              <div className="max-h-72 overflow-y-auto py-1 [scrollbar-width:thin]">
+                {filteredCompanies.length > 0 ? (
+                  filteredCompanies.map((client) => {
+                    const active = client.slug === activeClientSlug;
+                    return (
+                      <button
+                        key={client.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveClientSlug(client.slug);
+                          setCompanyOpen(false);
+                          setCompanySearch("");
+                        }}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-white/10 ${
+                          active ? "text-white" : "text-white/70"
+                        }`}
+                        data-testid={`sidebar-company-option-${client.slug}`}
+                      >
+                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-red-500" : "bg-white/25"}`} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[11px] font-semibold">{client.name}</span>
+                          <span className="block truncate text-[10px] text-white/35">/{client.slug}</span>
+                        </span>
+                        {active ? <FiCheck size={12} className="shrink-0 text-white/60" /> : null}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="px-3 py-4 text-center text-[11px] text-white/45">
+                    Nenhuma empresa encontrada
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 

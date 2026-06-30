@@ -33,6 +33,10 @@ function getUrls(message: string) {
   return Array.from(new Set(message.match(URL_PATTERN) ?? [])).slice(0, 3);
 }
 
+function hasUrl(message: string) {
+  return /https?:\/\/[^\s)]+/i.test(message);
+}
+
 function cleanSearchQuery(message: string) {
   return message
     .replace(URL_PATTERN, " ")
@@ -151,7 +155,7 @@ async function duckDuckGoInstantAnswer(query: string): Promise<WebSupportResult[
 export function shouldUseWebSupport(message: string) {
   const text = String(message ?? "").trim();
   if (!text) return false;
-  return URL_PATTERN.test(text) || WEB_INTENT_PATTERN.test(text);
+  return hasUrl(text) || WEB_INTENT_PATTERN.test(text);
 }
 
 export async function buildWebSupportContext(message: string) {

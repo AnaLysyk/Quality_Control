@@ -15,6 +15,10 @@ type BrainNodeOverlayProps = {
 };
 
 const ACTION_LABELS: Record<string, string> = {
+  integration: "Abrir empresa relacionada, revisar token, projeto e status da integração",
+  profile: "Abrir usuários por perfil e conferir origem correta do cadastro",
+  screen: "Abrir tela relacionada e revisar a fila operacional",
+  status: "Filtrar a fila por este status",
   access_request: "Abrir solicitação, revisar perfil, solicitar ajuste, aprovar ou recusar",
   automation: "Abrir automação, conferir execução, evidências e falhas",
   company: "Ver empresas, usuários vinculados, projetos, permissões e chamados",

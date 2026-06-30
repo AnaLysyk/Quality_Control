@@ -155,9 +155,9 @@ const BRAIN_CORES: BrainCoreDefinition[] = [
   },
   {
     id: "usuarios-permissoes",
-    label: "Usuários / Permissões",
-    modules: ["Usuarios", "Usuários", "Permissoes", "Permissões"],
-    description: "Pessoas, perfis, matriz de acesso, empresas e permissões efetivas.",
+    label: "Empresas / Usuários",
+    modules: ["Empresas", "Usuarios", "Usuários", "Permissoes", "Permissões"],
+    description: "Empresas, pessoas, perfis, matriz de acesso, integrações e permissões efetivas.",
   },
   {
     id: "logs",

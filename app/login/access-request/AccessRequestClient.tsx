@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useI18n } from "@/hooks/useI18n";
 import { normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
 import { ACCESS_REQUEST_BASE_ADJUSTMENT_OPTIONS, ACCESS_REQUEST_COMPANY_ADJUSTMENT_OPTIONS } from "@/lib/accessRequestAdjustmentFields";
+import { isCnpjValid, normalizeCnpj } from "@/lib/brasilApiCnpj";
 
 const ACCESS_OPTIONS = [
   {
@@ -307,10 +308,28 @@ export default function AccessRequestClient() {
   };
 
   const handleLookupCompanyByCnpj = async () => {
-    const cnpj = companyDraft.companyTaxId.trim();
+    const cnpj = normalizeCnpj(companyDraft.companyTaxId);
 
     setCompanyLookupMessage(null);
+
+    if (!cnpj) {
+      setCompanyLookupMessage("Informe o CNPJ para consultar a BrasilAPI.");
+      return;
+    }
+
+    if (cnpj.length < 14) {
+      setCompanyLookupMessage("Digite os 14 digitos do CNPJ.");
+      return;
+    }
+
+    if (!isCnpjValid(cnpj)) {
+      setCompanyLookupMessage("CNPJ invalido. Verifique os digitos antes de consultar.");
+      return;
+    }
+
+    setCompanyDraft((current) => ({ ...current, companyTaxId: cnpj }));
     setCompanyLookupLoading(true);
+    setCompanyLookupMessage("CNPJ valido. Consultando BrasilAPI...");
 
     try {
       const response = await fetch(`/api/public/company-lookup/cnpj?cnpj=${encodeURIComponent(cnpj)}`, {
@@ -339,7 +358,7 @@ export default function AccessRequestClient() {
       setCompanyDraft((current) => ({
         ...current,
         companyName: item.companyName || item.fantasyName || current.companyName,
-        companyTaxId: item.cnpj || current.companyTaxId,
+        companyTaxId: item.cnpj || cnpj || current.companyTaxId,
         companyZip: item.cep || current.companyZip,
         companyAddress:
           formatCompanyAddress({
@@ -352,7 +371,7 @@ export default function AccessRequestClient() {
         companyPhone: item.phone || current.companyPhone,
       }));
 
-      setCompanyLookupMessage("Dados da empresa encontrados e preenchidos automaticamente.");
+      setCompanyLookupMessage("Dados da empresa encontrados e preenchidos automaticamente pela BrasilAPI.");
     } catch (error) {
       setCompanyLookupMessage(error instanceof Error ? error.message : "Não foi possível consultar o CNPJ.");
     } finally {
@@ -767,6 +786,8 @@ export default function AccessRequestClient() {
     ACCESS_OPTIONS.find((option) => option.value === (lookupDraft?.accessType ?? "testing_company_user")) ?? ACCESS_OPTIONS[0];
   const isCompanyAccessRequest = accessType === "empresa";
   const isLookupCompanyAccessRequest = lookupDraft?.accessType === "empresa";
+  const requestCompanyCnpj = normalizeCnpj(companyDraft.companyTaxId);
+  const requestCompanyCnpjReady = requestCompanyCnpj.length === 14 && isCnpjValid(requestCompanyCnpj);
 
   const isLookupFieldEditable = (field: AccessRequestAdjustmentField) => {
     if (!canEditLookup) return false;
@@ -1086,7 +1107,6 @@ export default function AccessRequestClient() {
                   </select>
                   <p className="text-xs font-medium text-[#64748b]">{selectedAccessOption.hint}</p>
                 </div>
-
                 {requestProfileTypeNeedsCompany(accessType) ? (
                   <label className={labelClass}>
                     Empresa vinculada
@@ -1155,7 +1175,7 @@ export default function AccessRequestClient() {
                             data-testid="request-access-company-cnpj-input"
                             type="text"
                             value={companyDraft.companyTaxId}
-                            onChange={(event) => setCompanyDraft((current) => ({ ...current, companyTaxId: event.target.value }))}
+                            onChange={(event) => setCompanyDraft((current) => ({ ...current, companyTaxId: normalizeCnpj(event.target.value) }))}
                             className={inputBase}
                             placeholder="00.000.000/0000-00"
                           />
@@ -1163,12 +1183,19 @@ export default function AccessRequestClient() {
                             data-testid="request-access-company-cnpj-lookup-button"
                             type="button"
                             onClick={handleLookupCompanyByCnpj}
-                            disabled={companyLookupLoading}
+                            disabled={companyLookupLoading || !requestCompanyCnpjReady}
                             className="shrink-0 rounded-xl bg-linear-to-r from-[#011848] to-[#ef0001] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {companyLookupLoading ? "Buscando..." : "Buscar"}
+                            {companyLookupLoading ? "BrasilAPI..." : "Buscar"}
                           </button>
                         </div>
+                        <p className="text-xs font-medium text-[#64748b]">
+                          {requestCompanyCnpj.length === 0
+                            ? "Digite o CNPJ para preencher dados pela BrasilAPI."
+                            : requestCompanyCnpjReady
+                              ? "CNPJ valido para consulta."
+                              : "Complete um CNPJ valido com 14 digitos."}
+                        </p>
                       </label>
                       <label className={labelClass}>
                         CEP

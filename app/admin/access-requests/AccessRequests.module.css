@@ -21,3 +21,352 @@
 .detailCard {
   background: linear-gradient(135deg, var(--tc-primary) 0%, rgba(10, 34, 90, 0.96) 58%, rgba(239, 0, 1, 0.82) 180%);
 }
+
+/* ACCESS REQUESTS THEME MODE - START */
+.queueShell {
+  --tc-accent: #ef0001;
+  --tc-border: #e2e8f0;
+  --tc-primary: #011848;
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f8fafc;
+  --tc-text-muted: #64748b;
+  --tc-text-primary: #0f172a;
+  --tc-text-secondary: #475569;
+  color-scheme: light;
+}
+
+:global(.dark) .queueShell {
+  --tc-border: rgba(148, 163, 184, 0.22);
+  --tc-primary: #dbeafe;
+  --tc-surface: #071426;
+  --tc-surface-2: #0d1b2f;
+  --tc-text-muted: #94a3b8;
+  --tc-text-primary: #f8fafc;
+  --tc-text-secondary: #cbd5e1;
+  color-scheme: dark;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.34);
+}
+
+:global(.dark) .queueShell input,
+:global(.dark) .queueShell select,
+:global(.dark) .queueShell textarea {
+  background: var(--tc-surface);
+  color: var(--tc-text-primary);
+  border-color: var(--tc-border);
+}
+
+:global(.dark) .queueShell option {
+  background: #071426;
+  color: #f8fafc;
+}
+
+:global(.dark) .queueShell button {
+  color: inherit;
+}
+
+:global(.dark) .queueShell table {
+  background: var(--tc-surface);
+}
+
+:global(.dark) .queueShell thead {
+  background: var(--tc-surface);
+}
+
+:global(.dark) .queueShell tbody tr {
+  color: var(--tc-text-primary);
+}
+
+:global(.dark) .queueShell [class*="bg-slate-50"],
+:global(.dark) .queueShell [class*="bg-slate-100"] {
+  background-color: var(--tc-surface-2);
+}
+
+:global(.dark) .queueShell [class*="text-slate-950"],
+:global(.dark) .queueShell [class*="text-slate-900"],
+:global(.dark) .queueShell [class*="text-slate-800"] {
+  color: var(--tc-text-primary);
+}
+
+:global(.dark) .queueShell [class*="text-slate-700"],
+:global(.dark) .queueShell [class*="text-slate-600"],
+:global(.dark) .queueShell [class*="text-slate-500"] {
+  color: var(--tc-text-secondary);
+}
+/* ACCESS REQUESTS THEME MODE - END */
+
+/* ACCESS REQUESTS DARK FORCE - START */
+.queueShell {
+  --tc-accent: #ef0001;
+  --tc-border: #e2e8f0;
+  --tc-primary: #011848;
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f8fafc;
+  --tc-text-muted: #64748b;
+  --tc-text-primary: #0f172a;
+  --tc-text-secondary: #475569;
+  color-scheme: light;
+}
+
+:global(.dark) .queueShell,
+:global(html.dark) .queueShell,
+:global(body.dark) .queueShell,
+:global([data-theme="dark"]) .queueShell,
+:global([data-mode="dark"]) .queueShell {
+  --tc-border: rgba(148, 163, 184, 0.24);
+  --tc-primary: #dbeafe;
+  --tc-surface: #071426;
+  --tc-surface-2: #0d1b2f;
+  --tc-text-muted: #94a3b8;
+  --tc-text-primary: #f8fafc;
+  --tc-text-secondary: #cbd5e1;
+  background: #071426 !important;
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color-scheme: dark;
+}
+
+:global(.dark) .queueShell *,
+:global(html.dark) .queueShell *,
+:global(body.dark) .queueShell *,
+:global([data-theme="dark"]) .queueShell *,
+:global([data-mode="dark"]) .queueShell * {
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+:global(.dark) .queueShell [class*="bg-white"],
+:global(.dark) .queueShell [class*="bg-slate-50"],
+:global(.dark) .queueShell [class*="bg-slate-100"],
+:global(.dark) .queueShell [class*="bg-\\(--tc-surface"],
+:global(html.dark) .queueShell [class*="bg-white"],
+:global(html.dark) .queueShell [class*="bg-slate-50"],
+:global(html.dark) .queueShell [class*="bg-slate-100"],
+:global(html.dark) .queueShell [class*="bg-\\(--tc-surface"],
+:global(body.dark) .queueShell [class*="bg-white"],
+:global(body.dark) .queueShell [class*="bg-slate-50"],
+:global(body.dark) .queueShell [class*="bg-slate-100"],
+:global(body.dark) .queueShell [class*="bg-\\(--tc-surface"],
+:global([data-theme="dark"]) .queueShell [class*="bg-white"],
+:global([data-theme="dark"]) .queueShell [class*="bg-slate-50"],
+:global([data-theme="dark"]) .queueShell [class*="bg-slate-100"],
+:global([data-theme="dark"]) .queueShell [class*="bg-\\(--tc-surface"],
+:global([data-mode="dark"]) .queueShell [class*="bg-white"],
+:global([data-mode="dark"]) .queueShell [class*="bg-slate-50"],
+:global([data-mode="dark"]) .queueShell [class*="bg-slate-100"],
+:global([data-mode="dark"]) .queueShell [class*="bg-\\(--tc-surface"] {
+  background: var(--tc-surface) !important;
+}
+
+:global(.dark) .queueShell [class*="even:bg"],
+:global(html.dark) .queueShell [class*="even:bg"],
+:global(body.dark) .queueShell [class*="even:bg"],
+:global([data-theme="dark"]) .queueShell [class*="even:bg"],
+:global([data-mode="dark"]) .queueShell [class*="even:bg"] {
+  background: var(--tc-surface-2) !important;
+}
+
+:global(.dark) .queueShell [class*="text-slate-950"],
+:global(.dark) .queueShell [class*="text-slate-900"],
+:global(.dark) .queueShell [class*="text-slate-800"],
+:global(.dark) .queueShell [class*="text-\\(--tc-text-primary"],
+:global(html.dark) .queueShell [class*="text-slate-950"],
+:global(html.dark) .queueShell [class*="text-slate-900"],
+:global(html.dark) .queueShell [class*="text-slate-800"],
+:global(html.dark) .queueShell [class*="text-\\(--tc-text-primary"],
+:global(body.dark) .queueShell [class*="text-slate-950"],
+:global(body.dark) .queueShell [class*="text-slate-900"],
+:global(body.dark) .queueShell [class*="text-slate-800"],
+:global(body.dark) .queueShell [class*="text-\\(--tc-text-primary"],
+:global([data-theme="dark"]) .queueShell [class*="text-slate-950"],
+:global([data-theme="dark"]) .queueShell [class*="text-slate-900"],
+:global([data-theme="dark"]) .queueShell [class*="text-slate-800"],
+:global([data-theme="dark"]) .queueShell [class*="text-\\(--tc-text-primary"],
+:global([data-mode="dark"]) .queueShell [class*="text-slate-950"],
+:global([data-mode="dark"]) .queueShell [class*="text-slate-900"],
+:global([data-mode="dark"]) .queueShell [class*="text-slate-800"],
+:global([data-mode="dark"]) .queueShell [class*="text-\\(--tc-text-primary"] {
+  color: var(--tc-text-primary) !important;
+}
+
+:global(.dark) .queueShell [class*="text-slate-700"],
+:global(.dark) .queueShell [class*="text-slate-600"],
+:global(.dark) .queueShell [class*="text-slate-500"],
+:global(.dark) .queueShell [class*="text-\\(--tc-text-secondary"],
+:global(.dark) .queueShell [class*="text-\\(--tc-text-muted"],
+:global(html.dark) .queueShell [class*="text-slate-700"],
+:global(html.dark) .queueShell [class*="text-slate-600"],
+:global(html.dark) .queueShell [class*="text-slate-500"],
+:global(html.dark) .queueShell [class*="text-\\(--tc-text-secondary"],
+:global(html.dark) .queueShell [class*="text-\\(--tc-text-muted"],
+:global(body.dark) .queueShell [class*="text-slate-700"],
+:global(body.dark) .queueShell [class*="text-slate-600"],
+:global(body.dark) .queueShell [class*="text-slate-500"],
+:global(body.dark) .queueShell [class*="text-\\(--tc-text-secondary"],
+:global(body.dark) .queueShell [class*="text-\\(--tc-text-muted"],
+:global([data-theme="dark"]) .queueShell [class*="text-slate-700"],
+:global([data-theme="dark"]) .queueShell [class*="text-slate-600"],
+:global([data-theme="dark"]) .queueShell [class*="text-slate-500"],
+:global([data-theme="dark"]) .queueShell [class*="text-\\(--tc-text-secondary"],
+:global([data-theme="dark"]) .queueShell [class*="text-\\(--tc-text-muted"],
+:global([data-mode="dark"]) .queueShell [class*="text-slate-700"],
+:global([data-mode="dark"]) .queueShell [class*="text-slate-600"],
+:global([data-mode="dark"]) .queueShell [class*="text-slate-500"],
+:global([data-mode="dark"]) .queueShell [class*="text-\\(--tc-text-secondary"],
+:global([data-mode="dark"]) .queueShell [class*="text-\\(--tc-text-muted"] {
+  color: var(--tc-text-secondary) !important;
+}
+
+:global(.dark) .queueShell input,
+:global(.dark) .queueShell select,
+:global(.dark) .queueShell textarea,
+:global(html.dark) .queueShell input,
+:global(html.dark) .queueShell select,
+:global(html.dark) .queueShell textarea,
+:global(body.dark) .queueShell input,
+:global(body.dark) .queueShell select,
+:global(body.dark) .queueShell textarea,
+:global([data-theme="dark"]) .queueShell input,
+:global([data-theme="dark"]) .queueShell select,
+:global([data-theme="dark"]) .queueShell textarea,
+:global([data-mode="dark"]) .queueShell input,
+:global([data-mode="dark"]) .queueShell select,
+:global([data-mode="dark"]) .queueShell textarea {
+  background: #0d1b2f !important;
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+:global(.dark) .queueShell option,
+:global(html.dark) .queueShell option,
+:global(body.dark) .queueShell option,
+:global([data-theme="dark"]) .queueShell option,
+:global([data-mode="dark"]) .queueShell option {
+  background: #071426 !important;
+  color: #f8fafc !important;
+}
+
+:global(.dark) .queueShell thead,
+:global(html.dark) .queueShell thead,
+:global(body.dark) .queueShell thead,
+:global([data-theme="dark"]) .queueShell thead,
+:global([data-mode="dark"]) .queueShell thead {
+  background: #071426 !important;
+}
+
+:global(.dark) .queueShell tbody tr:hover,
+:global(html.dark) .queueShell tbody tr:hover,
+:global(body.dark) .queueShell tbody tr:hover,
+:global([data-theme="dark"]) .queueShell tbody tr:hover,
+:global([data-mode="dark"]) .queueShell tbody tr:hover {
+  background: rgba(14, 165, 233, 0.14) !important;
+}
+
+:global(.dark) .queueShell [class*="bg-sky-50"],
+:global(html.dark) .queueShell [class*="bg-sky-50"],
+:global(body.dark) .queueShell [class*="bg-sky-50"],
+:global([data-theme="dark"]) .queueShell [class*="bg-sky-50"],
+:global([data-mode="dark"]) .queueShell [class*="bg-sky-50"] {
+  background: rgba(8, 47, 73, 0.55) !important;
+  color: #bae6fd !important;
+}
+/* ACCESS REQUESTS DARK FORCE - END */
+
+/* ACCESS REQUESTS DETAIL DARK FIX - START */
+:global(.dark) .queueShell [class*="bg-amber-50"],
+:global(html.dark) .queueShell [class*="bg-amber-50"],
+:global(body.dark) .queueShell [class*="bg-amber-50"],
+:global([data-theme="dark"]) .queueShell [class*="bg-amber-50"],
+:global([data-mode="dark"]) .queueShell [class*="bg-amber-50"] {
+  background: rgba(120, 53, 15, 0.34) !important;
+}
+
+:global(.dark) .queueShell [class*="bg-emerald-50"],
+:global(html.dark) .queueShell [class*="bg-emerald-50"],
+:global(body.dark) .queueShell [class*="bg-emerald-50"],
+:global([data-theme="dark"]) .queueShell [class*="bg-emerald-50"],
+:global([data-mode="dark"]) .queueShell [class*="bg-emerald-50"] {
+  background: rgba(6, 78, 59, 0.30) !important;
+}
+
+:global(.dark) .queueShell [class*="text-amber-700"],
+:global(html.dark) .queueShell [class*="text-amber-700"],
+:global(body.dark) .queueShell [class*="text-amber-700"],
+:global([data-theme="dark"]) .queueShell [class*="text-amber-700"],
+:global([data-mode="dark"]) .queueShell [class*="text-amber-700"] {
+  color: #fbbf24 !important;
+}
+
+:global(.dark) .queueShell [class*="text-emerald-700"],
+:global(html.dark) .queueShell [class*="text-emerald-700"],
+:global(body.dark) .queueShell [class*="text-emerald-700"],
+:global([data-theme="dark"]) .queueShell [class*="text-emerald-700"],
+:global([data-mode="dark"]) .queueShell [class*="text-emerald-700"] {
+  color: #6ee7b7 !important;
+}
+/* ACCESS REQUESTS DETAIL DARK FIX - END */
+
+/* ACCESS REQUESTS LIGHT FORCE - START */
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell {
+  --tc-accent: #ef0001;
+  --tc-border: #d8e0ec;
+  --tc-primary: #011848;
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f8fafc;
+  --tc-text-muted: #64748b;
+  --tc-text-primary: #0f172a;
+  --tc-text-secondary: #475569;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #d8e0ec !important;
+  color-scheme: light !important;
+}
+
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell,
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell > div,
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell section,
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell article {
+  color-scheme: light !important;
+}
+
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="bg-\\(--tc-surface"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="bg-white"] {
+  background: #ffffff !important;
+}
+
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="bg-slate-50"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="bg-slate-100"] {
+  background: #f8fafc !important;
+}
+
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-\\(--tc-text-primary"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-slate-950"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-slate-900"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-slate-800"] {
+  color: #0f172a !important;
+}
+
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-\\(--tc-text-secondary"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-\\(--tc-text-muted"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-slate-700"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-slate-600"],
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell [class*="text-slate-500"] {
+  color: #475569 !important;
+}
+
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell input,
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell select,
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell textarea {
+  background: #ffffff !important;
+  border-color: #d8e0ec !important;
+  color: #0f172a !important;
+}
+
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell input::placeholder,
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+:global(html:not(.dark):not([data-theme="dark"]):not([data-mode="dark"]) body:not(.dark):not([data-theme="dark"]):not([data-mode="dark"])) .queueShell option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+/* ACCESS REQUESTS LIGHT FORCE - END */

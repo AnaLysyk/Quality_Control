@@ -5138,6 +5138,94 @@ video {
   text-decoration: none !important;
 }
 
+/* Shared queue/listing surface used by solicitacoes, empresas and usuarios */
+.tc-queue-shell {
+  --tc-accent: #ef0001;
+  --tc-border: #d6e0ec;
+  --tc-primary: #011848;
+  --tc-surface: #fbfdff;
+  --tc-surface-2: #f3f7fb;
+  --tc-surface-alt: #eef4f9;
+  --tc-text-muted: #64748b;
+  --tc-text-primary: #0f172a;
+  --tc-text-secondary: #475569;
+  color-scheme: light;
+}
+
+.dark .tc-queue-shell,
+html.dark .tc-queue-shell,
+body.dark .tc-queue-shell,
+[data-theme="dark"] .tc-queue-shell,
+[data-mode="dark"] .tc-queue-shell {
+  --tc-border: rgba(148, 163, 184, 0.26);
+  --tc-primary: #dbeafe;
+  --tc-surface: #0a1728;
+  --tc-surface-2: #102036;
+  --tc-surface-alt: #13243b;
+  --tc-text-muted: #94a3b8;
+  --tc-text-primary: #f8fafc;
+  --tc-text-secondary: #cbd5e1;
+  background: #0a1728 !important;
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color-scheme: dark;
+}
+
+.dark .tc-queue-shell input,
+.dark .tc-queue-shell select,
+.dark .tc-queue-shell textarea,
+html.dark .tc-queue-shell input,
+html.dark .tc-queue-shell select,
+html.dark .tc-queue-shell textarea,
+body.dark .tc-queue-shell input,
+body.dark .tc-queue-shell select,
+body.dark .tc-queue-shell textarea,
+[data-theme="dark"] .tc-queue-shell input,
+[data-theme="dark"] .tc-queue-shell select,
+[data-theme="dark"] .tc-queue-shell textarea,
+[data-mode="dark"] .tc-queue-shell input,
+[data-mode="dark"] .tc-queue-shell select,
+[data-mode="dark"] .tc-queue-shell textarea {
+  background: #0d1b2f !important;
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+.dark .tc-queue-shell option,
+html.dark .tc-queue-shell option,
+body.dark .tc-queue-shell option,
+[data-theme="dark"] .tc-queue-shell option,
+[data-mode="dark"] .tc-queue-shell option {
+  background: #071426 !important;
+  color: #f8fafc !important;
+}
+
+.dark .tc-queue-shell thead,
+html.dark .tc-queue-shell thead,
+body.dark .tc-queue-shell thead,
+[data-theme="dark"] .tc-queue-shell thead,
+[data-mode="dark"] .tc-queue-shell thead {
+  background: #071426 !important;
+}
+
+.dark .tc-queue-shell tbody tr:hover,
+html.dark .tc-queue-shell tbody tr:hover,
+body.dark .tc-queue-shell tbody tr:hover,
+[data-theme="dark"] .tc-queue-shell tbody tr:hover,
+[data-mode="dark"] .tc-queue-shell tbody tr:hover {
+  background: rgba(14, 165, 233, 0.14) !important;
+}
+
+.dark .tc-queue-shell .tc-queue-soft,
+html.dark .tc-queue-shell .tc-queue-soft,
+body.dark .tc-queue-shell .tc-queue-soft,
+[data-theme="dark"] .tc-queue-shell .tc-queue-soft,
+[data-mode="dark"] .tc-queue-shell .tc-queue-soft {
+  background: #0d1b2f !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #f8fafc !important;
+}
+
 /* Cores estatÃ­sticas (evita inline styles) */
 .text-stat-pass { color: var(--stat-pass) !important; }
 .text-stat-fail { color: var(--stat-fail) !important; }

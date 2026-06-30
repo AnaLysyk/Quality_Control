@@ -636,7 +636,7 @@ Equipe Testing Company
       companyDetails?: Record<string, unknown> | null;
     },
   ): Promise<boolean> {
-    const lookupUrl = `${this.resolvePublicBaseUrl()}/login/access-request`;
+    const lookupUrl = `${this.resolvePublicBaseUrl()}/login/access-request/status?key=${encodeURIComponent(data.accessKey)}`;
     const accessUsername = (data.username ?? data.user ?? data.email ?? "").trim();
     const profileKey = String(data.profileType ?? "").trim();
     const companyName = String(data.companyName ?? "").trim();
@@ -818,7 +818,7 @@ Equipe Testing Company
         ${companyUserSection}
         ${companySection}
 
-        <div class="box">Guarde este código. Para consultar o andamento, acesse a tela de consulta e informe seu nome, e-mail e código de consulta.</div>
+        <div class="box">Guarde este código. O botão abaixo abre a consulta desta solicitação; se o prazo expirar, use “Reenviar código” na tela de consulta para receber uma nova chave válida.</div>
 
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:20px auto 10px;border-collapse:separate;">
                 <tr>
@@ -877,7 +877,7 @@ ${companyText ? `DADOS DA EMPRESA
 ${companyText}
 ` : ""}
 
-Para consultar o andamento, acesse a tela de consulta e informe seu nome, e-mail e código.
+Para consultar o andamento, use o link abaixo. Se o prazo expirar, reenvie o código pela tela de consulta.
 
 Acesse a consulta em:
 ${lookupUrl}
@@ -1446,4 +1446,3 @@ ${lookupUrl}`;
 }
 
 export const emailService = new EmailService();
-

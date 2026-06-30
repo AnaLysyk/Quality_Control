@@ -15,6 +15,7 @@ import { FiAlertCircle, FiCheckCircle, FiChevronDown, FiEye, FiEyeOff, FiSearch,
 import Breadcrumb from "@/components/Breadcrumb";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import UserAvatar from "@/components/UserAvatar";
+import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { publishAuthUser, useAuthUser } from "@/hooks/useAuthUser";
 import { useI18n } from "@/hooks/useI18n";
@@ -499,6 +500,14 @@ function isBlobAvatarUrl(value?: string | null) {
   return typeof value === "string" && value.startsWith("blob:");
 }
 
+function resolveProfileAvatarLibraryKind(value?: string | null): AvatarLibraryChoice["avatarKind"] {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  if (!normalized) return "default";
+  if (!/^(https?:\/\/|\/|blob:|data:)/i.test(normalized)) return "emoji";
+  if (/\.gif(?:$|\?)/i.test(normalized) || normalized.includes("media.giphy.com")) return "gif";
+  return "image";
+}
+
 function PanelHeader({
   title,
   description,
@@ -700,6 +709,7 @@ export default function SettingsProfilePage() {
   const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
   const [profileAvatarSource, setProfileAvatarSource] = useState<AvatarSource>(null);
   const [profileAvatarDirty, setProfileAvatarDirty] = useState(false);
+  const [profileAvatarLibraryOpen, setProfileAvatarLibraryOpen] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
   const [profileSummary, setProfileSummary] = useState<ProfileSummary | null>(null);
@@ -1632,6 +1642,28 @@ export default function SettingsProfilePage() {
     } finally {
       setDeleteRequestLoading(false);
     }
+  }
+
+  function handleProfileAvatarLibraryChoice(choice: AvatarLibraryChoice) {
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    if (choice.avatarKind === "default") {
+      setProfileAvatarSource(null);
+      setProfileAvatarUrlInput("");
+      setProfileAvatarFile(null);
+      setProfileUploadedAvatarUrl("");
+      setProfileAvatarDirty(true);
+      setProfileSuccess("Avatar removido. Salve para aplicar no perfil.");
+      return;
+    }
+
+    setProfileAvatarSource("url");
+    setProfileAvatarUrlInput(choice.avatarValue);
+    setProfileAvatarFile(null);
+    setProfileUploadedAvatarUrl("");
+    setProfileAvatarDirty(true);
+    setProfileSuccess(`${choice.avatarLabel || "Avatar"} pronto para salvar.`);
   }
 
   async function handleAvatarUpload(file?: File) {
@@ -2939,7 +2971,7 @@ export default function SettingsProfilePage() {
                   showFallback={!avatarLoadingPlaceholder}
                   size="lg"
                   editable
-                  onEdit={() => avatarInputRef.current?.click()}
+                  onEdit={() => setProfileAvatarLibraryOpen(true)}
                   className="h-24 w-24 shrink-0 sm:h-28 sm:w-28"
                   frameClassName={heroAvatarUrl ? "border-0 bg-transparent ring-0 shadow-[0_16px_34px_rgba(1,24,72,0.22)]" : "border border-white/28 bg-white/10 text-white shadow-[0_16px_34px_rgba(1,24,72,0.18)]"}
                   fallbackClassName="text-xl font-bold tracking-[0.18em] text-white"
@@ -3214,14 +3246,14 @@ export default function SettingsProfilePage() {
                   showFallback={!avatarLoadingPlaceholder}
                   size="xl"
                   editable
-                  onEdit={() => avatarInputRef.current?.click()}
+                  onEdit={() => setProfileAvatarLibraryOpen(true)}
                   frameClassName="border-4 border-white bg-transparent shadow-[0_20px_44px_rgba(15,23,42,0.16)] ring-1 ring-slate-200/80 dark:ring-white/10"
                   fallbackClassName="text-2xl font-bold tracking-[0.18em] text-slate-600 dark:text-white"
                   buttonClassName="bg-(--tc-primary) text-white hover:bg-(--tc-accent)"
                 />
                 <div className="space-y-1">
                   <div className="text-xs font-semibold text-(--tc-accent) dark:text-[#ff8a8a]">
-                    {avatarUploading ? "Enviando foto..." : profileAvatarFile ? "A nova foto aparece aqui antes de salvar." : "Upload e URL usam uma única origem por vez."}
+                    {avatarUploading ? "Enviando foto..." : profileAvatarDirty ? "O novo avatar aparece aqui antes de salvar." : "Use upload, GIF, emoji ou URL como foto do perfil."}
                   </div>
                 </div>
                 <input
@@ -3256,7 +3288,7 @@ export default function SettingsProfilePage() {
                   setProfileAvatarDirty(true);
                 }}
                 disabled={profileLoading || loading}
-                placeholder="https://exemplo.com/foto.jpg"
+                placeholder="https://exemplo.com/foto.gif ou imagem"
               />
             </Field>
 
@@ -3439,6 +3471,14 @@ export default function SettingsProfilePage() {
           </div>
         </section>
 
+
+        <AvatarLibraryDialog
+          open={profileAvatarLibraryOpen}
+          onOpenChange={setProfileAvatarLibraryOpen}
+          value={profileAvatarDirty ? activeAvatarUrl : persistedAvatarUrl}
+          kind={resolveProfileAvatarLibraryKind(profileAvatarDirty ? activeAvatarUrl : persistedAvatarUrl)}
+          onSelect={handleProfileAvatarLibraryChoice}
+        />
         <ConfirmDialog
           open={!!usernameReplacementDialog}
           title="Trocar login da conta"

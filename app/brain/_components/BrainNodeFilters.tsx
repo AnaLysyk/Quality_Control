@@ -7,6 +7,7 @@ const FILTERS: Array<{ id: BrainGraphFilter; label: string }> = [
   { id: "access_requests", label: "Solicitacoes" },
   { id: "requesters", label: "Solicitantes" },
   { id: "profiles", label: "Perfis" },
+  { id: "integrations", label: "Integracoes" },
   { id: "status", label: "Status" },
   { id: "logs", label: "Logs" },
   { id: "emails", label: "E-mails" },

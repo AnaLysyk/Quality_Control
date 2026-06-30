@@ -5,6 +5,8 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { FiCheck, FiCloudLightning, FiEye, FiEyeOff, FiLink2, FiSearch, FiZap, FiEdit2 } from "react-icons/fi";
 import { extractCnpjAddress, extractCnpjCompanyName, lookupCnpjCompany, normalizeCnpj, isCnpjValid } from "@/lib/brasilApiCnpj";
+import UserAvatar from "@/components/UserAvatar";
+import { AvatarLibraryDialog, type AvatarLibraryChoice } from "@/components/AvatarLibraryDialog";
 
 export type ClientIntegrationMode = "qase" | "manual";
 
@@ -71,6 +73,25 @@ function formatCep(value: string) {
   return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
 }
 
+function suggestCompanyUsername(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "")
+    .replace(/\.{2,}/g, "")
+    .slice(0, 40);
+}
+
+function resolveCompanyLogoLibraryKind(value?: string | null): AvatarLibraryChoice["avatarKind"] {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  if (!normalized) return "default";
+  if (!/^(https?:\/\/|\/|blob:|data:)/i.test(normalized)) return "emoji";
+  if (/\.gif(?:$|\?)/i.test(normalized) || normalized.includes("media.giphy.com")) return "gif";
+  return "image";
+}
+
 function buildViaCepAddress(data: Record<string, unknown>) {
   return [
     typeof data.logradouro === "string" ? data.logradouro : "",
@@ -95,6 +116,8 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const [logoUrl, setLogoUrl] = useState("");
   const [logoFileName, setLogoFileName] = useState("");
   const [logoPreviewObjectUrl, setLogoPreviewObjectUrl] = useState<string | null>(null);
+  const [logoLibraryOpen, setLogoLibraryOpen] = useState(false);
+  const [logoLabel, setLogoLabel] = useState("Sem logo");
   const [linkedin, setLinkedin] = useState("");
   const [notes, setNotes] = useState("");
   const [description, setDescription] = useState("");
@@ -136,7 +159,79 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const [profileSyncDetected, setProfileSyncDetected] = useState(false);
   const cnpjLookupIdRef = useRef(0);
   const cnpjLookupControllerRef = useRef<AbortController | null>(null);
+  const lastAutoCnpjLookupRef = useRef("");
   const isMountedRef = useRef(true);
+
+  const logoKind = useMemo(() => resolveCompanyLogoLibraryKind(logoUrl), [logoUrl]);
+  const companyLogoPreviewName = name || companyUsername || adminEmail || "Empresa";
+  const companyLogoPreviewSrc = logoPreviewObjectUrl ?? (logoUrl.trim() || null);
+
+  function clearCompanyLogoObjectPreview() {
+    if (logoPreviewObjectUrl) {
+      URL.revokeObjectURL(logoPreviewObjectUrl);
+      setLogoPreviewObjectUrl(null);
+    }
+    setLogoFileName("");
+  }
+
+  function handleCompanyLogoLibraryChoice(choice: AvatarLibraryChoice) {
+    setError(null);
+
+    if (choice.avatarValue.startsWith("data:image/") && choice.avatarValue.length > 500000) {
+      setError("Imagem muito grande para salvar na empresa. Use GIF por URL, emoji, ícone ou uma imagem menor.");
+      return;
+    }
+
+    clearCompanyLogoObjectPreview();
+
+    if (choice.avatarKind === "default") {
+      setLogoUrl("");
+      setLogoLabel("Sem logo");
+      return;
+    }
+
+    setLogoUrl(choice.avatarValue);
+    setLogoLabel(choice.avatarLabel || "Logo da empresa");
+  }
+
+  function clearCompanyLogoChoice() {
+    clearCompanyLogoObjectPreview();
+    setLogoUrl("");
+    setLogoLabel("Sem logo");
+  }
+
+  // AUTO CNPJ LOOKUP
+  useEffect(() => {
+    if (!open || !isEditing) return;
+
+    const rawCnpj = normalizeCnpj(taxId);
+
+    if (!rawCnpj) {
+      lastAutoCnpjLookupRef.current = "";
+      setCnpjMessage(null);
+      return;
+    }
+
+    if (rawCnpj.length < 14) {
+      setCnpjMessage("Digite os 14 dígitos do CNPJ.");
+      return;
+    }
+
+    if (!isCnpjValid(rawCnpj)) {
+      setCnpjMessage("❌ CNPJ inválido (checksum falhou).");
+      return;
+    }
+
+    if (lastAutoCnpjLookupRef.current === rawCnpj) return;
+
+    const timer = window.setTimeout(() => {
+      lastAutoCnpjLookupRef.current = rawCnpj;
+      void handleCnpjBlur();
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, isEditing, taxId]);
 
   const selectedProjects = useMemo(
     () => qaseProjects.filter((project) => selectedQaseProjectCodes.includes(project.code)),
@@ -243,6 +338,11 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
 
       if (companyName) {
         setName((currentName) => (currentName.trim() ? currentName : companyName));
+        setCompanyUsername((current) => current.trim() || suggestCompanyUsername(companyName));
+      }
+
+      if (contactEmail) {
+        setAdminEmail((current) => current.trim() || contactEmail.toLowerCase());
       }
       setZip((current) => current.trim() || (typeof data?.cep === "string" ? formatCep(data.cep) : ""));
       setAddress((current) => current.trim() || companyAddress || "");
@@ -358,6 +458,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             setPhone((current) => current.trim() || (typeof data.phone === "string" ? data.phone : ""));
             setWebsite((current) => current.trim() || (typeof data.website === "string" ? data.website : ""));
             setLogoUrl((current) => current.trim() || (typeof data.logo_url === "string" ? data.logo_url : ""));
+            if (typeof data.logo_url === "string" && data.logo_url.trim()) setLogoLabel("Logo salva");
             setLinkedin((current) => current.trim() || (typeof data.linkedin_url === "string" ? data.linkedin_url : ""));
             setNotificationsFanoutEnabled(typeof data.notifications_fanout_enabled === "boolean" ? data.notifications_fanout_enabled : false);
           }
@@ -477,6 +578,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
 
   function resetForm() {
     cnpjLookupIdRef.current += 1;
+    lastAutoCnpjLookupRef.current = "";
     cnpjLookupControllerRef.current?.abort();
     cnpjLookupControllerRef.current = null;
     setName("");
@@ -490,6 +592,8 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     setWebsite("");
     setLogoUrl("");
     setLogoFileName("");
+    setLogoLibraryOpen(false);
+    setLogoLabel("Sem logo");
     setLinkedin("");
     setNotes("");
     setDescription("");
@@ -823,17 +927,17 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-3 py-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/55 px-3 py-4 backdrop-blur-sm">
       <form
         aria-label={modalTitle}
         onSubmit={handleSubmit}
-        className="w-full max-w-3xl max-h-[calc(100vh-48px)] space-y-4 overflow-y-auto rounded-xl border border-(--tc-border) bg-(--tc-surface) p-4 text-(--tc-text) shadow-2xl sm:p-6"
+        className="w-full max-w-5xl max-h-[calc(100vh-48px)] overflow-hidden rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) shadow-[0_28px_90px_rgba(2,8,23,0.36)]"
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 border-b border-white/10 bg-[linear-gradient(135deg,#011848_0%,#10285d_48%,#6f102f_100%)] px-5 py-4 text-white sm:px-6">
           <div>
-            <p className="text-xs uppercase tracking-wide text-(--tc-accent)">Empresa</p>
-            <h3 className="text-xl font-semibold text-(--tc-text)">{modalTitle}</h3>
-            <p className="text-sm text-(--tc-text-muted)">
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-white/65">Gestao de empresas</p>
+            <h3 className="mt-1 text-2xl font-black tracking-tight text-white">{modalTitle}</h3>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-white/78">
               {mode === 'create' 
                 ? 'Preencha os dados principais e configure a integração se necessário.'
                 : isViewMode
@@ -843,7 +947,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           </div>
           <button
             type="button"
-            className="rounded-md px-2 py-1 text-lg text-(--tc-text-muted) hover:bg-(--tc-surface-2) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-lg leading-none text-white/80 transition hover:bg-white/18 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             onClick={handleCloseOrCancel}
             aria-label="Fechar ou cancelar edição"
           >
@@ -851,15 +955,16 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           </button>
         </div>
 
+        <div className="max-h-[calc(100vh-168px)] space-y-4 overflow-y-auto p-4 sm:p-6">
         {error ? (
-          <div role="alert" className="rounded-lg border border-(--tc-accent) bg-(--tc-accent-soft) px-3 py-2 text-sm text-(--tc-text)">
+          <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-700/60 dark:bg-rose-950/35 dark:text-rose-100">
             {error}
           </div>
         ) : null}
 
         <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
           <label className="block text-sm">
-            Nome da empresa
+            Nome / razão social
             <input
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={name}
@@ -997,56 +1102,78 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               placeholder="https://www.linkedin.com/company/..."
               disabled={isViewMode}
             />
-          </label>
-
-          <label className="block text-sm">
-            Logo da empresa
-            <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://exemplo.com/logo.png"
-              disabled={isViewMode}
-            />
-          </label>
-
-          <label className="block text-sm">
-            Escolher logo
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-1 w-full text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                setLogoFileName(file?.name ?? "");
-                if (logoPreviewObjectUrl) {
-                  URL.revokeObjectURL(logoPreviewObjectUrl);
-                  setLogoPreviewObjectUrl(null);
-                }
-                if (file) {
-                  setLogoPreviewObjectUrl(URL.createObjectURL(file));
-                }
-              }}
-              disabled={isViewMode}
-            />
-            {logoFileName ? <p className="mt-1 text-xs text-(--tc-text-muted)">Selecionado: {logoFileName}</p> : null}
-          </label>
-
-          <div className="md:col-span-2 rounded-lg border border-(--tc-border) bg-(--tc-surface-2) p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-(--tc-text-muted)">Preview da logo</p>
-            {logoPreviewObjectUrl || logoUrl.trim() ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoPreviewObjectUrl ?? logoUrl.trim()}
-                alt="Preview da logo da empresa"
-                className="mt-2 h-20 w-20 rounded-md border border-(--tc-border) object-contain bg-white"
+          </label>          <div className="md:col-span-2 rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <UserAvatar
+                src={companyLogoPreviewSrc}
+                name={companyLogoPreviewName}
+                size="lg"
+                editable={!isViewMode}
+                onEdit={() => setLogoLibraryOpen(true)}
+                frameClassName="border-4 border-white bg-white shadow-[0_16px_34px_rgba(15,23,42,0.14)] ring-1 ring-(--tc-border)"
+                fallbackClassName="text-xl font-black tracking-[0.18em] text-(--tc-text-muted)"
+                buttonClassName="bg-(--tc-accent,#ef0001) text-white hover:opacity-90"
+                buttonLabel="Escolher logo da empresa"
               />
-            ) : (
-              <p className="mt-2 text-xs text-(--tc-text-muted)">Informe a URL da logo ou selecione um arquivo para visualizar o preview.</p>
-            )}
-          </div>
 
-          <div className="md:col-span-2 rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-3">
+              <div className="min-w-0 flex-1 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-(--tc-text)">Logo da empresa</p>
+                  <p className="mt-1 text-xs leading-5 text-(--tc-text-muted)">
+                    Informe a logo oficial da empresa. Essa imagem será usada em PDFs, relatórios, cards e áreas institucionais.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setLogoLibraryOpen(true)}
+                    disabled={isViewMode}
+                    className="rounded-lg bg-linear-to-b from-(--tc-accent,#ff4b4b) to-(--tc-accent-dark,#c30000) px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Escolher visual
+                  </button>
+
+                  {(logoUrl.trim() || logoPreviewObjectUrl) && !isViewMode ? (
+                    <button
+                      type="button"
+                      onClick={clearCompanyLogoChoice}
+                      className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text) transition hover:bg-(--tc-surface-2)"
+                    >
+                      Remover
+                    </button>
+                  ) : null}
+                </div>
+
+                <label className="block text-xs font-semibold text-(--tc-text-muted)">
+                  URL / valor salvo
+                  <input
+                    className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                    value={logoUrl}
+                    onChange={(e) => {
+                      clearCompanyLogoObjectPreview();
+                      setLogoUrl(e.target.value);
+                      setLogoLabel(e.target.value.trim() ? "Logo informada manualmente" : "Sem logo");
+                    }}
+                    placeholder="https://exemplo.com/logo.png ou imagem oficial da empresa"
+                    disabled={isViewMode}
+                  />
+                </label>
+
+                <p className="text-xs text-(--tc-text-muted)">
+                  Logo selecionada: {companyLogoPreviewSrc ? logoLabel : "Sem logo"}
+                </p>
+              </div>
+            </div>
+
+            <AvatarLibraryDialog
+              open={logoLibraryOpen}
+              onOpenChange={setLogoLibraryOpen}
+              value={logoUrl}
+              kind={logoKind}
+              onSelect={handleCompanyLogoLibraryChoice}
+            />
+          </div><div className="md:col-span-2 rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-3">
             <label className="flex items-start gap-3 text-sm">
               <input
                 type="checkbox"
@@ -1084,13 +1211,13 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               </button>
             </div>
             <span className="mt-1 block text-xs text-(--tc-text-muted)">
-              Login único do perfil institucional. A sugestão usa o nome da empresa e evita duplicidade.
+              Login único do perfil institucional da empresa. Será usado no usuário que acessa o Meu Perfil dessa empresa.
             </span>
           </label>
 
-          <fieldset className="md:col-span-2 rounded-xl border-2 border-(--tc-accent)/20 bg-[linear-gradient(180deg,var(--tc-surface-2)_0%,rgba(239,0,1,0.03)_100%)] p-4" disabled={isViewMode}>
+          <fieldset className="md:col-span-2 rounded-2xl border border-sky-200/80 bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_100%)] p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] dark:border-sky-700/45 dark:bg-[linear-gradient(180deg,rgba(14,30,55,0.94)_0%,rgba(8,20,38,0.98)_100%)]" disabled={isViewMode}>
             <legend className="flex items-center gap-2 px-2 text-sm font-bold text-(--tc-text)">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-(--tc-accent,#ef0001) text-white"><FiLink2 size={12} /></span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-sky-600 text-white shadow-sm"><FiLink2 size={12} /></span>
               Integração
             </legend>
             <p className="mt-1 text-xs leading-5 text-(--tc-text-muted)">
@@ -1098,7 +1225,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             </p>
 
             <div className="mt-3">
-              <p className="text-sm font-semibold text-(--tc-text)"><FiZap size={13} className="text-(--tc-accent,#ef0001)" /> Integração com Qase</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100"><FiZap size={13} className="text-sky-500" /> Integração com Qase</p>
               <p className="mt-1 text-xs text-(--tc-text-muted)">Informe o token da Qase (novo ou já salvo) e clique em &quot;Buscar projetos&quot; para carregar os projetos disponíveis. Selecione os projetos que deseja vincular — cada projeto selecionado será cadastrado como uma aplicação da empresa.</p>
             </div>
 
@@ -1108,7 +1235,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                   Token da Qase
                   <div className="relative mt-2">
                     <input
-                      className="w-full h-10 rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#fff) px-3 pr-10 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                      className="h-10 w-full rounded-xl border border-sky-200 bg-white px-3 pr-10 text-sm font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 dark:border-sky-700/55 dark:bg-slate-950/55 dark:text-slate-100 dark:focus-visible:ring-sky-500/50"
                       type={showQaseToken ? "text" : "password"}
                       value={qaseToken}
                       onChange={(e) => {
@@ -1123,7 +1250,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                     <button
                       type="button"
                       onClick={() => setShowQaseToken((v) => !v)}
-                      className="absolute right-3 top-3 flex items-center text-(--tc-text-muted) hover:text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="absolute right-3 top-3 flex items-center text-slate-500 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-400 dark:hover:text-slate-100"
                       aria-label={showQaseToken ? "Esconder token" : "Mostrar token"}
                       tabIndex={-1}
                       disabled={isViewMode}
@@ -1135,7 +1262,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
 
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 h-10 rounded-lg bg-linear-to-b from-(--tc-accent,#ff4b4b) to-(--tc-accent-dark,#c30000) px-4 text-sm font-semibold text-white shadow-lg transition duration-150 hover:opacity-95 disabled:opacity-60 sm:self-end"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-[linear-gradient(180deg,#0f4f9f_0%,#07356f_100%)] px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(7,53,111,0.22)] transition duration-150 hover:brightness-110 disabled:opacity-60 sm:self-end"
                   onClick={() => void handleFetchQaseProjects()}
                   disabled={loadingQaseProjects || !qaseToken || isViewMode}
                 >
@@ -1200,7 +1327,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                           return (
                             <label
                               key={project.code}
-                              className={`flex cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-sm transition border ${isSelected ? "border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(255,230,230,0.9))" : "border-transparent hover:border-(--tc-border) hover:bg-(--tc-surface-2)"}`}
+                              className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm transition border ${isSelected ? "border-2 border-sky-400 bg-sky-50 shadow-[0_8px_20px_rgba(14,165,233,0.12)] dark:border-sky-600 dark:bg-sky-950/35" : "border-transparent hover:border-sky-200 hover:bg-sky-50/65 dark:hover:border-sky-800 dark:hover:bg-sky-950/25"}`}
                             >
                               <input type="checkbox" checked={isSelected} onChange={() => toggleSelectedQaseProject(project.code)} className="h-5 w-5" />
                               <div className="flex items-center gap-3 min-w-0">
@@ -1250,8 +1377,8 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                       </div>
                       <div className="mt-2 flex flex-wrap gap-3">
                         {selectedProjects.map((p) => (
-                          <span key={p.code} className="inline-flex items-center gap-3 rounded-full border-2 border-(--tc-accent,#ef0001) bg-(--tc-accent-soft,rgba(255,230,230,0.9)) px-4 py-2 text-sm shadow-sm">
-                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-white text-(--tc-accent,#ef0001)"><FiCheck size={14} /></div>
+                          <span key={p.code} className="inline-flex items-center gap-3 rounded-full border border-sky-300 bg-sky-50 px-4 py-2 text-sm shadow-sm dark:border-sky-700/60 dark:bg-sky-950/35">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sky-600 dark:bg-slate-950/70 dark:text-sky-300"><FiCheck size={14} /></div>
                             <div className="flex flex-col text-left">
                               <strong className="text-sm">{p.title}</strong>
                               <span className="text-xs text-(--tc-text-muted)">{p.code}</span>
@@ -1291,8 +1418,8 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 rounded-lg border border-dashed border-(--tc-accent)/30 bg-(--tc-accent-soft,rgba(239,0,1,0.03)) px-4 py-4 text-sm text-(--tc-text-muted)">
-                    <FiSearch size={18} className="shrink-0 text-(--tc-accent,#ef0001) opacity-60" />
+                  <div className="flex items-center gap-3 rounded-xl border border-dashed border-sky-300 bg-sky-50 px-4 py-4 text-sm text-slate-600 dark:border-sky-700/55 dark:bg-sky-950/30 dark:text-slate-300">
+                    <FiSearch size={18} className="shrink-0 text-sky-500" />
                     <span>Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicações da empresa. Cada projeto da Qase será cadastrado como uma aplicação independente.</span>
                   </div>
                 )}
@@ -1360,6 +1487,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               {busy ? "Salvando..." : submitButtonText}
             </button>
           )}
+        </div>
         </div>
       </form>
     </div>

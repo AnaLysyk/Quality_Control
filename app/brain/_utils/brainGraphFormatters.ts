@@ -31,6 +31,7 @@ export function nodeTypeLabel(type: BrainNodeType) {
     profile: "Perfil",
     status: "Status",
     action: "Ação",
+    integration: "Integração",
     event: "Evento",
     permission: "Permissão",
     log: "Log",

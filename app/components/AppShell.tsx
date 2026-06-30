@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FiMenu } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { useClientContext } from "@/context/ClientContext";
@@ -471,6 +471,7 @@ function shouldUseNativeImageTag(src: string) {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname() || "";
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { language } = useI18n();
   const [hydrated, setHydrated] = useState(false);
@@ -489,6 +490,10 @@ export default function AppShell({ children }: AppShellProps) {
   const hideShellCover = shouldHideShellCover(pathname);
   const renderShellCover = hydrated && !hideShellCover;
   const isBrainCanvasRoute = pathname.startsWith("/admin/brain") || pathname.startsWith("/brain");
+  const sidebarPathname = useMemo(() => {
+    const query = searchParams.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
   const isPlaywrightWorkspaceRoute =
     /^\/automacoes\/playwright(?:\/|$)/.test(pathname) ||
     /\/automacao\/playwright(?:\/|$)/.test(pathname);
@@ -718,7 +723,7 @@ export default function AppShell({ children }: AppShellProps) {
       <div className="flex h-screen overflow-hidden">
         {hydrated && !hideGlobalSidebar ? (
           <Sidebar
-            pathname={pathname}
+            pathname={sidebarPathname}
             mobileOpen={mobileOpen}
             mobilePanelId={mobileSidebarId}
             onClose={() => setMobileOpen(false)}

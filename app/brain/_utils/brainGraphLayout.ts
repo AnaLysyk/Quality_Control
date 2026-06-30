@@ -9,7 +9,7 @@ export type BrainLayoutNode = BrainNode & {
   isOrphan: boolean;
 };
 
-const MODULE_ORDER = ["Solicitacoes", "Defeitos", "Automacao", "Documentos", "Usuarios", "Permissoes", "Logs", "Chat/Brain"];
+const MODULE_ORDER = ["Solicitacoes", "Empresas", "Defeitos", "Automacao", "Documentos", "Usuarios", "Permissoes", "Logs", "Chat/Brain"];
 
 function radiusForNode(node: BrainNode) {
   if (node.size === "lg" || node.type === "module") return 46;

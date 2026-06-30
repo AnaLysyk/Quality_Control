@@ -63,6 +63,8 @@ const LEADER_TC: SystemRole[] = [SYSTEM_ROLES.LEADER_TC];
 const LEADER_AND_SUPPORT: SystemRole[] = [SYSTEM_ROLES.LEADER_TC, SYSTEM_ROLES.TECHNICAL_SUPPORT];
 const ALL_INTERNAL: SystemRole[] = SYSTEM_USERS;
 const PRIVILEGED: SystemRole[] = LEADER_AND_SUPPORT;
+const COMPANY_USER_MANAGERS: SystemRole[] = [SYSTEM_ROLES.EMPRESA];
+const USER_MANAGERS: SystemRole[] = [...PRIVILEGED, ...COMPANY_USER_MANAGERS];
 const LEADER_ONLY: SystemRole[] = LEADER_TC;
 
 export const NAV_CATALOG: NavModuleDef[] = [
@@ -85,7 +87,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
   {
     id: "companies",
-    label: "Empresas",
+    label: "Gestão de Empresas",
     iconKey: "building",
     allowedRoles: SYSTEM_USERS,
     testId: "nav-companies",
@@ -99,17 +101,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
         href: "/admin/clients", 
         favoriteEnabled: true,
         testId: "nav-companies-list",
-      },
-      { 
-        id: "companies-search", 
-        routeId: "empresas.buscar",
-        label: "Buscar empresa", 
-        iconKey: "search", 
-        module: "companies", 
-        href: "/admin/clients?focus=search", 
-        action: "focusSearch",
-        favoriteEnabled: true,
-        testId: "nav-companies-search",
       },
       { 
         id: "companies-create", 
@@ -511,29 +502,26 @@ export const NAV_CATALOG: NavModuleDef[] = [
       },
     ],
   },
-
   // ============================================
-  // GESTÃO DE USUÁRIOS — Only PRIVILEGED users
-  // Grouped by profile type:
-  //   Testing Company (LEADER_ONLY): Líder TC, Suporte Técnico, Usuário TC
-  //   Empresas (PRIVILEGED): Empresa, Usuário da Empresa
-  //   Listagens (PRIVILEGED)
+  // GESTÃO DE USUÁRIOS
+  // - Interno TC: Líder TC cria Líder, Suporte e Usuário TC
+  // - Interno TC/Suporte: cria Usuário da Empresa
+  // - Empresa: cria apenas usuário da própria empresa
   // ============================================
   {
     id: "users",
     label: "Gestão de Usuários",
     iconKey: "users",
-    allowedRoles: PRIVILEGED,
+    allowedRoles: USER_MANAGERS,
     testId: "nav-users",
     items: [
-      // --- Testing Company: apenas Líder TC cria outros usuários internos ---
       {
         id: "users-create-leader-tc",
         routeId: "usuarios.criar-lider",
         label: "Criar Líder TC",
         iconKey: "shield",
         module: "users",
-        href: "/admin/users?modal=create&role=leader_tc",
+        href: "/admin/users?tab=admin&modal=create&role=leader_tc",
         action: "openCreateModal",
         allowedRoles: LEADER_ONLY,
         favoriteEnabled: true,
@@ -546,7 +534,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         label: "Criar Suporte Técnico",
         iconKey: "headphones",
         module: "users",
-        href: "/admin/users?modal=create&role=technical_support",
+        href: "/admin/users?tab=support&modal=create&role=technical_support",
         action: "openCreateModal",
         allowedRoles: LEADER_ONLY,
         favoriteEnabled: true,
@@ -559,51 +547,54 @@ export const NAV_CATALOG: NavModuleDef[] = [
         label: "Criar Usuário TC",
         iconKey: "user",
         module: "users",
-        href: "/admin/users?modal=create&role=testing_company_user",
+        href: "/admin/users?tab=testing&modal=create&role=testing_company_user",
         action: "openCreateModal",
         allowedRoles: LEADER_ONLY,
         favoriteEnabled: true,
         group: "Testing Company",
         testId: "nav-users-create-user-tc",
       },
-      // --- Empresas: Líder TC e Suporte podem criar usuários de empresas ---
       {
-        id: "users-create-company-user",
+        id: "users-create-company-user-internal",
         routeId: "usuarios.criar-usuario-empresa",
         label: "Criar Usuário da Empresa",
         iconKey: "user-plus",
         module: "users",
-        href: "/admin/users?modal=create&role=company_user",
+        href: "/admin/users?tab=company&modal=create&role=company_user",
         action: "openCreateModal",
+        allowedRoles: PRIVILEGED,
         favoriteEnabled: true,
         group: "Empresas",
-        testId: "nav-users-create-company-user",
+        testId: "nav-users-create-company-user-internal",
       },
-      // --- Listagens ---
+      {
+        id: "users-create-company-user-company",
+        routeId: "usuarios.criar-usuario",
+        label: "Criar usuário",
+        iconKey: "user-plus",
+        module: "users",
+        href: "/admin/users?tab=company&modal=create&role=company_user",
+        action: "openCreateModal",
+        allowedRoles: COMPANY_USER_MANAGERS,
+        favoriteEnabled: true,
+        group: "Usuários",
+        testId: "nav-users-create-company-user-company",
+      },
       {
         id: "users-list",
         routeId: "usuarios.listagem",
         label: "Listagem usuários",
         iconKey: "users",
         module: "users",
-        href: "/admin/users",
+        href: "/admin/users?tab=company",
+        allowedRoles: USER_MANAGERS,
         favoriteEnabled: true,
-        group: "Listagens",
+        group: "Listagem",
         testId: "nav-users-list",
-      },
-      {
-        id: "users-list-empresas",
-        routeId: "empresas.listagem",
-        label: "Listagem empresas",
-        iconKey: "list",
-        module: "users",
-        href: "/admin/clients",
-        favoriteEnabled: true,
-        group: "Listagens",
-        testId: "nav-users-list-empresas",
       },
     ],
   },
+
 
   // ============================================
   // ADMIN — Only PRIVILEGED users

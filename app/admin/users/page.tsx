@@ -1,9 +1,12 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiCircle,
   FiHome,
   FiSearch,
   FiShield,
@@ -80,6 +83,15 @@ function resolveUserTabParam(value: string | null): UserTab | null {
   if (normalized === "testing" || normalized === "tc" || normalized === "usuario-tc") return "testing";
   if (normalized === "admin" || normalized === "leader" || normalized === "lider") return "admin";
   if (normalized === "support" || normalized === "suporte") return "support";
+  return null;
+}
+
+function resolveUserTabFromRole(value: string | null): UserTab | null {
+  const role = normalizeFixedProfileKind(value);
+  if (role === "empresa" || role === "company_user") return "company";
+  if (role === "testing_company_user") return "testing";
+  if (role === "leader_tc") return "admin";
+  if (role === "technical_support") return "support";
   return null;
 }
 
@@ -276,6 +288,358 @@ function CompanyUsersSection({
   );
 }
 
+type UserStatusFilter = "all" | "active" | "inactive";
+type UserSortMode = "name_asc" | "name_desc" | "profile_asc" | "company_asc" | "status_active_first" | "status_inactive_first";
+
+function userStatusFilterLabel(value: UserStatusFilter) {
+  if (value === "active") return "Ativos";
+  if (value === "inactive") return "Inativos";
+  return "Todos";
+}
+
+function userStatusDotClass(value: UserStatusFilter) {
+  if (value === "active") return "text-emerald-500";
+  if (value === "inactive") return "text-amber-500";
+  return "text-sky-500";
+}
+
+function compareQueueText(left?: string | null, right?: string | null) {
+  return (left || "").localeCompare(right || "", "pt-BR", { sensitivity: "base" });
+}
+
+function userSortLabel(value: UserSortMode) {
+  if (value === "name_desc") return "Nome Z-A";
+  if (value === "profile_asc") return "Perfil";
+  if (value === "company_asc") return "Empresa";
+  if (value === "status_active_first") return "Ativos primeiro";
+  if (value === "status_inactive_first") return "Inativos primeiro";
+  return "Nome A-Z";
+}
+
+function UserManagementQueueExperience({
+  title,
+  description,
+  users,
+  loading,
+  search,
+  onSearchChange,
+  canCreate,
+  createLabel,
+  onCreate,
+  onSelect,
+  selectedId,
+  emptyTitle,
+  emptyDescription,
+  searchInputRef,
+}: {
+  title: string;
+  description: string;
+  users: UserItem[];
+  loading: boolean;
+  search: string;
+  onSearchChange: (value: string) => void;
+  canCreate: boolean;
+  createLabel: string;
+  onCreate: () => void;
+  onSelect?: (user: UserItem) => void;
+  selectedId?: string | null;
+  emptyTitle: string;
+  emptyDescription: string;
+  searchInputRef?: RefObject<HTMLInputElement | null>;
+}) {
+  const [statusFilter, setStatusFilter] = useState<UserStatusFilter>("all");
+  const [sortMode, setSortMode] = useState<UserSortMode>("name_asc");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(12);
+
+  const activeCount = useMemo(() => users.filter((user) => !isInactiveUser(user)).length, [users]);
+  const inactiveCount = useMemo(() => users.filter((user) => isInactiveUser(user)).length, [users]);
+  const filteredUsers = useMemo(() => {
+    const next =
+      statusFilter === "active"
+        ? users.filter((user) => !isInactiveUser(user))
+        : statusFilter === "inactive"
+          ? users.filter((user) => isInactiveUser(user))
+          : [...users];
+
+    return next.sort((left, right) => {
+      if (sortMode === "name_desc") return compareQueueText(right.name, left.name);
+      if (sortMode === "profile_asc") return compareQueueText(profileLabel(left), profileLabel(right)) || compareQueueText(left.name, right.name);
+      if (sortMode === "company_asc") return compareQueueText(left.company_names?.[0], right.company_names?.[0]) || compareQueueText(left.name, right.name);
+      if (sortMode === "status_active_first") return Number(isInactiveUser(left)) - Number(isInactiveUser(right)) || compareQueueText(left.name, right.name);
+      if (sortMode === "status_inactive_first") return Number(isInactiveUser(right)) - Number(isInactiveUser(left)) || compareQueueText(left.name, right.name);
+      return compareQueueText(left.name, right.name);
+    });
+  }, [sortMode, statusFilter, users]);
+  const pageCount = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const visibleUsers = useMemo(
+    () => filteredUsers.slice(pageIndex * pageSize, pageIndex * pageSize + pageSize),
+    [filteredUsers, pageIndex, pageSize],
+  );
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [search, statusFilter, users.length]);
+
+  useEffect(() => {
+    setPageIndex((current) => Math.min(current, Math.max(0, pageCount - 1)));
+  }, [pageCount]);
+
+  const statusOptions: Array<{ value: UserStatusFilter; label: string; count: number }> = [
+    { value: "all", label: "Todos", count: users.length },
+    { value: "active", label: "Ativos", count: activeCount },
+    { value: "inactive", label: "Inativos", count: inactiveCount },
+  ];
+
+  return (
+    <section className="tc-queue-shell mt-5 overflow-hidden rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) shadow-[0_18px_54px_rgba(15,23,42,0.09)]">
+      <div className="border-b border-(--tc-border,#d7deea) bg-[linear-gradient(135deg,var(--tc-surface,#ffffff)_0%,var(--tc-surface-2,#f8fafc)_58%,rgba(14,165,233,0.08)_100%)] p-3 sm:p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">{title}</p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{description}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {canCreate ? (
+              <button
+                type="button"
+                onClick={onCreate}
+                className="inline-flex h-10 items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,var(--tc-primary,#011848)_0%,var(--tc-accent,#ef0001)_100%)] px-4 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.22)] ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:opacity-95"
+              >
+                <FiUserPlus className="h-4 w-4" />
+                {createLabel}
+              </button>
+            ) : null}
+
+            <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-(--tc-text-primary,#0b1a3c) shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Total</span>
+              <span className="text-base font-black leading-none text-(--tc-primary,#011848)">{users.length}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-2 xl:grid-cols-[minmax(260px,1fr)_190px_190px]">
+          <label className="relative">
+            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+            <input
+              ref={searchInputRef}
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Buscar por nome, usuário, e-mail ou empresa"
+              className="h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) pl-11 pr-4 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) outline-none transition placeholder:text-(--tc-text-muted,#94a3b8) focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+              data-testid="users-search-input"
+            />
+          </label>
+
+          <select
+            aria-label="Filtrar usuários por status"
+            title="Filtrar usuários por status"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as UserStatusFilter)}
+            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} ({option.count})
+              </option>
+            ))}
+          </select>
+
+          <select
+            aria-label="Ordenar usuários"
+            title="Ordenar usuários"
+            value={sortMode}
+            onChange={(event) => setSortMode(event.target.value as UserSortMode)}
+            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+          >
+            <option value="name_asc">Nome A-Z</option>
+            <option value="name_desc">Nome Z-A</option>
+            <option value="profile_asc">Perfil</option>
+            <option value="company_asc">Empresa</option>
+            <option value="status_active_first">Ativos primeiro</option>
+            <option value="status_inactive_first">Inativos primeiro</option>
+          </select>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {statusOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setStatusFilter(option.value)}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
+                statusFilter === option.value
+                  ? "border-sky-600 bg-sky-700 text-white shadow-[0_12px_24px_rgba(14,116,144,0.18)]"
+                  : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-secondary,#4b5563) hover:border-sky-300 hover:text-(--tc-text-primary,#0b1a3c)"
+              }`}
+            >
+              <FiCircle className={`h-2 w-2 ${statusFilter === option.value ? "text-white" : userStatusDotClass(option.value)}`} />
+              {option.label}
+              <span className="opacity-75">{option.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="p-8 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Carregando usuários...</div>
+      ) : filteredUsers.length === 0 ? (
+        <div className="flex min-h-90 items-center justify-center p-8 text-center">
+          <div className="max-w-md">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)">
+              <FiSearch className="h-7 w-7" />
+            </div>
+            <h3 className="mt-5 text-xl font-black text-(--tc-text-primary,#0b1a3c)">{emptyTitle}</h3>
+            <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{emptyDescription}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="hidden max-h-[calc(100vh-332px)] overflow-auto lg:block">
+            <table className="w-full min-w-230 border-separate border-spacing-0">
+              <thead className="sticky top-0 z-10 bg-(--tc-surface,#ffffff) shadow-[0_1px_0_var(--tc-border,#d7deea)]">
+                <tr>
+                  {["Usuário", "Perfil", "Empresa", "Cargo", "Status", "Ação"].map((column) => (
+                    <th key={column} className="whitespace-nowrap border-b border-(--tc-border,#d7deea) px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                      {column}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleUsers.map((user) => {
+                  const active = user.id === selectedId;
+                  return (
+                  <tr
+                    key={user.id}
+                    onClick={() => onSelect?.(user)}
+                    onKeyDown={(event) => {
+                      if (!onSelect) return;
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onSelect(user);
+                      }
+                    }}
+                    role={onSelect ? "button" : undefined}
+                    tabIndex={onSelect ? 0 : undefined}
+                    className={`group transition ${onSelect ? "cursor-pointer" : ""} ${
+                      active
+                        ? "bg-sky-50/90 shadow-[inset_4px_0_0_#0284c7] dark:bg-sky-950/35"
+                        : "odd:bg-(--tc-surface,#ffffff) even:bg-(--tc-surface-2,#f8fafc) hover:bg-sky-50/65 dark:hover:bg-sky-950/25"
+                    }`}
+                  >
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <UserAvatar user={user} />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-(--tc-text-primary,#0b1a3c)">{user.name}</p>
+                          <p className="mt-0.5 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{getUserHandle(user)} · {user.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                      <span className={`inline-flex max-w-52 rounded-full border px-3 py-1.5 text-xs font-black ${roleTone(user)}`}>
+                        <span className="truncate">{profileLabel(user)}</span>
+                      </span>
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
+                      {user.company_names?.[0] || "Sem empresa"}
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
+                      {user.job_title || "Não informado"}
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                      <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ${statusTone(user)}`}>{statusLabel(user)}</span>
+                    </td>
+                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-(--tc-accent,#ef0001) align-middle">
+                      {active ? "Selecionado" : onSelect ? "Ver detalhes" : "Somente leitura"}
+                    </td>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="space-y-3 p-4 lg:hidden">
+            {visibleUsers.map((user) => (
+              <button
+                key={`mobile-${user.id}`}
+                type="button"
+                onClick={() => onSelect?.(user)}
+                disabled={!onSelect}
+                className={`w-full rounded-[24px] border p-4 text-left shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 disabled:cursor-default ${
+                  user.id === selectedId
+                    ? "border-sky-300 bg-sky-50 shadow-[inset_4px_0_0_#0284c7] dark:border-sky-700/60 dark:bg-sky-950/35"
+                    : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <UserAvatar user={user} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-black text-(--tc-text-primary,#0b1a3c)">{user.name}</p>
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${statusTone(user)}`}>{statusLabel(user)}</span>
+                    </div>
+                    <p className="mt-1 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{user.email}</p>
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{profileLabel(user)} · {user.company_names?.[0] || "Sem empresa"}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-5 py-4">
+            <p className="text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
+              Página {pageIndex + 1} de {pageCount} · {filteredUsers.length} resultado(s) · {userStatusFilterLabel(statusFilter)} · {userSortLabel(sortMode)}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <select
+                aria-label="Quantidade de usuários por página"
+                title="Quantidade de usuários por página"
+                value={pageSize}
+                onChange={(event) => {
+                  setPageSize(Number(event.target.value));
+                  setPageIndex(0);
+                }}
+                className="h-10 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 text-sm font-bold text-(--tc-text-primary,#0b1a3c)"
+              >
+                {[10, 12, 20, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}/página
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
+                disabled={pageIndex === 0}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-40"
+                aria-label="Página anterior"
+              >
+                <FiChevronLeft />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
+                disabled={pageIndex >= pageCount - 1}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-40"
+                aria-label="Próxima página"
+              >
+                <FiChevronRight />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 export default function AdminUsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -292,7 +656,9 @@ export default function AdminUsersPage() {
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<UserTab>(() => resolveUserTabParam(searchParams.get("tab")) ?? "company");
+  const [activeTab, setActiveTab] = useState<UserTab>(
+    () => resolveUserTabParam(searchParams.get("tab")) ?? resolveUserTabFromRole(searchParams.get("role")) ?? "company",
+  );
   const [search, setSearch] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
@@ -367,6 +733,17 @@ export default function AdminUsersPage() {
     const focusParam = searchParams.get("focus");
     const roleParam = searchParams.get("role");
     const modalParam = searchParams.get("modal");
+    const tabParam = resolveUserTabParam(searchParams.get("tab"));
+    const roleTab = resolveUserTabFromRole(roleParam);
+    const queryParam = (searchParams.get("q") ?? searchParams.get("search") ?? "").trim();
+
+    if (tabParam || roleTab) {
+      setActiveTab(tabParam ?? roleTab ?? "company");
+    }
+
+    if (queryParam) {
+      setSearch(queryParam);
+    }
 
     if (focusParam === "search" && searchInputRef.current) {
       setTimeout(() => {
@@ -375,12 +752,14 @@ export default function AdminUsersPage() {
       }, 100);
     }
 
-    setCreateRolePreset(normalizeFixedProfileKind(roleParam));
+    const rolePreset = normalizeFixedProfileKind(roleParam);
+    setCreateRolePreset(rolePreset);
 
     if (userAccess.canCreateUsers && (modalParam === "create" || searchParams.get("create") === "1")) {
       const token = searchParams.toString();
       if (openCreateTokenRef.current !== token) {
         openCreateTokenRef.current = token;
+        setSelectedUser(null);
         setOpenCreate(true);
         window.history.replaceState({}, "", window.location.pathname);
       }
@@ -574,6 +953,44 @@ export default function AdminUsersPage() {
           ? supportUsers.length
           : adminUsers.length;
   const hasSearch = !!search.trim();
+  const currentTabUsers = useMemo(() => {
+    if (activeTab === "company") return sortUsers([...companyAccounts, ...companyProfileUsers]);
+    if (activeTab === "testing") return testingCompanyUsers;
+    if (activeTab === "support") return supportUsers;
+    return adminUsers;
+  }, [activeTab, adminUsers, companyAccounts, companyProfileUsers, sortUsers, supportUsers, testingCompanyUsers]);
+  const currentTabCopy = useMemo(() => {
+    if (activeTab === "testing") {
+      return {
+        title: "Fila de usuários TC",
+        description: "Listagem operacional dos usuários internos vinculados às empresas.",
+        emptyTitle: "Nenhum usuário TC encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo usuário TC direto nesta tela.",
+      };
+    }
+    if (activeTab === "admin") {
+      return {
+        title: "Fila de Líderes TC",
+        description: "Listagem dos perfis de liderança com acesso administrativo.",
+        emptyTitle: "Nenhum Líder TC encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo Líder TC direto nesta tela.",
+      };
+    }
+    if (activeTab === "support") {
+      return {
+        title: "Fila de suporte técnico",
+        description: "Listagem dos perfis técnicos internos da Testing Company.",
+        emptyTitle: "Nenhum suporte técnico encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo suporte técnico direto nesta tela.",
+      };
+    }
+    return {
+      title: "Fila de empresa e usuários",
+      description: "Listagem de empresas institucionais e usuários da empresa, no mesmo padrão da fila de solicitações.",
+      emptyTitle: "Nenhum perfil da empresa encontrado",
+      emptyDescription: "Ajuste os filtros ou crie um usuário da empresa direto nesta tela.",
+    };
+  }, [activeTab]);
 
   if (accessLoading) {
     return <AccessDeniedState state="loading" />;
@@ -634,7 +1051,13 @@ export default function AdminUsersPage() {
         </section>
 
         <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as UserTab)}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => {
+              setActiveTab(value as UserTab);
+              setCreateRolePreset(null);
+            }}
+          >
             <div className="border-b border-(--tc-border,#d7deea) pb-5">
               <h2 className="text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Gestão por contexto</h2>
               <div className="mt-4">
@@ -653,12 +1076,10 @@ export default function AdminUsersPage() {
                   </TabsTrigger>
                 </TabsList>
               </div>
-              <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+              <div className="hidden">
                 <label className="flex flex-1 items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
                   <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
                   <input
-                                       data-testid="users-search-input"
-                                       ref={searchInputRef}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Buscar por nome, usuário, e-mail ou empresa"
@@ -669,7 +1090,11 @@ export default function AdminUsersPage() {
                 {userAccess.canCreateUsers ? (
                   <button
                     type="button"
-                    onClick={() => setOpenCreate(true)}
+                    onClick={() => {
+                      setCreateRolePreset(null);
+                      setSelectedUser(null);
+                      setOpenCreate(true);
+                    }}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-70"
                   >
                     <FiUserPlus className="h-4 w-4" /> {createModalConfig.submitLabel}
@@ -680,7 +1105,28 @@ export default function AdminUsersPage() {
 
             {error ? <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div> : null}
 
-            {loading ? (
+            <UserManagementQueueExperience
+              title={currentTabCopy.title}
+              description={currentTabCopy.description}
+              users={currentTabUsers}
+              loading={loading}
+              search={search}
+              onSearchChange={setSearch}
+              canCreate={userAccess.canCreateUsers}
+              createLabel={createModalConfig.submitLabel}
+              onCreate={() => {
+                setCreateRolePreset(null);
+                setSelectedUser(null);
+                setOpenCreate(true);
+              }}
+              onSelect={userAccess.canEditUsers ? setSelectedUser : undefined}
+              selectedId={selectedUser?.id ?? null}
+              emptyTitle={currentTabCopy.emptyTitle}
+              emptyDescription={currentTabCopy.emptyDescription}
+              searchInputRef={searchInputRef}
+            />
+
+            {false ? (
               <div className="mt-6 grid gap-5 xl:grid-cols-2">
                 {Array.from({ length: 4 }).map((_, index) => (
                   <div key={index} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
@@ -694,7 +1140,7 @@ export default function AdminUsersPage() {
                 ))}
               </div>
             ) : (
-              <div className="mt-6 space-y-4">
+              <div className="hidden">
                 {hasSearch ? (
                   <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm font-medium text-(--tc-text-secondary,#4b5563)">
                     {currentTabTotal} resultado{currentTabTotal === 1 ? "" : "s"} encontrado{currentTabTotal === 1 ? "" : "s"}
@@ -947,9 +1393,13 @@ export default function AdminUsersPage() {
           title={createModalConfig.title}
           subtitle={createModalConfig.subtitle}
           submitLabel={createModalConfig.submitLabel}
-          onClose={() => setOpenCreate(false)}
+          onClose={() => {
+            setOpenCreate(false);
+            setCreateRolePreset(null);
+          }}
           onCreated={async () => {
             setOpenCreate(false);
+            setCreateRolePreset(null);
             await load();
           }}
         />

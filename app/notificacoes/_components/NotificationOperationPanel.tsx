@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import useSWR from "swr";
-import { FiActivity, FiBell, FiCheckCircle, FiCpu, FiInbox, FiLayers, FiMessageCircle, FiRefreshCw, FiSave, FiShield, FiSliders, FiUsers } from "react-icons/fi";
+import { FiActivity, FiBell, FiCheckCircle, FiCpu, FiExternalLink, FiInbox, FiLayers, FiMessageCircle, FiRefreshCw, FiSave, FiShield, FiSliders, FiUsers } from "react-icons/fi";
 
 import { fetchApi } from "@/lib/api";
 
@@ -146,12 +146,67 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
+function payloadText(payload: Record<string, unknown>, key: string) {
+  const value = payload[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
 function shortPayload(payload: Record<string, unknown>) {
-  const releaseName = typeof payload.releaseName === "string" ? payload.releaseName : null;
-  const releaseId = typeof payload.releaseId === "string" ? payload.releaseId : null;
-  const calendarStatus = typeof payload.calendarStatus === "string" ? payload.calendarStatus : null;
-  const notificationType = typeof payload.notificationType === "string" ? payload.notificationType : null;
+  const releaseName = payloadText(payload, "releaseName");
+  const releaseId = payloadText(payload, "releaseId");
+  const calendarStatus = payloadText(payload, "calendarStatus");
+  const notificationType = payloadText(payload, "notificationType");
   return [releaseName, releaseId, calendarStatus, notificationType].filter(Boolean).join(" · ");
+}
+
+function operationalFacts(event?: NotificationEventRecord | null) {
+  if (!event) return [] as Array<{ label: string; value: string }>;
+  const payload = event.payload ?? {};
+  const area = payloadText(payload, "operationalArea");
+  const entity = payloadText(payload, "entityType");
+  const action = payloadText(payload, "sourceAction");
+  const sourceId = payloadText(payload, "sourceId") ?? event.sourceId;
+  const trackingKey = payloadText(payload, "trackingKey");
+  const route = payloadText(payload, "route") ?? payloadText(payload, "link");
+  const company = event.companyName ?? event.companySlug ?? payloadText(payload, "companySlug");
+  const project = event.projectSlug ?? payloadText(payload, "projectSlug");
+
+  return [
+    area ? { label: "Área", value: area } : null,
+    entity ? { label: "Entidade", value: entity } : null,
+    action ? { label: "Ação", value: action } : null,
+    sourceId ? { label: "ID fonte", value: sourceId } : null,
+    route ? { label: "Rota", value: route } : null,
+    company ? { label: "Empresa", value: company } : null,
+    project ? { label: "Projeto", value: project } : null,
+    trackingKey ? { label: "Tracking", value: trackingKey } : null,
+  ].filter((item): item is { label: string; value: string } => Boolean(item));
+}
+
+function OperationalMeta({ event, compact = false }: { event?: NotificationEventRecord | null; compact?: boolean }) {
+  const facts = operationalFacts(event);
+  if (!facts.length) return null;
+
+  const visibleFacts = compact ? facts.slice(0, 5) : facts;
+  const route = facts.find((fact) => fact.label === "Rota")?.value;
+
+  return (
+    <div className="mt-3 rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3">
+      <div className="flex flex-wrap gap-2">
+        {visibleFacts.map((fact) =>
+          fact.label === "Rota" && route ? (
+            <a key={`${fact.label}:${fact.value}`} href={route} className="inline-flex items-center gap-1 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-2.5 py-1 text-[11px] font-black text-(--tc-text,#0b1a3c)">
+              <FiExternalLink className="h-3 w-3" /> Abrir rota
+            </a>
+          ) : (
+            <span key={`${fact.label}:${fact.value}`} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-2.5 py-1 text-[11px] font-black text-(--tc-text,#0b1a3c)">
+              {fact.label}: {fact.value}
+            </span>
+          ),
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function NotificationOperationPanel() {
@@ -168,6 +223,11 @@ export function NotificationOperationPanel() {
   const deliveriesByEvent = new Map<string, NotificationDeliveryRecord[]>();
   for (const delivery of data?.notificationEvents.deliveries ?? []) {
     deliveriesByEvent.set(delivery.eventId, [...(deliveriesByEvent.get(delivery.eventId) ?? []), delivery]);
+  }
+
+  const eventById = new Map<string, NotificationEventRecord>();
+  for (const event of data?.notificationEvents.events ?? []) {
+    eventById.set(event.id, event);
   }
 
   async function handlePreferenceSubmit(event: FormEvent<HTMLFormElement>) {
@@ -247,14 +307,17 @@ export function NotificationOperationPanel() {
 
           <section className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
             <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)"><FiMessageCircle className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Brian explica</div>
-            {data?.notificationBrianInsights?.length ? data.notificationBrianInsights.map((insight) => <article key={insight.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{insight.eventType}</p><h2 className="mt-1 text-base font-black text-(--tc-text,#0b1a3c)">{insight.title}</h2></div><div className="flex flex-wrap gap-2"><Badge>{insight.severity}</Badge><Badge>delivered {insight.delivered}</Badge><Badge>suppressed {insight.suppressed}</Badge></div></div><p className="mt-2 text-sm font-semibold leading-6 text-(--tc-text-secondary,#4b5563)">{insight.summary}</p><ul className="mt-3 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{insight.explanations.map((item) => <li key={item}>• {item}</li>)}</ul><ul className="mt-3 space-y-1 text-xs font-semibold leading-5 text-(--tc-text,#0b1a3c)">{insight.recommendedActions.map((item) => <li key={item}>→ {item}</li>)}</ul></article>) : <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Nenhuma explicação do Brian disponível ainda.</div>}
+            {data?.notificationBrianInsights?.length ? data.notificationBrianInsights.map((insight) => {
+              const event = eventById.get(insight.eventId);
+              return <article key={insight.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{insight.eventType}</p><h2 className="mt-1 text-base font-black text-(--tc-text,#0b1a3c)">{insight.title}</h2></div><div className="flex flex-wrap gap-2"><Badge>{insight.severity}</Badge><Badge>delivered {insight.delivered}</Badge><Badge>suppressed {insight.suppressed}</Badge></div></div><OperationalMeta event={event} /><p className="mt-2 text-sm font-semibold leading-6 text-(--tc-text-secondary,#4b5563)">{insight.summary}</p><ul className="mt-3 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{insight.explanations.map((item) => <li key={item}>• {item}</li>)}</ul><ul className="mt-3 space-y-1 text-xs font-semibold leading-5 text-(--tc-text,#0b1a3c)">{insight.recommendedActions.map((item) => <li key={item}>→ {item}</li>)}</ul></article>;
+            }) : <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Nenhuma explicação do Brian disponível ainda.</div>}
           </section>
 
           <section className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
             <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)"><FiActivity className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Eventos reais gerados</div>
             {data?.notificationEvents.events.length ? data.notificationEvents.events.map((event) => {
               const deliveries = deliveriesByEvent.get(event.id) ?? [];
-              return <article key={event.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{event.eventType} · {event.sourceType}</p><h2 className="mt-1 text-base font-black text-(--tc-text,#0b1a3c)">{event.title}</h2><p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#6b7280)">{formatDate(event.createdAt)}</p></div><div className="flex flex-wrap gap-2"><Badge>{event.criticality}</Badge><Badge>{event.mandatory ? "Obrigatório" : "Configurável"}</Badge></div></div><p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{event.description}</p><div className="mt-3 flex flex-wrap gap-2">{event.companyName || event.companySlug ? <Badge>{event.companyName ?? event.companySlug}</Badge> : null}{event.projectSlug ? <Badge>{event.projectSlug}</Badge> : null}{event.actorName ? <Badge>ator: {event.actorName}</Badge> : null}{shortPayload(event.payload) ? <Badge>{shortPayload(event.payload)}</Badge> : null}</div><div className="mt-4 rounded-xl border border-(--tc-border,#d7deea) bg-white p-3"><p className="flex items-center gap-2 text-xs font-black text-(--tc-text,#0b1a3c)"><FiInbox /> Entregas geradas</p>{deliveries.length ? <div className="mt-3 space-y-2">{deliveries.map((delivery) => <div key={delivery.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-black text-(--tc-text,#0b1a3c)">{delivery.recipientName ?? delivery.recipientId}</p><div className="flex flex-wrap gap-2"><Badge>{delivery.channel}</Badge><Badge>{delivery.status}</Badge><Badge>{delivery.decision}</Badge></div></div><p className="mt-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{delivery.decisionReason}</p></div>)}</div> : <p className="mt-2 text-xs font-semibold text-(--tc-text-muted,#6b7280)">Evento registrado sem destinatário calculado ainda.</p>}</div></article>;
+              return <article key={event.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{event.eventType} · {event.sourceType}</p><h2 className="mt-1 text-base font-black text-(--tc-text,#0b1a3c)">{event.title}</h2><p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#6b7280)">{formatDate(event.createdAt)}</p></div><div className="flex flex-wrap gap-2"><Badge>{event.criticality}</Badge><Badge>{event.mandatory ? "Obrigatório" : "Configurável"}</Badge></div></div><p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{event.description}</p><div className="mt-3 flex flex-wrap gap-2">{event.companyName || event.companySlug ? <Badge>{event.companyName ?? event.companySlug}</Badge> : null}{event.projectSlug ? <Badge>{event.projectSlug}</Badge> : null}{event.actorName ? <Badge>ator: {event.actorName}</Badge> : null}{shortPayload(event.payload) ? <Badge>{shortPayload(event.payload)}</Badge> : null}</div><OperationalMeta event={event} compact /><div className="mt-4 rounded-xl border border-(--tc-border,#d7deea) bg-white p-3"><p className="flex items-center gap-2 text-xs font-black text-(--tc-text,#0b1a3c)"><FiInbox /> Entregas geradas</p>{deliveries.length ? <div className="mt-3 space-y-2">{deliveries.map((delivery) => <div key={delivery.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-black text-(--tc-text,#0b1a3c)">{delivery.recipientName ?? delivery.recipientId}</p><div className="flex flex-wrap gap-2"><Badge>{delivery.channel}</Badge><Badge>{delivery.status}</Badge><Badge>{delivery.decision}</Badge></div></div><p className="mt-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{delivery.decisionReason}</p></div>)}</div> : <p className="mt-2 text-xs font-semibold text-(--tc-text-muted,#6b7280)">Evento registrado sem destinatário calculado ainda.</p>}</div></article>;
             }) : <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Nenhum evento gerado ainda.</div>}
           </section>
         </div>

@@ -8,9 +8,10 @@ import styles from "./ProjectSelector.module.css";
 
 type Props = {
   collapsed?: boolean;
+  showCompanySelector?: boolean;
 };
 
-export default function ProjectSelector({ collapsed = false }: Props) {
+export default function ProjectSelector({ collapsed = false, showCompanySelector = true }: Props) {
   const {
     clients,
     activeClient,
@@ -71,67 +72,69 @@ export default function ProjectSelector({ collapsed = false }: Props) {
 
   return (
     <div className="mx-3 mb-2 space-y-2">
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => {
-            if (!hasMultipleCompanies) return;
-            setCompanyOpen((value) => !value);
-            setProjectOpen(false);
-          }}
-          className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-2.5 py-2 text-left transition hover:bg-white/15"
-          data-testid="sidebar-company-selector"
-        >
-          <FiBriefcase size={13} className="shrink-0 text-white/70" />
+      {showCompanySelector ? (
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              if (!hasMultipleCompanies) return;
+              setCompanyOpen((value) => !value);
+              setProjectOpen(false);
+            }}
+            className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-2.5 py-2 text-left transition hover:bg-white/15"
+            data-testid="sidebar-company-selector"
+          >
+            <FiBriefcase size={13} className="shrink-0 text-white/70" />
 
-          <span className="min-w-0 flex-1">
-            <span className="block text-[9px] font-black uppercase tracking-[0.22em] text-white/35">
-              Empresa
+            <span className="min-w-0 flex-1">
+              <span className="block text-[9px] font-black uppercase tracking-[0.22em] text-white/35">
+                Empresa
+              </span>
+              <span className="block truncate text-[11px] font-semibold text-white/90">
+                {activeClient?.name ?? "Selecionar empresa"}
+              </span>
             </span>
-            <span className="block truncate text-[11px] font-semibold text-white/90">
-              {activeClient?.name ?? "Selecionar empresa"}
-            </span>
-          </span>
 
-          {hasMultipleCompanies ? (
-            <FiChevronDown
-              size={12}
-              className={`shrink-0 text-white/50 transition-transform ${companyOpen ? "rotate-180" : ""}`}
-            />
+            {hasMultipleCompanies ? (
+              <FiChevronDown
+                size={12}
+                className={`shrink-0 text-white/50 transition-transform ${companyOpen ? "rotate-180" : ""}`}
+              />
+            ) : null}
+          </button>
+
+          {companyOpen ? (
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-xl border border-white/15 bg-[#0a1e4a] py-1 shadow-xl">
+              {clients.map((company) => {
+                const active = company.slug === activeClientSlug;
+
+                return (
+                  <button
+                    key={company.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveClientSlug(company.slug);
+                      setCompanyOpen(false);
+                      setProjectOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] transition hover:bg-white/10 ${
+                      active ? "text-white" : "text-white/65"
+                    }`}
+                    data-testid={`sidebar-company-option-${company.slug}`}
+                  >
+                    <span className={active ? styles.dot : styles.dotMuted} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-semibold">{company.name}</span>
+                      <span className="block truncate text-[10px] text-white/35">/{company.slug}</span>
+                    </span>
+                    {active ? <span className="text-[10px] text-white/35">ativa</span> : null}
+                  </button>
+                );
+              })}
+            </div>
           ) : null}
-        </button>
-
-        {companyOpen ? (
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-xl border border-white/15 bg-[#0a1e4a] py-1 shadow-xl">
-            {clients.map((company) => {
-              const active = company.slug === activeClientSlug;
-
-              return (
-                <button
-                  key={company.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveClientSlug(company.slug);
-                    setCompanyOpen(false);
-                    setProjectOpen(false);
-                  }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] transition hover:bg-white/10 ${
-                    active ? "text-white" : "text-white/65"
-                  }`}
-                  data-testid={`sidebar-company-option-${company.slug}`}
-                >
-                  <span className={active ? styles.dot : styles.dotMuted} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">{company.name}</span>
-                    <span className="block truncate text-[10px] text-white/35">/{company.slug}</span>
-                  </span>
-                  {active ? <span className="text-[10px] text-white/35">ativa</span> : null}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       <div className="relative">
         <button

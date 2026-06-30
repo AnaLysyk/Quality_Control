@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   FiActivity,
@@ -10,26 +10,22 @@ import {
   FiBarChart2,
   FiBriefcase,
   FiCheckCircle,
-  FiClock,
   FiCompass,
+  FiCpu,
   FiDatabase,
+  FiGitBranch,
   FiLayers,
-  FiLogOut,
-  FiSettings,
+  FiMessageCircle,
+  FiPieChart,
   FiShield,
+  FiTarget,
   FiTrendingUp,
   FiUsers,
 } from "react-icons/fi";
 import { useAuthUser, type AuthUser } from "@/hooks/useAuthUser";
-import { hasCapability, type Capability } from "@/lib/permissions";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import Breadcrumb from "@/components/Breadcrumb";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { useClientContext } from "@/context/ClientContext";
-import { useDashboardContext } from "@/hooks/useDashboardContext";
-import { useDashboardFilters } from "@/hooks/useDashboardFilters";
-import { resolveActiveIdentity } from "@/lib/activeIdentity";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 type CompanyRisk = "critical" | "warning" | "stable" | "empty";
@@ -61,18 +57,7 @@ type SystemMetrics = {
     totalTestRuns: number;
     activeSessions: number;
   };
-  testStats: {
-    total: number;
-    passed: number;
-    failed: number;
-    blocked: number;
-    skipped: number;
-  };
-  releaseStats: {
-    draft: number;
-    published: number;
-    archived: number;
-  };
+  testStats: { total: number; passed: number; failed: number; blocked: number; skipped: number };
   companyQuality?: CompanyQuality[];
   consultingStats?: {
     averagePassRate: number;
@@ -87,166 +72,111 @@ type SystemMetrics = {
   lastUpdated?: string;
 };
 
+type ActionCard = {
+  title: string;
+  description: string;
+  href: string;
+  icon: typeof FiTarget;
+  nodeId: string;
+  prompt: string;
+};
+
 function formatNumber(value: unknown) {
-  const numberValue = Number(value) || 0;
-  return new Intl.NumberFormat("pt-BR").format(numberValue);
+  return new Intl.NumberFormat("pt-BR").format(Number(value) || 0);
 }
 
 function formatPercent(value: unknown) {
-  const numberValue = Math.round(Number(value) || 0);
-  return `${numberValue}%`;
+  return `${Math.round(Number(value) || 0)}%`;
 }
 
 function formatDateTime(value?: string | null) {
   if (!value) return "Sem atividade";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Sem atividade";
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
 function riskMeta(risk: CompanyRisk) {
-  if (risk === "critical") {
-    return {
-      label: "Crítico",
-      className: "border-red-200 bg-red-50 text-red-700",
-      bar: "bg-red-500",
-      description: "precisa de atuação consultiva",
-    };
-  }
-  if (risk === "warning") {
-    return {
-      label: "Atenção",
-      className: "border-amber-200 bg-amber-50 text-amber-700",
-      bar: "bg-amber-500",
-      description: "acompanhar evolução",
-    };
-  }
-  if (risk === "stable") {
-    return {
-      label: "Estável",
-      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      bar: "bg-emerald-500",
-      description: "qualidade controlada",
-    };
-  }
-  return {
-    label: "Sem dados",
-    className: "border-slate-200 bg-slate-50 text-slate-600",
-    bar: "bg-slate-300",
-    description: "sem execução registrada",
-  };
+  if (risk === "critical") return { label: "Crítico", badge: "border-red-200 bg-red-50 text-red-700", dot: "bg-red-500", note: "ação imediata" };
+  if (risk === "warning") return { label: "Atenção", badge: "border-amber-200 bg-amber-50 text-amber-700", dot: "bg-amber-500", note: "acompanhar" };
+  if (risk === "stable") return { label: "Estável", badge: "border-emerald-200 bg-emerald-50 text-emerald-700", dot: "bg-emerald-500", note: "controlado" };
+  return { label: "Sem dados", badge: "border-slate-200 bg-slate-50 text-slate-600", dot: "bg-slate-300", note: "onboarding" };
+}
+
+function resolveRole(user: Partial<AuthUser>) {
+  return (
+    normalizeLegacyRole(typeof user.permissionRole === "string" ? user.permissionRole : null) ??
+    normalizeLegacyRole(typeof user.role === "string" ? user.role : null) ??
+    normalizeLegacyRole(typeof user.companyRole === "string" ? user.companyRole : null)
+  );
+}
+
+function roleLabel(value: ReturnType<typeof resolveRole>) {
+  if (value === SYSTEM_ROLES.LEADER_TC) return "Líder TC";
+  if (value === SYSTEM_ROLES.TECHNICAL_SUPPORT) return "Suporte Técnico";
+  if (value === SYSTEM_ROLES.EMPRESA) return "Empresa";
+  if (value === SYSTEM_ROLES.COMPANY_USER) return "Usuário da empresa";
+  return "Perfil operacional";
+}
+
+function openAssistant(message: string, metadata?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent("assistant:open", {
+      detail: {
+        source: "dashboard",
+        agentMode: "qa",
+        panelMode: "side",
+        initialMessage: message,
+        context: {
+          module: "dashboard",
+          screenLabel: "Visão geral TC",
+          screenSummary: "Painel executivo de qualidade por empresa para gestão Testing Company, consultoria, suporte técnico e liderança.",
+          suggestedPrompts: [
+            "Resuma a carteira de empresas",
+            "Quais empresas precisam de ação imediata?",
+            "Monte próximos passos para suporte técnico",
+            "Abra os nós do Brain relacionados a risco",
+          ],
+          metadata: metadata ?? null,
+        },
+      },
+    }),
+  );
 }
 
 export default function DashboardClient() {
   const { user, loading: userLoading } = useAuthUser();
-  const { activeClient, activeClientSlug } = useClientContext();
   const router = useRouter();
   const { metrics, loading: metricsLoading, error: metricsError } = useSystemMetrics();
-  const metricsData = (metrics ?? null) as SystemMetrics | null;
-
-  useEffect(() => {
-    if (!userLoading && !user) {
-      router.replace("/login");
-    }
-  }, [userLoading, user, router]);
-
-  async function handleLogout() {
-    try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        router.push("/login");
-      }
-    } catch {
-      router.push("/login");
-    }
-  }
-
   const safeUser: Partial<AuthUser> = user ?? {};
-  const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
-  const permissionRole = typeof safeUser.permissionRole === "string" ? safeUser.permissionRole : null;
-  const role = typeof safeUser.role === "string" ? safeUser.role : null;
-  const companyRole = typeof safeUser.companyRole === "string" ? safeUser.companyRole : null;
-  const userOrigin =
-    typeof (safeUser as { userOrigin?: string | null }).userOrigin === "string"
-      ? (safeUser as { userOrigin?: string | null }).userOrigin ?? null
-      : typeof (safeUser as { user_origin?: string | null }).user_origin === "string"
-        ? (safeUser as { user_origin?: string | null }).user_origin ?? null
-        : null;
-  const isGlobalAdmin = safeUser.isGlobalAdmin === true || safeUser.globalRole === "global_admin";
-  const normalizedRole =
-    normalizeLegacyRole(permissionRole) ??
-    normalizeLegacyRole(role) ??
-    normalizeLegacyRole(companyRole);
-  const canViewLeaderDashboard =
-    isGlobalAdmin ||
-    normalizedRole === SYSTEM_ROLES.LEADER_TC ||
-    normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
-  const scopedCompanySlug =
-    activeClientSlug ??
-    activeClient?.slug ??
+  const metricsData = (metrics ?? null) as SystemMetrics | null;
+  const normalizedRole = resolveRole(safeUser);
+  const isGlobalAdmin = safeUser.isGlobalAdmin === true || (safeUser as { is_global_admin?: boolean }).is_global_admin === true || safeUser.globalRole === "global_admin";
+  const canViewExecutive = isGlobalAdmin || normalizedRole === SYSTEM_ROLES.LEADER_TC || normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  const companySlug =
+    (typeof safeUser.clientSlug === "string" && safeUser.clientSlug.trim() ? safeUser.clientSlug.trim() : null) ??
     (typeof safeUser.companySlug === "string" && safeUser.companySlug.trim() ? safeUser.companySlug.trim() : null) ??
-    (typeof (safeUser as { clientSlug?: string | null }).clientSlug === "string" &&
-    (safeUser as { clientSlug?: string | null }).clientSlug?.trim()
-      ? (safeUser as { clientSlug?: string | null }).clientSlug!.trim()
-      : null);
-  const companySlug = scopedCompanySlug;
-  const canViewSystemMetrics = canViewLeaderDashboard;
-  const roleLabel = typeof safeUser.role === "string" && safeUser.role.trim() ? safeUser.role : "usuário";
-  const activeIdentity = resolveActiveIdentity({ user: user ?? null, activeCompany: activeClient });
-  const isCompanyIdentity = activeIdentity.kind === "company";
-  const displayName = activeIdentity.displayName || safeUser.fullName?.trim() || safeUser.name || "Usuário";
-  const displayUsername = activeIdentity.username || safeUser.username || safeUser.user || null;
-  const displayAvatarUrl = activeIdentity.avatarUrl;
-  const companyDisplayValue = isCompanyIdentity
-    ? activeIdentity.companyName ?? companySlug ?? "Sem empresa"
-    : companySlug ?? activeIdentity.companyName ?? "Portfólio TC";
-  const avatarFallback = (() => {
-    const value = displayName.trim();
-    const parts = value.split(/\s+/).filter(Boolean);
-    if (parts.length <= 1) return value.slice(0, 2).toUpperCase();
-    return `${parts[0]?.slice(0, 1) ?? ""}${parts[parts.length - 1]?.slice(0, 1) ?? ""}`.toUpperCase();
-  })();
-  const companyHomeHref = companySlug ? `/empresas/${encodeURIComponent(companySlug)}/home` : "/empresas";
-  const runsHref = companySlug ? `/empresas/${encodeURIComponent(companySlug)}/runs` : "/runs";
+    null;
 
   useEffect(() => {
-    if (userLoading || !user || canViewLeaderDashboard) return;
+    if (!userLoading && !user) router.replace("/login");
+  }, [router, user, userLoading]);
 
-    const targetHref = scopedCompanySlug
-      ? buildCompanyPathForAccess(scopedCompanySlug, "dashboard", {
+  useEffect(() => {
+    if (userLoading || !user || canViewExecutive) return;
+    const target = companySlug
+      ? buildCompanyPathForAccess(companySlug, "dashboard", {
           isGlobalAdmin,
-          permissionRole,
-          role,
-          companyRole,
-          userOrigin,
-          clientSlug: scopedCompanySlug,
+          permissionRole: typeof safeUser.permissionRole === "string" ? safeUser.permissionRole : null,
+          role: typeof safeUser.role === "string" ? safeUser.role : null,
+          companyRole: typeof safeUser.companyRole === "string" ? safeUser.companyRole : null,
+          userOrigin: typeof safeUser.userOrigin === "string" ? safeUser.userOrigin : null,
+          clientSlug: companySlug,
         })
       : "/empresas";
-
-    router.replace(targetHref);
-  }, [
-    canViewLeaderDashboard,
-    companyRole,
-    isGlobalAdmin,
-    permissionRole,
-    role,
-    router,
-    scopedCompanySlug,
-    user,
-    userLoading,
-    userOrigin,
-  ]);
+    router.replace(target);
+  }, [canViewExecutive, companySlug, isGlobalAdmin, router, safeUser, user, userLoading]);
 
   const companyQuality = Array.isArray(metricsData?.companyQuality) ? metricsData.companyQuality : [];
   const consultingStats = metricsData?.consultingStats ?? {
@@ -259,431 +189,290 @@ export default function DashboardClient() {
     totalProjects: 0,
     qaseProjects: 0,
   };
-  const priorityCompanies = companyQuality.slice(0, 5);
+
+  const totalTests = metricsData?.testStats.total ?? 0;
+  const globalPassRate = totalTests ? Math.round(((metricsData?.testStats.passed ?? 0) / totalTests) * 100) : 0;
+  const health = consultingStats.averagePassRate || globalPassRate;
+
+  const priorityCompanies = useMemo(() => companyQuality.slice(0, 6), [companyQuality]);
   const criticalCompanies = companyQuality.filter((company) => company.risk === "critical");
   const attentionCompanies = companyQuality.filter((company) => company.risk === "warning");
   const stableCompanies = companyQuality.filter((company) => company.risk === "stable");
   const emptyCompanies = companyQuality.filter((company) => company.risk === "empty");
-  const totalTests = metricsData?.testStats.total ?? 0;
-  const passRate = totalTests > 0 ? Math.round(((metricsData?.testStats.passed ?? 0) / totalTests) * 100) : 0;
 
-  const quickLinks = [
+  const actionCards: ActionCard[] = [
     {
-      title: "Empresas atendidas",
-      description: "Abra a carteira de empresas e acompanhe o contexto de cada cliente.",
+      title: "Carteira de empresas",
+      description: "Abra a visão de clientes e entre no dashboard ou nos projetos de cada empresa.",
       href: "/admin/clients",
-      kicker: "Carteira",
+      icon: FiBriefcase,
+      nodeId: "exec-companies",
+      prompt: "Analise a carteira de empresas e me diga quais clientes precisam de ação consultiva primeiro.",
     },
     {
-      title: "Solicitações",
-      description: "Revise pedidos de acesso, ajustes e entrada de novos clientes.",
-      href: "/requests",
-      kicker: "Operação",
-    },
-    {
-      title: "Gestão de Perfis",
-      description: "Valide a regra fixa de visibilidade por perfil e módulo.",
-      href: "/admin/users/permissions",
-      kicker: "Governança",
-    },
-    {
-      title: "Audit Logs",
-      description: "Consulte eventos técnicos e rastros importantes da plataforma.",
-      href: "/admin/audit-logs",
-      kicker: "Auditoria",
-    },
-    {
-      title: "Mapa do Sistema",
-      description: "Use o Brain para entender módulos, rotas e dependências do produto.",
-      href: "/admin/sistema/mapa",
-      kicker: "Brain",
-    },
-  ];
-
-  if (hasCapability(capabilities, "run:read")) {
-    quickLinks.push({
-      title: "Runs",
-      description: "Consulte execuções recentes e acompanhe resultados.",
-      href: runsHref,
-      kicker: "Qualidade",
-    });
-  }
-
-  if (!canViewSystemMetrics && hasCapability(capabilities, "company:write")) {
-    quickLinks.push({
-      title: "Empresas",
-      description: "Consulte a carteira de empresas com acesso permitido.",
+      title: "Projetos e operações",
+      description: "Controle qualidade por aplicação: dashboard, casos, defeitos, planos, runs e docs.",
       href: "/empresas",
-      kicker: "Cadastro",
-    });
-  }
-
-  const overviewCards = [
-    {
-      label: "Empresas",
-      value: metricsData && canViewSystemMetrics ? formatNumber(metricsData.overview.totalCompanies) : "--",
-      note: "clientes acompanhados pela Testing Company.",
+      icon: FiLayers,
+      nodeId: "exec-projects",
+      prompt: "Explique como devo usar projetos e operações para separar qualidade por aplicação.",
     },
     {
-      label: "Saúde média",
-      value: metricsData && canViewSystemMetrics ? formatPercent(consultingStats.averagePassRate || passRate) : "--",
-      note: "pass rate médio no portfólio consultivo.",
+      title: "Repositório de casos",
+      description: "Importe, exporte, revise cobertura e use a referência Qase como rastreabilidade opcional.",
+      href: "/casos-de-teste",
+      icon: FiDatabase,
+      nodeId: "exec-test-cases",
+      prompt: "Analise o repositório de casos e me ajude a encontrar lacunas de cobertura.",
     },
     {
-      label: "Empresas críticas",
-      value: metricsData && canViewSystemMetrics ? formatNumber(consultingStats.criticalCompanies) : "--",
-      note: "precisam de priorização da consultoria.",
+      title: "Defeitos e risco",
+      description: "Priorize bugs por empresa/projeto, severidade e impacto operacional.",
+      href: "/issues",
+      icon: FiAlertCircle,
+      nodeId: "exec-defects",
+      prompt: "Monte uma visão executiva dos defeitos abertos e riscos por empresa.",
     },
     {
-      label: "Projetos",
-      value: metricsData && canViewSystemMetrics ? formatNumber(consultingStats.totalProjects) : "--",
-      note: "operações/projetos sob controle de qualidade.",
+      title: "Brain contextual",
+      description: "Acesse os nós executivos, de QA, projetos, permissões e assistente por perfil.",
+      href: "/admin/sistema/mapa",
+      icon: FiCpu,
+      nodeId: "exec-brain",
+      prompt: "Abra o Brain e explique os nós da visão executiva da Testing Company.",
     },
     {
-      label: "Defeitos abertos",
-      value: metricsData && canViewSystemMetrics ? formatNumber(consultingStats.openDefects) : "--",
-      note: "risco ativo distribuído entre empresas.",
-    },
-    {
-      label: "Qase",
-      value: metricsData && canViewSystemMetrics ? formatNumber(consultingStats.qaseProjects) : "--",
-      note: "projetos integrados ou configurados.",
+      title: "Perfis e governança",
+      description: "Confira o que cada perfil acessa e como o chat deve ajudar sem quebrar RBAC.",
+      href: "/admin/users/permissions",
+      icon: FiShield,
+      nodeId: "exec-permissions",
+      prompt: "Explique a matriz de perfis e como o chat deve ajudar cada perfil com segurança.",
     },
   ];
 
-  const systemCards = metricsData
-    ? [
-        { label: "Usuários", value: metricsData.overview.totalUsers, note: "Contas cadastradas na plataforma." },
-        { label: "Empresas", value: metricsData.overview.totalCompanies, note: "Empresas na carteira TC." },
-        { label: "Runs", value: metricsData.overview.totalReleases, note: "Execuções registradas no sistema." },
-        { label: "Testes", value: metricsData.testStats.total, note: "Casos computados nos ciclos." },
-        { label: "Sessões", value: metricsData.overview.activeSessions, note: "Sessões autenticadas ativas." },
-      ]
-    : [];
-
-  const dashboardContext = useDashboardContext({
-    user: user ?? undefined,
-    companies: companyQuality.map((company) => ({ slug: company.slug, name: company.name })).slice(0, 8),
-    fixedCompanySlug: null,
-    labels: {
-      companyLabel: "Testing Company",
-      periodLabel: canViewSystemMetrics ? "Gestão consultiva" : null,
-    },
-  });
-  const dashboardFilters = useDashboardFilters({
-    chips: [roleLabel, "Testing Company", canViewSystemMetrics ? "Qualidade por empresa" : null],
-  });
-
-  if (userLoading) {
-    return <div className="tc-empty-state min-h-80">Carregando painel.</div>;
-  }
-
-  if (!user) {
-    return <div className="tc-empty-state min-h-80">Redirecionando para login.</div>;
-  }
-
-  if (!canViewLeaderDashboard) {
-    return <div className="tc-empty-state min-h-80">Redirecionando para o dashboard da empresa.</div>;
-  }
+  if (userLoading) return <div className="tc-empty-state min-h-80">Carregando painel executivo.</div>;
+  if (!user) return <div className="tc-empty-state min-h-80">Redirecionando para login.</div>;
+  if (!canViewExecutive) return <div className="tc-empty-state min-h-80">Redirecionando para a visão da empresa.</div>;
 
   return (
-    <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
-      <div className="tc-page-shell py-4 sm:py-6">
-        <Breadcrumb items={[{ label: "Painel" }, { label: "Visão geral TC" }]} />
+    <main className="min-h-screen bg-(--page-bg,#f3f6fb) px-3 py-4 text-(--page-text,#0b1a3c) sm:px-5 lg:px-7">
+      <div className="mx-auto flex w-full max-w-550 flex-col gap-5">
+        <Breadcrumb items={[{ label: "Testing Company" }, { label: "Visão geral" }]} />
 
-        <DashboardHeader
-          kicker="Testing Company"
-          title="Visão geral de qualidade por empresa"
-          subtitle="Painel consultivo para Líder TC e Suporte Técnico acompanharem saúde, risco e execução das empresas atendidas."
-          contextLabel={dashboardContext.contextLabel}
-          chips={dashboardFilters.compactChips}
-          hiddenChipCount={dashboardFilters.hiddenChipCount}
-          className="mb-4"
-        />
-
-        <div className="mb-4 flex justify-end">
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                window.dispatchEvent(new CustomEvent("assistant:open", {
-                  detail: {
-                    source: "dashboard",
-                    agentMode: "qa",
-                    panelMode: "side",
-                    initialMessage: "Analise a visão geral da Testing Company: empresas críticas, qualidade por cliente, riscos, runs, defeitos e próximos passos consultivos.",
-                  },
-                }));
-              }
-            }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1.5 text-xs font-semibold text-(--tc-text,#0b1a3c) shadow-sm transition hover:border-[rgba(1,24,72,0.3)] hover:text-(--tc-primary,#011848)"
-          >
-            🧠 Perguntar IA
-          </button>
-        </div>
-
-        <section className="tc-hero-panel">
-          <div className="tc-hero-grid">
-            <div className="space-y-5">
-              <div className="flex items-start gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-white/14 bg-white/10 text-lg font-bold tracking-[0.22em] text-white">
-                  {displayAvatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={displayAvatarUrl} alt={displayName} className="h-full w-full object-cover" />
-                  ) : (
-                    avatarFallback
-                  )}
-                </div>
-
-                <div className="tc-hero-copy">
-                  <p className="tc-hero-kicker">Gestão e consultoria</p>
-                  <h1 className="tc-hero-title">Controle de qualidade da carteira</h1>
-                  <p className="tc-hero-description">
-                    Acompanhe onde atuar primeiro, quais empresas estão em risco e quais operações precisam de atenção técnica.
-                  </p>
-                </div>
+        <section className="overflow-hidden rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.22)_0%,transparent_28%),linear-gradient(135deg,#011848_0%,#09275f_48%,#4b0f2f_78%,#ef0001_130%)] px-6 py-6 text-white shadow-[0_34px_90px_rgba(1,24,72,0.22)] sm:px-8 lg:px-9">
+          <div className="grid gap-7 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.34em] text-white/62">Gestão Testing Company</p>
+              <h1 className="mt-3 max-w-4xl text-3xl font-black tracking-[-0.05em] text-white sm:text-5xl">
+                Cockpit executivo de qualidade por empresa
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-white/78 sm:text-base">
+                Visão para Líder TC e Suporte Técnico acompanharem carteira, risco, saúde de qualidade, projetos, defeitos e próximos passos consultivos com apoio do Brain.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
+                <span className="rounded-full border border-white/16 bg-white/10 px-3 py-1.5 text-white/88">{roleLabel(normalizedRole)}</span>
+                <span className="rounded-full border border-white/16 bg-white/10 px-3 py-1.5 text-white/88">{safeUser.email ?? "sem e-mail"}</span>
+                <span className="rounded-full border border-white/16 bg-white/10 px-3 py-1.5 text-white/88">Brain conectado ao contexto</span>
               </div>
-
-              <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
-                  {displayName}
-                </span>
-                {displayUsername ? (
-                  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
-                    @{displayUsername}
-                  </span>
-                ) : null}
-                <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
-                  {safeUser.email ?? "Sem e-mail"}
-                </span>
-                {companySlug ? (
-                  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-white/92">
-                    Empresa ativa: {companyDisplayValue}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="tc-hero-actions">
-                <Link href="/admin/clients" className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
-                  <FiBriefcase size={14} />
-                  Carteira de empresas
-                </Link>
-                <Link href="/requests" className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
-                  <FiShield size={14} />
-                  Solicitações
-                </Link>
-                <button type="button" onClick={() => void handleLogout()} className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/18 bg-white/8 px-4 text-sm font-semibold text-white transition hover:bg-white/12">
-                  <FiLogOut size={14} />
-                  Sair
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => openAssistant("Resuma a visão executiva da Testing Company e priorize as ações por empresa.", { nodeId: "exec-root", role: normalizedRole })}
+                  className="inline-flex h-11 items-center gap-2 rounded-2xl bg-white px-4 text-xs font-black uppercase tracking-[0.12em] text-[#011848] transition hover:bg-white/90"
+                >
+                  <FiMessageCircle className="h-4 w-4" /> Perguntar IA
                 </button>
+                <Link href="/admin/sistema/mapa?node=exec-root" className="inline-flex h-11 items-center gap-2 rounded-2xl border border-white/18 bg-white/10 px-4 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/16">
+                  <FiCpu className="h-4 w-4" /> Abrir Brain executivo
+                </Link>
               </div>
             </div>
 
-            <div className="tc-hero-stat-grid">
-              {overviewCards.map((card) => (
-                <div key={card.label} className="tc-hero-stat">
-                  <div className="tc-hero-stat-label">{card.label}</div>
-                  <div className="tc-hero-stat-value">{card.value}</div>
-                  <div className="tc-hero-stat-note">{card.note}</div>
-                </div>
-              ))}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ExecutiveMetric label="Saúde média" value={metricsLoading ? "..." : formatPercent(health)} detail="pass rate da carteira" icon={FiTrendingUp} tone={health < 70 ? "danger" : health < 90 ? "warning" : "success"} />
+              <ExecutiveMetric label="Empresas críticas" value={formatNumber(consultingStats.criticalCompanies)} detail="ação consultiva imediata" icon={FiAlertCircle} tone="danger" />
+              <ExecutiveMetric label="Projetos" value={formatNumber(consultingStats.totalProjects)} detail="operações de qualidade" icon={FiLayers} tone="info" />
+              <ExecutiveMetric label="Defeitos abertos" value={formatNumber(consultingStats.openDefects)} detail="risco ativo" icon={FiActivity} tone="warning" />
             </div>
           </div>
         </section>
 
         {metricsError ? (
-          <div className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
             {metricsError instanceof Error ? metricsError.message : String(metricsError)}
           </div>
         ) : null}
 
-        <section className="tc-panel">
-          <div className="tc-panel-header">
-            <div>
-              <p className="tc-panel-kicker">Gestão consultiva</p>
-              <h2 className="tc-panel-title">Prioridade de atuação por empresa</h2>
-              <p className="tc-panel-description">
-                Ranking do portfólio pela saúde de qualidade, defeitos abertos, execuções e presença de projetos integrados.
+        <section className="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
+          <div className="rounded-[30px] border border-(--tc-border,#d7deea) bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001)">Prioridade consultiva</p>
+                <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-(--tc-text,#0b1a3c)">Empresas que precisam de atenção</h2>
+                <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">Ranking por risco, defeitos, execução e saúde de qualidade.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => openAssistant("Analise o ranking de empresas e gere uma ordem de atendimento para Líder TC e Suporte Técnico.", { nodeId: "exec-companies", criticalCompanies: criticalCompanies.length })}
+                className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-xs font-black uppercase tracking-[0.1em] text-(--tc-text,#0b1a3c)"
+              >
+                <FiMessageCircle /> Analisar carteira
+              </button>
+            </div>
+
+            {metricsLoading && !metricsData ? (
+              <div className="mt-5 grid gap-3 lg:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-48 animate-pulse rounded-3xl bg-slate-100" />)}
+              </div>
+            ) : priorityCompanies.length === 0 ? (
+              <div className="mt-5 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-5 py-10 text-center text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
+                Ainda não há dados suficientes de qualidade por empresa. Configure empresas, projetos, casos ou runs para alimentar a visão executiva.
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-3 lg:grid-cols-2">
+                {priorityCompanies.map((company) => <CompanyRiskCard key={company.slug} company={company} />)}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-[30px] border border-(--tc-border,#d7deea) bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001)">Resumo da carteira</p>
+            <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-(--tc-text,#0b1a3c)">Distribuição executiva</h2>
+            <div className="mt-5 grid gap-3">
+              <PortfolioRow icon={FiAlertCircle} label="Críticas" value={criticalCompanies.length} tone="danger" description="Atuação imediata" />
+              <PortfolioRow icon={FiActivity} label="Em atenção" value={attentionCompanies.length} tone="warning" description="Monitorar e orientar" />
+              <PortfolioRow icon={FiCheckCircle} label="Estáveis" value={stableCompanies.length} tone="success" description="Qualidade controlada" />
+              <PortfolioRow icon={FiCompass} label="Sem dados" value={emptyCompanies.length} tone="neutral" description="Onboarding operacional" />
+            </div>
+            <div className="mt-5 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <p className="text-sm font-black text-(--tc-text,#0b1a3c)">Como usar essa visão</p>
+              <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                Comece pelas empresas críticas, entre no dashboard da empresa, abra projetos e use o Brain para explicar risco, cobertura e próximo passo.
               </p>
             </div>
-            <FiTrendingUp size={20} className="text-(--tc-text-muted,#6b7280)" />
           </div>
-
-          {metricsLoading && !metricsData ? (
-            <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="tc-panel-muted min-h-40 animate-pulse" />
-              ))}
-            </div>
-          ) : priorityCompanies.length === 0 ? (
-            <div className="tc-empty-state mt-5 min-h-44">
-              Sem empresas com dados suficientes. Configure empresas, projetos ou integrações para montar a visão consultiva.
-            </div>
-          ) : (
-            <div className="mt-5 grid gap-4 xl:grid-cols-2">
-              {priorityCompanies.map((company) => {
-                const meta = riskMeta(company.risk);
-                return (
-                  <article key={company.slug} className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate text-lg font-black text-(--tc-text-primary,#0b1a3c)">{company.name}</h3>
-                          <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${meta.className}`}>{meta.label}</span>
-                        </div>
-                        <p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#64748b)">/{company.slug} · {meta.description}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-black tracking-[-0.05em] text-(--tc-text-primary,#0b1a3c)">{formatPercent(company.passRate)}</div>
-                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#64748b)">saúde</div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
-                      <div className={`h-full rounded-full ${meta.bar}`} style={{ width: `${Math.max(company.passRate, company.runs > 0 ? 8 : 0)}%` }} />
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-                        <div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">Runs</div>
-                        <div className="mt-1 text-lg font-black">{formatNumber(company.runs)}</div>
-                      </div>
-                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-                        <div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">Projetos</div>
-                        <div className="mt-1 text-lg font-black">{formatNumber(company.projects)}</div>
-                      </div>
-                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-                        <div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">Defeitos</div>
-                        <div className="mt-1 text-lg font-black">{formatNumber(company.openDefects)}</div>
-                      </div>
-                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-                        <div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">Última ação</div>
-                        <div className="mt-1 text-sm font-black">{formatDateTime(company.lastActivityAt)}</div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Link href={`/empresas/${encodeURIComponent(company.slug)}/dashboard`} className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-white">
-                        Dashboard <FiArrowRight size={14} />
-                      </Link>
-                      <Link href={`/empresas/${encodeURIComponent(company.slug)}/projetos`} className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-(--tc-text-primary,#0b1a3c)">
-                        Projetos
-                      </Link>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="tc-panel">
-            <div className="tc-panel-header">
-              <div>
-                <p className="tc-panel-kicker">Portfólio</p>
-                <h2 className="tc-panel-title">Resumo da carteira</h2>
-                <p className="tc-panel-description">Distribuição executiva para reunião de gestão, suporte e consultoria.</p>
-              </div>
-              <FiBarChart2 size={20} className="text-(--tc-text-muted,#6b7280)" />
-            </div>
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
-              <div className="tc-panel-muted">
-                <div className="flex items-center gap-3">
-                  <FiAlertCircle className="text-red-500" />
-                  <div>
-                    <div className="tc-kv-label">Críticas</div>
-                    <div className="tc-kv-value">{formatNumber(criticalCompanies.length)}</div>
-                    <div className="tc-kv-note">empresa(s) para atuação imediata.</div>
-                  </div>
-                </div>
-              </div>
-              <div className="tc-panel-muted">
-                <div className="flex items-center gap-3">
-                  <FiActivity className="text-amber-500" />
-                  <div>
-                    <div className="tc-kv-label">Em atenção</div>
-                    <div className="tc-kv-value">{formatNumber(attentionCompanies.length)}</div>
-                    <div className="tc-kv-note">empresa(s) com risco moderado.</div>
-                  </div>
-                </div>
-              </div>
-              <div className="tc-panel-muted">
-                <div className="flex items-center gap-3">
-                  <FiCheckCircle className="text-emerald-500" />
-                  <div>
-                    <div className="tc-kv-label">Estáveis</div>
-                    <div className="tc-kv-value">{formatNumber(stableCompanies.length)}</div>
-                    <div className="tc-kv-note">empresa(s) com qualidade controlada.</div>
-                  </div>
-                </div>
-              </div>
-              <div className="tc-panel-muted">
-                <div className="flex items-center gap-3">
-                  <FiClock className="text-slate-500" />
-                  <div>
-                    <div className="tc-kv-label">Sem dados</div>
-                    <div className="tc-kv-value">{formatNumber(emptyCompanies.length)}</div>
-                    <div className="tc-kv-note">precisam de onboarding operacional.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {canViewSystemMetrics ? (
-            <section className="tc-panel">
-              <div className="tc-panel-header">
-                <div>
-                  <p className="tc-panel-kicker">Base da plataforma</p>
-                  <h2 className="tc-panel-title">Números administrativos</h2>
-                  <p className="tc-panel-description">Indicadores técnicos que sustentam a operação da Testing Company.</p>
-                </div>
-                <FiDatabase size={20} className="text-(--tc-text-muted,#6b7280)" />
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {metricsLoading && !metricsData
-                  ? Array.from({ length: 4 }).map((_, index) => (
-                      <div key={index} className="tc-panel-muted min-h-28 animate-pulse" />
-                    ))
-                  : systemCards.map((card) => (
-                      <div key={card.label} className="tc-kv">
-                        <div className="tc-kv-label">{card.label}</div>
-                        <div className="tc-kv-value">{formatNumber(card.value)}</div>
-                        <div className="tc-kv-note">{card.note}</div>
-                      </div>
-                    ))}
-              </div>
-            </section>
-          ) : null}
-        </section>
-
-        <section className="tc-panel">
-          <div className="tc-panel-header">
+        <section className="rounded-[30px] border border-(--tc-border,#d7deea) bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="tc-panel-kicker">Ações de gestão</p>
-              <h2 className="tc-panel-title">Atalhos para liderança e suporte</h2>
-              <p className="tc-panel-description">Entradas principais para operação consultiva, governança e sustentação técnica.</p>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001)">Brain e operação</p>
+              <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-(--tc-text,#0b1a3c)">Nós funcionais para acessar contexto</h2>
+              <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">Cada bloco abre uma tela e também tem um nó no Brain para o chat explicar impacto, relação e próximos passos.</p>
             </div>
-            <FiCompass size={20} className="text-(--tc-text-muted,#6b7280)" />
           </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {actionCards.map((card) => <ExecutiveActionCard key={card.title} card={card} />)}
+          </div>
+        </section>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {quickLinks.map((item) => (
-              <Link key={`${item.kicker}-${item.title}`} href={item.href} className="tc-link-card">
-                <span className="tc-link-kicker">{item.kicker}</span>
-                <span className="tc-link-title">{item.title}</span>
-                <span className="tc-link-text">{item.description}</span>
-                <span className="inline-flex items-center gap-2 text-sm font-semibold text-(--tc-accent,#ef0001)">
-                  Abrir
-                  <FiArrowRight size={14} />
-                </span>
-              </Link>
-            ))}
-          </div>
+        <section className="grid gap-4 lg:grid-cols-3">
+          <ProfileHelpCard title="Líder TC" description="Enxerga carteira, prioriza empresas, define ação consultiva, valida governança e acompanha saúde geral." prompts={["Priorize a carteira", "Gere resumo executivo", "Compare empresas críticas"]} />
+          <ProfileHelpCard title="Suporte Técnico" description="Atua em risco, bug, bloqueio, triagem, evidência, fluxo e direcionamento por empresa/projeto." prompts={["Explique causa provável", "Sugira próxima ação", "Monte resposta técnica"]} />
+          <ProfileHelpCard title="Empresa / Usuário" description="Recebe ajuda contextual dentro da própria empresa/projeto, sem acesso indevido a outras carteiras." prompts={["Explique esta tela", "O que falta no meu projeto?", "Como acompanho meus defeitos?"]} />
         </section>
       </div>
+    </main>
+  );
+}
+
+function ExecutiveMetric({ label, value, detail, icon: Icon, tone }: { label: string; value: string; detail: string; icon: typeof FiTarget; tone: "danger" | "warning" | "success" | "info" }) {
+  const toneClass = {
+    danger: "bg-red-50 text-red-700 border-red-200",
+    warning: "bg-amber-50 text-amber-700 border-amber-200",
+    success: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    info: "bg-blue-50 text-blue-700 border-blue-200",
+  }[tone];
+  return (
+    <div className="rounded-3xl border border-white/14 bg-white/10 p-4 backdrop-blur">
+      <div className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${toneClass}`}><Icon /></div>
+      <div className="mt-3 text-3xl font-black tracking-[-0.05em]">{value}</div>
+      <div className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-white/58">{label}</div>
+      <div className="mt-1 text-xs text-white/68">{detail}</div>
     </div>
+  );
+}
+
+function CompanyRiskCard({ company }: { company: CompanyQuality }) {
+  const meta = riskMeta(company.risk);
+  return (
+    <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate text-lg font-black text-(--tc-text,#0b1a3c)">{company.name}</h3>
+          <p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#64748b)">/{company.slug} · {meta.note}</p>
+        </div>
+        <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${meta.badge}`}>{meta.label}</span>
+      </div>
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <div>
+          <div className="text-3xl font-black tracking-[-0.05em] text-(--tc-text,#0b1a3c)">{formatPercent(company.passRate)}</div>
+          <div className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#64748b)">saúde</div>
+        </div>
+        <div className="text-right text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{formatDateTime(company.lastActivityAt)}</div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+        <div className={`h-full rounded-full ${meta.dot}`} style={{ width: `${Math.max(company.passRate, company.runs > 0 ? 8 : 0)}%` }} />
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+        <MiniStat label="Runs" value={company.runs} />
+        <MiniStat label="Projetos" value={company.projects} />
+        <MiniStat label="Defeitos" value={company.openDefects} />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link href={`/empresas/${encodeURIComponent(company.slug)}/dashboard`} className="rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-white">Dashboard</Link>
+        <Link href={`/empresas/${encodeURIComponent(company.slug)}/projetos`} className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-(--tc-text,#0b1a3c)">Projetos</Link>
+      </div>
+    </article>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2"><div className="text-lg font-black">{formatNumber(value)}</div><div className="text-[10px] font-black uppercase tracking-[0.12em] text-(--tc-text-muted,#64748b)">{label}</div></div>;
+}
+
+function PortfolioRow({ icon: Icon, label, value, description, tone }: { icon: typeof FiTarget; label: string; value: number; description: string; tone: "danger" | "warning" | "success" | "neutral" }) {
+  const toneClass = {
+    danger: "text-red-600 bg-red-50 border-red-200",
+    warning: "text-amber-600 bg-amber-50 border-amber-200",
+    success: "text-emerald-600 bg-emerald-50 border-emerald-200",
+    neutral: "text-slate-600 bg-slate-50 border-slate-200",
+  }[tone];
+  return (
+    <div className="flex items-center gap-3 rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+      <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border ${toneClass}`}><Icon /></div>
+      <div className="min-w-0 flex-1"><p className="font-black text-(--tc-text,#0b1a3c)">{label}</p><p className="text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{description}</p></div>
+      <div className="text-2xl font-black">{formatNumber(value)}</div>
+    </div>
+  );
+}
+
+function ExecutiveActionCard({ card }: { card: ActionCard }) {
+  const Icon = card.icon;
+  return (
+    <article className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4 transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-(--tc-primary,#011848) shadow-sm"><Icon /></div>
+      <h3 className="mt-4 text-lg font-black text-(--tc-text,#0b1a3c)">{card.title}</h3>
+      <p className="mt-2 min-h-12 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{card.description}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link href={card.href} className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-primary,#011848) px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-white">Abrir <FiArrowRight /></Link>
+        <button type="button" onClick={() => openAssistant(card.prompt, { nodeId: card.nodeId, route: card.href })} className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-(--tc-text,#0b1a3c)">Brain</button>
+      </div>
+    </article>
+  );
+}
+
+function ProfileHelpCard({ title, description, prompts }: { title: string; description: string; prompts: string[] }) {
+  return (
+    <article className="rounded-[30px] border border-(--tc-border,#d7deea) bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+      <div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-(--tc-surface-2,#f8fafc) text-(--tc-primary,#011848)"><FiUsers /></div><h3 className="text-lg font-black text-(--tc-text,#0b1a3c)">{title}</h3></div>
+      <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{description}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {prompts.map((prompt) => (
+          <button key={prompt} type="button" onClick={() => openAssistant(prompt, { profile: title })} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1.5 text-xs font-bold text-(--tc-text,#0b1a3c)">{prompt}</button>
+        ))}
+      </div>
+    </article>
   );
 }

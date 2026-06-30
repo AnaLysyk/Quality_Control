@@ -1,7 +1,7 @@
-import { OperationsWorkspaceClient } from "../../runs/OperationsWorkspaceClient";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default function AdminOperacaoPage() {
-  return <OperationsWorkspaceClient />;
+  redirect("/operacoes");
 }

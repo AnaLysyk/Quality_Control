@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
+import { writeAuditLog } from "@/lib/audit/writeAuditLog";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -19,7 +20,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const companySlug = searchParams.get("companySlug")?.trim();
   if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
-
 
   if (process.env.E2E_USE_JSON === "1") {
     return NextResponse.json({
@@ -98,7 +98,6 @@ export async function POST(request: Request) {
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
   if (!company) return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
 
-  // Check uniqueness
   const existing = await db.project.findUnique({
     where: { companyId_slug: { companyId: company.id, slug } },
     select: { id: true },
@@ -125,6 +124,24 @@ export async function POST(request: Request) {
       iconKey: true,
       companyId: true,
       createdAt: true,
+    },
+  });
+
+  writeAuditLog({
+    actorUserId: user.id,
+    actorEmail: user.email ?? null,
+    action: "create",
+    entityType: "Project",
+    entityId: project.id,
+    entityLabel: project.name,
+    metadata: {
+      companyId: company.id,
+      companySlug,
+      projectId: project.id,
+      projectSlug: project.slug,
+      projectName: project.name,
+      status: project.status,
+      source: "api.projects.post",
     },
   });
 

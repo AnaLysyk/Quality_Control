@@ -56,6 +56,9 @@ TEST_FAILED
 DEFECT_ASSIGNED
 CHAT_MENTION
 BRAIN_MEMORY_CANDIDATE
+RELEASE_CALENDAR_CRITICAL
+RELEASE_CALENDAR_RISK
+RELEASE_CALENDAR_BLOCKED
 USER_ACCESS_UPDATED
 PASSWORD_RESET_REQUEST
 ```
@@ -108,22 +111,57 @@ NotificationPreference
   updatedAt
 ```
 
+## Ligacao com agenda de release
+
+```txt
+Criar evento critico na agenda
+  -> RELEASE_CALENDAR_CRITICAL
+  -> gera NotificationEvent
+  -> cria NotificationDelivery para ator e Brain
+
+Mudar evento para at_risk
+  -> RELEASE_CALENDAR_RISK
+  -> gera NotificationEvent
+  -> calcula delivered/suppressed por canal
+  -> Brain recebe contexto
+
+Mudar evento para blocked
+  -> RELEASE_CALENDAR_BLOCKED
+  -> gera NotificationEvent obrigatorio
+  -> Brain recebe contexto
+```
+
 ## Implementado nesta camada
 
 ```txt
 data/notificationOperationModel.ts
 lib/notificationPreferencesStore.ts
+lib/notificationEventsStore.ts
 app/api/notification-model/route.ts
 app/notificacoes/page.tsx
 app/notificacoes/_components/NotificationOperationPanel.tsx
 ```
 
+## O que ja funciona
+
+```txt
+Catalogo de workflows de notificacao
+Preferencias por empresa, perfil e usuario
+Resolver delivered/suppressed por canal
+Criar NotificationEvent auditavel
+Criar NotificationDelivery por destinatario/canal
+Expor eventos e entregas no GET /api/notification-model
+Agenda de release gerando evento critico, risco e bloqueio
+UI /notificacoes exibindo eventos reais e entregas por canal
+Resumo de delivered/suppressed na central de notificacoes
+UI /notificacoes permite ativar/desativar canal por empresa, perfil ou usuario
+UI /notificacoes lista preferencias cadastradas
+```
+
 ## Proxima implementacao tecnica
 
-1. Criar NotificationEvent real no Prisma ou store persistente.
-2. Criar NotificationDelivery real por destinatario/canal.
-3. Adaptar createUserNotification para passar por resolveNotificationDeliveryDecision.
-4. Criar UI para empresa desligar recebimento por categoria/canal.
-5. Criar UI para perfil/usuario desligar recebimento nao critico.
-6. Fazer Brain responder por que alguem recebeu ou nao recebeu.
-7. Integrar eventos de conversa, run, caso, defeito e acesso.
+1. Adaptar createUserNotification para passar por resolveNotificationDeliveryDecision.
+2. Fazer Brain responder por que alguem recebeu ou nao recebeu.
+3. Integrar eventos de conversa, run, caso, defeito e acesso.
+4. Persistir NotificationEvent e NotificationDelivery no banco real.
+5. Criar filtros avancados na central de notificacoes.

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getNotificationOperationModel } from "@/data/notificationOperationModel";
+import { getNotificationEventsSummary, listNotificationEvents } from "@/lib/notificationEventsStore";
 import { getNotificationPreferenceSummary, listNotificationPreferences, upsertNotificationPreference } from "@/lib/notificationPreferencesStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
@@ -8,10 +9,23 @@ import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 export const runtime = "nodejs";
 export const revalidate = 0;
 
-export async function GET() {
-  const [preferences, preferenceSummary] = await Promise.all([
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const companySlug = url.searchParams.get("companySlug")?.trim() || null;
+  const projectSlug = url.searchParams.get("projectSlug")?.trim() || null;
+  const sourceType = url.searchParams.get("sourceType")?.trim() || null;
+  const limit = Number(url.searchParams.get("limit") ?? 50);
+
+  const [preferences, preferenceSummary, notificationEvents, notificationEventsSummary] = await Promise.all([
     listNotificationPreferences(),
     getNotificationPreferenceSummary(),
+    listNotificationEvents({
+      companySlug,
+      projectSlug,
+      sourceType: sourceType === "release_calendar" || sourceType === "chat" || sourceType === "qa_operation" || sourceType === "manual" ? sourceType : null,
+      limit: Number.isFinite(limit) ? limit : 50,
+    }),
+    getNotificationEventsSummary(),
   ]);
 
   return NextResponse.json(
@@ -19,6 +33,8 @@ export async function GET() {
       ...getNotificationOperationModel(),
       preferences,
       preferenceSummary,
+      notificationEvents,
+      notificationEventsSummary,
     },
     { headers: NO_STORE_HEADERS },
   );

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getReleaseCalendarModel, type ReleaseCalendarEvent } from "@/data/releaseCalendarModel";
-import { createNotificationEvent } from "@/lib/notificationEventsStore";
+import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
 import { getReleaseCalendarSummary, listReleaseCalendarEvents, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
@@ -21,19 +21,19 @@ function actorName(user: { name?: string | null; email?: string | null; id: stri
   return user.name ?? user.email ?? user.id;
 }
 
-function buildRecipients(user: { name?: string | null; email?: string | null; id: string }, event: ReleaseCalendarEvent) {
+function buildRecipients(user: { name?: string | null; email?: string | null; id: string }, event: ReleaseCalendarEvent): NotificationEventRecipient[] {
   return [
     {
       recipientId: user.id,
       recipientName: actorName(user),
       profileKind: "release_actor",
-      channels: event.criticality === "critical" ? ["in_app", "brain" as const] : ["in_app" as const, "brain" as const],
+      channels: ["in_app", "brain"],
     },
     {
       recipientId: "brain",
       recipientName: "Brain",
       profileKind: "brain",
-      channels: ["brain" as const],
+      channels: ["brain"],
     },
   ];
 }

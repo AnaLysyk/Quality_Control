@@ -1,5 +1,3 @@
-import { BrainAccessRequestFlowPanel } from "../_components/BrainAccessRequestFlowPanel";
-
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -8,9 +6,5 @@ export const metadata = {
 };
 
 export default function BrainSolicitacoesPage() {
-  return (
-    <main className="space-y-5">
-      <BrainAccessRequestFlowPanel />
-    </main>
-  );
+  return null;
 }

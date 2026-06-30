@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getNodeWithContext } from "@/lib/brain";
 import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
+import { getExecutiveBrainContextGraph } from "@/lib/brain/executiveContext";
 
 export async function GET(
   req: Request,
@@ -13,6 +14,30 @@ export async function GET(
   }
 
   const { id } = await params;
+  const executiveGraph = getExecutiveBrainContextGraph(accessResult.context);
+  const virtualNode = executiveGraph.nodes.find((node) => node.id === id);
+
+  if (virtualNode) {
+    const outgoing = executiveGraph.edges
+      .filter((edge) => edge.source === id)
+      .map((edge) => ({ id: edge.id, fromId: edge.source, toId: edge.target, type: edge.type }));
+    const incoming = executiveGraph.edges
+      .filter((edge) => edge.target === id)
+      .map((edge) => ({ id: edge.id, fromId: edge.source, toId: edge.target, type: edge.type }));
+    const neighborIds = new Set([
+      ...outgoing.map((edge) => edge.toId),
+      ...incoming.map((edge) => edge.fromId),
+    ]);
+    const neighbors = executiveGraph.nodes.filter((node) => neighborIds.has(node.id));
+
+    return NextResponse.json({
+      node: virtualNode,
+      outgoing,
+      incoming,
+      neighbors,
+    });
+  }
+
   const nodeAccess = await assertBrainNodeAccess(id, accessResult.context);
   if (!nodeAccess.ok) {
     return NextResponse.json({ error: nodeAccess.error }, { status: nodeAccess.status });

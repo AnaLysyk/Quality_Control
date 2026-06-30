@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSubgraph, searchNodes } from "@/lib/brain";
 import { filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
+import { getExecutiveBrainContextGraph } from "@/lib/brain/executiveContext";
 import { prisma } from "@/lib/prismaClient";
 
 function isE2eJsonMode() {
@@ -14,6 +15,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
   }
   const { context: access } = accessResult;
+  const executiveGraph = getExecutiveBrainContextGraph(access);
 
   if (isE2eJsonMode()) {
     return NextResponse.json({
@@ -28,8 +30,9 @@ export async function GET(req: Request) {
           metadata: { companySlug: Array.from(access.allowedCompanySlugs)[0] ?? "demo" },
           isRoot: true,
         },
+        ...executiveGraph.nodes,
       ],
-      edges: [],
+      edges: executiveGraph.edges,
       root: {
         id: "brain-e2e-root",
         label: "Brain E2E",
@@ -50,6 +53,15 @@ export async function GET(req: Request) {
   try {
     let rootId = nodeId;
 
+    const virtualRoot = rootId ? executiveGraph.nodes.find((node) => node.id === rootId) ?? null : null;
+    if (virtualRoot) {
+      return NextResponse.json({
+        nodes: executiveGraph.nodes,
+        edges: executiveGraph.edges,
+        root: virtualRoot,
+      });
+    }
+
     if (!rootId) {
       if (nodeType) {
         const nodes = await searchNodes({ type: nodeType, limit: 1 });
@@ -67,7 +79,7 @@ export async function GET(req: Request) {
     }
 
     if (!rootId) {
-      return NextResponse.json({ nodes: [], edges: [], root: null });
+      return NextResponse.json({ nodes: executiveGraph.nodes, edges: executiveGraph.edges, root: executiveGraph.nodes[0] ?? null });
     }
 
     const subgraph = await getSubgraph(rootId, depth);
@@ -98,13 +110,13 @@ export async function GET(req: Request) {
       createdAt: edge.createdAt,
     })).filter((edge) => visibility.visibleEdgeIds.has(edge.id));
 
-    const uniqueNodes = Array.from(new Map(graphNodes.map((node) => [node.id, node])).values());
-    const uniqueEdges = Array.from(new Map(graphEdges.map((edge) => [edge.id, edge])).values());
+    const uniqueNodes = Array.from(new Map([...executiveGraph.nodes, ...graphNodes].map((node) => [node.id, node])).values());
+    const uniqueEdges = Array.from(new Map([...executiveGraph.edges, ...graphEdges].map((edge) => [edge.id, edge])).values());
 
     return NextResponse.json({
       nodes: uniqueNodes,
       edges: uniqueEdges,
-      root: subgraph.root,
+      root: subgraph.root ?? executiveGraph.nodes[0] ?? null,
     });
   } catch (error) {
     console.error("[brain/graph] GET error:", error);

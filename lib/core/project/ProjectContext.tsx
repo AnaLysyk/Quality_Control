@@ -20,6 +20,8 @@ export type ProjectRecord = {
   color?: string | null;
   iconKey?: string | null;
   companyId: string;
+  source?: string | null;
+  qaseProjectCode?: string | null;
   createdAt?: string | null;
 };
 
@@ -39,6 +41,47 @@ const ProjectContext = createContext<ProjectContextValue | undefined>(undefined)
 const storageKey = (companyId: string) => `activeProject:${companyId}`;
 const getSessionStorage = () => (typeof window === "undefined" ? null : window.sessionStorage);
 
+function normalizeSlug(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function toProjectRecord(item: Partial<ProjectRecord>, companySlug: string): ProjectRecord | null {
+  const name = typeof item.name === "string" ? item.name.trim() : "";
+  const slug = typeof item.slug === "string" && item.slug.trim() ? normalizeSlug(item.slug) : normalizeSlug(name);
+  if (!name || !slug) return null;
+
+  return {
+    id: item.id ?? `${item.source ?? "project"}-${slug}`,
+    slug,
+    name,
+    description: item.description ?? null,
+    status: item.status ?? "active",
+    color: item.color ?? null,
+    iconKey: item.iconKey ?? "folder",
+    companyId: item.companyId ?? companySlug,
+    source: item.source ?? (item.qaseProjectCode ? "qase" : "manual"),
+    qaseProjectCode: item.qaseProjectCode ?? null,
+    createdAt: item.createdAt ?? null,
+  };
+}
+
+function mergeProjects(projects: ProjectRecord[]) {
+  const merged = new Map<string, ProjectRecord>();
+  for (const project of projects) {
+    const key = project.qaseProjectCode ? `qase:${project.qaseProjectCode.toUpperCase()}` : project.slug;
+    if (!merged.has(key)) merged.set(key, project);
+  }
+  return Array.from(merged.values()).sort((left, right) =>
+    left.name.localeCompare(right.name, "pt-BR", { sensitivity: "base" }),
+  );
+}
+
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { activeClient, activeClientSlug } = useClientContext();
 
@@ -51,10 +94,21 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/projects?companySlug=${encodeURIComponent(companySlug)}`);
-      if (!res.ok) throw new Error("Falha ao carregar projetos");
-      const json = (await res.json()) as { projects?: ProjectRecord[] };
-      const list = json.projects ?? [];
+      const [projectRes, appRes] = await Promise.all([
+        fetch(`/api/projects?companySlug=${encodeURIComponent(companySlug)}`),
+        fetch(`/api/applications?companySlug=${encodeURIComponent(companySlug)}`),
+      ]);
+
+      if (!projectRes.ok) throw new Error("Falha ao carregar projetos");
+
+      const projectJson = (await projectRes.json().catch(() => null)) as { projects?: Partial<ProjectRecord>[] } | null;
+      const appJson = (await appRes.json().catch(() => null)) as { items?: Partial<ProjectRecord>[] } | null;
+
+      const list = mergeProjects([
+        ...((projectJson?.projects ?? []).map((item) => toProjectRecord(item, companySlug)).filter(Boolean) as ProjectRecord[]),
+        ...((appJson?.items ?? []).map((item) => toProjectRecord(item, companySlug)).filter(Boolean) as ProjectRecord[]),
+      ]);
+
       setProjects(list);
       return list;
     } catch (err) {
@@ -67,7 +121,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Reload projects when active company changes
   useEffect(() => {
     if (!activeClientSlug) {
       setProjects([]);
@@ -85,7 +138,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       const companyId = activeClient?.id ?? activeClientSlug;
       const stored = storage?.getItem(storageKey(companyId)) ?? null;
       const storedProject = stored
-        ? list.find((p) => p.slug === stored || p.id === stored) ?? null
+        ? list.find((p) => p.slug === stored || p.id === stored || p.qaseProjectCode === stored) ?? null
         : null;
 
       const resolved = storedProject?.slug ?? list[0].slug;
@@ -102,14 +155,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         if (activeClient?.id) getSessionStorage()?.removeItem(storageKey(activeClient.id));
         return;
       }
-      const found = projects.find((p) => p.slug === slugOrId || p.id === slugOrId);
+      const found = projects.find((p) => p.slug === slugOrId || p.id === slugOrId || p.qaseProjectCode === slugOrId);
       if (!found) return;
       setActiveProjectSlugState(found.slug);
       if (activeClient?.id) {
         getSessionStorage()?.setItem(storageKey(activeClient.id), found.slug);
       }
     },
-    [projects, activeClient]
+    [projects, activeClient],
   );
 
   const refreshProjects = useCallback(async () => {
@@ -119,7 +172,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const activeProject = useMemo(
     () => (activeProjectSlug ? projects.find((p) => p.slug === activeProjectSlug) ?? null : null),
-    [projects, activeProjectSlug]
+    [projects, activeProjectSlug],
   );
 
   useEffect(() => {
@@ -149,7 +202,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setActiveProject,
       refreshProjects,
     }),
-    [projects, activeProject, activeProjectSlug, loading, error, setActiveProject, refreshProjects]
+    [projects, activeProject, activeProjectSlug, loading, error, setActiveProject, refreshProjects],
   );
 
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;

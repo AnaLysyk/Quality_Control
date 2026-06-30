@@ -123,12 +123,23 @@ app/agenda/page.tsx
 app/agenda/_components/ReleaseCalendarPanel.tsx
 ```
 
+## O que ja funciona na tela
+
+```txt
+Visualizar linha do tempo da release
+Filtrar por empresa, projeto, release e status
+Cadastrar evento de release pela UI
+Salvar evento via POST /api/release-calendar
+Atualizar timeline apos cadastro
+Mostrar checklist, notificacoes e regras do Brain por evento
+```
+
 ## Proxima implementacao tecnica
 
 1. Persistir ReleaseCalendarEvent em banco real.
-2. Criar formulario para cadastrar release/evento.
-3. Conectar evento da agenda com NotificationEvent real.
-4. Criar filtros por empresa, projeto, release e status.
-5. Conectar janela de QA com plano e runs.
+2. Conectar evento da agenda com NotificationEvent real.
+3. Gerar notificacao automatica ao criar evento critico.
+4. Conectar janela de QA com plano e runs.
+5. Criar status update pela UI: planned, at_risk, blocked, done, cancelled.
 6. Fazer Brain gerar resumo semanal de entregas.
 7. Fazer Brain alertar release em risco.

@@ -14,10 +14,11 @@ import { useClientContext } from "@/context/ClientContext";
 import { useDashboardContext } from "@/hooks/useDashboardContext";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
 import { resolveActiveIdentity } from "@/lib/activeIdentity";
+import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 
 export default function DashboardClient() {
   const { user, loading: userLoading } = useAuthUser();
-  const { activeClient } = useClientContext();
+  const { activeClient, activeClientSlug } = useClientContext();
   const router = useRouter();
   const { metrics, loading: metricsLoading, error: metricsError } = useSystemMetrics();
 
@@ -46,12 +47,34 @@ export default function DashboardClient() {
 
   const safeUser: Partial<AuthUser> = user ?? {};
   const capabilities = (Array.isArray(safeUser.capabilities) ? safeUser.capabilities : []) as Capability[];
+  const permissionRole = typeof safeUser.permissionRole === "string" ? safeUser.permissionRole : null;
+  const role = typeof safeUser.role === "string" ? safeUser.role : null;
+  const companyRole = typeof safeUser.companyRole === "string" ? safeUser.companyRole : null;
+  const userOrigin =
+    typeof (safeUser as { userOrigin?: string | null }).userOrigin === "string"
+      ? (safeUser as { userOrigin?: string | null }).userOrigin ?? null
+      : typeof (safeUser as { user_origin?: string | null }).user_origin === "string"
+        ? (safeUser as { user_origin?: string | null }).user_origin ?? null
+        : null;
   const isGlobalAdmin = safeUser.isGlobalAdmin === true || safeUser.globalRole === "global_admin";
-  const normalizedRole = normalizeLegacyRole(
-    typeof safeUser.permissionRole === "string" ? safeUser.permissionRole : null,
-  ) ?? normalizeLegacyRole(typeof safeUser.role === "string" ? safeUser.role : null);
-  const canViewSystemMetrics = isGlobalAdmin || normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
-  const companySlug = typeof safeUser.companySlug === "string" ? safeUser.companySlug : null;
+  const normalizedRole =
+    normalizeLegacyRole(permissionRole) ??
+    normalizeLegacyRole(role) ??
+    normalizeLegacyRole(companyRole);
+  const canViewLeaderDashboard =
+    isGlobalAdmin ||
+    normalizedRole === SYSTEM_ROLES.LEADER_TC ||
+    normalizedRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
+  const scopedCompanySlug =
+    activeClientSlug ??
+    activeClient?.slug ??
+    (typeof safeUser.companySlug === "string" && safeUser.companySlug.trim() ? safeUser.companySlug.trim() : null) ??
+    (typeof (safeUser as { clientSlug?: string | null }).clientSlug === "string" &&
+    (safeUser as { clientSlug?: string | null }).clientSlug?.trim()
+      ? (safeUser as { clientSlug?: string | null }).clientSlug!.trim()
+      : null);
+  const companySlug = scopedCompanySlug;
+  const canViewSystemMetrics = canViewLeaderDashboard;
   const roleLabel = typeof safeUser.role === "string" && safeUser.role.trim() ? safeUser.role : "usuário";
   const activeIdentity = resolveActiveIdentity({ user: user ?? null, activeCompany: activeClient });
   const isCompanyIdentity = activeIdentity.kind === "company";
@@ -69,6 +92,34 @@ export default function DashboardClient() {
   })();
   const companyHomeHref = companySlug ? `/empresas/${encodeURIComponent(companySlug)}/home` : "/empresas";
   const runsHref = companySlug ? `/empresas/${encodeURIComponent(companySlug)}/runs` : "/runs";
+
+  useEffect(() => {
+    if (userLoading || !user || canViewLeaderDashboard) return;
+
+    const targetHref = scopedCompanySlug
+      ? buildCompanyPathForAccess(scopedCompanySlug, "dashboard", {
+          isGlobalAdmin,
+          permissionRole,
+          role,
+          companyRole,
+          userOrigin,
+          clientSlug: scopedCompanySlug,
+        })
+      : "/empresas";
+
+    router.replace(targetHref);
+  }, [
+    canViewLeaderDashboard,
+    companyRole,
+    isGlobalAdmin,
+    permissionRole,
+    role,
+    router,
+    scopedCompanySlug,
+    user,
+    userLoading,
+    userOrigin,
+  ]);
 
   const quickLinks = [
     {
@@ -177,6 +228,10 @@ export default function DashboardClient() {
     return <div className="tc-empty-state min-h-80">Redirecionando para login.</div>;
   }
 
+  if (!canViewLeaderDashboard) {
+    return <div className="tc-empty-state min-h-80">Redirecionando para o dashboard da empresa.</div>;
+  }
+
   return (
     <div className="min-h-screen bg-(--page-bg,#f3f6fb) text-(--page-text,#0b1a3c)">
       <div className="tc-page-shell py-4 sm:py-6">
@@ -228,11 +283,9 @@ export default function DashboardClient() {
 
                 <div className="tc-hero-copy">
                   <p className="tc-hero-kicker">Painel inicial</p>
-                  <h1 className="tc-hero-title">{isCompanyIdentity ? "Visão geral institucional" : "Visão geral do usuário"}</h1>
+                  <h1 className="tc-hero-title">Visão geral da liderança</h1>
                   <p className="tc-hero-description">
-                    {isCompanyIdentity
-                      ? "Acesso institucional da empresa ativa, com foco no contexto da organização e não em um usuário individual."
-                      : "Base inicial para navegar pela plataforma com o mesmo padrão visual das telas principais de administração."}
+                    Base inicial para liderança TC e suporte técnico acompanharem indicadores globais, qualidade e execução.
                   </p>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "crypto";
-import { createNotificationEvent } from "@/lib/notificationEventsStore";
+import { createNotificationEvent, type NotificationEventSourceType } from "@/lib/notificationEventsStore";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
@@ -62,9 +62,16 @@ type NotificationInput = {
   status?: NotificationStatus;
   link?: string | null;
   companySlug?: string | null;
+  companyName?: string | null;
+  projectSlug?: string | null;
+  actorId?: string | null;
+  actorName?: string | null;
   requestId?: string | null;
   ticketId?: string | null;
   dedupeKey?: string | null;
+  sourceType?: NotificationEventSourceType;
+  sourceId?: string | null;
+  payload?: Record<string, unknown>;
 };
 
 type NotificationsStore = Record<string, UserNotification[]>;
@@ -131,8 +138,27 @@ function notificationWorkflowId(type: NotificationType) {
   return type;
 }
 
+function defaultSourceType(type: NotificationType): NotificationEventSourceType {
+  if (type === "RUN_CREATED" || type === "TEST_FAILED" || type.startsWith("DEFECT_")) return "qa_operation";
+  if (type.startsWith("TICKET_")) return "qa_operation";
+  return "manual";
+}
+
 function notificationSourceId(input: NotificationInput) {
-  return input.requestId ?? input.ticketId ?? input.dedupeKey ?? null;
+  return input.sourceId ?? input.requestId ?? input.ticketId ?? input.dedupeKey ?? null;
+}
+
+function notificationPayload(input: NotificationInput) {
+  return {
+    ...(input.payload ?? {}),
+    notificationType: input.type,
+    link: input.link ?? null,
+    requestId: input.requestId ?? null,
+    ticketId: input.ticketId ?? null,
+    dedupeKey: input.dedupeKey ?? null,
+    companySlug: input.companySlug ?? null,
+    projectSlug: input.projectSlug ?? null,
+  };
 }
 
 async function shouldDeliverInAppNotification(userId: string, input: NotificationInput) {
@@ -141,17 +167,13 @@ async function shouldDeliverInAppNotification(userId: string, input: Notificatio
     title: input.title,
     description: input.description ?? "",
     companySlug: input.companySlug ?? null,
-    actorId: null,
-    actorName: null,
-    sourceType: "manual",
+    companyName: input.companyName ?? null,
+    projectSlug: input.projectSlug ?? null,
+    actorId: input.actorId ?? null,
+    actorName: input.actorName ?? null,
+    sourceType: input.sourceType ?? defaultSourceType(input.type),
     sourceId: notificationSourceId(input),
-    payload: {
-      notificationType: input.type,
-      link: input.link ?? null,
-      requestId: input.requestId ?? null,
-      ticketId: input.ticketId ?? null,
-      dedupeKey: input.dedupeKey ?? null,
-    },
+    payload: notificationPayload(input),
     recipients: [
       {
         recipientId: userId,

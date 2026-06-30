@@ -30,7 +30,14 @@ const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "brain",
   "documents",
 ]);
-const PROJECT_SCOPED_ITEM_IDS = new Set(["quality-cases", "docs-central", "docs-repository"]);
+const PROJECT_SCOPED_ITEM_IDS = new Set([
+  "quality-cases",
+  "quality-plans",
+  "quality-runs",
+  "quality-defects",
+  "docs-central",
+  "docs-repository",
+]);
 const ENABLED_NAV_CATALOG = NAV_CATALOG.filter((module) => !DISABLED_MODULE_IDS.has(module.id));
 
 function withScopeQuery(
@@ -104,7 +111,7 @@ function resolveItemHref(
     return withScopeQuery("/documentos/repositorio", companySlug, projectSlug, true);
   }
 
-  return withScopeQuery(mappedHref, companySlug, projectSlug, false);
+  return withScopeQuery(mappedHref, companySlug, projectSlug, includeProject);
 }
 
 function resolveModuleHref(
@@ -116,7 +123,7 @@ function resolveModuleHref(
 ): string | undefined {
   if (mod.id === "home") {
     if (companySlug) {
-      return buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput);
+      return withScopeQuery(buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput), companySlug, projectSlug, true);
     }
 
     if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
@@ -124,19 +131,19 @@ function resolveModuleHref(
     }
 
     if (companySlug && effectiveRole && COMPANY_DASHBOARD_ROLES.has(effectiveRole)) {
-      return buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput);
+      return withScopeQuery(buildCompanyPathForAccess(companySlug, "dashboard", companyRouteInput), companySlug, projectSlug, true);
     }
   }
 
   if (mod.id === "brain") {
-    return withScopeQuery("/brain", companySlug, projectSlug, false);
+    return withScopeQuery("/brain", companySlug, projectSlug, true);
   }
 
   return resolveCompanyRouteHref(getNavigationRoute(mod)?.path, mod.href, companySlug, companyRouteInput);
 }
 
-function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string | null): NavItemDef[] {
-  if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
+function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string | null, projectSlug: string | null): NavItemDef[] {
+  if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole) && !companySlug) {
     return [
       {
         id: "brain-system-map",
@@ -156,10 +163,10 @@ function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string |
       {
         id: "brain-company",
         routeId: "brain.empresa",
-        label: "Brain da empresa",
+        label: projectSlug ? "Brain do projeto" : "Brain da empresa",
         iconKey: "cpu",
         module: "brain",
-        href: withScopeQuery("/brain", companySlug, null, false),
+        href: withScopeQuery("/brain", companySlug, projectSlug, true),
         favoriteEnabled: true,
         testId: "nav-brain-company",
       },
@@ -197,7 +204,7 @@ function resolveModuleItems(
     (INTERNAL_DASHBOARD_ROLES.has(effectiveRole) || COMPANY_DASHBOARD_ROLES.has(effectiveRole));
   const dynamicItems =
     mod.id === "brain"
-      ? buildBrainItems(effectiveRole, companySlug)
+      ? buildBrainItems(effectiveRole, companySlug, projectSlug)
       : mod.id === "quality"
         ? buildQualityItems(mod.items, companySlug)
         : mod.items;

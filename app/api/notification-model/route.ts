@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getNotificationOperationModel } from "@/data/notificationOperationModel";
+import { buildNotificationBrianInsights } from "@/lib/notificationBrianInsights";
 import { getNotificationEventsSummary, listNotificationEvents } from "@/lib/notificationEventsStore";
 import { getNotificationPreferenceSummary, listNotificationPreferences, upsertNotificationPreference } from "@/lib/notificationPreferencesStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -28,6 +29,12 @@ export async function GET(req: NextRequest) {
     getNotificationEventsSummary(),
   ]);
 
+  const notificationBrianInsights = buildNotificationBrianInsights({
+    events: notificationEvents.events,
+    deliveries: notificationEvents.deliveries,
+    limit: 20,
+  });
+
   return NextResponse.json(
     {
       ...getNotificationOperationModel(),
@@ -35,6 +42,7 @@ export async function GET(req: NextRequest) {
       preferenceSummary,
       notificationEvents,
       notificationEventsSummary,
+      notificationBrianInsights,
     },
     { headers: NO_STORE_HEADERS },
   );

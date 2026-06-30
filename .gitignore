@@ -118,3 +118,5 @@ __localstore_snapshot.tmp
 .next/
 .next-stable-e2e/
 .next-stable-e2e-webpack/
+
+Quality_Control/

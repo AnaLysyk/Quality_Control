@@ -3,6 +3,7 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { detectAgentMode, AGENT_REGISTRY } from "@/lib/brain/agents";
+import { buildWebSupportContext, shouldUseWebSupport } from "@/lib/assistant/webSupport";
 import type { AgentMode } from "@/lib/brain/agents";
 import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
 
@@ -142,6 +143,23 @@ function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?
   return fromActor ?? authUser.companySlug ?? body.brainContext?.companySlug ?? null;
 }
 
+function appendContextToLastUserMessage(messages: Array<{ role: "user" | "assistant"; content: string }>, title: string, context: string) {
+  if (!context.trim()) return messages;
+  let lastUserIndex = -1;
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index]?.role === "user") {
+      lastUserIndex = index;
+      break;
+    }
+  }
+  if (lastUserIndex < 0) return messages;
+  messages[lastUserIndex] = {
+    ...messages[lastUserIndex],
+    content: [messages[lastUserIndex].content, "", "---", `[${title}]`, context].join("\n"),
+  };
+  return messages;
+}
+
 export async function POST(req: Request) {
   if (!ASSISTANT_ENABLED) {
     return NextResponse.json({ error: "Assistente desativado" }, { status: 410 });
@@ -179,54 +197,14 @@ export async function POST(req: Request) {
       return NextResponse.json(response);
     }
 
-    const shouldUseBrain = Boolean(
-      brainContext?.source === "brain" ||
-        brainContext?.nodeId ||
-        brainContext?.agentMode ||
-        body.context?.module === "brain" ||
-        body.context?.route?.startsWith("/brain") ||
-        brainContext?.route?.startsWith("/brain"),
-    );
-
-    if (!shouldUseBrain) {
-      const { runAssistantRequest } = await import("@/lib/assistant/service");
-      const response = await runAssistantRequest(authUser, {
-        message: body.message,
-        context: body.context ?? null,
-        actor: body.actor ?? null,
-        action: body.action ?? null,
-        history: body.history ?? null,
-        brainContext,
-      } as Parameters<typeof runAssistantRequest>[1]);
-
-      await persistConversationMemory({
-        body,
-        authUser,
-        reply: String(response.reply ?? ""),
-        tool: response.tool,
-        agentMode: null,
-        brainContext,
-      });
-
-      return NextResponse.json(response);
-    }
-
     const messages = buildMessagesFromHistory(body);
+    const latestUserMessage = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
     const brainRuntimeSnapshot = compactJson(brainContext?.metadata ?? body.context?.metadata ?? null);
-    if (brainRuntimeSnapshot && messages.length > 0) {
-      let lastUserIndex = -1;
-      for (let index = messages.length - 1; index >= 0; index -= 1) {
-        if (messages[index]?.role === "user") {
-          lastUserIndex = index;
-          break;
-        }
-      }
-      if (lastUserIndex >= 0) {
-        messages[lastUserIndex] = {
-          ...messages[lastUserIndex],
-          content: [messages[lastUserIndex].content, "", "---", "[Brain runtime context]", brainRuntimeSnapshot].join("\n"),
-        };
-      }
+    appendContextToLastUserMessage(messages, "Brain runtime context", brainRuntimeSnapshot);
+
+    if (shouldUseWebSupport(latestUserMessage)) {
+      const webContext = await buildWebSupportContext(latestUserMessage).catch(() => "");
+      appendContextToLastUserMessage(messages, "Apoio externo/web", webContext);
     }
 
     const lastUserContent = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
@@ -246,7 +224,7 @@ export async function POST(req: Request) {
       agentMode,
       companySlug,
       route: body.context?.route ?? brainContext?.route ?? null,
-      screenLabel: brainContext?.entityType ?? brainContext?.source ?? null,
+      screenLabel: body.context?.screenLabel ?? brainContext?.entityType ?? brainContext?.source ?? null,
       userId: authUser.id ?? null,
       actorName: authUser.user ?? authUser.email ?? null,
     });

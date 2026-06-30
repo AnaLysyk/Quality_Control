@@ -1,6 +1,5 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { detectAgentMode, AGENT_REGISTRY } from "@/lib/brain/agents";
@@ -36,16 +35,12 @@ function getLatestUserMessage(body: AssistantRequestBody) {
   if (explicit) return explicit;
 
   const direct = Array.isArray(body.messages)
-    ? [...body.messages]
-        .reverse()
-        .find((item) => item?.role === "user" && String(item?.content ?? "").trim())
+    ? [...body.messages].reverse().find((item) => item?.role === "user" && String(item?.content ?? "").trim())
     : null;
   if (direct?.content) return String(direct.content).trim();
 
   const fromHistory = Array.isArray(body.history)
-    ? [...body.history]
-        .reverse()
-        .find((item) => item?.from !== "assistant" && String(item?.text ?? "").trim())
+    ? [...body.history].reverse().find((item) => item?.from !== "assistant" && String(item?.text ?? "").trim())
     : null;
   return fromHistory?.text ? String(fromHistory.text).trim() : "";
 }
@@ -105,7 +100,7 @@ async function persistConversationMemory(args: {
       });
     }
   } catch {
-    // aprendizado nÃ£o pode quebrar o chat
+    // aprendizado não pode quebrar o chat
   }
 }
 
@@ -132,15 +127,9 @@ function buildMessagesFromHistory(body: AssistantRequestBody): Array<{ role: "us
   if (directMessages.length > 0) return directMessages;
 
   const currentMessage = typeof body.message === "string" ? body.message.trim() : "";
-  return currentMessage
-    ? [...historyMessages, { role: "user" as const, content: currentMessage }]
-    : historyMessages;
+  return currentMessage ? [...historyMessages, { role: "user" as const, content: currentMessage }] : historyMessages;
 }
 
-/**
- * AÃ§Ãµes estruturadas (create_ticket, create_comment, create_test_case) precisam passar pelo service.ts
- * porque dependem de lÃ³gica de RBAC e validaÃ§Ã£o. Tudo mais vai direto para o engine.
- */
 function isStructuredToolAction(body: AssistantRequestBody) {
   return (
     body.action?.kind === "tool" &&
@@ -163,22 +152,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const isGlobalAdmin =
-    authUser.isGlobalAdmin === true ||
-    (authUser as { is_global_admin?: boolean }).is_global_admin === true;
-  if (
-    !isGlobalAdmin &&
-    (!hasPermissionAccess(authUser.permissions, "ai", "view") ||
-      !hasPermissionAccess(authUser.permissions, "ai", "use"))
-  ) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
-  }
-
   try {
     const body = (await req.json().catch(() => ({}))) as AssistantRequestBody;
     const brainContext = body.brainContext ?? null;
 
-    // â”€â”€â”€ AÃ§Ãµes estruturadas: create_ticket, create_comment, create_test_case â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (isStructuredToolAction(body)) {
       const { runAssistantRequest } = await import("@/lib/assistant/service");
       const response = await runAssistantRequest(authUser, {
@@ -191,7 +168,8 @@ export async function POST(req: Request) {
       } as Parameters<typeof runAssistantRequest>[1]);
 
       await persistConversationMemory({
-        body, authUser,
+        body,
+        authUser,
         reply: String(response.reply ?? ""),
         tool: response.tool,
         agentMode: null,
@@ -203,11 +181,11 @@ export async function POST(req: Request) {
 
     const shouldUseBrain = Boolean(
       brainContext?.source === "brain" ||
-      brainContext?.nodeId ||
-      brainContext?.agentMode ||
-      body.context?.module === "brain" ||
-      body.context?.route?.startsWith("/brain") ||
-      brainContext?.route?.startsWith("/brain"),
+        brainContext?.nodeId ||
+        brainContext?.agentMode ||
+        body.context?.module === "brain" ||
+        body.context?.route?.startsWith("/brain") ||
+        brainContext?.route?.startsWith("/brain"),
     );
 
     if (!shouldUseBrain) {
@@ -222,7 +200,8 @@ export async function POST(req: Request) {
       } as Parameters<typeof runAssistantRequest>[1]);
 
       await persistConversationMemory({
-        body, authUser,
+        body,
+        authUser,
         reply: String(response.reply ?? ""),
         tool: response.tool,
         agentMode: null,
@@ -232,7 +211,6 @@ export async function POST(req: Request) {
       return NextResponse.json(response);
     }
 
-    // â”€â”€â”€ Fluxo principal: InternalBrainEngine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const messages = buildMessagesFromHistory(body);
     const brainRuntimeSnapshot = compactJson(brainContext?.metadata ?? body.context?.metadata ?? null);
     if (brainRuntimeSnapshot && messages.length > 0) {
@@ -246,35 +224,19 @@ export async function POST(req: Request) {
       if (lastUserIndex >= 0) {
         messages[lastUserIndex] = {
           ...messages[lastUserIndex],
-          content: [
-            messages[lastUserIndex].content,
-            "",
-            "---",
-            "[Brain runtime context]",
-            brainRuntimeSnapshot,
-          ].join("\n"),
+          content: [messages[lastUserIndex].content, "", "---", "[Brain runtime context]", brainRuntimeSnapshot].join("\n"),
         };
       }
     }
-    const lastUserContent = messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
 
+    const lastUserContent = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
     if (!lastUserContent.trim()) {
       return NextResponse.json({ error: "Mensagem obrigatória" }, { status: 400 });
     }
 
     const companySlug = resolveCompanySlug(body, authUser);
-
-    // Detecta agente: usa o do brainContext se explÃ­cito, senÃ£o detecta pela mensagem
-    const agentMode: AgentMode =
-      (brainContext?.agentMode as AgentMode | undefined) ??
-      detectAgentMode(lastUserContent);
-
-    const agent = AGENT_REGISTRY?.[agentMode] ?? {
-      name: agentMode,
-      icon: "🧠",
-      label: "Agente Brain",
-      color: "#5b92ff",
-    };
+    const agentMode: AgentMode = (brainContext?.agentMode as AgentMode | undefined) ?? detectAgentMode(lastUserContent);
+    const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "🧠", label: "Agente Brain", color: "#5b92ff" };
     const startedAt = Date.now();
 
     const engine = new InternalBrainEngine();
@@ -294,11 +256,9 @@ export async function POST(req: Request) {
     let success = true;
 
     for await (const event of events) {
-      if (event.type === "text-delta") {
-        replyText += event.text;
-      } else if (event.type === "tool-input-start") {
-        lastToolName = event.toolName;
-      } else if (event.type === "error") {
+      if (event.type === "text-delta") replyText += event.text;
+      else if (event.type === "tool-input-start") lastToolName = event.toolName;
+      else if (event.type === "error") {
         success = false;
         replyText = replyText || `Erro do agente: ${event.error}`;
       }
@@ -315,13 +275,7 @@ export async function POST(req: Request) {
 
     const finalReply = replyText || (success ? "Análise concluída." : "Não foi possível processar sua pergunta.");
 
-    await persistConversationMemory({
-      body, authUser,
-      reply: finalReply,
-      tool: lastToolName ?? agentMode,
-      agentMode,
-      brainContext,
-    });
+    await persistConversationMemory({ body, authUser, reply: finalReply, tool: lastToolName ?? agentMode, agentMode, brainContext });
 
     return NextResponse.json({
       reply: finalReply,
@@ -339,7 +293,6 @@ export async function POST(req: Request) {
         durationMs: Date.now() - startedAt,
       },
     });
-
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erro interno";
     console.error("[assistant/ask] error:", error);

@@ -7,8 +7,7 @@ export default function PermissoesPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to permissions management
-    router.replace("/admin/users/permissions");
+    router.replace("/admin/users");
   }, [router]);
 
   return null;

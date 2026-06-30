@@ -20,24 +20,24 @@ function resolveAcceptedActions(action: string) {
   return [action];
 }
 
-export function canAccess(
-  context: UserAccessContext | null | undefined,
-  permission: AccessPermission,
-) {
+export function canAccess(context: UserAccessContext | null | undefined, permission: AccessPermission) {
   if (!context) return false;
 
   const parsed = parsePermission(permission);
   if (!parsed) return false;
+
+  // O chat/Brain precisa orientar todos os perfis autenticados.
+  // As ações sensíveis continuam passando pelo RBAC dos serviços e ferramentas.
+  if (parsed.moduleId === "ai" && (parsed.action === "view" || parsed.action === "use")) {
+    return true;
+  }
 
   return resolveAcceptedActions(parsed.action).some((action) =>
     hasPermissionAccess(context.permissions, parsed.moduleId, action),
   );
 }
 
-export function canAccessRoute(
-  context: UserAccessContext | null | undefined,
-  route: Pick<SystemRouteDefinition, "requiredPermission">,
-) {
+export function canAccessRoute(context: UserAccessContext | null | undefined, route: Pick<SystemRouteDefinition, "requiredPermission">) {
   if (!context) return false;
   if (!route.requiredPermission) return true;
   return canAccess(context, route.requiredPermission);

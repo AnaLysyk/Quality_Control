@@ -14,10 +14,8 @@ type ProjectItem = {
   slug: string;
   name: string;
   description?: string | null;
-  status?: string | null;
   source?: string | null;
   qaseProjectCode?: string | null;
-  createdAt?: string | null;
 };
 
 type ProjectDraft = {
@@ -48,42 +46,65 @@ function sourceClass(project: ProjectItem) {
   return "border-slate-200 bg-slate-100 text-slate-700";
 }
 
+function makeProjectKey(project: ProjectItem) {
+  return project.qaseProjectCode ? `qase:${project.qaseProjectCode.toUpperCase()}` : `manual:${project.slug}`;
+}
+
 export default function CompanyProjectsPage() {
   const { slug } = useParams<{ slug: string }>();
   const { refreshProjects } = useProjectContext();
+  const companySlug = String(slug ?? "");
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [draft, setDraft] = useState<ProjectDraft>({ name: "", slug: "", description: "" });
 
-  const companySlug = String(slug ?? "");
-
-  async function loadProjects() {
+  async function loadProjects(forceQase = false) {
     if (!companySlug) return;
     setLoading(true);
     setError(null);
+    if (forceQase) setSyncing(true);
     try {
-      const [projectRes, appRes] = await Promise.all([
+      const [projectRes, appRes, defectsRes] = await Promise.all([
         fetchApi(`/api/projects?companySlug=${encodeURIComponent(companySlug)}`),
         fetchApi(`/api/applications?companySlug=${encodeURIComponent(companySlug)}`),
+        fetchApi(`/api/company-defects?companySlug=${encodeURIComponent(companySlug)}${forceQase ? "&refresh=1" : ""}`),
       ]);
+
       const projectJson = await projectRes.json().catch(() => null);
       const appJson = await appRes.json().catch(() => null);
-      const manualProjects = Array.isArray(projectJson?.projects) ? projectJson.projects : [];
-      const applicationProjects = Array.isArray(appJson?.items)
+      const defectsJson = await defectsRes.json().catch(() => null);
+
+      const manualProjects: ProjectItem[] = Array.isArray(projectJson?.projects)
+        ? projectJson.projects.map((item: ProjectItem) => ({ ...item, source: item.source ?? "manual" }))
+        : [];
+      const applicationProjects: ProjectItem[] = Array.isArray(appJson?.items)
         ? appJson.items.map((item: ProjectItem) => ({
             ...item,
             source: item.source ?? (item.qaseProjectCode ? "qase" : "manual"),
           }))
         : [];
+      const qaseCatalogProjects: ProjectItem[] = Array.isArray(defectsJson?.applications)
+        ? defectsJson.applications.map((item: { name: string; projectCode?: string | null; source?: string | null }) => ({
+            id: `qase-${item.projectCode ?? normalizeSlug(item.name)}`,
+            name: item.name,
+            slug: normalizeSlug(item.projectCode ?? item.name),
+            description: "Projeto integrado pelo Qase no operacional da empresa.",
+            qaseProjectCode: item.projectCode ?? null,
+            source: item.source ?? "qase",
+          }))
+        : [];
+
       const merged = new Map<string, ProjectItem>();
-      [...manualProjects, ...applicationProjects].forEach((item) => {
-        const key = item.qaseProjectCode ? `qase:${item.qaseProjectCode}` : item.slug;
+      [...manualProjects, ...applicationProjects, ...qaseCatalogProjects].forEach((item) => {
+        const key = makeProjectKey(item);
         if (!merged.has(key)) merged.set(key, item);
       });
+
       setProjects(
         Array.from(merged.values()).sort((left, right) =>
           left.name.localeCompare(right.name, "pt-BR", { sensitivity: "base" }),
@@ -94,11 +115,12 @@ export default function CompanyProjectsPage() {
       setError("Não foi possível carregar os projetos da empresa.");
     } finally {
       setLoading(false);
+      setSyncing(false);
     }
   }
 
   useEffect(() => {
-    void loadProjects();
+    void loadProjects(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companySlug]);
 
@@ -115,11 +137,6 @@ export default function CompanyProjectsPage() {
 
   const manualCount = projects.filter((project) => !project.qaseProjectCode && String(project.source ?? "manual").toLowerCase() !== "qase").length;
   const qaseCount = projects.filter((project) => project.qaseProjectCode || String(project.source ?? "").toLowerCase() === "qase").length;
-
-  function openCreate() {
-    setDraft({ name: "", slug: "", description: "" });
-    setCreateOpen(true);
-  }
 
   async function createProject() {
     const name = draft.name.trim();
@@ -147,7 +164,7 @@ export default function CompanyProjectsPage() {
       if (!response.ok) throw new Error(payload?.error || "Erro ao criar projeto.");
       setCreateOpen(false);
       setDraft({ name: "", slug: "", description: "" });
-      await loadProjects();
+      await loadProjects(false);
       await refreshProjects();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar projeto.");
@@ -167,19 +184,13 @@ export default function CompanyProjectsPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Operacional da empresa</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Projetos</h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-white/82">
-                Tela antiga de aplicações reorganizada como projetos. Pode listar projetos cadastrados manualmente ou projetos integrados pelo Qase.
+                A antiga tela de aplicações volta como Projetos: cadastro manual para empresas sem integração e sincronização com Qase quando configurado.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiFolder className="h-4 w-4" /> {projects.length} projetos
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                Manual: {manualCount}
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                Qase: {qaseCount}
-              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92"><FiFolder className="h-4 w-4" /> {projects.length} projetos</span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">Manual: {manualCount}</span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">Qase: {qaseCount}</span>
             </div>
           </div>
         </section>
@@ -188,26 +199,13 @@ export default function CompanyProjectsPage() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <label className="relative flex-1">
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar por nome, slug ou código Qase"
-                className="h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-              />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, slug ou código Qase" className="h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10" />
             </label>
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void loadProjects()}
-                className="inline-flex h-12 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-xs font-black uppercase tracking-[0.12em] text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-alt,#f8fafc)"
-              >
-                <FiRefreshCw className="h-4 w-4" /> Sincronizar Qase
+              <button type="button" onClick={() => void loadProjects(true)} disabled={syncing} className="inline-flex h-12 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-xs font-black uppercase tracking-[0.12em] text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-alt,#f8fafc) disabled:opacity-60">
+                <FiRefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} /> Sincronizar Qase
               </button>
-              <button
-                type="button"
-                onClick={openCreate}
-                className="inline-flex h-12 items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,var(--tc-primary,#011848)_0%,var(--tc-accent,#ef0001)_100%)] px-4 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.22)] transition hover:-translate-y-0.5 hover:opacity-95"
-              >
+              <button type="button" onClick={() => setCreateOpen(true)} className="inline-flex h-12 items-center gap-2 rounded-2xl bg-[linear-gradient(90deg,var(--tc-primary,#011848)_0%,var(--tc-accent,#ef0001)_100%)] px-4 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.22)] transition hover:-translate-y-0.5 hover:opacity-95">
                 <FiPlus className="h-4 w-4" /> Novo projeto
               </button>
             </div>
@@ -216,34 +214,21 @@ export default function CompanyProjectsPage() {
           {error ? <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div> : null}
 
           {loading ? (
-            <div className="mt-5 rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-10 text-center text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
-              Carregando projetos...
-            </div>
+            <div className="mt-5 rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-10 text-center text-sm font-semibold text-(--tc-text-secondary,#4b5563)">Carregando projetos...</div>
           ) : filtered.length === 0 ? (
-            <div className="mt-5 rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-10 text-center text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
-              Nenhum projeto encontrado. Cadastre manualmente ou configure a integração Qase na empresa.
-            </div>
+            <div className="mt-5 rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-10 text-center text-sm font-semibold text-(--tc-text-secondary,#4b5563)">Nenhum projeto encontrado. Cadastre manualmente ou configure a integração Qase na empresa.</div>
           ) : (
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((project) => (
-                <article key={`${project.source ?? "manual"}-${project.id}`} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
+                <article key={makeProjectKey(project)} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-(--tc-primary,#011848)">
-                        {project.qaseProjectCode ? <FiLink className="h-5 w-5" /> : <FiFolder className="h-5 w-5" />}
-                      </div>
-                      <div className="min-w-0">
-                        <h2 className="truncate text-lg font-black text-(--tc-text-primary,#0b1a3c)">{project.name}</h2>
-                        <p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#64748b)">/{project.slug}</p>
-                      </div>
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-(--tc-primary,#011848)">{project.qaseProjectCode ? <FiLink className="h-5 w-5" /> : <FiFolder className="h-5 w-5" />}</div>
+                      <div className="min-w-0"><h2 className="truncate text-lg font-black text-(--tc-text-primary,#0b1a3c)">{project.name}</h2><p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#64748b)">/{project.slug}</p></div>
                     </div>
-                    <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${sourceClass(project)}`}>
-                      {sourceLabel(project)}
-                    </span>
+                    <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${sourceClass(project)}`}>{sourceLabel(project)}</span>
                   </div>
-                  <p className="mt-4 min-h-12 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                    {project.description || "Sem descrição operacional cadastrada."}
-                  </p>
+                  <p className="mt-4 min-h-12 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{project.description || "Sem descrição operacional cadastrada."}</p>
                 </article>
               ))}
             </div>
@@ -254,57 +239,13 @@ export default function CompanyProjectsPage() {
       {createOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onClick={() => setCreateOpen(false)}>
           <div className="w-full max-w-2xl rounded-4xl border border-(--tc-border,#d7deea) bg-white shadow-[0_34px_100px_rgba(15,23,42,0.34)]" onClick={(event) => event.stopPropagation()}>
-            <div className="border-b border-(--tc-border,#d7deea) px-6 py-5">
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001)">Cadastro manual</p>
-              <h2 className="mt-1 text-2xl font-black text-(--tc-text-primary,#0b1a3c)">Novo projeto</h2>
-              <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                Use este fluxo para empresas sem Qase ou para projetos que precisam existir manualmente no operacional.
-              </p>
-            </div>
+            <div className="border-b border-(--tc-border,#d7deea) px-6 py-5"><p className="text-xs font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001)">Cadastro manual</p><h2 className="mt-1 text-2xl font-black text-(--tc-text-primary,#0b1a3c)">Novo projeto</h2><p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">Use este fluxo para empresas sem Qase ou para projetos que precisam existir manualmente no operacional.</p></div>
             <div className="space-y-4 p-6">
-              <label className="block text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
-                Nome
-                <input
-                  value={draft.name}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      name: event.target.value,
-                      slug: current.slug || normalizeSlug(event.target.value),
-                    }))
-                  }
-                  className="mt-1 w-full rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-                  placeholder="Ex.: Cidadão Smart"
-                />
-              </label>
-              <label className="block text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
-                Slug
-                <input
-                  value={draft.slug}
-                  onChange={(event) => setDraft((current) => ({ ...current, slug: normalizeSlug(event.target.value) }))}
-                  className="mt-1 w-full rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-                  placeholder="cidadao-smart"
-                />
-              </label>
-              <label className="block text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
-                Descrição
-                <textarea
-                  value={draft.description}
-                  onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
-                  className="mt-1 w-full rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-                  rows={4}
-                  placeholder="Resumo operacional do projeto"
-                />
-              </label>
+              <label className="block text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Nome<input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value, slug: current.slug || normalizeSlug(event.target.value) }))} className="mt-1 w-full rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10" placeholder="Ex.: Cidadão Smart" /></label>
+              <label className="block text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Slug<input value={draft.slug} onChange={(event) => setDraft((current) => ({ ...current, slug: normalizeSlug(event.target.value) }))} className="mt-1 w-full rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10" placeholder="cidadao-smart" /></label>
+              <label className="block text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Descrição<textarea value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} className="mt-1 w-full rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10" rows={4} placeholder="Resumo operacional do projeto" /></label>
             </div>
-            <div className="flex justify-end gap-2 border-t border-(--tc-border,#d7deea) px-6 py-4">
-              <button type="button" onClick={() => setCreateOpen(false)} className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-2 text-sm font-bold">
-                Cancelar
-              </button>
-              <button type="button" onClick={() => void createProject()} disabled={saving} className="rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
-                {saving ? "Salvando..." : "Salvar projeto"}
-              </button>
-            </div>
+            <div className="flex justify-end gap-2 border-t border-(--tc-border,#d7deea) px-6 py-4"><button type="button" onClick={() => setCreateOpen(false)} className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-2 text-sm font-bold">Cancelar</button><button type="button" onClick={() => void createProject()} disabled={saving} className="rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{saving ? "Salvando..." : "Salvar projeto"}</button></div>
           </div>
         </div>
       ) : null}

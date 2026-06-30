@@ -154,13 +154,14 @@ Expor eventos e entregas no GET /api/notification-model
 Agenda de release gerando evento critico, risco e bloqueio
 UI /notificacoes exibindo eventos reais e entregas por canal
 Resumo de delivered/suppressed na central de notificacoes
+UI /notificacoes permite ativar/desativar canal por empresa, perfil ou usuario
+UI /notificacoes lista preferencias cadastradas
 ```
 
 ## Proxima implementacao tecnica
 
 1. Adaptar createUserNotification para passar por resolveNotificationDeliveryDecision.
-2. Criar UI para empresa desligar recebimento por categoria/canal.
-3. Criar UI para perfil/usuario desligar recebimento nao critico.
-4. Fazer Brain responder por que alguem recebeu ou nao recebeu.
-5. Integrar eventos de conversa, run, caso, defeito e acesso.
-6. Persistir NotificationEvent e NotificationDelivery no banco real.
+2. Fazer Brain responder por que alguem recebeu ou nao recebeu.
+3. Integrar eventos de conversa, run, caso, defeito e acesso.
+4. Persistir NotificationEvent e NotificationDelivery no banco real.
+5. Criar filtros avancados na central de notificacoes.

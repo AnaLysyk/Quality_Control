@@ -131,6 +131,7 @@ Filtrar por empresa, projeto, release e status
 Cadastrar evento de release pela UI
 Salvar evento via POST /api/release-calendar
 Atualizar timeline apos cadastro
+Alterar status pela UI via PATCH /api/release-calendar
 Mostrar checklist, notificacoes e regras do Brain por evento
 ```
 
@@ -140,6 +141,5 @@ Mostrar checklist, notificacoes e regras do Brain por evento
 2. Conectar evento da agenda com NotificationEvent real.
 3. Gerar notificacao automatica ao criar evento critico.
 4. Conectar janela de QA com plano e runs.
-5. Criar status update pela UI: planned, at_risk, blocked, done, cancelled.
-6. Fazer Brain gerar resumo semanal de entregas.
-7. Fazer Brain alertar release em risco.
+5. Fazer Brain gerar resumo semanal de entregas.
+6. Fazer Brain alertar release em risco.

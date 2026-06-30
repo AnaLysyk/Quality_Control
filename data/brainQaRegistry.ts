@@ -93,6 +93,22 @@ export const brainEvalCases: BrainEvalCase[] = [
     priority: "critical",
   },
   {
+    id: "eval-operation-run-control",
+    suite: "Operacao QA",
+    title: "Controlar run a partir de plano e repositorio",
+    userInput: "Brian, reprova o caso de login na run de regressao e registra meu tempo.",
+    expectedBehavior: [
+      "Confirmar projeto, plano, run e caso quando houver ambiguidade.",
+      "Bloquear acao se a run nao estiver vinculada a um plano.",
+      "Registrar responsavel, status, motivo, inicio/fim ou duracao do item.",
+      "Sugerir defeito quando o status for failed.",
+      "Atualizar metricas por pessoa, projeto e run.",
+    ],
+    evidenceRequired: ["projectId", "planId", "runId", "caseId", "assigneeId", "status", "motivo/evidencia"],
+    status: "ready",
+    priority: "critical",
+  },
+  {
     id: "eval-memory-source-control",
     suite: "Memoria auditavel",
     title: "Responder com origem da memoria usada",
@@ -158,6 +174,23 @@ export const brainPromptTemplates: BrainPromptTemplate[] = [
     linkedEvalIds: ["eval-public-request-email-flow", "eval-compare-expected-current"],
     status: "active",
   },
+  {
+    id: "brain.operation.controller.v1",
+    name: "Controlador de operacao QA",
+    version: "1.0.0",
+    owner: "Quality Control",
+    purpose: "Permitir que o Brian consulte projeto, repositorio, plano, run, caso, responsavel, tempo, evidencia e metricas antes de executar uma acao operacional.",
+    guardrails: [
+      "Nao criar run sem plano.",
+      "Nao marcar caso sem run item.",
+      "Perguntar qual caso quando houver ambiguidade.",
+      "Exigir motivo ou evidencia para failed e blocked.",
+      "Registrar ator, projeto, entidade e acao para auditoria.",
+    ],
+    expectedOutput: ["confirmacao", "entidade alterada", "responsavel", "status", "tempo", "evidencia", "impacto nas metricas"],
+    linkedEvalIds: ["eval-operation-run-control"],
+    status: "active",
+  },
 ];
 
 export const brainQuickActions: BrainQuickAction[] = [
@@ -200,6 +233,38 @@ export const brainQuickActions: BrainQuickAction[] = [
     prompt: "Compare esperado x atual. Diga se reprova, se e bug ou melhoria, qual evidencia falta e qual seria o proximo teste manual.",
     outputType: "checklist",
     requiredEvidence: ["esperado", "atual", "evidencia"],
+  },
+  {
+    id: "start-run-from-plan",
+    label: "Iniciar run por plano",
+    description: "Cria ou inicia execucao somente a partir de um plano de teste.",
+    prompt: "Inicie uma run a partir de um plano. Confirme projeto, plano, casos incluidos, responsavel, data de inicio e crie os itens da execucao com status not_run.",
+    outputType: "checklist",
+    requiredEvidence: ["projectId", "planId", "casos do plano", "responsavel"],
+  },
+  {
+    id: "mark-run-item-result",
+    label: "Marcar resultado da run",
+    description: "Passa, reprova, bloqueia ou pula um caso dentro de uma run.",
+    prompt: "Marque o resultado de um caso dentro da run. Se houver mais de um caso, pergunte qual. Registre responsavel, status, motivo, tempo, nota e evidencia quando falhar ou bloquear.",
+    outputType: "analysis",
+    requiredEvidence: ["runId", "caseId", "status", "responsavel", "motivo"],
+  },
+  {
+    id: "link-case-automation",
+    label: "Vincular automacao",
+    description: "Conecta caso candidato a script automatizado.",
+    prompt: "Vincule este caso ao script de automacao informado. Valide se o caso possui passos e esperado, registre scriptPath, framework, comando e altere o status para automated ou automation_outdated quando necessario.",
+    outputType: "checklist",
+    requiredEvidence: ["caseId", "scriptPath", "framework", "comando"],
+  },
+  {
+    id: "summarize-project-metrics",
+    label: "Resumo do projeto",
+    description: "Gera resumo executivo com base nas metricas operacionais.",
+    prompt: "Gere um resumo executivo do projeto usando casos, planos, runs, pessoas, defeitos, notas e automacao. Separe numeros reais, riscos, gargalos e proximas acoes.",
+    outputType: "analysis",
+    requiredEvidence: ["projectId", "periodo", "metricas", "fontes"],
   },
 ];
 

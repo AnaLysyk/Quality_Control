@@ -95,7 +95,9 @@ function normalizeText(value: string) {
 }
 
 function companyGate(company: QualityCompany) {
-  return company.gate?.status || "none";
+  const status = company.gate?.status;
+  if (status === "no_data") return "none";
+  return status || "none";
 }
 
 function buildExecutiveNote(data: QualityOverview | null, visibleCompanies?: QualityCompany[]) {
@@ -129,12 +131,22 @@ function downloadExecutiveNote(data: QualityOverview | null, companies: QualityC
 export default function CentralDeQualidadePage() {
   const [period, setPeriod] = useState(30);
   const [data, setData] = useState<QualityOverview | null>(null);
+  const [availableCompanies, setAvailableCompanies] = useState<QualityCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [query, setQuery] = useState("");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [gateFilter, setGateFilter] = useState("all");
+
+  const overviewQuery = useMemo(() => {
+    const params = new URLSearchParams({ period: String(period) });
+    if (companyFilter !== "all") params.set("company", companyFilter);
+    if (gateFilter !== "all") params.set("gate", gateFilter);
+    const trimmedQuery = query.trim();
+    if (trimmedQuery) params.set("q", trimmedQuery);
+    return params.toString();
+  }, [companyFilter, gateFilter, period, query]);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,13 +155,21 @@ export default function CentralDeQualidadePage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetchApi(`/api/admin/quality/overview?period=${period}`, { cache: "no-store" });
+        const response = await fetchApi(`/api/admin/quality/overview?${overviewQuery}`, { cache: "no-store" });
         const payload = await response.json().catch(() => null);
         const root = payload?.data ?? payload;
         if (!response.ok || !root) {
           throw new Error(payload?.message || payload?.error || "Não foi possível carregar a Central de Qualidade.");
         }
-        if (!cancelled) setData(root as QualityOverview);
+        if (!cancelled) {
+          const overview = root as QualityOverview;
+          setData(overview);
+          setAvailableCompanies((current) => {
+            const isUnfiltered = companyFilter === "all" && gateFilter === "all" && !query.trim();
+            if (isUnfiltered || current.length === 0) return overview.companies;
+            return current;
+          });
+        }
       } catch (loadError) {
         if (!cancelled) {
           setError(loadError instanceof Error ? loadError.message : "Erro ao carregar a Central de Qualidade.");
@@ -165,11 +185,11 @@ export default function CentralDeQualidadePage() {
     return () => {
       cancelled = true;
     };
-  }, [period, refreshNonce]);
+  }, [companyFilter, gateFilter, overviewQuery, query, refreshNonce]);
 
   const companyOptions = useMemo(() => {
-    return [...(data?.companies ?? [])].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  }, [data?.companies]);
+    return [...availableCompanies].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [availableCompanies]);
 
   const orderedCompanies = useMemo(() => {
     const normalizedQuery = normalizeText(query);

@@ -213,8 +213,8 @@ export async function GET(request: NextRequest) {
 
     const scopedReleases = scopedByCompany ? uniqueReleases(companies) : periodReleases;
     const projectRows = buildProjectRows(scopedReleases);
-    const withStats = scopedReleases.filter((release) => release.stats !== null).length;
-    const coverage = { total: scopedReleases.length, withStats, percent: scopedReleases.length ? Math.round((withStats / scopedReleases.length) * 100) : 0 };
+    const companiesWithStats = companies.filter((company) => company.releases.some((release) => release.stats !== null)).length;
+    const coverage = { total: companies.length, withStats: companiesWithStats, percent: companies.length ? Math.round((companiesWithStats / companies.length) * 100) : 0 };
     const globalStats = sumReleases(scopedReleases);
     const globalTotal = sumStats(globalStats);
     const globalPassRate = globalTotal > 0 ? toPercent(globalStats.pass, globalTotal) : null;

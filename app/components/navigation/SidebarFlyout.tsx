@@ -40,6 +40,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
   }, []);
 
   const visibleItems = mod.items.filter((item) => item.href);
+  const baseClassName = `sidebar-mini-entry ${isActive ? "sidebar-mini-entry--active" : ""}`;
 
   if (visibleItems.length === 0 && mod.href) {
     return (
@@ -49,11 +50,9 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
         title={mod.label}
         aria-label={mod.label}
         onClick={onClose}
-        className={`flex w-full items-center justify-center rounded-xl p-2 transition ${
-          isActive ? "bg-white/16 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
-        }`}
+        className={baseClassName}
       >
-        {createElement(getIcon(mod.iconKey), { size: 17 })}
+        {createElement(getIcon(mod.iconKey), { size: 17, className: "sidebar-nav-icon" })}
       </Link>
     );
   }
@@ -66,21 +65,19 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
         data-testid={mod.testId}
         title={mod.label}
         aria-label={mod.label}
-        className={`flex w-full items-center justify-center rounded-xl p-2 transition ${
-          isActive ? "bg-white/16 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
-        }`}
+        className={baseClassName}
       >
-        {createElement(getIcon(mod.iconKey), { size: 17 })}
+        {createElement(getIcon(mod.iconKey), { size: 17, className: "sidebar-nav-icon" })}
       </button>
 
       {open && (
         <div
-          className="absolute left-19 top-0 z-50 ml-1 min-w-56 max-w-72 overflow-hidden rounded-xl border border-white/15 bg-[#0c1f4a] shadow-2xl"
+          className="sidebar-flyout-panel absolute left-19 top-0 z-50 ml-1 min-w-56 max-w-72 overflow-hidden rounded-xl border shadow-2xl"
           onMouseEnter={clearClose}
           onMouseLeave={scheduleClose}
         >
-          <div className="border-b border-white/10 px-4 py-2.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">{mod.label}</p>
+          <div className="sidebar-flyout-header border-b px-4 py-2.5">
+            <p className="text-xs font-semibold uppercase tracking-widest">{mod.label}</p>
           </div>
           <nav className="p-2">
             {visibleItems.map((item) => {
@@ -94,17 +91,15 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
                     setOpen(false);
                     onClose?.();
                   }}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
-                    active ? "bg-white/14 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
-                  }`}
+                  className={`sidebar-flyout-item ${active ? "sidebar-flyout-item--active" : ""}`}
                 >
-                  {createElement(getIcon(item.iconKey), { size: 14, className: "shrink-0 text-white/50" })}
+                  {createElement(getIcon(item.iconKey), { size: 14, className: "shrink-0 sidebar-nav-icon" })}
                   <span>{item.label}</span>
                 </Link>
               );
             })}
             {visibleItems.length === 0 && (
-              <p className="px-3 py-2 text-xs text-white/40">Nenhum item disponível</p>
+              <p className="px-3 py-2 text-xs text-(--shell-sidebar-text-muted)">Nenhum item disponível</p>
             )}
           </nav>
         </div>

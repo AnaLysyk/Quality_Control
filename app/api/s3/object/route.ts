@@ -26,6 +26,10 @@ function contentTypeFromFile(key: string) {
   if (ext === ".webp") return "image/webp";
   if (ext === ".gif") return "image/gif";
   if (ext === ".svg") return "image/svg+xml";
+  if (ext === ".pdf") return "application/pdf";
+  if (ext === ".txt") return "text/plain; charset=utf-8";
+  if (ext === ".csv") return "text/csv; charset=utf-8";
+  if (ext === ".json") return "application/json; charset=utf-8";
   return "application/octet-stream";
 }
 
@@ -62,6 +66,7 @@ export async function GET(req: Request) {
       headers: {
         "Content-Type": contentTypeFromFile(key),
         "Cache-Control": "public, max-age=31536000, immutable",
+        "Content-Disposition": "inline",
       },
     });
   } catch {

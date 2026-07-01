@@ -71,15 +71,27 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   );
   const { activeModuleId, isModuleActive, isItemActive } = useActiveNavigation(modules, pathname);
   const { favorites, removeFavorite } = useFavorites();
-  const { user } = usePermissionAccess();
+  const { user, can } = usePermissionAccess();
   const { clients, activeClient, activeClientSlug, setActiveClientSlug } = useClientContext();
   const [companyOpen, setCompanyOpen] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
   const [navSearch, setNavSearch] = useState("");
 
+  const canSwitchCompany = can("context", "switch_company");
+  const canSwitchProject = can("context", "switch_project");
+  const showCompanyContextSelector = clients.length > 0 && !collapsed && canSwitchCompany;
+  const showProjectContextSelector = Boolean(activeClientSlug) && canSwitchProject;
+
   useEffect(() => {
     if (activeModuleId) openSection(activeModuleId);
   }, [activeModuleId, openSection]);
+
+  useEffect(() => {
+    if (!canSwitchCompany && companyOpen) {
+      setCompanyOpen(false);
+      setCompanySearch("");
+    }
+  }, [canSwitchCompany, companyOpen]);
 
   const dbLogo = typeof user?.companyLogoUrl === "string" ? user.companyLogoUrl.trim() : "";
   const logoSrc = dbLogo || menuLogoEnv || "/images/tc.png";
@@ -176,7 +188,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         onClose={onClose}
       />
 
-      {clients.length > 0 && !collapsed ? (
+      {showCompanyContextSelector ? (
         <div className="relative px-3 pt-3">
           <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-white/55">
             Empresa
@@ -184,6 +196,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           <button
             type="button"
             onClick={() => {
+              if (!canSwitchCompany) return;
               setCompanyOpen((value) => !value);
               setCompanySearch("");
             }}
@@ -253,12 +266,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         </div>
       ) : null}
 
-      {activeClientSlug && (
+      {showProjectContextSelector ? (
         <div className="pt-2">
           <ProjectSelector collapsed={collapsed} showCompanySelector={false} />
           <div className="mx-3 border-t border-white/10" />
         </div>
-      )}
+      ) : null}
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visibleFavorites.length > 0 && (

@@ -211,7 +211,7 @@ function resolveModuleItems(
 
   return {
     ...mod,
-    label: usesInternalOverview ? "Dashboard" : usesCompanyCentral ? "Central da Empresa" : mod.label,
+    label: usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {

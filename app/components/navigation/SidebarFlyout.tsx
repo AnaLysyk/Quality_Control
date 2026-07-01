@@ -12,6 +12,11 @@ type SidebarFlyoutProps = {
   onClose?: () => void;
 };
 
+function resolveSidebarHref(href: string) {
+  if (href === "/suporte/kanban") return "/kanban-it";
+  return href;
+}
+
 export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: SidebarFlyoutProps) {
   const [open, setOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -45,7 +50,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
   if (visibleItems.length === 0 && mod.href) {
     return (
       <Link
-        href={mod.href}
+        href={resolveSidebarHref(mod.href)}
         data-testid={mod.testId}
         title={mod.label}
         aria-label={mod.label}
@@ -85,7 +90,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
               return (
                 <Link
                   key={item.id}
-                  href={item.href!}
+                  href={resolveSidebarHref(item.href!)}
                   data-testid={item.testId}
                   onClick={() => {
                     setOpen(false);

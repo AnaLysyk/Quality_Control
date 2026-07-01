@@ -6,6 +6,10 @@ import { FiDownload } from "react-icons/fi";
 export default function AdminDashboardPrintShell({ children }: { children: ReactNode }) {
   return (
     <div>
+      <header className="hidden border-b border-slate-200 pb-4 print:mb-5 print:block">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Relatório</p>
+        <h1 className="mt-1 text-2xl font-black text-slate-950">Dashboard Admin</h1>
+      </header>
       <div className="fixed bottom-6 right-6 z-50 print:hidden">
         <button
           type="button"

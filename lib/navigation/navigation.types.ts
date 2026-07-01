@@ -16,6 +16,7 @@ export type SystemModuleId =
   | "documentos"
   | "dashboards"
   | "operacao"
+  | "agenda"
   | "configuracoes";
 
 export type SystemPermission = {

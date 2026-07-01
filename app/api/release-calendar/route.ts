@@ -1,15 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getReleaseCalendarModel, type ReleaseCalendarEvent } from "@/data/releaseCalendarModel";
+import {
+  getReleaseCalendarModel,
+  type ReleaseCalendarAudienceProfile,
+  type ReleaseCalendarContext,
+  type ReleaseCalendarCriticality,
+  type ReleaseCalendarEvent,
+} from "@/data/releaseCalendarModel";
+import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { authenticateRequest } from "@/lib/jwtAuth";
 import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
 import { getReleaseCalendarSummary, listReleaseCalendarEvents, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
-import { authenticateRequest } from "@/lib/jwtAuth";
-import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
 
 const VALID_STATUSES = ["planned", "at_risk", "blocked", "done", "cancelled"] as const;
+const VALID_CRITICALITIES = ["critical", "high", "normal", "low"] as const;
+const VALID_CONTEXTS = ["company", "project", "user", "tc", "support", "release", "delivery"] as const;
+const VALID_AUDIENCE_PROFILES = [
+  "all",
+  "empresa",
+  "company_user",
+  "testing_company_user",
+  "leader_tc",
+  "technical_support",
+  "release_actor",
+  "brain",
+] as const;
 
 type ReleaseStatus = (typeof VALID_STATUSES)[number];
 
@@ -17,11 +35,34 @@ function normalizeStatus(value: unknown): ReleaseStatus | null {
   return typeof value === "string" && VALID_STATUSES.includes(value as ReleaseStatus) ? (value as ReleaseStatus) : null;
 }
 
+function normalizeCriticality(value: unknown): ReleaseCalendarCriticality | null {
+  return typeof value === "string" && VALID_CRITICALITIES.includes(value as ReleaseCalendarCriticality) ? (value as ReleaseCalendarCriticality) : null;
+}
+
+function normalizeContext(value: unknown): ReleaseCalendarContext | null {
+  return typeof value === "string" && VALID_CONTEXTS.includes(value as ReleaseCalendarContext) ? (value as ReleaseCalendarContext) : null;
+}
+
+function normalizeAudienceProfile(value: unknown): ReleaseCalendarAudienceProfile | null {
+  return typeof value === "string" && VALID_AUDIENCE_PROFILES.includes(value as ReleaseCalendarAudienceProfile)
+    ? (value as ReleaseCalendarAudienceProfile)
+    : null;
+}
+
 function actorName(user: { name?: string | null; email?: string | null; id: string }) {
   return user.name ?? user.email ?? user.id;
 }
 
 function buildRecipients(user: { name?: string | null; email?: string | null; id: string }, event: ReleaseCalendarEvent): NotificationEventRecipient[] {
+  const profileRecipients = event.audienceProfiles
+    .filter((profileKind) => profileKind !== "brain")
+    .map((profileKind) => ({
+      recipientId: `${profileKind}:${event.companySlug ?? event.projectSlug ?? event.releaseId}`,
+      recipientName: profileKind,
+      profileKind,
+      channels: ["in_app", "brain"] as NotificationEventRecipient["channels"],
+    }));
+
   return [
     {
       recipientId: user.id,
@@ -29,6 +70,7 @@ function buildRecipients(user: { name?: string | null; email?: string | null; id
       profileKind: "release_actor",
       channels: ["in_app", "brain"],
     },
+    ...profileRecipients,
     {
       recipientId: "brain",
       recipientName: "Brain",
@@ -64,6 +106,9 @@ async function recordCalendarNotification(input: {
       calendarEventType: input.event.type,
       calendarStatus: input.event.status,
       calendarCriticality: input.event.criticality,
+      calendarContext: input.event.context,
+      calendarAudienceProfiles: input.event.audienceProfiles,
+      calendarParticipants: input.event.participantNames,
       startAt: input.event.startAt,
       endAt: input.event.endAt,
     },
@@ -76,10 +121,14 @@ export async function GET(req: NextRequest) {
   const companySlug = url.searchParams.get("companySlug")?.trim() || null;
   const projectSlug = url.searchParams.get("projectSlug")?.trim() || null;
   const releaseId = url.searchParams.get("releaseId")?.trim() || null;
+  const ownerName = url.searchParams.get("ownerName")?.trim() || null;
   const status = normalizeStatus(url.searchParams.get("status")?.trim() || null);
+  const criticality = normalizeCriticality(url.searchParams.get("criticality")?.trim() || null);
+  const context = normalizeContext(url.searchParams.get("context")?.trim() || null);
+  const audienceProfile = normalizeAudienceProfile(url.searchParams.get("audienceProfile")?.trim() || null);
 
   const [events, summary] = await Promise.all([
-    listReleaseCalendarEvents({ companySlug, projectSlug, releaseId, status }),
+    listReleaseCalendarEvents({ companySlug, projectSlug, releaseId, ownerName, status, criticality, context, audienceProfile }),
     getReleaseCalendarSummary(),
   ]);
 
@@ -108,7 +157,7 @@ export async function POST(req: NextRequest) {
         event,
         user,
         title: `Evento critico criado: ${event.title}`,
-        description: `Evento critico da release ${event.releaseName} foi cadastrado na agenda.`,
+        description: `Evento critico da release ${event.releaseName} foi cadastrado na agenda para ${event.audienceProfiles.join(", ")}.`,
       })
     : null;
 

@@ -1,0 +1,223 @@
+/* Operational theme bridge
+   Centraliza o comportamento claro/escuro para evitar telas quebradas por classes fixas do Tailwind.
+   Modo claro: fundo claro, texto escuro, cartões/superfícies claras.
+   Modo escuro: fundo escuro, texto claro, superfícies escuras.
+*/
+
+:root,
+:root.theme-light,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f5f6fa;
+  --foreground: #0b1a3c;
+  --page-bg: #f5f6fa;
+  --page-text: #0b1a3c;
+  --tc-bg: #f5f6fa;
+  --tc-surface: #ffffff;
+  --tc-surface-rgb: 255 255 255;
+  --tc-surface-2: #f0f4fb;
+  --tc-surface-alt: #f8fafc;
+  --tc-surface-hover: #e9effb;
+  --tc-input-bg: #ffffff;
+  --tc-text: #0b1a3c;
+  --tc-text-primary: #011848;
+  --tc-text-secondary: #334155;
+  --tc-text-muted: #64748b;
+  --tc-border: rgba(15, 23, 42, 0.14);
+
+  /* O menu lateral permanece como elemento operacional com degradê de marca. */
+  --shell-sidebar-gradient: linear-gradient(180deg, #050b16 0%, #071633 42%, #081f4b 72%, #560816 100%);
+  --shell-sidebar-border: rgba(255, 255, 255, 0.12);
+  --shell-sidebar-shadow: 0 24px 72px rgba(1, 8, 25, 0.28);
+  --shell-menu-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.08) 55%, rgba(239, 0, 1, 0.22) 100%);
+  --shell-menu-border: rgba(255, 255, 255, 0.14);
+  --shell-menu-shadow: 0 16px 38px rgba(1, 8, 25, 0.28);
+}
+
+:root.dark,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #08111d;
+  --foreground: #f3f6fb;
+  --page-bg: #08111d;
+  --page-text: #f8fafc;
+  --tc-bg: #08111d;
+  --tc-surface: #0f1725;
+  --tc-surface-rgb: 15 23 37;
+  --tc-surface-2: #131d2d;
+  --tc-surface-alt: #172233;
+  --tc-surface-hover: #1b2940;
+  --tc-input-bg: #111b2b;
+  --tc-text: #f3f6fb;
+  --tc-text-primary: #f7f9fc;
+  --tc-text-secondary: #c6d0de;
+  --tc-text-muted: #91a3bb;
+  --tc-border: rgba(148, 163, 184, 0.24);
+
+  --shell-sidebar-gradient: linear-gradient(180deg, #030812 0%, #061631 42%, #09285a 72%, #780b1e 100%);
+  --shell-sidebar-border: rgba(148, 163, 184, 0.18);
+  --shell-sidebar-shadow: 0 30px 84px rgba(0, 0, 0, 0.52);
+  --shell-menu-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.07) 56%, rgba(239, 0, 1, 0.28) 100%);
+  --shell-menu-border: rgba(255, 255, 255, 0.16);
+  --shell-menu-shadow: 0 22px 52px rgba(0, 0, 0, 0.5);
+}
+
+html,
+body {
+  background: var(--page-bg) !important;
+  color: var(--page-text) !important;
+}
+
+/* Menu lateral: operacional, com degradê, sem aparência de documentação/card. */
+.sidebar-operational-shell {
+  background: var(--shell-sidebar-gradient) !important;
+  border-color: var(--shell-sidebar-border) !important;
+  box-shadow: var(--shell-sidebar-shadow) !important;
+  color: #ffffff !important;
+}
+
+.sidebar-operational-shell :is(a, button, span, p, label, input, div) {
+  color: inherit;
+}
+
+.sidebar-operational-shell :is(a, button) {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.sidebar-operational-shell :is(a:hover, button:hover) {
+  color: #ffffff !important;
+}
+
+.sidebar-operational-shell .sidebar-control,
+.sidebar-operational-shell .sidebar-search,
+.sidebar-operational-shell .sidebar-dropdown {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.sidebar-operational-shell .sidebar-control:hover,
+.sidebar-operational-shell .sidebar-search:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.sidebar-operational-shell input,
+.sidebar-operational-shell input::placeholder {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.sidebar-operational-shell input:focus,
+.sidebar-operational-shell input:not(:placeholder-shown) {
+  color: #ffffff !important;
+}
+
+/* Superfícies genéricas: corrige telas que usam bg-white/text-slate fixos. */
+:root.dark .bg-white,
+:root[data-theme="dark"] .bg-white,
+:root.dark .bg-\[\#ffffff\],
+:root[data-theme="dark"] .bg-\[\#ffffff\] {
+  background-color: var(--tc-surface) !important;
+}
+
+:root.dark .bg-slate-50,
+:root.dark .bg-slate-100,
+:root.dark .bg-gray-50,
+:root.dark .bg-gray-100,
+:root[data-theme="dark"] .bg-slate-50,
+:root[data-theme="dark"] .bg-slate-100,
+:root[data-theme="dark"] .bg-gray-50,
+:root[data-theme="dark"] .bg-gray-100 {
+  background-color: var(--tc-surface-2) !important;
+}
+
+:root.dark .text-slate-900,
+:root.dark .text-slate-800,
+:root.dark .text-slate-700,
+:root.dark .text-gray-900,
+:root.dark .text-gray-800,
+:root.dark .text-gray-700,
+:root[data-theme="dark"] .text-slate-900,
+:root[data-theme="dark"] .text-slate-800,
+:root[data-theme="dark"] .text-slate-700,
+:root[data-theme="dark"] .text-gray-900,
+:root[data-theme="dark"] .text-gray-800,
+:root[data-theme="dark"] .text-gray-700 {
+  color: var(--tc-text-primary) !important;
+}
+
+:root.dark .text-slate-600,
+:root.dark .text-slate-500,
+:root.dark .text-gray-600,
+:root.dark .text-gray-500,
+:root[data-theme="dark"] .text-slate-600,
+:root[data-theme="dark"] .text-slate-500,
+:root[data-theme="dark"] .text-gray-600,
+:root[data-theme="dark"] .text-gray-500 {
+  color: var(--tc-text-muted) !important;
+}
+
+:root.dark .border-slate-200,
+:root.dark .border-slate-300,
+:root.dark .border-gray-200,
+:root.dark .border-gray-300,
+:root[data-theme="dark"] .border-slate-200,
+:root[data-theme="dark"] .border-slate-300,
+:root[data-theme="dark"] .border-gray-200,
+:root[data-theme="dark"] .border-gray-300 {
+  border-color: var(--tc-border) !important;
+}
+
+:root.dark input,
+:root.dark select,
+:root.dark textarea,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+  background-color: var(--tc-input-bg);
+  color: var(--tc-text-primary);
+  border-color: var(--tc-border);
+}
+
+:root.dark input::placeholder,
+:root.dark textarea::placeholder,
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: var(--tc-text-muted);
+}
+
+/* Badges/estados fixos do Tailwind no modo escuro. */
+:root.dark .bg-sky-50,
+:root[data-theme="dark"] .bg-sky-50 { background-color: rgba(14, 165, 233, 0.12) !important; }
+:root.dark .border-sky-200,
+:root[data-theme="dark"] .border-sky-200 { border-color: rgba(56, 189, 248, 0.34) !important; }
+:root.dark .text-sky-700,
+:root[data-theme="dark"] .text-sky-700 { color: #7dd3fc !important; }
+
+:root.dark .bg-amber-50,
+:root[data-theme="dark"] .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12) !important; }
+:root.dark .border-amber-200,
+:root[data-theme="dark"] .border-amber-200 { border-color: rgba(251, 191, 36, 0.34) !important; }
+:root.dark .text-amber-700,
+:root[data-theme="dark"] .text-amber-700 { color: #fcd34d !important; }
+
+:root.dark .bg-emerald-50,
+:root[data-theme="dark"] .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+:root.dark .border-emerald-200,
+:root[data-theme="dark"] .border-emerald-200 { border-color: rgba(52, 211, 153, 0.34) !important; }
+:root.dark .text-emerald-700,
+:root[data-theme="dark"] .text-emerald-700 { color: #6ee7b7 !important; }
+
+:root.dark .bg-indigo-50,
+:root[data-theme="dark"] .bg-indigo-50,
+:root.dark .bg-cyan-50,
+:root[data-theme="dark"] .bg-cyan-50 { background-color: rgba(99, 102, 241, 0.14) !important; }
+:root.dark .border-indigo-200,
+:root[data-theme="dark"] .border-indigo-200,
+:root.dark .border-cyan-200,
+:root[data-theme="dark"] .border-cyan-200 { border-color: rgba(129, 140, 248, 0.32) !important; }
+:root.dark .text-indigo-700,
+:root[data-theme="dark"] .text-indigo-700,
+:root.dark .text-cyan-700,
+:root[data-theme="dark"] .text-cyan-700 { color: #a5b4fc !important; }

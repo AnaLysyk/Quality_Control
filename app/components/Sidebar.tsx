@@ -16,9 +16,11 @@ import SidebarFlyout from "./navigation/SidebarFlyout";
 import SidebarFavorites from "./navigation/SidebarFavorites";
 import SidebarFooter from "./navigation/SidebarFooter";
 import ProjectSelector from "./ProjectSelector";
+import type { NavModuleDef } from "@/lib/navigation/navigationCatalog";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const REMOVED_MODULE_IDS = new Set<string>();
+const SUPPORT_MENU_ITEM_IDS = new Set(["support-create", "support-chamados"]);
 
 type SidebarProps = {
   pathname: string;
@@ -34,11 +36,37 @@ function normalizeSearch(value: string) {
     .toLowerCase();
 }
 
+function simplifySupportMenu(mod: NavModuleDef): NavModuleDef {
+  if (mod.id !== "support") return mod;
+
+  return {
+    ...mod,
+    items: mod.items
+      .filter((item) => SUPPORT_MENU_ITEM_IDS.has(item.id))
+      .map((item) => {
+        if (item.id === "support-chamados") {
+          return {
+            ...item,
+            label: "Buscar chamados",
+            group: undefined,
+            testId: "nav-support-search",
+          };
+        }
+
+        return {
+          ...item,
+          label: "Abrir chamado",
+          group: undefined,
+        };
+      }),
+  };
+}
+
 export default function Sidebar({ pathname, mobileOpen = false, onClose, mobilePanelId }: SidebarProps) {
   const { collapsed, toggleCollapsed, openSections, toggleSection, openSection } = useSidebarState();
   const { modules: navigationModules, loading, companySlug } = useMenuLateral();
   const modules = useMemo(
-    () => navigationModules.filter((mod) => !REMOVED_MODULE_IDS.has(mod.id)),
+    () => navigationModules.filter((mod) => !REMOVED_MODULE_IDS.has(mod.id)).map(simplifySupportMenu),
     [navigationModules],
   );
   const { activeModuleId, isModuleActive, isItemActive } = useActiveNavigation(modules, pathname);

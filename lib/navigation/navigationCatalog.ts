@@ -406,6 +406,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
   {
     id: "agenda",
+    routeId: "agenda.release",
     requiredPermission: { moduleId: "release_calendar", action: "view" },
     label: "Agenda",
     iconKey: "clock",

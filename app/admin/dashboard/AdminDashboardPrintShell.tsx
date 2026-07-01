@@ -25,6 +25,13 @@ export default function AdminDashboardPrintShell({ children }: { children: React
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Relatório</p>
         <h1 className="mt-1 text-2xl font-black text-slate-950">Dashboard Admin</h1>
       </header>
+      <section className="mx-auto mt-4 w-full max-w-[1480px] rounded-2xl border border-slate-200 bg-white px-5 py-4 text-slate-900 shadow-sm print:mt-0 print:shadow-none">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Leitura executiva</p>
+        <h2 className="mt-1 text-lg font-black">O que acompanhar neste painel</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Use esta visão para cruzar saúde global, empresas em risco, defeitos ativos, histórico recente e ranking operacional antes de decidir a próxima ação de suporte ou qualidade.
+        </p>
+      </section>
       <div className="fixed bottom-6 right-6 z-50 print:hidden">
         <button
           type="button"

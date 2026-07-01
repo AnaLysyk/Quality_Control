@@ -13102,7 +13102,9 @@ aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role=
   color: #bbf7d0 !important;
 }
 
-/* === /QC Profile permissions product v2 === */\n\n/* === QC Profile user permissions === */
+/* === /QC Profile permissions product v2 === */
+
+/* === QC Profile user permissions === */
 .profile-permissions-profile-list .max-h-64 {
   scrollbar-width: thin;
 }
@@ -13120,4 +13122,5 @@ aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role=
 :root[data-theme="dark"] .profile-permissions-profile-list .max-h-64::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.22);
 }
-/* === /QC Profile user permissions === */\n
+/* === /QC Profile user permissions === */
+

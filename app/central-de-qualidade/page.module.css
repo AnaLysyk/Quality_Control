@@ -1,0 +1,36 @@
+.printRoot {
+  background: var(--page-bg, #f5f7fb);
+}
+
+.printActions {
+  display: flex;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  .printRoot {
+    min-height: auto !important;
+    background: #ffffff !important;
+    color: #0b1a3c !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .printActions {
+    display: none !important;
+  }
+
+  .printSection {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .printTable tr {
+    break-inside: avoid;
+  }
+}

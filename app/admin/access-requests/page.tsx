@@ -1208,10 +1208,10 @@ function AccessRequestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#eef3f8] text-(--tc-text-primary) transition-colors dark:bg-[#081323]">
+    <div className="min-h-screen bg-white text-(--tc-text-primary) transition-colors dark:bg-[#081323]">
       <div className="mx-auto flex w-full max-w-none flex-col gap-3 px-1.5 py-3 sm:px-2 lg:px-3 xl:px-4">
         <section
-          className={`relative overflow-hidden rounded-[24px] border border-(--tc-border) px-4 py-3 text-white shadow-[0_18px_44px_rgba(15,23,42,0.12)] sm:px-5 ${styles.headerCard}`}
+          className={`relative overflow-hidden rounded-none border-0 bg-transparent px-0 py-1 text-slate-950 shadow-none sm:px-0 dark:rounded-[24px] dark:border dark:border-white/10 dark:bg-[linear-gradient(135deg,#07132a_0%,#101a34_54%,rgba(239,0,1,0.20)_140%)] dark:px-4 dark:py-3 dark:text-white dark:shadow-[0_18px_44px_rgba(0,0,0,0.28)]`}
         >
           <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
           <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
@@ -1229,9 +1229,9 @@ function AccessRequestsPage() {
               </div>
 
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/72">Central de aprovação</p>
-                <h1 className="mt-1 text-2xl font-black text-white sm:text-3xl">Solicitações de acesso</h1>
-                <p className="mt-2 max-w-2xl text-sm text-white/84">
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500 dark:text-white/72">Central de aprovação</p>
+                <h1 className="mt-1 text-2xl font-black text-slate-950 sm:text-3xl dark:text-white">Solicitações de acesso</h1>
+                <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-white/84">
                   Revise solicitações, acompanhe ajustes e aprove novos perfis de usuário.
                 </p>
               </div>
@@ -1241,49 +1241,49 @@ function AccessRequestsPage() {
           </div>
 
           <div className="hidden">
-            <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="rounded-[18px] border border-slate-200 bg-transparent p-3 shadow-none dark:border-white/12 dark:bg-white/10 dark:backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Abertas</span>
-                <FiClock className="h-4 w-4 text-white/72" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-white/72">Abertas</span>
+                <FiClock className="h-4 w-4 text-slate-500 dark:text-white/72" />
               </div>
-              <div className="mt-3 text-3xl font-semibold text-white">{statusCounters.open}</div>
-              <p className="mt-1 text-sm text-white/76">Aguardando primeira leitura.</p>
+              <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{statusCounters.open}</div>
+              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Aguardando primeira leitura.</p>
             </div>
 
-            <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="rounded-[18px] border border-slate-200 bg-transparent p-3 shadow-none dark:border-white/12 dark:bg-white/10 dark:backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Em análise</span>
-                <FiRefreshCw className="h-4 w-4 text-white/72" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-white/72">Em análise</span>
+                <FiRefreshCw className="h-4 w-4 text-slate-500 dark:text-white/72" />
               </div>
-              <div className="mt-3 text-3xl font-semibold text-white">{statusCounters.inReview}</div>
-              <p className="mt-1 text-sm text-white/76">Fila ativa de triagem.</p>
+              <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{statusCounters.inReview}</div>
+              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Fila ativa de triagem.</p>
             </div>
 
-            <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="rounded-[18px] border border-slate-200 bg-transparent p-3 shadow-none dark:border-white/12 dark:bg-white/10 dark:backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Ajuste</span>
-                <FiRefreshCw className="h-4 w-4 text-white/72" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-white/72">Ajuste</span>
+                <FiRefreshCw className="h-4 w-4 text-slate-500 dark:text-white/72" />
               </div>
-              <div className="mt-3 text-3xl font-semibold text-white">{statusCounters.inProgress}</div>
-              <p className="mt-1 text-sm text-white/76">Solicitante reenviou a solicitação para nova análise.</p>
+              <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{statusCounters.inProgress}</div>
+              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Solicitante reenviou a solicitação para nova análise.</p>
             </div>
 
-            <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="rounded-[18px] border border-slate-200 bg-transparent p-3 shadow-none dark:border-white/12 dark:bg-white/10 dark:backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Aprovadas</span>
-                <FiCheckCircle className="h-4 w-4 text-white/72" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-white/72">Aprovadas</span>
+                <FiCheckCircle className="h-4 w-4 text-slate-500 dark:text-white/72" />
               </div>
-              <div className="mt-3 text-3xl font-semibold text-white">{statusCounters.approved}</div>
-              <p className="mt-1 text-sm text-white/76">Acessos validados e convertidos.</p>
+              <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{statusCounters.approved}</div>
+              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Acessos validados e convertidos.</p>
             </div>
 
-            <div className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="rounded-[18px] border border-slate-200 bg-transparent p-3 shadow-none dark:border-white/12 dark:bg-white/10 dark:backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">Recusadas</span>
-                <FiSlash className="h-4 w-4 text-white/72" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-white/72">Recusadas</span>
+                <FiSlash className="h-4 w-4 text-slate-500 dark:text-white/72" />
               </div>
-              <div className="mt-3 text-3xl font-semibold text-white">{statusCounters.rejected}</div>
-              <p className="mt-1 text-sm text-white/76">Encerradas sem liberação.</p>
+              <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{statusCounters.rejected}</div>
+              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Encerradas sem liberação.</p>
             </div>
           </div>
         </section>

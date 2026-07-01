@@ -84,6 +84,8 @@ export function getUserAccessContext(
     permissionRole === SYSTEM_ROLES.LEADER_TC ||
     permissionRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
     permissionRole === SYSTEM_ROLES.TESTING_COMPANY_USER;
+  const resolvedUserPermissions =
+    user.permissions != null ? normalizePermissionMatrix(user.permissions) : null;
 
   return {
     userId,
@@ -96,16 +98,14 @@ export function getUserAccessContext(
     isGlobalAdmin,
     isTestingCompanyUser,
     isCompanyUser,
-    permissions: isGlobalAdmin
-      ? resolveEffectivePermissionMatrix({
-          permissionRole,
-          role,
-          companyRole,
-          globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
-          isGlobalAdmin,
-        })
-      : user.permissions != null
-        ? normalizePermissionMatrix(user.permissions)
-        : resolveEffectivePermissionMatrix(user),
+    permissions:
+      resolvedUserPermissions ??
+      resolveEffectivePermissionMatrix({
+        permissionRole,
+        role,
+        companyRole,
+        globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
+        isGlobalAdmin,
+      }),
   };
 }

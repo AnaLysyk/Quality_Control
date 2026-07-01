@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import CompanyIntelligenceDashboardClient from "./CompanyIntelligenceDashboardClient";
+import CompanyDashboardPrintShell from "./CompanyDashboardPrintShell";
 import { loadCompanyDashboardData } from "./companyDashboardData";
 import { applyProjectDashboardScope } from "./projectDashboardScope";
 
@@ -29,5 +30,9 @@ export default async function CompanyDashboardPage({ params, searchParams }: Pag
     projectCode: query.projectCode ?? query.qaseProjectCode ?? null,
   });
 
-  return <CompanyIntelligenceDashboardClient {...scopedData} />;
+  return (
+    <CompanyDashboardPrintShell>
+      <CompanyIntelligenceDashboardClient {...scopedData} />
+    </CompanyDashboardPrintShell>
+  );
 }

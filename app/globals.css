@@ -1,13 +1,13 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
-/* Ãrea de hover para menu mobile */
+/* ÃƒÂrea de hover para menu mobile */
 .menu-hover-area {
   cursor: pointer;
 }
 .menu-hover-area--disabled {
   pointer-events: none;
 }
-/* AnimaÃ§Ã£o spin mais lenta para o logo da Testing Company */
+/* AnimaÃƒÂ§ÃƒÂ£o spin mais lenta para o logo da Testing Company */
 .animate-spin-slower {
   animation: spin 18s linear infinite;
 }
@@ -124,7 +124,7 @@ input[type="password"]::-ms-clear {
   --tc-watermark-opacity: 0.03;
   --tc-watermark-image: url("/images/tc.png");
 
-  /* STATUS / MÃ‰TRICAS */
+  /* STATUS / MÃƒâ€°TRICAS */
   --stat-pass: #7cd343;
   --stat-fail: #ef0001;
   --stat-blocked: #ffa73a;
@@ -625,7 +625,7 @@ video {
   color: #0b1220 !important;
 }
 
-/* Note color tokens â€” refined modern palette (white cards + left accent) */
+/* Note color tokens Ã¢â‚¬â€ refined modern palette (white cards + left accent) */
 .note-color-amber   { background: #fffbeb; border-color: #f59e0b; color: #78350f; }
 .note-color-sky     { background: #f0f9ff; border-color: #0ea5e9; color: #0c4a6e; }
 .note-color-emerald { background: #f0fdf4; border-color: #10b981; color: #064e3b; }
@@ -642,7 +642,7 @@ video {
 
 .notes-panel-header { background: #111827; }
 
-/* Notes Widget â€” clean modern dark */
+/* Notes Widget Ã¢â‚¬â€ clean modern dark */
 .notes-widget {
   border-radius: 14px;
   background: #111827;
@@ -4054,7 +4054,7 @@ video {
   filter: brightness(0.96);
 }
 
-/* tarefa â€” blue */
+/* tarefa Ã¢â‚¬â€ blue */
 .tickets-priority-btn[data-tickettype="tarefa"][data-active] {
   background: #dbeafe;
   border-color: #93c5fd;
@@ -4066,7 +4066,7 @@ video {
   color: #1e40af;
 }
 
-/* bug â€” red */
+/* bug Ã¢â‚¬â€ red */
 .tickets-priority-btn[data-tickettype="bug"][data-active] {
   background: #fee2e2;
   border-color: #fca5a5;
@@ -4078,7 +4078,7 @@ video {
   color: #991b1b;
 }
 
-/* melhoria â€” purple */
+/* melhoria Ã¢â‚¬â€ purple */
 .tickets-priority-btn[data-tickettype="melhoria"][data-active] {
   background: #ede9fe;
   border-color: #c4b5fd;
@@ -4090,7 +4090,7 @@ video {
   color: #5b21b6;
 }
 
-/* low â€” green */
+/* low Ã¢â‚¬â€ green */
 .tickets-priority-btn[data-priority="low"][data-active] {
   background: #dcfce7;
   border-color: #86efac;
@@ -4102,7 +4102,7 @@ video {
   color: #166534;
 }
 
-/* medium â€” amber */
+/* medium Ã¢â‚¬â€ amber */
 .tickets-priority-btn[data-priority="medium"][data-active] {
   background: #fef9c3;
   border-color: #fde047;
@@ -4114,7 +4114,7 @@ video {
   color: #854d0e;
 }
 
-/* high â€” red */
+/* high Ã¢â‚¬â€ red */
 .tickets-priority-btn[data-priority="high"][data-active] {
   background: #fee2e2;
   border-color: #fca5a5;
@@ -5088,7 +5088,7 @@ video {
   }
 
   button {
-    display: none !important; /* Remove botÃµes no PDF */
+    display: none !important; /* Remove botÃƒÂµes no PDF */
   }
 
   a {
@@ -5226,7 +5226,7 @@ body.dark .tc-queue-shell .tc-queue-soft,
   color: #f8fafc !important;
 }
 
-/* Cores estatÃ­sticas (evita inline styles) */
+/* Cores estatÃƒÂ­sticas (evita inline styles) */
 .text-stat-pass { color: var(--stat-pass) !important; }
 .text-stat-fail { color: var(--stat-fail) !important; }
 .text-stat-blocked { color: var(--stat-blocked) !important; }
@@ -5238,7 +5238,7 @@ body.dark .tc-queue-shell .tc-queue-soft,
 .legend-dot-blocked { background-color: var(--stat-blocked) !important; }
 .legend-dot-not-run { background-color: var(--stat-notrun) !important; }
 
-/* UTILITÃRIOS DE TEMA */
+/* UTILITÃƒÂRIOS DE TEMA */
 .btn-tc {
   background: var(--tc-accent);
   color: #fff;
@@ -5663,7 +5663,7 @@ body.dark .tc-queue-shell .tc-queue-soft,
   background: currentColor;
 }
 
-/* â”€â”€â”€ Small-phone overrides (Galaxy A14 â‰ˆ 360 px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Small-phone overrides (Galaxy A14 Ã¢â€°Ë† 360 px) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 @media (max-width: 480px) {
   .tc-page-shell {
     gap: 12px;
@@ -5808,17 +5808,17 @@ body.dark .tc-queue-shell .tc-queue-soft,
   }
 }
 
-/* â”€â”€â”€ Layout tokens (used by MainWrapper & floating buttons) â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Layout tokens (used by MainWrapper & floating buttons) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 :root {
-  --topbar-h: 3.5rem;    /* clearance for fixed top bar â€” mobile */
-  --content-pr: 3.5rem;  /* right padding to clear floating action strip â€” mobile */
+  --topbar-h: 3.5rem;    /* clearance for fixed top bar Ã¢â‚¬â€ mobile */
+  --content-pr: 3.5rem;  /* right padding to clear floating action strip Ã¢â‚¬â€ mobile */
 }
 @media (min-width: 640px)  { :root { --topbar-h: 4rem; --content-pr: 5.5rem; } }
 @media (min-width: 1024px) { :root { --content-pr: 5rem; } }
 @media (min-width: 1280px) { :root { --content-pr: 5.5rem; } }
 @media (min-width: 1536px) { :root { --content-pr: 6.5rem; } }
 
-/* â”€â”€â”€ Sidebar hover expand â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Sidebar hover expand Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .app-shell {
   --sidebar-collapsed: 88px;
   --sidebar-expanded: 304px;
@@ -5826,11 +5826,11 @@ body.dark .tc-queue-shell .tc-queue-soft,
   isolation: isolate;
 }
 
-/* â”€â”€â”€ Zoom-responsive sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Zoom-responsive sidebar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    At 1024-1200 px (either small screen or ~120%+ browser zoom)
    use a slightly thinner collapsed sidebar so the content area
    retains usable width without triggering the mobile layout.
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 @media (min-width: 1024px) and (max-width: 1200px) {
   .app-shell {
     --sidebar-collapsed: 80px;
@@ -6060,7 +6060,7 @@ body.dark .tc-queue-shell .tc-queue-soft,
     margin-left: var(--sidebar-collapsed);
   }
 }
-/* CENTRALIZAR GRAFICOS NA IMPRESSÃƒO */
+/* CENTRALIZAR GRAFICOS NA IMPRESSÃƒÆ’O */
 @media print {
   /* qualquer container que tenha charts */
   .chart-container,
@@ -6265,11 +6265,11 @@ body.dark .tc-queue-shell .tc-queue-soft,
   justify-content: flex-end;
 }
 
-/* â”€â”€â”€ Generic zoom-adaptive modal utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Generic zoom-adaptive modal utilities Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Use .tc-modal-overlay on the backdrop wrapper and .tc-modal-panel on the
    dialog box itself. Works at any browser zoom level. z-index left to the
    consumer (add a Tailwind z-* class alongside).
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .tc-modal-overlay {
   position: fixed;
   inset: 0;
@@ -6614,7 +6614,7 @@ backdrop-filter: blur(6px);
 }
 
 .ticket-detail-requester-meta span:not(:last-child)::after {
-  content: "â€¢";
+  content: "Ã¢â‚¬Â¢";
   margin-left: 0.6rem;
   color: rgba(100, 116, 139, 0.7);
 }
@@ -9309,7 +9309,7 @@ backdrop-filter: blur(14px);
   color: #f8fbff;
 }
 
-/* Collapse ticket-detail 2-col grid at 1100 px â€” covers ~115%+ browser zoom */
+/* Collapse ticket-detail 2-col grid at 1100 px Ã¢â‚¬â€ covers ~115%+ browser zoom */
 @media (max-width: 1100px) {
   .ticket-detail-modal-grid {
     grid-template-columns: 1fr;
@@ -9934,7 +9934,7 @@ body.qc-brain-side-open {
   overflow-x: hidden;
 }
 
-/* reserva espaÃ§o sÃ³ no main. NÃ£o aplicar em filhos, senÃ£o soma padding e cria faixa branca */
+/* reserva espaÃƒÂ§o sÃƒÂ³ no main. NÃƒÂ£o aplicar em filhos, senÃƒÂ£o soma padding e cria faixa branca */
 body.qc-brain-side-open main {
   margin-right: var(--qc-brain-side-width, 460px) !important;
   padding-right: 0 !important;
@@ -9944,7 +9944,7 @@ body.qc-brain-side-open main {
   transition: margin-right 180ms ease;
 }
 
-/* filhos ocupam o espaÃ§o disponÃ­vel atÃ© encostar no painel */
+/* filhos ocupam o espaÃƒÂ§o disponÃƒÂ­vel atÃƒÂ© encostar no painel */
 body.qc-brain-side-open [data-qc-page],
 body.qc-brain-side-open [data-testid="access-requests-page"],
 body.qc-brain-side-open .app-shell-content,
@@ -9956,7 +9956,7 @@ body.qc-brain-side-open .app-shell-main {
   box-sizing: border-box !important;
 }
 
-/* remove centralizaÃ§Ã£o/max-width que deixa buraco antes do Brain */
+/* remove centralizaÃƒÂ§ÃƒÂ£o/max-width que deixa buraco antes do Brain */
 body.qc-brain-side-open [data-testid="access-requests-page"] > *,
 body.qc-brain-side-open [data-qc-page] > * {
   margin-right: 0 !important;
@@ -10038,7 +10038,7 @@ body.qc-brain-route.qc-brain-side-open:not(.qc-brain-chat-side-open) .app-shell-
 }
 
 
-/* ===== Brain definitivo: universo Ãºnico, sem scroll, sem capa ===== */
+/* ===== Brain definitivo: universo ÃƒÂºnico, sem scroll, sem capa ===== */
 
 body:has(.brain-universe-canvas) {
   overflow: hidden !important;
@@ -10140,7 +10140,7 @@ body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):nth-of
   box-shadow: none !important;
 }
 
-/* Light mode colorido e legÃ­vel */
+/* Light mode colorido e legÃƒÂ­vel */
 html:not(.dark) .brain-universe-canvas {
   background:
     radial-gradient(circle at 50% 45%, rgba(14, 165, 233, 0.28), transparent 22%),
@@ -10163,7 +10163,7 @@ html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-univers
   border-color: rgba(15, 23, 42, 0.14) !important;
 }
 
-/* Overlay do nÃ³ */
+/* Overlay do nÃƒÂ³ */
 .brain-node-overlay {
   max-width: calc(100vw - 150px);
   max-height: calc(100dvh - 120px);
@@ -10173,7 +10173,7 @@ html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-univers
   scrollbar-width: thin;
 }
 
-/* Resize invisÃ­vel em todos os lados */
+/* Resize invisÃƒÂ­vel em todos os lados */
 .brain-resize-handle {
   position: absolute;
   z-index: 5;
@@ -10247,7 +10247,7 @@ html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-univers
 
 /* ===== Brain polish: HUD leve e light mode vivo ===== */
 
-/* HUD compacto: o destaque Ã© o grafo, nÃ£o o filtro */
+/* HUD compacto: o destaque ÃƒÂ© o grafo, nÃƒÂ£o o filtro */
 body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):not(.qc-brain-filter-panel):first-of-type {
   top: 16px !important;
   width: min(860px, calc(100vw - 420px)) !important;
@@ -10279,7 +10279,7 @@ body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):not(.q
   box-shadow: none !important;
 }
 
-/* input de busca nÃ£o precisa virar bloco gigante */
+/* input de busca nÃƒÂ£o precisa virar bloco gigante */
 body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):not(.qc-brain-filter-panel):first-of-type input {
   min-width: 220px !important;
 }
@@ -10290,7 +10290,7 @@ body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):not(.q
   font-size: 9px !important;
 }
 
-/* KPIs mais apagados: informam, mas nÃ£o competem com neurÃ´nios */
+/* KPIs mais apagados: informam, mas nÃƒÂ£o competem com neurÃƒÂ´nios */
 body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):nth-of-type(2) {
   top: 72px !important;
   opacity: 0.82 !important;
@@ -10298,7 +10298,7 @@ body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):nth-of
   transform-origin: top center !important;
 }
 
-/* BotÃ£o grafo local menor e sem competir com Ã­cones globais */
+/* BotÃƒÂ£o grafo local menor e sem competir com ÃƒÂ­cones globais */
 .brain-universe-canvas button[class*="right-"] {
   opacity: 0.78;
 }
@@ -10313,7 +10313,7 @@ html:not(.dark) .brain-universe-canvas {
     linear-gradient(135deg, #e9f6ff 0%, #dff1ff 42%, #f4edff 100%) !important;
 }
 
-/* HUD no claro: translÃºcido, nÃ£o bloco branco pesado */
+/* HUD no claro: translÃƒÂºcido, nÃƒÂ£o bloco branco pesado */
 html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-universe-canvas):not(.qc-brain-filter-panel):first-of-type {
   background: rgba(255, 255, 255, 0.58) !important;
   border-color: rgba(14, 116, 144, 0.20) !important;
@@ -10335,7 +10335,7 @@ html:not(.dark) body:has(.brain-universe-canvas) main section:not(.brain-univers
   color: rgba(15, 23, 42, 0.46) !important;
 }
 
-/* NeurÃ´nios: mais vivos no claro e no escuro */
+/* NeurÃƒÂ´nios: mais vivos no claro e no escuro */
 .brain-orb-node {
   filter: saturate(1.18) contrast(1.04);
 }
@@ -10369,7 +10369,7 @@ html:not(.dark) .brain-orb-node[data-brain-node-status="orphan"] {
   box-shadow: 0 0 44px rgba(251,113,133,.58), 0 0 120px rgba(251,113,133,.20) !important;
 }
 
-/* NÃºcleos maiores ficam ainda mais fortes */
+/* NÃƒÂºcleos maiores ficam ainda mais fortes */
 html:not(.dark) .brain-orb-node[data-brain-node-type="company"],
 html:not(.dark) .brain-orb-node[data-brain-node-type="project"],
 html:not(.dark) .brain-orb-node[data-brain-node-type="module"] {
@@ -10379,7 +10379,7 @@ html:not(.dark) .brain-orb-node[data-brain-node-type="module"] {
     inset 0 0 26px rgba(255,255,255,.20) !important;
 }
 
-/* Labels das conexÃµes no claro mais legÃ­veis */
+/* Labels das conexÃƒÂµes no claro mais legÃƒÂ­veis */
 html:not(.dark) .react-flow__edge-text,
 html:not(.dark) .react-flow__edge-textbg {
   filter: drop-shadow(0 2px 5px rgba(255,255,255,.8));
@@ -10407,7 +10407,7 @@ html:not(.dark) .brain-node-overlay button {
   color: #06111f !important;
 }
 
-/* quando chat lateral abrir, reduz o HUD para nÃ£o sobrepor */
+/* quando chat lateral abrir, reduz o HUD para nÃƒÂ£o sobrepor */
 body:has(.brain-universe-canvas):has([class*="chat"][class*="open"]) main section:not(.brain-universe-canvas):not(.qc-brain-filter-panel):first-of-type,
 body:has(.brain-universe-canvas):has(.qc-chat-open) main section:not(.brain-universe-canvas):not(.qc-brain-filter-panel):first-of-type,
 body:has(.brain-universe-canvas):has([data-qc-chat-open="true"]) main section:not(.brain-universe-canvas):not(.qc-brain-filter-panel):first-of-type {
@@ -10442,7 +10442,7 @@ body.qc-brain-active-route [class*="hero"] {
   display: none !important;
 }
 
-/* O conteÃºdo da rota Brain deve comeÃ§ar no universo, sem faixa branca */
+/* O conteÃƒÂºdo da rota Brain deve comeÃƒÂ§ar no universo, sem faixa branca */
 body.qc-brain-active-route main,
 body.qc-brain-active-route main > div:has(.brain-universe-canvas) {
   height: 100dvh !important;
@@ -10490,7 +10490,7 @@ html:not(.dark) body.qc-brain-active-route .brain-universe-canvas {
     linear-gradient(135deg, #dbeeff 0%, #eaf7ff 42%, #f1eaff 100%) !important;
 }
 
-/* HUD no claro: vidro leve, nÃ£o bloco branco bruto */
+/* HUD no claro: vidro leve, nÃƒÂ£o bloco branco bruto */
 html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canvas):not(.qc-brain-filter-panel):first-of-type {
   background: rgba(255, 255, 255, 0.46) !important;
   border-color: rgba(14, 116, 144, 0.18) !important;
@@ -10506,7 +10506,7 @@ html:not(.dark) body.qc-brain-active-route main section:not(.brain-universe-canv
   border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
-/* Overlay: legÃ­vel, sem transparÃªncia estourada no claro */
+/* Overlay: legÃƒÂ­vel, sem transparÃƒÂªncia estourada no claro */
 .brain-node-overlay {
   background: #06111f !important;
   color: #ffffff !important;
@@ -10528,7 +10528,7 @@ html:not(.dark) .brain-node-overlay button {
   border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
-/* garante que os neurÃ´nios fiquem acima do fundo e abaixo do HUD/overlay */
+/* garante que os neurÃƒÂ´nios fiquem acima do fundo e abaixo do HUD/overlay */
 .brain-universe-canvas .react-flow__node {
   z-index: 10 !important;
   visibility: visible !important;
@@ -12167,3 +12167,960 @@ body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud .qc-b
   }
 }
 /* QC BRAIN FILTER WHEN CHAT SIDE OPEN - END */
+
+
+
+/* === QC Sidebar fixed header/footer continuous gradient === */
+.sidebar-operational-shell .sidebar-shell-header,
+.sidebar-operational-shell .sidebar-shell-footer {
+  position: relative !important;
+  z-index: 2 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)),
+    transparent !important;
+  border-color: var(--shell-sidebar-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+:root.theme-light .sidebar-operational-shell .sidebar-shell-header,
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-shell-header,
+:root.theme-light .sidebar-operational-shell .sidebar-shell-footer,
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-shell-footer {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.46), rgba(255,255,255,0.14)),
+    transparent !important;
+}
+
+:root.dark .sidebar-operational-shell .sidebar-shell-header,
+:root[data-theme="dark"] .sidebar-operational-shell .sidebar-shell-header,
+:root.dark .sidebar-operational-shell .sidebar-shell-footer,
+:root[data-theme="dark"] .sidebar-operational-shell .sidebar-shell-footer {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+    transparent !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header a,
+.sidebar-operational-shell .sidebar-shell-footer a,
+.sidebar-operational-shell .sidebar-shell-header span,
+.sidebar-operational-shell .sidebar-shell-footer span {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header a:hover,
+.sidebar-operational-shell .sidebar-shell-footer a:hover,
+.sidebar-operational-shell .sidebar-shell-header a:hover span,
+.sidebar-operational-shell .sidebar-shell-footer a:hover span {
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header a span:last-child,
+.sidebar-operational-shell .sidebar-shell-footer a {
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header [class*="bg-slate-50"],
+.sidebar-operational-shell .sidebar-shell-footer [class*="bg-slate-50"],
+.sidebar-operational-shell .sidebar-shell-footer [class*="bg-white"],
+.sidebar-operational-shell .sidebar-shell-footer [class*="bg-slate-950"] {
+  background: var(--shell-sidebar-control-bg) !important;
+  border-color: var(--shell-sidebar-control-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header button,
+.sidebar-operational-shell .sidebar-shell-footer button {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header button:hover,
+.sidebar-operational-shell .sidebar-shell-footer button:hover {
+  background: var(--shell-sidebar-control-hover) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer {
+  justify-content: center !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:first-child {
+  align-items: center !important;
+  text-align: center !important;
+  flex: 1 1 auto !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:first-child a {
+  font-size: 0.72rem !important;
+  letter-spacing: 0.20em !important;
+  text-align: center !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:first-child span {
+  text-align: center !important;
+}
+/* === /QC Sidebar fixed header/footer continuous gradient === */
+
+/* === QC Access validation colors === */
+:root,
+:root.theme-light,
+:root[data-theme="light"] {
+  --qc-access-card-bg:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 255, 0.92));
+  --qc-access-icon-bg:
+    linear-gradient(135deg, rgba(1, 24, 72, 0.08), rgba(239, 0, 1, 0.08));
+  --qc-access-icon-color: #011848;
+  --qc-access-title: #011848;
+  --qc-access-description: #334155;
+  --qc-access-border: rgba(15, 23, 42, 0.12);
+  --qc-access-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+}
+
+:root.dark,
+:root[data-theme="dark"] {
+  --qc-access-card-bg:
+    radial-gradient(circle at 50% 0%, rgba(15, 54, 116, 0.30), transparent 36%),
+    linear-gradient(145deg, rgba(13, 27, 48, 0.96), rgba(8, 17, 29, 0.94));
+  --qc-access-icon-bg:
+    linear-gradient(135deg, rgba(239, 0, 1, 0.18), rgba(34, 91, 180, 0.22));
+  --qc-access-icon-color: #dbeafe;
+  --qc-access-title: #f8fafc;
+  --qc-access-description: #cbd5e1;
+  --qc-access-border: rgba(148, 163, 184, 0.24);
+  --qc-access-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
+}
+
+main section:has(h1):has(.animate-spin),
+[role="main"] section:has(h1):has(.animate-spin),
+.app-content section:has(h1):has(.animate-spin),
+.page-content section:has(h1):has(.animate-spin) {
+  background: var(--qc-access-card-bg) !important;
+  border-color: var(--qc-access-border) !important;
+  box-shadow: var(--qc-access-shadow) !important;
+}
+
+main section:has(h1):has(.animate-spin) > div:first-child,
+[role="main"] section:has(h1):has(.animate-spin) > div:first-child,
+.app-content section:has(h1):has(.animate-spin) > div:first-child,
+.page-content section:has(h1):has(.animate-spin) > div:first-child {
+  background: var(--qc-access-icon-bg) !important;
+  color: var(--qc-access-icon-color) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+main section:has(h1):has(.animate-spin) h1,
+[role="main"] section:has(h1):has(.animate-spin) h1,
+.app-content section:has(h1):has(.animate-spin) h1,
+.page-content section:has(h1):has(.animate-spin) h1 {
+  color: var(--qc-access-title) !important;
+}
+
+main section:has(h1):has(.animate-spin) p,
+[role="main"] section:has(h1):has(.animate-spin) p,
+.app-content section:has(h1):has(.animate-spin) p,
+.page-content section:has(h1):has(.animate-spin) p {
+  color: var(--qc-access-description) !important;
+}
+/* === /QC Access validation colors === */
+
+/* === QC Sidebar footer brand fix === */
+.sidebar-operational-shell .sidebar-shell-footer {
+  gap: 0.75rem !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  padding-inline: 0.25rem !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand a {
+  display: block !important;
+  max-width: 128px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.14em !important;
+  font-size: 0.56rem !important;
+  line-height: 1.1 !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand span {
+  display: block !important;
+  max-width: 128px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 0.56rem !important;
+  opacity: 0.72 !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:last-child {
+  flex-shrink: 0 !important;
+}
+/* === /QC Sidebar footer brand fix === */
+
+/* === QC Sidebar brand colors: blue white red no purple === */
+
+@keyframes qcSidebarBrandBubbleA {
+  0% { transform: translate3d(-18px, -40px, 0) scale(0.96); opacity: 0.28; }
+  45% { transform: translate3d(10px, 360px, 0) scale(1.08); opacity: 0.38; }
+  100% { transform: translate3d(-8px, 900px, 0) scale(1); opacity: 0.26; }
+}
+
+@keyframes qcSidebarBrandBubbleB {
+  0% { transform: translate3d(14px, 900px, 0) scale(1); opacity: 0.24; }
+  50% { transform: translate3d(-12px, 420px, 0) scale(1.10); opacity: 0.34; }
+  100% { transform: translate3d(8px, -36px, 0) scale(0.98); opacity: 0.22; }
+}
+
+:root,
+:root.theme-light,
+:root[data-theme="light"] {
+  --shell-sidebar-gradient:
+    radial-gradient(circle at 86% 16%, rgba(56, 189, 248, 0.18), transparent 28%),
+    radial-gradient(circle at 18% 88%, rgba(239, 0, 1, 0.12), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 28%, #eef7ff 62%, #fff1f2 100%) !important;
+  --shell-sidebar-border: rgba(1, 24, 72, 0.12);
+  --shell-sidebar-text: #0b1a3c;
+  --shell-sidebar-text-strong: #011848;
+  --shell-sidebar-text-muted: #516178;
+  --shell-sidebar-control-bg: rgba(255, 255, 255, 0.76);
+  --shell-sidebar-control-hover: rgba(255, 255, 255, 0.96);
+  --shell-sidebar-control-border: rgba(1, 24, 72, 0.12);
+}
+
+:root.dark,
+:root[data-theme="dark"] {
+  --shell-sidebar-gradient:
+    radial-gradient(circle at 82% 18%, rgba(56, 189, 248, 0.12), transparent 28%),
+    radial-gradient(circle at 18% 88%, rgba(239, 0, 1, 0.28), transparent 32%),
+    linear-gradient(180deg, #020817 0%, #061631 36%, #082b63 68%, #65070d 100%) !important;
+  --shell-sidebar-border: rgba(148, 163, 184, 0.18);
+  --shell-sidebar-text: #ffffff;
+  --shell-sidebar-text-strong: #ffffff;
+  --shell-sidebar-text-muted: rgba(255, 255, 255, 0.74);
+  --shell-sidebar-control-bg: rgba(255, 255, 255, 0.08);
+  --shell-sidebar-control-hover: rgba(255, 255, 255, 0.14);
+  --shell-sidebar-control-border: rgba(255, 255, 255, 0.14);
+}
+
+.sidebar-operational-shell,
+aside:has(input[placeholder*="Buscar módulo"]),
+aside:has(input[placeholder*="Buscar modulo"]) {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  background: var(--shell-sidebar-gradient) !important;
+  border-right: 1px solid var(--shell-sidebar-border) !important;
+  color: var(--shell-sidebar-text) !important;
+}
+
+.sidebar-operational-shell::before,
+.sidebar-operational-shell::after,
+aside:has(input[placeholder*="Buscar módulo"])::before,
+aside:has(input[placeholder*="Buscar módulo"])::after,
+aside:has(input[placeholder*="Buscar modulo"])::before,
+aside:has(input[placeholder*="Buscar modulo"])::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(18px);
+  will-change: transform, opacity;
+}
+
+.sidebar-operational-shell::before,
+aside:has(input[placeholder*="Buscar módulo"])::before,
+aside:has(input[placeholder*="Buscar modulo"])::before {
+  top: 0;
+  left: -90px;
+  width: 250px;
+  height: 250px;
+  background:
+    radial-gradient(circle,
+      rgba(239, 0, 1, 0.24) 0%,
+      rgba(239, 0, 1, 0.14) 38%,
+      rgba(239, 0, 1, 0.05) 62%,
+      transparent 82%);
+  animation: qcSidebarBrandBubbleA 34s ease-in-out infinite alternate;
+}
+
+.sidebar-operational-shell::after,
+aside:has(input[placeholder*="Buscar módulo"])::after,
+aside:has(input[placeholder*="Buscar modulo"])::after {
+  top: 0;
+  right: -120px;
+  width: 300px;
+  height: 300px;
+  background:
+    radial-gradient(circle,
+      rgba(56, 189, 248, 0.16) 0%,
+      rgba(255, 255, 255, 0.10) 34%,
+      rgba(239, 0, 1, 0.08) 58%,
+      transparent 82%);
+  animation: qcSidebarBrandBubbleB 40s ease-in-out infinite alternate;
+}
+
+:root.theme-light .sidebar-operational-shell::before,
+:root[data-theme="light"] .sidebar-operational-shell::before,
+:root.theme-light aside:has(input[placeholder*="Buscar módulo"])::before,
+:root[data-theme="light"] aside:has(input[placeholder*="Buscar módulo"])::before,
+:root.theme-light aside:has(input[placeholder*="Buscar modulo"])::before,
+:root[data-theme="light"] aside:has(input[placeholder*="Buscar modulo"])::before {
+  opacity: 0.45;
+}
+
+:root.dark .sidebar-operational-shell::before,
+:root[data-theme="dark"] .sidebar-operational-shell::before,
+:root.dark aside:has(input[placeholder*="Buscar módulo"])::before,
+:root[data-theme="dark"] aside:has(input[placeholder*="Buscar módulo"])::before,
+:root.dark aside:has(input[placeholder*="Buscar modulo"])::before,
+:root[data-theme="dark"] aside:has(input[placeholder*="Buscar modulo"])::before {
+  opacity: 0.60;
+}
+
+.sidebar-operational-shell > *,
+aside:has(input[placeholder*="Buscar módulo"]) > *,
+aside:has(input[placeholder*="Buscar modulo"]) > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-operational-shell .sidebar-shell-header,
+.sidebar-operational-shell .sidebar-shell-footer,
+.sidebar-operational-shell :is(header, footer, .sticky, [class*="sticky"], [class*="top-0"], [data-sidebar-footer], .qc-sidebar-footer, [class*="SidebarFooter"], [class*="footer"]) {
+  background: transparent !important;
+  border-color: var(--shell-sidebar-border) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.sidebar-operational-shell input,
+aside:has(input[placeholder*="Buscar módulo"]) input,
+aside:has(input[placeholder*="Buscar modulo"]) input {
+  background: var(--shell-sidebar-control-bg) !important;
+  border-color: var(--shell-sidebar-control-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+  box-shadow: none !important;
+}
+
+.sidebar-operational-shell input::placeholder,
+aside:has(input[placeholder*="Buscar módulo"]) input::placeholder,
+aside:has(input[placeholder*="Buscar modulo"]) input::placeholder {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell :is(a, button, span, p, label),
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]) {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell :is(a:hover, button:hover, nav a:hover, nav button:hover),
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]):hover,
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]):focus-visible,
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"])[aria-expanded="true"],
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"])[aria-current="page"],
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"])[data-active="true"],
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]).active {
+  color: var(--shell-sidebar-text-strong) !important;
+  background: var(--shell-sidebar-control-hover) !important;
+  border-color: var(--shell-sidebar-control-border) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header a span:last-child,
+.sidebar-operational-shell .sidebar-footer-brand a {
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand a {
+  max-width: 128px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.12em !important;
+  font-size: 0.56rem !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand span {
+  max-width: 128px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 0.56rem !important;
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-operational-shell::before,
+  .sidebar-operational-shell::after,
+  aside:has(input[placeholder*="Buscar módulo"])::before,
+  aside:has(input[placeholder*="Buscar módulo"])::after,
+  aside:has(input[placeholder*="Buscar modulo"])::before,
+  aside:has(input[placeholder*="Buscar modulo"])::after {
+    animation: none !important;
+  }
+}
+/* === /QC Sidebar brand colors: blue white red no purple === */
+
+/* === QC Sidebar footer link only hover === */
+.sidebar-operational-shell .sidebar-shell-footer,
+.sidebar-operational-shell .sidebar-shell-footer:hover,
+.sidebar-operational-shell .sidebar-footer-brand,
+.sidebar-operational-shell .sidebar-footer-brand:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link {
+  display: block !important;
+  max-width: 150px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--shell-sidebar-text-muted) !important;
+  text-decoration: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link:hover {
+  color: var(--shell-sidebar-text-strong) !important;
+  text-shadow: 0 0 10px rgba(239, 0, 1, 0.18) !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-version {
+  color: var(--shell-sidebar-text-muted) !important;
+  opacity: 0.62 !important;
+}
+/* === /QC Sidebar footer link only hover === */
+
+/* === QC Sidebar final brand clean === */
+
+:root,
+:root.theme-light,
+:root[data-theme="light"] {
+  --qc-sidebar-bg:
+    radial-gradient(circle at 88% 12%, rgba(56, 189, 248, 0.18), transparent 30%),
+    radial-gradient(circle at 12% 92%, rgba(239, 0, 1, 0.12), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 28%, #eef7ff 66%, #fff3f4 100%);
+  --qc-sidebar-text: #43516a;
+  --qc-sidebar-text-strong: #011848;
+  --qc-sidebar-text-muted: #64748b;
+  --qc-sidebar-border: rgba(1, 24, 72, 0.10);
+  --qc-sidebar-search-bg: rgba(255, 255, 255, 0.76);
+  --qc-sidebar-hover-bg:
+    linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(238,247,255,0.84) 58%, rgba(239,0,1,0.10) 100%);
+}
+
+:root.dark,
+:root[data-theme="dark"] {
+  --qc-sidebar-bg:
+    radial-gradient(circle at 86% 14%, rgba(56, 189, 248, 0.10), transparent 30%),
+    radial-gradient(circle at 14% 92%, rgba(239, 0, 1, 0.28), transparent 34%),
+    linear-gradient(180deg, #020817 0%, #061631 42%, #082b63 76%, #65070d 100%);
+  --qc-sidebar-text: rgba(255,255,255,0.74);
+  --qc-sidebar-text-strong: #ffffff;
+  --qc-sidebar-text-muted: rgba(255,255,255,0.64);
+  --qc-sidebar-border: rgba(255,255,255,0.12);
+  --qc-sidebar-search-bg: rgba(255,255,255,0.08);
+  --qc-sidebar-hover-bg:
+    linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(56,189,248,0.10) 54%, rgba(239,0,1,0.22) 100%);
+}
+
+.sidebar-operational-shell,
+aside:has(input[placeholder*="Buscar módulo"]),
+aside:has(input[placeholder*="Buscar modulo"]) {
+  background: var(--qc-sidebar-bg) !important;
+  color: var(--qc-sidebar-text) !important;
+  border-right: 1px solid var(--qc-sidebar-border) !important;
+  box-shadow: none !important;
+}
+
+.sidebar-operational-shell::before,
+.sidebar-operational-shell::after,
+aside:has(input[placeholder*="Buscar módulo"])::before,
+aside:has(input[placeholder*="Buscar módulo"])::after,
+aside:has(input[placeholder*="Buscar modulo"])::before,
+aside:has(input[placeholder*="Buscar modulo"])::after {
+  content: none !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header,
+.sidebar-operational-shell .sidebar-shell-footer,
+.sidebar-operational-shell :is(header, footer, .sticky, [class*="sticky"], [class*="top-0"], [class*="bottom"], [data-sidebar-footer], .qc-sidebar-footer, [class*="SidebarFooter"], [class*="footer"]) {
+  background: transparent !important;
+  border-color: var(--qc-sidebar-border) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.sidebar-operational-shell :is(a, button, span, p, label),
+aside:has(input[placeholder*="Buscar módulo"]) :is(a, button, span, p, label),
+aside:has(input[placeholder*="Buscar modulo"]) :is(a, button, span, p, label) {
+  color: var(--qc-sidebar-text) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header a span:last-child,
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]) {
+  color: var(--qc-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell input,
+.sidebar-operational-shell .sidebar-search,
+.sidebar-operational-shell .sidebar-control,
+.sidebar-operational-shell .sidebar-dropdown,
+aside:has(input[placeholder*="Buscar módulo"]) input,
+aside:has(input[placeholder*="Buscar modulo"]) input {
+  background: var(--qc-sidebar-search-bg) !important;
+  border-color: var(--qc-sidebar-border) !important;
+  color: var(--qc-sidebar-text-strong) !important;
+  box-shadow: none !important;
+}
+
+.sidebar-operational-shell input::placeholder,
+aside:has(input[placeholder*="Buscar módulo"]) input::placeholder,
+aside:has(input[placeholder*="Buscar modulo"]) input::placeholder {
+  color: var(--qc-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]),
+aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"]),
+aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]) {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  transform: none !important;
+}
+
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]):hover,
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]):focus-visible,
+aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"]):hover,
+aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"]):focus-visible,
+aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]):hover,
+aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]):focus-visible {
+  background: var(--qc-sidebar-hover-bg) !important;
+  border-color: var(--qc-sidebar-border) !important;
+  color: var(--qc-sidebar-text-strong) !important;
+  box-shadow: 0 10px 24px rgba(1, 24, 72, 0.10) !important;
+  transform: translateY(-1px) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer,
+.sidebar-operational-shell .sidebar-shell-footer:hover,
+.sidebar-operational-shell .sidebar-footer-brand,
+.sidebar-operational-shell .sidebar-footer-brand:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link,
+.sidebar-operational-shell .sidebar-footer-brand a {
+  display: inline-flex !important;
+  max-width: 138px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--qc-sidebar-text-muted) !important;
+  text-decoration: none !important;
+  font-size: 0.58rem !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link:hover,
+.sidebar-operational-shell .sidebar-footer-brand a:hover {
+  color: var(--qc-sidebar-text-strong) !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+  text-shadow: 0 0 10px rgba(239, 0, 1, 0.14) !important;
+  background: transparent !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-version,
+.sidebar-operational-shell .sidebar-footer-brand span {
+  color: var(--qc-sidebar-text-muted) !important;
+  opacity: 0.62 !important;
+  font-size: 0.56rem !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:last-child {
+  flex-shrink: 0 !important;
+}
+/* === /QC Sidebar final brand clean === */
+
+/* === QC Sidebar footer full company name === */
+.sidebar-operational-shell .sidebar-shell-footer {
+  gap: 0.45rem !important;
+  padding-inline: 0.55rem !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  overflow: visible !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding-inline: 0.15rem !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link,
+.sidebar-operational-shell .sidebar-footer-brand a {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  font-size: 0.47rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.035em !important;
+  font-weight: 900 !important;
+  color: var(--qc-sidebar-text-muted, var(--shell-sidebar-text-muted)) !important;
+  text-decoration: none !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link:hover,
+.sidebar-operational-shell .sidebar-footer-brand a:hover {
+  color: var(--qc-sidebar-text-strong, var(--shell-sidebar-text-strong)) !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+  background: transparent !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-version,
+.sidebar-operational-shell .sidebar-footer-brand span {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  font-size: 0.46rem !important;
+  line-height: 1.05 !important;
+  opacity: 0.58 !important;
+  color: var(--qc-sidebar-text-muted, var(--shell-sidebar-text-muted)) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:last-child {
+  flex: 0 0 auto !important;
+}
+/* === /QC Sidebar footer full company name === */
+
+/* === QC Profile permissions product v2 === */
+
+.profile-permissions-clean {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(56, 189, 248, 0.10), transparent 26rem),
+    radial-gradient(circle at 100% 4%, rgba(239, 0, 1, 0.07), transparent 24rem),
+    linear-gradient(180deg, #f8fbff 0%, #f4f7fb 48%, #ffffff 100%) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.profile-permissions-shell {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.profile-permissions-hero {
+  border-radius: 1.35rem !important;
+  border: 1px solid rgba(1, 24, 72, 0.12) !important;
+  background:
+    radial-gradient(circle at 95% 35%, rgba(239, 0, 1, 0.32), transparent 17rem),
+    linear-gradient(135deg, #011848 0%, #06255a 54%, #ef0001 100%) !important;
+  box-shadow: 0 18px 45px rgba(1, 24, 72, 0.14) !important;
+}
+
+.profile-permissions-hero h1 {
+  font-size: clamp(1.55rem, 2vw, 2.25rem) !important;
+  letter-spacing: -0.04em !important;
+}
+
+.profile-permissions-kpis {
+  gap: 0.45rem !important;
+}
+
+.profile-permissions-kpis span {
+  min-height: 1.85rem !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  padding: 0.32rem 0.65rem !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+}
+
+.profile-permissions-layout {
+  padding-inline: 0 !important;
+  padding-bottom: 0 !important;
+  grid-template-columns: 236px minmax(0, 1fr) !important;
+}
+
+.profile-permissions-profile-list {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.profile-permissions-profile-list > p {
+  padding-left: 0.35rem !important;
+  color: #64748b !important;
+}
+
+.profile-permissions-profile-list button {
+  min-height: 2.45rem !important;
+  border-radius: 0.95rem !important;
+  border-color: rgba(1, 24, 72, 0.10) !important;
+  background: rgba(255, 255, 255, 0.64) !important;
+  color: #0b1a3c !important;
+  box-shadow: none !important;
+}
+
+.profile-permissions-profile-list button:hover {
+  background: #ffffff !important;
+  border-color: rgba(1, 24, 72, 0.22) !important;
+}
+
+.profile-permissions-profile-list button[class*="bg-[#011848]"] {
+  background:
+    linear-gradient(135deg, #011848 0%, #0b2a69 100%) !important;
+  color: #ffffff !important;
+}
+
+.profile-permissions-profile-hint {
+  display: none !important;
+}
+
+.profile-permissions-toolbar {
+  position: relative !important;
+  top: auto !important;
+  z-index: 1 !important;
+  border-radius: 1.15rem !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(1, 24, 72, 0.10) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.profile-permissions-toolbar label {
+  background: #ffffff !important;
+  border-color: rgba(1, 24, 72, 0.12) !important;
+}
+
+.profile-permissions-toolbar input {
+  color: #0b1a3c !important;
+}
+
+.profile-permissions-toolbar input::placeholder {
+  color: #64748b !important;
+}
+
+.profile-permissions-toolbar button {
+  height: 2.55rem !important;
+  border-radius: 0.95rem !important;
+  box-shadow: none !important;
+}
+
+.profile-permissions-toolbar > div:nth-child(2) {
+  display: none !important;
+}
+
+.profile-permissions-toolbar [role="status"],
+.profile-permissions-toolbar .mt-4 {
+  border-radius: 0.95rem !important;
+}
+
+.profile-permissions-section {
+  border: 1px solid rgba(1, 24, 72, 0.10) !important;
+  border-radius: 1.15rem !important;
+  background: rgba(255, 255, 255, 0.68) !important;
+  box-shadow: none !important;
+}
+
+.profile-permissions-section > div:first-child {
+  gap: 0.75rem !important;
+}
+
+.profile-permissions-section h2 {
+  font-size: 1rem !important;
+  color: #011848 !important;
+}
+
+.profile-permissions-section h3,
+.profile-permissions-section h4 {
+  color: #0b1a3c !important;
+}
+
+.profile-permissions-section p {
+  color: #64748b !important;
+}
+
+.profile-permissions-section .grid {
+  gap: 0.7rem !important;
+}
+
+.profile-permissions-section [class*="bg-slate-50"] {
+  background: rgba(255, 255, 255, 0.52) !important;
+}
+
+.profile-permissions-section [class*="rounded-3xl"],
+.profile-permissions-section [class*="rounded-2xl"] {
+  border-radius: 1rem !important;
+}
+
+.profile-permissions-section [class*="shadow"] {
+  box-shadow: none !important;
+}
+
+.profile-permissions-section label.group {
+  min-height: 2.25rem !important;
+  border-radius: 0.8rem !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  color: #334155 !important;
+}
+
+.profile-permissions-section label.group:hover {
+  background: #ffffff !important;
+  border-color: rgba(1, 24, 72, 0.18) !important;
+}
+
+.profile-permissions-section label.group[class*="bg-emerald"] {
+  background: rgba(16, 185, 129, 0.10) !important;
+  border-color: rgba(16, 185, 129, 0.24) !important;
+  color: #065f46 !important;
+}
+
+.profile-permissions-section span[class*="bg-emerald"],
+.profile-permissions-section span[class*="bg-amber"],
+.profile-permissions-section span[class*="bg-rose"],
+.profile-permissions-section button[class*="bg-emerald"],
+.profile-permissions-section button[class*="bg-rose"] {
+  box-shadow: none !important;
+}
+
+.profile-permissions-section section,
+.profile-permissions-section article,
+.profile-permissions-section div {
+  scrollbar-color: rgba(1, 24, 72, 0.20) transparent;
+}
+
+.profile-permissions-section:has(h2) + .profile-permissions-section {
+  margin-top: 0 !important;
+}
+
+.profile-permissions-section div:has(> h3) p {
+  max-width: 32rem !important;
+}
+
+/* deixa as decisões rápidas mais produto e menos cardão */
+.profile-permissions-section:has(h2):has(svg) [class*="lg:grid-cols-2"],
+.profile-permissions-section:has(h2):has(svg) [class*="2xl:grid-cols-3"] {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+}
+
+.profile-permissions-section:has(h2):has(svg) [class*="rounded-2xl"][class*="p-3"],
+.profile-permissions-section:has(h2):has(svg) [class*="rounded-3xl"][class*="p-4"] {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.78), rgba(248,250,252,0.72)) !important;
+  border-color: rgba(1, 24, 72, 0.10) !important;
+}
+
+/* Dark */
+:root.dark .profile-permissions-clean,
+:root[data-theme="dark"] .profile-permissions-clean {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(56, 189, 248, 0.10), transparent 26rem),
+    radial-gradient(circle at 100% 4%, rgba(239, 0, 1, 0.13), transparent 24rem),
+    linear-gradient(180deg, #07111f 0%, #0b1424 48%, #0e1726 100%) !important;
+  color: #f8fafc !important;
+}
+
+:root.dark .profile-permissions-toolbar,
+:root[data-theme="dark"] .profile-permissions-toolbar,
+:root.dark .profile-permissions-section,
+:root[data-theme="dark"] .profile-permissions-section {
+  background: rgba(15, 23, 37, 0.74) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+:root.dark .profile-permissions-profile-list button,
+:root[data-theme="dark"] .profile-permissions-profile-list button,
+:root.dark .profile-permissions-toolbar label,
+:root[data-theme="dark"] .profile-permissions-toolbar label,
+:root.dark .profile-permissions-section [class*="bg-slate-50"],
+:root[data-theme="dark"] .profile-permissions-section [class*="bg-slate-50"],
+:root.dark .profile-permissions-section label.group,
+:root[data-theme="dark"] .profile-permissions-section label.group {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+:root.dark .profile-permissions-section h2,
+:root.dark .profile-permissions-section h3,
+:root.dark .profile-permissions-section h4,
+:root.dark .profile-permissions-toolbar input,
+:root[data-theme="dark"] .profile-permissions-section h2,
+:root[data-theme="dark"] .profile-permissions-section h3,
+:root[data-theme="dark"] .profile-permissions-section h4,
+:root[data-theme="dark"] .profile-permissions-toolbar input {
+  color: #f8fafc !important;
+}
+
+:root.dark .profile-permissions-section p,
+:root.dark .profile-permissions-profile-list > p,
+:root[data-theme="dark"] .profile-permissions-section p,
+:root[data-theme="dark"] .profile-permissions-profile-list > p {
+  color: rgba(226, 232, 240, 0.72) !important;
+}
+
+:root.dark .profile-permissions-section label.group[class*="bg-emerald"],
+:root[data-theme="dark"] .profile-permissions-section label.group[class*="bg-emerald"] {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #bbf7d0 !important;
+}
+
+/* === /QC Profile permissions product v2 === */
+
+/* === QC Profile user permissions === */
+.profile-permissions-profile-list .max-h-64 {
+  scrollbar-width: thin;
+}
+
+.profile-permissions-profile-list .max-h-64::-webkit-scrollbar {
+  width: 7px;
+}
+
+.profile-permissions-profile-list .max-h-64::-webkit-scrollbar-thumb {
+  background: rgba(1, 24, 72, 0.18);
+  border-radius: 999px;
+}
+
+:root.dark .profile-permissions-profile-list .max-h-64::-webkit-scrollbar-thumb,
+:root[data-theme="dark"] .profile-permissions-profile-list .max-h-64::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+}
+/* === /QC Profile user permissions === */
+

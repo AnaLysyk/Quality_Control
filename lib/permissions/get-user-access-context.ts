@@ -6,9 +6,11 @@ import {
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { resolveFixedProfileKind, type FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import {
+  applyPermissionOverride,
   normalizePermissionMatrix,
   resolveEffectivePermissionMatrix,
   type PermissionMatrix,
+  type PermissionOverride,
 } from "@/lib/permissionMatrix";
 
 export type UserAccessContext = {
@@ -30,6 +32,7 @@ type UserAccessSource = AuthenticatedUserLike & {
   userId?: string;
   clientId?: string | null;
   companyId?: string | null;
+  permissionOverride?: PermissionOverride | null;
 };
 
 export function getUserAccessContext(
@@ -86,6 +89,26 @@ export function getUserAccessContext(
     permissionRole === SYSTEM_ROLES.TESTING_COMPANY_USER;
   const resolvedUserPermissions =
     user.permissions != null ? normalizePermissionMatrix(user.permissions) : null;
+  const userPermissionOverride =
+    user.permissionOverride && typeof user.permissionOverride === "object"
+      ? user.permissionOverride
+      : null;
+  const basePermissions = isGlobalAdmin
+    ? resolveEffectivePermissionMatrix({
+        permissionRole,
+        role,
+        companyRole,
+        globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
+        isGlobalAdmin,
+      })
+    : resolvedUserPermissions ??
+        resolveEffectivePermissionMatrix({
+          permissionRole,
+          role,
+          companyRole,
+          globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
+          isGlobalAdmin,
+        });
 
   return {
     userId,
@@ -98,21 +121,6 @@ export function getUserAccessContext(
     isGlobalAdmin,
     isTestingCompanyUser,
     isCompanyUser,
-    permissions: isGlobalAdmin
-      ? resolveEffectivePermissionMatrix({
-          permissionRole,
-          role,
-          companyRole,
-          globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
-          isGlobalAdmin,
-        })
-      : resolvedUserPermissions ??
-          resolveEffectivePermissionMatrix({
-            permissionRole,
-            role,
-            companyRole,
-            globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
-            isGlobalAdmin,
-          }),
+    permissions: applyPermissionOverride(basePermissions, userPermissionOverride),
   };
 }

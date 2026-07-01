@@ -28,7 +28,7 @@ export default function SidebarFooter({ collapsed }: SidebarFooterProps) {
 
   if (collapsed) {
     return (
-      <div className="flex flex-col items-center gap-1.5 border-t border-slate-200 bg-white px-1.5 py-2">
+      <div className="sidebar-shell-footer flex flex-col items-center gap-1.5 border-t px-1.5 py-2">
         <button
           type="button"
           onClick={handleToggle}
@@ -44,17 +44,16 @@ export default function SidebarFooter({ collapsed }: SidebarFooterProps) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-2 border-t border-slate-200 bg-white px-3 py-2.5">
-      <div className="flex min-w-0 flex-col">
+    <div className="sidebar-shell-footer flex items-center justify-between gap-2 border-t px-3 py-2.5">
+      <div className="sidebar-footer-brand flex min-w-0 flex-1 flex-col items-center justify-center text-center">
         <Link
           href="https://www.testingcompany.com.br/"
           target="_blank"
           rel="noopener noreferrer"
-          className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 transition hover:text-slate-950"
-        >
-          Testing Company
-        </Link>
-        <span className="select-none font-mono text-[10px] leading-tight text-slate-400">
+          title="Testing Company"
+          className="sidebar-footer-company-link truncate text-center text-[8.5px] font-black uppercase tracking-[0.08em] text-slate-500 transition"
+        >Testing Company ↗</Link>
+        <span className="sidebar-footer-version select-none truncate text-center font-mono text-[8.5px] leading-tight text-slate-400">
           {APP_VERSION}
         </span>
       </div>

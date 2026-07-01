@@ -445,6 +445,18 @@ export const SYSTEM_ROUTES = [
     notes: "Avaliar consolidação com /chat.",
   },
   {
+    id: "agenda.release",
+    moduleId: "release_calendar",
+    path: "/agenda",
+    label: "Agenda",
+    description: "Calendário operacional para Líder TC e Suporte Técnico acompanharem marcações por empresa, projeto, usuário, contexto e entrega.",
+    requiredPermission: { moduleId: "release_calendar", action: "view" },
+    expectedProfiles: ADMIN_PROFILES,
+    status: "ativo",
+    mainFile: "app/agenda/page.tsx",
+    notes: "Controlado pela Gestão de Perfis. Líder TC e Suporte Técnico podem visualizar o calendário global sem selecionar empresa/projeto; empresa, projeto e usuário funcionam como filtros.",
+  },
+  {
     id: "suporte.central",
     moduleId: "suporte",
     path: "/suporte",

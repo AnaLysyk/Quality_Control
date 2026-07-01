@@ -13102,5 +13102,22 @@ aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role=
   color: #bbf7d0 !important;
 }
 
-/* === /QC Profile permissions product v2 === */
+/* === /QC Profile permissions product v2 === */\n\n/* === QC Profile user permissions === */
+.profile-permissions-profile-list .max-h-64 {
+  scrollbar-width: thin;
+}
 
+.profile-permissions-profile-list .max-h-64::-webkit-scrollbar {
+  width: 7px;
+}
+
+.profile-permissions-profile-list .max-h-64::-webkit-scrollbar-thumb {
+  background: rgba(1, 24, 72, 0.18);
+  border-radius: 999px;
+}
+
+:root.dark .profile-permissions-profile-list .max-h-64::-webkit-scrollbar-thumb,
+:root[data-theme="dark"] .profile-permissions-profile-list .max-h-64::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+}
+/* === /QC Profile user permissions === */\n

@@ -17,7 +17,6 @@ import {
   FiShield,
   FiSliders,
 } from "react-icons/fi";
-import Breadcrumb from "@/components/Breadcrumb";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
@@ -50,12 +49,42 @@ type ProfilePermissionsResponse = {
   override: ProfileOverride | null;
   permissions: PermissionMatrix;
   canEdit: boolean;
+  user?: {
+    id: string;
+    name: string | null;
+    fullName: string | null;
+    email: string;
+    active: boolean;
+    status: string;
+  };
   counts?: {
     system: number;
+    profile?: number;
     allow: number;
     deny: number;
     effective: number;
   };
+};
+
+type ProfileUserSummary = {
+  id: string;
+  name: string | null;
+  fullName: string | null;
+  email: string;
+  label: string;
+  active: boolean;
+  status: string;
+  hasOverride: boolean;
+  overrideCount: number;
+  effectiveCount: number;
+  updatedAt: string | null;
+};
+
+type ProfileUsersResponse = {
+  role: SystemRole;
+  label: string;
+  users: ProfileUserSummary[];
+  total: number;
 };
 
 type NoticeState =
@@ -279,6 +308,9 @@ export default function ProfileManagementPage() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<NoticeState>({ type: "idle" });
+  const [profileUsers, setProfileUsers] = useState<ProfileUserSummary[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const currentRole = resolveCurrentRole(user, accessContext?.role ?? null);
   const canView =
@@ -295,7 +327,10 @@ export default function ProfileManagementPage() {
       setLoadingProfile(true);
       setNotice({ type: "idle" });
       try {
-        const response = await fetch(`/api/admin/profile-permissions/${selectedRole}`, { credentials: "include" });
+        const response = await fetch(
+          selectedUserId ? `/api/admin/user-permissions/${selectedUserId}` : `/api/admin/profile-permissions/${selectedRole}`,
+          { credentials: "include" },
+        );
         const payload = (await response.json().catch(() => null)) as ProfilePermissionsResponse | { error?: string } | null;
         if (!response.ok) throw new Error((payload as { error?: string } | null)?.error ?? "Falha ao carregar perfil");
         if (cancelled) return;
@@ -314,6 +349,33 @@ export default function ProfileManagementPage() {
     }
 
     if (canView) void loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [canView, selectedRole, selectedUserId]);
+
+  useEffect(() => {
+    setSelectedUserId(null);
+  }, [selectedRole]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadUsers() {
+      setLoadingUsers(true);
+      try {
+        const response = await fetch(`/api/admin/profile-permissions/${selectedRole}/users`, { credentials: "include" });
+        const payload = (await response.json().catch(() => null)) as ProfileUsersResponse | { error?: string } | null;
+        if (!response.ok) throw new Error((payload as { error?: string } | null)?.error ?? "Falha ao carregar usuários do perfil");
+        if (!cancelled) setProfileUsers((payload as ProfileUsersResponse).users ?? []);
+      } catch {
+        if (!cancelled) setProfileUsers([]);
+      } finally {
+        if (!cancelled) setLoadingUsers(false);
+      }
+    }
+
+    if (canView) void loadUsers();
     return () => {
       cancelled = true;
     };
@@ -388,6 +450,8 @@ export default function ProfileManagementPage() {
     });
   }, [allScreenRows, normalizedQuery]);
 
+  const selectedUser = profileUsers.find((item) => item.id === selectedUserId) ?? null;
+  const editingUser = Boolean(selectedUserId);
   const visibleScreenCount = allScreenRows.filter((row) => row.visible).length;
   const hiddenScreenCount = allScreenRows.length - visibleScreenCount;
   const overriddenCount = countPermissionActions(draftOverride.allow) + countPermissionActions(draftOverride.deny);
@@ -420,9 +484,9 @@ export default function ProfileManagementPage() {
       const body = {
         allow: normalizePermissionMatrix(draftOverride.allow),
         deny: normalizePermissionMatrix(draftOverride.deny),
-        reason: "Ajuste pela Gestão de Perfis",
+        reason: editingUser ? "Ajuste individual pela Gestão de Perfis" : "Ajuste pela Gestão de Perfis",
       };
-      const response = await fetch(`/api/admin/profile-permissions/${selectedRole}`, {
+      const response = await fetch(selectedUserId ? `/api/admin/user-permissions/${selectedUserId}` : `/api/admin/profile-permissions/${selectedRole}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -447,7 +511,12 @@ export default function ProfileManagementPage() {
             }
           : current,
       );
-      setNotice({ type: "success", message: "Perfil salvo. As mudanças já entram no controle de módulos, telas, IA, Brain e Chat." });
+      setNotice({
+        type: "success",
+        message: editingUser
+          ? "Usuário salvo. Ele mantém o perfil, mas agora usa permissões individuais."
+          : "Perfil salvo. As mudanças já entram no controle de módulos, telas, IA, Brain e Chat.",
+      });
       await refreshUser();
     } catch (error) {
       setNotice({ type: "error", message: error instanceof Error ? error.message : "Falha ao salvar perfil" });
@@ -461,7 +530,7 @@ export default function ProfileManagementPage() {
     setSaving(true);
     setNotice({ type: "idle" });
     try {
-      const response = await fetch(`/api/admin/profile-permissions/${selectedRole}`, {
+      const response = await fetch(selectedUserId ? `/api/admin/user-permissions/${selectedUserId}` : `/api/admin/profile-permissions/${selectedRole}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -484,7 +553,12 @@ export default function ProfileManagementPage() {
             }
           : current,
       );
-      setNotice({ type: "success", message: "Perfil restaurado para o padrão do sistema." });
+      setNotice({
+        type: "success",
+        message: editingUser
+          ? "Usuário restaurado. Ele voltou a seguir o padrão efetivo do perfil."
+          : "Perfil restaurado para o padrão do sistema.",
+      });
       await refreshUser();
     } catch (error) {
       setNotice({ type: "error", message: error instanceof Error ? error.message : "Falha ao restaurar perfil" });
@@ -507,49 +581,32 @@ export default function ProfileManagementPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e9efff_0,#f7f9fc_34%,#f8fafc_100%)] px-3 py-4 text-[#0b1a3c] sm:px-5 lg:px-7">
-      <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-5">
-        <Breadcrumb items={[{ label: "Admin", href: "/admin" }, { label: "Gestão de Perfis" }]} />
-
-        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-sm shadow-slate-200/70">
-          <div className="border-b border-slate-100 bg-[#011848] px-5 py-5 text-white sm:px-7">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/12 text-white ring-1 ring-white/20">
-                  <FiShield className="h-6 w-6" />
+    <main className="profile-permissions-clean min-h-screen px-3 py-3 text-[#0b1a3c] sm:px-5 lg:px-6">
+      <div className="mx-auto flex w-full max-w-none flex-col gap-4">
+        <section className="profile-permissions-shell overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-white/82 shadow-sm shadow-slate-200/60">
+          <div className="profile-permissions-hero border-b border-slate-200/70 px-5 py-4 text-white sm:px-6">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/12 text-white ring-1 ring-white/20">
+                  <FiShield className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-red-200">Governança de acesso</p>
-                  <h1 className="mt-2 text-2xl font-black tracking-tight sm:text-4xl">Gestão de Perfis</h1>
-                  <p className="mt-3 max-w-4xl text-sm leading-6 text-blue-50/90">
-                    Central de produto para decidir o que cada perfil vê e usa: módulos, funções, telas, contexto de empresa/projeto, Operacional, IA, Brain e Chat.
-                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-100">Governança de acesso</p>
+                  <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Gestão de Perfis</h1>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:min-w-[520px]">
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                  <div className="text-xs font-semibold text-blue-100">Permissões ativas</div>
-                  <div className="mt-1 text-3xl font-black">{countPermissionActions(effectivePermissions)}</div>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                  <div className="text-xs font-semibold text-blue-100">Telas visíveis</div>
-                  <div className="mt-1 text-3xl font-black">{visibleScreenCount}</div>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                  <div className="text-xs font-semibold text-blue-100">Ocultas</div>
-                  <div className="mt-1 text-3xl font-black">{hiddenScreenCount}</div>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                  <div className="text-xs font-semibold text-blue-100">Ajustes manuais</div>
-                  <div className="mt-1 text-3xl font-black">{overriddenCount}</div>
-                </div>
+              <div className="profile-permissions-kpis flex flex-wrap gap-2 text-xs font-bold text-blue-50/90">
+                <span>{countPermissionActions(effectivePermissions)} permissões</span>
+                <span>{visibleScreenCount} telas visíveis</span>
+                <span>{hiddenScreenCount} ocultas</span>
+                <span>{overriddenCount} ajustes</span>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-5 p-4 sm:p-5 xl:grid-cols-[320px_minmax(0,1fr)]">
-            <aside className="rounded-3xl border border-slate-200 bg-slate-50/80 p-3">
+          <div className="profile-permissions-layout grid gap-4 p-4 sm:p-5 xl:grid-cols-[260px_minmax(0,1fr)]">
+            <aside className="profile-permissions-profile-list rounded-2xl border border-slate-200/70 bg-slate-50/55 p-2.5">
               <p className="px-2 pb-2 text-xs font-black uppercase tracking-[0.18em] text-slate-500">Tipo de perfil</p>
               <div className="grid gap-2">
                 {PROFILE_ORDER.map((profile) => {
@@ -573,9 +630,9 @@ export default function ProfileManagementPage() {
                 })}
               </div>
 
-              <div className="mt-4 rounded-2xl border border-white bg-white p-4 shadow-sm">
+              <div className="profile-permissions-profile-hint mt-3 rounded-2xl border border-slate-200/70 bg-white/60 p-3">
                 <h2 className="text-base font-black text-[#0b1a3c]">{getFixedProfileLabel(selectedRole)}</h2>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{getFixedProfileHint(selectedRole)}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">{getFixedProfileHint(selectedRole)}</p>
                 <ul className="mt-3 space-y-2 text-xs font-semibold leading-5 text-slate-600">
                   {PROFILE_GUIDES[selectedRole].map((item) => (
                     <li key={item} className="flex gap-2">
@@ -588,7 +645,7 @@ export default function ProfileManagementPage() {
             </aside>
 
             <div className="flex min-w-0 flex-col gap-4">
-              <section className="sticky top-3 z-10 rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur">
+              <section className="profile-permissions-toolbar sticky top-3 z-10 rounded-2xl border border-slate-200/70 bg-white/88 p-3 shadow-sm backdrop-blur">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                   <label className="flex min-h-11 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 xl:max-w-xl">
                     <FiSearch className="h-4 w-4 shrink-0 text-slate-500" />
@@ -610,7 +667,7 @@ export default function ProfileManagementPage() {
                       className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 text-sm font-black text-slate-700 transition hover:border-[#011848] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <FiRefreshCw className="h-4 w-4" />
-                      Restaurar padrão
+                      {editingUser ? "Restaurar usuário" : "Restaurar padrão"}
                     </button>
                     <button
                       type="button"
@@ -626,6 +683,11 @@ export default function ProfileManagementPage() {
 
                 <div className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 lg:flex-row lg:items-center lg:justify-between">
                   <span>
+                    {editingUser && selectedUser ? (
+                      <>Editando usuário: <strong>{selectedUser.label}</strong> · </>
+                    ) : (
+                      <>Editando padrão do perfil · </>
+                    )}
                     Última alteração: <strong>{formatDateTime(draftOverride.updatedAt)}</strong>{" "}
                     {draftOverride.updatedBy ? `por ${draftOverride.updatedBy}` : ""}
                   </span>
@@ -656,14 +718,14 @@ export default function ProfileManagementPage() {
                 ) : null}
               </section>
 
-              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <section className="profile-permissions-section rounded-2xl border border-slate-200/70 bg-white/72 p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <FiSliders className="h-4 w-4 text-[#ef0001]" />
-                      <h2 className="text-lg font-black">Decisões rápidas do perfil</h2>
+                      <h2 className="text-base font-black">Decisões rápidas do perfil</h2>
                     </div>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                    <p className="mt-1 text-xs leading-5 text-slate-600">
                       Ligue ou esconda o que mais muda a experiência do usuário: visão geral, contexto, Operacional, IA, Brain e Chat.
                     </p>
                   </div>
@@ -673,7 +735,7 @@ export default function ProfileManagementPage() {
                   {quickModules.map((module) => {
                     const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
                     return (
-                      <div key={module.id} className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+                      <div key={module.id} className="rounded-2xl border border-slate-200/70 bg-white/55 p-3">
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <h3 className="font-black text-[#0b1a3c]">{module.label}</h3>
@@ -703,12 +765,12 @@ export default function ProfileManagementPage() {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <section className="profile-permissions-section rounded-2xl border border-slate-200/70 bg-white/72 p-4">
                 <div className="flex items-center gap-2">
                   <FiGrid className="h-4 w-4 text-[#ef0001]" />
-                  <h2 className="text-lg font-black">Módulos e funções</h2>
+                  <h2 className="text-base font-black">Módulos e funções</h2>
                 </div>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
+                <p className="mt-1 text-xs leading-5 text-slate-600">
                   Cada módulo pode ser liberado, bloqueado ou ajustado ação por ação. O que ficar sem permissão sai do menu e da experiência do perfil.
                 </p>
 
@@ -724,7 +786,7 @@ export default function ProfileManagementPage() {
                           {modules.map((module) => {
                             const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
                             return (
-                              <div key={module.id} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/60">
+                              <div key={module.id} className="rounded-2xl border border-slate-200/70 bg-white/58 p-3">
                                 <div className="grid gap-4 xl:grid-cols-[minmax(220px,340px)_minmax(0,1fr)]">
                                   <div>
                                     <div className="flex flex-wrap items-center gap-2">
@@ -782,14 +844,14 @@ export default function ProfileManagementPage() {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+              <section className="profile-permissions-section rounded-2xl border border-slate-200/70 bg-white/72 p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <FiFilter className="h-4 w-4 text-[#ef0001]" />
-                      <h2 className="text-lg font-black">Telas visíveis e invisíveis</h2>
+                      <h2 className="text-base font-black">Telas visíveis e invisíveis</h2>
                     </div>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                    <p className="mt-1 text-xs leading-5 text-slate-600">
                       Prévia calculada em tempo real. Se uma tela depender de permissão bloqueada, ela fica invisível para o perfil selecionado.
                     </p>
                   </div>

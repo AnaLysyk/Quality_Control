@@ -34,8 +34,18 @@ type ClientRow = {
   active?: boolean | null;
 };
 
+type ProjectRow = {
+  id: string;
+  name: string;
+  releaseCount: number;
+  passRate: number | null;
+  gateStatus: string;
+  latestRelease?: { slug?: string; title?: string; createdAt?: string };
+};
+
 type CompanyListResponse = {
   companies: ReturnType<typeof buildCompanyRows>;
+  projectRows: ProjectRow[];
   period: number;
   coverage: { total: number; withStats: number; percent: number };
   releaseCount: number;
@@ -147,6 +157,28 @@ function sumReleases(releases: ReturnType<typeof buildReleaseWithStats>[]) {
   return stats;
 }
 
+function projectName(release: ReturnType<typeof buildReleaseWithStats>) {
+  return release.project || release.app || release.qaseProject || release.title || "Sem projeto";
+}
+
+function buildProjectRows(releases: ReturnType<typeof buildReleaseWithStats>[]): ProjectRow[] {
+  const gatePriority: Record<string, number> = { failed: 0, warning: 1, approved: 2, no_data: 3 };
+  const rows = new Map<string, ProjectRow>();
+  releases.forEach((release) => {
+    const name = projectName(release);
+    const id = text(name) || "sem-projeto";
+    const current = rows.get(id) ?? { id, name, releaseCount: 0, passRate: null, gateStatus: "no_data" };
+    current.releaseCount += 1;
+    if ((gatePriority[release.gate.status] ?? 99) < (gatePriority[current.gateStatus] ?? 99)) current.gateStatus = release.gate.status;
+    if (release.passRate !== null && (current.passRate === null || release.passRate < current.passRate)) current.passRate = release.passRate;
+    if (!current.latestRelease || release.createdAtValue >= new Date(current.latestRelease.createdAt ?? "").getTime()) {
+      current.latestRelease = { slug: release.slug, title: release.title, createdAt: release.createdAt ?? release.created_at };
+    }
+    rows.set(id, current);
+  });
+  return Array.from(rows.values()).sort((a, b) => (gatePriority[a.gateStatus] ?? 99) - (gatePriority[b.gateStatus] ?? 99) || (a.passRate ?? -1) - (b.passRate ?? -1) || a.name.localeCompare(b.name)).slice(0, 12);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const periodParam = Number(request.nextUrl.searchParams.get("period") ?? 30);
@@ -180,6 +212,7 @@ export async function GET(request: NextRequest) {
     companies = companies.sort((a, b) => (gatePriority[a.gate.status] ?? 99) - (gatePriority[b.gate.status] ?? 99) || a.name.localeCompare(b.name));
 
     const scopedReleases = scopedByCompany ? uniqueReleases(companies) : periodReleases;
+    const projectRows = buildProjectRows(scopedReleases);
     const withStats = scopedReleases.filter((release) => release.stats !== null).length;
     const coverage = { total: scopedReleases.length, withStats, percent: scopedReleases.length ? Math.round((withStats / scopedReleases.length) * 100) : 0 };
     const globalStats = sumReleases(scopedReleases);
@@ -208,6 +241,7 @@ export async function GET(request: NextRequest) {
 
     const response: CompanyListResponse = {
       companies,
+      projectRows,
       period,
       coverage,
       releaseCount: scopedReleases.length,

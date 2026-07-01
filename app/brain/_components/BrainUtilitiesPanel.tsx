@@ -107,8 +107,8 @@ function textToBase64(value: string) {
 }
 
 async function createPdfBlob(sourceText: string, file: File | null) {
-  const module = (await import("jspdf")) as unknown as { default?: new () => any; jsPDF?: new () => any };
-  const JsPDF = module.default ?? module.jsPDF;
+  const pdfModule = (await import("jspdf")) as unknown as { default?: new () => any; jsPDF?: new () => any };
+  const JsPDF = pdfModule.default ?? pdfModule.jsPDF;
   if (!JsPDF) throw new Error("Biblioteca PDF indisponível no navegador.");
 
   const doc = new JsPDF();

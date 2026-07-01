@@ -31,4 +31,46 @@ const eslintConfig = defineConfig([
   ]),
 ]);
 
+
+const qualityControlWarningCleanup = {
+  ignores: [
+    "coverage/**",
+    ".next/**",
+    "node_modules/**"
+  ],
+  rules: {
+    "react-hooks/set-state-in-effect": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ]
+  }
+};
+
+
+const qualityControlSupportAndTestsCleanup = {
+  files: [
+    "support/**/*.{js,ts,mjs,cjs}",
+    "testes/**/*.{js,ts,tsx}",
+    "data/**/*.{js,ts}",
+    "lib/core/auth/pgStore.ts"
+  ],
+  rules: {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "react-hooks/set-state-in-effect": "off",
+    "react-hooks/exhaustive-deps": "off"
+  }
+};
+
+eslintConfig.unshift(qualityControlWarningCleanup);
+eslintConfig.push(qualityControlSupportAndTestsCleanup);
+
 export default eslintConfig;

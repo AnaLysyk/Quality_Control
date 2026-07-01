@@ -73,11 +73,11 @@ export function isSupportOperatorUser(user: SupportAccessUser) {
 
 export function canAccessGlobalSupportScope(user: SupportAccessUser) {
   if (!canViewSupportBoard(user)) return false;
-  return isSupportOperatorUser(user) || isSupportAdminUser(user);
+  return isSupportOperatorUser(user);
 }
 
 export function canManageSupportWorkflow(user: SupportAccessUser) {
-  if (!isSupportOperatorUser(user) && !isSupportAdminUser(user)) return false;
+  if (!isSupportOperatorUser(user)) return false;
   return (
     hasSupportAccess(user, "tickets", "assign") ||
     hasSupportAccess(user, "tickets", "status") ||

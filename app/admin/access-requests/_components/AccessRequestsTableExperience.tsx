@@ -827,7 +827,7 @@ export function AccessRequestsTableExperience({
                 }}
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
                   statusFilter === option.value
-                    ? "border-(--tc-primary) bg-(--tc-primary) text-white shadow-[0_12px_24px_rgba(1,24,72,0.18)]"
+                    ? "border-[#011848] bg-[#011848] text-white shadow-[0_12px_24px_rgba(1,24,72,0.18)] dark:border-sky-500/40 dark:bg-sky-950 dark:text-sky-100"
                     : "border-(--tc-border) bg-(--tc-surface) text-(--tc-text-secondary) hover:border-[rgba(239,0,1,0.25)] hover:text-(--tc-text-primary)"
                 }`}
               >

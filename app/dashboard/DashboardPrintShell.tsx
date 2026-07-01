@@ -1,0 +1,21 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { FiDownload } from "react-icons/fi";
+
+export default function DashboardPrintShell({ children }: { children: ReactNode }) {
+  return (
+    <div>
+      <div className="fixed bottom-6 right-6 z-50 print:hidden">
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-(--tc-primary,#011848) bg-(--tc-primary,#011848) px-4 py-2 text-sm font-extrabold text-white shadow-lg"
+        >
+          <FiDownload className="h-4 w-4" /> Gerar PDF
+        </button>
+      </div>
+      {children}
+    </div>
+  );
+}

@@ -9,6 +9,8 @@ import { getVisibleRouteIds } from "./get-visible-routes";
 import { SYSTEM_ROUTE_BY_ID } from "./route-map";
 import type { NavItemDef, NavModuleDef } from "./navigationCatalog";
 
+const DISABLED_NAV_MODULE_IDS = new Set(["operations"]);
+
 function buildNavigationAccessContext(
   userRole: SystemRole | null,
   permissions?: PermissionMatrix | null,
@@ -23,12 +25,19 @@ function buildNavigationAccessContext(
   });
 }
 
+function isDisabledNavigationDefinition(item: NavItemDef | NavModuleDef) {
+  if (DISABLED_NAV_MODULE_IDS.has(item.id)) return true;
+  if ("module" in item && DISABLED_NAV_MODULE_IDS.has(item.module)) return true;
+  return false;
+}
+
 function canSeeNavigationDefinition(
   item: NavItemDef | NavModuleDef,
   userRole: SystemRole | null,
   context: UserAccessContext | null,
   visibleRouteIds: Set<string>,
 ) {
+  if (isDisabledNavigationDefinition(item)) return false;
   if (!userRole || !context) return false;
 
   const allowedRoles = item.allowedRoles;

@@ -13,6 +13,16 @@ export type ReleaseCalendarEventType =
 
 export type ReleaseCalendarStatus = "planned" | "at_risk" | "blocked" | "done" | "cancelled";
 export type ReleaseCalendarCriticality = "critical" | "high" | "normal" | "low";
+export type ReleaseCalendarContext = "company" | "project" | "user" | "tc" | "support" | "release" | "delivery";
+export type ReleaseCalendarAudienceProfile =
+  | "all"
+  | "empresa"
+  | "company_user"
+  | "testing_company_user"
+  | "leader_tc"
+  | "technical_support"
+  | "release_actor"
+  | "brain";
 
 export type ReleaseCalendarEvent = {
   id: string;
@@ -20,6 +30,9 @@ export type ReleaseCalendarEvent = {
   type: ReleaseCalendarEventType;
   status: ReleaseCalendarStatus;
   criticality: ReleaseCalendarCriticality;
+  context: ReleaseCalendarContext;
+  markerLabel: string;
+  audienceProfiles: ReleaseCalendarAudienceProfile[];
   companyId: string | null;
   companySlug: string | null;
   companyName: string | null;
@@ -31,6 +44,7 @@ export type ReleaseCalendarEvent = {
   endAt: string;
   ownerId: string | null;
   ownerName: string | null;
+  participantNames: string[];
   description: string;
   checklist: string[];
   notificationRules: string[];
@@ -55,11 +69,22 @@ export const releaseCalendarRules: ReleaseCalendarRule[] = [
   {
     id: "single-release-calendar",
     title: "Calendario unico de entrega",
-    description: "Toda entrega precisa aparecer em um calendario operacional por empresa, projeto e release.",
+    description: "Toda entrega precisa aparecer em um calendario operacional por empresa, projeto, usuario responsavel e release.",
     acceptanceCriteria: [
       "Release deve ter data de escopo, freeze, janela de QA, homologacao, entrega e pos-release quando aplicavel.",
-      "Agenda deve permitir filtrar por empresa, projeto, status e criticidade.",
-      "Brain deve conseguir responder o que entrega quando e o que esta em risco.",
+      "Agenda deve permitir filtrar por empresa, projeto, status, criticidade, contexto e responsavel.",
+      "Lider TC e Suporte Tecnico enxergam a agenda consolidada sem precisar trocar de empresa manualmente.",
+      "Brain deve conseguir responder o que entrega quando, quem esta responsavel e o que esta em risco.",
+    ],
+  },
+  {
+    id: "leader-support-overview",
+    title: "Visao consolidada para Lider TC e Suporte Tecnico",
+    description: "Perfis internos da TC precisam ver marcacoes de empresas, projetos e usuarios em uma camada visual compacta.",
+    acceptanceCriteria: [
+      "Marcacoes devem informar contexto, responsavel e publico-alvo.",
+      "Calendario deve agrupar eventos por dia e esconder excesso com contador de mais marcacoes.",
+      "Ao clicar em um dia, a tela exibe as marcacoes daquele dia com detalhes operacionais.",
     ],
   },
   {
@@ -89,7 +114,7 @@ export const releaseCalendarRules: ReleaseCalendarRule[] = [
     acceptanceCriteria: [
       "Evento de agenda gera notificacao mesmo que entrega seja suprimida.",
       "Eventos criticos de release nao devem ser silenciados sem registro.",
-      "Brain recebe contexto de prazo e risco.",
+      "Brain recebe contexto de prazo, responsavel, publico-alvo e risco.",
     ],
   },
 ];
@@ -119,6 +144,12 @@ export const releaseCalendarMetrics: ReleaseCalendarMetric[] = [
     formula: "calendar_events_with_notifications / total_calendar_events",
     description: "Mostra se os prazos estao gerando avisos e lembretes.",
   },
+  {
+    id: "calendar-context-coverage",
+    label: "Cobertura por contexto",
+    formula: "count(calendar_events grouped by context)",
+    description: "Mostra se a agenda esta distribuida entre empresa, projeto, usuario, TC, suporte e entrega.",
+  },
 ];
 
 export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
@@ -128,6 +159,9 @@ export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
     type: "scope_cut",
     status: "planned",
     criticality: "high",
+    context: "project",
+    markerLabel: "Escopo",
+    audienceProfiles: ["leader_tc", "technical_support", "testing_company_user"],
     companyId: null,
     companySlug: null,
     companyName: null,
@@ -139,6 +173,7 @@ export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
     endAt: "2026-07-01T10:00:00.000-03:00",
     ownerId: null,
     ownerName: "Produto/Tech Lead",
+    participantNames: ["QA", "Produto"],
     description: "Fechar o que entra e o que fica fora da release.",
     checklist: ["Lista de tickets fechada", "Critérios de aceite revisados", "Riscos conhecidos registrados"],
     notificationRules: ["Avisar lideres e QA", "Gerar lembrete 24h antes", "Gerar alerta se escopo mudar depois do corte"],
@@ -150,6 +185,9 @@ export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
     type: "qa_window",
     status: "planned",
     criticality: "critical",
+    context: "user",
+    markerLabel: "QA",
+    audienceProfiles: ["leader_tc", "technical_support", "testing_company_user"],
     companyId: null,
     companySlug: null,
     companyName: null,
@@ -161,6 +199,7 @@ export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
     endAt: "2026-07-03T18:00:00.000-03:00",
     ownerId: null,
     ownerName: "QA",
+    participantNames: ["QA", "Suporte Tecnico"],
     description: "Executar aceite, regressao e validacoes criticas antes da entrega.",
     checklist: ["Plano de teste criado", "Runs abertas", "Bugs criticos triados", "Evidencias anexadas"],
     notificationRules: ["Avisar inicio da janela", "Avisar bloqueios", "Avisar fim da janela"],
@@ -172,6 +211,9 @@ export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
     type: "release",
     status: "planned",
     criticality: "critical",
+    context: "delivery",
+    markerLabel: "Entrega",
+    audienceProfiles: ["all"],
     companyId: null,
     companySlug: null,
     companyName: null,
@@ -183,6 +225,7 @@ export const releaseCalendarTemplates: ReleaseCalendarEvent[] = [
     endAt: "2026-07-04T12:00:00.000-03:00",
     ownerId: null,
     ownerName: "Release Manager",
+    participantNames: ["Lider TC", "Suporte Tecnico", "Empresa"],
     description: "Publicar a versao e acompanhar a estabilizacao inicial.",
     checklist: ["Go/no-go confirmado", "Plano de rollback revisado", "Comunicacao enviada", "Monitoramento ativo"],
     notificationRules: ["Avisar todos os envolvidos", "Avisar status final", "Avisar incidente pos-release"],
@@ -208,12 +251,25 @@ export function getReleaseCalendarModel() {
       "post_release",
     ] satisfies ReleaseCalendarEventType[],
     statuses: ["planned", "at_risk", "blocked", "done", "cancelled"] satisfies ReleaseCalendarStatus[],
+    contexts: ["company", "project", "user", "tc", "support", "release", "delivery"] satisfies ReleaseCalendarContext[],
+    audienceProfiles: [
+      "all",
+      "empresa",
+      "company_user",
+      "testing_company_user",
+      "leader_tc",
+      "technical_support",
+      "release_actor",
+      "brain",
+    ] satisfies ReleaseCalendarAudienceProfile[],
     summary: {
       rules: releaseCalendarRules.length,
       metrics: releaseCalendarMetrics.length,
       templates: releaseCalendarTemplates.length,
       eventTypes: 9,
       statuses: 5,
+      contexts: 7,
+      audienceProfiles: 8,
     },
   };
 }

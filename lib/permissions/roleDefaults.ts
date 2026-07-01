@@ -23,6 +23,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     settings: ["view", "edit"],
     ai: ["view", "use"],
     brain: ["view", "read", "use"],
+    chat: ["view", "use"],
     // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: ["read"],
     test_plan: ["read"],
@@ -51,6 +52,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     settings: ["view", "edit"],
     ai: ["view", "use"],
     brain: ["view", "read", "use"],
+    chat: ["view", "use"],
     // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: [],
     test_plan: [],
@@ -79,6 +81,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     settings: ["view", "edit"],
     ai: ["view", "use"],
     brain: ["view", "read", "use"],
+    chat: ["view", "use"],
     // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: ["read", "create", "update"],
     test_plan: ["read", "create", "update"],
@@ -109,6 +112,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     settings: ["view", "edit"],
     ai: ["view", "use"],
     brain: ["view", "read", "use"],
+    chat: ["view", "use"],
     // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: ["read", "create", "update", "delete", "import"],
     test_plan: ["read", "create", "update", "delete"],
@@ -137,6 +141,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     settings: ["view"],
     ai: ["view", "use"],
     brain: ["view", "read", "use"],
+    chat: ["view", "use"],
     // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: ["read", "create", "update"],
     test_plan: ["read"],

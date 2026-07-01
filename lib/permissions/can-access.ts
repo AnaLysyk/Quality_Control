@@ -4,6 +4,8 @@ import type { UserAccessContext } from "./get-user-access-context";
 
 export type AccessPermission = SystemPermission | `${string}.${string}`;
 
+const DISABLED_PERMISSION_MODULES = new Set(["operations"]);
+
 function parsePermission(permission: AccessPermission): SystemPermission | null {
   if (typeof permission !== "string") return permission;
 
@@ -25,6 +27,7 @@ export function canAccess(context: UserAccessContext | null | undefined, permiss
 
   const parsed = parsePermission(permission);
   if (!parsed) return false;
+  if (DISABLED_PERMISSION_MODULES.has(parsed.moduleId)) return false;
 
   // O chat/Brain precisa orientar todos os perfis autenticados.
   // As ações sensíveis continuam passando pelo RBAC dos serviços e ferramentas.

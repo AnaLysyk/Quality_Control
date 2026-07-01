@@ -12,6 +12,7 @@ import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/nav
 import type { SystemRole } from "@/lib/auth/roles";
 
 const DISABLED_ITEM_IDS = new Set(["admin-system-map"]);
+const DISABLED_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
 const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
@@ -23,7 +24,6 @@ const COMPANY_DASHBOARD_ROLES = new Set<SystemRole>([
 const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "home",
-  "operations",
   "quality",
   "automation",
   "support",
@@ -38,7 +38,7 @@ const PROJECT_SCOPED_ITEM_IDS = new Set([
   "docs-central",
   "docs-repository",
 ]);
-const ENABLED_NAV_CATALOG = NAV_CATALOG;
+const ENABLED_NAV_CATALOG = NAV_CATALOG.filter((module) => !DISABLED_MODULE_IDS.has(module.id));
 
 function withScopeQuery(
   href: string | undefined,

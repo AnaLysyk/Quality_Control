@@ -12765,3 +12765,342 @@ aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role=
 }
 /* === /QC Sidebar final brand clean === */
 
+/* === QC Sidebar footer full company name === */
+.sidebar-operational-shell .sidebar-shell-footer {
+  gap: 0.45rem !important;
+  padding-inline: 0.55rem !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  overflow: visible !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding-inline: 0.15rem !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link,
+.sidebar-operational-shell .sidebar-footer-brand a {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  font-size: 0.47rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.035em !important;
+  font-weight: 900 !important;
+  color: var(--qc-sidebar-text-muted, var(--shell-sidebar-text-muted)) !important;
+  text-decoration: none !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link:hover,
+.sidebar-operational-shell .sidebar-footer-brand a:hover {
+  color: var(--qc-sidebar-text-strong, var(--shell-sidebar-text-strong)) !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+  background: transparent !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-version,
+.sidebar-operational-shell .sidebar-footer-brand span {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  font-size: 0.46rem !important;
+  line-height: 1.05 !important;
+  opacity: 0.58 !important;
+  color: var(--qc-sidebar-text-muted, var(--shell-sidebar-text-muted)) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:last-child {
+  flex: 0 0 auto !important;
+}
+/* === /QC Sidebar footer full company name === */
+
+/* === QC Profile permissions product v2 === */
+
+.profile-permissions-clean {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(56, 189, 248, 0.10), transparent 26rem),
+    radial-gradient(circle at 100% 4%, rgba(239, 0, 1, 0.07), transparent 24rem),
+    linear-gradient(180deg, #f8fbff 0%, #f4f7fb 48%, #ffffff 100%) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.profile-permissions-shell {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.profile-permissions-hero {
+  border-radius: 1.35rem !important;
+  border: 1px solid rgba(1, 24, 72, 0.12) !important;
+  background:
+    radial-gradient(circle at 95% 35%, rgba(239, 0, 1, 0.32), transparent 17rem),
+    linear-gradient(135deg, #011848 0%, #06255a 54%, #ef0001 100%) !important;
+  box-shadow: 0 18px 45px rgba(1, 24, 72, 0.14) !important;
+}
+
+.profile-permissions-hero h1 {
+  font-size: clamp(1.55rem, 2vw, 2.25rem) !important;
+  letter-spacing: -0.04em !important;
+}
+
+.profile-permissions-kpis {
+  gap: 0.45rem !important;
+}
+
+.profile-permissions-kpis span {
+  min-height: 1.85rem !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  padding: 0.32rem 0.65rem !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+}
+
+.profile-permissions-layout {
+  padding-inline: 0 !important;
+  padding-bottom: 0 !important;
+  grid-template-columns: 236px minmax(0, 1fr) !important;
+}
+
+.profile-permissions-profile-list {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.profile-permissions-profile-list > p {
+  padding-left: 0.35rem !important;
+  color: #64748b !important;
+}
+
+.profile-permissions-profile-list button {
+  min-height: 2.45rem !important;
+  border-radius: 0.95rem !important;
+  border-color: rgba(1, 24, 72, 0.10) !important;
+  background: rgba(255, 255, 255, 0.64) !important;
+  color: #0b1a3c !important;
+  box-shadow: none !important;
+}
+
+.profile-permissions-profile-list button:hover {
+  background: #ffffff !important;
+  border-color: rgba(1, 24, 72, 0.22) !important;
+}
+
+.profile-permissions-profile-list button[class*="bg-[#011848]"] {
+  background:
+    linear-gradient(135deg, #011848 0%, #0b2a69 100%) !important;
+  color: #ffffff !important;
+}
+
+.profile-permissions-profile-hint {
+  display: none !important;
+}
+
+.profile-permissions-toolbar {
+  position: relative !important;
+  top: auto !important;
+  z-index: 1 !important;
+  border-radius: 1.15rem !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(1, 24, 72, 0.10) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.profile-permissions-toolbar label {
+  background: #ffffff !important;
+  border-color: rgba(1, 24, 72, 0.12) !important;
+}
+
+.profile-permissions-toolbar input {
+  color: #0b1a3c !important;
+}
+
+.profile-permissions-toolbar input::placeholder {
+  color: #64748b !important;
+}
+
+.profile-permissions-toolbar button {
+  height: 2.55rem !important;
+  border-radius: 0.95rem !important;
+  box-shadow: none !important;
+}
+
+.profile-permissions-toolbar > div:nth-child(2) {
+  display: none !important;
+}
+
+.profile-permissions-toolbar [role="status"],
+.profile-permissions-toolbar .mt-4 {
+  border-radius: 0.95rem !important;
+}
+
+.profile-permissions-section {
+  border: 1px solid rgba(1, 24, 72, 0.10) !important;
+  border-radius: 1.15rem !important;
+  background: rgba(255, 255, 255, 0.68) !important;
+  box-shadow: none !important;
+}
+
+.profile-permissions-section > div:first-child {
+  gap: 0.75rem !important;
+}
+
+.profile-permissions-section h2 {
+  font-size: 1rem !important;
+  color: #011848 !important;
+}
+
+.profile-permissions-section h3,
+.profile-permissions-section h4 {
+  color: #0b1a3c !important;
+}
+
+.profile-permissions-section p {
+  color: #64748b !important;
+}
+
+.profile-permissions-section .grid {
+  gap: 0.7rem !important;
+}
+
+.profile-permissions-section [class*="bg-slate-50"] {
+  background: rgba(255, 255, 255, 0.52) !important;
+}
+
+.profile-permissions-section [class*="rounded-3xl"],
+.profile-permissions-section [class*="rounded-2xl"] {
+  border-radius: 1rem !important;
+}
+
+.profile-permissions-section [class*="shadow"] {
+  box-shadow: none !important;
+}
+
+.profile-permissions-section label.group {
+  min-height: 2.25rem !important;
+  border-radius: 0.8rem !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  color: #334155 !important;
+}
+
+.profile-permissions-section label.group:hover {
+  background: #ffffff !important;
+  border-color: rgba(1, 24, 72, 0.18) !important;
+}
+
+.profile-permissions-section label.group[class*="bg-emerald"] {
+  background: rgba(16, 185, 129, 0.10) !important;
+  border-color: rgba(16, 185, 129, 0.24) !important;
+  color: #065f46 !important;
+}
+
+.profile-permissions-section span[class*="bg-emerald"],
+.profile-permissions-section span[class*="bg-amber"],
+.profile-permissions-section span[class*="bg-rose"],
+.profile-permissions-section button[class*="bg-emerald"],
+.profile-permissions-section button[class*="bg-rose"] {
+  box-shadow: none !important;
+}
+
+.profile-permissions-section section,
+.profile-permissions-section article,
+.profile-permissions-section div {
+  scrollbar-color: rgba(1, 24, 72, 0.20) transparent;
+}
+
+.profile-permissions-section:has(h2) + .profile-permissions-section {
+  margin-top: 0 !important;
+}
+
+.profile-permissions-section div:has(> h3) p {
+  max-width: 32rem !important;
+}
+
+/* deixa as decisões rápidas mais produto e menos cardão */
+.profile-permissions-section:has(h2):has(svg) [class*="lg:grid-cols-2"],
+.profile-permissions-section:has(h2):has(svg) [class*="2xl:grid-cols-3"] {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+}
+
+.profile-permissions-section:has(h2):has(svg) [class*="rounded-2xl"][class*="p-3"],
+.profile-permissions-section:has(h2):has(svg) [class*="rounded-3xl"][class*="p-4"] {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.78), rgba(248,250,252,0.72)) !important;
+  border-color: rgba(1, 24, 72, 0.10) !important;
+}
+
+/* Dark */
+:root.dark .profile-permissions-clean,
+:root[data-theme="dark"] .profile-permissions-clean {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(56, 189, 248, 0.10), transparent 26rem),
+    radial-gradient(circle at 100% 4%, rgba(239, 0, 1, 0.13), transparent 24rem),
+    linear-gradient(180deg, #07111f 0%, #0b1424 48%, #0e1726 100%) !important;
+  color: #f8fafc !important;
+}
+
+:root.dark .profile-permissions-toolbar,
+:root[data-theme="dark"] .profile-permissions-toolbar,
+:root.dark .profile-permissions-section,
+:root[data-theme="dark"] .profile-permissions-section {
+  background: rgba(15, 23, 37, 0.74) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+:root.dark .profile-permissions-profile-list button,
+:root[data-theme="dark"] .profile-permissions-profile-list button,
+:root.dark .profile-permissions-toolbar label,
+:root[data-theme="dark"] .profile-permissions-toolbar label,
+:root.dark .profile-permissions-section [class*="bg-slate-50"],
+:root[data-theme="dark"] .profile-permissions-section [class*="bg-slate-50"],
+:root.dark .profile-permissions-section label.group,
+:root[data-theme="dark"] .profile-permissions-section label.group {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+:root.dark .profile-permissions-section h2,
+:root.dark .profile-permissions-section h3,
+:root.dark .profile-permissions-section h4,
+:root.dark .profile-permissions-toolbar input,
+:root[data-theme="dark"] .profile-permissions-section h2,
+:root[data-theme="dark"] .profile-permissions-section h3,
+:root[data-theme="dark"] .profile-permissions-section h4,
+:root[data-theme="dark"] .profile-permissions-toolbar input {
+  color: #f8fafc !important;
+}
+
+:root.dark .profile-permissions-section p,
+:root.dark .profile-permissions-profile-list > p,
+:root[data-theme="dark"] .profile-permissions-section p,
+:root[data-theme="dark"] .profile-permissions-profile-list > p {
+  color: rgba(226, 232, 240, 0.72) !important;
+}
+
+:root.dark .profile-permissions-section label.group[class*="bg-emerald"],
+:root[data-theme="dark"] .profile-permissions-section label.group[class*="bg-emerald"] {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #bbf7d0 !important;
+}
+
+/* === /QC Profile permissions product v2 === */
+

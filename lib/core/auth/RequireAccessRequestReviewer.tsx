@@ -37,7 +37,8 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
   const nonGlobalRedirect = user?.isGlobalAdmin ? "/admin/dashboard" : clientSlug ? `/empresas/${encodeURIComponent(clientSlug)}/home` : "/empresas";
 
   useEffect(() => {
-    setMounted(true);
+    const timeoutId = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -63,4 +64,3 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
 }
 
 export default RequireAccessRequestReviewer;
-

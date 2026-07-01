@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import useSWR from "swr";
-import { FiBarChart2, FiBrain, FiMessageCircle, FiRefreshCw, FiShield, FiUsers } from "react-icons/fi";
+import { FiBarChart2, FiCpu, FiMessageCircle, FiRefreshCw, FiShield, FiUsers } from "react-icons/fi";
 
 import { fetchApi } from "@/lib/api";
 
@@ -115,7 +115,7 @@ export function UnifiedConversationsHub() {
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
           <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-            <FiBrain className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Feed para memória do Brain
+            <FiCpu className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Feed para memória do Brain
           </div>
 
           {data?.signals.length ? (

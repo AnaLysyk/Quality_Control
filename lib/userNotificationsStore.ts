@@ -358,3 +358,54 @@ export async function closeNotificationsByDedupeKey(userId: string, dedupeKey: s
   });
   if (changed) await writeStore(store);
 }
+
+
+export async function closeAllNotifications(userId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const result = await prisma.userNotification.updateMany({
+      where: { userId, status: { not: "closed" } },
+      data: { status: "closed" },
+    });
+    return result.count;
+  }
+
+  const store = await readStore();
+  const items = Array.isArray(store[userId]) ? store[userId] : [];
+  const now = new Date().toISOString();
+  let changed = 0;
+
+  store[userId] = items.map((item) => {
+    if (item.status === "closed") return item;
+    changed += 1;
+    return { ...item, status: "closed", updatedAt: now };
+  });
+
+  if (changed) await writeStore(store);
+  return changed;
+}
+
+export async function closeNotificationsByTicketId(userId: string, ticketId: string) {
+  if (USE_POSTGRES) {
+    const prisma = await getPrisma();
+    const result = await prisma.userNotification.updateMany({
+      where: { userId, ticketId, status: { not: "closed" } },
+      data: { status: "closed" },
+    });
+    return result.count;
+  }
+
+  const store = await readStore();
+  const items = Array.isArray(store[userId]) ? store[userId] : [];
+  const now = new Date().toISOString();
+  let changed = 0;
+
+  store[userId] = items.map((item) => {
+    if (item.ticketId !== ticketId || item.status === "closed") return item;
+    changed += 1;
+    return { ...item, status: "closed", updatedAt: now };
+  });
+
+  if (changed) await writeStore(store);
+  return changed;
+}

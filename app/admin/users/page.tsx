@@ -523,8 +523,8 @@ function UserManagementQueueExperience({
                         onSelect(user);
                       }
                     }}
-                    role={onSelect ? "button" : undefined}
                     tabIndex={onSelect ? 0 : undefined}
+                    aria-label={onSelect ? `Ver detalhes de ${user.name}` : undefined}
                     className={`group transition ${onSelect ? "cursor-pointer" : ""} ${
                       active
                         ? "bg-sky-50/90 shadow-[inset_4px_0_0_#0284c7] dark:bg-sky-950/35"

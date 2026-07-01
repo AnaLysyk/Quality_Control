@@ -101,6 +101,14 @@ export function QaOperationModelPanel() {
 
   const criticalBacklog = useMemo(() => data?.backlog.filter((item) => item.priority === "critical") ?? [], [data]);
 
+  const summaryCards: Array<{ label: string; value: number; icon: React.ComponentType<{ className?: string }> }> = [
+    { label: "Blocos", value: data?.summary.hierarchyItems ?? 0, icon: FiLayers },
+    { label: "Métricas", value: data?.summary.metrics ?? 0, icon: FiBarChart2 },
+    { label: "Comandos Brian", value: data?.summary.brianCommands ?? 0, icon: FiMessageCircle },
+    { label: "Backlog", value: data?.summary.backlogItems ?? 0, icon: FiList },
+    { label: "Prontos", value: data?.summary.readyBacklog ?? 0, icon: FiCheckCircle },
+  ];
+
   return (
     <main className="space-y-5">
       <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
@@ -122,16 +130,10 @@ export function QaOperationModelPanel() {
         {error ? <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{error.message}</div> : null}
 
         <div className="mt-5 grid gap-3 md:grid-cols-5">
-          {[
-            ["Blocos", data?.summary.hierarchyItems ?? 0, FiLayers],
-            ["Métricas", data?.summary.metrics ?? 0, FiBarChart2],
-            ["Comandos Brian", data?.summary.brianCommands ?? 0, FiMessageCircle],
-            ["Backlog", data?.summary.backlogItems ?? 0, FiList],
-            ["Prontos", data?.summary.readyBacklog ?? 0, FiCheckCircle],
-          ].map(([label, value, Icon]) => (
-            <div key={String(label)} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+          {summaryCards.map(({ label, value, icon: Icon }) => (
+            <div key={label} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{String(label)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{label}</p>
                 <Icon className="h-4 w-4 text-(--tc-accent,#ef0001)" />
               </div>
               <p className="mt-1 text-2xl font-black text-(--tc-text,#0b1a3c)">{isLoading ? "..." : String(value)}</p>

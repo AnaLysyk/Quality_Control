@@ -123,28 +123,38 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!activeClientSlug) {
-      setProjects([]);
-      setActiveProjectSlugState(null);
-      return;
+      const timeoutId = window.setTimeout(() => {
+        setProjects([]);
+        setActiveProjectSlugState(null);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
 
-    fetchProjects(activeClientSlug).then((list) => {
-      if (list.length === 0) {
-        setActiveProjectSlugState(null);
-        return;
-      }
+    let cancelled = false;
+    const timeoutId = window.setTimeout(() => {
+      fetchProjects(activeClientSlug).then((list) => {
+        if (cancelled) return;
+        if (list.length === 0) {
+          setActiveProjectSlugState(null);
+          return;
+        }
 
-      const storage = getSessionStorage();
-      const companyId = activeClient?.id ?? activeClientSlug;
-      const stored = storage?.getItem(storageKey(companyId)) ?? null;
-      const storedProject = stored
-        ? list.find((p) => p.slug === stored || p.id === stored || p.qaseProjectCode === stored) ?? null
-        : null;
+        const storage = getSessionStorage();
+        const companyId = activeClient?.id ?? activeClientSlug;
+        const stored = storage?.getItem(storageKey(companyId)) ?? null;
+        const storedProject = stored
+          ? list.find((p) => p.slug === stored || p.id === stored || p.qaseProjectCode === stored) ?? null
+          : null;
 
-      const resolved = storedProject?.slug ?? list[0].slug;
-      setActiveProjectSlugState(resolved);
-      storage?.setItem(storageKey(companyId), resolved);
-    });
+        const resolved = storedProject?.slug ?? list[0].slug;
+        setActiveProjectSlugState(resolved);
+        storage?.setItem(storageKey(companyId), resolved);
+      });
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClientSlug]);
 

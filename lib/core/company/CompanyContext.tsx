@@ -141,65 +141,68 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   const clients = normalizedClients;
 
   useEffect(() => {
-    if (authLoading) {
-      setLoading(true);
-      return;
-    }
+    const timeoutId = window.setTimeout(() => {
+      if (authLoading) {
+        setLoading(true);
+        return;
+      }
 
-    if (!user) {
-      setActiveClientSlugState(null);
+      if (!user) {
+        setActiveClientSlugState(null);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
+      if (normalizedClients.length === 0) {
+        setActiveClientSlugState(null);
+        getSessionStorage()?.removeItem(storageKey(user.id));
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
+      const storage = getSessionStorage();
+      const stored = storage?.getItem(storageKey(user.id)) ?? null;
+      const storedSlug = stored
+        ? normalizedClients.find((client) => normalizeSlug(client.slug) === normalizeSlug(stored) || normalizeSlug(client.id) === normalizeSlug(stored))?.slug ?? null
+        : null;
+
+      const cookieMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )active_company_slug=([^;]+)/) : null;
+      const cookieActiveSlug = normalizeSlug(cookieMatch?.[1] ?? null) || null;
+
+      // Order of preference for resolving active client slug:
+      // 1) explicit cookie set by login (represents user choosing a company)
+      // 2) for non-global-admin users: normalized primary/default company plus the stored company choice
+      // For global admins we intentionally avoid inheriting a company from storage or implicit defaults
+      // so the admin sees the global admin nav unless they explicitly requested a company via cookie.
+      const preferredSlugs = [
+        ...(cookieActiveSlug ? [cookieActiveSlug] : []),
+        ...(!isGlobalAdmin
+          ? [
+              ...(primaryCompanySlug ? [primaryCompanySlug] : []),
+              storedSlug,
+              ...(defaultCompanySlug ? [defaultCompanySlug] : []),
+              ...companySlugs,
+            ]
+          : []),
+      ].filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index);
+
+      const resolvedSlug =
+        preferredSlugs.find((candidate) => normalizedClients.some((client) => normalizeSlug(client.slug) === candidate || normalizeSlug(client.id) === candidate)) ??
+        (isGlobalAdmin ? null : normalizedClients[0].slug);
+
+      setActiveClientSlugState(resolvedSlug ?? null);
+      if (resolvedSlug) {
+        storage?.setItem(storageKey(user.id), resolvedSlug);
+      } else {
+        storage?.removeItem(storageKey(user.id));
+      }
+
       setLoading(false);
       setError(null);
-      return;
-    }
-
-    if (normalizedClients.length === 0) {
-      setActiveClientSlugState(null);
-      getSessionStorage()?.removeItem(storageKey(user.id));
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    const storage = getSessionStorage();
-    const stored = storage?.getItem(storageKey(user.id)) ?? null;
-    const storedSlug = stored
-      ? normalizedClients.find((client) => normalizeSlug(client.slug) === normalizeSlug(stored) || normalizeSlug(client.id) === normalizeSlug(stored))?.slug ?? null
-      : null;
-
-    const cookieMatch = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )active_company_slug=([^;]+)/) : null;
-    const cookieActiveSlug = normalizeSlug(cookieMatch?.[1] ?? null) || null;
-
-    // Order of preference for resolving active client slug:
-    // 1) explicit cookie set by login (represents user choosing a company)
-    // 2) for non-global-admin users: normalized primary/default company plus the stored company choice
-    // For global admins we intentionally avoid inheriting a company from storage or implicit defaults
-    // so the admin sees the global admin nav unless they explicitly requested a company via cookie.
-    const preferredSlugs = [
-      ...(cookieActiveSlug ? [cookieActiveSlug] : []),
-      ...(!isGlobalAdmin
-        ? [
-            ...(primaryCompanySlug ? [primaryCompanySlug] : []),
-            storedSlug,
-            ...(defaultCompanySlug ? [defaultCompanySlug] : []),
-            ...companySlugs,
-          ]
-        : []),
-    ].filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index);
-
-    const resolvedSlug =
-      preferredSlugs.find((candidate) => normalizedClients.some((client) => normalizeSlug(client.slug) === candidate || normalizeSlug(client.id) === candidate)) ??
-      (isGlobalAdmin ? null : normalizedClients[0].slug);
-
-    setActiveClientSlugState(resolvedSlug ?? null);
-    if (resolvedSlug) {
-      storage?.setItem(storageKey(user.id), resolvedSlug);
-    } else {
-      storage?.removeItem(storageKey(user.id));
-    }
-
-    setLoading(false);
-    setError(null);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [authLoading, normalizedClients, user, isGlobalAdmin, primaryCompanySlug, defaultCompanySlug, companySlugs]);
 
   const refreshClients = useCallback(async () => {

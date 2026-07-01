@@ -93,6 +93,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (result === "final") {
       return NextResponse.json({ error: "Solicitacao finalizada" }, { status: 409 });
     }
+    if (result === "duplicate-user") {
+      return NextResponse.json({ error: "Usuario ja cadastrado" }, { status: 409 });
+    }
     if (result === "invalid-profile" || result === "company-missing") {
       return NextResponse.json({ error: "Perfil ou empresa invalida" }, { status: 400 });
     }

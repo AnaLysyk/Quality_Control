@@ -124,6 +124,7 @@ export default function BrainChatUtilities({ text, onUseText }: Props) {
         <input
           ref={fileRef}
           type="file"
+          aria-label="Anexar arquivo para conversao"
           className="hidden"
           onChange={(event) => {
             setSelectedFile(event.target.files?.[0] ?? null);
@@ -145,6 +146,8 @@ export default function BrainChatUtilities({ text, onUseText }: Props) {
           </span>
         ) : null}
         <select
+          aria-label="Formato de conversao"
+          title="Formato de conversao"
           value={targetFormat}
           onChange={(event) => setTargetFormat(event.target.value as TargetFormat)}
           className="rounded-xl border border-(--border-clr) bg-(--input-bg) px-2.5 py-1.5 text-(--text-clr) outline-none"

@@ -259,4 +259,34 @@ describePg("Criação de usuários — persistência por perfil", () => {
       ).rejects.toMatchObject({ code: "DUPLICATE_EMAIL" });
     });
   });
+
+  describe("Restricao: usuario duplicado", () => {
+    it("lanca DUPLICATE_USER ao tentar criar dois usuarios com o mesmo login", async () => {
+      const login = `dup.user.${uid}`;
+      await createUser({ name: "Dup User A", email: testEmail("dup-user-a"), user: login });
+
+      await expect(
+        pgCreateLocalUser({
+          name: "Dup User B",
+          email: testEmail("dup-user-b"),
+          user: login.toUpperCase(),
+          password_hash: TEST_PASSWORD,
+        }),
+      ).rejects.toMatchObject({ code: "DUPLICATE_USER" });
+    });
+
+    it("lanca DUPLICATE_USER quando o login usa o e-mail de outro usuario", async () => {
+      const existingEmail = testEmail("dup-user-email-token");
+      await createUser({ name: "Dup User Email Token A", email: existingEmail });
+
+      await expect(
+        pgCreateLocalUser({
+          name: "Dup User Email Token B",
+          email: testEmail("dup-user-email-token-b"),
+          user: existingEmail,
+          password_hash: TEST_PASSWORD,
+        }),
+      ).rejects.toMatchObject({ code: "DUPLICATE_USER" });
+    });
+  });
 });

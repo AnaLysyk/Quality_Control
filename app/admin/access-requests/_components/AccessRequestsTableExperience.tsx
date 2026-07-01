@@ -559,6 +559,8 @@ export function AccessRequestsTableExperience({
 
                   <button
                     type="button"
+                    aria-label="Baixar solicitação em PDF"
+                    title="Baixar solicitação em PDF"
                     data-brain-action="pdf"
                     onClick={() => {
                       void downloadRequestPdf(item);
@@ -1045,6 +1047,8 @@ export function AccessRequestsTableExperience({
                 <button
                   type="button"
                   data-brain-action="pdf"
+                  aria-label="Download PDF"
+                  title="Download PDF"
                   onClick={() => selectedItem && void downloadRequestPdf(selectedItem)}
                   disabled={!selectedItem}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-sm font-black text-white transition hover:bg-white/20"

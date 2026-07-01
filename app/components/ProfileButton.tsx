@@ -126,8 +126,21 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
   })();
 
   const isTechnicalSupportProfile = normalizedRuntimeRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
-  const isInstitutionalAdminProfile = normalizedRuntimeRole === SYSTEM_ROLES.LEADER_TC;
   const isAdmin = Boolean(user?.isGlobalAdmin || legacyUser?.isGlobalAdmin || normalizedRuntimeRole === SYSTEM_ROLES.LEADER_TC);
+  const profileTypeLabel =
+    normalizedRuntimeRole === SYSTEM_ROLES.LEADER_TC
+      ? t("roles.leaderTc")
+      : normalizedRuntimeRole === SYSTEM_ROLES.TECHNICAL_SUPPORT
+        ? t("roles.technicalSupport")
+        : normalizedRuntimeRole === SYSTEM_ROLES.TESTING_COMPANY_USER
+          ? t("roles.userTc")
+          : normalizedRuntimeRole === SYSTEM_ROLES.EMPRESA
+            ? t("roles.company")
+            : normalizedRuntimeRole === SYSTEM_ROLES.COMPANY_USER
+              ? t("roles.companyUser")
+              : isAdmin
+                ? t("roles.systemAdmin")
+                : null;
   const activeIdentity = resolveActiveIdentity({ user, activeCompany: activeClient });
   const displayName = activeIdentity.displayName;
   const displayEmail = activeIdentity.email ?? "";
@@ -156,13 +169,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
   const avatarLoadingPlaceholder = loading && !activeIdentity.avatarUrl;
   const contextBadgeLabel = activeIdentity.kind === "company"
     ? null
-    : isTechnicalSupportProfile
-      ? t("roles.technicalSupport")
-      : isInstitutionalAdminProfile || isAdmin
-        ? t("roles.systemAdmin")
-        : activeIdentity.showCompanyTag
-          ? activeIdentity.companyTagLabel
-          : null;
+    : profileTypeLabel ?? (activeIdentity.showCompanyTag ? activeIdentity.companyTagLabel : null);
 
   useEffect(() => {
     if (!open) return undefined;

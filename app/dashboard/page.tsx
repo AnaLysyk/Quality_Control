@@ -1,1 +1,1 @@
-export { default, dynamic } from "../admin/dashboard/page";
+export { default } from "../admin/dashboard/page";

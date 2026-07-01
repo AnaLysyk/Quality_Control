@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import useSWR from "swr";
-import { FiAlertTriangle, FiCheckCircle, FiClock, FiExternalLink, FiMail, FiRefreshCw, FiRoute, FiShield } from "react-icons/fi";
+import { FiAlertTriangle, FiCheckCircle, FiClock, FiExternalLink, FiGitBranch, FiMail, FiRefreshCw, FiShield } from "react-icons/fi";
 
 import { fetchApi } from "@/lib/api";
 
@@ -185,7 +185,7 @@ export function BrainAccessRequestEmailFlowPanel() {
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
           <div className="flex items-center gap-2">
-            <FiRoute className="h-5 w-5 text-(--tc-accent,#ef0001)" />
+            <FiGitBranch className="h-5 w-5 text-(--tc-accent,#ef0001)" />
             <h3 className="text-sm font-extrabold text-(--tc-text,#0b1a3c)">Rotas do fluxo</h3>
           </div>
           <div className="mt-3 space-y-2">

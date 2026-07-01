@@ -19,6 +19,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (result === "company-missing") return NextResponse.json({ message: "Empresa obrigatória não encontrada" }, { status: 400 });
   if (result === "company-name-missing") return NextResponse.json({ message: "Nome da empresa obrigatório" }, { status: 400 });
   if (result === "invalid-profile") return NextResponse.json({ message: "Perfil solicitado inválido" }, { status: 400 });
+  if (result === "duplicate-user") return NextResponse.json({ message: "Usuário já cadastrado" }, { status: 409 });
   if (result === "invalid-transition") return NextResponse.json({ message: "Transição de status inválida" }, { status: 409 });
   if (!result) return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
 

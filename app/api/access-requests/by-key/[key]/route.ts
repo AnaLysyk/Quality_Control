@@ -71,6 +71,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ key: stri
       "invalid-email": "Informe um e-mail valido",
       "invalid-profile": "Perfil invalido",
       "invalid-company": "Empresa invalida",
+      "duplicate-user": "Usuario ja cadastrado",
     };
     return NextResponse.json(
       { message: messages[result.error], field: result.field },

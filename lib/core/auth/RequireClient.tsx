@@ -84,17 +84,18 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timeoutId = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
     if (!loading) {
-      setTimedOut(false);
-      return;
+      const timeoutId = window.setTimeout(() => setTimedOut(false), 0);
+      return () => window.clearTimeout(timeoutId);
     }
 
-    const handle = setTimeout(() => setTimedOut(true), 10_000);
-    return () => clearTimeout(handle);
+    const handle = window.setTimeout(() => setTimedOut(true), 10_000);
+    return () => window.clearTimeout(handle);
   }, [loading]);
 
   const { isAdmin, isLinkedTcUser } = resolveRoleAccess(user, slug);

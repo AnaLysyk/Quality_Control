@@ -464,6 +464,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
         "company-missing": [400, "Empresa obrigatoria para este perfil"],
         "company-name-missing": [400, "Nome da empresa obrigatorio"],
         "invalid-profile": [400, "Perfil solicitado invalido"],
+        "duplicate-user": [409, "Usuario ja cadastrado"],
         "invalid-transition": [409, "A solicitacao nao pode mais ser aprovada"],
       };
       if (typeof result === "string") {

@@ -299,6 +299,12 @@ function duplicateUserError() {
   return err;
 }
 
+function userIdentityTokens(user: Pick<LocalAuthUser, "email" | "user">) {
+  return [user.user, user.email]
+    .map((value) => normalizeLogin(value ?? ""))
+    .filter(Boolean);
+}
+
 function buildUniqueLogin(
   users: Array<Pick<LocalAuthUser, "id" | "email" | "user">>,
   preferredLogin: string | null | undefined,
@@ -308,7 +314,7 @@ function buildUniqueLogin(
   const taken = new Set(
     users
       .filter((user) => user.id !== excludeUserId)
-      .map((user) => normalizeLogin(user.user ?? user.email ?? "")),
+      .flatMap(userIdentityTokens),
   );
 
   const normalizedPreferred = normalizeLogin(preferredLogin ?? "");

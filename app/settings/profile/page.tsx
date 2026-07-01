@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 import { useSWRProfileSummary } from "./useSWRProfileSummary";
@@ -25,7 +25,7 @@ import { fetchApi } from "@/lib/api";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { getFixedProfileLabel, resolveFixedProfileKind } from "@/lib/fixedProfilePresentation";
-import { hasPermissionAccess, normalizePermissionMatrix, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
+import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 import {
   canCreateCompanyUsersByScope,
   canViewCompanyUsersByScope,
@@ -605,35 +605,6 @@ function resolveCompanyStatusMeta(companyProfile: CompanyProfile | null) {
   return { label: "Ativa", tone: "positive" as const };
 }
 
-function resolveCompanyIntegrationMeta({
-  mode,
-  hasToken,
-  projectCodes,
-  hasError,
-}: {
-  mode?: string | null;
-  hasToken: boolean;
-  projectCodes: string[];
-  hasError: boolean;
-}) {
-  const normalizedMode = (mode ?? "").trim().toLowerCase();
-  const hasProjects = projectCodes.length > 0;
-
-  if (hasError) {
-    return { label: "Erro na integração", tone: "danger" as const };
-  }
-  if (normalizedMode === "manual") {
-    return { label: "Manual", tone: "neutral" as const };
-  }
-  if (!hasToken && !hasProjects) {
-    return { label: "Sem integração", tone: "neutral" as const };
-  }
-  if (hasToken && hasProjects) {
-    return { label: "Qase ativa", tone: "positive" as const };
-  }
-  return { label: "Configuração pendente", tone: "warning" as const };
-}
-
 export default function SettingsProfilePage() {
   const { user, loading, refreshUser } = useAuthUser();
   const { t } = useI18n();
@@ -855,10 +826,7 @@ export default function SettingsProfilePage() {
   const previewAvatarUrl = profileAvatarDirty ? activeAvatarUrl : persistedAvatarUrl;
   const heroAvatarUrl = persistedAvatarUrl;
   const avatarLoadingPlaceholder = loading && !persistedAvatarUrl && !profileAvatarDirty;
-  const generatedUsernameHint = useMemo(
-    () => suggestUsername(companyName.trim() || profileFullName.trim() || profileEmail.trim() || heroName),
-    [companyName, heroName, profileEmail, profileFullName],
-  );
+  const generatedUsernameHint = suggestUsername(companyName.trim() || profileFullName.trim() || profileEmail.trim() || heroName);
   const filteredJobTitleOptions = useMemo(() => {
     const query = normalizeSearchTerm(profileJobTitle);
     return [...JOB_TITLE_OPTIONS]
@@ -867,23 +835,17 @@ export default function SettingsProfilePage() {
       .sort((left, right) => right.score - left.score || left.option.localeCompare(right.option, "pt-BR"))
       .map(({ option }) => option);
   }, [profileJobTitle]);
-  const persistedUsername = useMemo(
-    () => (
-      (typeof user?.username === "string" ? user.username : "") ||
-      (typeof user?.user === "string" ? user.user : "") ||
-      username ||
-      ""
-    ).trim().toLowerCase(),
-    [user?.user, user?.username, username],
-  );
+  const persistedUsername = (
+    (typeof user?.username === "string" ? user.username : "") ||
+    (typeof user?.user === "string" ? user.user : "") ||
+    username ||
+    ""
+  ).trim().toLowerCase();
   const userPermissions = useMemo(
     () => resolveEffectivePermissionMatrix(user),
     [user],
   );
-  const scopePolicy = useMemo(
-    () => resolveUserScopePolicy(institutionalCompanyContext ? "company_admin" : companyContextRoleValue || roleValue),
-    [companyContextRoleValue, institutionalCompanyContext, roleValue],
-  );
+  const scopePolicy = resolveUserScopePolicy(institutionalCompanyContext ? "company_admin" : companyContextRoleValue || roleValue);
   const canManageInstitutionalUsers =
     hasCompanyContext &&
     (
@@ -1203,99 +1165,146 @@ export default function SettingsProfilePage() {
     if (!query) return true;
     return project.code.toLowerCase().includes(query) || project.title.toLowerCase().includes(query);
   });
+
+  const restoreCompanyIntegrationFromSaved = useCallback((savedProfile?: CompanyProfile | null) => {
+    const source = savedProfile ?? companyProfile;
+    setCompanyQaseToken("");
+    setCompanyRemoveSavedQaseToken(false);
+    setCompanyShowQaseToken(false);
+    setCompanyProjectCodes(Array.isArray(source?.qase_project_codes) ? source.qase_project_codes : []);
+    setCompanyQaseValidationState(source?.qase_is_valid === true && source?.qase_is_active === true ? "active" : source?.qase_validation_status ?? "empty");
+    setCompanyJiraBaseUrl(source?.jira_base_url ?? "");
+    setCompanyJiraEmail(source?.jira_email ?? "");
+    setCompanyJiraApiToken("");
+    setCompanyRemoveSavedJiraToken(false);
+    setCompanyShowJiraApiToken(false);
+    setCompanyJiraValidationState(source?.jira_is_valid === true && source?.jira_is_active === true ? "active" : source?.jira_validation_status ?? "empty");
+    setCompanyJiraValidationMessage(null);
+    setCompanyJiraAccountName(source?.jira_account_name ?? null);
+    setCompanyJiraValidationLoading(false);
+    setCompanyIntegrationMode("manual");
+    setCompanyIntegrationEditing(false);
+    setCompanyPendingDisableAll(false);
+    setCompanyDisableIntegrationsConfirmOpen(false);
+    setCompanySaveConfirmOpen(false);
+    setCompanySaveConfirmDescription(null);
+    setQaseProjects([]);
+    setQaseProjectsError(null);
+    setSearchProjects("");
+    setOnlyValidProjects(false);
+    setDisplayLimit(12);
+  }, [companyProfile]);
+
   useEffect(() => {
-    if (swrCompanies) setCompanies(normalizeCompanies(swrCompanies));
-    if (swrCompaniesError) setCompaniesError(swrCompaniesError.message || String(swrCompaniesError));
+    const timeoutId = window.setTimeout(() => {
+      if (swrCompanies) setCompanies(normalizeCompanies(swrCompanies));
+      if (swrCompaniesError) setCompaniesError(swrCompaniesError.message || String(swrCompaniesError));
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [swrCompanies, swrCompaniesError]);
 
   const { profileSummary: swrProfileSummary, loading: swrProfileSummaryLoading, error: swrProfileSummaryError } = useSWRProfileSummary(user?.id);
   useEffect(() => {
-    if (swrProfileSummary) setProfileSummary(normalizeProfileSummary(swrProfileSummary));
-    if (swrProfileSummaryError) setProfileSummary(null);
-    setProfileSummaryLoading(swrProfileSummaryLoading);
+    const timeoutId = window.setTimeout(() => {
+      if (swrProfileSummary) setProfileSummary(normalizeProfileSummary(swrProfileSummary));
+      if (swrProfileSummaryError) setProfileSummary(null);
+      setProfileSummaryLoading(swrProfileSummaryLoading);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [swrProfileSummary, swrProfileSummaryError, swrProfileSummaryLoading]);
 
   useEffect(() => {
     if (activeProfileTab === "usuários" && !companyUsersTabActivated) {
-      setCompanyUsersTabActivated(true);
+      const timeoutId = window.setTimeout(() => setCompanyUsersTabActivated(true), 0);
+      return () => window.clearTimeout(timeoutId);
     }
+    return undefined;
   }, [activeProfileTab, companyUsersTabActivated]);
 
   useEffect(() => {
-    if (swrCompanyProfile) {
-      const normalized = normalizeCompanyProfile(swrCompanyProfile);
-      if (normalized) {
-        setCompanyProfile(normalized);
-        setCompanyError(null);
-        setQaseProjectsError(null);
+    const timeoutId = window.setTimeout(() => {
+      if (swrCompanyProfile) {
+        const normalized = normalizeCompanyProfile(swrCompanyProfile);
+        if (normalized) {
+          setCompanyProfile(normalized);
+          setCompanyError(null);
+          setQaseProjectsError(null);
+        }
       }
-    }
-    if (swrCompanyProfileError) {
-      setCompanyError(swrCompanyProfileError.message || String(swrCompanyProfileError));
-    }
+      if (swrCompanyProfileError) {
+        setCompanyError(swrCompanyProfileError.message || String(swrCompanyProfileError));
+      }
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [swrCompanyProfile, swrCompanyProfileError]);
 
   useEffect(() => {
     if (!companyScopeKey) return;
-    companyFieldsInitRef.current = false;
-    setActiveProfileTab("perfil");
-    setCompanyUsersTabActivated(false);
-    setCompanyUsers([]);
-    setCompanyUsersError(null);
-    setCompanyError(null);
-    setCompanySuccess(null);
-    setCompanyLogoError(null);
-    setCompanyLogoSuccess(null);
-    setQaseProjectsError(null);
-    setCompanyUserCreateOpen(false);
-    setCompanyLogoDirty(false);
-    setCompanyLogoFile(null);
-    setCompanyQaseToken("");
-    setCompanyRemoveSavedQaseToken(false);
-    setCompanyShowQaseToken(false);
-    setCompanyQaseValidationState("empty");
-    setCompanyJiraBaseUrl("");
-    setCompanyJiraEmail("");
-    setCompanyJiraApiToken("");
-    setCompanyRemoveSavedJiraToken(false);
-    setCompanyShowJiraApiToken(false);
-    setCompanyJiraValidationState("empty");
-    setCompanyJiraValidationLoading(false);
-    setCompanyJiraValidationMessage(null);
-    setCompanyJiraAccountName(null);
-    setCompanyDisableIntegrationsConfirmOpen(false);
-    setCompanySaveConfirmOpen(false);
-    setCompanySaveConfirmDescription(null);
-    setCompanyLogoPreviewObjectUrl((current) => {
-      if (current) {
-        URL.revokeObjectURL(current);
-      }
-      return null;
-    });
+    const timeoutId = window.setTimeout(() => {
+      companyFieldsInitRef.current = false;
+      setActiveProfileTab("perfil");
+      setCompanyUsersTabActivated(false);
+      setCompanyUsers([]);
+      setCompanyUsersError(null);
+      setCompanyError(null);
+      setCompanySuccess(null);
+      setCompanyLogoError(null);
+      setCompanyLogoSuccess(null);
+      setQaseProjectsError(null);
+      setCompanyUserCreateOpen(false);
+      setCompanyLogoDirty(false);
+      setCompanyLogoFile(null);
+      setCompanyQaseToken("");
+      setCompanyRemoveSavedQaseToken(false);
+      setCompanyShowQaseToken(false);
+      setCompanyQaseValidationState("empty");
+      setCompanyJiraBaseUrl("");
+      setCompanyJiraEmail("");
+      setCompanyJiraApiToken("");
+      setCompanyRemoveSavedJiraToken(false);
+      setCompanyShowJiraApiToken(false);
+      setCompanyJiraValidationState("empty");
+      setCompanyJiraValidationLoading(false);
+      setCompanyJiraValidationMessage(null);
+      setCompanyJiraAccountName(null);
+      setCompanyDisableIntegrationsConfirmOpen(false);
+      setCompanySaveConfirmOpen(false);
+      setCompanySaveConfirmDescription(null);
+      setCompanyLogoPreviewObjectUrl((current) => {
+        if (current) {
+          URL.revokeObjectURL(current);
+        }
+        return null;
+      });
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [companyScopeKey]);
 
   useEffect(() => {
     if (!companyProfile) return;
-    if (!companyFieldsInitRef.current || !companyDataFieldsDirty) {
-      setCompanyName((companyProfile.company_name ?? companyProfile.name ?? "").trim());
-      setCompanyTaxId(companyProfile.tax_id ?? "");
-      setCompanyCep(companyProfile.cep ?? "");
-      setCompanyAddress(companyProfile.address ?? "");
-      setCompanyAddressDetail(companyProfile.address_detail ?? "");
-      setCompanyPhone(companyProfile.phone ?? "");
-      setCompanyWebsite(companyProfile.website ?? "");
-      setCompanyDocsLink(companyProfile.docs_link ?? "");
-      setCompanyLinkedinUrl(companyProfile.linkedin_url ?? "");
-      setCompanyNotificationsFanoutEnabled(companyProfile.notifications_fanout_enabled ?? true);
-      companyFieldsInitRef.current = true;
-    }
-    if (!companyLogoHasChanges) {
-      setCompanyLogoUrl(companyProfile.logo_url ?? "");
-    }
-    if (!companyHasUnsavedIntegrationChanges) {
-      restoreCompanyIntegrationFromSaved(companyProfile);
-    }
-  }, [companyDataFieldsDirty, companyHasUnsavedIntegrationChanges, companyLogoHasChanges, companyProfile]);
+    const timeoutId = window.setTimeout(() => {
+      if (!companyFieldsInitRef.current || !companyDataFieldsDirty) {
+        setCompanyName((companyProfile.company_name ?? companyProfile.name ?? "").trim());
+        setCompanyTaxId(companyProfile.tax_id ?? "");
+        setCompanyCep(companyProfile.cep ?? "");
+        setCompanyAddress(companyProfile.address ?? "");
+        setCompanyAddressDetail(companyProfile.address_detail ?? "");
+        setCompanyPhone(companyProfile.phone ?? "");
+        setCompanyWebsite(companyProfile.website ?? "");
+        setCompanyDocsLink(companyProfile.docs_link ?? "");
+        setCompanyLinkedinUrl(companyProfile.linkedin_url ?? "");
+        setCompanyNotificationsFanoutEnabled(companyProfile.notifications_fanout_enabled ?? true);
+        companyFieldsInitRef.current = true;
+      }
+      if (!companyLogoHasChanges) {
+        setCompanyLogoUrl(companyProfile.logo_url ?? "");
+      }
+      if (!companyHasUnsavedIntegrationChanges) {
+        restoreCompanyIntegrationFromSaved(companyProfile);
+      }
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [companyDataFieldsDirty, companyHasUnsavedIntegrationChanges, companyLogoHasChanges, companyProfile, restoreCompanyIntegrationFromSaved]);
 
   useEffect(() => {
     return () => {
@@ -1306,30 +1315,36 @@ export default function SettingsProfilePage() {
   }, [companyLogoPreviewObjectUrl]);
 
   useEffect(() => {
-    if (swrCompanyUsers) {
-      setCompanyUsers(normalizeCompanyUsers(swrCompanyUsers));
-      setCompanyUsersError(null);
-    }
-    if (swrCompanyUsersFetchError) {
-      setCompanyUsersError(swrCompanyUsersFetchError.message || String(swrCompanyUsersFetchError));
-    }
+    const timeoutId = window.setTimeout(() => {
+      if (swrCompanyUsers) {
+        setCompanyUsers(normalizeCompanyUsers(swrCompanyUsers));
+        setCompanyUsersError(null);
+      }
+      if (swrCompanyUsersFetchError) {
+        setCompanyUsersError(swrCompanyUsersFetchError.message || String(swrCompanyUsersFetchError));
+      }
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [swrCompanyUsers, swrCompanyUsersFetchError]);
 
   useEffect(() => {
-    setProfileFullName(fullName || "");
-    setProfileUsername(username || "");
-    setProfileEmail(email || "");
-    setProfilePhone(phone || "");
-    setProfileJobTitle(jobTitle || "");
-    setProfileLinkedinUrl(linkedinUrl || "");
-    const nextAvatarUrl = avatarUrl || "";
-    const nextSource = resolveAvatarSource(nextAvatarUrl);
-    setProfileAvatarFile(null);
-    setProfileAvatarDirty(false);
-    setGeneratedUsernameHistory([]);
-    setProfileAvatarSource(nextSource);
-    setProfileUploadedAvatarUrl(nextSource === "upload" ? nextAvatarUrl : "");
-    setProfileAvatarUrlInput(nextSource === "url" ? nextAvatarUrl : "");
+    const timeoutId = window.setTimeout(() => {
+      setProfileFullName(fullName || "");
+      setProfileUsername(username || "");
+      setProfileEmail(email || "");
+      setProfilePhone(phone || "");
+      setProfileJobTitle(jobTitle || "");
+      setProfileLinkedinUrl(linkedinUrl || "");
+      const nextAvatarUrl = avatarUrl || "";
+      const nextSource = resolveAvatarSource(nextAvatarUrl);
+      setProfileAvatarFile(null);
+      setProfileAvatarDirty(false);
+      setGeneratedUsernameHistory([]);
+      setProfileAvatarSource(nextSource);
+      setProfileUploadedAvatarUrl(nextSource === "upload" ? nextAvatarUrl : "");
+      setProfileAvatarUrlInput(nextSource === "url" ? nextAvatarUrl : "");
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [avatarUrl, email, fullName, jobTitle, linkedinUrl, phone, username]);
 
   useEffect(() => {
@@ -1802,35 +1817,6 @@ export default function SettingsProfilePage() {
     } catch (error) {
       setCompanyUsersError(error instanceof Error ? error.message : "Não foi possível atualizar os usuários da empresa.");
     }
-  }
-
-  function restoreCompanyIntegrationFromSaved(savedProfile?: CompanyProfile | null) {
-    const source = savedProfile ?? companyProfile;
-    setCompanyQaseToken("");
-    setCompanyRemoveSavedQaseToken(false);
-    setCompanyShowQaseToken(false);
-    setCompanyProjectCodes(Array.isArray(source?.qase_project_codes) ? source.qase_project_codes : []);
-    setCompanyQaseValidationState(source?.qase_is_valid === true && source?.qase_is_active === true ? "active" : source?.qase_validation_status ?? "empty");
-    setCompanyJiraBaseUrl(source?.jira_base_url ?? "");
-    setCompanyJiraEmail(source?.jira_email ?? "");
-    setCompanyJiraApiToken("");
-    setCompanyRemoveSavedJiraToken(false);
-    setCompanyShowJiraApiToken(false);
-    setCompanyJiraValidationState(source?.jira_is_valid === true && source?.jira_is_active === true ? "active" : source?.jira_validation_status ?? "empty");
-    setCompanyJiraValidationMessage(null);
-    setCompanyJiraAccountName(source?.jira_account_name ?? null);
-    setCompanyJiraValidationLoading(false);
-    setCompanyIntegrationMode("manual");
-    setCompanyIntegrationEditing(false);
-    setCompanyPendingDisableAll(false);
-    setCompanyDisableIntegrationsConfirmOpen(false);
-    setCompanySaveConfirmOpen(false);
-    setCompanySaveConfirmDescription(null);
-    setQaseProjects([]);
-    setQaseProjectsError(null);
-    setSearchProjects("");
-    setOnlyValidProjects(false);
-    setDisplayLimit(12);
   }
 
   function openCompanyIntegrationEditor(provider: CompanyIntegrationProvider) {

@@ -286,6 +286,24 @@ function normalizeDuplicateValue(value?: string | null) {
   return (value ?? "").trim().toLowerCase();
 }
 
+async function isIdentityTokenTakenByAnotherUser(
+  token: string | null | undefined,
+  owner: { userId?: string | null; email?: string | null },
+) {
+  const normalized = normalizeDuplicateValue(token);
+  if (!normalized) return false;
+
+  const existing = await findLocalUserByEmailOrId(normalized);
+  if (!existing) return false;
+
+  const ownerId = normalizeDuplicateValue(owner.userId);
+  const ownerEmail = normalizeDuplicateValue(owner.email);
+  if (ownerId && normalizeDuplicateValue(existing.id) === ownerId) return false;
+  if (ownerEmail && normalizeDuplicateValue(existing.email) === ownerEmail) return false;
+
+  return true;
+}
+
 function isActiveDuplicateStatus(status: AccessRequestV2Status) {
   return status === "pending" || status === "under_review" || status === "needs_more_info";
 }
@@ -335,6 +353,16 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
   }
   if (requestedRole === "empresa" && !details.company?.companyName) {
     return { status: 400 as const, body: { message: "Informe os dados da empresa" } };
+  }
+  if (requestedUser && (await isIdentityTokenTakenByAnotherUser(requestedUser, { userId: authUser?.id, email: requesterEmail }))) {
+    return {
+      status: 409 as const,
+      body: {
+        ok: false,
+        code: "DUPLICATE_USER",
+        message: "Usuario ja cadastrado",
+      },
+    };
   }
 
   if (shouldBlockDuplicateAccessRequests()) {
@@ -508,6 +536,15 @@ export async function updateAccessRequestDetailsForReviewer(
     notes: readTextFromPayload(payload, ["notes"], 2000) || request.details?.notes,
     company: request.details?.company,
   };
+  if (
+    details.username &&
+    (await isIdentityTokenTakenByAnotherUser(details.username, {
+      userId: request.requesterUserId,
+      email: request.requesterEmail,
+    }))
+  ) {
+    return "duplicate-user" as const;
+  }
 
   const companyId =
     readTextFromPayload(payload, ["client_id", "requestedCompanyId"], 120) ||
@@ -676,6 +713,15 @@ async function applyApprovalEffects(request: AccessRequestV2, reviewer: AuthUser
   const storedRole = toStoredEditableUserRole(profile);
   const profileState = resolveEditableProfileUserState(profile, company?.id ?? null);
 
+  if (
+    await isIdentityTokenTakenByAnotherUser(username, {
+      userId: existingUser?.id ?? request.requesterUserId,
+      email: request.requesterEmail,
+    })
+  ) {
+    return "duplicate-user" as const;
+  }
+
   const targetUser =
     existingUser ??
     (await createLocalUser({
@@ -839,7 +885,8 @@ export async function transitionAccessRequest(
       result === "testing-company-missing" ||
       result === "company-missing" ||
       result === "company-name-missing" ||
-      result === "invalid-profile"
+      result === "invalid-profile" ||
+      result === "duplicate-user"
     ) {
       return result;
     }
@@ -1121,8 +1168,17 @@ export async function updateAccessRequestByKey(
       patch.requestedCompanySlug = company.name ?? company.company_name ?? company.slug;
       next = patch.requestedCompanySlug ?? nextRaw;
     } else if (field === "username") {
-      details.username = nextRaw.toLowerCase();
-      next = nextRaw.toLowerCase();
+      const nextUsername = nextRaw.toLowerCase();
+      if (
+        await isIdentityTokenTakenByAnotherUser(nextUsername, {
+          userId: request.requesterUserId,
+          email: request.requesterEmail,
+        })
+      ) {
+        return { error: "duplicate-user" as const, field };
+      }
+      details.username = nextUsername;
+      next = nextUsername;
     } else if (field === "phone") {
       details.phone = nextRaw;
     } else if (field === "jobRole") {

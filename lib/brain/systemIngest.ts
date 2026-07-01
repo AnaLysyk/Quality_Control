@@ -80,7 +80,7 @@ function shouldIngest(input: SystemEntityInput) {
 }
 
 function resolveNodeType(entityType: string) {
-  return NODE_TYPE_BY_ENTITY[entityType] ?? entityType.replace(/[^a-zA-Z0-9]/g, "") || "SystemRecord";
+  return NODE_TYPE_BY_ENTITY[entityType] ?? (entityType.replace(/[^a-zA-Z0-9]/g, "") || "SystemRecord");
 }
 
 function buildDescription(input: SystemEntityInput) {

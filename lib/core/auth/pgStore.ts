@@ -253,6 +253,19 @@ function isPrismaUniqueViolation(err: unknown, field?: string): boolean {
   return false;
 }
 
+async function pgFindUserByIdentityToken(token: string, excludeUserId?: string): Promise<{ id: string } | null> {
+  const normalized = nl(token);
+  if (!normalized) return null;
+
+  return prisma.user.findFirst({
+    where: {
+      OR: [{ user: normalized }, { email: normalized }],
+      ...(excludeUserId ? { NOT: { id: excludeUserId } } : {}),
+    },
+    select: { id: true },
+  });
+}
+
 // ── User ──────────────────────────────────────────────────────────────────────
 
 export async function pgFindLocalUserByEmailOrId(identifier: string): Promise<LocalAuthUser | null> {
@@ -300,10 +313,14 @@ export async function pgCreateLocalUser(input: {
   const loginRaw = nl(input.user ?? "");
   const loginBase = loginRaw || email.split("@")[0] || "usuario";
 
-  // Build a unique login, checking the DB
+  if (await prisma.user.findUnique({ where: { email } })) {
+    throw pgDuplicateEmailError();
+  }
+
+  // Build a unique login, checking the full login namespace.
   let login = loginBase;
   let counter = 2;
-  while (await prisma.user.findFirst({ where: { user: login } })) {
+  while (await pgFindUserByIdentityToken(login)) {
     if (loginRaw && login === loginRaw) throw pgDuplicateUserError();
     login = `${loginBase}.${counter++}`;
   }
@@ -360,6 +377,11 @@ export async function pgUpdateLocalUser(
     const dup = await prisma.user.findUnique({ where: { email: nextEmail } });
     if (dup) throw pgDuplicateEmailError();
   }
+  const nextLogin = typeof patch.user === "string" ? nl(patch.user) : undefined;
+  if (nextLogin) {
+    const dup = await pgFindUserByIdentityToken(nextLogin, id);
+    if (dup) throw pgDuplicateUserError();
+  }
 
   try {
     const user = await prisma.user.update({
@@ -368,7 +390,7 @@ export async function pgUpdateLocalUser(
         ...(patch.name ? { name: patch.name } : {}),
         ...(patch.full_name !== undefined ? { full_name: patch.full_name ?? null } : {}),
         ...(nextEmail ? { email: nextEmail } : {}),
-        ...(typeof patch.user === "string" ? { user: nl(patch.user) || undefined } : {}),
+        ...(typeof patch.user === "string" ? { user: nextLogin || undefined } : {}),
         ...(typeof patch.role === "string" ? { role: patch.role as any } : {}),
         ...(patch.globalRole !== undefined ? { globalRole: patch.globalRole } : {}),
         ...(typeof patch.status === "string" ? { status: patch.status } : {}),

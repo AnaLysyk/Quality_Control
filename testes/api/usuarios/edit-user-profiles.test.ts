@@ -234,4 +234,14 @@ describePg("Edição de usuário — por tipo de perfil", () => {
     expect(updated!.linkedin_url).toContain(UID);
     console.log(`\n✅ Múltiplos campos editados: ${Object.keys({ name: 1, full_name: 1, phone: 1, job_title: 1, linkedin_url: 1 }).join(", ")}`);
   });
+
+  it("rejeita edicao com usuario ja cadastrado para outro usuario", async () => {
+    const login = `edit.dup.user.${UID}`;
+    const userA = await makeUser("dup-user-a", { user: login });
+    const userB = await makeUser("dup-user-b");
+
+    await expect(
+      pgUpdateLocalUser(userB.id, { user: (userA.user ?? login).toUpperCase() })
+    ).rejects.toMatchObject({ code: "DUPLICATE_USER" });
+  });
 });

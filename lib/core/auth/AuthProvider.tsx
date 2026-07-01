@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contracts/auth";
 import { getAccessToken, refreshClientSession } from "@/lib/api";
 import { unwrapEnvelopeData } from "@/lib/apiEnvelope";
@@ -148,7 +148,6 @@ function decodeBase64Url(value: string) {
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
   try {
     if (typeof atob === "function") return atob(padded);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return Buffer.from(padded, "base64").toString("utf8");
   } catch {
     return null;
@@ -227,6 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [companies, setCompanies] = useState<AuthCompany[]>(cached?.companies ?? []);
   const [loading, setLoading] = useState(cached === null); // skip spinner if cache hit
   const [error, setError] = useState<string | null>(null);
+  const initialHadCacheRef = useRef(cached !== null);
 
   const refreshUser = useCallback(async (showSpinner = true) => {
     if (showSpinner) setLoading(true);
@@ -275,10 +275,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // If we had a cache hit on mount, revalidate silently in background
-    const hadCache = cached !== null;
-    void refreshUser(!hadCache);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void refreshUser(!initialHadCacheRef.current);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [refreshUser]);
 
   useEffect(() => {
     return subscribeAuthUserSync((nextUser) => {

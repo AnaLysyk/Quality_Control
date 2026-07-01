@@ -46,6 +46,9 @@ type VisibleGraphOptions = {
   period?: "all" | "today" | "7d" | "30d";
   companyId?: string | null;
   projectId?: string | null;
+  profileType?: string | null;
+  subjectId?: string | null;
+  subjectKind?: "profile" | "user" | "company" | null;
 };
 
 function normalize(value: string) {
@@ -81,6 +84,9 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
     period = "all",
     companyId = null,
     projectId = null,
+    profileType = null,
+    subjectId = null,
+    subjectKind = null,
   } = options;
 
   const connected = getConnectedNodeIds(edges);
@@ -97,8 +103,21 @@ export function getVisibleGraph(nodes: BrainNode[], edges: BrainEdge[], options:
   const query = normalize(searchText);
 
   const visibleNodes = nodes.filter((node) => {
-    if (!belongsToSelectedCompany(node, companyId)) return false;
-    if (!belongsToSelectedProject(node, projectId)) return false;
+    if (profileType && node.metadata?.profileType && node.metadata.profileType !== profileType) return false;
+
+    if (subjectKind === "user" && subjectId) {
+      const createdByMatch = node.createdBy === subjectId;
+      const actorMatch = node.metadata?.actorUserId === subjectId;
+      const directUserNode = node.id === subjectId || node.id === `user:${subjectId}`;
+      if (!createdByMatch && !actorMatch && !directUserNode) return false;
+    }
+
+    if (subjectKind === "company" && subjectId) {
+      if (node.companyId && node.companyId !== subjectId) return false;
+    } else {
+      if (!belongsToSelectedCompany(node, companyId)) return false;
+      if (!belongsToSelectedProject(node, projectId)) return false;
+    }
     if (moduleFilter && node.module !== moduleFilter) return false;
     if (nodeType !== "all" && node.type !== nodeType) return false;
     if (nodeStatus !== "all" && node.status !== nodeStatus) return false;

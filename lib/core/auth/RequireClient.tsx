@@ -80,7 +80,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   const { user, loading, error, refreshUser } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname() || "/";
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(true);
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {

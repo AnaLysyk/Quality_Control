@@ -31,7 +31,8 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
       "Você está em: Visão geral TC.",
       "Esta é a camada executiva da Testing Company para Líder TC e Suporte Técnico acompanharem qualidade por empresa, risco, projetos, defeitos, runs, cobertura e próximos passos consultivos.",
       "Como agente, devo ajudar por perfil: liderança recebe visão executiva e priorização; suporte recebe triagem técnica; empresa recebe apenas o próprio contexto permitido.",
-      "O Brain possui nós executivos como Visão Geral TC, Empresas atendidas, Projetos e operações, Repositório de Casos, Defeitos, Planos, Runs, Qase, Perfis e Chat por perfil.",
+      "O Brain possui nós executivos como Visão Geral TC, Empresas atendidas, Projetos e operação, Repositório de Casos, Defeitos, Planos, Runs, Qase, Perfis e Chat por perfil.",
+      "Dica: use esta visão para destravar a operação e transformar risco em ação.",
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
@@ -68,6 +69,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
       "Você está em: Kanban global de suporte.",
       "Aqui você prioriza, atribui responsável, acompanha SLA e avança status dos chamados.",
       "Como agente, posso localizar chamados, explicar bloqueios, sugerir prioridade e preparar a próxima ação conforme seu RBAC.",
+      "Dica: comece pelo chamado mais crítico ou pelo SLA mais próximo de vencer.",
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: ["Buscar chamado por código", "Explicar o que posso fazer nesta tela", "Sugerir próxima ação como agente", "Listar chamados pendentes", ...PROFILE_HELP_PROMPTS],
@@ -79,7 +81,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     screenSummary: [
       "Você está em: Meus chamados.",
       "Aqui você acompanha status, comenta e pede ajustes nos seus chamados.",
-      "Como agente, posso resumir andamento, preparar comentário e orientar o melhor próximo passo.",
+      "Como agente, posso resumir andamento, preparar comentário, avaliar impacto e orientar o melhor próximo passo.",
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: ["Buscar meu chamado por código", "Explicar o que posso fazer nesta tela", "Preparar comentário para chamado", "Listar chamados em andamento", ...PROFILE_HELP_PROMPTS],
@@ -91,7 +93,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     screenSummary: [
       "Você está em: Gestão de Perfis.",
       "Aqui a plataforma mantém a matriz de acesso por perfil: Líder TC, Suporte Técnico, Empresa, Usuário da empresa e Usuário TC.",
-      "Como agente, posso explicar por que alguém vê ou não vê uma tela, comparar perfis e sugerir ajuste seguro sem quebrar RBAC.",
+      "Como agente, posso explicar permissões, bloqueios, por que alguém vê ou não vê uma tela, comparar perfis e sugerir ajuste seguro sem quebrar RBAC.",
     ].join(" "),
     entityType: "permission_profile",
     suggestedPrompts: ["Explicar bloqueio de permissão", "Comparar perfis", "Sugerir ajuste seguro de acesso", "Resumir permissões do perfil atual", ...PROFILE_HELP_PROMPTS],
@@ -103,7 +105,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     screenSummary: [
       "Você está em: Planos e casos de teste.",
       "Aqui você cria, importa, exporta e organiza casos com pré-condições, passos, resultado esperado, tags, suites, projeto Qase opcional e rastreabilidade.",
-      "Como agente, posso transformar bug, requisito ou conversa em caso estruturado, revisar cobertura e explicar campos disponíveis no sistema.",
+      "Como agente, posso transformar bug, ticket, requisito ou conversa em caso estruturado, revisar cobertura e explicar campos disponíveis no sistema.",
     ].join(" "),
     entityType: "test_plan",
     suggestedPrompts: ["Gerar caso de teste a partir de bug", "Montar passos e resultado esperado", "Explicar modelo de importação", "Listar lacunas de cobertura", ...PROFILE_HELP_PROMPTS],
@@ -115,7 +117,7 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     screenSummary: [
       "Você está em: Empresa e operação de qualidade.",
       "Aqui você acompanha dashboard, projetos, casos, defeitos, runs, planos, documentos, usuários e indicadores da empresa selecionada.",
-      "Como agente, posso resumir a empresa, apontar risco, buscar registros e sugerir próxima ação dentro do escopo permitido.",
+      "Como agente, posso resumir a empresa, apontar risco, buscar registros, cruzar chamados e sugerir próxima ação dentro do escopo permitido.",
     ].join(" "),
     entityType: "company",
     entityId: (slug) => slug,
@@ -177,7 +179,7 @@ const GENERAL_CONTEXT: Omit<ScreenContextRule, "match"> = {
   screenSummary: [
     "Você está em: Plataforma Quality Control.",
     "Aqui você navega, busca registros, cria chamados, acompanha qualidade ou entende seu contexto.",
-    "Como agente, devo ajudar qualquer perfil dentro do seu escopo de acesso, explicando a tela, sugerindo próximos passos e executando apenas ações permitidas pelo RBAC.",
+    "Como agente, devo ajudar qualquer perfil dentro do seu escopo de acesso, explicando a tela, sugerindo próximos passos e executando apenas ações permitidas pelo RBAC. Dica: diga o que deseja fazer e eu oriento o caminho seguro.",
   ].join(" "),
   entityType: "screen",
   suggestedPrompts: ["Me ajuda com meu perfil", "Resumir esta tela", "Explicar o que posso fazer aqui", "Buscar registro por palavra-chave", "Sugerir próxima ação como agente"],

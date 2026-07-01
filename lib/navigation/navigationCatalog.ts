@@ -104,6 +104,18 @@ export const NAV_CATALOG: NavModuleDef[] = [
         testId: "nav-companies-list",
       },
       {
+        id: "companies-search",
+        routeId: "empresas.buscar",
+        label: "Buscar empresa",
+        iconKey: "search",
+        module: "companies",
+        href: "/admin/clients?focus=search",
+        action: "focusSearch",
+        allowedRoles: PRIVILEGED,
+        favoriteEnabled: true,
+        testId: "nav-companies-search",
+      },
+      {
         id: "companies-create",
         routeId: "empresas.criar",
         label: "Criar empresa",
@@ -364,7 +376,29 @@ export const NAV_CATALOG: NavModuleDef[] = [
     href: "/solicitacoes",
     allowedRoles: LEADER_AND_SUPPORT,
     testId: "nav-requests",
-    items: [],
+    items: [
+      {
+        id: "requests-list",
+        routeId: "solicitacoes.listagem",
+        label: "Listagem",
+        iconKey: "clipboard",
+        module: "requests",
+        href: "/solicitacoes",
+        favoriteEnabled: true,
+        testId: "nav-requests-list",
+      },
+      {
+        id: "requests-search",
+        routeId: "solicitacoes.buscar",
+        label: "Buscar solicitação",
+        iconKey: "search",
+        module: "requests",
+        href: "/solicitacoes?focus=search",
+        action: "focusSearch",
+        favoriteEnabled: true,
+        testId: "nav-requests-search",
+      },
+    ],
   },
 
   // ============================================
@@ -372,7 +406,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
   {
     id: "agenda",
-    routeId: "agenda.release",
+    requiredPermission: { moduleId: "release_calendar", action: "view" },
     label: "Agenda",
     iconKey: "clock",
     href: "/agenda",
@@ -482,7 +516,28 @@ export const NAV_CATALOG: NavModuleDef[] = [
     href: "/brain",
     allowedRoles: ALL_USERS,
     testId: "nav-brain",
-    items: [],
+    items: [
+      {
+        id: "brain-graph",
+        routeId: "brain.grafo",
+        label: "Grafo",
+        iconKey: "cpu",
+        module: "brain",
+        href: "/brain",
+        favoriteEnabled: true,
+        testId: "nav-brain-graph",
+      },
+      {
+        id: "brain-ask",
+        routeId: "assistente.perguntar",
+        label: "Perguntar",
+        iconKey: "message-circle",
+        module: "brain",
+        href: "/brain/perguntar",
+        favoriteEnabled: true,
+        testId: "nav-brain-ask",
+      },
+    ],
   },
 
   // ============================================
@@ -609,6 +664,18 @@ export const NAV_CATALOG: NavModuleDef[] = [
         group: "Listagem",
         testId: "nav-users-list",
       },
+      {
+        id: "users-list-empresas",
+        routeId: "usuarios.listagem",
+        label: "Usuários de empresas",
+        iconKey: "users",
+        module: "users",
+        href: "/admin/users?tab=company",
+        allowedRoles: PRIVILEGED,
+        favoriteEnabled: true,
+        group: "Listagem",
+        testId: "nav-users-list-empresas",
+      },
     ],
   },
 
@@ -624,11 +691,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       {
         id: "admin-permissions",
-        routeId: "permissoes.matriz",
+        routeId: "permissoes.atalho-admin",
         label: "Gestão de Perfis",
         iconKey: "lock",
         module: "admin",
-        href: "/admin/users/permissions",
+        href: "/admin/permissoes",
         favoriteEnabled: true,
         testId: "nav-admin-permissions",
       },

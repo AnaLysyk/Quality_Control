@@ -12169,366 +12169,434 @@ body.qc-brain-side-open:has(.brain-universe-canvas) main .brain-filter-hud .qc-b
 /* QC BRAIN FILTER WHEN CHAT SIDE OPEN - END */
 
 
-/* === QC Sidebar: degradÃª contÃ­nuo sem cards fixos === */
-@keyframes qcSidebarBubbleFloat {
-  0% {
-    transform: translate3d(-10px, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(18px, -22px, 0) scale(1.06);
-  }
-  100% {
-    transform: translate3d(-10px, 0, 0) scale(1);
-  }
-}
 
-aside:has(input[placeholder*="Buscar mÃ³dulo"]),
-aside:has(input[placeholder*="Buscar modulo"]) {
+/* === QC Sidebar fixed header/footer continuous gradient === */
+.sidebar-operational-shell .sidebar-shell-header,
+.sidebar-operational-shell .sidebar-shell-footer {
   position: relative !important;
+  z-index: 2 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)),
+    transparent !important;
+  border-color: var(--shell-sidebar-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+:root.theme-light .sidebar-operational-shell .sidebar-shell-header,
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-shell-header,
+:root.theme-light .sidebar-operational-shell .sidebar-shell-footer,
+:root[data-theme="light"] .sidebar-operational-shell .sidebar-shell-footer {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.46), rgba(255,255,255,0.14)),
+    transparent !important;
+}
+
+:root.dark .sidebar-operational-shell .sidebar-shell-header,
+:root[data-theme="dark"] .sidebar-operational-shell .sidebar-shell-header,
+:root.dark .sidebar-operational-shell .sidebar-shell-footer,
+:root[data-theme="dark"] .sidebar-operational-shell .sidebar-shell-footer {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+    transparent !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header a,
+.sidebar-operational-shell .sidebar-shell-footer a,
+.sidebar-operational-shell .sidebar-shell-header span,
+.sidebar-operational-shell .sidebar-shell-footer span {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header a:hover,
+.sidebar-operational-shell .sidebar-shell-footer a:hover,
+.sidebar-operational-shell .sidebar-shell-header a:hover span,
+.sidebar-operational-shell .sidebar-shell-footer a:hover span {
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header a span:last-child,
+.sidebar-operational-shell .sidebar-shell-footer a {
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header [class*="bg-slate-50"],
+.sidebar-operational-shell .sidebar-shell-footer [class*="bg-slate-50"],
+.sidebar-operational-shell .sidebar-shell-footer [class*="bg-white"],
+.sidebar-operational-shell .sidebar-shell-footer [class*="bg-slate-950"] {
+  background: var(--shell-sidebar-control-bg) !important;
+  border-color: var(--shell-sidebar-control-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header button,
+.sidebar-operational-shell .sidebar-shell-footer button {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-header button:hover,
+.sidebar-operational-shell .sidebar-shell-footer button:hover {
+  background: var(--shell-sidebar-control-hover) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer {
+  justify-content: center !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:first-child {
+  align-items: center !important;
+  text-align: center !important;
+  flex: 1 1 auto !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:first-child a {
+  font-size: 0.72rem !important;
+  letter-spacing: 0.20em !important;
+  text-align: center !important;
+}
+
+.sidebar-operational-shell .sidebar-shell-footer > div:first-child span {
+  text-align: center !important;
+}
+/* === /QC Sidebar fixed header/footer continuous gradient === */
+
+/* === QC Access validation colors === */
+:root,
+:root.theme-light,
+:root[data-theme="light"] {
+  --qc-access-card-bg:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 255, 0.92));
+  --qc-access-icon-bg:
+    linear-gradient(135deg, rgba(1, 24, 72, 0.08), rgba(239, 0, 1, 0.08));
+  --qc-access-icon-color: #011848;
+  --qc-access-title: #011848;
+  --qc-access-description: #334155;
+  --qc-access-border: rgba(15, 23, 42, 0.12);
+  --qc-access-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+}
+
+:root.dark,
+:root[data-theme="dark"] {
+  --qc-access-card-bg:
+    radial-gradient(circle at 50% 0%, rgba(15, 54, 116, 0.30), transparent 36%),
+    linear-gradient(145deg, rgba(13, 27, 48, 0.96), rgba(8, 17, 29, 0.94));
+  --qc-access-icon-bg:
+    linear-gradient(135deg, rgba(239, 0, 1, 0.18), rgba(34, 91, 180, 0.22));
+  --qc-access-icon-color: #dbeafe;
+  --qc-access-title: #f8fafc;
+  --qc-access-description: #cbd5e1;
+  --qc-access-border: rgba(148, 163, 184, 0.24);
+  --qc-access-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
+}
+
+main section:has(h1):has(.animate-spin),
+[role="main"] section:has(h1):has(.animate-spin),
+.app-content section:has(h1):has(.animate-spin),
+.page-content section:has(h1):has(.animate-spin) {
+  background: var(--qc-access-card-bg) !important;
+  border-color: var(--qc-access-border) !important;
+  box-shadow: var(--qc-access-shadow) !important;
+}
+
+main section:has(h1):has(.animate-spin) > div:first-child,
+[role="main"] section:has(h1):has(.animate-spin) > div:first-child,
+.app-content section:has(h1):has(.animate-spin) > div:first-child,
+.page-content section:has(h1):has(.animate-spin) > div:first-child {
+  background: var(--qc-access-icon-bg) !important;
+  color: var(--qc-access-icon-color) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+main section:has(h1):has(.animate-spin) h1,
+[role="main"] section:has(h1):has(.animate-spin) h1,
+.app-content section:has(h1):has(.animate-spin) h1,
+.page-content section:has(h1):has(.animate-spin) h1 {
+  color: var(--qc-access-title) !important;
+}
+
+main section:has(h1):has(.animate-spin) p,
+[role="main"] section:has(h1):has(.animate-spin) p,
+.app-content section:has(h1):has(.animate-spin) p,
+.page-content section:has(h1):has(.animate-spin) p {
+  color: var(--qc-access-description) !important;
+}
+/* === /QC Access validation colors === */
+
+/* === QC Sidebar footer brand fix === */
+.sidebar-operational-shell .sidebar-shell-footer {
+  gap: 0.75rem !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-brand {
+  min-width: 0 !important;
   overflow: hidden !important;
-  background:
-    radial-gradient(circle at 16% 10%, rgba(255, 255, 255, 0.82), transparent 24%),
-    radial-gradient(circle at 92% 18%, rgba(239, 0, 1, 0.12), transparent 30%),
-    radial-gradient(circle at 20% 78%, rgba(1, 24, 72, 0.12), transparent 32%),
-    linear-gradient(180deg, #eef8ff 0%, #f7edf7 46%, #eaf3ff 100%) !important;
-  border-right: 1px solid rgba(1, 24, 72, 0.08) !important;
+  padding-inline: 0.25rem !important;
 }
 
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]),
-.dark aside:has(input[placeholder*="Buscar modulo"]) {
-  background:
-    radial-gradient(circle at 16% 10%, rgba(90, 150, 255, 0.18), transparent 26%),
-    radial-gradient(circle at 92% 18%, rgba(239, 0, 1, 0.20), transparent 30%),
-    radial-gradient(circle at 20% 78%, rgba(255, 255, 255, 0.08), transparent 32%),
-    linear-gradient(180deg, #06152e 0%, #151d3a 45%, #2a1224 100%) !important;
-  border-right-color: rgba(255, 255, 255, 0.10) !important;
+.sidebar-operational-shell .sidebar-footer-brand a {
+  display: block !important;
+  max-width: 128px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.14em !important;
+  font-size: 0.56rem !important;
+  line-height: 1.1 !important;
 }
 
-aside:has(input[placeholder*="Buscar mÃ³dulo"])::before,
-aside:has(input[placeholder*="Buscar modulo"])::before,
-aside:has(input[placeholder*="Buscar mÃ³dulo"])::after,
-aside:has(input[placeholder*="Buscar modulo"])::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 999px;
-  opacity: 0.58;
-  will-change: transform;
-  animation: qcSidebarBubbleFloat 26s ease-in-out infinite;
+.sidebar-operational-shell .sidebar-footer-brand span {
+  display: block !important;
+  max-width: 128px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 0.56rem !important;
+  opacity: 0.72 !important;
 }
 
-aside:has(input[placeholder*="Buscar mÃ³dulo"])::before,
-aside:has(input[placeholder*="Buscar modulo"])::before {
-  width: 150px;
-  height: 150px;
-  left: -62px;
-  top: 118px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.72), rgba(239, 0, 1, 0.10) 46%, transparent 72%);
+.sidebar-operational-shell .sidebar-shell-footer > div:last-child {
+  flex-shrink: 0 !important;
+}
+/* === /QC Sidebar footer brand fix === */
+
+/* === QC Sidebar brand colors: blue white red no purple === */
+
+@keyframes qcSidebarBrandBubbleA {
+  0% { transform: translate3d(-18px, -40px, 0) scale(0.96); opacity: 0.28; }
+  45% { transform: translate3d(10px, 360px, 0) scale(1.08); opacity: 0.38; }
+  100% { transform: translate3d(-8px, 900px, 0) scale(1); opacity: 0.26; }
 }
 
-aside:has(input[placeholder*="Buscar mÃ³dulo"])::after,
-aside:has(input[placeholder*="Buscar modulo"])::after {
-  width: 190px;
-  height: 190px;
-  right: -90px;
-  bottom: 80px;
-  background: radial-gradient(circle, rgba(1, 24, 72, 0.14), rgba(255, 255, 255, 0.42) 44%, transparent 72%);
-  animation-delay: -11s;
+@keyframes qcSidebarBrandBubbleB {
+  0% { transform: translate3d(14px, 900px, 0) scale(1); opacity: 0.24; }
+  50% { transform: translate3d(-12px, 420px, 0) scale(1.10); opacity: 0.34; }
+  100% { transform: translate3d(8px, -36px, 0) scale(0.98); opacity: 0.22; }
 }
 
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) > *,
-aside:has(input[placeholder*="Buscar modulo"]) > * {
-  position: relative;
-  z-index: 1;
+:root,
+:root.theme-light,
+:root[data-theme="light"] {
+  --shell-sidebar-gradient:
+    radial-gradient(circle at 86% 16%, rgba(56, 189, 248, 0.18), transparent 28%),
+    radial-gradient(circle at 18% 88%, rgba(239, 0, 1, 0.12), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 28%, #eef7ff 62%, #fff1f2 100%) !important;
+  --shell-sidebar-border: rgba(1, 24, 72, 0.12);
+  --shell-sidebar-text: #0b1a3c;
+  --shell-sidebar-text-strong: #011848;
+  --shell-sidebar-text-muted: #516178;
+  --shell-sidebar-control-bg: rgba(255, 255, 255, 0.76);
+  --shell-sidebar-control-hover: rgba(255, 255, 255, 0.96);
+  --shell-sidebar-control-border: rgba(1, 24, 72, 0.12);
 }
 
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(header, .sticky, [class*="sticky"], [class*="top-0"]),
-aside:has(input[placeholder*="Buscar modulo"]) :is(header, .sticky, [class*="sticky"], [class*="top-0"]) {
-  background: transparent !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
+:root.dark,
+:root[data-theme="dark"] {
+  --shell-sidebar-gradient:
+    radial-gradient(circle at 82% 18%, rgba(56, 189, 248, 0.12), transparent 28%),
+    radial-gradient(circle at 18% 88%, rgba(239, 0, 1, 0.28), transparent 32%),
+    linear-gradient(180deg, #020817 0%, #061631 36%, #082b63 68%, #65070d 100%) !important;
+  --shell-sidebar-border: rgba(148, 163, 184, 0.18);
+  --shell-sidebar-text: #ffffff;
+  --shell-sidebar-text-strong: #ffffff;
+  --shell-sidebar-text-muted: rgba(255, 255, 255, 0.74);
+  --shell-sidebar-control-bg: rgba(255, 255, 255, 0.08);
+  --shell-sidebar-control-hover: rgba(255, 255, 255, 0.14);
+  --shell-sidebar-control-border: rgba(255, 255, 255, 0.14);
 }
 
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) input,
-aside:has(input[placeholder*="Buscar modulo"]) input {
-  background: rgba(255, 255, 255, 0.46) !important;
-  border-color: rgba(1, 24, 72, 0.10) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48) !important;
-}
-
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]) input,
-.dark aside:has(input[placeholder*="Buscar modulo"]) input {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: rgba(255, 255, 255, 0.92) !important;
-}
-
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"]),
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]) {
-  background: transparent !important;
-  background-image: none !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  color: #061a3e !important;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    color 160ms ease !important;
-}
-
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"]),
-.dark aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]) {
-  color: rgba(255, 255, 255, 0.88) !important;
-}
-
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"]):hover,
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]):hover,
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"]):focus-visible,
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]):focus-visible,
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"])[aria-expanded="true"],
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[aria-expanded="true"],
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"])[aria-current="page"],
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[aria-current="page"],
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"])[data-active="true"],
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[data-active="true"],
-aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"]).active,
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]).active {
-  background: rgba(255, 255, 255, 0.52) !important;
-  border-color: rgba(1, 24, 72, 0.12) !important;
-  box-shadow: 0 10px 28px rgba(1, 24, 72, 0.10) !important;
-  transform: translateY(-1px);
-}
-
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"]):hover,
-.dark aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]):hover,
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"]):focus-visible,
-.dark aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]):focus-visible,
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"])[aria-expanded="true"],
-.dark aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[aria-expanded="true"],
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"])[aria-current="page"],
-.dark aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[aria-current="page"],
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"])[data-active="true"],
-.dark aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[data-active="true"],
-.dark aside:has(input[placeholder*="Buscar mÃ³dulo"]) :is(nav a, nav button, nav [role="button"]).active,
-.dark aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]).active {
-  background: rgba(255, 255, 255, 0.10) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  aside:has(input[placeholder*="Buscar mÃ³dulo"])::before,
-  aside:has(input[placeholder*="Buscar modulo"])::before,
-  aside:has(input[placeholder*="Buscar mÃ³dulo"])::after,
-  aside:has(input[placeholder*="Buscar modulo"])::after {
-    animation: none !important;
-  }
-}
-/* === /QC Sidebar === */
-
-
-/* === QC Sidebar: degradê contínuo + bolhas vermelhas + rodapé centralizado === */
-
-@keyframes qcSidebarBubbleTravelA {
-  0% {
-    transform: translate3d(0, -24px, 0) scale(0.92);
-    opacity: 0.18;
-  }
-  22% {
-    transform: translate3d(16px, 180px, 0) scale(1.04);
-    opacity: 0.28;
-  }
-  48% {
-    transform: translate3d(-8px, 410px, 0) scale(1.08);
-    opacity: 0.24;
-  }
-  74% {
-    transform: translate3d(10px, 670px, 0) scale(1.02);
-    opacity: 0.30;
-  }
-  100% {
-    transform: translate3d(0, 930px, 0) scale(0.96);
-    opacity: 0.16;
-  }
-}
-
-@keyframes qcSidebarBubbleTravelB {
-  0% {
-    transform: translate3d(0, 900px, 0) scale(1);
-    opacity: 0.16;
-  }
-  28% {
-    transform: translate3d(-18px, 650px, 0) scale(1.08);
-    opacity: 0.26;
-  }
-  56% {
-    transform: translate3d(10px, 380px, 0) scale(1.02);
-    opacity: 0.22;
-  }
-  78% {
-    transform: translate3d(-12px, 160px, 0) scale(1.10);
-    opacity: 0.28;
-  }
-  100% {
-    transform: translate3d(0, -30px, 0) scale(0.94);
-    opacity: 0.16;
-  }
-}
-
+.sidebar-operational-shell,
 aside:has(input[placeholder*="Buscar módulo"]),
 aside:has(input[placeholder*="Buscar modulo"]) {
   position: relative !important;
+  isolation: isolate !important;
   overflow: hidden !important;
-  background:
-    radial-gradient(circle at 18% 10%, rgba(255,255,255,0.14), transparent 22%),
-    radial-gradient(circle at 82% 20%, rgba(239,0,1,0.16), transparent 28%),
-    radial-gradient(circle at 22% 76%, rgba(239,0,1,0.10), transparent 32%),
-    linear-gradient(180deg, #07142f 0%, #201038 46%, #0d1e52 100%) !important;
-  border-right: 1px solid rgba(255,255,255,0.08) !important;
+  background: var(--shell-sidebar-gradient) !important;
+  border-right: 1px solid var(--shell-sidebar-border) !important;
+  color: var(--shell-sidebar-text) !important;
 }
 
+.sidebar-operational-shell::before,
+.sidebar-operational-shell::after,
 aside:has(input[placeholder*="Buscar módulo"])::before,
-aside:has(input[placeholder*="Buscar modulo"])::before,
 aside:has(input[placeholder*="Buscar módulo"])::after,
+aside:has(input[placeholder*="Buscar modulo"])::before,
 aside:has(input[placeholder*="Buscar modulo"])::after {
   content: "";
   position: absolute;
   z-index: 0;
   pointer-events: none;
   border-radius: 999px;
+  filter: blur(18px);
   will-change: transform, opacity;
-  filter: blur(8px);
 }
 
+.sidebar-operational-shell::before,
 aside:has(input[placeholder*="Buscar módulo"])::before,
 aside:has(input[placeholder*="Buscar modulo"])::before {
-  top: 8px;
-  left: -58px;
-  width: 220px;
-  height: 220px;
-  background:
-    radial-gradient(circle,
-      rgba(255, 70, 70, 0.00) 0%,
-      rgba(255, 70, 70, 0.20) 28%,
-      rgba(239, 0, 1, 0.30) 45%,
-      rgba(239, 0, 1, 0.12) 62%,
-      transparent 78%);
-  animation: qcSidebarBubbleTravelA 24s ease-in-out infinite alternate;
-}
-
-aside:has(input[placeholder*="Buscar módulo"])::after,
-aside:has(input[placeholder*="Buscar modulo"])::after {
-  top: 24px;
-  right: -84px;
+  top: 0;
+  left: -90px;
   width: 250px;
   height: 250px;
   background:
     radial-gradient(circle,
-      rgba(255, 90, 90, 0.00) 0%,
-      rgba(255, 90, 90, 0.16) 26%,
-      rgba(239, 0, 1, 0.24) 44%,
-      rgba(239, 0, 1, 0.10) 60%,
-      transparent 80%);
-  animation: qcSidebarBubbleTravelB 30s ease-in-out infinite alternate;
+      rgba(239, 0, 1, 0.24) 0%,
+      rgba(239, 0, 1, 0.14) 38%,
+      rgba(239, 0, 1, 0.05) 62%,
+      transparent 82%);
+  animation: qcSidebarBrandBubbleA 34s ease-in-out infinite alternate;
 }
 
+.sidebar-operational-shell::after,
+aside:has(input[placeholder*="Buscar módulo"])::after,
+aside:has(input[placeholder*="Buscar modulo"])::after {
+  top: 0;
+  right: -120px;
+  width: 300px;
+  height: 300px;
+  background:
+    radial-gradient(circle,
+      rgba(56, 189, 248, 0.16) 0%,
+      rgba(255, 255, 255, 0.10) 34%,
+      rgba(239, 0, 1, 0.08) 58%,
+      transparent 82%);
+  animation: qcSidebarBrandBubbleB 40s ease-in-out infinite alternate;
+}
+
+:root.theme-light .sidebar-operational-shell::before,
+:root[data-theme="light"] .sidebar-operational-shell::before,
+:root.theme-light aside:has(input[placeholder*="Buscar módulo"])::before,
+:root[data-theme="light"] aside:has(input[placeholder*="Buscar módulo"])::before,
+:root.theme-light aside:has(input[placeholder*="Buscar modulo"])::before,
+:root[data-theme="light"] aside:has(input[placeholder*="Buscar modulo"])::before {
+  opacity: 0.45;
+}
+
+:root.dark .sidebar-operational-shell::before,
+:root[data-theme="dark"] .sidebar-operational-shell::before,
+:root.dark aside:has(input[placeholder*="Buscar módulo"])::before,
+:root[data-theme="dark"] aside:has(input[placeholder*="Buscar módulo"])::before,
+:root.dark aside:has(input[placeholder*="Buscar modulo"])::before,
+:root[data-theme="dark"] aside:has(input[placeholder*="Buscar modulo"])::before {
+  opacity: 0.60;
+}
+
+.sidebar-operational-shell > *,
 aside:has(input[placeholder*="Buscar módulo"]) > *,
 aside:has(input[placeholder*="Buscar modulo"]) > * {
   position: relative;
   z-index: 1;
 }
 
-aside:has(input[placeholder*="Buscar módulo"]) :is(header, .sticky, [class*="sticky"], [class*="top-0"]),
-aside:has(input[placeholder*="Buscar modulo"]) :is(header, .sticky, [class*="sticky"], [class*="top-0"]) {
+.sidebar-operational-shell .sidebar-shell-header,
+.sidebar-operational-shell .sidebar-shell-footer,
+.sidebar-operational-shell :is(header, footer, .sticky, [class*="sticky"], [class*="top-0"], [data-sidebar-footer], .qc-sidebar-footer, [class*="SidebarFooter"], [class*="footer"]) {
   background: transparent !important;
+  border-color: var(--shell-sidebar-border) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
 }
 
+.sidebar-operational-shell input,
 aside:has(input[placeholder*="Buscar módulo"]) input,
 aside:has(input[placeholder*="Buscar modulo"]) input {
-  background: rgba(255,255,255,0.08) !important;
-  border-color: rgba(255,255,255,0.14) !important;
-  color: rgba(255,255,255,0.92) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+  background: var(--shell-sidebar-control-bg) !important;
+  border-color: var(--shell-sidebar-control-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+  box-shadow: none !important;
 }
 
+.sidebar-operational-shell input::placeholder,
 aside:has(input[placeholder*="Buscar módulo"]) input::placeholder,
 aside:has(input[placeholder*="Buscar modulo"]) input::placeholder {
-  color: rgba(255,255,255,0.58) !important;
+  color: var(--shell-sidebar-text-muted) !important;
 }
 
-aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"]),
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]) {
-  background: transparent !important;
-  background-image: none !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  color: rgba(255,255,255,0.90) !important;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    color 160ms ease !important;
+.sidebar-operational-shell :is(a, button, span, p, label),
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]) {
+  color: var(--shell-sidebar-text-muted) !important;
 }
 
-aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"]):hover,
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]):hover,
-aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"]):focus-visible,
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]):focus-visible,
-aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"])[aria-expanded="true"],
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[aria-expanded="true"],
-aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"])[aria-current="page"],
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[aria-current="page"],
-aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"])[data-active="true"],
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"])[data-active="true"],
-aside:has(input[placeholder*="Buscar módulo"]) :is(nav a, nav button, nav [role="button"]).active,
-aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role="button"]).active {
-  background: rgba(255,255,255,0.08) !important;
-  border-color: rgba(255,255,255,0.12) !important;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.18) !important;
-  transform: translateY(-1px);
+.sidebar-operational-shell :is(a:hover, button:hover, nav a:hover, nav button:hover),
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]):hover,
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]):focus-visible,
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"])[aria-expanded="true"],
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"])[aria-current="page"],
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"])[data-active="true"],
+.sidebar-operational-shell :is(nav a, nav button, nav [role="button"]).active {
+  color: var(--shell-sidebar-text-strong) !important;
+  background: var(--shell-sidebar-control-hover) !important;
+  border-color: var(--shell-sidebar-control-border) !important;
 }
 
-aside:has(input[placeholder*="Buscar módulo"]) :is(footer, [data-sidebar-footer], .qc-sidebar-footer, [class*="sidebarFooter"], [class*="SidebarFooter"]) {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  text-align: center !important;
-  gap: 0.75rem !important;
-  padding-inline: 1rem !important;
-  background: transparent !important;
-  box-shadow: none !important;
+.sidebar-operational-shell .sidebar-shell-header a span:last-child,
+.sidebar-operational-shell .sidebar-footer-brand a {
+  color: var(--shell-sidebar-text-strong) !important;
 }
 
-aside:has(input[placeholder*="Buscar módulo"]) :is(footer, [data-sidebar-footer], .qc-sidebar-footer, [class*="sidebarFooter"], [class*="SidebarFooter"]) a {
-  margin-inline: auto !important;
-  text-align: center !important;
-  font-size: 0.98rem !important;
-  line-height: 1.2 !important;
-  font-weight: 700 !important;
-  color: rgba(255,255,255,0.96) !important;
-  max-width: 100% !important;
+.sidebar-operational-shell .sidebar-footer-brand a {
+  max-width: 128px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.12em !important;
+  font-size: 0.56rem !important;
 }
 
-aside:has(input[placeholder*="Buscar módulo"]) :is(footer, [data-sidebar-footer], .qc-sidebar-footer, [class*="sidebarFooter"], [class*="SidebarFooter"]) a:hover {
-  color: #ffffff !important;
-  text-shadow: 0 0 18px rgba(239,0,1,0.26) !important;
+.sidebar-operational-shell .sidebar-footer-brand span {
+  max-width: 128px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 0.56rem !important;
+  color: var(--shell-sidebar-text-muted) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sidebar-operational-shell::before,
+  .sidebar-operational-shell::after,
   aside:has(input[placeholder*="Buscar módulo"])::before,
-  aside:has(input[placeholder*="Buscar modulo"])::before,
   aside:has(input[placeholder*="Buscar módulo"])::after,
+  aside:has(input[placeholder*="Buscar modulo"])::before,
   aside:has(input[placeholder*="Buscar modulo"])::after {
     animation: none !important;
   }
 }
+/* === /QC Sidebar brand colors: blue white red no purple === */
 
-/* === /QC Sidebar === */
+/* === QC Sidebar footer link only hover === */
+.sidebar-operational-shell .sidebar-shell-footer,
+.sidebar-operational-shell .sidebar-shell-footer:hover,
+.sidebar-operational-shell .sidebar-footer-brand,
+.sidebar-operational-shell .sidebar-footer-brand:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link {
+  display: block !important;
+  max-width: 150px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--shell-sidebar-text-muted) !important;
+  text-decoration: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-company-link:hover {
+  color: var(--shell-sidebar-text-strong) !important;
+  text-shadow: 0 0 10px rgba(239, 0, 1, 0.18) !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+}
+
+.sidebar-operational-shell .sidebar-footer-version {
+  color: var(--shell-sidebar-text-muted) !important;
+  opacity: 0.62 !important;
+}
+/* === /QC Sidebar footer link only hover === */
+

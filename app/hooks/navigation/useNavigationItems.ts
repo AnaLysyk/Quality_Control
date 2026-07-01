@@ -21,6 +21,19 @@ const COMPANY_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.EMPRESA,
   SYSTEM_ROLES.COMPANY_USER,
 ]);
+const AGENDA_ROLES: SystemRole[] = [
+  SYSTEM_ROLES.LEADER_TC,
+  SYSTEM_ROLES.TECHNICAL_SUPPORT,
+];
+const AGENDA_MODULE: NavModuleDef = {
+  id: "agenda" as NavModuleDef["id"],
+  label: "Agenda",
+  iconKey: "calendar",
+  href: "/agenda",
+  allowedRoles: AGENDA_ROLES,
+  testId: "nav-release-agenda",
+  items: [],
+};
 const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
   "home",
@@ -244,6 +257,21 @@ function filterByActiveContext(modules: NavModuleDef[], companySlug: string | nu
   return modules.filter((module) => !OPERATIONAL_MODULE_IDS.has(module.id));
 }
 
+function withReleaseAgendaModule(modules: NavModuleDef[], effectiveRole: SystemRole | null) {
+  if (!effectiveRole || !AGENDA_ROLES.includes(effectiveRole)) return modules;
+  if (modules.some((module) => (module.id as string) === "agenda")) return modules;
+
+  const agendaModule: NavModuleDef = { ...AGENDA_MODULE };
+  const homeIndex = modules.findIndex((module) => module.id === "home");
+  if (homeIndex < 0) return [agendaModule, ...modules];
+
+  return [
+    ...modules.slice(0, homeIndex + 1),
+    agendaModule,
+    ...modules.slice(homeIndex + 1),
+  ];
+}
+
 export function useNavigationItems() {
   const { user, loading, permissions, accessContext } = usePermissionAccess();
   const { activeClientSlug } = useClientContext();
@@ -309,10 +337,11 @@ export function useNavigationItems() {
     const catalog = isClientProfile ? buildClientCatalog() : ENABLED_NAV_CATALOG;
     const contextCatalog = filterByActiveContext(catalog, companySlug);
     const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
-
-    return filtered
+    const resolvedModules = filtered
       .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole))
       .filter((mod) => mod.href || mod.items.length > 0);
+
+    return withReleaseAgendaModule(resolvedModules, effectiveRole);
   }, [
     user,
     isClientProfile,

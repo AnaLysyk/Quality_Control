@@ -1,7 +1,9 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo, useState } from "react";
-import { FiAlertTriangle, FiBarChart2, FiBriefcase, FiDownload, FiRefreshCw, FiShield, FiTrendingUp } from "react-icons/fi";
+import { FiAlertTriangle, FiBarChart2, FiBriefcase, FiDownload, FiRefreshCw, FiSearch, FiShield, FiTrendingUp } from "react-icons/fi";
 
 import { fetchApi } from "@/lib/api";
 
@@ -52,6 +54,14 @@ type QualityOverview = {
   };
 };
 
+const GATE_FILTERS = [
+  { value: "all", label: "Todos os gates" },
+  { value: "approved", label: "Aprovado" },
+  { value: "warning", label: "Atenção" },
+  { value: "failed", label: "Bloqueado" },
+  { value: "none", label: "Sem dados" },
+];
+
 function asNumber(value: unknown, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
@@ -76,22 +86,37 @@ function gateLabel(status?: string | null) {
   return "Sem dados";
 }
 
-function buildExecutiveNote(data: QualityOverview | null) {
+function normalizeText(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function companyGate(company: QualityCompany) {
+  return company.gate?.status || "none";
+}
+
+function buildExecutiveNote(data: QualityOverview | null, visibleCompanies?: QualityCompany[]) {
   if (!data) return "Carregue os dados para gerar a leitura executiva.";
+  const companies = visibleCompanies ?? data.companies;
   const score = data.globalPassRate;
   const scoreText = score == null ? "sem score consolidado" : `${Math.round(score)}% de sucesso`;
-  const riskText = data.riskCount || data.releaseRiskCount
-    ? `Existem ${data.riskCount} empresa(s) e ${data.releaseRiskCount} release(s) em risco.`
-    : "Não há risco bloqueante consolidado no período.";
-  const warningText = data.warningCount || data.releaseWarningCount
-    ? `Há ${data.warningCount} empresa(s) e ${data.releaseWarningCount} release(s) em atenção.`
-    : "Os alertas do período estão controlados.";
+  const riskyCompanies = companies.filter((company) => companyGate(company) === "failed").length;
+  const warningCompanies = companies.filter((company) => companyGate(company) === "warning").length;
+  const riskText = riskyCompanies || data.releaseRiskCount
+    ? `Existem ${riskyCompanies} empresa(s) filtrada(s) e ${data.releaseRiskCount} release(s) em risco.`
+    : "Não há risco bloqueante consolidado no recorte atual.";
+  const warningText = warningCompanies || data.releaseWarningCount
+    ? `Há ${warningCompanies} empresa(s) filtrada(s) e ${data.releaseWarningCount} release(s) em atenção.`
+    : "Os alertas do recorte atual estão controlados.";
 
   return `No período de ${data.period} dias, a Central de Qualidade está com ${scoreText}. ${riskText} ${warningText} Recomenda-se priorizar projetos com gate bloqueado, revisar falhas recorrentes e atualizar as runs sem cobertura estatística.`;
 }
 
-function downloadExecutiveNote(data: QualityOverview | null) {
-  const note = buildExecutiveNote(data);
+function downloadExecutiveNote(data: QualityOverview | null, companies: QualityCompany[]) {
+  const note = buildExecutiveNote(data, companies);
   const blob = new Blob([note], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -107,6 +132,9 @@ export default function CentralDeQualidadePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshNonce, setRefreshNonce] = useState(0);
+  const [query, setQuery] = useState("");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [gateFilter, setGateFilter] = useState("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -139,16 +167,30 @@ export default function CentralDeQualidadePage() {
     };
   }, [period, refreshNonce]);
 
-  const orderedCompanies = useMemo(() => {
-    return [...(data?.companies ?? [])].sort((a, b) => {
-      const aScore = a.passRate ?? -1;
-      const bScore = b.passRate ?? -1;
-      return aScore - bScore;
-    });
+  const companyOptions = useMemo(() => {
+    return [...(data?.companies ?? [])].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   }, [data?.companies]);
 
+  const orderedCompanies = useMemo(() => {
+    const normalizedQuery = normalizeText(query);
+    return [...(data?.companies ?? [])]
+      .filter((company) => {
+        if (companyFilter !== "all" && company.id !== companyFilter && company.slug !== companyFilter) return false;
+        if (gateFilter !== "all" && companyGate(company) !== gateFilter) return false;
+        if (!normalizedQuery) return true;
+        return normalizeText(`${company.name} ${company.slug ?? ""} ${gateLabel(company.gate?.status)}`).includes(normalizedQuery);
+      })
+      .sort((a, b) => {
+        const aScore = a.passRate ?? -1;
+        const bScore = b.passRate ?? -1;
+        return aScore - bScore;
+      });
+  }, [companyFilter, data?.companies, gateFilter, query]);
+
   const totalTests = data ? Object.values(data.globalStats).reduce((sum, value) => sum + asNumber(value), 0) : 0;
-  const executiveNote = buildExecutiveNote(data);
+  const filteredFailures = orderedCompanies.reduce((sum, company) => sum + asNumber(company.stats?.fail), 0);
+  const filteredBlocked = orderedCompanies.reduce((sum, company) => sum + asNumber(company.stats?.blocked), 0);
+  const executiveNote = buildExecutiveNote(data, orderedCompanies);
 
   return (
     <main className="min-h-screen bg-(--page-bg,#f5f7fb) px-4 py-6 text-(--page-text,#0b1a3c) sm:px-6 lg:px-10">
@@ -186,6 +228,53 @@ export default function CentralDeQualidadePage() {
           </div>
         </section>
 
+        <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4 shadow-sm">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+            <label className="grid flex-1 gap-2 text-sm font-bold text-(--tc-text,#0b1a3c)">
+              Buscar empresa, projeto ou gate
+              <span className="flex min-h-11 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3">
+                <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Ex.: cliente crítico, homologação, bloqueado..."
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-(--tc-text-muted,#6b7280)"
+                />
+              </span>
+            </label>
+            <label className="grid min-w-[220px] gap-2 text-sm font-bold text-(--tc-text,#0b1a3c)">
+              Empresa
+              <select
+                value={companyFilter}
+                onChange={(event) => setCompanyFilter(event.target.value)}
+                className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm font-semibold outline-none"
+              >
+                <option value="all">Todas as empresas</option>
+                {companyOptions.map((company) => (
+                  <option key={company.id} value={company.id}>{company.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="grid min-w-[200px] gap-2 text-sm font-bold text-(--tc-text,#0b1a3c)">
+              Gate / status
+              <select
+                value={gateFilter}
+                onChange={(event) => setGateFilter(event.target.value)}
+                className="min-h-11 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm font-semibold outline-none"
+              >
+                {GATE_FILTERS.map((filter) => (
+                  <option key={filter.value} value={filter.value}>{filter.label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-(--tc-text-muted,#6b7280)">
+            <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1">{orderedCompanies.length}/{data?.companies.length ?? 0} empresa(s) no recorte</span>
+            <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1">{filteredFailures} falha(s)</span>
+            <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1">{filteredBlocked} bloqueado(s)</span>
+          </div>
+        </section>
+
         {error ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div>
         ) : null}
@@ -194,7 +283,7 @@ export default function CentralDeQualidadePage() {
           {[
             { label: "Score consolidado", value: percent(data?.globalPassRate), icon: FiTrendingUp, note: scoreLabel(data?.globalPassRate ?? null) },
             { label: "Runs/Releases", value: loading ? "..." : String(data?.releaseCount ?? 0), icon: FiBarChart2, note: `${totalTests} testes consolidados` },
-            { label: "Empresas em risco", value: loading ? "..." : String(data?.riskCount ?? 0), icon: FiAlertTriangle, note: `${data?.warningCount ?? 0} em atenção` },
+            { label: "Empresas filtradas", value: loading ? "..." : String(orderedCompanies.length), icon: FiAlertTriangle, note: `${filteredFailures} falhas no recorte` },
             { label: "Cobertura", value: loading ? "..." : percent(data?.coverage?.percent), icon: FiBriefcase, note: `${data?.coverage?.withStats ?? 0}/${data?.coverage?.total ?? 0} com estatística` },
           ].map((card) => {
             const Icon = card.icon;
@@ -238,7 +327,7 @@ export default function CentralDeQualidadePage() {
                       <td className="px-4 py-3">{company.stats?.fail ?? 0}</td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={4} className="px-4 py-6 text-center text-(--tc-text-muted,#6b7280)">Nenhum dado encontrado para o período.</td></tr>
+                    <tr><td colSpan={4} className="px-4 py-6 text-center text-(--tc-text-muted,#6b7280)">Nenhum dado encontrado para o recorte aplicado.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -250,7 +339,7 @@ export default function CentralDeQualidadePage() {
               <h2 className="text-lg font-extrabold text-(--tc-text,#0b1a3c)">Nota executiva</h2>
               <button
                 type="button"
-                onClick={() => downloadExecutiveNote(data)}
+                onClick={() => downloadExecutiveNote(data, orderedCompanies)}
                 className="inline-flex h-9 items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) px-3 text-xs font-bold text-(--tc-text,#0b1a3c)"
               >
                 <FiDownload className="h-4 w-4" /> TXT
@@ -259,7 +348,7 @@ export default function CentralDeQualidadePage() {
             <p className="mt-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">{executiveNote}</p>
             <div className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
               <p className="font-bold text-(--tc-text,#0b1a3c)">Quality Gates</p>
-              <p className="mt-1">Aprovado, Atenção, Bloqueado ou Sem dados. A leitura usa os gates já calculados no overview administrativo.</p>
+              <p className="mt-1">Aprovado, Atenção, Bloqueado ou Sem dados. A leitura usa os gates já calculados no overview administrativo e respeita os filtros combinados da página.</p>
             </div>
           </aside>
         </section>

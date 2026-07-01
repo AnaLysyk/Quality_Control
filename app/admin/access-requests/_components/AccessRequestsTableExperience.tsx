@@ -760,7 +760,7 @@ export function AccessRequestsTableExperience({
                 <span className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted)">
                   Total
                 </span>
-                <span className="text-base font-black leading-none text-(--tc-primary)">
+                <span className="text-base font-black leading-none text-[var(--tc-primary-text,var(--tc-primary))]">
                   {total}
                 </span>
               </div>

@@ -86,7 +86,7 @@ function RegistrationFieldRow({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             {changed ? <FiCheckCircle className="h-4 w-4 text-emerald-600" /> : null}
-            <p className="truncate text-sm font-black text-slate-950">{row.label}</p>
+            <p className="truncate text-sm font-black text-slate-950 dark:text-slate-50">{row.label}</p>
           </div>
           <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
             {selected ? (hasComment ? "Ajuste orientado" : "Ajuste sem orientação") : changed ? "Alterado após ajuste" : "Sem ajuste"}
@@ -137,7 +137,7 @@ function RegistrationFieldRow({
       {selected ? (
         <div className="mt-3 rounded-xl border border-amber-200 bg-white p-3 dark:border-amber-400/40 dark:bg-[#071426]">
           <label className="block">
-            <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
+            <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700 dark:text-amber-200">
               Orientação ao solicitante
             </span>
             <textarea

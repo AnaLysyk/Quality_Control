@@ -1,4 +1,4 @@
-Ôªøimport { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FiClock, FiEdit3, FiExternalLink, FiSave, FiTrash2, FiUser } from "react-icons/fi";
 import { AvatarLibraryDialog } from "@/components/AvatarLibraryDialog";
 import type { AccessRequestProfilePreview, AvatarChoice } from "../../_types/accessRequests.types";
@@ -54,10 +54,10 @@ function statusBadgeClass(status: string) {
 }
 
 function toneClass(tone: ProfileTimelineItem["tone"]) {
-  if (tone === "ok") return "border-emerald-200 bg-emerald-50 text-emerald-800";
-  if (tone === "warn") return "border-amber-200 bg-amber-50 text-amber-800";
-  if (tone === "danger") return "border-rose-200 bg-rose-50 text-rose-800";
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  if (tone === "ok") return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-950/30 dark:text-emerald-200";
+  if (tone === "warn") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-400/40 dark:bg-amber-950/30 dark:text-amber-200";
+  if (tone === "danger") return "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-400/40 dark:bg-rose-950/30 dark:text-rose-200";
+  return "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700/60 dark:bg-[#13243b] dark:text-slate-200";
 }
 
 function normalizeAccessLabel(value?: string | null) {
@@ -85,27 +85,27 @@ function buildManagementTarget(profile: AccessRequestProfilePreview) {
   if (accessType.includes("suporte")) {
     return {
       href: `/admin/users?tab=support&q=${userQuery}`,
-      label: "Abrir em Usu√°rios",
+      label: "Abrir em Usu·rios",
     };
   }
 
   if (accessType.includes("lider")) {
     return {
       href: `/admin/users?tab=admin&q=${userQuery}`,
-      label: "Abrir em Usu√°rios",
+      label: "Abrir em Usu·rios",
     };
   }
 
   if (accessType.includes("tc")) {
     return {
       href: `/admin/users?tab=testing&q=${userQuery}`,
-      label: "Abrir em Usu√°rios",
+      label: "Abrir em Usu·rios",
     };
   }
 
   return {
     href: `/admin/users?tab=company&q=${userQuery}`,
-    label: "Abrir em Usu√°rios",
+    label: "Abrir em Usu·rios",
   };
 }
 
@@ -136,14 +136,14 @@ function AvatarPreview({
 
   if (kind === "emoji" && value) {
     return (
-      <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50">
-        <span className="block translate-y-[1px] text-3xl leading-none">{value}</span>
+      <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50 dark:bg-[#13243b]">
+        <span className="block translate-y-px text-3xl leading-none">{value}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50 text-slate-500">
+    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50 text-slate-500 dark:bg-[#13243b] dark:text-slate-300">
       <FiUser className="h-7 w-7" aria-hidden="true" />
       <span className="sr-only">Sem foto</span>
     </div>
@@ -153,8 +153,8 @@ function AvatarPreview({
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="mt-1 truncate text-sm font-bold text-slate-900">{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mt-1 truncate text-sm font-bold text-slate-900 dark:text-slate-100">{value}</p>
     </div>
   );
 }
@@ -210,11 +210,11 @@ export function ProfileHero({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm dark:border-slate-700/60 dark:bg-[#0d1b2f]">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 gap-4">
           <div className="relative h-16 w-16 shrink-0">
-            <div className="h-full w-full overflow-hidden rounded-full border border-slate-200 bg-white">
+            <div className="h-full w-full overflow-hidden rounded-full border border-slate-200 bg-white dark:border-slate-700/60 dark:bg-[#071426]">
               <AvatarPreview profile={profile} avatarValue={avatarValue} avatarKind={avatarKind} />
             </div>
             {!readOnly ? (
@@ -232,14 +232,14 @@ export function ProfileHero({
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500">Recebida em {safeDate(profile.createdAt)}</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Recebida em {safeDate(profile.createdAt)}</span>
             </div>
 
-            <h2 className="mt-1 break-words text-2xl font-black tracking-tight text-slate-950">
+            <h2 className="mt-1 wrap-break-word text-2xl font-black tracking-tight text-slate-950 dark:text-slate-50">
               {displayName(profile)}
             </h2>
-            <p className="mt-1 text-sm font-bold text-slate-700">
-              {profile.accessType || "Perfil n√£o informado"} ¬∑ {profile.jobRole || "Cargo n√£o informado"}
+            <p className="mt-1 text-sm font-bold text-slate-700 dark:text-slate-300">
+              {profile.accessType || "Perfil n„o informado"} ∑ {profile.jobRole || "Cargo n„o informado"}
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -263,7 +263,7 @@ export function ProfileHero({
           {managementTarget ? (
             <a
               href={managementTarget.href}
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-400/40 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:bg-emerald-950/45"
             >
               <FiExternalLink className="h-4 w-4" />
               {managementTarget.label}
@@ -273,9 +273,9 @@ export function ProfileHero({
           <button
             type="button"
             onClick={() => setTimelineOpen((current) => !current)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-            aria-label="Abrir hist√≥rico da solicita√ß√£o"
-            title="Hist√≥rico da solicita√ß√£o"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700/60 dark:bg-[#071426] dark:text-slate-200 dark:hover:bg-[#13243b]"
+            aria-label="Abrir histÛrico da solicitaÁ„o"
+            title="HistÛrico da solicitaÁ„o"
           >
             <FiClock className="h-4 w-4" />
           </button>
@@ -288,7 +288,7 @@ export function ProfileHero({
                 setVisualDirty(false);
               }}
               disabled={saving || !onSaveVisual}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-700 dark:hover:bg-sky-600"
             >
               <FiSave />
               Salvar visual
@@ -297,17 +297,17 @@ export function ProfileHero({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2 xl:grid-cols-4">
-        <DetailItem label="E-mail" value={profile.email || "N√£o informado"} />
-        <DetailItem label="Telefone" value={profile.phone || "N√£o informado"} />
-        <DetailItem label="Usu√°rio" value={profile.username ? "@" + profile.username : "A definir"} />
+      <div className="mt-4 grid gap-4 border-t border-slate-100 pt-4 dark:border-slate-700/60 sm:grid-cols-2 xl:grid-cols-4">
+        <DetailItem label="E-mail" value={profile.email || "N„o informado"} />
+        <DetailItem label="Telefone" value={profile.phone || "N„o informado"} />
+        <DetailItem label="Usu·rio" value={profile.username ? "@" + profile.username : "A definir"} />
         <DetailItem label="Empresa" value={profile.company || "Sem empresa"} />
       </div>
 
-      <div className="mt-4 border-t border-slate-100 pt-3">
+      <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-700/60">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Observa√ß√£o interna</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">ObservaÁ„o interna</p>
 
             {noteEditing ? (
               <textarea
@@ -315,12 +315,12 @@ export function ProfileHero({
                 maxLength={INTERNAL_NOTES_LIMIT}
                 onChange={(event) => setNoteDraft(event.target.value.slice(0, INTERNAL_NOTES_LIMIT))}
                 rows={3}
-                className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
-                placeholder="Adicionar uma observa√ß√£o interna para este perfil..."
+                className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white dark:border-slate-700/60 dark:bg-[#071426] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-[#071426]"
+                placeholder="Adicionar uma observaÁ„o interna para este perfil..."
               />
             ) : (
-              <p className="mt-1 whitespace-pre-wrap text-sm font-medium leading-6 text-slate-900">
-                {noteText || "Sem observa√ß√£o interna."}
+              <p className="mt-1 whitespace-pre-wrap text-sm font-medium leading-6 text-slate-900 dark:text-slate-200">
+                {noteText || "Sem observaÁ„o interna."}
               </p>
             )}
           </div>
@@ -335,7 +335,7 @@ export function ProfileHero({
                       setNoteDraft(resolvedNote);
                       setNoteEditing(false);
                     }}
-                    className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black uppercase tracking-[0.12em] text-slate-600 transition hover:bg-slate-50"
+                    className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black uppercase tracking-[0.12em] text-slate-600 transition hover:bg-slate-50 dark:border-slate-700/60 dark:bg-[#071426] dark:text-slate-200 dark:hover:bg-[#13243b]"
                   >
                     Cancelar
                   </button>
@@ -343,7 +343,7 @@ export function ProfileHero({
                     type="button"
                     onClick={saveNote}
                     disabled={!canEditNote || (!noteDirty && noteDraft.trim() === noteText)}
-                    className="h-9 rounded-xl bg-slate-950 px-3 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-9 rounded-xl bg-slate-950 px-3 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-sky-700 dark:hover:bg-sky-600"
                   >
                     Salvar
                   </button>
@@ -353,7 +353,7 @@ export function ProfileHero({
                   <button
                     type="button"
                     onClick={() => setNoteEditing(true)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 dark:border-slate-700/60 dark:bg-[#071426] dark:text-slate-300 dark:hover:bg-[#13243b]"
                     aria-label="Editar nota"
                     title="Editar nota"
                   >
@@ -364,7 +364,7 @@ export function ProfileHero({
                       type="button"
                       onClick={removeNote}
                       disabled={!canEditNote}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-400/40 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/45"
                       aria-label="Remover nota"
                       title="Remover nota"
                     >
@@ -379,16 +379,16 @@ export function ProfileHero({
       </div>
 
       {timelineOpen ? (
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700/60 dark:bg-[#071426]">
           <div className="flex items-center gap-2">
-            <FiClock className="h-4 w-4 text-slate-500" />
-            <p className="text-sm font-black text-slate-950">Linha do tempo</p>
+            <FiClock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+            <p className="text-sm font-black text-slate-950 dark:text-slate-50">Linha do tempo</p>
           </div>
 
           <div className="mt-3 grid gap-2">
             {timelineItems.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-500">
-                Nenhuma movimenta√ß√£o registrada.
+              <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-500 dark:border-slate-700/60 dark:bg-[#0d1b2f] dark:text-slate-400">
+                Nenhuma movimentaÁ„o registrada.
               </p>
             ) : (
               timelineItems.map((item) => {
@@ -398,13 +398,13 @@ export function ProfileHero({
                     key={item.id}
                     type="button"
                     onClick={() => setExpandedTimelineId(expanded ? null : item.id)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-slate-300"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-slate-300 dark:border-slate-700/60 dark:bg-[#0d1b2f] dark:hover:border-slate-500"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-black text-slate-950">{item.title}</p>
-                        <p className="mt-1 truncate text-xs font-semibold text-slate-500">
-                          {item.side} ¬∑ {item.summary}
+                        <p className="text-sm font-black text-slate-950 dark:text-slate-50">{item.title}</p>
+                        <p className="mt-1 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          {item.side} ∑ {item.summary}
                         </p>
                       </div>
                       <span className={classNames("rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]", toneClass(item.tone))}>
@@ -413,7 +413,7 @@ export function ProfileHero({
                     </div>
 
                     {expanded ? (
-                      <p className="mt-3 whitespace-pre-wrap rounded-xl bg-slate-50 px-3 py-2 text-sm font-semibold leading-6 text-slate-700">
+                      <p className="mt-3 whitespace-pre-wrap rounded-xl bg-slate-50 px-3 py-2 text-sm font-semibold leading-6 text-slate-700 dark:bg-[#071426] dark:text-slate-300">
                         {item.details}
                       </p>
                     ) : null}

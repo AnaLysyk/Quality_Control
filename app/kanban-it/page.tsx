@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
 import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPaperclip, FiPlus, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
@@ -473,6 +473,7 @@ export default function KanbanItPage() {
     [isPt],
   );
   const pathname = usePathname() || "";
+  const searchParams = useSearchParams();
   const { user, loading } = usePermissionAccess();
   const { companies } = useAuth();
   const { activeClient, activeClientSlug } = useClientContext();
@@ -494,6 +495,7 @@ export default function KanbanItPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [createEvidenceFile, setCreateEvidenceFile] = useState<File | null>(null);
   const createEvidenceInputRef = useRef<HTMLInputElement | null>(null);
+  const openCreateTokenRef = useRef<string | null>(null);
 
   const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
   const [editingColumnLabel, setEditingColumnLabel] = useState("");
@@ -662,6 +664,27 @@ export default function KanbanItPage() {
     const timer = setInterval(loadSuportes, 30000);
     return () => clearInterval(timer);
   }, [loadSuportes]);
+
+  useEffect(() => {
+    const shouldOpenCreateModal = searchParams.get("modal") === "create" || searchParams.get("create") === "1";
+    if (!canCreateSupport || !shouldOpenCreateModal) return;
+
+    const token = searchParams.toString();
+    if (openCreateTokenRef.current === token) return;
+
+    openCreateTokenRef.current = token;
+    setCreateOpen(true);
+
+    const nextParams = new URLSearchParams(token);
+    nextParams.delete("modal");
+    nextParams.delete("create");
+    const nextQueryString = nextParams.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${nextQueryString ? `?${nextQueryString}` : ""}${window.location.hash}`,
+    );
+  }, [canCreateSupport, searchParams]);
 
   // Auto-scroll ao card encontrado pela busca
   useEffect(() => {

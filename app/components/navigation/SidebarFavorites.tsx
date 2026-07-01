@@ -65,7 +65,7 @@ export default function SidebarFavorites({
           onMouseLeave={scheduleClose}
           title="Favoritos"
           aria-label="Favoritos"
-          className="flex w-full items-center justify-center rounded-xl p-2.5 text-amber-300/70 transition hover:bg-white/10 hover:text-amber-300"
+          className="sidebar-nav-item flex w-full items-center justify-center rounded-xl border border-transparent p-2.5 text-amber-300/70 transition hover:bg-white/10 hover:text-amber-300"
         >
           <FiBookmark size={18} />
         </button>
@@ -89,8 +89,8 @@ export default function SidebarFavorites({
                       setFlyoutOpen(false);
                       onClose?.();
                     }}
-                    className={`flex flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
-                      pathname === fav.href ? "text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
+                    className={`sidebar-nav-item flex flex-1 items-center gap-2.5 rounded-lg border border-transparent px-3 py-2 text-sm transition ${
+                      pathname === fav.href ? "sidebar-nav-active text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     <FiBookmark size={13} className="shrink-0 text-amber-300/60" />
@@ -124,8 +124,8 @@ export default function SidebarFavorites({
             <Link
               href={fav.href}
               onClick={onClose}
-              className={`flex flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium transition ${
-                pathname === fav.href ? "bg-white/14 text-white" : "text-white/75 hover:bg-white/8 hover:text-white"
+              className={`sidebar-nav-item flex flex-1 items-center gap-2 rounded-lg border border-transparent px-2 py-1.5 text-[13px] font-medium transition ${
+                pathname === fav.href ? "sidebar-nav-active text-white" : "text-white/75 hover:bg-white/8 hover:text-white"
               }`}
             >
               <FiBookmark size={12} className="shrink-0 text-amber-300/60" />

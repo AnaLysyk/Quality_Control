@@ -99,13 +99,21 @@ export function getUserAccessContext(
     isTestingCompanyUser,
     isCompanyUser,
     permissions:
-      resolvedUserPermissions ??
-      resolveEffectivePermissionMatrix({
-        permissionRole,
-        role,
-        companyRole,
-        globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
-        isGlobalAdmin,
-      }),
+      isGlobalAdmin
+        ? resolveEffectivePermissionMatrix({
+            permissionRole,
+            role,
+            companyRole,
+            globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
+            isGlobalAdmin,
+          })
+        : resolvedUserPermissions ??
+          resolveEffectivePermissionMatrix({
+            permissionRole,
+            role,
+            companyRole,
+            globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
+            isGlobalAdmin,
+          }),
   };
 }

@@ -17,7 +17,7 @@ process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 jest.mock("server-only", () => ({}));
 
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
-jest.mock("../../../lib/email", () => ({
+jest.mock("@/lib/email", () => ({
   emailService: {
     sendPasswordResetEmail: jest.fn().mockResolvedValue(true),
   },
@@ -249,5 +249,4 @@ describePg("Esqueci a senha â€” aprovaÃ§Ã£o por LÃ­der TC / Suporte T
     expect(updated!.reviewNote).toBe("Aprovado pelo Suporte Tecnico");
   });
 });
-
 

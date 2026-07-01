@@ -637,12 +637,13 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     if (payload.message) setInput("");
 
     // Usa endpoint unificado para garantir memória persistente de todas as conversas.
-    const apiRoute = "/api/assistant/ask";
+    const apiRoute = "/api/assistente/ask";
     const shouldSendBrainContext =
       pathname.startsWith("/brain") ||
       Boolean(
-        brainOpenContext?.source === "brain" &&
-        (brainOpenContext.route ?? pathname).startsWith("/brain"),
+        brainOpenContext?.source === "brain" ||
+        brainOpenContext?.nodeId ||
+        brainOpenContext?.agentMode,
       );
 
     try {

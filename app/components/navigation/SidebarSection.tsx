@@ -21,10 +21,10 @@ function resolveSidebarHref(href: string) {
 }
 
 const moduleBaseClass =
-  "flex w-full items-center gap-3 rounded-xl border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm font-semibold text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
+  "sidebar-nav-item flex w-full items-center gap-3 rounded-xl border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm font-semibold text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 const subItemBaseClass =
-  "flex items-center gap-2.5 rounded-lg border border-transparent border-l-transparent bg-transparent px-2 py-1.5 text-[13px] font-medium text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
+  "sidebar-nav-item flex items-center gap-2.5 rounded-lg border border-transparent border-l-transparent bg-transparent px-2 py-1.5 text-[13px] font-medium text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 export default function SidebarSection({
   mod,
@@ -36,7 +36,9 @@ export default function SidebarSection({
 }: SidebarSectionProps) {
   const visibleItems = mod.items.filter((item) => item.href);
   const hasChildren = visibleItems.length > 0;
-  const moduleClassName = `${moduleBaseClass} ${isActive ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`;
+  const moduleClassName = `${moduleBaseClass} ${
+    isActive ? "sidebar-nav-active border-(--shell-menu-border) border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""
+  }`;
 
   if (!hasChildren && mod.href) {
     return (
@@ -84,7 +86,9 @@ export default function SidebarSection({
                   href={resolveSidebarHref(item.href!)}
                   data-testid={item.testId}
                   onClick={onClose}
-                  className={`${subItemBaseClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
+                  className={`${subItemBaseClass} ${
+                    active ? "sidebar-nav-active border-(--shell-menu-border) border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""
+                  }`}
                 >
                   {createElement(getIcon(item.iconKey), { size: 13, className: "shrink-0 text-current opacity-75" })}
                   <span className="truncate">{item.label}</span>

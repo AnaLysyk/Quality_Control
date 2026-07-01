@@ -74,6 +74,14 @@ export const SYSTEM_MODULES = [
     status: "ativo",
   },
   {
+    id: "agenda",
+    name: "Agenda",
+    description: "Calendário de releases e compromissos operacionais.",
+    mainRoute: "/agenda",
+    basePermission: { moduleId: "release_calendar", action: "view" },
+    status: "ativo",
+  },
+  {
     id: "solicitacoes",
     name: "Solicitações",
     description: "Solicitações de acesso e alterações administrativas.",

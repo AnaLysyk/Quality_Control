@@ -60,8 +60,8 @@ export function DecisionPanel({
 
   if (commentsLocked) {
     return (
-      <div className="sticky bottom-0 z-30 rounded-2xl border border-slate-200 bg-white/98 px-4 py-3 shadow-[0_-10px_36px_rgba(15,23,42,0.10)] backdrop-blur">
-        <p className="text-sm font-black text-slate-700">{finalTitle(status)}</p>
+      <div className="sticky bottom-0 z-30 rounded-2xl border border-slate-200 bg-white/98 px-4 py-3 shadow-[0_-10px_36px_rgba(15,23,42,0.10)] backdrop-blur dark:border-slate-700/60 dark:bg-[#0d1b2f]/95">
+        <p className="text-sm font-black text-slate-700 dark:text-slate-200">{finalTitle(status)}</p>
       </div>
     );
   }
@@ -102,11 +102,11 @@ export function DecisionPanel({
   }
 
   return (
-    <section className="sticky bottom-0 z-30 rounded-xl border border-slate-200 bg-white/98 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur">
+    <section className="sticky bottom-0 z-30 rounded-xl border border-slate-200 bg-white/98 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur dark:border-slate-700/60 dark:bg-[#0d1b2f]/95">
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
         <div className="min-w-0">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Ações da solicitação</p>
-          <p className="mt-0.5 text-sm font-semibold text-slate-600">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Ações da solicitação</p>
+          <p className="mt-0.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
             {adjustmentFieldCount > 0
               ? `${adjustmentFieldCount} campo(s) marcados para ajuste`
               : "Nenhum ajuste marcado"}
@@ -118,7 +118,7 @@ export function DecisionPanel({
             type="button"
             onClick={onRequestAdjustment}
             disabled={!canRequestAdjustment}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-400/40 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-950/45"
           >
             <FiEdit3 />
             {requestingAdjustment ? "Enviando..." : "Solicitar ajuste"}
@@ -129,7 +129,7 @@ export function DecisionPanel({
             onClick={() => setRejectOpen(true)}
             aria-label="Recusar solicitação"
             disabled={accepting || isRejecting}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-400/40 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/45"
           >
             <FiXCircle />
             {isRejecting ? "Recusando..." : "Recusar"}
@@ -140,7 +140,7 @@ export function DecisionPanel({
             onClick={() => void confirmApprove()}
             aria-label="Aprovar solicitação"
             disabled={approvalBlocked || isRejecting}
-            className="inline-flex h-9 items-center gap-2 rounded-xl bg-slate-950 px-5 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center gap-2 rounded-xl bg-slate-950 px-5 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-sky-700 dark:hover:bg-sky-600"
           >
             <FiCheckCircle />
             {isApproving ? "Aprovando..." : selectedIsPasswordReset ? "Aprovar reset" : "Aprovar"}
@@ -151,7 +151,7 @@ export function DecisionPanel({
       <Dialog.Root open={rejectOpen} onOpenChange={(open) => !isRejecting && setRejectOpen(open)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[220] bg-slate-950/55 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[221] w-[min(560px,calc(100vw-28px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-rose-100 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.35)]">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[221] w-[min(560px,calc(100vw-28px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-rose-100 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.35)] dark:border-rose-400/30 dark:bg-[#0d1b2f]">
             <div className="bg-[linear-gradient(135deg,#7f1d1d_0%,#be123c_60%,#ef4444_130%)] px-6 py-5 text-white">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-start gap-3">
@@ -179,13 +179,13 @@ export function DecisionPanel({
 
             <div className="space-y-4 px-6 py-5">
               <label className="block">
-                <span className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">
+                <span className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   Motivo da recusa
                 </span>
                 <select
                   value={rejectionReasonDraft}
                   onChange={(event) => onRejectionReasonChange(event.target.value)}
-                  className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+                  className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 dark:border-slate-700/60 dark:bg-[#071426] dark:text-slate-100 dark:focus:ring-rose-950/40"
                   data-testid="access-request-rejection-reason"
                   aria-label="Motivo da rejeição"
                 >
@@ -198,22 +198,22 @@ export function DecisionPanel({
                 </select>
               </label>
 
-              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-rose-700">
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 dark:border-rose-400/40 dark:bg-rose-950/30">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-rose-700 dark:text-rose-200">
                   O que será enviado
                 </p>
-                <p className="mt-1 text-sm font-bold leading-6 text-rose-950">
+                <p className="mt-1 text-sm font-bold leading-6 text-rose-950 dark:text-rose-50">
                   {rejectionSummary || "Selecione um motivo ou escreva uma justificativa na conversa antes de confirmar."}
                 </p>
               </div>
 
-              <p className="text-sm font-semibold leading-6 text-slate-600">
+              <p className="text-sm font-semibold leading-6 text-slate-600 dark:text-slate-300">
                 Para justificar por mensagem, escreva no chat da solicitação antes de confirmar a recusa.
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
-              <Dialog.Close className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-100">
+            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4 dark:border-slate-700/60 dark:bg-[#071426]">
+              <Dialog.Close className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-100 dark:border-slate-700/60 dark:bg-[#0d1b2f] dark:text-slate-200 dark:hover:bg-[#13243b]">
                 Cancelar
               </Dialog.Close>
 

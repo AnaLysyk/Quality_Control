@@ -304,7 +304,7 @@ function buildClarifyReply(
     success: true,
     summary: "pedido pouco claro",
     reply: compactMultiline([
-      `${prefix}Ainda preciso entender melhor o que voce quer que eu faca.`,
+      `${prefix}Nao consegui entender completamente o que voce quer que eu faca.`,
       "",
       `Estou em ${context.screenLabel}. Me diga o objetivo em uma frase e eu sigo contigo passo a passo.`,
       "",

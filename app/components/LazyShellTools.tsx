@@ -362,16 +362,15 @@ export function DeferredChatButton() {
   const { mounted, defaultOpen, prime, open } = useDeferredShellTool();
   const pathname = usePathname() || "/";
   const assistantEnabled = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
-  const isGlobalAdmin = user?.isGlobalAdmin === true || (user as { is_global_admin?: boolean } | null)?.is_global_admin === true;
   const isBrainAskRoute = pathname === "/brain/perguntar";
+  const canUseBrain = Boolean(user) && can("ai", "view") && can("ai", "use") && can("brain", "view");
 
   useEffect(() => {
-    if (!isBrainAskRoute || mounted) return;
+    if (!isBrainAskRoute || mounted || !canUseBrain) return;
     open();
-  }, [isBrainAskRoute, mounted, open]);
+  }, [canUseBrain, isBrainAskRoute, mounted, open]);
 
-  if (!assistantEnabled || !user) return null;
-  if (!isGlobalAdmin && (!can("ai", "view") || !can("ai", "use"))) return null;
+  if (!assistantEnabled || !user || !canUseBrain) return null;
 
   if (mounted) {
     return (

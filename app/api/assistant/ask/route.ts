@@ -4,6 +4,7 @@ import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { detectAgentMode, AGENT_REGISTRY } from "@/lib/brain/agents";
 import { buildWebSupportContext, shouldUseWebSupport } from "@/lib/assistant/webSupport";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import type { AgentMode } from "@/lib/brain/agents";
 import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
 
@@ -138,6 +139,16 @@ function isStructuredToolAction(body: AssistantRequestBody) {
   );
 }
 
+function shouldUseBrainFirst(brainContext: AssistantOpenEventDetail | null | undefined) {
+  return Boolean(
+    brainContext &&
+      (brainContext.source === "brain" ||
+        brainContext.nodeId ||
+        brainContext.agentMode ||
+        brainContext.metadata),
+  );
+}
+
 function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?: string | null }): string | null {
   const fromActor = body.actor?.companySlug ?? body.actor?.companySlugs?.[0] ?? null;
   return fromActor ?? authUser.companySlug ?? body.brainContext?.companySlug ?? null;
@@ -173,6 +184,12 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json().catch(() => ({}))) as AssistantRequestBody;
     const brainContext = body.brainContext ?? null;
+    const canViewAi = authUser.isGlobalAdmin || hasPermissionAccess(authUser.permissions, "ai", "view");
+    const canUseAi = authUser.isGlobalAdmin || hasPermissionAccess(authUser.permissions, "ai", "use");
+
+    if (!canViewAi || !canUseAi) {
+      return NextResponse.json({ error: "Sem permissao para usar o assistente" }, { status: 403 });
+    }
 
     if (isStructuredToolAction(body)) {
       const { runAssistantRequest } = await import("@/lib/assistant/service");
@@ -192,6 +209,29 @@ export async function POST(req: Request) {
         tool: response.tool,
         agentMode: null,
         brainContext,
+      });
+
+      return NextResponse.json(response);
+    }
+
+    if (!shouldUseBrainFirst(brainContext)) {
+      const { runAssistantRequest } = await import("@/lib/assistant/service");
+      const response = await runAssistantRequest(authUser, {
+        message: body.message,
+        context: body.context ?? null,
+        actor: body.actor ?? null,
+        action: body.action ?? null,
+        history: body.history ?? null,
+        brainContext: null,
+      } as Parameters<typeof runAssistantRequest>[1]);
+
+      await persistConversationMemory({
+        body,
+        authUser,
+        reply: String(response.reply ?? ""),
+        tool: response.tool,
+        agentMode: null,
+        brainContext: null,
       });
 
       return NextResponse.json(response);

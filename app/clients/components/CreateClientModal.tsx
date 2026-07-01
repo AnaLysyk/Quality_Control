@@ -966,6 +966,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           <label className="block text-sm">
             Nome / razão social
             <input
+              aria-label="Nome da empresa"
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={name}
               onChange={(e) => setName(e.target.value)}

@@ -72,6 +72,20 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     ],
   },
   {
+    id: "operations",
+    label: "Operacional",
+    description: "Área operacional, dashboard, métricas e busca transversal. Se desligar aqui, o menu e as rotas operacionais somem para o perfil.",
+    category: "Módulos e páginas",
+    actions: ["view"],
+  },
+  {
+    id: "release_calendar",
+    label: "Agenda de releases",
+    description: "Calendário de entregas, agendamentos e eventos de release visíveis para o perfil.",
+    category: "Módulos e páginas",
+    actions: ["view", "create", "edit", "status"],
+  },
+  {
     id: "applications",
     label: "Empresas e aplicações",
     description: "Cadastro e consulta de empresas, clientes e aplicações.",
@@ -186,7 +200,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   {
     id: "permissions",
     label: "Permissões",
-    description: "Tela administrativa de personalização por usuário.",
+    description: "Tela administrativa de personalização por tipo de perfil. Esta matriz controla menu, rotas e leitura do Brain.",
     category: "Usuários e administração",
     actions: ["view", "edit", "reset", "clone"],
   },
@@ -228,14 +242,14 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   {
     id: "ai",
     label: "Assistente IA",
-    description: "Chat e automações assistidas por IA.",
+    description: "Disponibilidade do assistente operacional nas telas. Não representa chat privado entre usuários.",
     category: "Produtividade",
     actions: ["view", "use"],
   },
   {
     id: "brain",
     label: "Brain",
-    description: "Grafo de conhecimento e leitura contextual permitida para o perfil.",
+    description: "Grafo de conhecimento e leitura contextual apenas das telas disponíveis para o perfil.",
     category: "Produtividade",
     actions: ["view", "read", "use"],
   },

@@ -15,6 +15,19 @@ type QualityRelease = {
   qaseProject?: string | null;
 };
 
+type QualityProjectRow = {
+  id: string;
+  name: string;
+  releaseCount: number;
+  passRate: number | null;
+  gateStatus: string;
+  latestRelease?: {
+    slug?: string | null;
+    title?: string | null;
+    createdAt?: string | null;
+  } | null;
+};
+
 type QualityCompany = {
   id: string;
   name: string;
@@ -43,6 +56,7 @@ type QualityCompany = {
 type QualityOverview = {
   period: number;
   companies: QualityCompany[];
+  projectRows?: QualityProjectRow[];
   releaseCount: number;
   releaseRiskCount: number;
   releaseWarningCount: number;
@@ -120,6 +134,10 @@ function releaseLabel(company: QualityCompany) {
   return firstRelease?.title || firstRelease?.project || firstRelease?.app || firstRelease?.qaseProject || "Sem release vinculada";
 }
 
+function projectReleaseLabel(project: QualityProjectRow) {
+  return project.latestRelease?.title || project.latestRelease?.slug || "Sem release vinculada";
+}
+
 function buildExecutiveNote(data: QualityOverview | null, visibleCompanies?: QualityCompany[]) {
   if (!data) return "Carregue os dados para gerar a leitura executiva.";
   const companies = visibleCompanies ?? data.companies;
@@ -127,11 +145,13 @@ function buildExecutiveNote(data: QualityOverview | null, visibleCompanies?: Qua
   const scoreText = score == null ? "sem score consolidado" : `${Math.round(score)}% de sucesso`;
   const riskyCompanies = companies.filter((company) => companyGate(company) === "failed").length;
   const warningCompanies = companies.filter((company) => companyGate(company) === "warning").length;
-  const riskText = riskyCompanies || data.releaseRiskCount
-    ? `Existem ${riskyCompanies} empresa(s) filtrada(s) e ${data.releaseRiskCount} release(s) em risco.`
+  const riskyProjects = data.projectRows?.filter((project) => project.gateStatus === "failed").length ?? 0;
+  const warningProjects = data.projectRows?.filter((project) => project.gateStatus === "warning").length ?? 0;
+  const riskText = riskyCompanies || data.releaseRiskCount || riskyProjects
+    ? `Existem ${riskyCompanies} empresa(s), ${riskyProjects} projeto(s) e ${data.releaseRiskCount} release(s) em risco.`
     : "Não há risco bloqueante consolidado no recorte atual.";
-  const warningText = warningCompanies || data.releaseWarningCount
-    ? `Há ${warningCompanies} empresa(s) filtrada(s) e ${data.releaseWarningCount} release(s) em atenção.`
+  const warningText = warningCompanies || data.releaseWarningCount || warningProjects
+    ? `Há ${warningCompanies} empresa(s), ${warningProjects} projeto(s) e ${data.releaseWarningCount} release(s) em atenção.`
     : "Os alertas do recorte atual estão controlados.";
 
   return `No período de ${data.period} dias, a Central de Qualidade está com ${scoreText}. ${riskText} ${warningText} Recomenda-se priorizar projetos com gate bloqueado, revisar falhas recorrentes e atualizar as runs sem cobertura estatística.`;
@@ -227,6 +247,16 @@ export default function CentralDeQualidadePage() {
       });
   }, [companyFilter, data?.companies, gateFilter, query]);
 
+  const priorityProjects = useMemo(() => {
+    const normalizedQuery = normalizeText(query);
+    return [...(data?.projectRows ?? [])].filter((project) => {
+      if (gateFilter !== "all" && gateFilter !== "none" && project.gateStatus !== gateFilter) return false;
+      if (gateFilter === "none" && project.gateStatus !== "no_data") return false;
+      if (!normalizedQuery) return true;
+      return normalizeText(`${project.name} ${gateLabel(project.gateStatus)} ${projectReleaseLabel(project)}`).includes(normalizedQuery);
+    });
+  }, [data?.projectRows, gateFilter, query]);
+
   const totalTests = data ? Object.values(data.globalStats).reduce((sum, value) => sum + asNumber(value), 0) : 0;
   const filteredFailures = orderedCompanies.reduce((sum, company) => sum + asNumber(company.stats?.fail), 0);
   const filteredBlocked = orderedCompanies.reduce((sum, company) => sum + asNumber(company.stats?.blocked), 0);
@@ -310,6 +340,7 @@ export default function CentralDeQualidadePage() {
           </div>
           <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-(--tc-text-muted,#6b7280)">
             <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1">{orderedCompanies.length}/{data?.companies.length ?? 0} empresa(s) no recorte</span>
+            <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1">{priorityProjects.length}/{data?.projectRows?.length ?? 0} projeto(s) no recorte</span>
             <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1">{filteredFailures} falha(s)</span>
             <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1">{filteredBlocked} bloqueado(s)</span>
           </div>
@@ -323,7 +354,7 @@ export default function CentralDeQualidadePage() {
           {[
             { label: "Score consolidado", value: percent(data?.globalPassRate), icon: FiTrendingUp, note: scoreLabel(data?.globalPassRate ?? null) },
             { label: "Runs/Releases", value: loading ? "..." : String(data?.releaseCount ?? 0), icon: FiBarChart2, note: `${totalTests} testes consolidados` },
-            { label: "Empresas filtradas", value: loading ? "..." : String(orderedCompanies.length), icon: FiAlertTriangle, note: `${filteredFailures} falhas no recorte` },
+            { label: "Projetos priorizados", value: loading ? "..." : String(priorityProjects.length), icon: FiAlertTriangle, note: `${priorityProjects.filter((project) => project.gateStatus === "failed").length} projeto(s) bloqueado(s)` },
             { label: "Cobertura", value: loading ? "..." : percent(data?.coverage?.percent), icon: FiBriefcase, note: `${data?.coverage?.withStats ?? 0}/${data?.coverage?.total ?? 0} com estatística` },
           ].map((card) => {
             const Icon = card.icon;
@@ -340,10 +371,44 @@ export default function CentralDeQualidadePage() {
           })}
         </section>
 
+        <section className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-extrabold text-(--tc-text,#0b1a3c)">Projetos prioritários</h2>
+            <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1 text-xs font-bold text-(--tc-text-muted,#6b7280)">{priorityProjects.length} projeto(s)</span>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {loading ? (
+              <div className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-5 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Carregando projetos...</div>
+            ) : priorityProjects.length ? priorityProjects.map((project) => (
+              <article key={project.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-black text-(--tc-text,#0b1a3c)">{project.name}</h3>
+                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{projectReleaseLabel(project)}</p>
+                  </div>
+                  <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-2 py-1 text-xs font-bold text-(--tc-text,#0b1a3c)">{gateLabel(project.gateStatus)}</span>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                  <div className="rounded-xl bg-white px-3 py-2">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-(--tc-text-muted,#6b7280)">Score</p>
+                    <p className="mt-1 font-black text-(--tc-text,#0b1a3c)">{percent(project.passRate)}</p>
+                  </div>
+                  <div className="rounded-xl bg-white px-3 py-2">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-(--tc-text-muted,#6b7280)">Releases</p>
+                    <p className="mt-1 font-black text-(--tc-text,#0b1a3c)">{project.releaseCount}</p>
+                  </div>
+                </div>
+              </article>
+            )) : (
+              <div className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-5 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Nenhum projeto encontrado para o recorte aplicado.</div>
+            )}
+          </div>
+        </section>
+
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <article className="rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4 shadow-sm">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-extrabold text-(--tc-text,#0b1a3c)">Projetos/empresas priorizados por risco</h2>
+              <h2 className="text-lg font-extrabold text-(--tc-text,#0b1a3c)">Empresas priorizadas por risco</h2>
               <span className="rounded-full border border-(--tc-border,#d7deea) px-3 py-1 text-xs font-bold text-(--tc-text-muted,#6b7280)">{orderedCompanies.length} empresa(s)</span>
             </div>
             <div className="mt-4 overflow-hidden rounded-2xl border border-(--tc-border,#d7deea)">

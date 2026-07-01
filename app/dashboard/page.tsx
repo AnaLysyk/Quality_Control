@@ -1,7 +1,12 @@
 ﻿export const dynamic = "force-dynamic";
 
 import DashboardClient from "./DashboardClient";
+import DashboardPrintShell from "./DashboardPrintShell";
 
 export default function DashboardPage() {
-  return <DashboardClient />;
+  return (
+    <DashboardPrintShell>
+      <DashboardClient />
+    </DashboardPrintShell>
+  );
 }

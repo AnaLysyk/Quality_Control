@@ -166,7 +166,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
         <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-(--tc-primary,#011848) text-white">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-(--tc-primary,#011848) text-[#011848] dark:text-white">
                 <FiMap className="h-5 w-5" />
               </div>
               <div>
@@ -278,7 +278,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-400 w-full border-collapse text-left text-sm">
-                <thead className="bg-(--tc-primary,#011848) text-white">
+                <thead className="bg-(--tc-primary,#011848) text-[#011848] dark:text-white">
                   <tr>
                     <th className="px-4 py-4 font-semibold">Módulo</th>
                     <th className="px-4 py-4 font-semibold">Rota</th>

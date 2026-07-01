@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { normalizeAuthenticatedUser, type NormalizedAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import {
@@ -34,6 +34,20 @@ export function usePermissionAccess() {
     [companies, user],
   );
   const permissions = accessContext?.permissions ?? EMPTY_PERMISSION_MATRIX;
+
+  useEffect(() => {
+    function handlePermissionsChanged() {
+      void refreshUser();
+    }
+
+    window.addEventListener("qc:permissions-changed", handlePermissionsChanged);
+    window.addEventListener("storage", handlePermissionsChanged);
+
+    return () => {
+      window.removeEventListener("qc:permissions-changed", handlePermissionsChanged);
+      window.removeEventListener("storage", handlePermissionsChanged);
+    };
+  }, [refreshUser]);
 
   const visibility = useMemo(() => toVisibilityMap(permissions), [permissions]);
 

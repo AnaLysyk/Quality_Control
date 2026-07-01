@@ -234,6 +234,12 @@ function formatDateTime(value?: string | null) {
   }).format(time);
 }
 
+function notifyPermissionRuntimeChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("qc:permissions-changed"));
+  window.localStorage.setItem("qc:permissions-changed", String(Date.now()));
+}
+
 function resolveCurrentRole(user: ReturnType<typeof usePermissionAccess>["user"], accessRole?: string | null) {
   return (
     normalizeLegacyRole(typeof user?.permissionRole === "string" ? user.permissionRole : null) ??
@@ -517,6 +523,7 @@ export default function ProfileManagementPage() {
           ? "Usuário salvo. Ele mantém o perfil, mas agora usa permissões individuais."
           : "Perfil salvo. As mudanças já entram no controle de módulos, telas, IA, Brain e Chat.",
       });
+      notifyPermissionRuntimeChanged();
       await refreshUser();
     } catch (error) {
       setNotice({ type: "error", message: error instanceof Error ? error.message : "Falha ao salvar perfil" });
@@ -559,6 +566,7 @@ export default function ProfileManagementPage() {
           ? "Usuário restaurado. Ele voltou a seguir o padrão efetivo do perfil."
           : "Perfil restaurado para o padrão do sistema.",
       });
+      notifyPermissionRuntimeChanged();
       await refreshUser();
     } catch (error) {
       setNotice({ type: "error", message: error instanceof Error ? error.message : "Falha ao restaurar perfil" });
@@ -584,10 +592,10 @@ export default function ProfileManagementPage() {
     <main className="profile-permissions-clean min-h-screen px-3 py-3 text-[#0b1a3c] sm:px-5 lg:px-6">
       <div className="mx-auto flex w-full max-w-none flex-col gap-4">
         <section className="profile-permissions-shell overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-white/82 shadow-sm shadow-slate-200/60">
-          <div className="profile-permissions-hero border-b border-slate-200/70 px-5 py-4 text-white sm:px-6">
+          <div className="profile-permissions-hero border-b border-slate-200/70 px-5 py-4 text-[#011848] dark:text-white sm:px-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/12 text-white ring-1 ring-white/20">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/12 text-[#011848] dark:text-white ring-1 ring-white/20">
                   <FiShield className="h-5 w-5" />
                 </div>
                 <div>
@@ -619,7 +627,7 @@ export default function ProfileManagementPage() {
                       className={[
                         "flex min-h-12 items-center justify-between gap-3 rounded-2xl border px-3 py-2 text-left text-sm font-black transition",
                         selected
-                          ? "border-[#011848] bg-[#011848] text-white shadow-sm"
+                          ? "border-[#011848] bg-[#011848] text-[#011848] dark:text-white shadow-sm"
                           : `${getFixedProfileTone(profile)} hover:border-[#011848] hover:bg-white`,
                       ].join(" ")}
                     >
@@ -673,7 +681,7 @@ export default function ProfileManagementPage() {
                       type="button"
                       onClick={handleSave}
                       disabled={!canEdit || saving || loadingProfile || !hasDraftChanges}
-                      className="inline-flex h-11 items-center gap-2 rounded-2xl bg-[#011848] px-4 text-sm font-black text-white shadow-sm transition hover:bg-[#0b255d] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex h-11 items-center gap-2 rounded-2xl bg-[#011848] px-4 text-sm font-black text-[#011848] dark:text-white shadow-sm transition hover:bg-[#0b255d] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <FiSave className="h-4 w-4" />
                       {saving ? "Salvando..." : hasDraftChanges ? "Salvar alterações" : "Tudo salvo"}
@@ -735,7 +743,7 @@ export default function ProfileManagementPage() {
                   {quickModules.map((module) => {
                     const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
                     return (
-                      <div key={module.id} className="rounded-2xl border border-slate-200/70 bg-white/55 p-3">
+                      <div key={module.id} className="rounded-2xl border border-slate-200/70 bg-[#f8fafc] dark:bg-white/55 p-3">
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <h3 className="font-black text-[#0b1a3c]">{module.label}</h3>
@@ -786,7 +794,7 @@ export default function ProfileManagementPage() {
                           {modules.map((module) => {
                             const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
                             return (
-                              <div key={module.id} className="rounded-2xl border border-slate-200/70 bg-white/58 p-3">
+                              <div key={module.id} className="rounded-2xl border border-slate-200/70 bg-[#f8fafc] dark:bg-white/58 p-3">
                                 <div className="grid gap-4 xl:grid-cols-[minmax(220px,340px)_minmax(0,1fr)]">
                                   <div>
                                     <div className="flex flex-wrap items-center gap-2">

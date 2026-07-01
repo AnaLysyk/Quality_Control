@@ -13124,3 +13124,533 @@ aside:has(input[placeholder*="Buscar modulo"]) :is(nav a, nav button, nav [role=
 }
 /* === /QC Profile user permissions === */
 
+/* === QC Release Agenda Page === */
+.release-agenda-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.14), transparent 26rem),
+    radial-gradient(circle at 100% 0%, rgba(239, 0, 1, 0.12), transparent 25rem),
+    linear-gradient(180deg, #f8fbff 0%, #f2f6fb 52%, #ffffff 100%);
+  color: #07152f;
+}
+
+.release-agenda-shell {
+  width: min(100%, 1560px);
+  margin-inline: auto;
+  padding: 1.4rem;
+}
+
+.release-agenda-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border-radius: 1.8rem;
+  background: linear-gradient(135deg, #011848 0%, #07152f 54%, #ef0001 100%);
+  padding: 1.15rem 1.25rem;
+  color: #fff;
+  box-shadow: 0 24px 70px rgba(1, 24, 72, 0.18);
+}
+
+.release-agenda-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.release-agenda-mark {
+  display: grid;
+  place-items: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+}
+
+.release-agenda-hero p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.release-agenda-hero h1 {
+  margin: 0.1rem 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+  font-weight: 950;
+}
+
+.release-agenda-hero span {
+  display: block;
+  max-width: 48rem;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.release-agenda-hero button,
+.release-agenda-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(1, 24, 72, 0.12);
+  background: rgba(255,255,255,0.80);
+  padding-inline: 0.9rem;
+  color: #0f2348;
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.release-agenda-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.release-agenda-toolbar label {
+  width: 100%;
+  background: #fff;
+}
+
+.release-agenda-toolbar input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #07152f;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.release-agenda-counters {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.release-agenda-counters span {
+  min-height: 2.45rem;
+  border: 1px solid rgba(1, 24, 72, 0.10);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.82);
+  padding: 0.55rem 0.75rem;
+  color: #0f2348;
+  font-size: 0.74rem;
+  font-weight: 950;
+}
+
+.release-agenda-alert {
+  margin-top: 1rem;
+  border: 1px solid rgba(239, 0, 1, 0.18);
+  border-radius: 1rem;
+  background: rgba(239, 0, 1, 0.06);
+  padding: 0.85rem 1rem;
+  color: #b80001;
+  font-size: 0.85rem;
+  font-weight: 850;
+}
+
+.release-agenda-list {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.release-agenda-row,
+.release-agenda-empty {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 1rem;
+  border: 1px solid rgba(1, 24, 72, 0.10);
+  border-radius: 1.25rem;
+  background: rgba(255,255,255,0.78);
+  padding: 0.9rem;
+  box-shadow: 0 14px 45px rgba(1, 24, 72, 0.06);
+}
+
+.release-agenda-date {
+  display: grid;
+  align-content: center;
+  gap: 0.25rem;
+  border-radius: 1rem;
+  background: rgba(1, 24, 72, 0.045);
+  padding: 0.8rem;
+  color: #011848;
+}
+
+.release-agenda-date strong,
+.release-agenda-date small {
+  display: block;
+  font-weight: 950;
+}
+
+.release-agenda-date small {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.release-agenda-title-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.release-agenda-title-line h2 {
+  margin: 0;
+  color: #011848;
+  font-size: 1.05rem;
+  letter-spacing: -0.03em;
+  font-weight: 950;
+}
+
+.release-agenda-content p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.release-agenda-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.release-agenda-meta span,
+.release-agenda-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.75rem;
+  border-radius: 999px;
+  background: rgba(1, 24, 72, 0.06);
+  padding-inline: 0.6rem;
+  color: #0f2348;
+  font-size: 0.7rem;
+  font-weight: 950;
+}
+
+.release-agenda-status.is-blocked,
+.release-agenda-status.is-cancelled {
+  background: rgba(239, 0, 1, 0.10);
+  color: #b80001;
+}
+
+.release-agenda-status.is-at_risk {
+  background: rgba(245, 158, 11, 0.14);
+  color: #92400e;
+}
+
+.release-agenda-status.is-done {
+  background: rgba(16, 185, 129, 0.13);
+  color: #047857;
+}
+
+.release-agenda-empty {
+  grid-template-columns: 1fr;
+  place-items: center;
+  min-height: 12rem;
+  color: #64748b;
+  font-weight: 850;
+}
+
+:root.dark .release-agenda-page,
+:root[data-theme="dark"] .release-agenda-page {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.10), transparent 26rem),
+    radial-gradient(circle at 100% 0%, rgba(239, 0, 1, 0.14), transparent 25rem),
+    linear-gradient(180deg, #07111f 0%, #0b1424 52%, #0e1726 100%);
+  color: #f8fafc;
+}
+
+:root.dark .release-agenda-row,
+:root.dark .release-agenda-empty,
+:root.dark .release-agenda-toolbar label,
+:root.dark .release-agenda-counters span,
+:root[data-theme="dark"] .release-agenda-row,
+:root[data-theme="dark"] .release-agenda-empty,
+:root[data-theme="dark"] .release-agenda-toolbar label,
+:root[data-theme="dark"] .release-agenda-counters span {
+  border-color: rgba(255,255,255,0.11);
+  background: rgba(15,23,42,0.70);
+  color: #e2e8f0;
+}
+
+:root.dark .release-agenda-title-line h2,
+:root.dark .release-agenda-date,
+:root[data-theme="dark"] .release-agenda-title-line h2,
+:root[data-theme="dark"] .release-agenda-date {
+  color: #f8fafc;
+}
+
+:root.dark .release-agenda-content p,
+:root.dark .release-agenda-date small,
+:root[data-theme="dark"] .release-agenda-content p,
+:root[data-theme="dark"] .release-agenda-date small {
+  color: rgba(226,232,240,0.68);
+}
+
+:root.dark .release-agenda-date,
+:root.dark .release-agenda-meta span,
+:root[data-theme="dark"] .release-agenda-date,
+:root[data-theme="dark"] .release-agenda-meta span {
+  background: rgba(255,255,255,0.07);
+}
+
+@media (max-width: 900px) {
+  .release-agenda-hero,
+  .release-agenda-toolbar,
+  .release-agenda-row {
+    grid-template-columns: 1fr;
+  }
+
+  .release-agenda-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .release-agenda-row {
+    display: block;
+  }
+
+  .release-agenda-date {
+    margin-bottom: 0.75rem;
+  }
+}
+/* === /QC Release Agenda Page === */
+
+
+/* QC sidebar company theme override - start */
+:root {
+  --qc-company-blue: #011848;
+  --qc-company-red: #ef0001;
+  --qc-company-white: #ffffff;
+}
+
+/* Menu lateral - modo claro */
+html:not(.dark) .sidebar-operational-shell,
+.theme-light .sidebar-operational-shell {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(239, 0, 1, 0.10) 0%, transparent 24%),
+    radial-gradient(circle at 100% 100%, rgba(1, 24, 72, 0.14) 0%, transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 48%, rgba(1, 24, 72, 0.06) 100%) !important;
+  border-right: 1px solid rgba(1, 24, 72, 0.14) !important;
+}
+
+/* Remove o azul bebê de blocos internos do menu */
+html:not(.dark) .sidebar-operational-shell [class*="bg-sky"],
+html:not(.dark) .sidebar-operational-shell [class*="bg-blue"],
+.theme-light .sidebar-operational-shell [class*="bg-sky"],
+.theme-light .sidebar-operational-shell [class*="bg-blue"] {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+/* Hover/foco dos itens do menu */
+html:not(.dark) .sidebar-operational-shell a:hover,
+html:not(.dark) .sidebar-operational-shell button:hover,
+.theme-light .sidebar-operational-shell a:hover,
+.theme-light .sidebar-operational-shell button:hover {
+  background:
+    linear-gradient(90deg, rgba(1, 24, 72, 0.10) 0%, rgba(239, 0, 1, 0.08) 100%) !important;
+  color: #011848 !important;
+  border-color: rgba(1, 24, 72, 0.18) !important;
+}
+
+/* Item ativo/selecionado no menu */
+html:not(.dark) .sidebar-operational-shell a[aria-current="page"],
+html:not(.dark) .sidebar-operational-shell [class*="bg-rose"],
+html:not(.dark) .sidebar-operational-shell [class*="bg-red"],
+.theme-light .sidebar-operational-shell a[aria-current="page"],
+.theme-light .sidebar-operational-shell [class*="bg-rose"],
+.theme-light .sidebar-operational-shell [class*="bg-red"] {
+  background:
+    linear-gradient(90deg, rgba(1, 24, 72, 0.12) 0%, rgba(255, 255, 255, 0.92) 48%, rgba(239, 0, 1, 0.10) 100%) !important;
+  color: #011848 !important;
+  border-color: rgba(239, 0, 1, 0.22) !important;
+  box-shadow: 0 12px 28px rgba(1, 24, 72, 0.10) !important;
+}
+
+/* Campo de busca do menu */
+html:not(.dark) .sidebar-operational-shell input,
+.theme-light .sidebar-operational-shell input {
+  background: rgba(255, 255, 255, 0.86) !important;
+  border-color: rgba(1, 24, 72, 0.14) !important;
+  color: #011848 !important;
+}
+
+html:not(.dark) .sidebar-operational-shell input:focus,
+.theme-light .sidebar-operational-shell input:focus {
+  border-color: rgba(239, 0, 1, 0.35) !important;
+  box-shadow: 0 0 0 3px rgba(239, 0, 1, 0.10) !important;
+}
+
+/* Menu lateral - modo escuro */
+html.dark .sidebar-operational-shell,
+.theme-dark .sidebar-operational-shell {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(239, 0, 1, 0.20) 0%, transparent 28%),
+    linear-gradient(180deg, #011848 0%, #07132a 54%, #000f2e 100%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+html.dark .sidebar-operational-shell a:hover,
+html.dark .sidebar-operational-shell button:hover,
+.theme-dark .sidebar-operational-shell a:hover,
+.theme-dark .sidebar-operational-shell button:hover {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%) !important;
+  color: #ffffff !important;
+}
+/* QC sidebar company theme override - end */\n\n
+/* QC sidebar single gradient override - start */
+/* Sidebar com um único degradê contínuo, incluindo topo, busca, menu e rodapé */
+.sidebar-operational-shell {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(239, 0, 1, 0.28) 0%, transparent 24%),
+    linear-gradient(180deg, #011848 0%, #07132a 48%, #000f2e 100%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Remove fundos diferentes das áreas fixas internas */
+.sidebar-operational-shell .sidebar-shell-header,
+.sidebar-operational-shell .sidebar-shell-footer,
+.sidebar-operational-shell [class*="sidebar-shell-header"],
+.sidebar-operational-shell [class*="sidebar-shell-footer"],
+.sidebar-operational-shell > div,
+.sidebar-operational-shell > section,
+.sidebar-operational-shell > header,
+.sidebar-operational-shell > footer {
+  background: transparent !important;
+}
+
+/* Remove blocos azul claro/cinza que quebram o degradê */
+.sidebar-operational-shell [class*="bg-sky"],
+.sidebar-operational-shell [class*="bg-blue"],
+.sidebar-operational-shell [class*="bg-slate-50"],
+.sidebar-operational-shell [class*="bg-slate-100"],
+.sidebar-operational-shell [class*="bg-white"] {
+  background-color: transparent !important;
+}
+
+/* Campo de busca integrado ao degradê */
+.sidebar-operational-shell input {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.sidebar-operational-shell input::placeholder {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+.sidebar-operational-shell input:focus {
+  border-color: rgba(239, 0, 1, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(239, 0, 1, 0.14) !important;
+}
+
+/* Hover/ativo sem criar faixa de outra cor */
+.sidebar-operational-shell a:hover,
+.sidebar-operational-shell button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.sidebar-operational-shell a[aria-current="page"],
+.sidebar-operational-shell [class*="bg-rose"],
+.sidebar-operational-shell [class*="bg-red"] {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(239, 0, 1, 0.32) !important;
+  box-shadow: none !important;
+}
+
+/* Textos e ícones do menu em branco/azul claro, sem cinza apagado */
+.sidebar-operational-shell,
+.sidebar-operational-shell a,
+.sidebar-operational-shell button,
+.sidebar-operational-shell span,
+.sidebar-operational-shell p {
+  color: rgba(255, 255, 255, 0.86) !important;
+}
+
+.sidebar-operational-shell [class*="text-slate"],
+.sidebar-operational-shell [class*="text-gray"],
+.sidebar-operational-shell [class*="text-blue"] {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+/* QC sidebar single gradient override - end */
+\n
+
+
+/* QC restricted access theme override - start */
+/* Tela de acesso restrito / permissões */
+html:not(.dark) [class*="permissions"] [class*="bg-white"],
+.theme-light [class*="permissions"] [class*="bg-white"] {
+  color: #011848;
+}
+
+html:not(.dark) main:has([class*="permission"]) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(239, 0, 1, 0.06) 0%, transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+
+html:not(.dark) main:has([class*="permission"]) section,
+html:not(.dark) main:has([class*="permission"]) article {
+  background: #ffffff !important;
+  border-color: rgba(1, 24, 72, 0.16) !important;
+  color: #011848 !important;
+}
+
+html:not(.dark) main:has([class*="permission"]) h1,
+html:not(.dark) main:has([class*="permission"]) h2,
+html:not(.dark) main:has([class*="permission"]) h3,
+html:not(.dark) main:has([class*="permission"]) p,
+html:not(.dark) main:has([class*="permission"]) span {
+  color: #011848 !important;
+}
+
+html:not(.dark) main:has([class*="permission"]) [class*="rounded-full"],
+html:not(.dark) main:has([class*="permission"]) [class*="rounded-xl"] {
+  background: rgba(1, 24, 72, 0.08) !important;
+  border-color: rgba(1, 24, 72, 0.16) !important;
+  color: #011848 !important;
+}
+
+html:not(.dark) main:has([class*="permission"]) [class*="permission"] {
+  background: rgba(239, 0, 1, 0.10) !important;
+  color: #011848 !important;
+  border-color: rgba(239, 0, 1, 0.22) !important;
+}
+
+html.dark main:has([class*="permission"]) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(239, 0, 1, 0.16) 0%, transparent 32%),
+    linear-gradient(180deg, #011848 0%, #07132a 60%, #000f2e 100%) !important;
+}
+
+html.dark main:has([class*="permission"]) section,
+html.dark main:has([class*="permission"]) article {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark main:has([class*="permission"]) [class*="permission"] {
+  background: rgba(239, 0, 1, 0.18) !important;
+  color: #ffffff !important;
+  border-color: rgba(239, 0, 1, 0.32) !important;
+}
+/* QC restricted access theme override - end */
+

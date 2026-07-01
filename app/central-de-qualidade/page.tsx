@@ -7,6 +7,14 @@ import { FiAlertTriangle, FiBarChart2, FiBriefcase, FiDownload, FiRefreshCw, FiS
 
 import { fetchApi } from "@/lib/api";
 
+type QualityRelease = {
+  slug?: string | null;
+  title?: string | null;
+  project?: string | null;
+  app?: string | null;
+  qaseProject?: string | null;
+};
+
 type QualityCompany = {
   id: string;
   name: string;
@@ -24,7 +32,12 @@ type QualityCompany = {
     label?: string;
     reason?: string;
   } | null;
-  releases?: unknown[];
+  releases?: QualityRelease[];
+  latestRelease?: {
+    slug?: string | null;
+    title?: string | null;
+    createdAt?: string | null;
+  } | null;
 };
 
 type QualityOverview = {
@@ -98,6 +111,13 @@ function companyGate(company: QualityCompany) {
   const status = company.gate?.status;
   if (status === "no_data") return "none";
   return status || "none";
+}
+
+function releaseLabel(company: QualityCompany) {
+  const latest = company.latestRelease?.title || company.latestRelease?.slug;
+  if (latest) return latest;
+  const firstRelease = company.releases?.[0];
+  return firstRelease?.title || firstRelease?.project || firstRelease?.app || firstRelease?.qaseProject || "Sem release vinculada";
 }
 
 function buildExecutiveNote(data: QualityOverview | null, visibleCompanies?: QualityCompany[]) {
@@ -198,7 +218,7 @@ export default function CentralDeQualidadePage() {
         if (companyFilter !== "all" && company.id !== companyFilter && company.slug !== companyFilter) return false;
         if (gateFilter !== "all" && companyGate(company) !== gateFilter) return false;
         if (!normalizedQuery) return true;
-        return normalizeText(`${company.name} ${company.slug ?? ""} ${gateLabel(company.gate?.status)}`).includes(normalizedQuery);
+        return normalizeText(`${company.name} ${company.slug ?? ""} ${gateLabel(company.gate?.status)} ${releaseLabel(company)}`).includes(normalizedQuery);
       })
       .sort((a, b) => {
         const aScore = a.passRate ?? -1;
@@ -331,6 +351,7 @@ export default function CentralDeQualidadePage() {
                 <thead className="bg-(--tc-surface-2,#f8fafc) text-[11px] uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">
                   <tr>
                     <th className="px-4 py-3">Empresa</th>
+                    <th className="px-4 py-3">Projeto/release</th>
                     <th className="px-4 py-3">Score</th>
                     <th className="px-4 py-3">Gate</th>
                     <th className="px-4 py-3">Falhas</th>
@@ -338,16 +359,20 @@ export default function CentralDeQualidadePage() {
                 </thead>
                 <tbody className="divide-y divide-(--tc-border,#d7deea)">
                   {loading ? (
-                    <tr><td colSpan={4} className="px-4 py-6 text-center text-(--tc-text-muted,#6b7280)">Carregando dados...</td></tr>
+                    <tr><td colSpan={5} className="px-4 py-6 text-center text-(--tc-text-muted,#6b7280)">Carregando dados...</td></tr>
                   ) : orderedCompanies.length ? orderedCompanies.map((company) => (
                     <tr key={company.id} className="bg-white">
                       <td className="px-4 py-3 font-bold text-(--tc-text,#0b1a3c)">{company.name}</td>
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-(--tc-text,#0b1a3c)">{releaseLabel(company)}</p>
+                        <p className="text-xs text-(--tc-text-muted,#6b7280)">{company.releases?.length ?? 0} release(s) no período</p>
+                      </td>
                       <td className="px-4 py-3">{percent(company.passRate)}</td>
                       <td className="px-4 py-3">{gateLabel(company.gate?.status)}</td>
                       <td className="px-4 py-3">{company.stats?.fail ?? 0}</td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={4} className="px-4 py-6 text-center text-(--tc-text-muted,#6b7280)">Nenhum dado encontrado para o recorte aplicado.</td></tr>
+                    <tr><td colSpan={5} className="px-4 py-6 text-center text-(--tc-text-muted,#6b7280)">Nenhum dado encontrado para o recorte aplicado.</td></tr>
                   )}
                 </tbody>
               </table>

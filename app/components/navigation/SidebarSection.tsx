@@ -15,6 +15,11 @@ type SidebarSectionProps = {
   onClose?: () => void;
 };
 
+function resolveSidebarHref(href: string) {
+  if (href === "/suporte/kanban") return "/kanban-it";
+  return href;
+}
+
 export default function SidebarSection({
   mod,
   isActive,
@@ -30,7 +35,7 @@ export default function SidebarSection({
   if (!hasChildren && mod.href) {
     return (
       <Link
-        href={mod.href}
+        href={resolveSidebarHref(mod.href)}
         data-testid={mod.testId}
         onClick={onClose}
         className={moduleClassName}
@@ -70,7 +75,7 @@ export default function SidebarSection({
                   </span>
                 )}
                 <Link
-                  href={item.href!}
+                  href={resolveSidebarHref(item.href!)}
                   data-testid={item.testId}
                   onClick={onClose}
                   className={`sidebar-nav-subentry ${active ? "sidebar-nav-subentry--active" : ""}`}

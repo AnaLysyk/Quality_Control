@@ -48,6 +48,34 @@ function normalizeRole(value?: string | null) {
   return normalizeLegacyRole(value) ?? value?.trim().toLowerCase() ?? null;
 }
 
+function normalizeBrainProfile(value?: string | null) {
+  return normalizeRole(value) ?? "usuario";
+}
+
+function profileNodeId(profileType: string) {
+  return `profile:${profileType || "usuario"}`;
+}
+
+function profileLabel(profileType: string) {
+  const labels: Record<string, string> = {
+    company: "Empresas do Sistema",
+    empresa: "Empresa",
+    company_user: "Usuário da Empresa",
+    leader_tc: "Líder TC",
+    technical_support: "Suporte Técnico",
+    testing_company_user: "Usuário TC",
+    user: "Usuário TC",
+    viewer: "Usuário TC",
+    usuario: "Usuário",
+  };
+
+  return labels[profileType] ?? profileType.replace(/_/g, " ");
+}
+
+function isSameUser(value?: string | null, userId?: string | null) {
+  return Boolean(value && userId && value === userId);
+}
+
 function isCompanyActor(access: BrainAccessContext) {
   const role = normalizeRole(access.user.permissionRole) ?? normalizeRole(access.user.role) ?? normalizeRole(access.user.companyRole);
   return role === SYSTEM_ROLES.EMPRESA || role === SYSTEM_ROLES.COMPANY_USER;
@@ -260,8 +288,8 @@ export async function GET(req: Request) {
     status: "ok",
     size: "lg",
     information: access.hasGlobalVisibility
-      ? "Perfil global: líder TC e suporte técnico enxergam todo o Brain."
-      : "Perfil com escopo de empresa: o Brain mostra somente empresas, usuários e fluxos permitidos.",
+      ? "Perfil global: o Brain organiza o conhecimento por perfil, usuário, empresa e módulos."
+      : "Perfil com escopo restrito: o Brain mostra perfis, empresas, usuários e fluxos permitidos.",
     metadata: {
       visibility: access.hasGlobalVisibility ? "global" : "scoped",
       role: access.user.role,
@@ -270,6 +298,54 @@ export async function GET(req: Request) {
   });
 
   for (const company of companies) {
+
+  const profileTypes = uniqueById(
+    [
+      { id: "company" },
+      ...visibleUsers.map((user) => ({
+        id: normalizeBrainProfile(String(user.permissionRole ?? user.role ?? user.globalRole ?? user.companyRole ?? "")),
+      })),
+    ],
+  ).map((item) => item.id);
+
+  for (const profileType of profileTypes) {
+    const usersInProfile = visibleUsers.filter(
+      (user) => normalizeBrainProfile(String(user.permissionRole ?? user.role ?? user.globalRole ?? user.companyRole ?? "")) === profileType,
+    );
+    const isCompanyProfile = profileType === "company";
+
+    addNode({
+      id: profileNodeId(profileType),
+      type: "profile",
+      module: "Perfis",
+      label: profileLabel(profileType),
+      description: isCompanyProfile
+        ? "Perfil Empresas do Sistema agrupa as empresas visíveis. Ao abrir uma empresa, o Brain mostra os módulos, usuários e movimentos daquele contexto."
+        : `Perfil ${profileLabel(profileType)} agrupa usuários. Ao abrir um usuário, o Brain mostra o que ele vê, criou, executou, comentou ou movimentou.`,
+      status: "ok",
+      size: "lg",
+      information: isCompanyProfile
+        ? `Perfil Empresas do Sistema conecta ${companies.length} empresa(s) visíveis.`
+        : `Perfil ${profileLabel(profileType)} conecta ${usersInProfile.length} usuário(s) visíveis.`,
+      metadata: {
+        profileType,
+        subjectKind: "profile",
+        userCount: usersInProfile.length,
+        companyCount: isCompanyProfile ? companies.length : 0,
+      },
+    });
+
+    addEdge({
+      id: `domain-profile-${profileType}`,
+      source: "domain:quality-control",
+      target: profileNodeId(profileType),
+      label: "organiza perfil",
+      type: "contains",
+      status: "ok",
+      metadata: { profileType, subjectKind: "profile" },
+    });
+  }
+
     const companyNodeId = `company:${company.id}`;
     const name = company.company_name || company.name;
     addNode({
@@ -285,9 +361,18 @@ export async function GET(req: Request) {
       information: `${name} conecta projetos, usuários, chamados, defeitos, notas e documentos visíveis neste perfil.`,
       createdAt: date(company.createdAt),
       updatedAt: date(company.updatedAt),
-      metadata: { slug: company.slug, status: company.status },
+      metadata: { slug: company.slug, status: company.status, profileType: "company", subjectKind: "company", subjectId: company.id },
     });
-    addEdge({ id: `domain-company-${company.id}`, source: "domain:quality-control", target: companyNodeId, label: "mapeia empresa", type: "contains", status: "ok", companyId: company.id });
+    addEdge({
+      id: `profile-company-${company.id}`,
+      source: profileNodeId("company"),
+      target: companyNodeId,
+      label: "contém empresa",
+      type: "contains",
+      status: "ok",
+      companyId: company.id,
+      metadata: { subjectKind: "company", profileType: "company" },
+    });
   }
 
   for (const project of projects) {
@@ -316,7 +401,30 @@ export async function GET(req: Request) {
     const userCompanyId = user.home_company_id || user.created_by_company_id || companyBySlug.get(user.default_company_slug ?? "")?.id || null;
     const company = userCompanyId ? companyById.get(userCompanyId) : null;
     const userNodeId = `user:${user.id}`;
+    const profileType = normalizeBrainProfile(String(user.permissionRole ?? user.role ?? user.globalRole ?? user.companyRole ?? ""));
     const role = normalizeRole(String(user.role ?? "")) ?? user.globalRole ?? "usuario";
+
+    const userTickets = tickets.filter((ticket) => isSameUser(ticket.createdBy, user.id) || isSameUser(ticket.assignedToUserId, user.id));
+    const userComments = comments.filter((comment) => isSameUser(comment.authorUserId, user.id));
+    const userTicketEvents = events.filter((event) => isSameUser(event.actorUserId, user.id));
+    const userNotes = visibleNotes.filter((note) => isSameUser(note.userId, user.id));
+    const userAuditLogs = visibleAuditLogs.filter((log) => isSameUser(log.actor_user_id, user.id) || Boolean(log.actor_email && log.actor_email === user.email));
+
+    const movementDates = [
+      user.updatedAt,
+      ...userTickets.map((item) => item.updatedAt),
+      ...userComments.map((item) => item.createdAt),
+      ...userTicketEvents.map((item) => item.createdAt),
+      ...userNotes.map((item) => item.updatedAt),
+      ...userAuditLogs.map((item) => item.created_at),
+    ]
+      .filter(Boolean)
+      .map((item) => item instanceof Date ? item : new Date(String(item)))
+      .filter((item) => Number.isFinite(item.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime());
+
+    const lastMovement = movementDates[0] ?? null;
+
     addNode({
       id: userNodeId,
       type: "person",
@@ -324,24 +432,54 @@ export async function GET(req: Request) {
       companyId: userCompanyId ?? undefined,
       companyName: company?.company_name || company?.name,
       label: user.full_name || user.name || user.email,
-      description: `${user.email} · ${role}`,
+      description: `${user.email} · perfil ${profileLabel(profileType)} · visão lógica do usuário.`,
       status: user.active && user.status !== "inactive" ? "ok" : "warning",
       size: "md",
-      information: `${user.full_name || user.name || user.email} participa do mapa como ${role}.`,
+      information: `${user.full_name || user.name || user.email} é usuário do perfil ${profileLabel(profileType)}. Chamados: ${userTickets.length}; comentários: ${userComments.length}; notas/documentos: ${userNotes.length}; logs/eventos: ${userTicketEvents.length + userAuditLogs.length}; última movimentação: ${lastMovement ? lastMovement.toLocaleDateString("pt-BR") : "não identificada"}.`,
       createdAt: date(user.createdAt),
       updatedAt: date(user.updatedAt),
       metadata: {
         email: user.email,
         role,
+        profileType,
+        profileLabel: profileLabel(profileType),
         globalRole: user.globalRole,
         userOrigin: user.user_origin,
         userScope: user.user_scope,
+        subjectKind: "user",
+        subjectId: user.id,
+        counters: {
+          tickets: userTickets.length,
+          comments: userComments.length,
+          notes: userNotes.length,
+          logs: userTicketEvents.length + userAuditLogs.length,
+        },
+        lastMovementAt: lastMovement ? lastMovement.toISOString() : null,
       },
     });
+
+    addEdge({
+      id: `profile-${profileType}-user-${user.id}`,
+      source: profileNodeId(profileType),
+      target: userNodeId,
+      label: "contém usuário",
+      type: "contains",
+      status: "ok",
+      companyId: userCompanyId ?? undefined,
+      metadata: { profileType, subjectKind: "user", subjectId: user.id },
+    });
+
     if (userCompanyId && companyById.has(userCompanyId)) {
-      addEdge({ id: `company-${userCompanyId}-user-${user.id}`, source: `company:${userCompanyId}`, target: userNodeId, label: "possui usuário", type: "contains", status: "ok", companyId: userCompanyId });
-    } else {
-      addEdge({ id: `domain-user-${user.id}`, source: "domain:quality-control", target: userNodeId, label: "possui usuário TC", type: "contains", status: "ok" });
+      addEdge({
+        id: `company-${userCompanyId}-user-${user.id}`,
+        source: `company:${userCompanyId}`,
+        target: userNodeId,
+        label: "possui usuário",
+        type: "contains",
+        status: "ok",
+        companyId: userCompanyId,
+        metadata: { profileType, subjectKind: "user", subjectId: user.id },
+      });
     }
   }
 
@@ -391,11 +529,11 @@ export async function GET(req: Request) {
       updatedAt: date(ticket.updatedAt),
       entityType: "ticket",
       entityId: ticket.id,
-      metadata: { code: ticket.code, type: ticket.type, priority: ticket.priority, tags: ticket.tags, assignedToUserId: ticket.assignedToUserId },
+      metadata: { code: ticket.code, type: ticket.type, priority: ticket.priority, tags: ticket.tags, assignedToUserId: ticket.assignedToUserId, actorUserId: ticket.createdBy, subjectKind: "user" },
     });
     if (companyId) addEdge({ id: `company-${companyId}-ticket-${ticket.id}`, source: `company:${companyId}`, target: `ticket:${ticket.id}`, label: "possui chamado", type: "contains", status: "ok", companyId });
-    addEdge({ id: `ticket-${ticket.id}-creator-${ticket.createdBy}`, source: `ticket:${ticket.id}`, target: `user:${ticket.createdBy}`, label: "criado por", type: "created_by", status: "ok", companyId });
-    if (ticket.assignedToUserId) addEdge({ id: `ticket-${ticket.id}-assignee-${ticket.assignedToUserId}`, source: `ticket:${ticket.id}`, target: `user:${ticket.assignedToUserId}`, label: "atribuído para", type: "action", status: "ok", companyId });
+    addEdge({ id: `ticket-${ticket.id}-creator-${ticket.createdBy}`, source: `user:${ticket.createdBy}`, target: `ticket:${ticket.id}`, label: "criou chamado", type: "created_by", status: "ok", companyId, metadata: { subjectKind: "user", subjectId: ticket.createdBy } });
+    if (ticket.assignedToUserId) addEdge({ id: `ticket-${ticket.id}-assignee-${ticket.assignedToUserId}`, source: `user:${ticket.assignedToUserId}`, target: `ticket:${ticket.id}`, label: "responsável por chamado", type: "action", status: "ok", companyId, metadata: { subjectKind: "user", subjectId: ticket.assignedToUserId } });
   }
 
   for (const comment of comments) {
@@ -414,9 +552,10 @@ export async function GET(req: Request) {
       createdAt: date(comment.createdAt),
       entityType: "ticket_comment",
       entityId: comment.id,
+      metadata: { actorUserId: comment.authorUserId, subjectKind: "user", subjectId: comment.authorUserId },
     });
     addEdge({ id: `ticket-${comment.ticketId}-comment-${comment.id}`, source: `ticket:${comment.ticketId}`, target: `ticket-comment:${comment.id}`, label: "tem comentário", type: "has_comment", status: "ok", companyId: comment.ticket.companyId ?? undefined });
-    addEdge({ id: `comment-${comment.id}-author-${comment.authorUserId}`, source: `ticket-comment:${comment.id}`, target: `user:${comment.authorUserId}`, label: "escrito por", type: "created_by", status: "ok", companyId: comment.ticket.companyId ?? undefined });
+    addEdge({ id: `comment-${comment.id}-author-${comment.authorUserId}`, source: `user:${comment.authorUserId}`, target: `ticket-comment:${comment.id}`, label: "escreveu comentário", type: "created_by", status: "ok", companyId: comment.ticket.companyId ?? undefined, metadata: { subjectKind: "user", subjectId: comment.authorUserId } });
   }
 
   for (const event of events) {
@@ -434,7 +573,7 @@ export async function GET(req: Request) {
       createdAt: date(event.createdAt),
       entityType: "ticket_event",
       entityId: event.id,
-      metadata: { payload: event.payload },
+      metadata: { payload: event.payload, actorUserId: event.actorUserId, subjectKind: event.actorUserId ? "user" : "system", subjectId: event.actorUserId },
     });
     addEdge({ id: `ticket-${event.ticketId}-event-${event.id}`, source: `ticket:${event.ticketId}`, target: `ticket-event:${event.id}`, label: "tem evento", type: "has_log", status: "ok", companyId: event.ticket.companyId ?? undefined });
   }
@@ -500,7 +639,7 @@ export async function GET(req: Request) {
       updatedAt: date(note.updatedAt),
       entityType: "user_note",
       entityId: note.id,
-      metadata: { color: note.color, priority: note.priority, tags: note.tags, status: note.status },
+      metadata: { color: note.color, priority: note.priority, tags: note.tags, status: note.status, actorUserId: note.userId, subjectKind: "user", subjectId: note.userId },
     });
     addEdge({ id: `user-${note.userId}-note-${note.id}`, source: `user:${note.userId}`, target: `note:${note.id}`, label: "possui nota", type: "has_document", status: "ok" });
   }
@@ -520,9 +659,13 @@ export async function GET(req: Request) {
       createdAt: date(log.created_at),
       entityType: "audit_log",
       entityId: log.id,
-      metadata: { entityType: log.entity_type, entityId: log.entity_id, metadata: log.metadata },
+      metadata: { entityType: log.entity_type, entityId: log.entity_id, metadata: log.metadata, actorUserId: log.actor_user_id, actorEmail: log.actor_email, subjectKind: log.actor_user_id ? "user" : "system", subjectId: log.actor_user_id },
     });
-    addEdge({ id: `domain-audit-${log.id}`, source: "domain:quality-control", target: `audit:${log.id}`, label: "possui log", type: "has_log", status: "ok" });
+    if (log.actor_user_id) {
+      addEdge({ id: `user-${log.actor_user_id}-audit-${log.id}`, source: `user:${log.actor_user_id}`, target: `audit:${log.id}`, label: "gerou log", type: "has_log", status: "ok", metadata: { subjectKind: "user", subjectId: log.actor_user_id } });
+    } else {
+      addEdge({ id: `domain-audit-${log.id}`, source: "domain:quality-control", target: `audit:${log.id}`, label: "log sem ator mapeado", type: "has_log", status: "ok" });
+    }
   }
 
   const uniqueNodes = uniqueById(nodes);

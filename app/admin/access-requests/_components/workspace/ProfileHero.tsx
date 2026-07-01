@@ -137,7 +137,7 @@ function AvatarPreview({
   if (kind === "emoji" && value) {
     return (
       <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50">
-        <span className="block translate-y-[1px] text-3xl leading-none">{value}</span>
+        <span className="block translate-y-px text-3xl leading-none">{value}</span>
       </div>
     );
   }
@@ -235,7 +235,7 @@ export function ProfileHero({
               <span className="text-xs font-semibold text-slate-500">Recebida em {safeDate(profile.createdAt)}</span>
             </div>
 
-            <h2 className="mt-1 break-words text-2xl font-black tracking-tight text-slate-950">
+            <h2 className="mt-1 wrap-break-word text-2xl font-black tracking-tight text-slate-950">
               {displayName(profile)}
             </h2>
             <p className="mt-1 text-sm font-bold text-slate-700">

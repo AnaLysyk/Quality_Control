@@ -1,4 +1,4 @@
-﻿// app/layout.tsx
+// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import AppShell from "@/components/AppShell";
@@ -15,13 +15,14 @@ import {
   normalizeThemePreference,
 } from "@/lib/appSettingsCookies";
 import "./globals.css";
+import "./operational-theme.css";
 import { ClientBootScripts } from "./_components/ClientBootScripts";
 
 export const metadata: Metadata = {
   title: "Quality Control",
   description: "Monitoramento inteligente de qualidade em tempo real.",
 };
-// Add default icons sÃ³ browsers show the app logo in the tab
+
 metadata.icons = {
   icon: [
     { url: "/images/tc.png", type: "image/png" }
@@ -140,6 +141,3 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     </html>
   );
 }
-
-
-

@@ -135,40 +135,11 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
   const sidebarBody = (
     <aside
-      data-testid="sidebar-docs-shell"
-      className={`sidebar-theme sidebar-docs-shell flex h-full flex-col overflow-hidden border-r border-slate-200 bg-white text-slate-900 shadow-[0_0_0_1px_rgba(15,23,42,0.02),0_16px_42px_rgba(15,23,42,0.08)] transition-[width] duration-300 ease-in-out ${
+      data-testid="sidebar-operational-shell"
+      className={`sidebar-theme sidebar-operational-shell flex h-full flex-col overflow-hidden border-r text-white transition-[width] duration-300 ease-in-out ${
         collapsed ? "w-18" : "w-72"
       }`}
     >
-      <style jsx global>{`
-        .sidebar-docs-shell :is(a, button, span, p, label, input, div) {
-          color: inherit;
-        }
-        .sidebar-docs-shell :is(a, button) {
-          color: #334155 !important;
-        }
-        .sidebar-docs-shell :is(a:hover, button:hover) {
-          color: #0f172a !important;
-        }
-        .sidebar-docs-shell [class*="border-white"] {
-          border-color: rgba(148, 163, 184, 0.28) !important;
-        }
-        .sidebar-docs-shell [class*="bg-white/10"],
-        .sidebar-docs-shell [class*="bg-white/8"],
-        .sidebar-docs-shell [class*="bg-white/14"],
-        .sidebar-docs-shell [class*="bg-white/16"] {
-          background-color: rgba(241, 245, 249, 0.9) !important;
-        }
-        .sidebar-docs-shell [class*="text-white/30"],
-        .sidebar-docs-shell [class*="text-white/35"],
-        .sidebar-docs-shell [class*="text-white/40"],
-        .sidebar-docs-shell [class*="text-white/45"],
-        .sidebar-docs-shell [class*="text-white/50"],
-        .sidebar-docs-shell [class*="text-white/60"],
-        .sidebar-docs-shell [class*="text-white/70"] {
-          color: #64748b !important;
-        }
-      `}</style>
       <SidebarHeader
         collapsed={collapsed}
         onToggle={toggleCollapsed}
@@ -179,7 +150,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
       {clients.length > 0 && !collapsed ? (
         <div className="relative px-3 pt-3">
-          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-white/55">
             Empresa
           </label>
           <button
@@ -188,7 +159,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
               setCompanyOpen((value) => !value);
               setCompanySearch("");
             }}
-            className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-left text-[12px] font-medium text-slate-800 outline-none transition hover:border-emerald-300 hover:bg-emerald-50"
+            className="sidebar-control flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-[12px] font-medium outline-none transition"
             data-testid="sidebar-company-combobox"
           >
             <span className="min-w-0 flex-1 truncate">
@@ -196,21 +167,21 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </span>
             <FiChevronDown
               size={13}
-              className={`shrink-0 text-slate-400 transition-transform ${companyOpen ? "rotate-180" : ""}`}
+              className={`shrink-0 text-white/55 transition-transform ${companyOpen ? "rotate-180" : ""}`}
             />
           </button>
 
           {companyOpen ? (
-            <div className="absolute left-3 right-3 top-full z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-              <div className="border-b border-slate-200 p-2">
-                <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
-                  <FiSearch size={12} className="shrink-0 text-slate-400" />
+            <div className="sidebar-dropdown absolute left-3 right-3 top-full z-50 mt-1 overflow-hidden rounded-xl border shadow-2xl">
+              <div className="border-b border-white/10 p-2">
+                <div className="sidebar-search flex items-center gap-2 rounded-lg border px-2 py-1.5">
+                  <FiSearch size={12} className="shrink-0 text-white/55" />
                   <input
                     value={companySearch}
                     onChange={(event) => setCompanySearch(event.target.value)}
                     autoFocus
                     placeholder="Digite para buscar a empresa..."
-                    className="w-full bg-transparent text-[12px] text-slate-900 placeholder:text-slate-400 outline-none"
+                    className="w-full bg-transparent text-[12px] text-white placeholder:text-white/50 outline-none"
                     data-testid="sidebar-company-search"
                   />
                 </div>
@@ -229,22 +200,22 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                           setCompanyOpen(false);
                           setCompanySearch("");
                         }}
-                        className={`flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-slate-50 ${
-                          active ? "text-slate-950" : "text-slate-600"
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-white/10 ${
+                          active ? "text-white" : "text-white/72"
                         }`}
                         data-testid={`sidebar-company-option-${client.slug}`}
                       >
-                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-emerald-500" : "bg-slate-300"}`} />
+                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-emerald-400" : "bg-white/35"}`} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[12px] font-semibold">{client.name}</span>
-                          <span className="block truncate text-[10px] text-slate-400">/{client.slug}</span>
+                          <span className="block truncate text-[10px] text-white/45">/{client.slug}</span>
                         </span>
-                        {active ? <FiCheck size={12} className="shrink-0 text-emerald-600" /> : null}
+                        {active ? <FiCheck size={12} className="shrink-0 text-emerald-300" /> : null}
                       </button>
                     );
                   })
                 ) : (
-                  <div className="px-3 py-4 text-center text-[11px] text-slate-400">
+                  <div className="px-3 py-4 text-center text-[11px] text-white/50">
                     Nenhuma empresa encontrada
                   </div>
                 )}
@@ -257,7 +228,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
       {activeClientSlug && (
         <div className="pt-2">
           <ProjectSelector collapsed={collapsed} showCompanySelector={false} />
-          <div className="mx-3 border-t border-slate-200" />
+          <div className="mx-3 border-t border-white/10" />
         </div>
       )}
 
@@ -273,23 +244,23 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                 onClose={onClose}
               />
             </div>
-            {!collapsed && <div className="mx-4 mb-1 border-t border-slate-200" />}
-            {collapsed && <div className="mx-2 my-1 border-t border-slate-200" />}
+            {!collapsed && <div className="mx-4 mb-1 border-t border-white/10" />}
+            {collapsed && <div className="mx-2 my-1 border-t border-white/10" />}
           </>
         )}
 
         {!collapsed && (
           <nav className="px-3 py-3" aria-label="Navegação principal">
-            <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-              Docs & Workspaces
+            <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-white/55">
+              Módulos operacionais
             </p>
-            <div className="mb-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 shadow-sm">
-              <FiSearch size={14} className="shrink-0 text-slate-400" />
+            <div className="sidebar-search mb-3 flex items-center gap-2 rounded-xl border px-2.5 py-2">
+              <FiSearch size={14} className="shrink-0 text-white/55" />
               <input
                 value={navSearch}
                 onChange={(event) => setNavSearch(event.target.value)}
                 placeholder="Buscar módulo, run, Brain..."
-                className="w-full bg-transparent text-[12px] text-slate-900 placeholder:text-slate-400 outline-none"
+                className="w-full bg-transparent text-[12px] text-white placeholder:text-white/50 outline-none"
                 data-testid="sidebar-nav-search"
               />
             </div>
@@ -308,7 +279,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                 ))}
             </div>
             {!loading && visibleModules.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
+              <div className="rounded-xl border border-dashed border-white/15 bg-white/8 px-3 py-4 text-center text-xs text-white/65">
                 Nenhum módulo encontrado.
               </div>
             ) : null}

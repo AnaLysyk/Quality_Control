@@ -4,12 +4,15 @@
 
 A agenda nao deve ser apenas um calendario visual. Ela deve ser o ponto unico para controlar entrega de release, janela de QA, freeze, homologacao, riscos, responsaveis, notificacoes e memoria do Brain.
 
+A mesma agenda tambem atende Lider TC e Suporte Tecnico, com uma visao consolidada por empresa, projeto, usuario, contexto e perfil. A ideia e enxergar horarios e marcacoes de todos sem transformar o calendario em uma montoeira de informacao.
+
 ## Regra principal
 
 ```txt
 Toda release precisa ter uma linha do tempo operacional.
 Toda linha do tempo precisa ter eventos claros.
 Todo evento pode gerar notificacao e contexto para o Brain.
+Lider TC e Suporte Tecnico podem filtrar a agenda sem trocar manualmente de empresa.
 ```
 
 ## Eventos da agenda
@@ -36,6 +39,31 @@ done
 cancelled
 ```
 
+## Contextos de marcacao
+
+```txt
+company   -> marcacao da empresa
+project   -> marcacao do projeto
+user      -> marcacao ligada a usuario/responsavel
+TC        -> contexto interno da Testing Company
+support   -> contexto de suporte tecnico
+release   -> contexto geral da release
+delivery  -> entrega/publicacao
+```
+
+## Publico-alvo da marcacao
+
+```txt
+all
+empresa
+company_user
+testing_company_user
+leader_tc
+technical_support
+release_actor
+brain
+```
+
 ## Modelo recomendado
 
 ```txt
@@ -45,11 +73,15 @@ ReleaseCalendarEvent
   type
   status
   criticality
+  context
+  markerLabel
+  audienceProfiles
   companyId/companySlug/companyName
   projectId/projectSlug
   releaseId/releaseName
   startAt/endAt
   ownerId/ownerName
+  participantNames
   description
   checklist
   notificationRules
@@ -69,6 +101,17 @@ Empresa
         -> Homologacao
         -> Entrega
         -> Pos-release
+```
+
+## Visao Lider TC e Suporte Tecnico
+
+```txt
+Calendario consolidado
+  -> filtros por empresa, projeto, usuario, release, contexto, perfil e status
+  -> atalhos de visao Lider TC e Suporte Tecnico
+  -> cards compactos por dia com ate 3 marcacoes visiveis
+  -> contador de marcacoes excedentes
+  -> clique no dia abre detalhes das marcacoes
 ```
 
 ## Ligacao com notificacoes
@@ -126,9 +169,12 @@ app/agenda/_components/ReleaseCalendarPanel.tsx
 ## O que ja funciona na tela
 
 ```txt
-Visualizar linha do tempo da release
-Filtrar por empresa, projeto, release e status
-Cadastrar evento de release pela UI
+Visualizar calendario compacto por dia
+Clicar no dia para abrir marcacoes
+Filtrar por empresa, projeto, usuario, release, contexto, perfil e status
+Usar atalho de visao Lider TC
+Usar atalho de visao Suporte Tecnico
+Cadastrar marcacao de calendario pela UI
 Salvar evento via POST /api/release-calendar
 Atualizar timeline apos cadastro
 Alterar status pela UI via PATCH /api/release-calendar

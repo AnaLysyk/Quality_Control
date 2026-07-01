@@ -79,13 +79,6 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     actions: ["view", "create", "edit", "delete", "export"],
   },
   {
-    id: "operations",
-    label: "Operacional",
-    description: "Exibição da opção Operacional e das telas operacionais do menu.",
-    category: "Operação",
-    actions: ["view"],
-  },
-  {
     id: "metrics",
     label: "Métricas",
     description: "Indicadores, qualidade e leitura de saúde por empresa.",

@@ -1,0 +1,343 @@
+/* Operational theme bridge
+   Centraliza o comportamento claro/escuro para evitar telas quebradas por classes fixas do Tailwind.
+   Modo claro: fundo claro, texto escuro, cartões/superfícies claras.
+   Modo escuro: fundo escuro, texto claro, superfícies escuras.
+*/
+
+:root,
+:root.theme-light,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f5f6fa;
+  --foreground: #0b1a3c;
+  --page-bg: #f5f6fa;
+  --page-text: #0b1a3c;
+  --tc-bg: #f5f6fa;
+  --tc-surface: #ffffff;
+  --tc-surface-rgb: 255 255 255;
+  --tc-surface-2: #f0f4fb;
+  --tc-surface-alt: #f8fafc;
+  --tc-surface-hover: #e9effb;
+  --tc-input-bg: #ffffff;
+  --tc-text: #0b1a3c;
+  --tc-text-primary: #011848;
+  --tc-text-secondary: #334155;
+  --tc-text-muted: #64748b;
+  --tc-border: rgba(15, 23, 42, 0.14);
+
+  /* Fundo leve tipo login, sem DOM extra e sem animação pesada. */
+  --operational-bg:
+    radial-gradient(circle at 18% 14%, rgba(56, 189, 248, 0.22), transparent 28%),
+    radial-gradient(circle at 78% 10%, rgba(239, 0, 1, 0.14), transparent 26%),
+    radial-gradient(circle at 86% 82%, rgba(124, 211, 67, 0.16), transparent 26%),
+    linear-gradient(135deg, #f8fbff 0%, #eef4ff 48%, #f7f9fd 100%);
+  --operational-bubble-opacity: 0.78;
+  --operational-button-gradient: linear-gradient(135deg, #011848 0%, #0b2a69 48%, #ef0001 100%);
+  --operational-button-gradient-hover: linear-gradient(135deg, #061f58 0%, #123a86 44%, #ef0001 100%);
+
+  /* Menu claro também precisa ser claro. Mantém charme/degradê sem fundo escuro. */
+  --shell-sidebar-gradient:
+    radial-gradient(circle at 16% 10%, rgba(239, 0, 1, 0.1), transparent 28%),
+    radial-gradient(circle at 86% 18%, rgba(56, 189, 248, 0.16), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f6f9ff 42%, #edf4ff 74%, #ffe9ec 100%);
+  --shell-sidebar-border: rgba(15, 23, 42, 0.1);
+  --shell-sidebar-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  --shell-sidebar-text: #0b1a3c;
+  --shell-sidebar-text-strong: #011848;
+  --shell-sidebar-text-muted: #5b6b83;
+  --shell-sidebar-control-bg: rgba(255, 255, 255, 0.78);
+  --shell-sidebar-control-hover: rgba(255, 255, 255, 0.94);
+  --shell-sidebar-control-border: rgba(15, 23, 42, 0.12);
+  --shell-menu-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(233, 240, 255, 0.92) 58%, rgba(239, 0, 1, 0.12) 100%);
+  --shell-menu-border: rgba(15, 23, 42, 0.12);
+  --shell-menu-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+:root.dark,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #08111d;
+  --foreground: #f3f6fb;
+  --page-bg: #08111d;
+  --page-text: #f8fafc;
+  --tc-bg: #08111d;
+  --tc-surface: #0f1725;
+  --tc-surface-rgb: 15 23 37;
+  --tc-surface-2: #131d2d;
+  --tc-surface-alt: #172233;
+  --tc-surface-hover: #1b2940;
+  --tc-input-bg: #111b2b;
+  --tc-text: #f3f6fb;
+  --tc-text-primary: #f7f9fc;
+  --tc-text-secondary: #c6d0de;
+  --tc-text-muted: #91a3bb;
+  --tc-border: rgba(148, 163, 184, 0.24);
+
+  --operational-bg:
+    radial-gradient(circle at 18% 14%, rgba(56, 189, 248, 0.1), transparent 30%),
+    radial-gradient(circle at 78% 10%, rgba(239, 0, 1, 0.14), transparent 28%),
+    radial-gradient(circle at 86% 82%, rgba(124, 211, 67, 0.08), transparent 28%),
+    linear-gradient(135deg, #050b16 0%, #08111d 48%, #0d1b2f 100%);
+  --operational-bubble-opacity: 0.68;
+  --operational-button-gradient: linear-gradient(135deg, #102b66 0%, #17458f 45%, #ef0001 100%);
+  --operational-button-gradient-hover: linear-gradient(135deg, #173b80 0%, #2459ad 42%, #ff2a2b 100%);
+
+  --shell-sidebar-gradient: linear-gradient(180deg, #030812 0%, #061631 42%, #09285a 72%, #780b1e 100%);
+  --shell-sidebar-border: rgba(148, 163, 184, 0.18);
+  --shell-sidebar-shadow: 0 30px 84px rgba(0, 0, 0, 0.52);
+  --shell-sidebar-text: #ffffff;
+  --shell-sidebar-text-strong: #ffffff;
+  --shell-sidebar-text-muted: rgba(255, 255, 255, 0.72);
+  --shell-sidebar-control-bg: rgba(255, 255, 255, 0.08);
+  --shell-sidebar-control-hover: rgba(255, 255, 255, 0.12);
+  --shell-sidebar-control-border: rgba(255, 255, 255, 0.14);
+  --shell-menu-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.07) 56%, rgba(239, 0, 1, 0.28) 100%);
+  --shell-menu-border: rgba(255, 255, 255, 0.16);
+  --shell-menu-shadow: 0 22px 52px rgba(0, 0, 0, 0.5);
+}
+
+html,
+body {
+  background: var(--page-bg) !important;
+  color: var(--page-text) !important;
+}
+
+body {
+  background-image: var(--operational-bg) !important;
+  background-attachment: fixed;
+}
+
+/* Bolhas tipo login: estáticas, leves e sem custo de render React. */
+body::after {
+  content: "" !important;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: var(--operational-bubble-opacity);
+  background-image:
+    radial-gradient(circle at 10% 28%, rgba(239, 0, 1, 0.1) 0 0, transparent 16rem),
+    radial-gradient(circle at 88% 22%, rgba(56, 189, 248, 0.12) 0 0, transparent 18rem),
+    radial-gradient(circle at 78% 88%, rgba(124, 211, 67, 0.1) 0 0, transparent 17rem),
+    radial-gradient(circle at 35% 92%, rgba(99, 102, 241, 0.08) 0 0, transparent 16rem);
+  filter: blur(0.2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  body::after {
+    background-attachment: scroll;
+  }
+}
+
+/* Menu lateral: operacional, com degradê, adaptado por tema. */
+.sidebar-operational-shell {
+  background: var(--shell-sidebar-gradient) !important;
+  border-color: var(--shell-sidebar-border) !important;
+  box-shadow: var(--shell-sidebar-shadow) !important;
+  color: var(--shell-sidebar-text) !important;
+}
+
+.sidebar-operational-shell :is(a, button, span, p, label, input, div) {
+  color: inherit;
+}
+
+.sidebar-operational-shell :is(a, button) {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell :is(a:hover, button:hover) {
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell :is(svg) {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell [class*="text-white"],
+.sidebar-operational-shell [class*="text-slate"] {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell [class*="bg-white/14"],
+.sidebar-operational-shell [class*="bg-white/16"],
+.sidebar-operational-shell [class*="bg-white/10"],
+.sidebar-operational-shell [class*="bg-white/8"] {
+  background: var(--shell-menu-gradient) !important;
+  border-color: var(--shell-menu-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell .sidebar-control,
+.sidebar-operational-shell .sidebar-search,
+.sidebar-operational-shell .sidebar-dropdown {
+  background: var(--shell-sidebar-control-bg) !important;
+  border-color: var(--shell-sidebar-control-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
+  box-shadow: none !important;
+}
+
+.sidebar-operational-shell .sidebar-control:hover,
+.sidebar-operational-shell .sidebar-search:hover {
+  background: var(--shell-sidebar-control-hover) !important;
+  border-color: var(--shell-menu-border) !important;
+}
+
+.sidebar-operational-shell input,
+.sidebar-operational-shell input::placeholder {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell input:focus,
+.sidebar-operational-shell input:not(:placeholder-shown) {
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+:root.theme-light .sidebar-operational-shell,
+:root[data-theme="light"] .sidebar-operational-shell {
+  color: #0b1a3c !important;
+}
+
+:root.theme-light .sidebar-operational-shell :is(a:hover, button:hover, input:focus),
+:root[data-theme="light"] .sidebar-operational-shell :is(a:hover, button:hover, input:focus) {
+  color: #011848 !important;
+}
+
+/* Degradê nos botões principais, sem mexer em botões transparentes ou do menu. */
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-(--tc-accent"],
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-[#ef0001"],
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-rose-600"],
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-red-600"],
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-blue-600"],
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-indigo-600"] {
+  background-image: var(--operational-button-gradient) !important;
+  background-color: transparent !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 14px 28px rgba(1, 24, 72, 0.18);
+}
+
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-(--tc-accent"]:hover,
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-[#ef0001"]:hover,
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-rose-600"]:hover,
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-red-600"]:hover,
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-blue-600"]:hover,
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[class*="bg-indigo-600"]:hover {
+  background-image: var(--operational-button-gradient-hover) !important;
+  transform: translateY(-1px);
+}
+
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[disabled],
+:where(main, [role="main"], .app-content, .page-content) :where(button, a)[aria-disabled="true"] {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Superfícies genéricas: corrige telas que usam bg-white/text-slate fixos. */
+:root.dark .bg-white,
+:root[data-theme="dark"] .bg-white,
+:root.dark .bg-\[\#ffffff\],
+:root[data-theme="dark"] .bg-\[\#ffffff\] {
+  background-color: var(--tc-surface) !important;
+}
+
+:root.dark .bg-slate-50,
+:root.dark .bg-slate-100,
+:root.dark .bg-gray-50,
+:root.dark .bg-gray-100,
+:root[data-theme="dark"] .bg-slate-50,
+:root[data-theme="dark"] .bg-slate-100,
+:root[data-theme="dark"] .bg-gray-50,
+:root[data-theme="dark"] .bg-gray-100 {
+  background-color: var(--tc-surface-2) !important;
+}
+
+:root.dark .text-slate-900,
+:root.dark .text-slate-800,
+:root.dark .text-slate-700,
+:root.dark .text-gray-900,
+:root.dark .text-gray-800,
+:root.dark .text-gray-700,
+:root[data-theme="dark"] .text-slate-900,
+:root[data-theme="dark"] .text-slate-800,
+:root[data-theme="dark"] .text-slate-700,
+:root[data-theme="dark"] .text-gray-900,
+:root[data-theme="dark"] .text-gray-800,
+:root[data-theme="dark"] .text-gray-700 {
+  color: var(--tc-text-primary) !important;
+}
+
+:root.dark .text-slate-600,
+:root.dark .text-slate-500,
+:root.dark .text-gray-600,
+:root.dark .text-gray-500,
+:root[data-theme="dark"] .text-slate-600,
+:root[data-theme="dark"] .text-slate-500,
+:root[data-theme="dark"] .text-gray-600,
+:root[data-theme="dark"] .text-gray-500 {
+  color: var(--tc-text-muted) !important;
+}
+
+:root.dark .border-slate-200,
+:root.dark .border-slate-300,
+:root.dark .border-gray-200,
+:root.dark .border-gray-300,
+:root[data-theme="dark"] .border-slate-200,
+:root[data-theme="dark"] .border-slate-300,
+:root[data-theme="dark"] .border-gray-200,
+:root[data-theme="dark"] .border-gray-300 {
+  border-color: var(--tc-border) !important;
+}
+
+:root.dark input,
+:root.dark select,
+:root.dark textarea,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+  background-color: var(--tc-input-bg);
+  color: var(--tc-text-primary);
+  border-color: var(--tc-border);
+}
+
+:root.dark input::placeholder,
+:root.dark textarea::placeholder,
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: var(--tc-text-muted);
+}
+
+/* Badges/estados fixos do Tailwind no modo escuro. */
+:root.dark .bg-sky-50,
+:root[data-theme="dark"] .bg-sky-50 { background-color: rgba(14, 165, 233, 0.12) !important; }
+:root.dark .border-sky-200,
+:root[data-theme="dark"] .border-sky-200 { border-color: rgba(56, 189, 248, 0.34) !important; }
+:root.dark .text-sky-700,
+:root[data-theme="dark"] .text-sky-700 { color: #7dd3fc !important; }
+
+:root.dark .bg-amber-50,
+:root[data-theme="dark"] .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12) !important; }
+:root.dark .border-amber-200,
+:root[data-theme="dark"] .border-amber-200 { border-color: rgba(251, 191, 36, 0.34) !important; }
+:root.dark .text-amber-700,
+:root[data-theme="dark"] .text-amber-700 { color: #fcd34d !important; }
+
+:root.dark .bg-emerald-50,
+:root[data-theme="dark"] .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+:root.dark .border-emerald-200,
+:root[data-theme="dark"] .border-emerald-200 { border-color: rgba(52, 211, 153, 0.34) !important; }
+:root.dark .text-emerald-700,
+:root[data-theme="dark"] .text-emerald-700 { color: #6ee7b7 !important; }
+
+:root.dark .bg-indigo-50,
+:root[data-theme="dark"] .bg-indigo-50,
+:root.dark .bg-cyan-50,
+:root[data-theme="dark"] .bg-cyan-50 { background-color: rgba(99, 102, 241, 0.14) !important; }
+:root.dark .border-indigo-200,
+:root[data-theme="dark"] .border-indigo-200,
+:root.dark .border-cyan-200,
+:root[data-theme="dark"] .border-cyan-200 { border-color: rgba(129, 140, 248, 0.32) !important; }
+:root.dark .text-indigo-700,
+:root[data-theme="dark"] .text-indigo-700,
+:root.dark .text-cyan-700,
+:root[data-theme="dark"] .text-cyan-700 { color: #a5b4fc !important; }

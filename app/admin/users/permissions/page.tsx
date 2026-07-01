@@ -32,6 +32,8 @@ import {
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
 
+type RoutePermission = { moduleId: string; action: string } | null;
+
 type ProfileOverride = {
   role?: SystemRole;
   allow?: PermissionMatrix;
@@ -69,7 +71,35 @@ const PROFILE_ORDER: SystemRole[] = [
   SYSTEM_ROLES.COMPANY_USER,
 ];
 
-const QUICK_CONTROL_MODULES = new Set(["context", "operations", "dashboard", "brain"]);
+const QUICK_CONTROL_MODULES = new Set(["dashboard", "context", "operations", "ai", "brain", "chat"]);
+
+const PROFILE_GUIDES: Record<SystemRole, string[]> = {
+  [SYSTEM_ROLES.LEADER_TC]: [
+    "Visão global sem precisar escolher empresa ou projeto.",
+    "Pode acompanhar Brain, IA, Chat, usuários, suporte e governança.",
+    "Operacional fica opcional: aparece apenas se o módulo estiver liberado.",
+  ],
+  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: [
+    "Enxerga o que precisa para atendimento, suporte e operação assistida.",
+    "Não precisa selecionar empresa/projeto antes de consultar a visão geral.",
+    "Operacional, Brain, IA e Chat podem ser ligados ou escondidos por perfil.",
+  ],
+  [SYSTEM_ROLES.TESTING_COMPANY_USER]: [
+    "Troca empresa e projeto conforme o vínculo de trabalho.",
+    "Vê dados operacionais apenas quando o contexto permitir.",
+    "Acesso a IA, Brain e Chat pode ser ajustado sem mexer no código.",
+  ],
+  [SYSTEM_ROLES.EMPRESA]: [
+    "Perfil institucional da empresa com visão do próprio contexto.",
+    "Não precisa escolher empresa antes; o projeto guia o recorte de dados.",
+    "Menus administrativos ficam ocultos quando a permissão não existir.",
+  ],
+  [SYSTEM_ROLES.COMPANY_USER]: [
+    "Usuário da empresa com acesso simples e limitado ao próprio uso.",
+    "Vê apenas telas úteis para consultar, pedir suporte e acompanhar qualidade.",
+    "Funções avançadas ficam invisíveis para não poluir a navegação.",
+  ],
+};
 
 function normalizeText(value: string) {
   return value
@@ -133,7 +163,13 @@ function toggleOverrideAction(
   return { ...override, allow, deny };
 }
 
-function routePermissionAllowed(permissions: PermissionMatrix, permission: { moduleId: string; action: string } | null) {
+function resolveRoutePermission(permission: RoutePermission | undefined, routeModuleId?: string | null): RoutePermission {
+  if (permission) return permission;
+  if (routeModuleId === "chat") return { moduleId: "chat", action: "view" };
+  return null;
+}
+
+function routePermissionAllowed(permissions: PermissionMatrix, permission: RoutePermission) {
   if (!permission) return true;
   if (permission.action === "view") {
     return ["view", "view_own", "view_company", "view_all"].some((action) =>
@@ -151,7 +187,7 @@ function getModulePermissionState(
   const total = module.actions.length;
   const allowed = module.actions.filter((action) => hasPermissionAccess(effectivePermissions, module.id, action)).length;
   const baseAllowed = module.actions.filter((action) => hasPermissionAccess(systemDefaults, module.id, action)).length;
-  if (allowed === 0) return { label: "Invisível", tone: "border-rose-200 bg-rose-50 text-rose-700", allowed, total, baseAllowed };
+  if (allowed === 0) return { label: "Oculto", tone: "border-rose-200 bg-rose-50 text-rose-700", allowed, total, baseAllowed };
   if (allowed === total) return { label: "Completo", tone: "border-emerald-200 bg-emerald-50 text-emerald-700", allowed, total, baseAllowed };
   return { label: "Parcial", tone: "border-amber-200 bg-amber-50 text-amber-800", allowed, total, baseAllowed };
 }
@@ -184,9 +220,10 @@ function PermissionToggle(props: {
   systemDefaults: PermissionMatrix;
   effectivePermissions: PermissionMatrix;
   disabled: boolean;
+  compact?: boolean;
   onToggle: (moduleId: string, action: string, checked: boolean) => void;
 }) {
-  const { moduleId, action, systemDefaults, effectivePermissions, disabled, onToggle } = props;
+  const { moduleId, action, systemDefaults, effectivePermissions, disabled, compact = false, onToggle } = props;
   const checked = hasPermissionAccess(effectivePermissions, moduleId, action);
   const baseChecked = hasPermissionAccess(systemDefaults, moduleId, action);
   const changed = checked !== baseChecked;
@@ -194,23 +231,41 @@ function PermissionToggle(props: {
   return (
     <label
       className={[
-        "flex min-h-10 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition",
+        "group flex items-center gap-3 rounded-2xl border text-sm font-semibold transition",
+        compact ? "min-h-9 px-3 py-2" : "min-h-11 px-3.5 py-2.5",
         checked
-          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-900"
           : "border-slate-200 bg-white text-slate-600",
-        changed ? "ring-1 ring-blue-300" : "",
-        disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:border-blue-300",
+        changed ? "ring-2 ring-blue-100" : "",
+        disabled ? "cursor-not-allowed opacity-65" : "cursor-pointer hover:border-blue-300 hover:bg-blue-50/50",
       ].join(" ")}
     >
-      <input
-        type="checkbox"
-        className="h-4 w-4 accent-[#011848]"
-        checked={checked}
-        disabled={disabled}
-        onChange={(event) => onToggle(moduleId, action, event.target.checked)}
-      />
+      <span
+        className={[
+          "relative flex h-5 w-9 shrink-0 items-center rounded-full border transition",
+          checked ? "border-emerald-400 bg-emerald-500" : "border-slate-300 bg-slate-200",
+        ].join(" ")}
+      >
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={checked}
+          disabled={disabled}
+          onChange={(event) => onToggle(moduleId, action, event.target.checked)}
+        />
+        <span
+          className={[
+            "absolute h-4 w-4 rounded-full bg-white shadow-sm transition",
+            checked ? "left-4" : "left-0.5",
+          ].join(" ")}
+        />
+      </span>
       <span className="min-w-0 flex-1">{getActionLabel(action)}</span>
-      {changed ? <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] uppercase text-blue-700">ajuste</span> : null}
+      {changed ? (
+        <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-blue-700">
+          ajuste
+        </span>
+      ) : null}
     </label>
   );
 }
@@ -286,14 +341,17 @@ export default function ProfileManagementPage() {
     return current !== draft;
   }, [draftOverride.allow, draftOverride.deny, profileState?.override?.allow, profileState?.override?.deny]);
 
+  const normalizedQuery = normalizeText(query);
+
   const filteredModules = useMemo(() => {
-    const normalizedQuery = normalizeText(query);
     if (!normalizedQuery) return PERMISSION_MODULES;
     return PERMISSION_MODULES.filter((permissionModule) => {
-      const haystack = normalizeText(`${permissionModule.id} ${permissionModule.label} ${permissionModule.description} ${permissionModule.category}`);
+      const haystack = normalizeText(
+        `${permissionModule.id} ${permissionModule.label} ${permissionModule.description} ${permissionModule.category} ${permissionModule.actions.join(" ")}`,
+      );
       return haystack.includes(normalizedQuery);
     });
-  }, [query]);
+  }, [normalizedQuery]);
 
   const groupedModules = useMemo(() => {
     const groups = new Map<string, PermissionModule[]>();
@@ -305,29 +363,53 @@ export default function ProfileManagementPage() {
     return Array.from(groups.entries());
   }, [filteredModules]);
 
-  const screenRows = useMemo(() => {
-    const normalizedQuery = normalizeText(query);
+  const allScreenRows = useMemo(() => {
     return SYSTEM_ROUTES.map((route) => {
-      const permission = route.requiredPermission;
+      const permission = resolveRoutePermission(route.requiredPermission, route.moduleId);
       const visible = routePermissionAllowed(effectivePermissions, permission);
       const moduleLabel =
         PERMISSION_MODULES.find((permissionModule) => permissionModule.id === permission?.moduleId)?.label ??
         permission?.moduleId ??
-        "Sem permissão granular";
+        "Controlada pelo produto";
       return { route, permission, visible, moduleLabel };
-    }).filter((row) => {
-      if (!normalizedQuery) return true;
-      const haystack = normalizeText(`${row.route.label} ${row.route.path} ${row.route.moduleId} ${row.moduleLabel}`);
+    });
+  }, [effectivePermissions]);
+
+  const screenRows = useMemo(() => {
+    if (!normalizedQuery) return allScreenRows;
+    return allScreenRows.filter((row) => {
+      const permissionLabel = row.permission
+        ? `${row.permission.moduleId} ${ACTION_LABELS[row.permission.action] ?? row.permission.action}`
+        : "produto";
+      const haystack = normalizeText(
+        `${row.route.label} ${row.route.path} ${row.route.moduleId} ${row.moduleLabel} ${permissionLabel}`,
+      );
       return haystack.includes(normalizedQuery);
     });
-  }, [effectivePermissions, query]);
+  }, [allScreenRows, normalizedQuery]);
 
-  const visibleScreenCount = screenRows.filter((row) => row.visible).length;
-  const hiddenScreenCount = screenRows.length - visibleScreenCount;
+  const visibleScreenCount = allScreenRows.filter((row) => row.visible).length;
+  const hiddenScreenCount = allScreenRows.length - visibleScreenCount;
+  const overriddenCount = countPermissionActions(draftOverride.allow) + countPermissionActions(draftOverride.deny);
   const quickModules = PERMISSION_MODULES.filter((module) => QUICK_CONTROL_MODULES.has(module.id));
+  const fullModuleCount = PERMISSION_MODULES.filter(
+    (module) => getModulePermissionState(module, systemDefaults, effectivePermissions).allowed === module.actions.length,
+  ).length;
+  const hiddenModuleCount = PERMISSION_MODULES.filter(
+    (module) => getModulePermissionState(module, systemDefaults, effectivePermissions).allowed === 0,
+  ).length;
 
   function handleToggle(moduleId: string, action: string, checked: boolean) {
     setDraftOverride((current) => toggleOverrideAction(current, systemDefaults, moduleId, action, checked));
+  }
+
+  function handleModuleToggle(module: PermissionModule, shouldAllow: boolean) {
+    setDraftOverride((current) =>
+      module.actions.reduce(
+        (nextOverride, action) => toggleOverrideAction(nextOverride, systemDefaults, module.id, action, shouldAllow),
+        current,
+      ),
+    );
   }
 
   async function handleSave() {
@@ -338,7 +420,7 @@ export default function ProfileManagementPage() {
       const body = {
         allow: normalizePermissionMatrix(draftOverride.allow),
         deny: normalizePermissionMatrix(draftOverride.deny),
-        reason: "Ajuste pela Gestao de Perfis",
+        reason: "Ajuste pela Gestão de Perfis",
       };
       const response = await fetch(`/api/admin/profile-permissions/${selectedRole}`, {
         method: "PATCH",
@@ -365,7 +447,7 @@ export default function ProfileManagementPage() {
             }
           : current,
       );
-      setNotice({ type: "success", message: "Perfil salvo. Líder TC recebeu notificação da alteração." });
+      setNotice({ type: "success", message: "Perfil salvo. As mudanças já entram no controle de módulos, telas, IA, Brain e Chat." });
       await refreshUser();
     } catch (error) {
       setNotice({ type: "error", message: error instanceof Error ? error.message : "Falha ao salvar perfil" });
@@ -425,315 +507,366 @@ export default function ProfileManagementPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-3 py-4 text-[#0b1a3c] sm:px-5 lg:px-7">
-      <div className="mx-auto flex w-full max-w-[1520px] flex-col gap-5">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e9efff_0,#f7f9fc_34%,#f8fafc_100%)] px-3 py-4 text-[#0b1a3c] sm:px-5 lg:px-7">
+      <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-5">
         <Breadcrumb items={[{ label: "Admin", href: "/admin" }, { label: "Gestão de Perfis" }]} />
 
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#011848] text-white">
-                <FiShield className="h-5 w-5" />
+        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-sm shadow-slate-200/70">
+          <div className="border-b border-slate-100 bg-[#011848] px-5 py-5 text-white sm:px-7">
+            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/12 text-white ring-1 ring-white/20">
+                  <FiShield className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.22em] text-red-200">Governança de acesso</p>
+                  <h1 className="mt-2 text-2xl font-black tracking-tight sm:text-4xl">Gestão de Perfis</h1>
+                  <p className="mt-3 max-w-4xl text-sm leading-6 text-blue-50/90">
+                    Central de produto para decidir o que cada perfil vê e usa: módulos, funções, telas, contexto de empresa/projeto, Operacional, IA, Brain e Chat.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#ef0001]">Governança de acesso</p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-[#0b1a3c] sm:text-3xl">
-                  Gestão de Perfis
-                </h1>
-                <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">
-                  Central para definir módulos, funções, telas, contexto de empresa/projeto e exibição do Operacional por tipo de perfil.
-                </p>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-xs font-semibold text-slate-500">Permissões</div>
-                <div className="mt-1 text-2xl font-black">{countPermissionActions(effectivePermissions)}</div>
-              </div>
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
-                <div className="text-xs font-semibold">Telas visíveis</div>
-                <div className="mt-1 text-2xl font-black">{visibleScreenCount}</div>
-              </div>
-              <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">
-                <div className="text-xs font-semibold">Bloqueadas</div>
-                <div className="mt-1 text-2xl font-black">{hiddenScreenCount}</div>
-              </div>
-              <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800">
-                <div className="text-xs font-semibold">Sobrescritas</div>
-                <div className="mt-1 text-2xl font-black">
-                  {countPermissionActions(draftOverride.allow) + countPermissionActions(draftOverride.deny)}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:min-w-[520px]">
+                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+                  <div className="text-xs font-semibold text-blue-100">Permissões ativas</div>
+                  <div className="mt-1 text-3xl font-black">{countPermissionActions(effectivePermissions)}</div>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+                  <div className="text-xs font-semibold text-blue-100">Telas visíveis</div>
+                  <div className="mt-1 text-3xl font-black">{visibleScreenCount}</div>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+                  <div className="text-xs font-semibold text-blue-100">Ocultas</div>
+                  <div className="mt-1 text-3xl font-black">{hiddenScreenCount}</div>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+                  <div className="text-xs font-semibold text-blue-100">Ajustes manuais</div>
+                  <div className="mt-1 text-3xl font-black">{overriddenCount}</div>
                 </div>
               </div>
             </div>
           </div>
-        </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex min-w-0 flex-wrap gap-2">
-              {PROFILE_ORDER.map((profile) => {
-                const selected = selectedRole === profile;
-                return (
-                  <button
-                    key={profile}
-                    type="button"
-                    onClick={() => setSelectedRole(profile)}
-                    className={[
-                      "inline-flex min-h-10 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-bold transition",
-                      selected
-                        ? "border-[#011848] bg-[#011848] text-white"
-                        : `${getFixedProfileTone(profile)} hover:border-[#011848]`,
-                    ].join(" ")}
-                  >
-                    {selected ? <FiCheck className="h-4 w-4" /> : null}
-                    {getFixedProfileLabel(profile, { short: true })}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="grid gap-5 p-4 sm:p-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className="rounded-3xl border border-slate-200 bg-slate-50/80 p-3">
+              <p className="px-2 pb-2 text-xs font-black uppercase tracking-[0.18em] text-slate-500">Tipo de perfil</p>
+              <div className="grid gap-2">
+                {PROFILE_ORDER.map((profile) => {
+                  const selected = selectedRole === profile;
+                  return (
+                    <button
+                      key={profile}
+                      type="button"
+                      onClick={() => setSelectedRole(profile)}
+                      className={[
+                        "flex min-h-12 items-center justify-between gap-3 rounded-2xl border px-3 py-2 text-left text-sm font-black transition",
+                        selected
+                          ? "border-[#011848] bg-[#011848] text-white shadow-sm"
+                          : `${getFixedProfileTone(profile)} hover:border-[#011848] hover:bg-white`,
+                      ].join(" ")}
+                    >
+                      <span>{getFixedProfileLabel(profile, { short: true })}</span>
+                      {selected ? <FiCheck className="h-4 w-4" /> : null}
+                    </button>
+                  );
+                })}
+              </div>
 
-            <label className="flex min-h-10 w-full items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 xl:max-w-md">
-              <FiSearch className="h-4 w-4 shrink-0 text-slate-500" />
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar módulo, tela, função ou escopo..."
-                className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-                aria-label="Buscar módulo, tela ou função"
-              />
-            </label>
-          </div>
+              <div className="mt-4 rounded-2xl border border-white bg-white p-4 shadow-sm">
+                <h2 className="text-base font-black text-[#0b1a3c]">{getFixedProfileLabel(selectedRole)}</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{getFixedProfileHint(selectedRole)}</p>
+                <ul className="mt-3 space-y-2 text-xs font-semibold leading-5 text-slate-600">
+                  {PROFILE_GUIDES[selectedRole].map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <FiCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </aside>
 
-          <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-lg font-black text-[#0b1a3c]">{getFixedProfileLabel(selectedRole)}</h2>
-              <p className="mt-1 text-sm text-slate-600">{getFixedProfileHint(selectedRole)}</p>
-              <p className="mt-1 text-xs text-slate-500">
-                Última alteração: {formatDateTime(draftOverride.updatedAt)} {draftOverride.updatedBy ? `por ${draftOverride.updatedBy}` : ""}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={!canEdit || saving || loadingProfile}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <FiRefreshCw className="h-4 w-4" />
-                Restaurar padrão
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={!canEdit || saving || loadingProfile || !hasDraftChanges}
-                className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#011848] px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <FiSave className="h-4 w-4" />
-                {saving ? "Salvando..." : "Salvar alterações"}
-              </button>
-            </div>
-          </div>
+            <div className="flex min-w-0 flex-col gap-4">
+              <section className="sticky top-3 z-10 rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                  <label className="flex min-h-11 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 xl:max-w-xl">
+                    <FiSearch className="h-4 w-4 shrink-0 text-slate-500" />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Buscar módulo, tela, função, Chat, IA, Brain ou Operacional..."
+                      className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
+                      aria-label="Buscar módulo, tela ou função"
+                    />
+                  </label>
 
-          {notice.type !== "idle" ? (
-            <div
-              className={[
-                "mt-4 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm font-semibold",
-                notice.type === "success"
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border-rose-200 bg-rose-50 text-rose-800",
-              ].join(" ")}
-              role="status"
-            >
-              {notice.type === "success" ? <FiCheck className="mt-0.5 h-4 w-4" /> : <FiAlertTriangle className="mt-0.5 h-4 w-4" />}
-              {notice.message}
-            </div>
-          ) : null}
-
-          {!canEdit ? (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-              Seu perfil pode consultar esta central, mas não possui permissão para editar a matriz.
-            </div>
-          ) : null}
-        </section>
-
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <FiSliders className="h-4 w-4 text-[#ef0001]" />
-            <h2 className="text-lg font-black">Contexto, Visão Geral, Brain e Operacional</h2>
-          </div>
-          <p className="mt-1 text-sm text-slate-600">
-            Controles mais sensíveis da troca de empresa/projeto, visão global e exibição do módulo Operacional.
-          </p>
-
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            {quickModules.map((module) => (
-              <div key={module.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-black text-[#0b1a3c]">{module.label}</h3>
-                    <p className="mt-1 text-xs leading-5 text-slate-600">{module.description}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      disabled={!canEdit || saving || loadingProfile}
+                      className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 text-sm font-black text-slate-700 transition hover:border-[#011848] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <FiRefreshCw className="h-4 w-4" />
+                      Restaurar padrão
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={!canEdit || saving || loadingProfile || !hasDraftChanges}
+                      className="inline-flex h-11 items-center gap-2 rounded-2xl bg-[#011848] px-4 text-sm font-black text-white shadow-sm transition hover:bg-[#0b255d] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <FiSave className="h-4 w-4" />
+                      {saving ? "Salvando..." : hasDraftChanges ? "Salvar alterações" : "Tudo salvo"}
+                    </button>
                   </div>
-                  <span className={`shrink-0 rounded-lg border px-2 py-1 text-xs font-bold ${getModulePermissionState(module, systemDefaults, effectivePermissions).tone}`}>
-                    {getModulePermissionState(module, systemDefaults, effectivePermissions).label}
+                </div>
+
+                <div className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 lg:flex-row lg:items-center lg:justify-between">
+                  <span>
+                    Última alteração: <strong>{formatDateTime(draftOverride.updatedAt)}</strong>{" "}
+                    {draftOverride.updatedBy ? `por ${draftOverride.updatedBy}` : ""}
+                  </span>
+                  <span className="font-semibold">
+                    {fullModuleCount} módulos completos · {hiddenModuleCount} ocultos · {screenRows.length} telas no filtro atual
                   </span>
                 </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {module.actions.map((action) => (
-                    <PermissionToggle
-                      key={`${module.id}-${action}`}
-                      moduleId={module.id}
-                      action={action}
-                      systemDefaults={systemDefaults}
-                      effectivePermissions={effectivePermissions}
-                      disabled={!canEdit || loadingProfile || saving}
-                      onToggle={handleToggle}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <FiGrid className="h-4 w-4 text-[#ef0001]" />
-            <h2 className="text-lg font-black">Módulos e funções</h2>
-          </div>
-          <p className="mt-1 text-sm text-slate-600">
-            Cada ação marcada fica disponível para o perfil. Ações desmarcadas deixam módulos, atalhos ou funções invisíveis quando dependem dessa permissão.
-          </p>
+                {notice.type !== "idle" ? (
+                  <div
+                    className={[
+                      "mt-4 flex items-start gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold",
+                      notice.type === "success"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                        : "border-rose-200 bg-rose-50 text-rose-800",
+                    ].join(" ")}
+                    role="status"
+                  >
+                    {notice.type === "success" ? <FiCheck className="mt-0.5 h-4 w-4" /> : <FiAlertTriangle className="mt-0.5 h-4 w-4" />}
+                    {notice.message}
+                  </div>
+                ) : null}
 
-          <div className="mt-5 space-y-5">
-            {groupedModules.map(([category, modules]) => (
-              <div key={category} className="border-t border-slate-200 pt-4 first:border-t-0 first:pt-0">
-                <div className="mb-3 flex items-center gap-2">
-                  <FiLayers className="h-4 w-4 text-slate-500" />
-                  <h3 className="text-sm font-black uppercase tracking-[0.14em] text-slate-500">{category}</h3>
+                {!canEdit ? (
+                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
+                    Seu perfil pode consultar esta central, mas não possui permissão para editar a matriz.
+                  </div>
+                ) : null}
+              </section>
+
+              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <FiSliders className="h-4 w-4 text-[#ef0001]" />
+                      <h2 className="text-lg font-black">Decisões rápidas do perfil</h2>
+                    </div>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Ligue ou esconda o que mais muda a experiência do usuário: visão geral, contexto, Operacional, IA, Brain e Chat.
+                    </p>
+                  </div>
                 </div>
-                <div className="grid gap-3">
-                  {modules.map((module) => {
+
+                <div className="mt-4 grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+                  {quickModules.map((module) => {
                     const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
                     return (
-                      <div key={module.id} className="rounded-lg border border-slate-200 bg-white p-3">
-                        <div className="grid gap-3 lg:grid-cols-[minmax(220px,360px)_minmax(0,1fr)]">
+                      <div key={module.id} className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+                        <div className="flex items-start justify-between gap-3">
                           <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="font-black text-[#0b1a3c]">{module.label}</h4>
-                              <span className={`rounded-lg border px-2 py-1 text-xs font-bold ${state.tone}`}>
-                                {state.allowed}/{state.total}
-                              </span>
-                            </div>
+                            <h3 className="font-black text-[#0b1a3c]">{module.label}</h3>
                             <p className="mt-1 text-xs leading-5 text-slate-600">{module.description}</p>
-                            <p className="mt-1 text-[11px] font-semibold text-slate-400">{module.id}</p>
                           </div>
-                          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                            {module.actions.map((action) => (
-                              <PermissionToggle
-                                key={`${module.id}-${action}`}
-                                moduleId={module.id}
-                                action={action}
-                                systemDefaults={systemDefaults}
-                                effectivePermissions={effectivePermissions}
-                                disabled={!canEdit || loadingProfile || saving}
-                                onToggle={handleToggle}
-                              />
-                            ))}
-                          </div>
+                          <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${state.tone}`}>
+                            {state.label}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid gap-2">
+                          {module.actions.map((action) => (
+                            <PermissionToggle
+                              key={`${module.id}-${action}`}
+                              moduleId={module.id}
+                              action={action}
+                              systemDefaults={systemDefaults}
+                              effectivePermissions={effectivePermissions}
+                              disabled={!canEdit || loadingProfile || saving}
+                              compact
+                              onToggle={handleToggle}
+                            />
+                          ))}
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <FiFilter className="h-4 w-4 text-[#ef0001]" />
-                <h2 className="text-lg font-black">Telas disponíveis e invisíveis</h2>
-              </div>
-              <p className="mt-1 text-sm text-slate-600">
-                A visibilidade abaixo é calculada a partir das permissões atuais do perfil selecionado.
-              </p>
-            </div>
-            <div className="flex gap-2 text-xs font-bold">
-              <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-800">
-                <FiEye className="h-3.5 w-3.5" /> {visibleScreenCount} visíveis
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-rose-800">
-                <FiEyeOff className="h-3.5 w-3.5" /> {hiddenScreenCount} invisíveis
-              </span>
-            </div>
-          </div>
+              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <FiGrid className="h-4 w-4 text-[#ef0001]" />
+                  <h2 className="text-lg font-black">Módulos e funções</h2>
+                </div>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  Cada módulo pode ser liberado, bloqueado ou ajustado ação por ação. O que ficar sem permissão sai do menu e da experiência do perfil.
+                </p>
 
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-[980px] w-full border-separate border-spacing-y-2 text-left text-sm">
-              <thead>
-                <tr className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                  <th className="px-3 py-2">Tela</th>
-                  <th className="px-3 py-2">Permissão</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Controle</th>
-                </tr>
-              </thead>
-              <tbody>
-                {screenRows.map(({ route, permission, visible, moduleLabel }) => (
-                  <tr key={route.id} className="bg-slate-50">
-                    <td className="rounded-l-lg px-3 py-3 align-top">
-                      <div className="font-black text-[#0b1a3c]">{route.label}</div>
-                      <div className="mt-1 text-xs text-slate-500">{route.path}</div>
-                      <div className="mt-1 text-[11px] font-semibold text-slate-400">{route.mainFile}</div>
-                    </td>
-                    <td className="px-3 py-3 align-top">
-                      {permission ? (
-                        <div>
-                          <div className="font-bold text-slate-700">{moduleLabel}</div>
-                          <div className="mt-1 text-xs text-slate-500">{permission.moduleId}:{ACTION_LABELS[permission.action] ?? permission.action}</div>
+                <div className="mt-5 space-y-5">
+                  {groupedModules.length ? (
+                    groupedModules.map(([category, modules]) => (
+                      <div key={category} className="border-t border-slate-200 pt-4 first:border-t-0 first:pt-0">
+                        <div className="mb-3 flex items-center gap-2">
+                          <FiLayers className="h-4 w-4 text-slate-500" />
+                          <h3 className="text-sm font-black uppercase tracking-[0.14em] text-slate-500">{category}</h3>
                         </div>
-                      ) : (
-                        <span className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-slate-500">
-                          Sem permissão granular
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 align-top">
-                      <span
-                        className={[
-                          "inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-bold",
-                          visible
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                            : "border-rose-200 bg-rose-50 text-rose-800",
-                        ].join(" ")}
+                        <div className="grid gap-3">
+                          {modules.map((module) => {
+                            const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
+                            return (
+                              <div key={module.id} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/60">
+                                <div className="grid gap-4 xl:grid-cols-[minmax(220px,340px)_minmax(0,1fr)]">
+                                  <div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h4 className="font-black text-[#0b1a3c]">{module.label}</h4>
+                                      <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${state.tone}`}>
+                                        {state.allowed}/{state.total}
+                                      </span>
+                                    </div>
+                                    <p className="mt-1 text-xs leading-5 text-slate-600">{module.description}</p>
+                                    <p className="mt-2 text-[11px] font-black uppercase tracking-wide text-slate-400">{module.id}</p>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleModuleToggle(module, true)}
+                                        disabled={!canEdit || loadingProfile || saving}
+                                        className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                      >
+                                        Liberar módulo
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleModuleToggle(module, false)}
+                                        disabled={!canEdit || loadingProfile || saving}
+                                        className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                      >
+                                        Ocultar módulo
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div className="grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
+                                    {module.actions.map((action) => (
+                                      <PermissionToggle
+                                        key={`${module.id}-${action}`}
+                                        moduleId={module.id}
+                                        action={action}
+                                        systemDefaults={systemDefaults}
+                                        effectivePermissions={effectivePermissions}
+                                        disabled={!canEdit || loadingProfile || saving}
+                                        onToggle={handleToggle}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
+                      Nenhum módulo encontrado para a busca atual.
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <FiFilter className="h-4 w-4 text-[#ef0001]" />
+                      <h2 className="text-lg font-black">Telas visíveis e invisíveis</h2>
+                    </div>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Prévia calculada em tempo real. Se uma tela depender de permissão bloqueada, ela fica invisível para o perfil selecionado.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 text-xs font-black">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-800">
+                      <FiEye className="h-3.5 w-3.5" /> {visibleScreenCount} visíveis
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-rose-800">
+                      <FiEyeOff className="h-3.5 w-3.5" /> {hiddenScreenCount} ocultas
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-2">
+                  {screenRows.length ? (
+                    screenRows.map(({ route, permission, visible, moduleLabel }) => (
+                      <div
+                        key={route.id}
+                        className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-3 lg:grid-cols-[minmax(220px,1.3fr)_minmax(180px,0.8fr)_150px_minmax(220px,0.9fr)] lg:items-center"
                       >
-                        {visible ? <FiEye className="h-3.5 w-3.5" /> : <FiEyeOff className="h-3.5 w-3.5" />}
-                        {visible ? "Visível" : "Invisível"}
-                      </span>
-                    </td>
-                    <td className="rounded-r-lg px-3 py-3 align-top">
-                      {permission ? (
-                        <PermissionToggle
-                          moduleId={permission.moduleId}
-                          action={permission.action}
-                          systemDefaults={systemDefaults}
-                          effectivePermissions={effectivePermissions}
-                          disabled={!canEdit || loadingProfile || saving}
-                          onToggle={handleToggle}
-                        />
-                      ) : (
-                        <span className="text-xs text-slate-500">Controlada pelo produto</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <div className="min-w-0">
+                          <div className="font-black text-[#0b1a3c]">{route.label}</div>
+                          <div className="mt-1 truncate text-xs font-semibold text-slate-500">{route.path}</div>
+                          <div className="mt-1 truncate text-[11px] font-semibold text-slate-400">{route.mainFile}</div>
+                        </div>
+                        <div>
+                          {permission ? (
+                            <div>
+                              <div className="text-sm font-black text-slate-700">{moduleLabel}</div>
+                              <div className="mt-1 text-xs text-slate-500">
+                                {permission.moduleId}:{ACTION_LABELS[permission.action] ?? permission.action}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-500">
+                              Controlada pelo produto
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <span
+                            className={[
+                              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-black",
+                              visible
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                : "border-rose-200 bg-rose-50 text-rose-800",
+                            ].join(" ")}
+                          >
+                            {visible ? <FiEye className="h-3.5 w-3.5" /> : <FiEyeOff className="h-3.5 w-3.5" />}
+                            {visible ? "Visível" : "Oculta"}
+                          </span>
+                        </div>
+                        <div>
+                          {permission ? (
+                            <PermissionToggle
+                              moduleId={permission.moduleId}
+                              action={permission.action}
+                              systemDefaults={systemDefaults}
+                              effectivePermissions={effectivePermissions}
+                              disabled={!canEdit || loadingProfile || saving}
+                              compact
+                              onToggle={handleToggle}
+                            />
+                          ) : (
+                            <span className="text-xs font-semibold text-slate-500">Sem ação configurável nesta matriz.</span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
+                      Nenhuma tela encontrada para a busca atual.
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
           </div>
         </section>
       </div>

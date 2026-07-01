@@ -35,13 +35,22 @@
   --operational-button-gradient: linear-gradient(135deg, #011848 0%, #0b2a69 48%, #ef0001 100%);
   --operational-button-gradient-hover: linear-gradient(135deg, #061f58 0%, #123a86 44%, #ef0001 100%);
 
-  /* O menu lateral permanece como elemento operacional com degradê de marca. */
-  --shell-sidebar-gradient: linear-gradient(180deg, #050b16 0%, #071633 42%, #081f4b 72%, #560816 100%);
-  --shell-sidebar-border: rgba(255, 255, 255, 0.12);
-  --shell-sidebar-shadow: 0 24px 72px rgba(1, 8, 25, 0.28);
-  --shell-menu-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.08) 55%, rgba(239, 0, 1, 0.22) 100%);
-  --shell-menu-border: rgba(255, 255, 255, 0.14);
-  --shell-menu-shadow: 0 16px 38px rgba(1, 8, 25, 0.28);
+  /* Menu claro também precisa ser claro. Mantém charme/degradê sem fundo escuro. */
+  --shell-sidebar-gradient:
+    radial-gradient(circle at 16% 10%, rgba(239, 0, 1, 0.1), transparent 28%),
+    radial-gradient(circle at 86% 18%, rgba(56, 189, 248, 0.16), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f6f9ff 42%, #edf4ff 74%, #ffe9ec 100%);
+  --shell-sidebar-border: rgba(15, 23, 42, 0.1);
+  --shell-sidebar-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  --shell-sidebar-text: #0b1a3c;
+  --shell-sidebar-text-strong: #011848;
+  --shell-sidebar-text-muted: #5b6b83;
+  --shell-sidebar-control-bg: rgba(255, 255, 255, 0.78);
+  --shell-sidebar-control-hover: rgba(255, 255, 255, 0.94);
+  --shell-sidebar-control-border: rgba(15, 23, 42, 0.12);
+  --shell-menu-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(233, 240, 255, 0.92) 58%, rgba(239, 0, 1, 0.12) 100%);
+  --shell-menu-border: rgba(15, 23, 42, 0.12);
+  --shell-menu-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
 }
 
 :root.dark,
@@ -76,6 +85,12 @@
   --shell-sidebar-gradient: linear-gradient(180deg, #030812 0%, #061631 42%, #09285a 72%, #780b1e 100%);
   --shell-sidebar-border: rgba(148, 163, 184, 0.18);
   --shell-sidebar-shadow: 0 30px 84px rgba(0, 0, 0, 0.52);
+  --shell-sidebar-text: #ffffff;
+  --shell-sidebar-text-strong: #ffffff;
+  --shell-sidebar-text-muted: rgba(255, 255, 255, 0.72);
+  --shell-sidebar-control-bg: rgba(255, 255, 255, 0.08);
+  --shell-sidebar-control-hover: rgba(255, 255, 255, 0.12);
+  --shell-sidebar-control-border: rgba(255, 255, 255, 0.14);
   --shell-menu-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.07) 56%, rgba(239, 0, 1, 0.28) 100%);
   --shell-menu-border: rgba(255, 255, 255, 0.16);
   --shell-menu-shadow: 0 22px 52px rgba(0, 0, 0, 0.5);
@@ -115,12 +130,12 @@ body::after {
   }
 }
 
-/* Menu lateral: operacional, com degradê, sem aparência de documentação/card. */
+/* Menu lateral: operacional, com degradê, adaptado por tema. */
 .sidebar-operational-shell {
   background: var(--shell-sidebar-gradient) !important;
   border-color: var(--shell-sidebar-border) !important;
   box-shadow: var(--shell-sidebar-shadow) !important;
-  color: #ffffff !important;
+  color: var(--shell-sidebar-text) !important;
 }
 
 .sidebar-operational-shell :is(a, button, span, p, label, input, div) {
@@ -128,36 +143,64 @@ body::after {
 }
 
 .sidebar-operational-shell :is(a, button) {
-  color: rgba(255, 255, 255, 0.82) !important;
+  color: var(--shell-sidebar-text-muted) !important;
 }
 
 .sidebar-operational-shell :is(a:hover, button:hover) {
-  color: #ffffff !important;
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+.sidebar-operational-shell :is(svg) {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell [class*="text-white"],
+.sidebar-operational-shell [class*="text-slate"] {
+  color: var(--shell-sidebar-text-muted) !important;
+}
+
+.sidebar-operational-shell [class*="bg-white/14"],
+.sidebar-operational-shell [class*="bg-white/16"],
+.sidebar-operational-shell [class*="bg-white/10"],
+.sidebar-operational-shell [class*="bg-white/8"] {
+  background: var(--shell-menu-gradient) !important;
+  border-color: var(--shell-menu-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
 }
 
 .sidebar-operational-shell .sidebar-control,
 .sidebar-operational-shell .sidebar-search,
 .sidebar-operational-shell .sidebar-dropdown {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  color: #ffffff !important;
+  background: var(--shell-sidebar-control-bg) !important;
+  border-color: var(--shell-sidebar-control-border) !important;
+  color: var(--shell-sidebar-text-strong) !important;
   box-shadow: none !important;
 }
 
 .sidebar-operational-shell .sidebar-control:hover,
 .sidebar-operational-shell .sidebar-search:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-  border-color: rgba(255, 255, 255, 0.22) !important;
+  background: var(--shell-sidebar-control-hover) !important;
+  border-color: var(--shell-menu-border) !important;
 }
 
 .sidebar-operational-shell input,
 .sidebar-operational-shell input::placeholder {
-  color: rgba(255, 255, 255, 0.72) !important;
+  color: var(--shell-sidebar-text-muted) !important;
 }
 
 .sidebar-operational-shell input:focus,
 .sidebar-operational-shell input:not(:placeholder-shown) {
-  color: #ffffff !important;
+  color: var(--shell-sidebar-text-strong) !important;
+}
+
+:root.theme-light .sidebar-operational-shell,
+:root[data-theme="light"] .sidebar-operational-shell {
+  color: #0b1a3c !important;
+}
+
+:root.theme-light .sidebar-operational-shell :is(a:hover, button:hover, input:focus),
+:root[data-theme="light"] .sidebar-operational-shell :is(a:hover, button:hover, input:focus) {
+  color: #011848 !important;
 }
 
 /* Degradê nos botões principais, sem mexer em botões transparentes ou do menu. */

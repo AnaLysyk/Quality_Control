@@ -127,7 +127,7 @@ function resolveModuleHref(
     }
 
     if (effectiveRole && INTERNAL_DASHBOARD_ROLES.has(effectiveRole)) {
-      return "/dashboard";
+      return "/admin/dashboard";
     }
 
     if (companySlug && effectiveRole && COMPANY_DASHBOARD_ROLES.has(effectiveRole)) {
@@ -148,10 +148,10 @@ function buildBrainItems(effectiveRole: SystemRole | null, companySlug: string |
       {
         id: "brain-system-map",
         routeId: "brain.mapa-sistema",
-        label: "Mapa do Sistema",
-        iconKey: "map",
+        label: "Brain visual",
+        iconKey: "cpu",
         module: "brain",
-        href: "/admin/sistema/mapa",
+        href: "/admin/brain",
         favoriteEnabled: true,
         testId: "nav-brain-system-map",
       },
@@ -211,7 +211,7 @@ function resolveModuleItems(
 
   return {
     ...mod,
-    label: usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
+    label: usesInternalOverview ? "Dashboard" : usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {

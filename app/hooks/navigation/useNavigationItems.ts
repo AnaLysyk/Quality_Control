@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -12,7 +12,8 @@ import { buildNavigationForUser, canSeeNavItem, getNavigationRoute } from "@/lib
 import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import type { SystemRole } from "@/lib/auth/roles";
 
-const DISABLED_ITEM_IDS = new Set(["admin-system-map"]);
+const DISABLED_ITEM_IDS = new Set(["admin-system-map", "companies-search"]);
+const HIDDEN_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
 const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
@@ -28,6 +29,42 @@ const AGENDA_ROLES: SystemRole[] = [
   SYSTEM_ROLES.EMPRESA,
   SYSTEM_ROLES.COMPANY_USER,
 ];
+const AGENDA_ITEMS: NavItemDef[] = [
+  {
+    id: "agenda-my-calendar",
+    routeId: "agenda.release",
+    label: "Meu calendário",
+    iconKey: "calendar",
+    module: "agenda",
+    href: "/agenda?view=me",
+    requiredPermission: { moduleId: "release_calendar", action: "view" },
+    favoriteEnabled: true,
+    testId: "nav-agenda-my-calendar",
+  },
+  {
+    id: "agenda-company-calendar",
+    routeId: "agenda.release",
+    label: "Calendário da empresa",
+    iconKey: "building",
+    module: "agenda",
+    href: "/agenda?view=company",
+    requiredPermission: { moduleId: "release_calendar", action: "view" },
+    favoriteEnabled: true,
+    testId: "nav-agenda-company-calendar",
+  },
+  {
+    id: "agenda-overview",
+    routeId: "agenda.release",
+    label: "Visão geral",
+    iconKey: "layout",
+    module: "agenda",
+    href: "/agenda?view=overview",
+    requiredPermission: { moduleId: "release_calendar", action: "view" },
+    allowedRoles: [SYSTEM_ROLES.LEADER_TC, SYSTEM_ROLES.TECHNICAL_SUPPORT, SYSTEM_ROLES.EMPRESA],
+    favoriteEnabled: true,
+    testId: "nav-agenda-overview",
+  },
+];
 const AGENDA_MODULE: NavModuleDef = {
   id: "agenda" as NavModuleDef["id"],
   label: "Agenda",
@@ -36,7 +73,7 @@ const AGENDA_MODULE: NavModuleDef = {
   requiredPermission: { moduleId: "release_calendar", action: "view" },
   allowedRoles: AGENDA_ROLES,
   testId: "nav-release-agenda",
-  items: [],
+  items: AGENDA_ITEMS,
 };
 const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
@@ -156,6 +193,14 @@ function resolveModuleHref(
     }
   }
 
+  if (mod.id === "agenda") {
+    return "/agenda";
+  }
+
+  if (mod.id === "chat") {
+    return "/chat";
+  }
+
   if (mod.id === "brain") {
     return withScopeQuery("/brain", companySlug, projectSlug, true);
   }
@@ -212,6 +257,24 @@ function buildQualityItems(items: NavItemDef[], companySlug: string | null): Nav
   return [projectItem, ...items.filter((item) => item.id !== projectItem.id)];
 }
 
+function buildAgendaItems(effectiveRole: SystemRole | null, companySlug: string | null): NavItemDef[] {
+  return AGENDA_ITEMS.filter((item) => {
+    if (item.id === "agenda-company-calendar" && !companySlug && effectiveRole === SYSTEM_ROLES.COMPANY_USER) {
+      return false;
+    }
+    if (!item.allowedRoles) return true;
+    return Boolean(effectiveRole && item.allowedRoles.includes(effectiveRole));
+  });
+}
+
+function resolveMenuLabel(item: NavItemDef): string {
+  if (item.id === "requests-list") return "Solicitações";
+  if (item.id === "requests-search") return "Buscar solicitações";
+  if (item.id === "management-profile") return "Gestão de perfil";
+  if (item.id === "management-users") return "Gestão de usuários";
+  return item.label;
+}
+
 function resolveModuleItems(
   mod: NavModuleDef,
   companySlug: string | null,
@@ -247,14 +310,17 @@ function resolveModuleItems(
     },
   ];
 
-  const dynamicItems =
-    mod.id === "permissoes"
+  const dynamicItems = mod.id === "permissoes"
       ? permissionItems
-      : mod.id === "brain"
-        ? buildBrainItems(effectiveRole, companySlug, projectSlug)
-        : mod.id === "quality"
-          ? buildQualityItems(mod.items, companySlug)
-          : mod.items;
+      : mod.id === "agenda"
+        ? buildAgendaItems(effectiveRole, companySlug)
+        : mod.id === "chat"
+          ? []
+          : mod.id === "brain"
+            ? buildBrainItems(effectiveRole, companySlug, projectSlug)
+            : mod.id === "quality"
+              ? buildQualityItems(mod.items, companySlug)
+              : mod.items;
 
   return {
     ...mod,
@@ -269,7 +335,7 @@ function resolveModuleItems(
       })
       .map((item) => ({
         ...item,
-        label: item.label,
+        label: resolveMenuLabel(item),
         href: resolveItemHref(item, companySlug, projectSlug, companyRouteInput),
         testId: item.testId,
       })),
@@ -288,8 +354,9 @@ function buildClientCatalog() {
 }
 
 function filterByActiveContext(modules: NavModuleDef[], companySlug: string | null) {
-  if (companySlug) return modules;
-  return modules.filter((module) => !OPERATIONAL_MODULE_IDS.has(module.id));
+  const visibleModules = modules.filter((module) => !HIDDEN_MODULE_IDS.has(module.id));
+  if (companySlug) return visibleModules;
+  return visibleModules.filter((module) => !OPERATIONAL_MODULE_IDS.has(module.id));
 }
 
 function withReleaseAgendaModule(modules: NavModuleDef[], effectiveRole: SystemRole | null, permissions?: PermissionMatrix | null) {
@@ -392,9 +459,3 @@ export function useNavigationItems() {
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }
-
-
-
-
-
-

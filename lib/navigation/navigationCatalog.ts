@@ -1,4 +1,4 @@
-﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type NavModule =
   | "home"
@@ -13,9 +13,7 @@ export type NavModule =
   | "brain"
   | "admin"
   | "documents"
-  | "users"
-  | "management"
-  | "logs" | "permissoes";
+  | "users";
 
 export type NavPermissionRequirement = {
   moduleId: string;
@@ -37,7 +35,7 @@ export type NavItemDef = {
   favoriteEnabled?: boolean;
   action?: "navigate" | "focusSearch" | "openCreateModal";
   testId?: string;
-  /** Label de agrupamento visual no sidebar (nÃ£o afeta filtros de role) */
+  /** Label de agrupamento visual no sidebar (não afeta filtros de role) */
   group?: string;
 };
 
@@ -62,13 +60,17 @@ const SYSTEM_USERS: SystemRole[] = [
 const INSTITUTIONAL_USERS: SystemRole[] = [SYSTEM_ROLES.COMPANY_USER, SYSTEM_ROLES.EMPRESA];
 const ALL_USERS: SystemRole[] = [...SYSTEM_USERS, ...INSTITUTIONAL_USERS];
 
+const LEADER_TC: SystemRole[] = [SYSTEM_ROLES.LEADER_TC];
 const LEADER_AND_SUPPORT: SystemRole[] = [SYSTEM_ROLES.LEADER_TC, SYSTEM_ROLES.TECHNICAL_SUPPORT];
 const ALL_INTERNAL: SystemRole[] = SYSTEM_USERS;
 const PRIVILEGED: SystemRole[] = LEADER_AND_SUPPORT;
+const COMPANY_USER_MANAGERS: SystemRole[] = [SYSTEM_ROLES.EMPRESA];
+const USER_MANAGERS: SystemRole[] = [...PRIVILEGED, ...COMPANY_USER_MANAGERS];
+const LEADER_ONLY: SystemRole[] = LEADER_TC;
 
 export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
-  // HOME â€” All users
+  // HOME — All users
   // ============================================
   {
     id: "home",
@@ -82,11 +84,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // EMPRESAS â€” Only for SYSTEM_USERS
+  // EMPRESAS — Only for SYSTEM_USERS
   // ============================================
   {
     id: "companies",
-    label: "GestÃ£o de Empresas",
+    label: "Gestão de Empresas",
     iconKey: "building",
     allowedRoles: SYSTEM_USERS,
     testId: "nav-companies",
@@ -129,11 +131,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // OPERAÃ‡Ã•ES â€” All users (context varies)
+  // OPERAÇÕES — All users (context varies)
   // ============================================
   {
     id: "operations",
-    label: "OperaÃ§Ãµes",
+    label: "Operações",
     iconKey: "monitor",
     allowedRoles: ALL_USERS,
     testId: "nav-operations",
@@ -152,7 +154,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "ops-metrics",
         routeId: "operacao.metricas",
-        label: "MÃ©tricas",
+        label: "Métricas",
         iconKey: "bar-chart",
         module: "operations",
         href: "/operacoes/metricas",
@@ -174,12 +176,12 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // REPOSITÃ“RIO DE TESTES â€” All users
-  // Removed: Releases, Cobertura, EvidÃªncias
+  // REPOSITÓRIO DE TESTES — All users
+  // Removed: Releases, Cobertura, Evidências
   // ============================================
   {
     id: "quality",
-    label: "RepositÃ³rio de Testes",
+    label: "Repositório de Testes",
     iconKey: "check-circle",
     allowedRoles: ALL_USERS,
     testId: "nav-test-repository",
@@ -229,12 +231,12 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // AUTOMAÃ‡ÃƒO â€” All internal users
-  // Grouped: Workspace | ExecuÃ§Ãµes | Ativos
+  // AUTOMAÇÃO — All internal users
+  // Grouped: Workspace | Execuções | Ativos
   // ============================================
   {
     id: "automation",
-    label: "AutomaÃ§Ã£o",
+    label: "Automação",
     iconKey: "zap",
     allowedRoles: ALL_INTERNAL,
     testId: "nav-automation",
@@ -264,12 +266,12 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "auto-execucoes",
         routeId: "automacao.execucoes",
-        label: "ExecuÃ§Ãµes",
+        label: "Execuções",
         iconKey: "play",
         module: "automation",
         href: "/automacoes/execucoes",
         favoriteEnabled: true,
-        group: "ExecuÃ§Ãµes",
+        group: "Execuções",
         testId: "nav-automation-executions",
       },
       {
@@ -280,7 +282,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation",
         href: "/automacoes/fluxos",
         favoriteEnabled: true,
-        group: "ExecuÃ§Ãµes",
+        group: "Execuções",
         testId: "nav-automation-flows",
       },
       {
@@ -291,7 +293,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation",
         href: "/automacoes/casos",
         favoriteEnabled: true,
-        group: "ExecuÃ§Ãµes",
+        group: "Execuções",
         testId: "nav-automation-cases",
       },
       {
@@ -364,12 +366,12 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // SOLICITAÃ‡Ã•ES â€” Leader + Technical support only
+  // SOLICITAÇÕES — Leader + Technical support only
   // ============================================
   {
     id: "requests",
     routeId: "solicitacoes.listagem",
-    label: "SolicitaÃ§Ãµes",
+    label: "Solicitações",
     iconKey: "clipboard",
     href: "/solicitacoes",
     allowedRoles: LEADER_AND_SUPPORT,
@@ -388,7 +390,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "requests-search",
         routeId: "solicitacoes.buscar",
-        label: "Buscar solicitaÃ§Ã£o",
+        label: "Buscar solicitação",
         iconKey: "search",
         module: "requests",
         href: "/solicitacoes?focus=search",
@@ -400,7 +402,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // AGENDA â€” Leader + Technical support only
+  // AGENDA — Leader + Technical support only
   // ============================================
   {
     id: "agenda",
@@ -415,7 +417,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // SUPORTE â€” All users
+  // SUPORTE — All users
   // ============================================
   {
     id: "support",
@@ -470,7 +472,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // CHAT â€” All users (contact scope varies by role)
+  // CHAT — All users (contact scope varies by role)
   // ============================================
   {
     id: "chat",
@@ -504,8 +506,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // BRAIN â€” All users
-  // Removed: Assistente da empresa, Brain Admin, MemÃ³rias, Contexto atual
+  // BRAIN — All users
+  // Removed: Assistente da empresa, Brain Admin, Memórias, Contexto atual
   // ============================================
   {
     id: "brain",
@@ -540,8 +542,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // DOCUMENTOS â€” All users
-  // Removed: Documentos da empresa, DocumentaÃ§Ã£o tÃ©cnica, EvidÃªncias, ExportaÃ§Ãµes
+  // DOCUMENTOS — All users
+  // Removed: Documentos da empresa, Documentação técnica, Evidências, Exportações
   // ============================================
   {
     id: "documents",
@@ -563,7 +565,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "docs-repository",
         routeId: "documentos.repositorio",
-        label: "RepositÃ³rio de documentos",
+        label: "Repositório de documentos",
         iconKey: "book",
         module: "documents",
         href: "/documentos/repositorio",
@@ -574,50 +576,150 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // GESTÃƒO â€” perfil e usuÃ¡rios
+  // GESTÃO DE USUÁRIOS
+  // - Interno TC: Líder TC cria Líder, Suporte e Usuário TC
+  // - Interno TC/Suporte: cria Usuário da Empresa
+  // - Empresa: cria apenas usuário da própria empresa
   // ============================================
   {
-    id: "management",
-    label: "GestÃ£o",
-    iconKey: "sliders",
-    allowedRoles: PRIVILEGED,
-    testId: "nav-management",
+    id: "users",
+    label: "Gestão de Usuários",
+    iconKey: "users",
+    allowedRoles: USER_MANAGERS,
+    testId: "nav-users",
     items: [
       {
-        id: "management-profile",
-        routeId: "permissoes.visao-geral",
-        label: "Perfil",
+        id: "users-create-leader-tc",
+        routeId: "usuarios.criar-lider",
+        label: "Criar Líder TC",
         iconKey: "shield",
-        module: "management",
-        href: "/admin/permissions",
+        module: "users",
+        href: "/admin/users?tab=admin&modal=create&role=leader_tc",
+        action: "openCreateModal",
+        allowedRoles: LEADER_ONLY,
         favoriteEnabled: true,
-        testId: "nav-management-profile",
+        group: "Testing Company",
+        testId: "nav-users-create-leader-tc",
       },
       {
-        id: "management-users",
-        routeId: "permissoes.matriz",
-        label: "UsuÃ¡rios",
-        iconKey: "users",
-        module: "management",
-        href: "/admin/users/permissions",
+        id: "users-create-support",
+        routeId: "usuarios.criar-suporte",
+        label: "Criar Suporte Técnico",
+        iconKey: "headphones",
+        module: "users",
+        href: "/admin/users?tab=support&modal=create&role=technical_support",
+        action: "openCreateModal",
+        allowedRoles: LEADER_ONLY,
         favoriteEnabled: true,
-        testId: "nav-management-users",
+        group: "Testing Company",
+        testId: "nav-users-create-support",
+      },
+      {
+        id: "users-create-user-tc",
+        routeId: "usuarios.criar-usuario-tc",
+        label: "Criar Usuário TC",
+        iconKey: "user",
+        module: "users",
+        href: "/admin/users?tab=testing&modal=create&role=testing_company_user",
+        action: "openCreateModal",
+        allowedRoles: LEADER_ONLY,
+        favoriteEnabled: true,
+        group: "Testing Company",
+        testId: "nav-users-create-user-tc",
+      },
+      {
+        id: "users-create-company-user-internal",
+        routeId: "usuarios.criar-usuario-empresa",
+        label: "Criar usuário da empresa",
+        iconKey: "user-plus",
+        module: "users",
+        href: "/admin/users?tab=company&modal=create&role=company_user",
+        action: "openCreateModal",
+        allowedRoles: PRIVILEGED,
+        favoriteEnabled: true,
+        group: "Usuários da empresa",
+        testId: "nav-users-create-company-user-internal",
+      },
+      {
+        id: "users-create-company-user-company",
+        routeId: "usuarios.criar-usuario",
+        label: "Criar usuário",
+        iconKey: "user-plus",
+        module: "users",
+        href: "/admin/users?tab=company&modal=create&role=company_user",
+        action: "openCreateModal",
+        allowedRoles: COMPANY_USER_MANAGERS,
+        favoriteEnabled: true,
+        group: "Usuários",
+        testId: "nav-users-create-company-user-company",
+      },
+      {
+        id: "users-list",
+        routeId: "usuarios.listagem",
+        label: "Listagem usuários",
+        iconKey: "users",
+        module: "users",
+        href: "/admin/users?tab=company",
+        allowedRoles: USER_MANAGERS,
+        favoriteEnabled: true,
+        group: "Listagem",
+        testId: "nav-users-list",
+      },
+      {
+        id: "users-list-empresas",
+        routeId: "usuarios.listagem",
+        label: "Usuários de empresas",
+        iconKey: "users",
+        module: "users",
+        href: "/admin/users?tab=company",
+        allowedRoles: PRIVILEGED,
+        favoriteEnabled: true,
+        group: "Listagem",
+        testId: "nav-users-list-empresas",
       },
     ],
   },
 
   // ============================================
-  // LOGS â€” link direto, fora de Admin
+  // ADMIN — Only PRIVILEGED users
   // ============================================
   {
-    id: "logs",
-    routeId: "configuracoes.auditoria",
-    label: "Logs",
-    iconKey: "eye",
-    href: "/admin/audit-logs",
+    id: "admin",
+    label: "Admin",
+    iconKey: "shield",
     allowedRoles: PRIVILEGED,
-    testId: "nav-logs",
-    items: [],
+    testId: "nav-admin",
+    items: [
+      {
+        id: "admin-permissions",
+        routeId: "permissoes.atalho-admin",
+        label: "Gestão de Perfis",
+        iconKey: "lock",
+        module: "admin",
+        href: "/admin/permissoes",
+        favoriteEnabled: true,
+        testId: "nav-admin-permissions",
+      },
+      {
+        id: "admin-audit-logs",
+        routeId: "configuracoes.auditoria",
+        label: "Audit Logs",
+        iconKey: "eye",
+        module: "admin",
+        href: "/audit-logs?source=admin",
+        favoriteEnabled: true,
+        testId: "nav-admin-audit-logs",
+      },
+      {
+        id: "admin-system-map",
+        routeId: "configuracoes.mapa-sistema",
+        label: "Mapa do Sistema",
+        iconKey: "map",
+        module: "admin",
+        href: "/admin/sistema/mapa",
+        favoriteEnabled: true,
+        testId: "nav-admin-system-map",
+      },
+    ],
   },
 ];
-

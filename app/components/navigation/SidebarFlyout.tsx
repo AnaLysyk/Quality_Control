@@ -18,17 +18,14 @@ function resolveSidebarHref(href: string) {
 }
 
 const miniBaseClass =
-<<<<<<< HEAD
   "flex w-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl border border-transparent border-l-transparent bg-transparent p-2 text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 const flyoutItemClass =
   "flex w-full min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
-=======
   "sidebar-nav-item flex w-full items-center justify-center rounded-xl border border-transparent border-l-transparent bg-transparent p-2 text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 const flyoutItemClass =
   "sidebar-nav-item flex items-center gap-2.5 rounded-lg border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
->>>>>>> fix/governanca-perfis-rotas
 
 export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: SidebarFlyoutProps) {
   const [open, setOpen] = useState(false);

@@ -1,12 +1,9 @@
 ﻿"use client";
 
-<<<<<<< HEAD
-=======
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
->>>>>>> fix/governanca-perfis-rotas
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
 import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -203,9 +200,7 @@ function getTicketSearchMeta(query: string, suporte: SuporteItem) {
 }
 
 export default function KanbanItPage() {
-<<<<<<< HEAD
   const { user, loading, can } = usePermissionAccess();
-=======
   const { language } = useI18n();
   const isPt = language === "pt-BR";
   const locale = isPt ? "pt-BR" : "en-US";
@@ -425,7 +420,6 @@ export default function KanbanItPage() {
   const { user, loading } = usePermissionAccess();
   const { companies } = useAuth();
   const { activeClient, activeClientSlug } = useClientContext();
->>>>>>> fix/governanca-perfis-rotas
   const [suportes, setSuportes] = useState<SuporteItem[]>([]);
   const [ticketSearch, setTicketSearch] = useState("");
   const [loadingSuportes, setLoadingSuportes] = useState(false);
@@ -442,12 +436,9 @@ export default function KanbanItPage() {
   });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
-<<<<<<< HEAD
-=======
   const [createEvidenceFile, setCreateEvidenceFile] = useState<File | null>(null);
   const createEvidenceInputRef = useRef<HTMLInputElement | null>(null);
   const openCreateTokenRef = useRef<string | null>(null);
->>>>>>> fix/governanca-perfis-rotas
 
   const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
   const [editingColumnLabel, setEditingColumnLabel] = useState("");

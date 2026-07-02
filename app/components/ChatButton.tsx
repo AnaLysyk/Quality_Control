@@ -636,11 +636,8 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     if (payload.message) setInput("");
 
-<<<<<<< HEAD
     // Usa endpoint unificado para garantir memÃ³ria persistente de todas as conversas.
-=======
     // Usa endpoint unificado para garantir memória persistente de todas as conversas.
->>>>>>> fix/governanca-perfis-rotas
     const apiRoute = "/api/assistente/ask";
     const shouldSendBrainContext =
       pathname.startsWith("/brain") ||

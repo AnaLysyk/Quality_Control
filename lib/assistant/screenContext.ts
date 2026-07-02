@@ -28,18 +28,15 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "dashboard",
     screenLabel: "VisÃ£o geral TC",
     screenSummary: [
-<<<<<<< HEAD
       "VocÃª estÃ¡ em: VisÃ£o geral TC.",
       "Esta Ã© a camada executiva da Testing Company para LÃ­der TC e Suporte TÃ©cnico acompanharem qualidade por empresa, risco, projetos, defeitos, runs, cobertura e prÃ³ximos passos consultivos.",
       "Como agente, devo ajudar por perfil: lideranÃ§a recebe visÃ£o executiva e priorizaÃ§Ã£o; suporte recebe triagem tÃ©cnica; empresa recebe apenas o prÃ³prio contexto permitido.",
       "O Brain possui nÃ³s executivos como VisÃ£o Geral TC, Empresas atendidas, Projetos e operaÃ§Ã£o, RepositÃ³rio de Casos, Defeitos, Planos, Runs, Qase, Perfis e Chat por perfil.",
       "Dica: use esta visÃ£o para destravar a operaÃ§Ã£o e transformar risco em aÃ§Ã£o.",
-=======
       "Você está em: Visão geral TC.",
       "Esta é a camada executiva da Testing Company para Líder TC e Suporte Técnico acompanharem qualidade por empresa, risco, projetos, defeitos, runs, cobertura e próximos passos consultivos.",
       "Como agente, devo ajudar a operação por perfil e destravar próximos passos: liderança recebe visão executiva e priorização; suporte recebe triagem técnica; empresa recebe apenas o próprio contexto permitido.",
       "O Brain possui nós executivos como Visão Geral TC, Empresas atendidas, Projetos e operações, Repositório de Casos, Defeitos, Planos, Runs, Qase, Perfis e Chat por perfil.",
->>>>>>> fix/governanca-perfis-rotas
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: [
@@ -73,16 +70,13 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "support",
     screenLabel: "Kanban global de suporte",
     screenSummary: [
-<<<<<<< HEAD
       "VocÃª estÃ¡ em: Kanban global de suporte.",
       "Aqui vocÃª prioriza, atribui responsÃ¡vel, acompanha SLA e avanÃ§a status dos chamados.",
       "Como agente, posso localizar chamados, explicar bloqueios, sugerir prioridade e preparar a prÃ³xima aÃ§Ã£o conforme seu RBAC.",
       "Dica: comece pelo chamado mais crÃ­tico ou pelo SLA mais prÃ³ximo de vencer.",
-=======
       "Você está em: Kanban global de suporte.",
       "Aqui você prioriza, atribui responsável, acompanha SLA e avança status dos chamados.",
       "Dica: como agente, posso localizar chamados, explicar bloqueios, sugerir prioridade e preparar a próxima ação conforme seu RBAC.",
->>>>>>> fix/governanca-perfis-rotas
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: ["Buscar chamado por cÃ³digo", "Explicar o que posso fazer nesta tela", "Sugerir prÃ³xima aÃ§Ã£o como agente", "Listar chamados pendentes", ...PROFILE_HELP_PROMPTS],
@@ -92,15 +86,12 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "support",
     screenLabel: "Meus chamados",
     screenSummary: [
-<<<<<<< HEAD
       "VocÃª estÃ¡ em: Meus chamados.",
       "Aqui vocÃª acompanha status, comenta e pede ajustes nos seus chamados.",
       "Como agente, posso resumir andamento, preparar comentÃ¡rio, avaliar impacto e orientar o melhor prÃ³ximo passo.",
-=======
       "Você está em: Meus chamados.",
       "Aqui você acompanha status, comenta e pede ajustes nos seus chamados.",
       "Como agente, posso resumir andamento, preparar comentário, avaliar impacto e orientar o melhor próximo passo.",
->>>>>>> fix/governanca-perfis-rotas
     ].join(" "),
     entityType: "screen",
     suggestedPrompts: ["Buscar meu chamado por cÃ³digo", "Explicar o que posso fazer nesta tela", "Preparar comentÃ¡rio para chamado", "Listar chamados em andamento", ...PROFILE_HELP_PROMPTS],
@@ -110,15 +101,12 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "permissions",
     screenLabel: "GestÃ£o de Perfis",
     screenSummary: [
-<<<<<<< HEAD
       "VocÃª estÃ¡ em: GestÃ£o de Perfis.",
       "Aqui a plataforma mantÃ©m a matriz de acesso por perfil: LÃ­der TC, Suporte TÃ©cnico, Empresa, UsuÃ¡rio da empresa e UsuÃ¡rio TC.",
       "Como agente, posso explicar permissÃµes, bloqueios, por que alguÃ©m vÃª ou nÃ£o vÃª uma tela, comparar perfis e sugerir ajuste seguro sem quebrar RBAC.",
-=======
       "Você está em: Gestão de Perfis.",
       "Aqui a plataforma mantém permissões e matriz de acesso por perfil: Líder TC, Suporte Técnico, Empresa, Usuário da empresa e Usuário TC.",
       "Como agente, posso explicar bloqueios de acesso, por que alguém vê ou não vê uma tela, comparar perfis e sugerir ajuste seguro sem quebrar RBAC.",
->>>>>>> fix/governanca-perfis-rotas
     ].join(" "),
     entityType: "permission_profile",
     suggestedPrompts: ["Explicar bloqueio de permissÃ£o", "Comparar perfis", "Sugerir ajuste seguro de acesso", "Resumir permissÃµes do perfil atual", ...PROFILE_HELP_PROMPTS],
@@ -128,15 +116,12 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "test_plans",
     screenLabel: "Planos e casos de teste",
     screenSummary: [
-<<<<<<< HEAD
       "VocÃª estÃ¡ em: Planos e casos de teste.",
       "Aqui vocÃª cria, importa, exporta e organiza casos com prÃ©-condiÃ§Ãµes, passos, resultado esperado, tags, suites, projeto Qase opcional e rastreabilidade.",
       "Como agente, posso transformar bug, ticket, requisito ou conversa em caso estruturado, revisar cobertura e explicar campos disponÃ­veis no sistema.",
-=======
       "Você está em: Planos e casos de teste.",
       "Aqui você cria, importa, exporta e organiza casos com pré-condições, passos, resultado esperado, tags, suites, projeto Qase opcional e rastreabilidade.",
       "Como agente, posso transformar bug, ticket, requisito ou conversa em caso estruturado, revisar cobertura e explicar campos disponíveis no sistema.",
->>>>>>> fix/governanca-perfis-rotas
     ].join(" "),
     entityType: "test_plan",
     suggestedPrompts: ["Gerar caso de teste a partir de bug", "Montar passos e resultado esperado", "Explicar modelo de importaÃ§Ã£o", "Listar lacunas de cobertura", ...PROFILE_HELP_PROMPTS],
@@ -146,15 +131,12 @@ const SCREEN_CONTEXT_RULES: ScreenContextRule[] = [
     module: "company",
     screenLabel: "Empresa e operaÃ§Ã£o de qualidade",
     screenSummary: [
-<<<<<<< HEAD
       "VocÃª estÃ¡ em: Empresa e operaÃ§Ã£o de qualidade.",
       "Aqui vocÃª acompanha dashboard, projetos, casos, defeitos, runs, planos, documentos, usuÃ¡rios e indicadores da empresa selecionada.",
       "Como agente, posso resumir a empresa, apontar risco, buscar registros, cruzar chamados e sugerir prÃ³xima aÃ§Ã£o dentro do escopo permitido.",
-=======
       "Você está em: Empresa e operação de qualidade.",
       "Aqui você acompanha dashboard, projetos, casos, defeitos, runs, planos, documentos, chamados, usuários e indicadores da empresa selecionada.",
       "Como agente, posso resumir a empresa, apontar risco, buscar registros e sugerir próxima ação dentro do escopo permitido.",
->>>>>>> fix/governanca-perfis-rotas
     ].join(" "),
     entityType: "company",
     entityId: (slug) => slug,
@@ -214,15 +196,12 @@ const GENERAL_CONTEXT: Omit<ScreenContextRule, "match"> = {
   module: "general",
   screenLabel: "Plataforma Quality Control",
   screenSummary: [
-<<<<<<< HEAD
     "VocÃª estÃ¡ em: Plataforma Quality Control.",
     "Aqui vocÃª navega, busca registros, cria chamados, acompanha qualidade ou entende seu contexto.",
     "Como agente, devo ajudar qualquer perfil dentro do seu escopo de acesso, explicando a tela, sugerindo prÃ³ximos passos e executando apenas aÃ§Ãµes permitidas pelo RBAC. Dica: diga o que deseja fazer e eu oriento o caminho seguro.",
-=======
     "Você está em: Plataforma Quality Control.",
     "Aqui você navega, busca registros, cria chamados, acompanha qualidade ou entende seu contexto.",
     "Como agente, devo ajudar qualquer perfil dentro do seu escopo de acesso, entendendo o que deseja fazer, explicando a tela, sugerindo próximos passos e executando apenas ações permitidas pelo RBAC.",
->>>>>>> fix/governanca-perfis-rotas
   ].join(" "),
   entityType: "screen",
   suggestedPrompts: ["Me ajuda com meu perfil", "Resumir esta tela", "Explicar o que posso fazer aqui", "Buscar registro por palavra-chave", "Sugerir prÃ³xima aÃ§Ã£o como agente"],

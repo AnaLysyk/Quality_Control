@@ -137,13 +137,10 @@ function RegistrationFieldRow({
       {selected ? (
         <div className="mt-3 rounded-xl border border-amber-200 bg-white p-3 dark:border-amber-400/40 dark:bg-[#071426]">
           <label className="block">
-<<<<<<< HEAD
             <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
               OrientaÃ§Ã£o ao solicitante
-=======
             <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700 dark:text-amber-200">
               Orientação ao solicitante
->>>>>>> fix/governanca-perfis-rotas
             </span>
             <textarea
               value={comment}

@@ -13,11 +13,8 @@ import {
   validateBrainIntegrity,
 } from '@/lib/brain'
 
-<<<<<<< HEAD
 describe('Brain - CÃ©rebro do Quality Control', () => {
-=======
 describeDb('Brain - Cérebro do Quality Control', () => {
->>>>>>> fix/governanca-perfis-rotas
   let testCompanyNodeId: string
   let testAppNodeId: string
   let testModuleNodeId: string

@@ -966,12 +966,9 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           <label className="block text-sm">
             Nome / razÃ£o social
             <input
-<<<<<<< HEAD
               className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
-=======
               aria-label="Nome da empresa"
               className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
->>>>>>> fix/governanca-perfis-rotas
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex.: Testing Company LTDA"

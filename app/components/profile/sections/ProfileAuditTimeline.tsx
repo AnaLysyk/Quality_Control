@@ -34,15 +34,12 @@ export function ProfileAuditTimeline({
 
   if (loading) {
     return (
-<<<<<<< HEAD
       <div className="rounded-lg border border-tc-border p-6 bg-tc-surface">
         <h3 className="text-lg font-semibold text-tc-text-primary mb-6">
           HistÃ³rico de AlteraÃ§Ãµes
-=======
       <div className="rounded-lg border border-(--tc-border) bg-(--tc-surface) p-6">
         <h3 className="mb-6 text-lg font-semibold text-(--tc-text-primary)">
           Histórico de Alterações
->>>>>>> fix/governanca-perfis-rotas
         </h3>
         <div className="flex items-center justify-center py-8">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--tc-border) border-t-(--tc-accent)" />
@@ -53,33 +50,27 @@ export function ProfileAuditTimeline({
 
   if (!entries || entries.length === 0) {
     return (
-<<<<<<< HEAD
       <div className="rounded-lg border border-tc-border p-6 bg-tc-surface">
         <h3 className="text-lg font-semibold text-tc-text-primary mb-6">
           HistÃ³rico de AlteraÃ§Ãµes
         </h3>
         <p className="text-sm text-tc-text-muted">Nenhuma alteraÃ§Ã£o registrada.</p>
-=======
       <div className="rounded-lg border border-(--tc-border) bg-(--tc-surface) p-6">
         <h3 className="mb-6 text-lg font-semibold text-(--tc-text-primary)">
           Histórico de Alterações
         </h3>
         <p className="text-sm text-(--tc-text-muted)">Nenhuma alteração registrada.</p>
->>>>>>> fix/governanca-perfis-rotas
       </div>
     );
   }
 
   return (
-<<<<<<< HEAD
     <div className="rounded-lg border border-tc-border p-6 bg-tc-surface">
       <h3 className="text-lg font-semibold text-tc-text-primary mb-6">
         HistÃ³rico de AlteraÃ§Ãµes
-=======
     <div className="rounded-lg border border-(--tc-border) bg-(--tc-surface) p-6">
       <h3 className="mb-6 text-lg font-semibold text-(--tc-text-primary)">
         Histórico de Alterações
->>>>>>> fix/governanca-perfis-rotas
       </h3>
 
       <div className="space-y-6">

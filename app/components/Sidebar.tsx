@@ -20,11 +20,8 @@ import type { NavModuleDef } from "@/lib/navigation/navigationCatalog";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const REMOVED_MODULE_IDS = new Set<string>();
-<<<<<<< HEAD
 const SUPPORT_MENU_ITEM_IDS = new Set(["support-create", "support-chamados"]);
-=======
 const SUPPORT_MENU_ITEM_IDS = new Set(["support-create", "support-kanban"]);
->>>>>>> fix/governanca-perfis-rotas
 
 type SidebarProps = {
   pathname: string;
@@ -48,30 +45,24 @@ function simplifySupportMenu(mod: NavModuleDef): NavModuleDef {
     items: mod.items
       .filter((item) => SUPPORT_MENU_ITEM_IDS.has(item.id))
       .map((item) => {
-<<<<<<< HEAD
         if (item.id === "support-chamados") {
           return {
             ...item,
             label: "Buscar chamados",
             group: undefined,
             testId: "nav-support-search",
-=======
         if (item.id === "support-kanban") {
           return {
             ...item,
             label: "Kanban de chamados",
             group: undefined,
->>>>>>> fix/governanca-perfis-rotas
           };
         }
 
         return {
           ...item,
-<<<<<<< HEAD
           label: "Abrir chamado",
-=======
           label: "Criar chamado",
->>>>>>> fix/governanca-perfis-rotas
           group: undefined,
         };
       }),

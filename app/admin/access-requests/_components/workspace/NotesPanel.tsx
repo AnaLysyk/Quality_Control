@@ -20,15 +20,12 @@ export function NotesPanel({
     <section className="rounded-[1.65rem] border border-slate-200 bg-white shadow-sm dark:border-slate-700/60 dark:bg-[#0d1b2f]">
       <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-700/60">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Interno</p>
-<<<<<<< HEAD
         <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Notas internas da anÃ¡lise</h3>
         <p className="mt-1 text-sm leading-6 text-slate-500">
           Registro privado do revisor. NÃ£o aparece para o solicitante e deve acompanhar o cadastro quando o usuÃ¡rio for criado.
-=======
         <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950 dark:text-slate-50">Notas internas da análise</h3>
         <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
           Registro privado do revisor. Não aparece para o solicitante e deve acompanhar o cadastro quando o usuário for criado.
->>>>>>> fix/governanca-perfis-rotas
         </p>
       </div>
 
@@ -49,13 +46,10 @@ export function NotesPanel({
             <span className={`text-xs font-bold ${remaining <= 100 ? "text-amber-700 dark:text-amber-300" : "text-slate-400 dark:text-slate-500"}`}>
               {limitedValue.length}/{INTERNAL_NOTES_LIMIT}
             </span>
-<<<<<<< HEAD
             <p className="mt-1 text-xs font-semibold text-slate-500">
               VisÃ­vel somente para revisores/admins.
-=======
             <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
               Visível somente para revisores/admins.
->>>>>>> fix/governanca-perfis-rotas
             </p>
           </div>
 

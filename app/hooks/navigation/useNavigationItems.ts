@@ -8,20 +8,17 @@ import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { NAV_CATALOG, type NavItemDef, type NavModuleDef } from "@/lib/navigation/navigationCatalog";
-<<<<<<< HEAD
 import { buildNavigationForUser, canSeeNavItem, getNavigationRoute } from "@/lib/navigation/navigationPermissions";
 import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import type { SystemRole } from "@/lib/auth/roles";
 
 const DISABLED_ITEM_IDS = new Set(["admin-system-map", "companies-search"]);
 const HIDDEN_MODULE_IDS = new Set<NavModuleDef["id"]>(["operations"]);
-=======
 import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/navigationPermissions";
 import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import type { SystemRole } from "@/lib/auth/roles";
 
 const DISABLED_ITEM_IDS = new Set(["admin-system-map"]);
->>>>>>> fix/governanca-perfis-rotas
 const INTERNAL_DASHBOARD_ROLES = new Set<SystemRole>([
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
@@ -33,7 +30,6 @@ const COMPANY_DASHBOARD_ROLES = new Set<SystemRole>([
 const AGENDA_ROLES: SystemRole[] = [
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
-<<<<<<< HEAD
   SYSTEM_ROLES.TESTING_COMPANY_USER,
   SYSTEM_ROLES.EMPRESA,
   SYSTEM_ROLES.COMPANY_USER,
@@ -73,8 +69,6 @@ const AGENDA_ITEMS: NavItemDef[] = [
     favoriteEnabled: true,
     testId: "nav-agenda-overview",
   },
-=======
->>>>>>> fix/governanca-perfis-rotas
 ];
 const AGENDA_MODULE: NavModuleDef = {
   id: "agenda" as NavModuleDef["id"],
@@ -84,11 +78,8 @@ const AGENDA_MODULE: NavModuleDef = {
   requiredPermission: { moduleId: "release_calendar", action: "view" },
   allowedRoles: AGENDA_ROLES,
   testId: "nav-release-agenda",
-<<<<<<< HEAD
   items: AGENDA_ITEMS,
-=======
   items: [],
->>>>>>> fix/governanca-perfis-rotas
 };
 const OPERATIONAL_MODULE_IDS = new Set<NavModuleDef["id"]>(["quality", "automation", "documents"]);
 const CLIENT_BASE_MODULES = new Set<NavModuleDef["id"]>([
@@ -472,11 +463,8 @@ export function useNavigationItems() {
     const contextCatalog = filterByActiveContext(catalog, companySlug);
     const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
     const resolvedModules = filtered
-<<<<<<< HEAD
       .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole, permissions))
-=======
       .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole))
->>>>>>> fix/governanca-perfis-rotas
       .filter((mod) => mod.href || mod.items.length > 0);
 
     return withReleaseAgendaModule(resolvedModules, effectiveRole, permissions);

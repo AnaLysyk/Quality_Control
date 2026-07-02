@@ -105,13 +105,10 @@ export function DecisionPanel({
     <section className="sticky bottom-0 z-30 rounded-xl border border-slate-200 bg-white/98 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur dark:border-slate-700/60 dark:bg-[#0d1b2f]/95">
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
         <div className="min-w-0">
-<<<<<<< HEAD
           <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">AÃ§Ãµes da solicitaÃ§Ã£o</p>
           <p className="mt-0.5 text-sm font-semibold text-slate-600">
-=======
           <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Ações da solicitação</p>
           <p className="mt-0.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
->>>>>>> fix/governanca-perfis-rotas
             {adjustmentFieldCount > 0
               ? `${adjustmentFieldCount} campo(s) marcados para ajuste`
               : "Nenhum ajuste marcado"}
@@ -203,28 +200,22 @@ export function DecisionPanel({
                 </select>
               </label>
 
-<<<<<<< HEAD
               <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-rose-700">
                   O que serÃ¡ enviado
-=======
               <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 dark:border-rose-400/40 dark:bg-rose-950/30">
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-rose-700 dark:text-rose-200">
                   O que será enviado
->>>>>>> fix/governanca-perfis-rotas
                 </p>
                 <p className="mt-1 text-sm font-bold leading-6 text-rose-950 dark:text-rose-50">
                   {rejectionSummary || "Selecione um motivo ou escreva uma justificativa na conversa antes de confirmar."}
                 </p>
               </div>
 
-<<<<<<< HEAD
               <p className="text-sm font-semibold leading-6 text-slate-600">
                 Para justificar por mensagem, escreva no chat da solicitaÃ§Ã£o antes de confirmar a recusa.
-=======
               <p className="text-sm font-semibold leading-6 text-slate-600 dark:text-slate-300">
                 Para justificar por mensagem, escreva no chat da solicitação antes de confirmar a recusa.
->>>>>>> fix/governanca-perfis-rotas
               </p>
             </div>
 

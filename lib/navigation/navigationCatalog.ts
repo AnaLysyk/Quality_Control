@@ -109,10 +109,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "companies",
         href: "/admin/clients?focus=search",
         action: "focusSearch",
-<<<<<<< HEAD
         allowedRoles: PRIVILEGED,
-=======
->>>>>>> fix/governanca-perfis-rotas
         favoriteEnabled: true,
         testId: "nav-companies-search",
       },
@@ -391,11 +388,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "requests-search",
         routeId: "solicitacoes.buscar",
-<<<<<<< HEAD
         label: "Buscar solicitaÃ§Ã£o",
-=======
         label: "Buscar solicitação",
->>>>>>> fix/governanca-perfis-rotas
         iconKey: "search",
         module: "requests",
         href: "/solicitacoes?focus=search",
@@ -445,11 +439,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "support-kanban",
         routeId: "suporte.kanban",
-<<<<<<< HEAD
         label: "Kanban IT",
-=======
         label: "Kanban de chamados",
->>>>>>> fix/governanca-perfis-rotas
         iconKey: "kanban",
         module: "support",
         href: "/kanban-it",
@@ -609,14 +600,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
         routeId: "permissoes.matriz",
         label: "UsuÃ¡rios",
         iconKey: "users",
-<<<<<<< HEAD
         module: "management",
         href: "/admin/users/permissions",
-=======
         module: "users",
         href: "/admin/users",
         allowedRoles: USER_MANAGERS,
->>>>>>> fix/governanca-perfis-rotas
         favoriteEnabled: true,
         testId: "nav-management-users",
       },
@@ -645,10 +633,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
     iconKey: "eye",
     href: "/admin/audit-logs",
     allowedRoles: PRIVILEGED,
-<<<<<<< HEAD
     testId: "nav-logs",
     items: [],
-=======
     testId: "nav-admin",
     items: [
       {
@@ -682,7 +668,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
         testId: "nav-admin-system-map",
       },
     ],
->>>>>>> fix/governanca-perfis-rotas
   },
 ];
 

@@ -68,13 +68,10 @@ export function CompanyProfileForm({
 
   if (visibleFields.length === 0) {
     return (
-<<<<<<< HEAD
       <div className="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-700">
         Sem campos visÃ­veis para este modo.
-=======
       <div className="rounded-lg border border-amber-200 bg-yellow-50 p-4 text-sm text-yellow-700 dark:border-amber-400/40 dark:bg-amber-950/30 dark:text-amber-100">
         Sem campos visíveis para este modo.
->>>>>>> fix/governanca-perfis-rotas
       </div>
     );
   }

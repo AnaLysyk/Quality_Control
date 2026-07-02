@@ -41,11 +41,8 @@ export function ProfileHeader({
   return (
     <div className="flex items-start justify-between gap-6">
       <div className="flex items-start gap-4">
-<<<<<<< HEAD
         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-[var(--tc-primary,#011848)] shadow-[0_14px_28px_rgba(1,24,72,0.12)]">
-=======
         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary,#011848) shadow-[0_14px_28px_rgba(1,24,72,0.12)] dark:border-slate-700/60 dark:bg-[linear-gradient(135deg,#13213a_0%,#0d1b2f_100%)] dark:text-slate-100">
->>>>>>> fix/governanca-perfis-rotas
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt={title} className="h-full w-full object-cover" />

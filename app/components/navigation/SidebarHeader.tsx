@@ -15,15 +15,12 @@ type SidebarHeaderProps = {
 export default function SidebarHeader({ collapsed, onToggle, logoSrc, logoHref, onClose }: SidebarHeaderProps) {
   if (collapsed) {
     return (
-<<<<<<< HEAD
       <div className="flex flex-col items-center gap-1.5 border-b border-slate-200 bg-white px-1.5 py-2.5">
         <Link href={logoHref} onClick={onClose} title="Ir para inÃ­cio">
           <div className="relative h-8 w-8 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
-=======
       <div className="flex flex-col items-center gap-1.5 border-b border-(--shell-sidebar-border) bg-transparent px-1.5 py-2.5">
         <Link href={logoHref} onClick={onClose} title="Ir para início">
           <div className="relative h-8 w-8 overflow-hidden rounded-xl border border-(--shell-sidebar-control-border) bg-(--shell-sidebar-control-bg) shadow-sm transition hover:border-(--shell-menu-border) hover:bg-(--shell-sidebar-control-hover)">
->>>>>>> fix/governanca-perfis-rotas
             <Image src={logoSrc} alt="Logo" fill sizes="32px" className="object-contain p-1" />
           </div>
         </Link>

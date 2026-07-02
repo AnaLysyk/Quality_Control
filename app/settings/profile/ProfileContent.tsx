@@ -91,13 +91,10 @@ export default function ProfileContent() {
   if (!context || !headerData) {
     return (
       <div className="mx-auto max-w-2xl p-6">
-<<<<<<< HEAD
         <div className="rounded-lg bg-yellow-50 p-6 text-yellow-800 border border-yellow-200">
           Contexto de perfil nÃ£o disponÃ­vel
-=======
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-yellow-800 dark:border-yellow-400/40 dark:bg-yellow-950/30 dark:text-yellow-100">
           Contexto de perfil não disponível
->>>>>>> fix/governanca-perfis-rotas
         </div>
       </div>
     );

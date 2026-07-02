@@ -174,8 +174,5 @@ export function ConversationPanel({
     </section>
   );
 }
-<<<<<<< HEAD
 
 
-=======
->>>>>>> fix/governanca-perfis-rotas

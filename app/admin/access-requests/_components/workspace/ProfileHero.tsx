@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+Ôªøimport { useEffect, useMemo, useState } from "react";
 import { FiClock, FiEdit3, FiExternalLink, FiSave, FiTrash2, FiUser } from "react-icons/fi";
 import { AvatarLibraryDialog } from "@/components/AvatarLibraryDialog";
 import type { AccessRequestProfilePreview, AvatarChoice } from "../../_types/accessRequests.types";
@@ -85,27 +85,27 @@ function buildManagementTarget(profile: AccessRequestProfilePreview) {
   if (accessType.includes("suporte")) {
     return {
       href: `/admin/users?tab=support&q=${userQuery}`,
-      label: "Abrir em Usu·rios",
+      label: "Abrir em Usu√°rios",
     };
   }
 
   if (accessType.includes("lider")) {
     return {
       href: `/admin/users?tab=admin&q=${userQuery}`,
-      label: "Abrir em Usu·rios",
+      label: "Abrir em Usu√°rios",
     };
   }
 
   if (accessType.includes("tc")) {
     return {
       href: `/admin/users?tab=testing&q=${userQuery}`,
-      label: "Abrir em Usu·rios",
+      label: "Abrir em Usu√°rios",
     };
   }
 
   return {
     href: `/admin/users?tab=company&q=${userQuery}`,
-    label: "Abrir em Usu·rios",
+    label: "Abrir em Usu√°rios",
   };
 }
 
@@ -136,11 +136,8 @@ function AvatarPreview({
 
   if (kind === "emoji" && value) {
     return (
-<<<<<<< HEAD
       <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50">
-=======
       <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-50 dark:bg-[#13243b]">
->>>>>>> fix/governanca-perfis-rotas
         <span className="block translate-y-px text-3xl leading-none">{value}</span>
       </div>
     );
@@ -239,15 +236,12 @@ export function ProfileHero({
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Recebida em {safeDate(profile.createdAt)}</span>
             </div>
 
-<<<<<<< HEAD
             <h2 className="mt-1 wrap-break-word text-2xl font-black tracking-tight text-slate-950">
-=======
             <h2 className="mt-1 wrap-break-word text-2xl font-black tracking-tight text-slate-950 dark:text-slate-50">
->>>>>>> fix/governanca-perfis-rotas
               {displayName(profile)}
             </h2>
             <p className="mt-1 text-sm font-bold text-slate-700 dark:text-slate-300">
-              {profile.accessType || "Perfil n„o informado"} ∑ {profile.jobRole || "Cargo n„o informado"}
+              {profile.accessType || "Perfil n√£o informado"} ¬∑ {profile.jobRole || "Cargo n√£o informado"}
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -282,8 +276,8 @@ export function ProfileHero({
             type="button"
             onClick={() => setTimelineOpen((current) => !current)}
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700/60 dark:bg-[#071426] dark:text-slate-200 dark:hover:bg-[#13243b]"
-            aria-label="Abrir histÛrico da solicitaÁ„o"
-            title="HistÛrico da solicitaÁ„o"
+            aria-label="Abrir hist√≥rico da solicita√ß√£o"
+            title="Hist√≥rico da solicita√ß√£o"
           >
             <FiClock className="h-4 w-4" />
           </button>
@@ -306,16 +300,16 @@ export function ProfileHero({
       </div>
 
       <div className="mt-4 grid gap-4 border-t border-slate-100 pt-4 dark:border-slate-700/60 sm:grid-cols-2 xl:grid-cols-4">
-        <DetailItem label="E-mail" value={profile.email || "N„o informado"} />
-        <DetailItem label="Telefone" value={profile.phone || "N„o informado"} />
-        <DetailItem label="Usu·rio" value={profile.username ? "@" + profile.username : "A definir"} />
+        <DetailItem label="E-mail" value={profile.email || "N√£o informado"} />
+        <DetailItem label="Telefone" value={profile.phone || "N√£o informado"} />
+        <DetailItem label="Usu√°rio" value={profile.username ? "@" + profile.username : "A definir"} />
         <DetailItem label="Empresa" value={profile.company || "Sem empresa"} />
       </div>
 
       <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-700/60">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">ObservaÁ„o interna</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Observa√ß√£o interna</p>
 
             {noteEditing ? (
               <textarea
@@ -324,11 +318,11 @@ export function ProfileHero({
                 onChange={(event) => setNoteDraft(event.target.value.slice(0, INTERNAL_NOTES_LIMIT))}
                 rows={3}
                 className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white dark:border-slate-700/60 dark:bg-[#071426] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-[#071426]"
-                placeholder="Adicionar uma observaÁ„o interna para este perfil..."
+                placeholder="Adicionar uma observa√ß√£o interna para este perfil..."
               />
             ) : (
               <p className="mt-1 whitespace-pre-wrap text-sm font-medium leading-6 text-slate-900 dark:text-slate-200">
-                {noteText || "Sem observaÁ„o interna."}
+                {noteText || "Sem observa√ß√£o interna."}
               </p>
             )}
           </div>
@@ -396,7 +390,7 @@ export function ProfileHero({
           <div className="mt-3 grid gap-2">
             {timelineItems.length === 0 ? (
               <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-500 dark:border-slate-700/60 dark:bg-[#0d1b2f] dark:text-slate-400">
-                Nenhuma movimentaÁ„o registrada.
+                Nenhuma movimenta√ß√£o registrada.
               </p>
             ) : (
               timelineItems.map((item) => {
@@ -412,7 +406,7 @@ export function ProfileHero({
                       <div className="min-w-0">
                         <p className="text-sm font-black text-slate-950 dark:text-slate-50">{item.title}</p>
                         <p className="mt-1 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
-                          {item.side} ∑ {item.summary}
+                          {item.side} ¬∑ {item.summary}
                         </p>
                       </div>
                       <span className={classNames("rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]", toneClass(item.tone))}>

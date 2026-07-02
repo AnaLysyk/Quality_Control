@@ -67,6 +67,7 @@ const PREFIX_TO_PROFILE_KIND = new Map<string, Exclude<FixedProfileKind, "empres
 const RESERVED_APP_ROOTS = new Set([
   "500",
   "admin",
+  "agenda",
   "api",
   "automacoes",
   "casos-de-teste",
@@ -107,7 +108,7 @@ const COMPANY_SECTION_ROOTS = new Set([
   "dashboard",
   "metrics",
   "aplicacoes",
-  "aplica\u00e7\u00f5es",
+  "aplicações",
   "planos-de-teste",
   "runs",
   "defeitos",

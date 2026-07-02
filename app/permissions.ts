@@ -1,4 +1,4 @@
-import { SYSTEM_ROLES } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES } from "@/lib/auth/roles";
 
 type RoleKey = "leader_tc" | "empresa" | "testing_company_user";
 type ResourceKey = "defect" | "run";
@@ -28,3 +28,4 @@ export function can(userRole: string, resource: string, action: string) {
   const allowed = permissions[roleKey]?.[resourceKey];
   return Array.isArray(allowed) ? allowed.includes(action) : false;
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useRef } from "react";
 
@@ -39,15 +39,15 @@ export default function ConfirmDialog(props: {
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
       <div
         ref={dialogRef}
-        className="relative z-70 max-w-lg w-full rounded-2xl bg-(--tc-surface,#ffffff) p-5 shadow-[0_30px_80px_rgba(2,6,23,0.6)] ring-1 ring-(--tc-border,#e5e7eb)"
+        className="relative z-70 max-w-lg w-full rounded-2xl bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_30px_80px_rgba(2,6,23,0.6)] ring-1 ring-(--tc-border,#e5e7eb)"
       >
         {title ? (
-          <h3 id="confirm-title" className="mb-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+          <h3 id="confirm-title" className="mb-1 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
             {title}
           </h3>
         ) : null}
         {description ? (
-          <p id="confirm-desc" className="mb-4 text-sm text-(--tc-text-muted,#64748b)">
+          <p id="confirm-desc" className="mb-4 text-sm text-[var(--tc-text-muted,#64748b)]">
             {description}
           </p>
         ) : null}
@@ -56,7 +56,7 @@ export default function ConfirmDialog(props: {
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md px-3 py-2 text-sm text-(--tc-text-muted,#6b7280) border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff)"
+            className="rounded-md px-3 py-2 text-sm text-[var(--tc-text-muted,#6b7280)] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)]"
           >
             {cancelLabel}
           </button>
@@ -64,7 +64,7 @@ export default function ConfirmDialog(props: {
             ref={confirmRef}
             type="button"
             onClick={onConfirm}
-            className="rounded-md px-3 py-2 text-sm font-semibold bg-(--tc-accent,#ef0001) text-white shadow-sm"
+            className="rounded-md px-3 py-2 text-sm font-semibold bg-[var(--tc-accent,#ef0001)] text-white shadow-sm"
           >
             {confirmLabel}
           </button>
@@ -73,3 +73,4 @@ export default function ConfirmDialog(props: {
     </div>
   );
 }
+

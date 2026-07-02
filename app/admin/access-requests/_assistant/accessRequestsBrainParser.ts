@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AccessRequestsBrainCommand,
   AccessRequestsBrainDateFilter,
   AccessRequestsBrainPendingAction,
@@ -28,7 +28,7 @@ function stripHelperWords(value: string) {
   return value
     .replace(/\b(busca|buscar|procura|procurar|localiza|localizar|filtra|filtrar|pesquisa|pesquisar)\b/g, " ")
     .replace(/\b(por|pelo|pela|com|sem|de|da|do|das|dos|a|o|as|os|na|no|nas|nos)\b/g, " ")
-    .replace(/\b(quais|qual|quem|estao|estão|estao|sao|são)\b/g, " ")
+    .replace(/\b(quais|qual|quem|estao|estÃ£o|estao|sao|sÃ£o)\b/g, " ")
     .replace(/\b(status|satus|situacao)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -47,7 +47,7 @@ function parseDate(text: string): AccessRequestsBrainDateFilter | null {
   if (/\bhoje\b/.test(text)) return "today";
   if (/(ultim[oa]s?|nas|nos|no).*(2h|2 h|2 horas|duas horas)/.test(text)) return "two_hours";
   if (/(ultim[oa]s?|nas|nos|no).*(7 dias|sete dias)|ultima semana|ultimos 7/.test(text)) return "week";
-  if (/(30 dias|trinta dias|ultimo mes|ultimos 30|ultimo mês)/.test(text)) return "month";
+  if (/(30 dias|trinta dias|ultimo mes|ultimos 30|ultimo mÃªs)/.test(text)) return "month";
   return null;
 }
 
@@ -95,11 +95,11 @@ function extractAdjustmentFields(text: string) {
 }
 
 function isGreeting(text: string) {
-  return /^(oi+|ola|olá|oie|bom dia|boa tarde|boa noite|hello|hi)[\s!?.]*$/.test(text);
+  return /^(oi+|ola|olÃ¡|oie|bom dia|boa tarde|boa noite|hello|hi)[\s!?.]*$/.test(text);
 }
 
 function isShortFollowUp(text: string) {
-  return /^(tudo|td|tudo bem|tudo certo|beleza|blz|ok|okay|ta|tá|entendi|certo|show|fechou|valeu|obrigado|obrigada)[\s!?.]*$/.test(text);
+  return /^(tudo|td|tudo bem|tudo certo|beleza|blz|ok|okay|ta|tÃ¡|entendi|certo|show|fechou|valeu|obrigado|obrigada)[\s!?.]*$/.test(text);
 }
 
 export function parseAccessRequestsBrainCommand(
@@ -114,7 +114,7 @@ export function parseAccessRequestsBrainCommand(
 
   if (pendingAction) {
     if (/^(sim|confirmo|pode|pode sim|aprova|recusa|remove|confirmar|ok|ss)\b/.test(text)) return { kind: "confirm_pending" };
-    if (/^(nao|não|cancela|cancelar|deixa|voltar|para)\b/.test(text)) return { kind: "cancel_pending" };
+    if (/^(nao|nÃ£o|cancela|cancelar|deixa|voltar|para)\b/.test(text)) return { kind: "cancel_pending" };
   }
 
   if (/\b(o que tem aqui|analisa|analise|resumo|o que voce encontrou|tem algo errado|qual proximo passo)\b/.test(text)) {
@@ -141,7 +141,7 @@ export function parseAccessRequestsBrainCommand(
     return {
       kind: "filter",
       filters: dateFilter === "all" ? { searchTerm: "", statusFilter: "all", dateFilter: "all" } : { dateFilter },
-      actionText: dateFilter === "all" ? "limpei os filtros" : `filtrei por período`,
+      actionText: dateFilter === "all" ? "limpei os filtros" : `filtrei por perÃ­odo`,
     };
   }
 
@@ -164,3 +164,4 @@ export function parseAccessRequestsBrainCommand(
 
   return { kind: "none" };
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 
@@ -6,7 +6,7 @@ import { useAutomationModuleContext } from "../_components/AutomationModuleConte
 
 const BiometricAutomationRunner = dynamic(() => import("../BiometricAutomationRunner"), {
   loading: () => (
-    <div className="h-[520px] animate-pulse rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
+    <div className="h-[520px] animate-pulse rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)]" />
   ),
   ssr: false,
 });
@@ -24,4 +24,5 @@ export default function AutomacoesExecucoesPage() {
     </div>
   );
 }
+
 

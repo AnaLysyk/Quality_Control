@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+﻿import { NextResponse, type NextRequest } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { readPlatformDocs, writePlatformDocs, newId, nowIso, sanitizeSlug } from "@/data/platformDocsStore";
 
@@ -49,3 +49,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

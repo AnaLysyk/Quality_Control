@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -55,7 +55,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
 
         const mapped: AppInfo[] = rawList.map((app) => ({
           slug: app.slug ?? app.name?.toLowerCase()?.replace(/\s+/g, "-") ?? "",
-          name: app.name ?? "Aplicação",
+          name: app.name ?? "AplicaÃ§Ã£o",
           tag: app.tag ?? app.name?.toUpperCase() ?? "APP",
         }));
 
@@ -79,16 +79,16 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
         <FiSearch className="absolute left-3 top-3 text-gray-500 text-lg" />
         <input
           type="text"
-          placeholder="Buscar aplicação..."
+          placeholder="Buscar aplicaÃ§Ã£o..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full rounded-xl bg-white border border-(--surface-border,#e5e7eb) py-2 pl-10 pr-4 text-sm text-(--page-text,#0b1a3c) placeholder-gray-500 shadow-sm focus:outline-none focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/20"
+          className="w-full rounded-xl bg-white border border-(--surface-border,#e5e7eb) py-2 pl-10 pr-4 text-sm text-(--page-text,#0b1a3c) placeholder-gray-500 shadow-sm focus:outline-none focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-(--tc-accent)/20"
         />
       </div>
 
       {filteredApps.length === 0 && (
         <div className="mt-6 rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 md:p-10 text-center text-(--page-text,#0b1a3c) space-y-4 shadow-sm">
-          <p className="text-lg font-semibold">Nenhuma aplicação encontrada.</p>
+          <p className="text-lg font-semibold">Nenhuma aplicaÃ§Ã£o encontrada.</p>
         </div>
       )}
 
@@ -101,15 +101,15 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
               <Link
                 key={app.slug}
                 href={`/applications-panel/${app.slug}`}
-                className="rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 shadow-lg shadow-black/10 transition hover:border-(--tc-accent)/60 text-(--page-text,#0b1a3c)"
+                className="rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 shadow-lg shadow-black/10 transition hover:border-[var(--tc-accent)]/60 text-(--page-text,#0b1a3c)"
               >
                 <div className="space-y-3">
                   <span className={`app-tag text-[12px] ${appColorClass}`}>
                     {meta.label.toUpperCase()}
                   </span>
                   <p className="text-lg font-semibold">{app.name}</p>
-                  <p className="text-sm font-semibold text-(--tc-accent) flex items-center gap-2">
-                    Ver runs <span aria-hidden="true">→</span>
+                  <p className="text-sm font-semibold text-[var(--tc-accent)] flex items-center gap-2">
+                    Ver runs <span aria-hidden="true">â†’</span>
                   </p>
                 </div>
               </Link>
@@ -120,3 +120,4 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-export function maskStoredSecret(value?: string | null) {
+﻿export function maskStoredSecret(value?: string | null) {
   const token = (value ?? "").trim();
   if (!token) return null;
   const suffix = token.slice(-4);
@@ -8,3 +8,4 @@ export function maskStoredSecret(value?: string | null) {
 export function maskQaseToken(value?: string | null) {
   return maskStoredSecret(value);
 }
+

@@ -1,4 +1,4 @@
-import { test } from "../../../../../support/fixtures/test";
+﻿import { test } from "../../../../../support/fixtures/test";
 import {
   executarRecuperacaoSenhaPorPerfil,
   obterPerfilEsqueciSenha,
@@ -11,3 +11,4 @@ test.describe("Esqueci senha - Usuario da Empresa", () => {
     await executarRecuperacaoSenhaPorPerfil(page, obterPerfilEsqueciSenha("usuario-empresa"));
   });
 });
+

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("rbac - runs API", () => {
@@ -30,3 +30,4 @@ test.describe("rbac - runs API", () => {
     expect(response.status()).toBe(403);
   });
 });
+

@@ -1,4 +1,4 @@
-import type { BrainAccessContext } from "@/lib/brain/access";
+﻿import type { BrainAccessContext } from "@/lib/brain/access";
 import type { BrainIntegrationProvider } from "@/lib/brain/integrations/types";
 import type { SystemPermission } from "@/lib/navigation/navigation.types";
 import { canAccess } from "@/lib/permissions/can-access";
@@ -75,3 +75,4 @@ export function canUseExternalProvider(
     canAccess(access.userAccess, assistantPermission)
   );
 }
+

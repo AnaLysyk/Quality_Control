@@ -31,3 +31,4 @@ export function criarEmailRealUnico(profileValue: string, unique: number, realEm
   const [user, domain] = realEmail.split("@");
   return `${user}+${profileValue}.${unique}@${domain}`;
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { getSubgraph, traceImpact, searchNodes } from "@/lib/brain";
@@ -59,3 +59,4 @@ export async function brainExplainRelation(edgeId: string) {
     confidence: typeof metadata.confidence === "number" ? metadata.confidence : edge.weight ?? 0.8,
   };
 }
+

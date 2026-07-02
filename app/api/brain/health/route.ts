@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
 import { getBrainHealth } from "@/lib/brain/health";
@@ -19,3 +19,4 @@ export async function GET(req: Request) {
   const health = await getBrainHealth(accessResult.context);
   return NextResponse.json(health);
 }
+

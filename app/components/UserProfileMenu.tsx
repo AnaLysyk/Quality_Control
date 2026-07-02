@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -64,7 +64,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
 
   const displayName = loading ? t("profileMenu.loading") : user?.name || t("profileMenu.userFallback");
 
-  // Universal session fallback: redireciona para login se não há usuário e não está carregando
+  // Universal session fallback: redireciona para login se nÃ£o hÃ¡ usuÃ¡rio e nÃ£o estÃ¡ carregando
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");
@@ -80,7 +80,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
         aria-label={t("profileMenu.menuAria")}
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
-          className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-(--tc-accent,#ef0001) bg-[#0f172a] text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] hover:border-(--tc-accent-dark,#c20000) hover:bg-[#111a2a] transition-all"
+          className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-[var(--tc-accent,#ef0001)] bg-[#0f172a] text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] hover:border-[var(--tc-accent-dark,#c20000)] hover:bg-[#111a2a] transition-all"
       >
         <span className="sr-only">{displayName}</span>
         <svg
@@ -98,11 +98,11 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
 
         {open && (
           <div
-            className="absolute right-0 mt-2 w-full sm:w-[20rem] max-w-xs sm:max-w-sm md:max-w-md min-w-0 rounded-2xl border-2 border-(--tc-accent,#ef0001) bg-[#0f172a] text-white shadow-[0_16px_40px_rgba(15,23,42,0.18)]"
+            className="absolute right-0 mt-2 w-full sm:w-[20rem] max-w-xs sm:max-w-sm md:max-w-md min-w-0 rounded-2xl border-2 border-[var(--tc-accent,#ef0001)] bg-[#0f172a] text-white shadow-[0_16px_40px_rgba(15,23,42,0.18)]"
           >
           <div className="px-6 py-5 space-y-2">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-(--tc-accent,#ef0001) text-white flex items-center justify-center h-12 w-12 font-bold text-xl uppercase">
+              <div className="rounded-full bg-[var(--tc-accent,#ef0001)] text-white flex items-center justify-center h-12 w-12 font-bold text-xl uppercase">
                 {user?.name?.[0] ?? "U"}
               </div>
               <div>
@@ -113,14 +113,14 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
                   <div className="text-xs text-blue-200">{t("profileMenu.notAuthenticated")}</div>
                 )}
                 {user?.role && (
-                  <div className="text-xs mt-1 px-2 py-0.5 rounded bg-(--tc-accent,#ef0001)/10 text-(--tc-accent,#ef0001) inline-block font-semibold uppercase tracking-wider">{user.role}</div>
+                  <div className="text-xs mt-1 px-2 py-0.5 rounded bg-[var(--tc-accent,#ef0001)]/10 text-[var(--tc-accent,#ef0001)] inline-block font-semibold uppercase tracking-wider">{user.role}</div>
                 )}
               </div>
             </div>
             {activeClientName && (
               <div className="text-sm mt-2">
                 {isAdmin && onEditCompany ? (
-                  <button className="text-(--tc-accent,#ef0001) underline font-semibold" onClick={onEditCompany}>
+                  <button className="text-[var(--tc-accent,#ef0001)] underline font-semibold" onClick={onEditCompany}>
                     {activeClientName}
                   </button>
                 ) : (
@@ -131,7 +131,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="mt-2 text-xs text-(--tc-accent,#ef0001) hover:underline font-semibold"
+              className="mt-2 text-xs text-[var(--tc-accent,#ef0001)] hover:underline font-semibold"
               disabled={uploading || !user}
             >
               {uploading ? t("profileMenu.uploadingPhoto") : t("profileMenu.editPhoto")}
@@ -147,7 +147,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
             />
           </div>
 
-          <div className="border-t border-(--tc-border,#e5e7eb)/40" />
+          <div className="border-t border-[var(--tc-border,#e5e7eb)]/40" />
 
           <div className="py-2">
             {onOpenTeam && (
@@ -178,7 +178,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
             </button>
           </div>
 
-          <div className="border-t border-(--tc-border,#e5e7eb)/40" />
+          <div className="border-t border-[var(--tc-border,#e5e7eb)]/40" />
 
           {/* Language selector */}
           <div className="px-4 py-3 flex items-center justify-between">
@@ -186,7 +186,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
             <LanguageSelector variant="full" />
           </div>
 
-          <div className="border-t border-(--tc-border,#e5e7eb)/40" />
+          <div className="border-t border-[var(--tc-border,#e5e7eb)]/40" />
 
           <button
             onClick={handleLogout}
@@ -199,6 +199,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
     </div>
   );
 }
+
 
 
 

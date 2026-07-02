@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.setTimeout(60000);
@@ -42,7 +42,7 @@ test("brain agent sends message and receives streaming response", async ({ page,
 
   // Type a message and send
   const input = page.getByTestId("agent-input");
-  await input.fill("Quantos nós existem no Brain?");
+  await input.fill("Quantos nÃ³s existem no Brain?");
   await page.getByTestId("agent-send").click();
 
   // User message appears
@@ -71,7 +71,7 @@ test("brain agent input disabled while loading and send button inactive when emp
   await page.getByTestId("agent-input").fill("teste");
   await expect(page.getByTestId("agent-send")).not.toBeDisabled();
 
-  // Clear input — send button disabled again
+  // Clear input â€” send button disabled again
   await page.getByTestId("agent-input").fill("");
   await expect(page.getByTestId("agent-send")).toBeDisabled();
 });
@@ -83,7 +83,8 @@ test("brain agents tab messages area starts empty with quick prompts", async ({ 
   // Messages container should be visible
   await expect(page.getByTestId("agent-messages")).toBeVisible();
 
-  // No messages yet — agent-thinking or quick prompts visible
+  // No messages yet â€” agent-thinking or quick prompts visible
   await expect(page.getByTestId("agent-message-user")).not.toBeVisible();
   await expect(page.getByTestId("agent-message-assistant")).not.toBeVisible();
 });
+

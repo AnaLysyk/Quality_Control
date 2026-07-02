@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { searchNodes, upsertNode } from "@/lib/brain";
 import { isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
@@ -57,3 +57,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao criar no" }, { status: 500 });
   }
 }
+

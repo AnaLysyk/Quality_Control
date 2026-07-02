@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/endpoints/validar-endpoints-tela-solicitacoes.ui.spec.ts --project=chromium
  */
@@ -7,7 +7,7 @@ import { autenticarSolicitacaoAcessoNaInterface } from "../../../../../../suppor
 import { endpointsTelaSolicitacoes } from "../../../../../../support/functions/api/solicitar-acesso/endpoints/solicitacoes.endpoints";
 import { localizarElementosTelaSolicitacoes } from "../../../../../../support/functions/ui/login/solicitar-acesso/elementos/solicitacoes.elementos";
 
-test("tela de Solicitações carrega os endpoints administrativos esperados", async ({
+test("tela de SolicitaÃ§Ãµes carrega os endpoints administrativos esperados", async ({
   context,
   page,
 }) => {
@@ -33,3 +33,4 @@ test("tela de Solicitações carrega os endpoints administrativos esperados", as
     expect(resposta.ok()).toBeTruthy();
   }
 });
+

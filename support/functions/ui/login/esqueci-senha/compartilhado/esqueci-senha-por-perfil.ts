@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+﻿import { expect, type Page } from "@playwright/test";
 
 import {
   BASE_URL,
@@ -184,3 +184,4 @@ export async function executarRecuperacaoSenhaPorPerfil(page: Page, perfil: Perf
     }
   }
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 import { getCompanyIntegrationConfig } from "@/lib/integrations";
 import { prisma } from "@/lib/prismaClient";
 import { info, warn, error } from "@/lib/logger";
@@ -70,3 +70,4 @@ export async function syncJiraIssuesToApplications(companySlug: string, maxResul
   info(`syncJiraIssuesToApplications finished`, { company: companySlug, persisted: synced.length });
   return synced;
 }
+

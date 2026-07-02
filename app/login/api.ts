@@ -1,4 +1,4 @@
-export async function login({ login, password }: { login: string; password: string }) {
+﻿export async function login({ login, password }: { login: string; password: string }) {
   const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -11,9 +11,10 @@ export async function login({ login, password }: { login: string; password: stri
     const message =
       data?.error ||
       data?.message ||
-      "Não foi possível entrar. Verifique usuário e senha.";
+      "NÃ£o foi possÃ­vel entrar. Verifique usuÃ¡rio e senha.";
     throw new Error(message);
   }
 
   return data;
 }
+

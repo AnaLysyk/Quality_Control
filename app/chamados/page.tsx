@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -113,31 +113,31 @@ export default function ChamadosPage() {
                   source: "chamados",
                   agentMode: "qa",
                   panelMode: "side",
-                  initialMessage: "Analise os chamados abertos: prioridades, padrões e próximas ações recomendadas.",
+                  initialMessage: "Analise os chamados abertos: prioridades, padrÃµes e prÃ³ximas aÃ§Ãµes recomendadas.",
                 },
               }));
             }
           }}
           className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm transition hover:border-gray-400"
         >
-          🧠 Perguntar IA
+          ðŸ§  Perguntar IA
         </button>
       </div>
-      {/* Botão flutuante para criar chamado */}
+      {/* BotÃ£o flutuante para criar chamado */}
       <div className="fixed bottom-8 right-8 z-50">
         <CreateSupportTicketButton />
       </div>
       <form className="space-y-3 mb-6" onSubmit={salvar}>
         <input
           className="w-full border rounded px-3 py-2"
-          placeholder="Título do chamado"
+          placeholder="TÃ­tulo do chamado"
           value={form.title}
           onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
           required
         />
         <textarea
           className="w-full border rounded px-3 py-2"
-          placeholder="Descrição"
+          placeholder="DescriÃ§Ã£o"
           value={form.description}
           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
         />
@@ -176,3 +176,4 @@ export default function ChamadosPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById } from "@/lib/auth/localStore";
@@ -156,3 +156,4 @@ export async function POST(req: NextRequest) {
     { headers: NO_STORE_HEADERS },
   );
 }
+

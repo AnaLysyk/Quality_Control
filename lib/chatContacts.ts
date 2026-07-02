@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AccessContext } from "@/lib/auth/session";
 import { listAdminUserItems, type AdminUserItem } from "@/lib/adminUsers";
@@ -164,3 +164,4 @@ export async function listChatContacts(
     .filter((contact) => contactMatches(contact, normalizedSearch))
     .sort((left, right) => left.name.localeCompare(right.name, "pt-BR", { sensitivity: "base" }));
 }
+

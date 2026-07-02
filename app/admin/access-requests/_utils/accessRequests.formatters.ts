@@ -2,3 +2,4 @@
   const normalized = value?.trim();
   return normalized ? normalized : "Não informado";
 }
+

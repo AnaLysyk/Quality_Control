@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getAllReleases } from "@/release/data";
 import { readManualReleaseStore } from "@/data/manualData";
 import { appendQualityGateHistory } from "@/lib/qualityGateHistory";
@@ -44,10 +44,10 @@ export async function GET() {
     // TODO: Add logic for "blocked" if needed
 
     // --- Quality Gate snapshot logic ---
-    // Exemplo de métricas: mttr_hours, open_defects, fail_rate
-    // (mock simples: valores ficticios, pois só temos runs)
-    const mttr_hours = 24; // TODO: calcular real se disponível
-    const open_defects = 0; // TODO: calcular real se disponível
+    // Exemplo de mÃ©tricas: mttr_hours, open_defects, fail_rate
+    // (mock simples: valores ficticios, pois sÃ³ temos runs)
+    const mttr_hours = 24; // TODO: calcular real se disponÃ­vel
+    const open_defects = 0; // TODO: calcular real se disponÃ­vel
     const totalRuns = runs.length;
     const fail_rate = totalRuns > 0 ? Math.round((failedRuns.length / totalRuns) * 100) : 0;
     let gate_status: "approved" | "warning" | "failed" = "approved";
@@ -56,7 +56,7 @@ export async function GET() {
       gate_status = "failed";
       reasons.push("Run falhou");
     }
-    // Exemplo: warning se fail_rate > 0 mas não "risk"
+    // Exemplo: warning se fail_rate > 0 mas nÃ£o "risk"
     // (ajuste conforme regras reais)
 
     // Salvar snapshot (imutavel)
@@ -122,3 +122,4 @@ export async function GET() {
   }
   return NextResponse.json({ releases: result });
 }
+

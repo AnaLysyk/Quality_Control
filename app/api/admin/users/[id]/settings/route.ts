@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/lib/i18n";
@@ -61,12 +61,12 @@ async function saveSettings(userId: string, next: Omit<StoredSettings, "user_id"
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(_req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
 
   const { id } = await params;
   if (!id) {
-    return NextResponse.json({ error: "ID do usuário inválido" }, { status: 400 });
+    return NextResponse.json({ error: "ID do usuÃ¡rio invÃ¡lido" }, { status: 400 });
   }
 
   const stored = await fetchSettings(id);
@@ -76,12 +76,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
 
   const { id } = await params;
   if (!id) {
-    return NextResponse.json({ error: "ID do usuário inválido" }, { status: 400 });
+    return NextResponse.json({ error: "ID do usuÃ¡rio invÃ¡lido" }, { status: 400 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -89,10 +89,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const rawLanguage = body?.language ? String(body.language) : null;
 
   if (rawTheme && !isValidTheme(rawTheme)) {
-    return NextResponse.json({ error: "Tema inválido" }, { status: 400 });
+    return NextResponse.json({ error: "Tema invÃ¡lido" }, { status: 400 });
   }
   if (rawLanguage && !isValidLanguage(rawLanguage)) {
-    return NextResponse.json({ error: "Idioma inválido" }, { status: 400 });
+    return NextResponse.json({ error: "Idioma invÃ¡lido" }, { status: 400 });
   }
 
   const normalized = normalizeSettings({
@@ -103,3 +103,4 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const saved = await saveSettings(id, normalized);
   return NextResponse.json({ settings: normalizeSettings(saved) }, { status: 200 });
 }
+

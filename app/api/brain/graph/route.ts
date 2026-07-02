@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getSubgraph, searchNodes } from "@/lib/brain";
 import { filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
@@ -123,3 +123,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Erro ao buscar grafo" }, { status: 500 });
   }
 }
+

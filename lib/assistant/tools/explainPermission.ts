@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 import type { AuthUser } from "@/lib/jwtAuth";
@@ -33,7 +33,7 @@ function buildRoutePermissionExplanation(route: string, permissions: PermissionM
       allowed: canViewGlobal,
       requiredPermissions: ["tickets:view_all", "tickets:assign OU support:status"],
       reason: canViewGlobal
-        ? "O perfil possui visão global de tickets e ação operacional de suporte."
+        ? "O perfil possui visÃ£o global de tickets e aÃ§Ã£o operacional de suporte."
         : "Para ver o Kanban global, precisa combinar tickets:view_all com assign/status.",
     };
   }
@@ -41,7 +41,7 @@ function buildRoutePermissionExplanation(route: string, permissions: PermissionM
   if (normalizedRoute.startsWith("/admin/users/permissions")) {
     const allowed = hasPermissionAccess(permissions, "permissions", "view");
     return { 
-      label: "Gestão de permissões", 
+      label: "GestÃ£o de permissÃµes", 
       allowed, 
       requiredPermissions: ["permissions:view"],
       reason: allowed ? "O perfil possui permissions:view." : "Requer permissions:view." 
@@ -74,7 +74,7 @@ function buildRoutePermissionExplanation(route: string, permissions: PermissionM
     label: "Tela atual", 
     allowed: true, 
     requiredPermissions: [],
-    reason: "Não há regra especializada para esta rota." 
+    reason: "NÃ£o hÃ¡ regra especializada para esta rota." 
   };
 }
 
@@ -98,17 +98,17 @@ export async function toolExplainPermission(user: AuthUser, context: AssistantSc
   }
 
   const explanation = buildRoutePermissionExplanation(context.route, targetPermissions);
-  const statusEmoji = explanation.allowed ? "✅" : "🚫";
+  const statusEmoji = explanation.allowed ? "âœ…" : "ðŸš«";
   const statusText = explanation.allowed ? "Acesso Permitido" : "Acesso Negado";
 
   const replyParts = [
-    `## 🔐 Análise de Permissões`,
+    `## ðŸ” AnÃ¡lise de PermissÃµes`,
     "",
     `### ${statusEmoji} ${statusText}`,
     "",
     `| Campo | Valor |`,
     `|-------|-------|`,
-    `| **Usuário** | ${targetLabel} |`,
+    `| **UsuÃ¡rio** | ${targetLabel} |`,
     `| **Tela** | ${explanation.label} |`,
     `| **Rota** | \`${context.route}\` |`,
   ];
@@ -116,13 +116,13 @@ export async function toolExplainPermission(user: AuthUser, context: AssistantSc
   if (explanation.requiredPermissions.length > 0) {
     replyParts.push(
       "",
-      "### 📋 Permissões Necessárias:",
+      "### ðŸ“‹ PermissÃµes NecessÃ¡rias:",
       "",
       ...explanation.requiredPermissions.map((p) => {
         const hasIt = p.includes(" OU ") 
           ? "verificar manualmente" 
           : hasPermissionAccess(targetPermissions, p.split(":")[0], p.split(":")[1]);
-        const emoji = hasIt === true ? "✅" : hasIt === false ? "❌" : "🔍";
+        const emoji = hasIt === true ? "âœ…" : hasIt === false ? "âŒ" : "ðŸ”";
         return `- ${emoji} \`${p}\``;
       })
     );
@@ -130,29 +130,29 @@ export async function toolExplainPermission(user: AuthUser, context: AssistantSc
 
   replyParts.push(
     "",
-    "### 💡 Explicação:",
+    "### ðŸ’¡ ExplicaÃ§Ã£o:",
     "",
     explanation.reason,
   );
 
-  // Mostrar permissões atuais
+  // Mostrar permissÃµes atuais
   const permSummary = summarizePermissionMatrix(targetPermissions);
   if (permSummary !== "sem modulos liberados") {
     replyParts.push(
       "",
-      "### 📊 Permissões Atuais:",
+      "### ðŸ“Š PermissÃµes Atuais:",
       "",
       `\`${permSummary}\``,
     );
   }
 
-  // Sugestões
+  // SugestÃµes
   const actions: AssistantAction[] = [
-    { kind: "prompt" as const, label: "🔍 Comparar perfis", prompt: "Comparar meu acesso com outro perfil" },
+    { kind: "prompt" as const, label: "ðŸ” Comparar perfis", prompt: "Comparar meu acesso com outro perfil" },
   ];
 
   if (!explanation.allowed && isOwnProfile) {
-    actions.unshift({ kind: "prompt" as const, label: "❓ Por que não tenho acesso?", prompt: `Por que não tenho acesso a ${explanation.label}?` });
+    actions.unshift({ kind: "prompt" as const, label: "â“ Por que nÃ£o tenho acesso?", prompt: `Por que nÃ£o tenho acesso a ${explanation.label}?` });
   }
 
   actions.push(...buildPromptActions(context).slice(0, 2));
@@ -165,3 +165,4 @@ export async function toolExplainPermission(user: AuthUser, context: AssistantSc
     reply: compactMultiline(replyParts.join("\n")),
   };
 }
+

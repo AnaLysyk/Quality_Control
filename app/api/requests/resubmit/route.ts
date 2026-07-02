@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getRequestById, resubmitRequest } from "@/data/requestsStore";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -11,24 +11,24 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 export async function POST(request: Request) {
   const authUser = await authenticateRequest(request);
   if (!authUser) {
-    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
   }
 
   const body = asRecord(await request.json().catch(() => null));
   const requestId = typeof body?.requestId === "string" ? body.requestId : "";
   if (!requestId) {
-    return NextResponse.json({ message: "requestId é obrigatório" }, { status: 400 });
+    return NextResponse.json({ message: "requestId Ã© obrigatÃ³rio" }, { status: 400 });
   }
 
   const existing = await getRequestById(requestId);
   if (!existing) {
-    return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
+    return NextResponse.json({ message: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
   }
   if (existing.userId !== authUser.id) {
-    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
   }
   if (existing.status !== "NEEDS_REVISION") {
-    return NextResponse.json({ message: "Solicitação não está aguardando ajuste" }, { status: 409 });
+    return NextResponse.json({ message: "SolicitaÃ§Ã£o nÃ£o estÃ¡ aguardando ajuste" }, { status: 409 });
   }
 
   const payload: Record<string, unknown> = {};
@@ -45,3 +45,4 @@ export async function POST(request: Request) {
   const updated = await resubmitRequest(requestId, payload);
   return NextResponse.json({ item: updated });
 }
+

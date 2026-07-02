@@ -1,4 +1,4 @@
-import type { AuthCompany, AuthUser } from "@/contracts/auth";
+﻿import type { AuthCompany, AuthUser } from "@/contracts/auth";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 type UnknownRecord = Record<string, unknown>;
@@ -434,3 +434,4 @@ export function resolveCompanyAccess(input: {
     errorMessage: null,
   };
 }
+

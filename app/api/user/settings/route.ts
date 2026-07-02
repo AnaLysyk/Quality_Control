@@ -125,3 +125,4 @@ export async function PATCH(req: Request) {
   applyThemeCookies(response, settings.theme);
   return response;
 }
+

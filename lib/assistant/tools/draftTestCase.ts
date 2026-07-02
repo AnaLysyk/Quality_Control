@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
 import type { AssistantAction, AssistantScreenContext } from "../types";
@@ -17,19 +17,19 @@ function buildTestCaseTemplate() {
 
 function getTypeEmoji(type: TicketType): string {
   switch (type) {
-    case "bug": return "🐛";
-    case "melhoria": return "✨";
-    case "tarefa": return "📋";
-    default: return "📝";
+    case "bug": return "ðŸ›";
+    case "melhoria": return "âœ¨";
+    case "tarefa": return "ðŸ“‹";
+    default: return "ðŸ“";
   }
 }
 
 function getSeverityEmoji(priority: TicketPriority): string {
   switch (priority) {
-    case "high": return "🔴";
-    case "medium": return "🟠";
-    case "low": return "🟢";
-    default: return "⚪";
+    case "high": return "ðŸ”´";
+    case "medium": return "ðŸŸ ";
+    case "low": return "ðŸŸ¢";
+    default: return "âšª";
   }
 }
 
@@ -130,20 +130,20 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
       tool: "draft_test_case",
       success: true,
       summary: "aguardando dados do caso de teste",
-      actions: [{ kind: "prompt", label: "📝 Preencher modelo", prompt: buildTestCaseTemplate() }],
+      actions: [{ kind: "prompt", label: "ðŸ“ Preencher modelo", prompt: buildTestCaseTemplate() }],
       reply: compactMultiline([
-        "## 🧪 Gerador de Caso de Teste",
+        "## ðŸ§ª Gerador de Caso de Teste",
         "",
-        "⚠️ **Preciso de mais informações** antes de montar o caso de teste.",
+        "âš ï¸ **Preciso de mais informaÃ§Ãµes** antes de montar o caso de teste.",
         "",
         "Envie:",
-        "- 🐛 Um **bug** com descrição do erro",
-        "- 🎫 Um **ticket** ou código (ex: SP-000001)",
-        "- 📋 Uma **descrição do fluxo** a ser testado",
+        "- ðŸ› Um **bug** com descriÃ§Ã£o do erro",
+        "- ðŸŽ« Um **ticket** ou cÃ³digo (ex: SP-000001)",
+        "- ðŸ“‹ Uma **descriÃ§Ã£o do fluxo** a ser testado",
         "",
         "---",
         "",
-        "### 📄 Modelo sugerido:",
+        "### ðŸ“„ Modelo sugerido:",
         "",
         buildTestCaseTemplate(),
       ].join("\n")),
@@ -154,13 +154,13 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
   const sourceDescription = ticket?.description ?? message;
   const suggestedPriority: TicketPriority = ticket?.priority ?? inferTicketPriority(message);
   const structuredDraft = parseStructuredTicketDraft(sourceDescription);
-  const severity = suggestedPriority === "high" ? "Alta" : suggestedPriority === "low" ? "Baixa" : "Média";
+  const severity = suggestedPriority === "high" ? "Alta" : suggestedPriority === "low" ? "Baixa" : "MÃ©dia";
   const ticketType: TicketType = ticket?.type ?? structuredDraft?.type ?? "tarefa";
 
   const objective = structuredDraft?.impact
     ? `Validar o fluxo e confirmar que o impacto relatado foi resolvido: ${structuredDraft.impact}.`
     : ticketType === "bug"
-      ? `Validar que o erro descrito em "${sourceTitle}" não ocorre mais.`
+      ? `Validar que o erro descrito em "${sourceTitle}" nÃ£o ocorre mais.`
       : ticketType === "melhoria"
         ? `Validar a melhoria entregue em "${sourceTitle}" e o comportamento esperado.`
         : `Validar o comportamento relacionado a "${sourceTitle}".`;
@@ -174,18 +174,18 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
     return {
       tool: "draft_test_case",
       success: true,
-      summary: "pendências para gerar caso de teste",
-      actions: [{ kind: "prompt", label: "📝 Preencher modelo", prompt: buildTestCaseTemplate() }],
+      summary: "pendÃªncias para gerar caso de teste",
+      actions: [{ kind: "prompt", label: "ðŸ“ Preencher modelo", prompt: buildTestCaseTemplate() }],
       reply: compactMultiline([
-        "## 🧪 Caso de Teste — Validação",
+        "## ðŸ§ª Caso de Teste â€” ValidaÃ§Ã£o",
         "",
-        "⚠️ **Pendências encontradas:**",
+        "âš ï¸ **PendÃªncias encontradas:**",
         "",
         formatValidationIssues(validation.issues),
         "",
         "---",
         "",
-        "### 📄 Complete o modelo:",
+        "### ðŸ“„ Complete o modelo:",
         "",
         buildTestCaseTemplate(),
       ].join("\n")),
@@ -223,7 +223,7 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
     summary: validation.sourceTitle,
     actions: nextActions,
     reply: compactMultiline([
-      `## 🧪 Caso de Teste`,
+      `## ðŸ§ª Caso de Teste`,
       "",
       `### ${typeEmoji} ${validation.sourceTitle}`,
       "",
@@ -232,21 +232,21 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
       `| **Tipo** | ${typeEmoji} ${ticketType} |`,
       `| **Severidade** | ${severityEmoji} ${severity} |`,
       ticket ? `| **Ticket Base** | ${ticket.code} |` : "",
-      `| **Módulo** | ${context.screenLabel} |`,
+      `| **MÃ³dulo** | ${context.screenLabel} |`,
       "",
-      "### 🎯 Objetivo:",
+      "### ðŸŽ¯ Objetivo:",
       "",
       validation.objective,
       "",
-      "### ✅ Pré-condições:",
+      "### âœ… PrÃ©-condiÃ§Ãµes:",
       "",
-      `1. ✅ Usuário autenticado com acesso ao módulo **${context.screenLabel}**`,
-      "2. ✅ Ambiente com dados necessários carregados",
-      ticket?.companySlug ? `3. ✅ Contexto ativo da empresa **${ticket.companySlug}**` : "",
+      `1. âœ… UsuÃ¡rio autenticado com acesso ao mÃ³dulo **${context.screenLabel}**`,
+      "2. âœ… Ambiente com dados necessÃ¡rios carregados",
+      ticket?.companySlug ? `3. âœ… Contexto ativo da empresa **${ticket.companySlug}**` : "",
       "",
-      "### 📝 Passos:",
+      "### ðŸ“ Passos:",
       "",
-      `| # | Ação |`,
+      `| # | AÃ§Ã£o |`,
       `|---|------|`,
       `| 1 | Acessar \`${context.route}\` |`,
       ticketType === "bug"
@@ -256,18 +256,19 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
           : `| 2 | Executar o fluxo: ${validation.reproductionBase.slice(0, 150)}${validation.reproductionBase.length > 150 ? "..." : ""} |`,
       `| 3 | Registrar resposta visual, funcional e dados apresentados |`,
       ticketType === "bug"
-        ? `| 4 | Confirmar que o erro anterior não volta a ocorrer |`
+        ? `| 4 | Confirmar que o erro anterior nÃ£o volta a ocorrer |`
         : ticketType === "melhoria"
-          ? `| 4 | Confirmar que a melhoria está disponível e coerente |`
+          ? `| 4 | Confirmar que a melhoria estÃ¡ disponÃ­vel e coerente |`
           : `| 4 | Confirmar comportamento final esperado |`,
       "",
-      "### ✨ Resultado Esperado:",
+      "### âœ¨ Resultado Esperado:",
       "",
       `> ${validation.expectedResult}`,
       "",
       "---",
       "",
-      "💡 **Dica:** Use este caso como base e ajuste conforme necessário.",
+      "ðŸ’¡ **Dica:** Use este caso como base e ajuste conforme necessÃ¡rio.",
     ].join("\n")),
   };
 }
+

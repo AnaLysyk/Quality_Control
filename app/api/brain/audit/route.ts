@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
 import { prisma } from "@/lib/prismaClient";
@@ -98,3 +98,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Erro ao buscar auditoria do Brain" }, { status: 500 });
   }
 }
+

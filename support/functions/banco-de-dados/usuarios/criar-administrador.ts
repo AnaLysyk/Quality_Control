@@ -1,4 +1,4 @@
-import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
+﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 import { prisma } from "@/lib/prismaClient";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 
@@ -8,7 +8,7 @@ async function createAdmin() {
   const hashedPassword = hashPasswordSha256(password);
 
   try {
-    // Criar empresa se não existir
+    // Criar empresa se nÃ£o existir
     const company = await prisma.company.upsert({
       where: { slug: 'testing-company' },
       update: {},
@@ -18,7 +18,7 @@ async function createAdmin() {
       },
     });
 
-    // Criar usuário
+    // Criar usuÃ¡rio
     const user = await prisma.user.upsert({
       where: { email },
       update: {},
@@ -30,7 +30,7 @@ async function createAdmin() {
       },
     });
 
-    // Associar usuário à empresa
+    // Associar usuÃ¡rio Ã  empresa
     await prisma.userCompany.upsert({
       where: {
         user_id_company_id: {
@@ -55,3 +55,4 @@ async function createAdmin() {
 }
 
 createAdmin();
+

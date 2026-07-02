@@ -1,4 +1,4 @@
-import {
+﻿import {
   normalizeRequestProfileType,
   toRequestProfileTypeLabel,
   type RequestProfileTypeLabel,
@@ -69,3 +69,4 @@ export function parseFromMessage(message: string, email: string): Partial<Access
 
   return { email, fullName: "", name: "" };
 }
+

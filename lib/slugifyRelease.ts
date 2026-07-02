@@ -1,4 +1,4 @@
-export function slugifyRelease(value: string | null | undefined): string {
+﻿export function slugifyRelease(value: string | null | undefined): string {
   const safe = (value ?? "").toString();
   if (!safe) return "";
   return safe
@@ -9,3 +9,4 @@ export function slugifyRelease(value: string | null | undefined): string {
     .replace(/^_+|_+$/g, "")
     .replace(/_{2,}/g, "_");
 }
+

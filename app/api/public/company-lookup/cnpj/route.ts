@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { lookupCompanyByCnpj } from "@/lib/company-lookup/companyLookup";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const message =
       error instanceof Error
         ? error.message
-        : "Não foi possível consultar o CNPJ.";
+        : "NÃ£o foi possÃ­vel consultar o CNPJ.";
 
     console.error("[COMPANY LOOKUP][CNPJ]", {
       cnpj,
@@ -35,3 +35,4 @@ export async function GET(request: Request) {
     );
   }
 }
+

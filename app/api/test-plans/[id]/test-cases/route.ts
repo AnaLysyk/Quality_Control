@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
@@ -155,3 +155,4 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     total: updated.cases.length,
   });
 }
+

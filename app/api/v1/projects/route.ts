@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
 import { withCompanyValidation } from "@/lib/middleware/withCompanyValidation";
@@ -15,9 +15,9 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
-  if (!auth) return NextResponse.json({ error: { message: "Não autorizado" } }, { status: 401 });
+  if (!auth) return NextResponse.json({ error: { message: "NÃ£o autorizado" } }, { status: 401 });
   if (!isCompanyUser(auth)) {
-    return NextResponse.json({ error: { message: "Sem permissão" } }, { status: 403 });
+    return NextResponse.json({ error: { message: "Sem permissÃ£o" } }, { status: 403 });
   }
 
   const companySlug = auth.companySlug ?? null;
@@ -88,7 +88,7 @@ export const PUT = withCompanyValidation(async (user, companyId, req) => {
   };
 
   const updated = await ProjectsStore.update(id, updates);
-  if (!updated) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
+  if (!updated) return NextResponse.json({ error: "NÃ£o encontrado" }, { status: 404 });
   return NextResponse.json({ success: true, project: updated }, { status: 200 });
 });
 
@@ -100,3 +100,4 @@ export const DELETE = withCompanyValidation(async (user, companyId, req) => {
   const ok = await ProjectsStore.delete(id, companyId);
   return NextResponse.json({ success: ok }, { status: 200 });
 });
+

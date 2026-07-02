@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { type DragEvent, useMemo, useState } from "react";
 import {
@@ -276,7 +276,7 @@ export function normalizeStoredRunCaseStatus(value: unknown): RunCaseStatus | nu
   if (["FALHA", "FAIL", "FAILED", "FALHOU"].includes(normalized)) return "fail";
   if (["BLOQUEADO", "BLOCKED"].includes(normalized)) return "blocked";
   if (["EM_ANDAMENTO", "IN_PROGRESS", "RUNNING", "ACTIVE", "ANDAMENTO"].includes(normalized)) return "inProgress";
-  if (["NAO_EXECUTADO", "NÃO_EXECUTADO", "NOT_RUN", "NOT RUN", "UNTESTED", "NEW", "NOVO"].includes(normalized)) return "notRun";
+  if (["NAO_EXECUTADO", "NÃƒO_EXECUTADO", "NOT_RUN", "NOT RUN", "UNTESTED", "NEW", "NOVO"].includes(normalized)) return "notRun";
   return null;
 }
 
@@ -489,36 +489,36 @@ export function RunCasesBoard({
   return (
     <>
       {editable && showComposer ? (
-        <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+        <div className="rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
               <FiPlus className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Casos executados</p>
-              <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Adicionar ao quadro</h3>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Casos executados</p>
+              <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Adicionar ao quadro</h3>
             </div>
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">ID do caso</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">ID do caso</span>
               <input
                 type="text"
                 value={caseDraft.id}
                 onChange={(event) => handleDraftChange("id", event.target.value)}
-                className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                 placeholder="Ex.: QC-142"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Status</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Status</span>
               <select
                 aria-label="Status do caso"
                 value={caseDraft.status}
                 onChange={(event) => handleDraftChange("status", event.target.value as RunCaseStatus)}
-                className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
               >
                 {CASE_COLUMNS.map((column) => (
                   <option key={column.key} value={column.key}>
@@ -529,62 +529,62 @@ export function RunCasesBoard({
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Projeto</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Projeto</span>
               <input
                 type="text"
                 value={caseDraft.projectCode ?? ""}
                 onChange={(event) => handleDraftChange("projectCode", event.target.value)}
-                className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                 placeholder="Ex.: CID"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Responsavel</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Responsavel</span>
               <input
                 type="text"
                 value={caseDraft.responsibleName ?? ""}
                 onChange={(event) => handleDraftChange("responsibleName", event.target.value)}
-                className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                 placeholder="Herdado da run se vazio"
               />
             </label>
 
             <label className="space-y-2 md:col-span-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Titulo *</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Titulo *</span>
               <input
                 type="text"
                 value={caseDraft.title}
                 onChange={(event) => handleDraftChange("title", event.target.value)}
-                className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                 placeholder="Nome do caso executado"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Suite/Pasta</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Suite/Pasta</span>
               <input
                 type="text"
                 value={caseDraft.suiteName ?? ""}
                 onChange={(event) => handleDraftChange("suiteName", event.target.value)}
-                className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                 placeholder="Ex.: Login"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Origem</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Origem</span>
               <input
                 type="text"
                 value={caseDraft.origin ?? ""}
                 onChange={(event) => handleDraftChange("origin", event.target.value)}
-                className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                 placeholder="manual, qase, playwright"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Link de evidencia</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Link de evidencia</span>
               <div className="relative">
                 <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                   <FiLink2 className="h-4 w-4" />
@@ -593,32 +593,32 @@ export function RunCasesBoard({
                   type="url"
                   value={caseDraft.link}
                   onChange={(event) => handleDraftChange("link", event.target.value)}
-                  className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) py-3 pr-4 pl-11 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                  className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] py-3 pr-4 pl-11 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                   placeholder="https://..."
                 />
               </div>
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Defeito vinculado</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Defeito vinculado</span>
               <input
                 type="text"
                 value={caseDraft.bug ?? ""}
                 onChange={(event) => handleDraftChange("bug", event.target.value)}
-                className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                 placeholder="Ex.: BUG-123 ou link"
               />
             </label>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="text-sm text-(--tc-text-secondary,#4b5563)">
+            <div className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
               O caso entra na run como snapshot, com origem, projeto, suite, evidencias e defeitos preservados.
             </div>
             <button
               type="button"
               onClick={handleAddCase}
-              className="rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
+              className="rounded-full bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
               disabled={!caseDraft.title.trim()}
             >
               Adicionar caso
@@ -627,12 +627,12 @@ export function RunCasesBoard({
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white shadow-sm">
+      <div className="overflow-hidden rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white shadow-sm">
         <div className="flex flex-col gap-3 px-5 pt-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">{eyebrow}</p>
-            <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{title}</h3>
-            <p className="mt-2 max-w-3xl text-sm text-(--tc-text-secondary,#4b5563)">{subtitle}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">{eyebrow}</p>
+            <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{title}</h3>
+            <p className="mt-2 max-w-3xl text-sm text-[var(--tc-text-secondary,#4b5563)]">{subtitle}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">
@@ -654,7 +654,7 @@ export function RunCasesBoard({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] border-t border-(--tc-border,#dfe5f1)">
+        <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] border-t border-[var(--tc-border,#dfe5f1)]">
           {columnOrder.map((columnKey) => {
             const column = CASE_COLUMNS.find((item) => item.key === columnKey)!;
             const columnCases = groupedCases[column.key];
@@ -698,17 +698,17 @@ export function RunCasesBoard({
                   >
                     {column.label}
                   </div>
-                  <span className="text-base font-extrabold text-(--tc-text,#0b1a3c)">{columnCases.length}</span>
+                  <span className="text-base font-extrabold text-[var(--tc-text,#0b1a3c)]">{columnCases.length}</span>
                 </div>
 
                 <div className="mt-4 max-h-96 space-y-2 overflow-y-auto pr-1">
                   {columnCases.length === 0 ? (
                     <div
                       className={[
-                        "rounded-[20px] border border-dashed px-4 py-7 text-base text-(--tc-text-muted,#4b5563) transition-colors",
+                        "rounded-[20px] border border-dashed px-4 py-7 text-base text-[var(--tc-text-muted,#4b5563)] transition-colors",
                         isCardDragOver
-                          ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001)/5"
-                          : "border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc)",
+                          ? "border-[var(--tc-accent,#ef0001)] bg-[var(--tc-accent,#ef0001)]/5"
+                          : "border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)]",
                       ].join(" ")}
                     >
                       {isCardDragOver ? "Solte aqui" : emptyMessage}
@@ -735,14 +735,14 @@ export function RunCasesBoard({
                           onDragEnd={() => setDraggingCardId(null)}
                           onClick={() => editable && setEditingCase({ ...item })}
                           className={[
-                            "relative rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:border-(--tc-accent,#ef0001)/30 hover:shadow-md",
+                            "relative rounded-[22px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:border-[var(--tc-accent,#ef0001)]/30 hover:shadow-md",
                             editable ? "cursor-pointer" : "",
                             draggingCardId === item.id ? "opacity-40" : "",
                           ].join(" ")}
                         >
                           <div className="pr-20">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#4b5563)">
+                              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#4b5563)]">
                                 {item.id}
                               </p>
                               {item.fromApi || item.origin ? (
@@ -756,9 +756,9 @@ export function RunCasesBoard({
                                 </span>
                               ) : null}
                             </div>
-                            <p className="mt-2 text-base font-semibold leading-6 text-(--tc-text,#0b1a3c)">{item.title}</p>
+                            <p className="mt-2 text-base font-semibold leading-6 text-[var(--tc-text,#0b1a3c)]">{item.title}</p>
 
-                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-(--tc-text-muted,#4b5563)">
+                            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-[var(--tc-text-muted,#4b5563)]">
                               {item.responsibleName ? (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-1">
                                   <FiUser className="h-3 w-3" />
@@ -826,7 +826,7 @@ export function RunCasesBoard({
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(event) => event.stopPropagation()}
-                                className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-(--tc-accent,#ef0001)"
+                                className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-[var(--tc-accent,#ef0001)]"
                               >
                                 <FiLink2 className="h-3.5 w-3.5" />
                                 {mode === "integration" ? "Abrir evidencia/origem" : "Abrir link"}
@@ -842,7 +842,7 @@ export function RunCasesBoard({
                                   event.stopPropagation();
                                   setEditingCase({ ...item });
                                 }}
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-muted,#4b5563) transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] text-[var(--tc-text-muted,#4b5563)] transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
                                 aria-label={`Editar caso ${item.id}`}
                                 title="Editar caso"
                               >
@@ -855,7 +855,7 @@ export function RunCasesBoard({
                                     event.stopPropagation();
                                     handleRemoveCase(item.id);
                                   }}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-muted,#4b5563) transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] text-[var(--tc-text-muted,#4b5563)] transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
                                   aria-label={`Remover caso ${item.id}`}
                                   title="Remover caso"
                                 >
@@ -884,16 +884,16 @@ export function RunCasesBoard({
             if (event.target === event.currentTarget) setEditingCase(null);
           }}
         >
-          <div className="w-full max-w-3xl rounded-[28px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
-            <div className="flex items-center justify-between gap-4 border-b border-(--tc-border,#dfe5f1) px-6 py-4">
+          <div className="w-full max-w-3xl rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
+            <div className="flex items-center justify-between gap-4 border-b border-[var(--tc-border,#dfe5f1)] px-6 py-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Caso {editingCase.id}</p>
-                <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Snapshot do caso nesta run</h3>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Caso {editingCase.id}</p>
+                <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Snapshot do caso nesta run</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingCase(null)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) text-(--tc-text-muted,#4b5563) transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tc-border,#dfe5f1)] text-[var(--tc-text-muted,#4b5563)] transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
                 aria-label="Fechar detalhes"
                 title="Fechar"
               >
@@ -904,17 +904,17 @@ export function RunCasesBoard({
             <div className="max-h-[calc(100dvh-12rem)] space-y-4 overflow-y-auto px-6 py-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">ID</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">ID</span>
                   <input
                     type="text"
                     value={editingCase.id}
                     readOnly
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-slate-50 px-4 py-2.5 text-sm text-(--tc-text-muted,#6b7280)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-slate-50 px-4 py-2.5 text-sm text-[var(--tc-text-muted,#6b7280)]"
                   />
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Status</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Status</span>
                   <select
                     aria-label="Status do caso"
                     value={editingCase.status}
@@ -923,7 +923,7 @@ export function RunCasesBoard({
                         current ? applyStatusTransition(current, event.target.value as RunCaseStatus) : current,
                       )
                     }
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                   >
                     {CASE_COLUMNS.map((column) => (
                       <option key={column.key} value={column.key}>
@@ -935,75 +935,75 @@ export function RunCasesBoard({
               </div>
 
               <label className="block space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Titulo *</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Titulo *</span>
                 <input
                   type="text"
                   value={editingCase.title}
                   onChange={(event) => setEditingCase((current) => (current ? { ...current, title: event.target.value } : current))}
-                  className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                  className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                 />
               </label>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Projeto</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Projeto</span>
                   <input
                     type="text"
                     value={editingCase.projectCode ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, projectCode: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Suite</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Suite</span>
                   <input
                     type="text"
                     value={editingCase.suiteName ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, suiteName: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Responsavel</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Responsavel</span>
                   <input
                     type="text"
                     value={editingCase.responsibleName ?? ""}
                     onChange={(event) =>
                       setEditingCase((current) => (current ? { ...current, responsibleName: event.target.value } : current))
                     }
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Prioridade</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Prioridade</span>
                   <input
                     type="text"
                     value={editingCase.priority ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, priority: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Severidade</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Severidade</span>
                   <input
                     type="text"
                     value={editingCase.severity ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, severity: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Tags</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Tags</span>
                   <input
                     type="text"
                     value={(editingCase.tags ?? []).join(", ")}
                     onChange={(event) =>
                       setEditingCase((current) => (current ? { ...current, tags: tagsValue(event.target.value) } : current))
                     }
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                     placeholder="regressao, smoke"
                   />
                 </label>
@@ -1011,60 +1011,60 @@ export function RunCasesBoard({
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Descricao</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Descricao</span>
                   <textarea
                     rows={3}
                     value={editingCase.description ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, description: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
                 <label className="block space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Resultado esperado</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Resultado esperado</span>
                   <textarea
                     rows={3}
                     value={editingCase.expectedText ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, expectedText: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Pre-condicoes</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Pre-condicoes</span>
                   <textarea
                     rows={2}
                     value={editingCase.preconditions ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, preconditions: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
                 <label className="block space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Pos-condicoes</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Pos-condicoes</span>
                   <textarea
                     rows={2}
                     value={editingCase.postconditions ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, postconditions: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   />
                 </label>
               </div>
 
               <label className="block space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Passos executaveis</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Passos executaveis</span>
                 <textarea
                   rows={6}
                   value={editingCase.stepsText ?? ""}
                   onChange={(event) => setEditingCase((current) => (current ? { ...current, stepsText: event.target.value } : current))}
-                  className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a)"
+                  className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)]"
                   placeholder={"1. Acessar tela\n2. Informar dados\n3. Validar mensagem"}
                 />
               </label>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                     {mode === "integration" ? "Evidencia / link externo" : "Link de evidencia"}
                   </span>
                   <div className="relative">
@@ -1075,25 +1075,25 @@ export function RunCasesBoard({
                       type="url"
                       value={editingCase.link}
                       onChange={(event) => setEditingCase((current) => (current ? { ...current, link: event.target.value } : current))}
-                      className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) py-2.5 pr-4 pl-11 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] py-2.5 pr-4 pl-11 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                       placeholder="https://..."
                     />
                   </div>
                 </label>
 
                 <label className="block space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Defeito vinculado</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Defeito vinculado</span>
                   <input
                     type="text"
                     value={editingCase.bug ?? ""}
                     onChange={(event) => setEditingCase((current) => (current ? { ...current, bug: event.target.value } : current))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                     placeholder="Ex.: BUG-123 ou link"
                   />
                 </label>
               </div>
 
-              <div className="grid gap-3 rounded-2xl border border-(--tc-border,#dfe5f1) bg-slate-50 p-4 text-xs text-(--tc-text-muted,#4b5563) sm:grid-cols-3">
+              <div className="grid gap-3 rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-slate-50 p-4 text-xs text-[var(--tc-text-muted,#4b5563)] sm:grid-cols-3">
                 <p>
                   <strong>Status:</strong> {getStatusLabel(editingCase.status)}
                 </p>
@@ -1106,11 +1106,11 @@ export function RunCasesBoard({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-(--tc-border,#dfe5f1) px-6 py-4">
+            <div className="flex items-center justify-end gap-3 border-t border-[var(--tc-border,#dfe5f1)] px-6 py-4">
               <button
                 type="button"
                 onClick={() => setEditingCase(null)}
-                className="rounded-2xl border border-(--tc-border,#dfe5f1) px-5 py-2.5 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-slate-400"
+                className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] px-5 py-2.5 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-slate-400"
               >
                 Cancelar
               </button>
@@ -1118,7 +1118,7 @@ export function RunCasesBoard({
                 type="button"
                 onClick={handleSaveEditingCase}
                 disabled={!editingCase.title.trim()}
-                className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                className="rounded-2xl bg-[var(--tc-accent,#ef0001)] px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
               >
                 Salvar alteracoes
               </button>
@@ -1129,3 +1129,4 @@ export function RunCasesBoard({
     </>
   );
 }
+

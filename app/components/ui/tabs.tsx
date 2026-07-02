@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
@@ -14,7 +14,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex items-center rounded-[20px] border border-(--tc-border) bg-(--tc-surface-2) p-1",
+      "inline-flex items-center rounded-[20px] border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-1",
       className,
     )}
     {...props}
@@ -29,9 +29,9 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-medium text-(--tc-text-secondary) transition outline-none",
+      "inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-medium text-[var(--tc-text-secondary)] transition outline-none",
       "focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.18)]",
-      "data-[state=active]:bg-(--tc-surface) data-[state=active]:text-(--tc-text-primary) data-[state=active]:shadow-[0_10px_24px_rgba(15,23,42,0.08)]",
+      "data-[state=active]:bg-[var(--tc-surface)] data-[state=active]:text-[var(--tc-text-primary)] data-[state=active]:shadow-[0_10px_24px_rgba(15,23,42,0.08)]",
       className,
     )}
     {...props}
@@ -52,3 +52,4 @@ const TabsContent = React.forwardRef<
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import { AuthMeResponseSchema, type AuthUser, type AuthCompany } from "@/contracts/auth";
@@ -308,3 +308,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth deve ser usado dentro de AuthProvider");
   return ctx;
 }
+

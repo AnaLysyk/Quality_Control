@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -89,16 +89,16 @@ type ChatAsset = {
 };
 
 const CHAT_ASSETS: ChatAsset[] = [
-  { id: "emoji-ok", label: "Aprovado", preview: "✅", kind: "emoji", keywords: "ok aprovado feito sucesso" },
-  { id: "emoji-bug", label: "Bug", preview: "🐞", kind: "emoji", keywords: "bug defeito problema" },
-  { id: "emoji-fire", label: "Urgente", preview: "🔥", kind: "emoji", keywords: "urgente prioridade fogo" },
-  { id: "emoji-eye", label: "Estou olhando", preview: "👀", kind: "emoji", keywords: "olhando revisar conferir" },
-  { id: "emoji-thanks", label: "Valeu", preview: "🙌", kind: "emoji", keywords: "obrigado valeu thanks" },
-  { id: "gif-cat-typing", label: "Cat typing", preview: "🐱", kind: "gif", url: "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif", keywords: "gato digitando meme trabalho" },
-  { id: "gif-done", label: "Done", preview: "🏁", kind: "gif", url: "https://media.giphy.com/media/26u4lOMA8JKSnL9Uk/giphy.gif", keywords: "feito done sucesso" },
-  { id: "gif-celebration", label: "Celebration", preview: "🎉", kind: "gif", url: "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif", keywords: "celebracao sucesso aprovado" },
-  { id: "gif-thinking", label: "Thinking", preview: "🤔", kind: "gif", url: "https://media.giphy.com/media/10zxDv7Hv5RF9C/giphy.gif", keywords: "pensando analise" },
-  { id: "gif-brain", label: "Brain loading", preview: "🧠", kind: "gif", url: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif", keywords: "pensando carregando brain" },
+  { id: "emoji-ok", label: "Aprovado", preview: "âœ…", kind: "emoji", keywords: "ok aprovado feito sucesso" },
+  { id: "emoji-bug", label: "Bug", preview: "ðŸž", kind: "emoji", keywords: "bug defeito problema" },
+  { id: "emoji-fire", label: "Urgente", preview: "ðŸ”¥", kind: "emoji", keywords: "urgente prioridade fogo" },
+  { id: "emoji-eye", label: "Estou olhando", preview: "ðŸ‘€", kind: "emoji", keywords: "olhando revisar conferir" },
+  { id: "emoji-thanks", label: "Valeu", preview: "ðŸ™Œ", kind: "emoji", keywords: "obrigado valeu thanks" },
+  { id: "gif-cat-typing", label: "Cat typing", preview: "ðŸ±", kind: "gif", url: "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif", keywords: "gato digitando meme trabalho" },
+  { id: "gif-done", label: "Done", preview: "ðŸ", kind: "gif", url: "https://media.giphy.com/media/26u4lOMA8JKSnL9Uk/giphy.gif", keywords: "feito done sucesso" },
+  { id: "gif-celebration", label: "Celebration", preview: "ðŸŽ‰", kind: "gif", url: "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif", keywords: "celebracao sucesso aprovado" },
+  { id: "gif-thinking", label: "Thinking", preview: "ðŸ¤”", kind: "gif", url: "https://media.giphy.com/media/10zxDv7Hv5RF9C/giphy.gif", keywords: "pensando analise" },
+  { id: "gif-brain", label: "Brain loading", preview: "ðŸ§ ", kind: "gif", url: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif", keywords: "pensando carregando brain" },
 ];
 
 function normalizeSearch(value: string) {
@@ -175,10 +175,10 @@ function getScopeNote(roleKind: "global" | "leader_tc" | "empresa" | "usuario") 
 function Chip({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "accent" | "soft" }) {
   const className =
     tone === "accent"
-      ? "border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.08)] text-(--tc-accent)"
+      ? "border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.08)] text-[var(--tc-accent)]"
       : tone === "soft"
-        ? "border-(--tc-border) bg-(--tc-surface-2) text-(--tc-text-primary)"
-        : "border-(--tc-border) bg-(--tc-surface) text-(--tc-text-muted)";
+        ? "border-[var(--tc-border)] bg-[var(--tc-surface-2)] text-[var(--tc-text-primary)]"
+        : "border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-muted)]";
 
   return (
     <span className={`inline-flex max-w-full items-center rounded-full border px-3 py-1 text-[11px] font-semibold ${className}`}>
@@ -202,21 +202,21 @@ function ContactRow({
     <button
       type="button"
       onClick={() => onSelect(contact.id)}
-      className={`group flex w-full items-center gap-3 border-b border-(--tc-border) px-3 py-3 text-left transition last:border-b-0 ${
+      className={`group flex w-full items-center gap-3 border-b border-[var(--tc-border)] px-3 py-3 text-left transition last:border-b-0 ${
         active
           ? "bg-[linear-gradient(135deg,rgba(1,24,72,0.08),rgba(239,0,1,0.08))]"
-          : "hover:bg-(--tc-surface-2)"
+          : "hover:bg-[var(--tc-surface-2)]"
       }`}
     >
-      <UserAvatar src={contact.avatar_url} name={contact.name} size="sm" className="shrink-0" frameClassName="border border-(--tc-border)" />
+      <UserAvatar src={contact.avatar_url} name={contact.name} size="sm" className="shrink-0" frameClassName="border border-[var(--tc-border)]" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold leading-5 text-(--tc-text-primary)">{contact.name}</div>
-            <div className="truncate text-xs leading-5 text-(--tc-text-muted)">{getContactSubtitle(contact)}</div>
+            <div className="truncate text-sm font-semibold leading-5 text-[var(--tc-text-primary)]">{contact.name}</div>
+            <div className="truncate text-xs leading-5 text-[var(--tc-text-muted)]">{getContactSubtitle(contact)}</div>
           </div>
-          {recent ? <span className="rounded-full bg-[rgba(239,0,1,0.1)] px-2 py-1 text-[10px] font-bold text-(--tc-accent)">recente</span> : null}
+          {recent ? <span className="rounded-full bg-[rgba(239,0,1,0.1)] px-2 py-1 text-[10px] font-bold text-[var(--tc-accent)]">recente</span> : null}
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -225,7 +225,7 @@ function ContactRow({
         </div>
       </div>
 
-      <FiChevronRight className="shrink-0 text-(--tc-text-muted) group-hover:text-(--tc-text-primary)" size={16} />
+      <FiChevronRight className="shrink-0 text-[var(--tc-text-muted)] group-hover:text-[var(--tc-text-primary)]" size={16} />
     </button>
   );
 }
@@ -249,25 +249,25 @@ function ThreadRow({
     <button
       type="button"
       onClick={() => onSelect(summary.peerId)}
-      className={`group flex w-full items-center gap-3 border-b border-(--tc-border) px-3 py-3 text-left transition last:border-b-0 ${
+      className={`group flex w-full items-center gap-3 border-b border-[var(--tc-border)] px-3 py-3 text-left transition last:border-b-0 ${
         active
           ? "bg-[linear-gradient(135deg,rgba(1,24,72,0.08),rgba(239,0,1,0.08))]"
-          : "hover:bg-(--tc-surface-2)"
+          : "hover:bg-[var(--tc-surface-2)]"
       }`}
     >
-      <UserAvatar src={contact?.avatar_url ?? summary.peerAvatarUrl} name={contact?.name ?? summary.peerName} size="sm" className="shrink-0" frameClassName="border border-(--tc-border)" />
+      <UserAvatar src={contact?.avatar_url ?? summary.peerAvatarUrl} name={contact?.name ?? summary.peerName} size="sm" className="shrink-0" frameClassName="border border-[var(--tc-border)]" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold leading-5 text-(--tc-text-primary)">{contact?.name ?? summary.peerName}</div>
-            <div className="truncate text-xs leading-5 text-(--tc-text-muted)">{summary.messageCount} mensagem{summary.messageCount === 1 ? "" : "s"}</div>
+            <div className="truncate text-sm font-semibold leading-5 text-[var(--tc-text-primary)]">{contact?.name ?? summary.peerName}</div>
+            <div className="truncate text-xs leading-5 text-[var(--tc-text-muted)]">{summary.messageCount} mensagem{summary.messageCount === 1 ? "" : "s"}</div>
           </div>
-          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted)">{formatRelative(summary.lastMessageAt)}</span>
+          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted)]">{formatRelative(summary.lastMessageAt)}</span>
         </div>
 
-        <div className="mt-2 truncate text-xs leading-5 text-(--tc-text-muted)">
-          <span className="font-semibold text-(--tc-text-primary)">{senderLabel}:</span> {summary.lastMessage}
+        <div className="mt-2 truncate text-xs leading-5 text-[var(--tc-text-muted)]">
+          <span className="font-semibold text-[var(--tc-text-primary)]">{senderLabel}:</span> {summary.lastMessage}
         </div>
       </div>
     </button>
@@ -290,14 +290,14 @@ function AttachmentPreview({ attachment }: { attachment: ChatAttachment }) {
 
   if (isSticker) {
     return (
-      <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3 text-3xl">
+      <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-3 text-3xl">
         <span>{attachment.label}</span>
       </div>
     );
   }
 
   return (
-    <div className="mt-3 rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3 text-xs font-semibold text-(--tc-text-muted)">
+    <div className="mt-3 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-3 text-xs font-semibold text-[var(--tc-text-muted)]">
       {attachment.sourceLabel ?? "Anexo"}: {attachment.label}
     </div>
   );
@@ -317,35 +317,35 @@ function MessageBubble({
   const attachments = message.attachments ?? [];
   return (
     <div className={`flex items-end gap-3 ${mine ? "justify-end" : "justify-start"}`}>
-      {!mine ? <UserAvatar src={avatarSrc} name={avatarName} size="sm" className="shrink-0" frameClassName="border border-(--tc-border)" /> : null}
+      {!mine ? <UserAvatar src={avatarSrc} name={avatarName} size="sm" className="shrink-0" frameClassName="border border-[var(--tc-border)]" /> : null}
 
       <div
         className={`max-w-[min(42rem,84%)] rounded-[26px] border px-4 py-3 shadow-[0_12px_28px_rgba(15,23,42,0.08)] ${
           mine
             ? "border-[rgba(1,24,72,0.3)] bg-[linear-gradient(135deg,#011848_0%,#0b2b66_100%)] text-white"
-            : "border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary)"
+            : "border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-primary)]"
         }`}
       >
-        <div className={`flex items-center justify-between gap-3 text-xs font-semibold ${mine ? "text-white/74" : "text-(--tc-text-muted)"}`}>
+        <div className={`flex items-center justify-between gap-3 text-xs font-semibold ${mine ? "text-white/74" : "text-[var(--tc-text-muted)]"}`}>
           <span className="truncate">{mine ? "Voce" : message.senderName}</span>
           <span className="shrink-0">{formatClock(message.createdAt)}</span>
         </div>
-        {message.text ? <p className={`mt-2 whitespace-pre-wrap text-sm leading-6 ${mine ? "text-white" : "text-(--tc-text-primary)"}`}>{message.text}</p> : null}
+        {message.text ? <p className={`mt-2 whitespace-pre-wrap text-sm leading-6 ${mine ? "text-white" : "text-[var(--tc-text-primary)]"}`}>{message.text}</p> : null}
         {attachments.map((attachment) => <AttachmentPreview key={attachment.id ?? `${attachment.label}-${attachment.url}`} attachment={attachment} />)}
       </div>
 
-      {mine ? <UserAvatar src={avatarSrc} name={avatarName} size="sm" className="shrink-0" frameClassName="border border-(--tc-border)" /> : null}
+      {mine ? <UserAvatar src={avatarSrc} name={avatarName} size="sm" className="shrink-0" frameClassName="border border-[var(--tc-border)]" /> : null}
     </div>
   );
 }
 
 function SectionHeader({ icon, title, count, action }: { icon: ReactNode; title: string; count?: number; action?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-(--tc-border) px-4 py-3">
-      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--tc-border)] px-4 py-3">
+      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">
         {icon}
         {title}
-        {typeof count === "number" ? <span className="tracking-normal text-(--tc-text-muted)">({count})</span> : null}
+        {typeof count === "number" ? <span className="tracking-normal text-[var(--tc-text-muted)]">({count})</span> : null}
       </div>
       {action}
     </div>
@@ -354,9 +354,9 @@ function SectionHeader({ icon, title, count, action }: { icon: ReactNode; title:
 
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,var(--page-bg)_0%,var(--page-grad-2)_100%)] px-4 py-5 text-(--tc-text-primary) sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[linear-gradient(180deg,var(--page-bg)_0%,var(--page-grad-2)_100%)] px-4 py-5 text-[var(--tc-text-primary)] sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
-        <div className="h-[calc(100vh-7rem)] animate-pulse rounded-[30px] border border-(--tc-border) bg-(--tc-surface)" />
+        <div className="h-[calc(100vh-7rem)] animate-pulse rounded-[30px] border border-[var(--tc-border)] bg-[var(--tc-surface)]" />
       </div>
     </div>
   );
@@ -724,44 +724,44 @@ export default function ChatWorkspace() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,var(--page-bg)_0%,var(--tc-bg)_100%)] px-3 py-4 text-(--tc-text-primary) sm:px-5 lg:px-6">
+    <div className="min-h-screen bg-[linear-gradient(180deg,var(--page-bg)_0%,var(--tc-bg)_100%)] px-3 py-4 text-[var(--tc-text-primary)] sm:px-5 lg:px-6">
       <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
-        <header className="flex flex-col gap-4 rounded-[28px] border border-(--tc-border) bg-(--tc-surface)/95 px-4 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.07)] sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+        <header className="flex flex-col gap-4 rounded-[28px] border border-[var(--tc-border)] bg-[var(--tc-surface)]/95 px-4 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.07)] sm:px-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface-2)">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)]">
               <Image src="/images/tc.png" alt="Quality Control" width={48} height={48} className="h-10 w-10 object-contain" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-text-muted)">Chat operacional</p>
-              <h1 className="mt-1 truncate text-2xl font-black tracking-[-0.05em] text-(--tc-text-primary) sm:text-3xl">Conversas da equipe</h1>
-              <p className="mt-1 max-w-3xl text-sm leading-6 text-(--tc-text-muted)">{scopeNote}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--tc-text-muted)]">Chat operacional</p>
+              <h1 className="mt-1 truncate text-2xl font-black tracking-[-0.05em] text-[var(--tc-text-primary)] sm:text-3xl">Conversas da equipe</h1>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--tc-text-muted)]">{scopeNote}</p>
             </div>
           </div>
 
           <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[440px]">
-            <div className="rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted)">Contatos</div>
-              <div className="mt-1 text-xl font-black text-(--tc-text-primary)">{contactsLoading ? "..." : contacts.length}</div>
+            <div className="rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted)]">Contatos</div>
+              <div className="mt-1 text-xl font-black text-[var(--tc-text-primary)]">{contactsLoading ? "..." : contacts.length}</div>
             </div>
-            <div className="rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted)">Ativos</div>
-              <div className="mt-1 text-xl font-black text-(--tc-text-primary)">{activeContactsCount}</div>
+            <div className="rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted)]">Ativos</div>
+              <div className="mt-1 text-xl font-black text-[var(--tc-text-primary)]">{activeContactsCount}</div>
             </div>
             <div className="rounded-2xl border border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.08)] px-4 py-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted)">Escopo</div>
-              <div className="mt-1 truncate text-sm font-black text-(--tc-text-primary)">{scopeLabel}</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted)]">Escopo</div>
+              <div className="mt-1 truncate text-sm font-black text-[var(--tc-text-primary)]">{scopeLabel}</div>
             </div>
           </div>
         </header>
 
-        <section className="grid min-h-[calc(100vh-12.5rem)] overflow-hidden rounded-[30px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_22px_58px_rgba(15,23,42,0.09)] xl:grid-cols-[390px_minmax(0,1fr)]">
-          <aside className="flex min-h-0 flex-col border-b border-(--tc-border) bg-(--tc-surface-2) xl:border-b-0 xl:border-r">
-            <div className="border-b border-(--tc-border) p-4">
+        <section className="grid min-h-[calc(100vh-12.5rem)] overflow-hidden rounded-[30px] border border-[var(--tc-border)] bg-[var(--tc-surface)] shadow-[0_22px_58px_rgba(15,23,42,0.09)] xl:grid-cols-[390px_minmax(0,1fr)]">
+          <aside className="flex min-h-0 flex-col border-b border-[var(--tc-border)] bg-[var(--tc-surface-2)] xl:border-b-0 xl:border-r">
+            <div className="border-b border-[var(--tc-border)] p-4">
               <div className="flex items-center gap-3">
-                <UserAvatar src={activeIdentity.avatarUrl} name={activeIdentity.displayName} size="md" className="shrink-0" frameClassName="border border-(--tc-border)" />
+                <UserAvatar src={activeIdentity.avatarUrl} name={activeIdentity.displayName} size="md" className="shrink-0" frameClassName="border border-[var(--tc-border)]" />
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-semibold text-(--tc-text-primary)">{activeIdentity.displayName}</div>
-                  <div className="truncate text-xs text-(--tc-text-muted)">{activeIdentity.username ? `@${activeIdentity.username}` : activeIdentity.email ?? "Conta autenticada"}</div>
+                  <div className="truncate text-sm font-semibold text-[var(--tc-text-primary)]">{activeIdentity.displayName}</div>
+                  <div className="truncate text-xs text-[var(--tc-text-muted)]">{activeIdentity.username ? `@${activeIdentity.username}` : activeIdentity.email ?? "Conta autenticada"}</div>
                 </div>
               </div>
 
@@ -771,18 +771,18 @@ export default function ChatWorkspace() {
               </div>
             </div>
 
-            <div className="border-b border-(--tc-border) p-4">
-              <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary)">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">Buscar pessoa</span>
+            <div className="border-b border-[var(--tc-border)] p-4">
+              <label className="flex flex-col gap-2 text-sm text-[var(--tc-text-primary)]">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">Buscar pessoa</span>
                 <div className="relative">
-                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-(--tc-text-muted)" size={15} />
+                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted)]" size={15} />
                   <input
                     ref={searchInputRef}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     onKeyDown={handleSearchKeyDown}
                     placeholder="Nome, usuario, empresa ou perfil"
-                    className="w-full rounded-[18px] border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) py-3 pl-10 pr-3 text-sm text-(--tc-text-primary) outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-2 focus:ring-[rgba(239,0,1,0.12)]"
+                    className="w-full rounded-[18px] border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] py-3 pl-10 pr-3 text-sm text-[var(--tc-text-primary)] outline-none transition placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-[rgba(239,0,1,0.12)]"
                   />
                 </div>
               </label>
@@ -796,7 +796,7 @@ export default function ChatWorkspace() {
                 title="Recentes"
                 count={recentThreads.length}
                 action={
-                  <button type="button" onClick={() => void loadThreads()} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted) hover:text-(--tc-text-primary)">
+                  <button type="button" onClick={() => void loadThreads()} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-muted)] hover:text-[var(--tc-text-primary)]">
                     {threadsLoading ? "Atualizando" : "Atualizar"}
                   </button>
                 }
@@ -805,49 +805,49 @@ export default function ChatWorkspace() {
                 const contact = contactsById.get(summary.peerId) ?? null;
                 return <ThreadRow key={summary.key} summary={summary} contact={contact} active={summary.peerId === selectedPeerId} currentUserId={currentUserId} onSelect={openConversation} />;
               }) : (
-                <div className="px-4 py-5 text-sm text-(--tc-text-muted)">Ainda nao ha conversas recentes.</div>
+                <div className="px-4 py-5 text-sm text-[var(--tc-text-muted)]">Ainda nao ha conversas recentes.</div>
               )}
 
               <SectionHeader icon={<FiUsers size={14} />} title="Pessoas" count={visibleContactsCount} />
               {contactsLoading ? (
-                <div className="px-4 py-5 text-sm text-(--tc-text-muted)">Carregando contatos...</div>
+                <div className="px-4 py-5 text-sm text-[var(--tc-text-muted)]">Carregando contatos...</div>
               ) : filteredContacts.length > 0 ? filteredContacts.map((contact) => (
                 <ContactRow key={contact.id} contact={contact} active={contact.id === selectedPeerId} recent={recentContactIds.has(contact.id)} onSelect={openConversation} />
               )) : (
-                <div className="px-4 py-5 text-sm text-(--tc-text-muted)">{search.trim() ? `Nenhum usuario encontrado para "${search.trim()}".` : "Digite um nome para iniciar uma conversa."}</div>
+                <div className="px-4 py-5 text-sm text-[var(--tc-text-muted)]">{search.trim() ? `Nenhum usuario encontrado para "${search.trim()}".` : "Digite um nome para iniciar uma conversa."}</div>
               )}
             </div>
           </aside>
 
           <main className="flex min-h-0 min-w-0 flex-col bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)]">
-            <div className="flex flex-col gap-4 border-b border-(--tc-border) bg-(--tc-surface)/95 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 border-b border-[var(--tc-border)] bg-[var(--tc-surface)]/95 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
               <div className="flex min-w-0 items-center gap-4">
-                <UserAvatar src={selectedPeerAvatar} name={selectedPeerName} size="lg" className="shrink-0" frameClassName="border border-(--tc-border)" />
+                <UserAvatar src={selectedPeerAvatar} name={selectedPeerName} size="lg" className="shrink-0" frameClassName="border border-[var(--tc-border)]" />
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted)">Conversa atual</p>
-                  <h2 className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-(--tc-text-primary)">{selectedPeerName}</h2>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-(--tc-text-muted)">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">Conversa atual</p>
+                  <h2 className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-[var(--tc-text-primary)]">{selectedPeerName}</h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--tc-text-muted)]">
                     {selectedPeerHandle ? <span>{selectedPeerHandle}</span> : null}
                     {selectedPeerCompany ? <span>| {selectedPeerCompany}</span> : null}
                     {selectedThreadSummary ? <span>| {selectedThreadSummary.messageCount} mensagens</span> : null}
                   </div>
-                  <p className="mt-2 max-w-2xl truncate text-xs leading-5 text-(--tc-text-muted)">{selectedThreadPreview || "Sem mensagens nesta conversa ainda. Envie a primeira mensagem."}</p>
+                  <p className="mt-2 max-w-2xl truncate text-xs leading-5 text-[var(--tc-text-muted)]">{selectedThreadPreview || "Sem mensagens nesta conversa ainda. Envie a primeira mensagem."}</p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={clearConversation} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-sm font-semibold text-(--tc-text-primary) transition hover:border-[rgba(239,0,1,0.18)] hover:bg-(--tc-surface)">
+                <button type="button" onClick={clearConversation} className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-[rgba(239,0,1,0.18)] hover:bg-[var(--tc-surface)]">
                   <FiX size={14} /> Trocar pessoa
                 </button>
-                <button type="button" onClick={() => void loadMessages(selectedPeerId)} disabled={!selectedPeerId} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-sm font-semibold text-(--tc-text-primary) transition hover:border-[rgba(239,0,1,0.18)] hover:bg-(--tc-surface) disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" onClick={() => void loadMessages(selectedPeerId)} disabled={!selectedPeerId} className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-[rgba(239,0,1,0.18)] hover:bg-[var(--tc-surface)] disabled:cursor-not-allowed disabled:opacity-60">
                   <FiRefreshCw size={14} className={messagesLoading ? "animate-spin" : ""} /> Atualizar
                 </button>
               </div>
             </div>
 
-            <div className="border-b border-(--tc-border) bg-(--tc-surface-2) px-4 py-3 sm:px-5">
+            <div className="border-b border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-3 sm:px-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">
                   <FiZap size={14} /> Comando rapido
                 </div>
                 <div className="flex min-w-0 flex-1 gap-2">
@@ -861,9 +861,9 @@ export default function ChatWorkspace() {
                       }
                     }}
                     placeholder="Ex.: Chat, chama a Barbara e diz pra ela revisar o chamado 123"
-                    className="min-w-0 flex-1 rounded-full border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-4 py-2.5 text-sm text-(--tc-text-primary) outline-none placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-2 focus:ring-[rgba(239,0,1,0.12)]"
+                    className="min-w-0 flex-1 rounded-full border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-2.5 text-sm text-[var(--tc-text-primary)] outline-none placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-[rgba(239,0,1,0.12)]"
                   />
-                  <button type="button" onClick={() => void runAssistantCommand()} disabled={!assistantCommand.trim() || commandSending} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+                  <button type="button" onClick={() => void runAssistantCommand()} disabled={!assistantCommand.trim() || commandSending} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[var(--tc-accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
                     <FiSend size={14} /> Mandar
                   </button>
                 </div>
@@ -879,8 +879,8 @@ export default function ChatWorkspace() {
                     <div className="space-y-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div key={index} className={`flex items-end gap-3 ${index % 2 === 0 ? "justify-start" : "justify-end"}`}>
-                          <div className="h-10 w-10 animate-pulse rounded-full bg-(--tc-surface)" />
-                          <div className="h-20 w-[min(28rem,70%)] animate-pulse rounded-[26px] bg-(--tc-surface)" />
+                          <div className="h-10 w-10 animate-pulse rounded-full bg-[var(--tc-surface)]" />
+                          <div className="h-20 w-[min(28rem,70%)] animate-pulse rounded-[26px] bg-[var(--tc-surface)]" />
                         </div>
                       ))}
                     </div>
@@ -890,40 +890,40 @@ export default function ChatWorkspace() {
                     const bubbleName = isMine ? activeIdentity.displayName : selectedPeerName;
                     return <MessageBubble key={item.id} message={item} mine={isMine} avatarSrc={bubbleAvatar} avatarName={bubbleName} />;
                   }) : (
-                    <div className="flex min-h-96 flex-col items-center justify-center rounded-[26px] border border-dashed border-(--tc-border) bg-(--tc-surface) px-6 text-center">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-(--tc-border) bg-(--tc-surface-2)">
-                        <FiInbox size={24} className="text-(--tc-text-muted)" />
+                    <div className="flex min-h-96 flex-col items-center justify-center rounded-[26px] border border-dashed border-[var(--tc-border)] bg-[var(--tc-surface)] px-6 text-center">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)]">
+                        <FiInbox size={24} className="text-[var(--tc-text-muted)]" />
                       </div>
-                      <h3 className="mt-4 text-xl font-bold text-(--tc-text-primary)">Conversa pronta</h3>
-                      <p className="mt-2 max-w-md text-sm leading-6 text-(--tc-text-muted)">Escreva, envie uma figurinha ou use o comando rapido para acionar alguem pelo nome.</p>
+                      <h3 className="mt-4 text-xl font-bold text-[var(--tc-text-primary)]">Conversa pronta</h3>
+                      <p className="mt-2 max-w-md text-sm leading-6 text-[var(--tc-text-muted)]">Escreva, envie uma figurinha ou use o comando rapido para acionar alguem pelo nome.</p>
                     </div>
                   )}
                   <div ref={messagesEndRef} />
                 </div>
               ) : (
-                <div className="flex min-h-120 flex-1 flex-col items-center justify-center rounded-[26px] border border-dashed border-(--tc-border) bg-(--tc-surface) px-6 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-(--tc-border) bg-(--tc-surface-2)">
-                    <FiUsers size={24} className="text-(--tc-text-muted)" />
+                <div className="flex min-h-120 flex-1 flex-col items-center justify-center rounded-[26px] border border-dashed border-[var(--tc-border)] bg-[var(--tc-surface)] px-6 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)]">
+                    <FiUsers size={24} className="text-[var(--tc-text-muted)]" />
                   </div>
-                  <h3 className="mt-4 text-2xl font-black tracking-[-0.04em] text-(--tc-text-primary)">Escolha uma pessoa</h3>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-(--tc-text-muted)">A lista respeita o escopo do seu perfil e das empresas que voce pode acessar.</p>
+                  <h3 className="mt-4 text-2xl font-black tracking-[-0.04em] text-[var(--tc-text-primary)]">Escolha uma pessoa</h3>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--tc-text-muted)]">A lista respeita o escopo do seu perfil e das empresas que voce pode acessar.</p>
                 </div>
               )}
             </div>
 
-            <form onSubmit={sendMessage} className="border-t border-(--tc-border) bg-(--tc-surface) px-4 py-4 sm:px-5">
-              <div className="mb-3 flex flex-col gap-3 rounded-[24px] border border-(--tc-border) bg-(--tc-surface-2) p-3">
+            <form onSubmit={sendMessage} className="border-t border-[var(--tc-border)] bg-[var(--tc-surface)] px-4 py-4 sm:px-5">
+              <div className="mb-3 flex flex-col gap-3 rounded-[24px] border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted)">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">
                     <FiSmile size={14} /> Figurinhas e GIFs
                   </div>
                   <label className="relative min-w-0 sm:w-72">
-                    <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-(--tc-text-muted)" size={13} />
+                    <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted)]" size={13} />
                     <input
                       value={assetSearch}
                       onChange={(event) => setAssetSearch(event.target.value)}
                       placeholder="Buscar figurinha"
-                      className="w-full rounded-full border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) py-2 pl-9 pr-3 text-xs text-(--tc-text-primary) outline-none placeholder:text-(--tc-text-muted) focus:border-(--tc-accent)"
+                      className="w-full rounded-full border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] py-2 pl-9 pr-3 text-xs text-[var(--tc-text-primary)] outline-none placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)]"
                     />
                   </label>
                 </div>
@@ -934,25 +934,25 @@ export default function ChatWorkspace() {
                       type="button"
                       onClick={() => void sendAsset(asset)}
                       disabled={!selectedPeerId || sending}
-                      className="inline-flex min-w-24 shrink-0 items-center justify-center gap-2 rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm font-semibold text-(--tc-text-primary) transition hover:border-[rgba(239,0,1,0.24)] hover:bg-(--tc-surface-2) disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex min-w-24 shrink-0 items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-3 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-[rgba(239,0,1,0.24)] hover:bg-[var(--tc-surface-2)] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <span className="text-lg">{asset.preview}</span>
                       <span className="truncate text-xs">{asset.label}</span>
-                      {asset.kind === "gif" ? <FiImage size={12} className="text-(--tc-text-muted)" /> : null}
+                      {asset.kind === "gif" ? <FiImage size={12} className="text-[var(--tc-text-muted)]" /> : null}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="flex items-end gap-3">
-                <UserAvatar src={activeIdentity.avatarUrl} name={activeIdentity.displayName} size="md" className="hidden shrink-0 sm:block" frameClassName="border border-(--tc-border)" />
+                <UserAvatar src={activeIdentity.avatarUrl} name={activeIdentity.displayName} size="md" className="hidden shrink-0 sm:block" frameClassName="border border-[var(--tc-border)]" />
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-(--tc-text-primary)">{activeIdentity.displayName}</div>
-                      <div className="truncate text-xs text-(--tc-text-muted)">{selectedPeerId ? `Escrevendo para ${selectedPeerName}` : "Selecione uma pessoa para enviar mensagem"}</div>
+                      <div className="truncate text-sm font-semibold text-[var(--tc-text-primary)]">{activeIdentity.displayName}</div>
+                      <div className="truncate text-xs text-[var(--tc-text-muted)]">{selectedPeerId ? `Escrevendo para ${selectedPeerName}` : "Selecione uma pessoa para enviar mensagem"}</div>
                     </div>
-                    {sending ? <span className="text-xs font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted)">Enviando...</span> : null}
+                    {sending ? <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)]">Enviando...</span> : null}
                   </div>
                   <textarea
                     value={message}
@@ -966,10 +966,10 @@ export default function ChatWorkspace() {
                     placeholder={selectedPeerId ? `Escreva para ${selectedPeerName}...` : "Escolha uma pessoa para comecar"}
                     rows={2}
                     disabled={!selectedPeerId || sending}
-                    className="w-full resize-none rounded-3xl border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-4 py-4 text-sm leading-6 text-(--tc-text-primary) outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-2 focus:ring-[rgba(239,0,1,0.12)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full resize-none rounded-3xl border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-4 text-sm leading-6 text-[var(--tc-text-primary)] outline-none transition placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-[rgba(239,0,1,0.12)] disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
-                <button type="submit" disabled={!selectedPeerId || !message.trim() || sending} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="submit" disabled={!selectedPeerId || !message.trim() || sending} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[var(--tc-accent)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50">
                   <FiSend size={14} /> Enviar
                 </button>
               </div>
@@ -980,3 +980,4 @@ export default function ChatWorkspace() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-export const STATUS_COLORS = {
+﻿export const STATUS_COLORS = {
   pass: "#22c55e",
   fail: "#ef4444",
   blocked: "#facc15",
@@ -15,3 +15,4 @@ export const STATUS_LABELS: Record<StatusKey, string> = {
   notRun: "Not Run",
   total: "Total",
 };
+

@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Shared utility functions used across assistant modules.
- * Pure functions — no side-effects, no imports beyond types.
+ * Pure functions â€” no side-effects, no imports beyond types.
  */
 
 export function stripAccents(value: string) {
@@ -59,3 +59,4 @@ export function sanitizeRoute(route?: string | null) {
   const trimmed = route.trim();
   return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
 }
+

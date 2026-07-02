@@ -1,4 +1,4 @@
-import path from "node:path";
+﻿import path from "node:path";
 
 function getJsonStoreOverride() {
   return process.env.JSON_STORE_DIR?.trim();
@@ -34,3 +34,4 @@ export function getJsonStorePath(filename: string) {
 
   return path.join(/*turbopackIgnore: true*/ process.cwd(), "data", filename);
 }
+

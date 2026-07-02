@@ -1,4 +1,4 @@
-import type { AuthCompany } from "@/contracts/auth";
+﻿import type { AuthCompany } from "@/contracts/auth";
 import {
   normalizeAuthenticatedUser,
   type AuthenticatedUserLike,
@@ -124,3 +124,4 @@ export function getUserAccessContext(
     permissions: applyPermissionOverride(basePermissions, userPermissionOverride),
   };
 }
+

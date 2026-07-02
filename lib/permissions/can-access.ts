@@ -1,4 +1,4 @@
-import type { SystemPermission, SystemRouteDefinition } from "@/lib/navigation/navigation.types";
+﻿import type { SystemPermission, SystemRouteDefinition } from "@/lib/navigation/navigation.types";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import type { UserAccessContext } from "./get-user-access-context";
 
@@ -36,3 +36,4 @@ export function canAccessRoute(context: UserAccessContext | null | undefined, ro
   if (!route.requiredPermission) return true;
   return canAccess(context, route.requiredPermission);
 }
+

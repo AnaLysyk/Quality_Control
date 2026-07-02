@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { listUserRequests } from "@/data/requestsStore";
 import { countUnreadUserNotifications, createUserNotification, listUserNotifications } from "@/lib/userNotificationsStore";
@@ -40,10 +40,10 @@ async function syncPendingResetNotifications(userId: string) {
           );
     await createUserNotification(userId, {
       type: "PASSWORD_RESET_PENDING",
-      title: "Solicitação de reset enviada",
+      title: "SolicitaÃ§Ã£o de reset enviada",
       description: canAdminReviewQueue(queue)
-        ? "Aguardando análise de Admin ou Global."
-        : "Aguardando análise exclusiva do Global.",
+        ? "Aguardando anÃ¡lise de Admin ou Global."
+        : "Aguardando anÃ¡lise exclusiva do Global.",
       requestId: request.id,
       dedupeKey: `reset:user:${request.id}`,
     });
@@ -53,7 +53,7 @@ async function syncPendingResetNotifications(userId: string) {
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const url = new URL(req.url);
@@ -72,3 +72,4 @@ export async function GET(req: Request) {
   }
   return NextResponse.json({ items }, { status: 200 });
 }
+

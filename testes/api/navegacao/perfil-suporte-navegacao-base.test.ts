@@ -1,4 +1,4 @@
-import { SYSTEM_ROLES } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES } from "@/lib/auth/roles";
 import { NAV_CATALOG, type NavModuleDef } from "@/lib/navigation/navigationCatalog";
 import { buildNavigationForUser } from "@/lib/navigation/navigationPermissions";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
@@ -74,3 +74,4 @@ describe("perfil suporte - navegacao base", () => {
     expect(items).not.toContain("support-meus-chamados");
   });
 });
+

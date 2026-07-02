@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 
@@ -22,3 +22,4 @@ const Base64Studio = dynamic(() => import("./Base64Studio"), {
 export default function Base64Page() {
   return <Base64Studio />;
 }
+

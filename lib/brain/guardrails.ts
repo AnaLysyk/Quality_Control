@@ -1,4 +1,4 @@
-export type GuardrailDecision = {
+﻿export type GuardrailDecision = {
   allowed: boolean;
   guardrail: string;
   reason?: string;
@@ -35,7 +35,7 @@ export function promptInjectionGuardrail(input: string): GuardrailDecision {
       return {
         allowed: false,
         guardrail: "PromptInjectionGuardrail",
-        reason: "Entrada contém padrão de prompt injection e foi bloqueada.",
+        reason: "Entrada contÃ©m padrÃ£o de prompt injection e foi bloqueada.",
         severity: "high",
       };
     }
@@ -50,7 +50,7 @@ export function sensitiveDataGuardrail(input: string): GuardrailDecision {
       return {
         allowed: false,
         guardrail: "SensitiveDataGuardrail",
-        reason: "Comando solicita dado sensível sem fluxo autorizado.",
+        reason: "Comando solicita dado sensÃ­vel sem fluxo autorizado.",
         severity: "high",
       };
     }
@@ -64,7 +64,7 @@ export function toolUseGuardrail(toolAction: string): GuardrailDecision {
     return {
       allowed: false,
       guardrail: "ToolUseGuardrail",
-      reason: `Ação de ferramenta não permitida: ${toolAction}`,
+      reason: `AÃ§Ã£o de ferramenta nÃ£o permitida: ${toolAction}`,
       severity: "high",
     };
   }
@@ -83,7 +83,7 @@ export function scopeGuardrail(options: {
     return {
       allowed: false,
       guardrail: "ScopeGuardrail",
-      reason: `Escopo não permitido para empresa ${requested}.`,
+      reason: `Escopo nÃ£o permitido para empresa ${requested}.`,
       severity: "high",
     };
   }
@@ -99,7 +99,7 @@ export function outputValidationGuardrail(options: {
     return {
       allowed: false,
       guardrail: "OutputValidationGuardrail",
-      reason: "Sem evidência suficiente no Brain para resposta segura.",
+      reason: "Sem evidÃªncia suficiente no Brain para resposta segura.",
       severity: "medium",
     };
   }
@@ -107,7 +107,7 @@ export function outputValidationGuardrail(options: {
     return {
       allowed: false,
       guardrail: "OutputValidationGuardrail",
-      reason: "Confiança baixa para resposta conclusiva.",
+      reason: "ConfianÃ§a baixa para resposta conclusiva.",
       severity: "medium",
     };
   }
@@ -123,3 +123,4 @@ export function runAllGuardrails(input: string) {
     checks,
   };
 }
+

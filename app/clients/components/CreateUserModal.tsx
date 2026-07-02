@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -32,7 +32,7 @@ export function CreateUserModal({ open, onClose, onCreate }: Props) {
         className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl space-y-4"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Criar usuário</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Criar usuÃ¡rio</h3>
           <button type="button" className="text-sm text-gray-500" onClick={onClose}>
             Fechar
           </button>
@@ -80,10 +80,11 @@ export function CreateUserModal({ open, onClose, onCreate }: Props) {
             Cancelar
           </button>
           <button type="submit" className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
-            Criar usuário
+            Criar usuÃ¡rio
           </button>
         </div>
       </form>
     </div>
   );
 }
+

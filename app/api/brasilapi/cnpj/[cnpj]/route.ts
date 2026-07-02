@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { extractCnpjCompanyName, normalizeCnpj, type BrasilApiCnpjLookup } from "@/lib/brasilApiCnpj";
 
@@ -73,3 +73,4 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cnp
     clearTimeout(timeoutId);
   }
 }
+

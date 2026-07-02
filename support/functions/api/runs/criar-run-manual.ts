@@ -1,4 +1,4 @@
-import type { APIRequestContext } from "@playwright/test";
+﻿import type { APIRequestContext } from "@playwright/test";
 
 import { slugifyRelease as slugifyRun } from "../../../../lib/slugifyRelease";
 import { EMPRESA_CLIENTE_E2E } from "../../ui/runs/rotas-runs";
@@ -47,3 +47,4 @@ export async function criarRunManualPorApi(
     slug: payload?.slug ?? slug,
   };
 }
+

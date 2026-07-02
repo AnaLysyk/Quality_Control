@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { addPublicAccessRequestComment } from "@/lib/accessRequestsV2/service";
 
@@ -45,3 +45,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ item: result });
 }
+

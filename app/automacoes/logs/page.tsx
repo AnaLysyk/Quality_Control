@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -225,7 +225,7 @@ export default function AutomacoesLogsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 text-slate-600 dark:text-zinc-500">
             <FiTerminal className="h-4 w-4 text-red-500" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em]">Console · Logs de Automacao</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em]">Console Â· Logs de Automacao</span>
           </div>
 
           <div className="ml-2 flex items-center gap-2">
@@ -341,7 +341,7 @@ export default function AutomacoesLogsPage() {
       <div className="flex-1 min-h-0 overflow-auto bg-white font-mono text-[12px] dark:bg-[#0b1020]">
         {loading && (
           <div className="flex items-center gap-2 px-5 py-4 text-slate-600 dark:text-zinc-500">
-            <span className="animate-pulse">▍</span>
+            <span className="animate-pulse">â–</span>
             <span>Carregando logs...</span>
           </div>
         )}
@@ -369,7 +369,7 @@ export default function AutomacoesLogsPage() {
             <span>Descricao</span>
             <span>Empresa</span>
             <span>Usuario</span>
-            <span>Duração</span>
+            <span>DuraÃ§Ã£o</span>
             <span>HTTP</span>
             <span>Erro</span>
           </div>
@@ -393,7 +393,7 @@ export default function AutomacoesLogsPage() {
               >
                 <span className="w-20 shrink-0 text-slate-700 dark:text-zinc-500">{formatTimestamp(entry.payload.createdAt)}</span>
                 <span className={`shrink-0 ${isOk ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                  {isOk ? "●" : "✖"}
+                  {isOk ? "â—" : "âœ–"}
                 </span>
                 <span className={`w-40 shrink-0 truncate font-semibold ${isOk ? "text-slate-900 dark:text-zinc-200" : "text-rose-700 dark:text-rose-300"}`}>
                   {routeLabel(entry.payload.route)}
@@ -425,9 +425,9 @@ export default function AutomacoesLogsPage() {
                   <div className="mb-2 flex items-center gap-3 text-slate-700 dark:text-zinc-500">
                     <FiClock className="h-3.5 w-3.5" />
                     <span>{formatDate(entry.payload.createdAt)}</span>
-                    <span>·</span>
+                    <span>Â·</span>
                     <span>{entry.payload.route}</span>
-                    <span>·</span>
+                    <span>Â·</span>
                     <span className={isOk ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}>
                       {isOk ? "Sucesso" : "Erro"}
                     </span>
@@ -490,3 +490,4 @@ export default function AutomacoesLogsPage() {
     </div>
   );
 }
+

@@ -264,3 +264,4 @@ export async function simularAutenticacao(context: BrowserContext, options: Opco
     });
   });
 }
+

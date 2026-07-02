@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { connectNodes } from "@/lib/brain";
 import { prisma } from "@/lib/prismaClient";
@@ -7,7 +7,7 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 export async function GET(req: Request) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autorizado" : "Sem permissÃ£o" }, { status });
   }
 
   const url = new URL(req.url);
@@ -31,7 +31,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autorizado" : "Sem permissÃ£o" }, { status });
   }
 
   try {
@@ -63,3 +63,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao criar aresta" }, { status: 500 });
   }
 }
+

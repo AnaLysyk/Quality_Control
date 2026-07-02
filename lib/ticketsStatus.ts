@@ -65,3 +65,4 @@ export const LEGACY_TICKET_STATUS_MAP: Record<string, TicketStatus> = {
   done: "done",
   concluido: "done",
 };
+

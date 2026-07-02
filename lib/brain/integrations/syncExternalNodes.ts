@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { BrainAccessContext } from "@/lib/brain/access";
 import { buildJiraExternalNodes } from "@/lib/brain/integrations/jiraSource";
@@ -26,3 +26,4 @@ export async function syncExternalBrainNodes(input: {
 
   return [...qaseNodes, ...jiraNodes];
 }
+

@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 /**
- * Profile Audit Timeline — Histórico de alterações
+ * Profile Audit Timeline â€” HistÃ³rico de alteraÃ§Ãµes
  */
 
 import { useProfileContext } from "@/lib/profile/useProfileContext";
@@ -13,12 +13,12 @@ export type ProfileAuditTimelineProps = {
 };
 
 const ACTION_LABELS: Record<string, string> = {
-  create: "Criação",
-  update_profile: "Atualização de perfil",
-  update_permissions: "Alteração de permissão",
+  create: "CriaÃ§Ã£o",
+  update_profile: "AtualizaÃ§Ã£o de perfil",
+  update_permissions: "AlteraÃ§Ã£o de permissÃ£o",
   block: "Bloqueio",
   unblock: "Desbloqueio",
-  deactivate: "Desativação",
+  deactivate: "DesativaÃ§Ã£o",
   archive: "Arquivamento",
 };
 
@@ -36,7 +36,7 @@ export function ProfileAuditTimeline({
     return (
       <div className="rounded-lg border border-tc-border p-6 bg-tc-surface">
         <h3 className="text-lg font-semibold text-tc-text-primary mb-6">
-          Histórico de Alterações
+          HistÃ³rico de AlteraÃ§Ãµes
         </h3>
         <div className="flex items-center justify-center py-8">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-tc-border border-t-tc-accent" />
@@ -49,9 +49,9 @@ export function ProfileAuditTimeline({
     return (
       <div className="rounded-lg border border-tc-border p-6 bg-tc-surface">
         <h3 className="text-lg font-semibold text-tc-text-primary mb-6">
-          Histórico de Alterações
+          HistÃ³rico de AlteraÃ§Ãµes
         </h3>
-        <p className="text-sm text-tc-text-muted">Nenhuma alteração registrada.</p>
+        <p className="text-sm text-tc-text-muted">Nenhuma alteraÃ§Ã£o registrada.</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ export function ProfileAuditTimeline({
   return (
     <div className="rounded-lg border border-tc-border p-6 bg-tc-surface">
       <h3 className="text-lg font-semibold text-tc-text-primary mb-6">
-        Histórico de Alterações
+        HistÃ³rico de AlteraÃ§Ãµes
       </h3>
 
       <div className="space-y-6">
@@ -131,3 +131,4 @@ export function ProfileAuditTimeline({
     </div>
   );
 }
+

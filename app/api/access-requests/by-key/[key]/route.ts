@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import {
   getPublicAccessRequestByKey,
@@ -13,7 +13,7 @@ export async function GET(_req: Request, context: { params: Promise<{ key: strin
 
   const result = await getPublicAccessRequestByKey(key);
   if (!result) {
-    return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
+    return NextResponse.json({ message: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
   }
   const { request, comments } = result;
 
@@ -60,7 +60,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ key: stri
   }
 
   const result = await updateAccessRequestByKey(key, body);
-  if (!result) return NextResponse.json({ message: "Solicitação não encontrada" }, { status: 404 });
+  if (!result) return NextResponse.json({ message: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
   if (result === "not-adjustable" || result === "no-adjustment-fields") {
     return NextResponse.json({ message: "Esta solicitacao nao aceita correcao" }, { status: 409 });
   }
@@ -87,3 +87,4 @@ export async function PATCH(req: Request, context: { params: Promise<{ key: stri
     },
   });
 }
+

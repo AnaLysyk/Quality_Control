@@ -1,4 +1,4 @@
-import { buildBrianContextSummary } from "./contextBuilder";
+﻿import { buildBrianContextSummary } from "./contextBuilder";
 import { sanitizeBrianImpulse, validateBrianImpulseContract } from "./governance";
 import { buildBrianIdempotencyKey, createBrianDeadLetterImpulse } from "./outbox";
 import { processBrianImpulse } from "./pipeline";
@@ -226,3 +226,4 @@ export function buildBrianAnswerTrace(input: {
     createdAt: nowIso(),
   };
 }
+

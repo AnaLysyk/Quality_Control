@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 const OptionalStringSchema = z.preprocess((value) => {
   if (value == null) return undefined;
@@ -130,3 +130,4 @@ export const ClientCreateRequestSchema = z
   .strip();
 
 export type ClientCreateRequest = z.infer<typeof ClientCreateRequestSchema>;
+

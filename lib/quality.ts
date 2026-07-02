@@ -1,4 +1,4 @@
-import { getCompanyDefects as getCompanyDefectsDataset } from "@/lib/companyDefects";
+﻿import { getCompanyDefects as getCompanyDefectsDataset } from "@/lib/companyDefects";
 import { readManualReleaseStore } from "@/data/manualData";
 import { calcMTTR } from "@/lib/mttr";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt } from "@/lib/defectNormalization";
@@ -40,7 +40,7 @@ export async function getCompanyQualitySummary(slug: string, _period: string = "
     return Number.isFinite(opened) && now - opened > SLA_MS;
   }).length;
 
-  // Quality Score: usar lógica do summary (pode ser ajustado)
+  // Quality Score: usar lÃ³gica do summary (pode ser ajustado)
   let qualityScore = 100;
   if (slaOverdue > 0) qualityScore -= slaOverdue * 10;
   // Penalidade extra se MTTR medio > 48h
@@ -61,7 +61,7 @@ export async function getCompanyQualitySummary(slug: string, _period: string = "
 // Lista de defeitos flat para exportacao
 export async function getCompanyDefects(slug: string, _period: string = "30d") {
   void _period;
-  // Reutiliza a mesma lógica do summary
+  // Reutiliza a mesma lÃ³gica do summary
   // Manual + Qase
   const manualReleases = await readManualReleaseStore();
   const manualDefects = manualReleases.map((r) => {
@@ -463,3 +463,4 @@ export function buildCompanyRows(clients: ClientItem[], releases: ReleaseWithSta
     };
   });
 }
+

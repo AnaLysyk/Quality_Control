@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test";
+﻿import { defineConfig, devices } from "@playwright/test";
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -127,3 +127,4 @@ export default defineConfig({
       : []),
   ],
 });
+

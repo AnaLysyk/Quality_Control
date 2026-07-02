@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 /**
- * ProfileContent — Loader e renderer da Profile Engine
- * Responsável por: carregar contexto, validar permissões, renderizar shell
+ * ProfileContent â€” Loader e renderer da Profile Engine
+ * ResponsÃ¡vel por: carregar contexto, validar permissÃµes, renderizar shell
  */
 
 import { useEffect, useState } from "react";
@@ -41,7 +41,7 @@ export default function ProfileContent() {
           const meData = await meResponse.json();
           targetId = meData?.user?.id;
           if (!targetId) {
-            throw new Error("Não foi possível resolver usuário atual");
+            throw new Error("NÃ£o foi possÃ­vel resolver usuÃ¡rio atual");
           }
         }
 
@@ -92,7 +92,7 @@ export default function ProfileContent() {
     return (
       <div className="mx-auto max-w-2xl p-6">
         <div className="rounded-lg bg-yellow-50 p-6 text-yellow-800 border border-yellow-200">
-          Contexto de perfil não disponível
+          Contexto de perfil nÃ£o disponÃ­vel
         </div>
       </div>
     );
@@ -113,17 +113,17 @@ export default function ProfileContent() {
         tabs={
           <ProfileTabs defaultTab="overview">
             {{
-              overview: <div className="p-4">Visão geral</div>,
+              overview: <div className="p-4">VisÃ£o geral</div>,
               profile: <div className="p-4">Cadastro</div>,
               access: <div className="p-4">Acesso</div>,
               companies: <div className="p-4">Empresas</div>,
-              users: <div className="p-4">Usuários</div>,
-              applications: <div className="p-4">Aplicações</div>,
-              integrations: <div className="p-4">Integrações</div>,
-              permissions: <div className="p-4">Permissões</div>,
-              preferences: <div className="p-4">Preferências</div>,
-              security: <div className="p-4">Segurança</div>,
-              audit: <div className="p-4">Histórico</div>,
+              users: <div className="p-4">UsuÃ¡rios</div>,
+              applications: <div className="p-4">AplicaÃ§Ãµes</div>,
+              integrations: <div className="p-4">IntegraÃ§Ãµes</div>,
+              permissions: <div className="p-4">PermissÃµes</div>,
+              preferences: <div className="p-4">PreferÃªncias</div>,
+              security: <div className="p-4">SeguranÃ§a</div>,
+              audit: <div className="p-4">HistÃ³rico</div>,
             }}
           </ProfileTabs>
         }
@@ -148,3 +148,4 @@ export default function ProfileContent() {
     </div>
   );
 }
+

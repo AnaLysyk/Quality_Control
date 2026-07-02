@@ -1,4 +1,4 @@
-/** @jest-environment jsdom */
+﻿/** @jest-environment jsdom */
 
 import "@testing-library/jest-dom";
 import React from "react";
@@ -188,3 +188,4 @@ describe("RequireClient", () => {
     });
   });
 });
+

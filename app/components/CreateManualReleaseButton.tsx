@@ -746,7 +746,7 @@ export function CreateManualReleaseButton({
         data-testid="test-run-new-button"
         type="button"
         onClick={handleOpen}
-        className="rounded-2xl bg-(--tc-accent) px-4 py-2.5 text-sm font-semibold text-white shadow hover:brightness-110"
+        className="rounded-2xl bg-[var(--tc-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow hover:brightness-110"
       >
         <span data-testid="run-create">Criar run manual</span>
       </button>
@@ -762,7 +762,7 @@ export function CreateManualReleaseButton({
             }
           }}
         >
-          <div data-testid="test-run-create-modal" className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-4xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
+          <div data-testid="test-run-create-modal" className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-4xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
             <div className="bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-4 text-white sm:px-8 sm:py-5">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
@@ -813,16 +813,16 @@ export function CreateManualReleaseButton({
 
             <div className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-alt)_100%)] px-4 py-6 sm:px-6 sm:py-8">
               <div className="space-y-6">
-                  {/* ── Seletor de modo ── */}
+                  {/* -- Seletor de modo -- */}
                   {!manualOnly ? (
-                    <div className="flex items-center gap-2 rounded-full border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-1">
+                    <div className="flex items-center gap-2 rounded-full border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] p-1">
                       <button
                         type="button"
                         onClick={() => setRunMode("integration")}
                         className={`flex-1 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.22em] transition ${
                           runMode === "integration"
                             ? "bg-emerald-600 text-white shadow"
-                            : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text,#0b1a3c)"
+                            : "text-[var(--tc-text-muted,#6b7280)] hover:text-[var(--tc-text,#0b1a3c)]"
                         }`}
                       >
                         Integração
@@ -832,8 +832,8 @@ export function CreateManualReleaseButton({
                         onClick={() => setRunMode("manual")}
                         className={`flex-1 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.22em] transition ${
                           runMode === "manual"
-                            ? "bg-(--tc-accent,#ef0001) text-white shadow"
-                            : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text,#0b1a3c)"
+                            ? "bg-[var(--tc-accent,#ef0001)] text-white shadow"
+                            : "text-[var(--tc-text-muted,#6b7280)] hover:text-[var(--tc-text,#0b1a3c)]"
                         }`}
                       >
                         Manual
@@ -841,26 +841,26 @@ export function CreateManualReleaseButton({
                     </div>
                   ) : null}
 
-                  {/* ── Integração Qase / Plano de teste ── */}
+                  {/* -- Integração Qase / Plano de teste -- */}
                   {!manualOnly && runMode === "integration" && (<>
-                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                  <div className="rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-700">
                         <FiLink2 className="h-4 w-4" />
                       </span>
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-600">Integração</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Aplicação e plano de teste</h3>
+                        <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Aplicação e plano de teste</h3>
                       </div>
                     </div>
 
                     <div className="mt-5 space-y-4">
                       <label className="block space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Aplicação</span>
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Aplicação</span>
                         {applications.length > 0 ? (
                           <select
                             aria-label="Selecionar aplicação"
-                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             value={selectedApplicationId ?? ""}
                             onChange={(event) => {
                               const nextId = event.target.value;
@@ -882,7 +882,7 @@ export function CreateManualReleaseButton({
                         ) : (
                           <select
                             aria-label="Selecionar aplicação"
-                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             value={form.app}
                             onChange={(event) => setForm((current) => ({ ...current, app: event.target.value }))}
                           >
@@ -893,20 +893,20 @@ export function CreateManualReleaseButton({
                             ))}
                           </select>
                         )}
-                        <span className="text-xs text-(--tc-text-muted,#6b7280)">
+                        <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">
                           {selectedApplication?.qaseProjectCode
                             ? `Conectado ao projeto Qase ${selectedApplication.qaseProjectCode}`
                             : `${appMeta.label} sera usado como contexto desta run.`}
                         </span>
                       </label>
 
-                      <div className="space-y-3 rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4">
+                      <div className="space-y-3 rounded-[22px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] p-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
-                            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                               Plano de teste
                             </span>
-                            <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                            <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                               Selecione um plano para preencher o quadro com os casos. Sem plano, a run segue direta.
                             </p>
                           </div>
@@ -923,7 +923,7 @@ export function CreateManualReleaseButton({
                             aria-label="Selecionar plano de teste"
                             value={selectedPlanKey}
                             onChange={(event) => setSelectedPlanKey(event.target.value)}
-                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-white px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             disabled={!selectedApplicationId || plansLoading}
                           >
                             <option value="">
@@ -944,7 +944,7 @@ export function CreateManualReleaseButton({
                             type="button"
                             onClick={() => void handleApplyPlan()}
                             disabled={!selectedPlan || planActionLoading}
-                            className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) disabled:opacity-60"
+                            className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-white px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] disabled:opacity-60"
                           >
                             {planActionLoading ? "Aplicando..." : "Aplicar plano"}
                           </button>
@@ -953,7 +953,7 @@ export function CreateManualReleaseButton({
                             type="button"
                             onClick={() => setSelectedPlanKey("")}
                             disabled={!selectedPlanKey}
-                            className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-transparent px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-slate-400 hover:text-slate-900 disabled:opacity-60"
+                            className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-transparent px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-slate-400 hover:text-slate-900 disabled:opacity-60"
                           >
                             Run direta
                           </button>
@@ -962,22 +962,22 @@ export function CreateManualReleaseButton({
                     </div>
                   </div>
 
-                  {/* ── Título (auto-preenchido do plano) ── */}
-                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                  {/* -- Título (auto-preenchido do plano) -- */}
+                  <div className="rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-700">
                         <FiLayers className="h-4 w-4" />
                       </span>
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-600">Preenchido automaticamente</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Título da run</h3>
+                        <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Título da run</h3>
                       </div>
                     </div>
                     <div className="mt-5">
                       <label className="space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título da run *</span>
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Título da run *</span>
                         <input
-                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                           data-testid="test-run-title-input"
                           value={form.name}
                           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -993,16 +993,16 @@ export function CreateManualReleaseButton({
                         />
                       </label>
                     </div>
-                    <p className="mt-3 text-xs text-(--tc-text-muted,#6b7280)">
+                    <p className="mt-3 text-xs text-[var(--tc-text-muted,#6b7280)]">
                       Preenchido automaticamente a partir do plano. Você pode editar se necessário.
                     </p>
                   </div>
 
-                  {/* ── Resultados calculados do plano ── */}
+                  {/* -- Resultados calculados do plano -- */}
                   {cases.length > 0 && (
                     <div className="rounded-[28px] border border-emerald-300 bg-emerald-50 p-5 shadow-sm dark:border-emerald-800 dark:bg-emerald-950/40">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-600 dark:text-emerald-400">Calculado automaticamente</p>
-                      <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Resultados do plano</h3>
+                      <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Resultados do plano</h3>
                       <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(100px,1fr))]">
                         {([
                           { label: "Aprovado", value: caseStats.pass, dotClass: "bg-emerald-500", labelClass: "text-emerald-600 dark:text-emerald-400" },
@@ -1011,10 +1011,10 @@ export function CreateManualReleaseButton({
                           { label: "Em andamento", value: caseStats.inProgress, dotClass: "bg-blue-500", labelClass: "text-blue-600 dark:text-blue-400" },
                           { label: "N/Executado", value: caseStats.notRun, dotClass: "bg-slate-400", labelClass: "text-slate-500 dark:text-slate-400" },
                         ]).map((s) => (
-                          <div key={s.label} className="flex items-center gap-2 rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) px-3 py-2">
+                          <div key={s.label} className="flex items-center gap-2 rounded-xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] px-3 py-2">
                             <span className={`inline-block h-2.5 w-2.5 rounded-full ${s.dotClass}`} />
                             <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${s.labelClass}`}>{s.label}</span>
-                            <span className="ml-auto text-lg font-black text-(--tc-text,#0b1a3c)">{s.value}</span>
+                            <span className="ml-auto text-lg font-black text-[var(--tc-text,#0b1a3c)]">{s.value}</span>
                           </div>
                         ))}
                       </div>
@@ -1023,22 +1023,22 @@ export function CreateManualReleaseButton({
                   </>)}
 
                   {runMode === "manual" && (<>
-                  {/* ── Dados da run (obrigatório) ── */}
-                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                  {/* -- Dados da run (obrigatório) -- */}
+                  <div className="rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
                         <FiLayers className="h-4 w-4" />
                       </span>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Obrigatório</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Dados da run</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Obrigatório</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Dados da run</h3>
                       </div>
                     </div>
                     <div className="mt-5 grid gap-4 md:grid-cols-2">
                       <label className="space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título da run *</span>
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Título da run *</span>
                         <input
-                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                           data-testid="test-run-title-input"
                           value={form.name}
                           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -1054,11 +1054,11 @@ export function CreateManualReleaseButton({
                         />
                       </label>
                       <label className="block space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Aplicação</span>
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Aplicação</span>
                         {applications.length > 0 ? (
                           <select
                             aria-label="Selecionar aplicação"
-                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             value={selectedApplicationId ?? ""}
                             onChange={(event) => {
                               const nextId = event.target.value;
@@ -1078,7 +1078,7 @@ export function CreateManualReleaseButton({
                         ) : (
                           <select
                             aria-label="Selecionar aplicação"
-                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             value={form.app}
                             onChange={(event) => setForm((current) => ({ ...current, app: event.target.value }))}
                           >
@@ -1093,11 +1093,11 @@ export function CreateManualReleaseButton({
                     </div>
                   </div>
 
-                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                  <div className="rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white p-5 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Totais da execução</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Preencha os resultados</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Totais da execução</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Preencha os resultados</h3>
                       </div>
                       <button
                         type="button"
@@ -1135,7 +1135,7 @@ export function CreateManualReleaseButton({
                         { key: "blocked", label: "Bloqueado", testId: "run-stat-blocked", dotClass: "bg-amber-500", borderClass: "border-amber-500/30", labelClass: "text-amber-600" },
                         { key: "notRun", label: "Não executado", testId: "run-stat-not-run", dotClass: "bg-slate-400", borderClass: "border-slate-300", labelClass: "text-slate-500" },
                       ] as const).map((item) => (
-                        <div key={item.key} className={`rounded-2xl border-2 ${item.borderClass} bg-(--tc-surface,#f8fafc) p-4`}>
+                        <div key={item.key} className={`rounded-2xl border-2 ${item.borderClass} bg-[var(--tc-surface,#f8fafc)] p-4`}>
                           <div className={`flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] ${item.labelClass}`}>
                             <span className={`inline-block h-2.5 w-2.5 rounded-full ${item.dotClass}`} />
                             {item.label}
@@ -1145,7 +1145,7 @@ export function CreateManualReleaseButton({
                             min={0}
                             aria-label={`Total ${item.label}`}
                             data-testid={item.testId}
-                            className="mt-2 w-full rounded-xl border border-(--tc-border,#dfe5f1) bg-white px-3 py-2 text-2xl font-black text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            className="mt-2 w-full rounded-xl border border-[var(--tc-border,#dfe5f1)] bg-white px-3 py-2 text-2xl font-black text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             value={form[item.key]}
                             onChange={(event) => handleNumber(item.key, event.target.value)}
                           />
@@ -1155,11 +1155,11 @@ export function CreateManualReleaseButton({
 
                       <div className="mt-5 space-y-4">
                         <label className="block space-y-2">
-                          <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Aplicação</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Aplicação</span>
                           {applications.length > 0 ? (
                             <select
                               aria-label="Selecionar aplicação"
-                              className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                              className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                               value={selectedApplicationId ?? ""}
                               onChange={(event) => {
                                 const nextId = event.target.value;
@@ -1180,7 +1180,7 @@ export function CreateManualReleaseButton({
                           ) : (
                             <select
                               aria-label="Selecionar aplicação"
-                              className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                              className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                               value={form.app}
                               onChange={(event) => setForm((current) => ({ ...current, app: event.target.value }))}
                             >
@@ -1191,18 +1191,18 @@ export function CreateManualReleaseButton({
                               ))}
                             </select>
                           )}
-                          <span className="text-xs text-(--tc-text-muted,#6b7280)">
+                          <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">
                             {selectedApplication?.qaseProjectCode
                               ? `O plano pode puxar casos do projeto Qase ${selectedApplication.qaseProjectCode}.`
                               : `${appMeta.label} será usado como contexto desta run.`}
                           </span>
                         </label>
 
-                        <div className="space-y-3 rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) p-4">
+                        <div className="space-y-3 rounded-[22px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] p-4">
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Plano de teste</span>
-                              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Plano de teste</span>
+                              <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                                 Aplique um plano para popular o quadro com casos. Sem plano, a run segue manual direta.
                               </p>
                             </div>
@@ -1219,7 +1219,7 @@ export function CreateManualReleaseButton({
                               aria-label="Selecionar plano de teste"
                               value={selectedPlanKey}
                               onChange={(event) => setSelectedPlanKey(event.target.value)}
-                              className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                              className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-white px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                               disabled={!selectedApplicationId || plansLoading}
                             >
                               <option value="">
@@ -1240,7 +1240,7 @@ export function CreateManualReleaseButton({
                               type="button"
                               onClick={() => void handleApplyPlan()}
                               disabled={!selectedPlan || planActionLoading}
-                              className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) disabled:opacity-60"
+                              className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-white px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] disabled:opacity-60"
                             >
                               {planActionLoading ? "Aplicando..." : "Aplicar plano"}
                             </button>
@@ -1250,7 +1250,7 @@ export function CreateManualReleaseButton({
                               type="button"
                               onClick={() => setSelectedPlanKey("")}
                               disabled={!selectedPlanKey}
-                              className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-transparent px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-slate-400 hover:text-slate-900 disabled:opacity-60"
+                              className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-transparent px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-slate-400 hover:text-slate-900 disabled:opacity-60"
                             >
                               Run direta
                             </button>
@@ -1259,33 +1259,33 @@ export function CreateManualReleaseButton({
                       </div>
 
                     <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
-                      <div className="flex items-center justify-between rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3">
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Total</span>
-                        <span className="text-xl font-black text-(--tc-text,#0b1a3c)">{total}</span>
+                      <div className="flex items-center justify-between rounded-xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Total</span>
+                        <span className="text-xl font-black text-[var(--tc-text,#0b1a3c)]">{total}</span>
                       </div>
-                      <div className="flex items-center justify-between rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3">
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Pass rate</span>
-                        <span className="text-xl font-black text-(--tc-text,#0b1a3c)">{passRate}%</span>
+                      <div className="flex items-center justify-between rounded-xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Pass rate</span>
+                        <span className="text-xl font-black text-[var(--tc-text,#0b1a3c)]">{passRate}%</span>
                       </div>
-                      <div className="flex items-center justify-between rounded-xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3">
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Casos</span>
-                        <span className="text-xl font-black text-(--tc-text,#0b1a3c)">{cases.length}</span>
+                      <div className="flex items-center justify-between rounded-xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Casos</span>
+                        <span className="text-xl font-black text-[var(--tc-text,#0b1a3c)]">{cases.length}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                  <div className="rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
                         <FiTrendingUp className="h-4 w-4" />
                       </span>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Observações</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Notas da execução</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Observações</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Notas da execução</h3>
                       </div>
                     </div>
                     <textarea
-                      className="mt-5 min-h-42.5 w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                      className="mt-5 min-h-42.5 w-full rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                       rows={6}
                       value={form.observations}
                       onChange={(event) => setForm((current) => ({ ...current, observations: event.target.value }))}
@@ -1293,37 +1293,37 @@ export function CreateManualReleaseButton({
                     />
                   </div>
 
-                  <div className="rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white p-5 shadow-sm">
+                  <div className="rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
                         <FiPlus className="h-4 w-4" />
                       </span>
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Casos executados</p>
-                        <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Adicionar ao quadro</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Casos executados</p>
+                        <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Adicionar ao quadro</h3>
                       </div>
                     </div>
 
                     <div className="mt-5 grid gap-4 md:grid-cols-2">
                       <label className="space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                           ID do caso (auto)
                         </span>
                         <input
                           type="text"
                           value={caseDraft.id}
                           onChange={(event) => handleCaseDraftChange("id", event.target.value)}
-                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                           placeholder="Deixe vazio para gerar automaticamente"
                         />
                       </label>
                       <label className="space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Status</span>
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Status</span>
                         <select
                           aria-label="Status do caso"
                           value={caseDraft.status}
                           onChange={(event) => handleCaseDraftChange("status", event.target.value as CaseStatus)}
-                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                         >
                           {CASE_COLUMNS.map((column) => (
                             <option key={column.key} value={column.key}>
@@ -1333,17 +1333,17 @@ export function CreateManualReleaseButton({
                         </select>
                       </label>
                       <label className="space-y-2 md:col-span-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título *</span>
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Título *</span>
                         <input
                           type="text"
                           value={caseDraft.title}
                           onChange={(event) => handleCaseDraftChange("title", event.target.value)}
-                          className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                          className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                           placeholder="Nome do caso executado"
                         />
                       </label>
                       <label className="space-y-2 md:col-span-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                           Link opcional (URL externa)
                         </span>
                         <div className="relative">
@@ -1354,7 +1354,7 @@ export function CreateManualReleaseButton({
                             type="url"
                             value={caseDraft.link}
                             onChange={(event) => handleCaseDraftChange("link", event.target.value)}
-                            className="w-full rounded-[20px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) py-3 pr-4 pl-11 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                            className="w-full rounded-[20px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] py-3 pr-4 pl-11 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                             placeholder="https://link-externo.com/..."
                           />
                         </div>
@@ -1362,13 +1362,13 @@ export function CreateManualReleaseButton({
                     </div>
 
                     <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
-                      <div className="text-sm text-(--tc-text-secondary,#4b5563)">
+                      <div className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
                         Título obrigatório. ID gerado automaticamente se vazio.
                       </div>
                       <button
                         type="button"
                         onClick={handleAddCase}
-                        className="rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                        className="rounded-full bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white shadow transition hover:brightness-110 disabled:opacity-60"
                         disabled={!caseDraft.title.trim()}
                       >
                         Cancelar
@@ -1378,7 +1378,7 @@ export function CreateManualReleaseButton({
                         onClick={handleSubmit}
                         disabled={saving || !form.name.trim()}
                         data-testid="run-submit"
-                        className="rounded-2xl bg-(--tc-accent,#ef0001) px-6 py-3 text-base font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                        className="rounded-2xl bg-[var(--tc-accent,#ef0001)] px-6 py-3 text-base font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
                       >
                         {saving ? "Salvando..." : <span data-testid="run-save">{redirectToRun ? "Salvar e abrir" : "Salvar run"}</span>}
                       </button>
@@ -1386,11 +1386,11 @@ export function CreateManualReleaseButton({
                   </div>
                   </>)}
 
-                  <div className="overflow-hidden rounded-[28px] border border-(--tc-border,#dfe5f1) bg-white shadow-sm">
+                  <div className="overflow-hidden rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-white shadow-sm">
                 <div className="flex flex-col gap-2 px-5 pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Quadro da run</p>
-                    <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Kanban dos casos executados</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Quadro da run</p>
+                    <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Kanban dos casos executados</h3>
                   </div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700">
                     <FiCheckCircle className="h-3.5 w-3.5" />
@@ -1434,18 +1434,18 @@ export function CreateManualReleaseButton({
                           >
                             {column.label}
                           </div>
-                          <span className="text-base font-extrabold text-(--tc-text,#0b1a3c)">{columnCases.length}</span>
+                          <span className="text-base font-extrabold text-[var(--tc-text,#0b1a3c)]">{columnCases.length}</span>
                         </div>
 
                         <div className="mt-4 max-h-96 space-y-2 overflow-y-auto pr-1">
                           {columnCases.length === 0 ? (
                             <div className={[
-                              "rounded-[20px] border border-dashed px-4 py-7 text-base text-(--tc-text-muted,#4b5563) transition-colors",
+                              "rounded-[20px] border border-dashed px-4 py-7 text-base text-[var(--tc-text-muted,#4b5563)] transition-colors",
                               isCardDragOver
-                                ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001)/5"
-                                : "border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc)",
+                                ? "border-[var(--tc-accent,#ef0001)] bg-[var(--tc-accent,#ef0001)]/5"
+                                : "border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)]",
                             ].join(" ")}>
-                              {isCardDragOver ? "Solte aqui ↓" : "Nenhum caso nesta coluna."}
+                              {isCardDragOver ? "Solte aqui ?" : "Nenhum caso nesta coluna."}
                             </div>
                           ) : (
                             columnCases.map((item) => (
@@ -1456,17 +1456,17 @@ export function CreateManualReleaseButton({
                                 onDragEnd={() => setDraggingCardId(null)}
                                 onClick={() => setEditingCase({ ...item })}
                                 className={[
-                                  "relative cursor-pointer rounded-[22px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:border-(--tc-accent,#ef0001)/30 hover:shadow-md",
+                                  "relative cursor-pointer rounded-[22px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:border-[var(--tc-accent,#ef0001)]/30 hover:shadow-md",
                                   draggingCardId === item.id ? "opacity-40" : "",
                                 ].join(" ")}
                               >
                                 <div className="pr-16">
-                                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#4b5563)">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#4b5563)]">
                                     Caso {item.id}
                                   </p>
-                                  <p className="mt-2 text-base font-semibold leading-6 text-(--tc-text,#0b1a3c)">{item.title}</p>
+                                  <p className="mt-2 text-base font-semibold leading-6 text-[var(--tc-text,#0b1a3c)]">{item.title}</p>
                                   {item.description ? (
-                                    <p className="mt-1 line-clamp-2 text-xs text-(--tc-text-muted,#4b5563)">{item.description}</p>
+                                    <p className="mt-1 line-clamp-2 text-xs text-[var(--tc-text-muted,#4b5563)]">{item.description}</p>
                                   ) : null}
                                   {item.link ? (
                                     <a
@@ -1474,7 +1474,7 @@ export function CreateManualReleaseButton({
                                       target="_blank"
                                       rel="noreferrer"
                                       onClick={(e) => e.stopPropagation()}
-                                      className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-(--tc-accent,#ef0001)"
+                                      className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-[var(--tc-accent,#ef0001)]"
                                     >
                                       <FiLink2 className="h-3.5 w-3.5" />
                                       Abrir link
@@ -1485,7 +1485,7 @@ export function CreateManualReleaseButton({
                                   <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); setEditingCase({ ...item }); }}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-muted,#4b5563) transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] text-[var(--tc-text-muted,#4b5563)] transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
                                     aria-label={`Editar caso ${item.id}`}
                                     title="Editar caso"
                                   >
@@ -1494,7 +1494,7 @@ export function CreateManualReleaseButton({
                                   <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); handleRemoveCase(item.id); }}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-muted,#4b5563) transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] text-[var(--tc-text-muted,#4b5563)] transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
                                     aria-label={`Remover caso ${item.id}`}
                                     title="Remover caso"
                                   >
@@ -1513,20 +1513,20 @@ export function CreateManualReleaseButton({
             </div>
             </div>
 
-            <div className="sticky bottom-0 z-10 border-t border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff)/96 px-7 py-5 backdrop-blur sm:px-10">
+            <div className="sticky bottom-0 z-10 border-t border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)]/96 px-7 py-5 backdrop-blur sm:px-10">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-h-6 text-base">
                   {submitError ? (
                     <span className="font-medium text-rose-600">{submitError}</span>
                   ) : (
-                    <span className="text-(--tc-text-muted,#4b5563)">Você pode salvar sem casos e complementar depois.</span>
+                    <span className="text-[var(--tc-text-muted,#4b5563)]">Você pode salvar sem casos e complementar depois.</span>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-4">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="rounded-2xl border border-(--tc-border,#dfe5f1) px-6 py-3 text-base font-semibold text-(--tc-text,#0b1a3c) transition hover:border-slate-400 hover:text-slate-900"
+                    className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] px-6 py-3 text-base font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-slate-400 hover:text-slate-900"
                   >
                     Cancelar
                   </button>
@@ -1535,7 +1535,7 @@ export function CreateManualReleaseButton({
                     onClick={handleSubmit}
                     disabled={saving || !form.name.trim()}
                     data-testid="run-submit"
-                    className="rounded-2xl bg-(--tc-accent,#ef0001) px-6 py-3 text-base font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                    className="rounded-2xl bg-[var(--tc-accent,#ef0001)] px-6 py-3 text-base font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
                   >
                     {saving ? "Salvando..." : <span data-testid="run-save">{redirectToRun ? "Salvar e abrir" : "Salvar run"}</span>}
                   </button>
@@ -1547,7 +1547,7 @@ export function CreateManualReleaseButton({
         document.body,
       ) : null}
 
-      {/* ── Case editing modal ── */}
+      {/* -- Case editing modal -- */}
       {editingCase
         ? createPortal(
             <div
@@ -1556,17 +1556,17 @@ export function CreateManualReleaseButton({
               aria-modal="true"
               onClick={(e) => { if (e.target === e.currentTarget) setEditingCase(null); }}
             >
-              <div className="w-full max-w-2xl rounded-[28px] border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#fff) shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
+              <div className="w-full max-w-2xl rounded-[28px] border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#fff)] shadow-[0_40px_140px_rgba(15,23,42,0.38)]">
                 {/* Header */}
-                <div className="flex items-center justify-between gap-4 border-b border-(--tc-border,#dfe5f1) px-6 py-4">
+                <div className="flex items-center justify-between gap-4 border-b border-[var(--tc-border,#dfe5f1)] px-6 py-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Caso {editingCase.id}</p>
-                    <h3 className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">Detalhes do caso</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">Caso {editingCase.id}</p>
+                    <h3 className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Detalhes do caso</h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setEditingCase(null)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#dfe5f1) text-(--tc-text-muted,#4b5563) transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tc-border,#dfe5f1)] text-[var(--tc-text-muted,#4b5563)] transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
                     aria-label="Fechar detalhes"
                     title="Fechar"
                   >
@@ -1578,21 +1578,21 @@ export function CreateManualReleaseButton({
                 <div className="max-h-[calc(100dvh-12rem)] space-y-4 overflow-y-auto px-6 py-5">
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">ID</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">ID</span>
                       <input
                         type="text"
                         value={editingCase.id}
                         readOnly
-                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-slate-50 px-4 py-2.5 text-sm text-(--tc-text-muted,#6b7280)"
+                        className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-slate-50 px-4 py-2.5 text-sm text-[var(--tc-text-muted,#6b7280)]"
                       />
                     </label>
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Status</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Status</span>
                       <select
                         aria-label="Status do caso"
                         value={editingCase.status}
                         onChange={(e) => setEditingCase((c) => c ? applyCaseStatusTransition(c, e.target.value as CaseStatus) : c)}
-                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                       >
                         {CASE_COLUMNS.map((col) => (
                           <option key={col.key} value={col.key}>{col.label}</option>
@@ -1602,44 +1602,44 @@ export function CreateManualReleaseButton({
                   </div>
 
                   <label className="block space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Título *</span>
+                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Título *</span>
                     <input
                       type="text"
                       value={editingCase.title}
                       onChange={(e) => setEditingCase((c) => c ? { ...c, title: e.target.value } : c)}
-                      className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                     />
                   </label>
 
                   <label className="block space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Descrição</span>
+                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Descrição</span>
                     <textarea
                       rows={3}
                       value={editingCase.description}
                       onChange={(e) => setEditingCase((c) => c ? { ...c, description: e.target.value } : c)}
-                      className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                       placeholder="O que este caso válida?"
                     />
                   </label>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Pre-condicao</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Pre-condicao</span>
                       <textarea
                         rows={2}
                         value={editingCase.precondition}
                         onChange={(e) => setEditingCase((c) => c ? { ...c, precondition: e.target.value } : c)}
-                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                         placeholder="Condicoes necessarias antes da execução"
                       />
                     </label>
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Pos-condicao</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Pos-condicao</span>
                       <textarea
                         rows={2}
                         value={editingCase.postcondition}
                         onChange={(e) => setEditingCase((c) => c ? { ...c, postcondition: e.target.value } : c)}
-                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                         placeholder="Estado esperado apos a execução"
                       />
                     </label>
@@ -1647,29 +1647,29 @@ export function CreateManualReleaseButton({
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Passos</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Passos</span>
                       <textarea
                         rows={6}
                         value={editingCase.steps}
                         onChange={(e) => setEditingCase((c) => c ? { ...c, steps: e.target.value } : c)}
-                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                         placeholder={"1. Acessar a tela X\n2. Clicar em Y\n3. Preencher campo Z"}
                       />
                     </label>
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">Resultado esperado</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">Resultado esperado</span>
                       <textarea
                         rows={6}
                         value={editingCase.expected}
                         onChange={(e) => setEditingCase((c) => c ? { ...c, expected: e.target.value } : c)}
-                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-2.5 text-sm text-(--tc-text,#0f172a) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                        className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-2.5 text-sm text-[var(--tc-text,#0f172a)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
                         placeholder={"1. Sistema exibe X\n2. Mensagem Y aparece\n3. Campo Z validado"}
                       />
                     </label>
                   </div>
 
                   <label className="block space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                    <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                       {runMode === "integration" ? "Link Qase" : "Link externo (opcional)"}
                     </span>
                     <div className="relative">
@@ -1682,16 +1682,16 @@ export function CreateManualReleaseButton({
                         onChange={(e) => setEditingCase((c) => c ? { ...c, link: e.target.value } : c)}
                         readOnly={runMode === "integration" && !!editingCase.link}
                         className={[
-                          "w-full rounded-2xl border border-(--tc-border,#dfe5f1) py-2.5 pr-4 pl-11 text-sm outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20",
+                          "w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] py-2.5 pr-4 pl-11 text-sm outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20",
                           runMode === "integration" && editingCase.link
-                            ? "bg-slate-50 text-(--tc-text-muted,#6b7280)"
-                            : "bg-(--tc-surface,#f8fafc) text-(--tc-text,#0f172a)",
+                            ? "bg-slate-50 text-[var(--tc-text-muted,#6b7280)]"
+                            : "bg-[var(--tc-surface,#f8fafc)] text-[var(--tc-text,#0f172a)]",
                         ].join(" ")}
                         placeholder={runMode === "integration" ? "Link Qase gerado automaticamente" : "https://..."}
                       />
                     </div>
                     {runMode === "integration" && editingCase.link ? (
-                      <a href={editingCase.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline">
+                      <a href={editingCase.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline">
                         <FiLink2 className="h-3 w-3" />
                         Abrir no Qase
                       </a>
@@ -1700,11 +1700,11 @@ export function CreateManualReleaseButton({
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-3 border-t border-(--tc-border,#dfe5f1) px-6 py-4">
+                <div className="flex items-center justify-end gap-3 border-t border-[var(--tc-border,#dfe5f1)] px-6 py-4">
                   <button
                     type="button"
                     onClick={() => setEditingCase(null)}
-                    className="rounded-2xl border border-(--tc-border,#dfe5f1) px-5 py-2.5 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-slate-400"
+                    className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] px-5 py-2.5 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-slate-400"
                   >
                     Cancelar
                   </button>
@@ -1712,7 +1712,7 @@ export function CreateManualReleaseButton({
                     type="button"
                     onClick={handleSaveEditingCase}
                     disabled={!editingCase.title.trim()}
-                    className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                    className="rounded-2xl bg-[var(--tc-accent,#ef0001)] px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
                   >
                     Salvar alterações
                   </button>
@@ -1725,3 +1725,4 @@ export function CreateManualReleaseButton({
     </div>
   );
 }
+

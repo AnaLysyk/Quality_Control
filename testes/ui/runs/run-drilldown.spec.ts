@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { criarRunManualPorApi } from "../../../support/functions/api/runs/criar-run-manual";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 import {
@@ -34,3 +34,4 @@ test.describe("drill-down de run", () => {
     await expect(runLink).toHaveAttribute("href", `/${EMPRESA_CLIENTE_E2E.slug}/runs/${slug}`);
   });
 });
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { getConversationBrainFeedSummary, listConversationBrainSignals } from "@/lib/conversationBrainFeed";
@@ -44,3 +44,4 @@ export async function GET(req: NextRequest) {
     { headers: NO_STORE_HEADERS },
   );
 }
+

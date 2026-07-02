@@ -1,4 +1,4 @@
-import { AUTOMATION_CASES } from "@/data/automationCases";
+﻿import { AUTOMATION_CASES } from "@/data/automationCases";
 
 describe("automation cases catalog", () => {
   it("includes the new Testing Company automation coverage cases", () => {
@@ -24,3 +24,4 @@ describe("automation cases catalog", () => {
     expect(automationCases.every((item) => item.companyScope === "testing-company")).toBe(true);
   });
 });
+

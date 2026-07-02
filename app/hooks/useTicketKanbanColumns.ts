@@ -180,3 +180,4 @@ export function useTicketKanbanColumns(extraKeys: string[] = [], canManageColumn
     setColumns, // para uso avançado
   };
 }
+

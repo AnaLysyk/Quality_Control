@@ -1,4 +1,4 @@
-export const JOB_TITLE_OPTIONS = [
+﻿export const JOB_TITLE_OPTIONS = [
   "Advogado",
   "Analista Administrativo",
   "Analista Comercial",
@@ -138,3 +138,4 @@ export const JOB_TITLE_OPTIONS = [
   "UX Writer",
   "Vendedor",
 ] as const;
+

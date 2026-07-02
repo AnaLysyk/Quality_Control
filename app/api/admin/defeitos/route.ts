@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 
@@ -181,7 +181,7 @@ function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>
   const timeline = new Map<string, number>();
 
   defects.forEach((d) => {
-    const app = d.projectCode || d.tags?.[0] || "Sem aplicação";
+    const app = d.projectCode || d.tags?.[0] || "Sem aplicaÃ§Ã£o";
     byApplication.set(app, (byApplication.get(app) ?? 0) + 1);
 
     const runKey = d.run_id ? String(d.run_id) : "sem-run";
@@ -217,7 +217,7 @@ function aggregate(defects: QaseDefect[], projectCodeToSlug: Map<string, string>
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const msg = status === 401 ? "Não autenticado" : "Sem permissão";
+    const msg = status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o";
     return apiFail(req, msg, { status, code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN", extra: { error: msg } });
   }
 
@@ -275,7 +275,7 @@ export async function GET(req: NextRequest) {
 
   if (!uniqueProjects.length) {
     const error = hadRawMap && !envMap.length
-      ? "QASE_PROJECT_MAP definido, mas não foi possível interpretar. Use slug:CODE ou JSON."
+      ? "QASE_PROJECT_MAP definido, mas nÃ£o foi possÃ­vel interpretar. Use slug:CODE ou JSON."
       : "Nenhum projeto Qase configurado. Defina QASE_PROJECT_MAP ou QASE_PROJECT_CODES.";
 
     const payload = {
@@ -313,3 +313,4 @@ export async function GET(req: NextRequest) {
   const aggregated = aggregate(allDefects, projectCodeToSlug);
   return apiOk(req, aggregated, "OK", { extra: aggregated });
 }
+

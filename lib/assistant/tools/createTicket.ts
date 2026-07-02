@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { findLocalCompanyBySlug, getLocalUserById } from "@/lib/auth/localStore";
 import type { AuthUser } from "@/lib/jwtAuth";
@@ -38,8 +38,8 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
     return {
       tool: "create_ticket",
       success: false,
-      summary: "sem permissão para criar ticket",
-      reply: "Seu perfil atual não pode criar chamados. Posso ajudar a estruturar o texto, mas a criação exige permissão de tickets/support:create.",
+      summary: "sem permissÃ£o para criar ticket",
+      reply: "Seu perfil atual nÃ£o pode criar chamados. Posso ajudar a estruturar o texto, mas a criaÃ§Ã£o exige permissÃ£o de tickets/support:create.",
     };
   }
 
@@ -47,19 +47,19 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
     return {
       tool: "create_ticket",
       success: true,
-      summary: "aguardando conteúdo do chamado",
+      summary: "aguardando conteÃºdo do chamado",
       actions: [
         { kind: "prompt", label: "Usar modelo de chamado", prompt: "Montar modelo de chamado estruturado" },
         { kind: "prompt", label: "Converter nota em chamado", prompt: "Converter esta nota em chamado: " },
       ],
       reply: compactMultiline([
-        "Consigo transformar texto, nota ou relato em chamado, mas preciso do conteúdo real para estruturar.",
+        "Consigo transformar texto, nota ou relato em chamado, mas preciso do conteÃºdo real para estruturar.",
         "",
         "Envie algo como:",
         "- Converter esta nota em chamado: [cole o texto aqui]",
         "- Criar chamado com base neste relato: [cole o relato aqui]",
         "",
-        "Quando você mandar o conteúdo, eu preparo título, descrição, tipo e prioridade antes de criar.",
+        "Quando vocÃª mandar o conteÃºdo, eu preparo tÃ­tulo, descriÃ§Ã£o, tipo e prioridade antes de criar.",
       ].join("\n")),
     };
   }
@@ -88,12 +88,12 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
           },
         ],
         reply: compactMultiline([
-          "Identifiquei um modelo estruturado de chamado, mas ele ainda não passou nas validações do módulo.",
+          "Identifiquei um modelo estruturado de chamado, mas ele ainda nÃ£o passou nas validaÃ§Ãµes do mÃ³dulo.",
           "",
-          "Pendências encontradas:",
+          "PendÃªncias encontradas:",
           formatValidationIssues([
-            !structuredDraft.title ? "Campo Título obrigatório." : "",
-            !structuredDraft.description ? "Campo Descrição obrigatório." : "",
+            !structuredDraft.title ? "Campo TÃ­tulo obrigatÃ³rio." : "",
+            !structuredDraft.description ? "Campo DescriÃ§Ã£o obrigatÃ³rio." : "",
           ].filter(Boolean)),
           "",
           buildStructuredTicketTemplate(),
@@ -111,12 +111,12 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
       return {
         tool: "create_ticket",
         success: true,
-        summary: "pendências para criar chamado",
+        summary: "pendÃªncias para criar chamado",
         actions: [{ kind: "prompt", label: "Completar modelo", prompt: buildStructuredTicketTemplate() }],
         reply: compactMultiline([
-          "Identifiquei o modelo estruturado, mas ele ainda não passou nas validações do módulo de suporte.",
+          "Identifiquei o modelo estruturado, mas ele ainda nÃ£o passou nas validaÃ§Ãµes do mÃ³dulo de suporte.",
           "",
-          "Pendências encontradas:",
+          "PendÃªncias encontradas:",
           formatValidationIssues(validation.issues),
           "",
           buildStructuredTicketTemplate(),
@@ -145,13 +145,13 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
       reply: compactMultiline([
         "Preparei um chamado estruturado a partir dos campos informados.",
         "",
-        `Título: ${validation.title}`,
+        `TÃ­tulo: ${validation.title}`,
         `Tipo: ${validation.type}`,
         `Prioridade: ${validation.priority}`,
         "",
         validation.description,
         "",
-        "Se estiver ok, execute a ação abaixo para criar no sistema.",
+        "Se estiver ok, execute a aÃ§Ã£o abaixo para criar no sistema.",
       ].join("\n")),
     };
   }
@@ -161,15 +161,15 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
     return {
       tool: "create_ticket",
       success: true,
-      summary: "aguardando conteúdo do chamado",
+      summary: "aguardando conteÃºdo do chamado",
       actions: [
         { kind: "prompt", label: "Usar modelo de chamado", prompt: "Montar modelo de chamado estruturado" },
         { kind: "prompt", label: "Converter nota em chamado", prompt: "Converter esta nota em chamado: " },
       ],
       reply: compactMultiline([
-        "Antes de criar o chamado, preciso validar os dados do módulo de suporte.",
+        "Antes de criar o chamado, preciso validar os dados do mÃ³dulo de suporte.",
         "",
-        "O texto enviado ainda está genérico demais para passar nas validações.",
+        "O texto enviado ainda estÃ¡ genÃ©rico demais para passar nas validaÃ§Ãµes.",
         "",
         buildStructuredTicketTemplate(),
       ].join("\n")),
@@ -212,15 +212,15 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
     return {
       tool: "create_ticket",
       success: true,
-      summary: "pendências para criar chamado",
+      summary: "pendÃªncias para criar chamado",
       actions: [
         { kind: "prompt", label: "Usar modelo de chamado", prompt: "Montar modelo de chamado estruturado" },
         { kind: "prompt", label: "Converter nota em chamado", prompt: "Converter esta nota em chamado: " },
       ],
       reply: compactMultiline([
-        "Antes de criar o chamado, preciso passar pelas validações do módulo de suporte.",
+        "Antes de criar o chamado, preciso passar pelas validaÃ§Ãµes do mÃ³dulo de suporte.",
         "",
-        "Pendências encontradas:",
+        "PendÃªncias encontradas:",
         formatValidationIssues(validation.issues),
         "",
         buildStructuredTicketTemplate(),
@@ -247,15 +247,15 @@ export async function buildTicketCreationAction(user: AuthUser, context: Assista
       },
     ],
     reply: compactMultiline([
-      "Preparei um rascunho de chamado e ele passou nas validações do módulo de suporte.",
+      "Preparei um rascunho de chamado e ele passou nas validaÃ§Ãµes do mÃ³dulo de suporte.",
       "",
-      `Título: ${validation.title}`,
+      `TÃ­tulo: ${validation.title}`,
       `Tipo: ${validation.type}`,
       `Prioridade: ${validation.priority}`,
       "",
       validation.description,
       "",
-      "Se estiver ok, execute a ação abaixo para criar no sistema.",
+      "Se estiver ok, execute a aÃ§Ã£o abaixo para criar no sistema.",
     ].join("\n")),
   };
 }
@@ -265,7 +265,7 @@ export async function executeCreateTicket(user: AuthUser, context: AssistantScre
     !hasPermissionAccess(user.permissions, "tickets", "create") &&
     !hasPermissionAccess(user.permissions, "support", "create")
   ) {
-    return { tool: "create_ticket", success: false, summary: "criação bloqueada", reply: "Seu perfil atual não pode criar chamados." };
+    return { tool: "create_ticket", success: false, summary: "criaÃ§Ã£o bloqueada", reply: "Seu perfil atual nÃ£o pode criar chamados." };
   }
 
   const validation = validateAssistantTicketDraft({
@@ -279,9 +279,9 @@ export async function executeCreateTicket(user: AuthUser, context: AssistantScre
     return {
       tool: "create_ticket",
       success: false,
-      summary: "validação do chamado falhou",
+      summary: "validaÃ§Ã£o do chamado falhou",
       reply: compactMultiline([
-        "Não executei a criação porque o chamado não passou nas validações do módulo de suporte.",
+        "NÃ£o executei a criaÃ§Ã£o porque o chamado nÃ£o passou nas validaÃ§Ãµes do mÃ³dulo de suporte.",
         "",
         formatValidationIssues(validation.issues),
       ].join("\n")),
@@ -305,7 +305,7 @@ export async function executeCreateTicket(user: AuthUser, context: AssistantScre
   });
 
   if (!ticket) {
-    return { tool: "create_ticket", success: false, summary: "falha ao criar", reply: "Não consegui criar o chamado. Verifique se título ou descrição ficaram vazios." };
+    return { tool: "create_ticket", success: false, summary: "falha ao criar", reply: "NÃ£o consegui criar o chamado. Verifique se tÃ­tulo ou descriÃ§Ã£o ficaram vazios." };
   }
 
   appendTicketEvent({ ticketId: ticket.id, type: "CREATED", actorUserId: user.id, payload: { source: "assistant", route: context.route } }).catch(() => null);
@@ -323,3 +323,4 @@ export async function executeCreateTicket(user: AuthUser, context: AssistantScre
     reply: compactMultiline(["Chamado criado com sucesso.", "", formatTicketCard(enriched)].join("\n")),
   };
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -114,7 +114,7 @@ function numberToneClasses(tone: Tone) {
 }
 
 function sourceLabel(sourceType: RunSourceType) {
-  return sourceType === "manual" ? "Manual" : "Integração";
+  return sourceType === "manual" ? "Manual" : "IntegraÃ§Ã£o";
 }
 
 function providerLabel(provider: RunIntegrationProvider) {
@@ -161,7 +161,7 @@ function buildAttentionItems(companySlug: string, run: HomeRunItem | null): Atte
     items.push({
       id: "not-run",
       title: "Cobertura incompleta",
-      detail: `${pluralize(run.stats.notRun, "caso")} ainda não foi executado nesta run.`,
+      detail: `${pluralize(run.stats.notRun, "caso")} ainda nÃ£o foi executado nesta run.`,
       tone: "warning",
       href: run.href,
     });
@@ -170,8 +170,8 @@ function buildAttentionItems(companySlug: string, run: HomeRunItem | null): Atte
   if (!run.isCompleted && isOlderThanDays(run.updatedAt ?? run.createdAt, 3)) {
     items.push({
       id: "stale",
-      title: "Execução sem atualização recente",
-      detail: "A run segue aberta há mais de 3 dias sem nova movimentação registrada.",
+      title: "ExecuÃ§Ã£o sem atualizaÃ§Ã£o recente",
+      detail: "A run segue aberta hÃ¡ mais de 3 dias sem nova movimentaÃ§Ã£o registrada.",
       tone: "warning",
       href: run.href,
     });
@@ -181,7 +181,7 @@ function buildAttentionItems(companySlug: string, run: HomeRunItem | null): Atte
     items.push({
       id: "integration",
       title: "Origem integrada confirmada",
-      detail: `Esta run veio da integração ${providerLabel(run.integrationProvider)} e reaproveita a tela oficial já existente.`,
+      detail: `Esta run veio da integraÃ§Ã£o ${providerLabel(run.integrationProvider)} e reaproveita a tela oficial jÃ¡ existente.`,
       tone: "positive",
       href: run.href,
     });
@@ -191,7 +191,7 @@ function buildAttentionItems(companySlug: string, run: HomeRunItem | null): Atte
     items.push({
       id: "clear",
       title: "Sem alertas imediatos",
-      detail: "A run selecionada não expõe sinais críticos de risco neste resumo rápido.",
+      detail: "A run selecionada nÃ£o expÃµe sinais crÃ­ticos de risco neste resumo rÃ¡pido.",
       tone: "positive",
       href: run.href,
     });
@@ -218,7 +218,7 @@ function buildRunEvents(run: HomeRunItem | null): RunEvent[] {
   if (run.updatedAt && run.updatedAt !== run.createdAt) {
     events.push({
       id: "updated",
-      title: "Última atualização",
+      title: "Ãšltima atualizaÃ§Ã£o",
       detail: `A run recebeu atualizacao ${formatRelative(run.updatedAt)}.`,
       tone: run.isCompleted ? "positive" : "warning",
       at: toTimestamp(run.updatedAt),
@@ -230,8 +230,8 @@ function buildRunEvents(run: HomeRunItem | null): RunEvent[] {
     title: run.sourceType === "manual" ? "Origem manual" : "Origem integrada",
     detail:
       run.sourceType === "manual"
-        ? "Execução criada manualmente no painel da empresa."
-        : `Run sincronizada via ${providerLabel(run.integrationProvider) ?? "integração"}.`,
+        ? "ExecuÃ§Ã£o criada manualmente no painel da empresa."
+        : `Run sincronizada via ${providerLabel(run.integrationProvider) ?? "integraÃ§Ã£o"}.`,
     tone: run.sourceType === "manual" ? "neutral" : "positive",
     at: toTimestamp(run.updatedAt ?? run.createdAt),
   });
@@ -343,11 +343,11 @@ async function resolveLiveStats(run: HomeRunItem, companySlug: string): Promise<
 function SectionHeader(props: { eyebrow: string; title: string; description: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-(--tc-accent,#ef0001)">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[var(--tc-accent,#ef0001)]">
         {props.eyebrow}
       </p>
-      <h2 className="text-xl font-extrabold text-(--tc-text,#0b1a3c)">{props.title}</h2>
-      <p className="text-sm text-(--tc-text-secondary,#4b5563)">{props.description}</p>
+      <h2 className="text-xl font-extrabold text-[var(--tc-text,#0b1a3c)]">{props.title}</h2>
+      <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">{props.description}</p>
     </div>
   );
 }
@@ -355,23 +355,23 @@ function SectionHeader(props: { eyebrow: string; title: string; description: str
 function HeroMetric(props: { label: string; value: string; note: string; tone: Tone }) {
   return (
     <div className="rounded-3xl border border-white/60 bg-white/70 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
         {props.label}
       </p>
       <div className={`mt-3 text-3xl font-extrabold ${numberToneClasses(props.tone)}`}>{props.value}</div>
-      <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{props.note}</p>
+      <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{props.note}</p>
     </div>
   );
 }
 
 function SummaryValue(props: { label: string; value: string; note: string }) {
   return (
-    <div className="rounded-[22px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+    <div className="rounded-[22px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-sm">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
         {props.label}
       </div>
-      <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{props.value}</div>
-      <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{props.note}</div>
+      <div className="mt-3 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{props.value}</div>
+      <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{props.note}</div>
     </div>
   );
 }
@@ -483,7 +483,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
   return (
     <div className="relative isolate flex w-full max-w-none flex-col gap-6 py-6 text-(--page-text,#0b1a3c)">
         {!isMetricsView ? (
-          <section className="overflow-hidden rounded-[36px] border border-(--tc-border,#dfe5f1) bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] p-6 text-white shadow-[0_32px_80px_rgba(15,23,42,0.18)] sm:p-8">
+          <section className="overflow-hidden rounded-[36px] border border-[var(--tc-border,#dfe5f1)] bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] p-6 text-white shadow-[0_32px_80px_rgba(15,23,42,0.18)] sm:p-8">
           <div className="flex flex-col gap-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
@@ -493,7 +493,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                 <div className="max-w-3xl">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/80">
-                      {isMetricsView ? "Métricas operacionais" : "Dashboard de runs"}
+                      {isMetricsView ? "MÃ©tricas operacionais" : "Dashboard de runs"}
                     </span>
                     <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${toneClasses(companyStatus.tone)}`}>
                       {companyStatus.title}
@@ -519,7 +519,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                     className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
                   >
                     <FiArrowLeft className="h-4 w-4" />
-                    Voltar às empresas
+                    Voltar Ã s empresas
                   </Link>
                 ) : null}
                 <button
@@ -532,20 +532,20 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                           agentMode: "debug",
                           panelMode: "side",
                           initialMessage: isMetricsView
-                            ? `Analise as métricas operacionais da empresa ${companyName}: runs, defeitos, tendências e pontos de atenção.`
-                            : `Analise as runs da empresa ${companyName}: execuções recentes, falhas e próximas ações.`,
+                            ? `Analise as mÃ©tricas operacionais da empresa ${companyName}: runs, defeitos, tendÃªncias e pontos de atenÃ§Ã£o.`
+                            : `Analise as runs da empresa ${companyName}: execuÃ§Ãµes recentes, falhas e prÃ³ximas aÃ§Ãµes.`,
                         },
                       }));
                     }
                   }}
                   className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
                 >
-                  🧠 Perguntar IA
+                  ðŸ§  Perguntar IA
                 </button>
                 <CreateManualReleaseButton companySlug={companySlug} redirectToRun={false} />
                 <Link
                   href="../runs"
-                  className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) shadow-sm transition hover:bg-slate-100"
+                  className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] shadow-sm transition hover:bg-slate-100"
                 >
                   {isMetricsView ? "Abrir runs" : "Ver lista completa"}
                 </Link>
@@ -554,38 +554,38 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
               <HeroMetric label="Runs totais" value={String(heroStats.total)} note="Base consolidada da empresa." tone="neutral" />
-              <HeroMetric label="Em andamento" value={String(heroStats.inProgress)} note="Runs ainda abertas ou em execução." tone={heroStats.inProgress > 0 ? "warning" : "neutral"} />
+              <HeroMetric label="Em andamento" value={String(heroStats.inProgress)} note="Runs ainda abertas ou em execuÃ§Ã£o." tone={heroStats.inProgress > 0 ? "warning" : "neutral"} />
               <HeroMetric label="Concluidas" value={String(heroStats.completed)} note="Runs com ciclo encerrado." tone={heroStats.completed > 0 ? "positive" : "neutral"} />
-              <HeroMetric label="Manuais" value={String(heroStats.manual)} note="Criadas no próprio painel." tone={heroStats.manual > 0 ? "neutral" : "warning"} />
-              <HeroMetric label="Integradas" value={String(heroStats.integration)} note="Vindas de integrações ativas." tone={heroStats.integration > 0 ? "positive" : "neutral"} />
-              <HeroMetric label="Última execução" value={heroStats.latestExecutionAt ? formatRelative(heroStats.latestExecutionAt) : "-"} note={`${heroStats.alerts} alertas recentes | ${heroStats.openDefects} defeitos abertos | ${heroStats.applications} apps`} tone={heroStats.alerts > 0 || heroStats.openDefects > 0 ? "warning" : "positive"} />
+              <HeroMetric label="Manuais" value={String(heroStats.manual)} note="Criadas no prÃ³prio painel." tone={heroStats.manual > 0 ? "neutral" : "warning"} />
+              <HeroMetric label="Integradas" value={String(heroStats.integration)} note="Vindas de integraÃ§Ãµes ativas." tone={heroStats.integration > 0 ? "positive" : "neutral"} />
+              <HeroMetric label="Ãšltima execuÃ§Ã£o" value={heroStats.latestExecutionAt ? formatRelative(heroStats.latestExecutionAt) : "-"} note={`${heroStats.alerts} alertas recentes | ${heroStats.openDefects} defeitos abertos | ${heroStats.applications} apps`} tone={heroStats.alerts > 0 || heroStats.openDefects > 0 ? "warning" : "positive"} />
             </div>
           </div>
           </section>
         ) : null}
 
-        <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface) p-6 shadow-sm sm:p-7">
+        <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] p-6 shadow-sm sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <SectionHeader
-              eyebrow="Seleção rápida"
+              eyebrow="SeleÃ§Ã£o rÃ¡pida"
               title={isMetricsView ? "Base operacional das runs da empresa" : "Runs mais recentes da empresa"}
-              description={isMetricsView ? "Leitura operacional detalhada, organizada por execução, projeto, status e origem." : "Cards ordenados da execução mais recente para a mais antiga, combinando fontes manuais e integradas."}
+              description={isMetricsView ? "Leitura operacional detalhada, organizada por execuÃ§Ã£o, projeto, status e origem." : "Cards ordenados da execuÃ§Ã£o mais recente para a mais antiga, combinando fontes manuais e integradas."}
             />
             {isMetricsView ? (
               <div className="flex flex-wrap gap-3 lg:justify-end">
                 {isInternalProfile ? (
                   <Link
                     href="/documentos"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-5 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:bg-(--tc-surface-alt)"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-5 py-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:bg-[var(--tc-surface-alt)]"
                   >
                     <FiArrowLeft className="h-4 w-4" />
-                    Voltar às empresas
+                    Voltar Ã s empresas
                   </Link>
                 ) : null}
                 <CreateManualReleaseButton companySlug={companySlug} redirectToRun={false} />
                 <Link
                   href="../runs"
-                  className="inline-flex items-center justify-center rounded-full bg-(--tc-primary,#0b1a3c) px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                  className="inline-flex items-center justify-center rounded-full bg-[var(--tc-primary,#0b1a3c)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
                 >
                   Abrir runs
                 </Link>
@@ -594,16 +594,16 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
           </div>
 
           {runs.length === 0 ? (
-            <div className="mt-6 rounded-[28px] border border-dashed border-(--tc-border,#d8dee9) bg-(--tc-surface,#f9fafb) p-8 text-center">
-              <p className="text-lg font-bold text-(--tc-text,#0b1a3c)">Nenhuma run encontrada para esta empresa.</p>
-              <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+            <div className="mt-6 rounded-[28px] border border-dashed border-[var(--tc-border,#d8dee9)] bg-[var(--tc-surface,#f9fafb)] p-8 text-center">
+              <p className="text-lg font-bold text-[var(--tc-text,#0b1a3c)]">Nenhuma run encontrada para esta empresa.</p>
+              <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                 Assim que a empresa receber uma run manual ou integrada, ela aparece aqui com tags de origem, projeto e status.
               </p>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
                 <CreateManualReleaseButton companySlug={companySlug} redirectToRun={false} />
                 <Link
                   href="../runs"
-                  className="inline-flex items-center rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+                  className="inline-flex items-center rounded-full border border-[var(--tc-border,#e5e7eb)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
                 >
                   Ver runs
                 </Link>
@@ -623,17 +623,17 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                       className={`relative flex w-92 shrink-0 flex-col overflow-hidden rounded-[28px] border p-4 shadow-sm transition ${
                         selected
                           ? "border-[rgba(239,0,1,0.28)] bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-alt)_100%)] shadow-[0_24px_44px_rgba(1,24,72,0.12)] ring-1 ring-[rgba(239,0,1,0.16)]"
-                          : "border-(--tc-border,#e5e7eb) bg-(--tc-surface)"
+                          : "border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)]"
                       }`}
                     >
                       {selected ? <span className="absolute inset-y-0 left-0 w-1.5 bg-[linear-gradient(180deg,var(--tc-primary)_0%,var(--tc-accent)_100%)]" /> : null}
                       <button type="button" onClick={() => setSelectedRunSlug(run.slug)} className="flex flex-1 flex-col gap-4 text-left">
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                               {formatDate(run.createdAt)}
                             </div>
-                            <div className="text-xl font-extrabold tracking-[-0.03em] text-(--tc-text,#0b1a3c)">
+                            <div className="text-xl font-extrabold tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">
                               {run.title}
                             </div>
                           </div>
@@ -642,7 +642,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                           </span>
                         </div>
 
-                        <p className="min-h-12 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                        <p className="min-h-12 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                           {run.summary || `Projeto ${run.projectCode ?? run.applicationName} | ultima atualizacao ${formatRelative(run.updatedAt ?? run.createdAt)}.`}
                         </p>
 
@@ -667,28 +667,28 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                           ) : null}
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3 border-t border-(--tc-border,#e5e7eb) pt-4">
+                        <div className="grid grid-cols-3 gap-3 border-t border-[var(--tc-border,#e5e7eb)] pt-4">
                           <div>
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">Casos</div>
-                            <div className="mt-2 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{run.stats.total}</div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted,#6b7280)]">Casos</div>
+                            <div className="mt-2 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{run.stats.total}</div>
                           </div>
                           <div>
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">Pass rate</div>
-                            <div className="mt-2 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{run.stats.passRate != null ? `${run.stats.passRate}%` : "-"}</div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted,#6b7280)]">Pass rate</div>
+                            <div className="mt-2 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{run.stats.passRate != null ? `${run.stats.passRate}%` : "-"}</div>
                           </div>
                           <div>
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">Falhas</div>
-                            <div className={`mt-2 text-lg font-extrabold ${run.stats.fail > 0 ? "text-rose-600" : "text-(--tc-text,#0b1a3c)"}`}>{run.stats.fail}</div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted,#6b7280)]">Falhas</div>
+                            <div className={`mt-2 text-lg font-extrabold ${run.stats.fail > 0 ? "text-rose-600" : "text-[var(--tc-text,#0b1a3c)]"}`}>{run.stats.fail}</div>
                           </div>
                         </div>
                       </button>
 
-                      <div className="mt-4 flex items-center justify-between border-t border-(--tc-border,#e5e7eb) pt-4">
-                        <button type="button" onClick={() => setSelectedRunSlug(run.slug)} className="inline-flex items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                      <div className="mt-4 flex items-center justify-between border-t border-[var(--tc-border,#e5e7eb)] pt-4">
+                        <button type="button" onClick={() => setSelectedRunSlug(run.slug)} className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                           <FiTarget className="h-4 w-4" />
                           Ver resumo
                         </button>
-                        <Link href={run.href} className="inline-flex items-center gap-2 rounded-full bg-(--tc-primary,#0b1a3c) px-4 py-2 text-sm font-semibold text-white">
+                        <Link href={run.href} className="inline-flex items-center gap-2 rounded-full bg-[var(--tc-primary,#0b1a3c)] px-4 py-2 text-sm font-semibold text-white">
                           Abrir run
                           <FiExternalLink className="h-4 w-4" />
                         </Link>
@@ -700,8 +700,8 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
             </div>
           )}
           {hasMoreRunsThanCards ? (
-            <p className="mt-4 text-xs font-medium text-(--tc-text-muted,#6b7280)">
-              Exibindo {runsForCards.length} de {runs.length} runs para leitura rápida. Use o botão &quot;Abrir runs&quot; para ver a lista completa.
+            <p className="mt-4 text-xs font-medium text-[var(--tc-text-muted,#6b7280)]">
+              Exibindo {runsForCards.length} de {runs.length} runs para leitura rÃ¡pida. Use o botÃ£o &quot;Abrir runs&quot; para ver a lista completa.
             </p>
           ) : null}
         </section>
@@ -709,11 +709,11 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
         {selectedRunWithLiveStats ? (
           <>
             <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface) p-6 shadow-sm sm:p-7">
+              <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] p-6 shadow-sm sm:p-7">
                 <SectionHeader
                   eyebrow="Run em foco"
                   title={selectedRunWithLiveStats.title}
-                  description="Resumo rápido da run selecionada, sem substituir a tela oficial de execução."
+                  description="Resumo rÃ¡pido da run selecionada, sem substituir a tela oficial de execuÃ§Ã£o."
                 />
 
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -730,28 +730,28 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                   ) : null}
                 </div>
 
-                <p className="mt-4 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                <p className="mt-4 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                   {selectedRunWithLiveStats.summary || "A home mostra um resumo operacional desta run e usa a tela oficial existente para o aprofundamento completo."}
                 </p>
 
-                <div className="mt-6 flex flex-col items-center gap-6 rounded-[22px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-alt) p-5 sm:flex-row sm:items-start">
+                <div className="mt-6 flex flex-col items-center gap-6 rounded-[22px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-alt)] p-5 sm:flex-row sm:items-start">
                   <div className="h-44 w-44 shrink-0">
                     <StatusChart
                       stats={selectedRunWithLiveStats.stats}
                       hasData={selectedRunWithLiveStats.stats.total > 0}
-                      emptyLabel="Sem execuções"
+                      emptyLabel="Sem execuÃ§Ãµes"
                     />
                   </div>
                   <div className="flex flex-1 flex-col gap-3 self-center">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">Distribuicao dos casos</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Distribuicao dos casos</p>
                       {liveStatsUpdatedAt ? (
-                        <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                        <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                           Atualizado {formatRelative(liveStatsUpdatedAt)}
                         </span>
                       ) : (
                         <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
-                          Sem sincronização ao vivo
+                          Sem sincronizaÃ§Ã£o ao vivo
                         </span>
                       )}
                     </div>
@@ -763,50 +763,50 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                     ] as const).map((item) => {
                       const pct = selectedRunWithLiveStats.stats.total > 0 ? Math.round((item.value / selectedRunWithLiveStats.stats.total) * 100) : 0;
                       return (
-                        <div key={item.label} className="flex items-center gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface) px-4 py-2.5">
+                        <div key={item.label} className="flex items-center gap-3 rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] px-4 py-2.5">
                           <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${item.dot}`} />
-                          <span className="flex-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{item.label}</span>
+                          <span className="flex-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{item.label}</span>
                           <span className={`text-base font-extrabold ${item.text}`}>{item.value}</span>
-                          <span className="w-10 text-right text-xs text-(--tc-text-muted,#6b7280)">{pct}%</span>
+                          <span className="w-10 text-right text-xs text-[var(--tc-text-muted,#6b7280)]">{pct}%</span>
                         </div>
                       );
                     })}
-                    <div className="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
+                    <div className="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
                       Total: {selectedRunWithLiveStats.stats.total} casos
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  <SummaryValue label="Aplicação" value={selectedRunWithLiveStats.applicationName} note="Contexto principal desta run." />
+                  <SummaryValue label="AplicaÃ§Ã£o" value={selectedRunWithLiveStats.applicationName} note="Contexto principal desta run." />
                   <SummaryValue label="Origem" value={sourceLabel(selectedRunWithLiveStats.sourceType)} note={selectedRunWithLiveStats.integrationProvider ? `Provedor ${providerLabel(selectedRunWithLiveStats.integrationProvider)}` : "Run criada manualmente."} />
-                  <SummaryValue label="Criada em" value={formatDate(selectedRunWithLiveStats.createdAt)} note="Data base da execução." />
-                  <SummaryValue label="Última atualização" value={formatDate(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)} note={formatRelative(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)} />
-                  <SummaryValue label="Casos totais" value={String(selectedRunWithLiveStats.stats.total)} note="Soma de aprovados, falhados, bloqueados e não executados." />
+                  <SummaryValue label="Criada em" value={formatDate(selectedRunWithLiveStats.createdAt)} note="Data base da execuÃ§Ã£o." />
+                  <SummaryValue label="Ãšltima atualizaÃ§Ã£o" value={formatDate(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)} note={formatRelative(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)} />
+                  <SummaryValue label="Casos totais" value={String(selectedRunWithLiveStats.stats.total)} note="Soma de aprovados, falhados, bloqueados e nÃ£o executados." />
                   <SummaryValue label="Aprovados" value={String(selectedRunWithLiveStats.stats.pass)} note="Casos que passaram nesta run." />
                   <SummaryValue label="Falhados" value={String(selectedRunWithLiveStats.stats.fail)} note="Casos com falha registrada." />
                   <SummaryValue label="Bloqueados" value={String(selectedRunWithLiveStats.stats.blocked)} note="Casos que ainda dependem de destravamento." />
-                  <SummaryValue label="Não executados" value={String(selectedRunWithLiveStats.stats.notRun)} note="Casos ainda sem execução nesta leitura." />
-                  <SummaryValue label="Pass rate" value={selectedRunWithLiveStats.stats.passRate != null ? `${selectedRunWithLiveStats.stats.passRate}%` : "Sem telemetria"} note="Percentual atual de aprovação." />
-                  <SummaryValue label="Release associada" value={selectedRunWithLiveStats.releaseLabel ?? "Não informada"} note={selectedRunWithLiveStats.responsibleLabel ? `Responsável: ${selectedRunWithLiveStats.responsibleLabel}` : "Sem responsável vinculado."} />
+                  <SummaryValue label="NÃ£o executados" value={String(selectedRunWithLiveStats.stats.notRun)} note="Casos ainda sem execuÃ§Ã£o nesta leitura." />
+                  <SummaryValue label="Pass rate" value={selectedRunWithLiveStats.stats.passRate != null ? `${selectedRunWithLiveStats.stats.passRate}%` : "Sem telemetria"} note="Percentual atual de aprovaÃ§Ã£o." />
+                  <SummaryValue label="Release associada" value={selectedRunWithLiveStats.releaseLabel ?? "NÃ£o informada"} note={selectedRunWithLiveStats.responsibleLabel ? `ResponsÃ¡vel: ${selectedRunWithLiveStats.responsibleLabel}` : "Sem responsÃ¡vel vinculado."} />
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <Link href={selectedRunWithLiveStats.href} className="inline-flex items-center gap-2 rounded-full bg-(--tc-primary,#0b1a3c) px-5 py-3 text-sm font-semibold text-white">
+                  <Link href={selectedRunWithLiveStats.href} className="inline-flex items-center gap-2 rounded-full bg-[var(--tc-primary,#0b1a3c)] px-5 py-3 text-sm font-semibold text-white">
                     Abrir run real
                     <FiExternalLink className="h-4 w-4" />
                   </Link>
-                  <Link href={`../defeitos?run=${encodeURIComponent(selectedRunWithLiveStats.slug)}`} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#e5e7eb) bg-white px-5 py-3 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                  <Link href={`../defeitos?run=${encodeURIComponent(selectedRunWithLiveStats.slug)}`} className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-white px-5 py-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                     Ver defeitos da run
                   </Link>
                 </div>
               </section>
 
-              <aside className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface) p-6 shadow-sm sm:p-7">
+              <aside className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] p-6 shadow-sm sm:p-7">
                 <SectionHeader
                   eyebrow="Prioridades"
-                  title="Atenção da run"
-                  description="Sinais de risco, pendência ou consistência para a run atualmente selecionada."
+                  title="AtenÃ§Ã£o da run"
+                  description="Sinais de risco, pendÃªncia ou consistÃªncia para a run atualmente selecionada."
                 />
 
                 <div className="mt-6 grid gap-4">
@@ -824,34 +824,34 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                   })}
                 </div>
 
-                <div className="mt-6 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5">
-                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">
+                <div className="mt-6 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] p-5">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">
                     <FiShield className="h-4 w-4" />
                     Leitura da run
                   </div>
                   <div className="mt-4 grid gap-3">
-                    <div className="rounded-2xl bg-(--tc-surface-alt) px-4 py-3 shadow-sm">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Tipo de execução</div>
-                      <div className="mt-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                    <div className="rounded-2xl bg-[var(--tc-surface-alt)] px-4 py-3 shadow-sm">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Tipo de execuÃ§Ã£o</div>
+                      <div className="mt-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                         {sourceLabel(selectedRunWithLiveStats.sourceType)}
                         {providerLabel(selectedRunWithLiveStats.integrationProvider) ? ` | ${providerLabel(selectedRunWithLiveStats.integrationProvider)}` : ""}
                       </div>
                     </div>
-                    <div className="rounded-2xl bg-(--tc-surface-alt) px-4 py-3 shadow-sm">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Resultado dominante</div>
-                      <div className="mt-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                    <div className="rounded-2xl bg-[var(--tc-surface-alt)] px-4 py-3 shadow-sm">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Resultado dominante</div>
+                      <div className="mt-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                         {selectedRunWithLiveStats.stats.fail > 0
                           ? "Falhas exigem leitura imediata"
                           : selectedRunWithLiveStats.stats.blocked > 0
                             ? "Bloqueios impactam o fechamento"
                             : selectedRunWithLiveStats.isCompleted
                               ? "Run concluida"
-                              : "Execução em andamento"}
+                              : "ExecuÃ§Ã£o em andamento"}
                       </div>
                     </div>
-                    <div className="rounded-2xl bg-(--tc-surface-alt) px-4 py-3 shadow-sm">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Última movimentacao</div>
-                      <div className="mt-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                    <div className="rounded-2xl bg-[var(--tc-surface-alt)] px-4 py-3 shadow-sm">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Ãšltima movimentacao</div>
+                      <div className="mt-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                         {formatRelative(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)}
                       </div>
                     </div>
@@ -860,27 +860,27 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
               </aside>
             </div>
 
-            <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface) p-6 shadow-sm sm:p-7">
+            <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] p-6 shadow-sm sm:p-7">
               <SectionHeader
                 eyebrow="Eventos recentes"
                 title="Movimentos da run selecionada"
-                description="Linha do tempo enxuta da run em foco, sem criar uma nova tela paralela de execução."
+                description="Linha do tempo enxuta da run em foco, sem criar uma nova tela paralela de execuÃ§Ã£o."
               />
 
               <div className="mt-6 grid gap-4">
                 {runEvents.map((event) => (
-                  <div key={event.id} className="flex items-start gap-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm">
+                  <div key={event.id} className="flex items-start gap-4 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-sm">
                     <div className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${toneClasses(event.tone)}`}>
                       {event.tone === "critical" ? <FiAlertTriangle className="h-5 w-5" /> : event.tone === "positive" ? <FiCheckCircle className="h-5 w-5" /> : event.id === "source" ? <FiRefreshCw className="h-5 w-5" /> : event.id === "created" ? <FiPlayCircle className="h-5 w-5" /> : event.id === "release" ? <FiLayers className="h-5 w-5" /> : <FiActivity className="h-5 w-5" />}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-sm font-semibold text-(--tc-text,#0b1a3c)">{event.title}</div>
-                        <div className="text-xs font-medium uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                        <div className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{event.title}</div>
+                        <div className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                           {formatRelative(event.at)}
                         </div>
                       </div>
-                      <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{event.detail}</div>
+                      <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{event.detail}</div>
                     </div>
                   </div>
                 ))}
@@ -888,18 +888,18 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
             </section>
           </>
         ) : isMetricsView && runs.length > 0 ? (
-          <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface) p-6 shadow-sm sm:p-7">
-            <div className="rounded-3xl border border-dashed border-(--tc-border,#d8dee9) bg-(--tc-surface-alt,#f8fafc) p-8 text-center">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Run em foco</p>
-              <h3 className="mt-3 text-xl font-extrabold text-(--tc-text,#0b1a3c)">Selecione uma run para carregar o resumo detalhado</h3>
-              <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-                Clique em &quot;Ver resumo&quot; em um card para abrir distribuição de casos, eventos e sinais de atenção.
+          <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] p-6 shadow-sm sm:p-7">
+            <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d8dee9)] bg-[var(--tc-surface-alt,#f8fafc)] p-8 text-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Run em foco</p>
+              <h3 className="mt-3 text-xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Selecione uma run para carregar o resumo detalhado</h3>
+              <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                Clique em &quot;Ver resumo&quot; em um card para abrir distribuiÃ§Ã£o de casos, eventos e sinais de atenÃ§Ã£o.
               </p>
               <div className="mt-5">
                 <button
                   type="button"
                   onClick={() => setSelectedRunSlug(runs[0]?.slug ?? null)}
-                  className="inline-flex items-center gap-2 rounded-full bg-(--tc-primary,#0b1a3c) px-5 py-3 text-sm font-semibold text-white"
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--tc-primary,#0b1a3c)] px-5 py-3 text-sm font-semibold text-white"
                 >
                   Carregar run mais recente
                 </button>
@@ -911,4 +911,6 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
     </div>
   );
 }
+
+
 

@@ -1,4 +1,4 @@
-import {
+﻿import {
   AUTOMATION_ENVIRONMENTS,
   getAutomationEnvironmentVariables,
   getDefaultAutomationEnvironmentId,
@@ -58,3 +58,4 @@ describe("Griaule automation catalog", () => {
     expect(JSON.stringify(doc)).toContain("SC_BIOMETRICS_API_PASSWORD");
   });
 });
+

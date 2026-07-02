@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { runAssistantRequest } from "@/lib/assistant/service";
 import type { AssistantClientRequest } from "@/lib/assistant/types";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
   const authUser = await authenticateRequest(req);
   if (!authUser) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
   const isGlobalAdmin =
     authUser.isGlobalAdmin === true ||
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     (!hasPermissionAccess(authUser.permissions, "ai", "view") ||
       !hasPermissionAccess(authUser.permissions, "ai", "use"))
   ) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
   }
 
   try {
@@ -39,3 +39,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
 import { filterBrainDomainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
@@ -36,3 +36,4 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ events, source: "fallback" });
 }
+

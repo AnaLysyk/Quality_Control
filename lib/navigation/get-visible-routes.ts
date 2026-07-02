@@ -1,4 +1,4 @@
-import { canAccessRoute } from "@/lib/permissions/can-access";
+﻿import { canAccessRoute } from "@/lib/permissions/can-access";
 import type { UserAccessContext } from "@/lib/permissions/get-user-access-context";
 import { SYSTEM_ROUTES } from "./route-map";
 import type { SystemRouteDefinition } from "./navigation.types";
@@ -17,3 +17,4 @@ export function getVisibleRouteIds(
 ) {
   return new Set(getVisibleRoutes(context, routes).map((routeDefinition) => routeDefinition.id));
 }
+

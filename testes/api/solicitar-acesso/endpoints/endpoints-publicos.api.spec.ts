@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/api/solicitar-acesso/endpoints-publicos.api.spec.ts --project=chromium
  */
@@ -17,3 +17,4 @@ test("listagem administrativa exige autenticacao", async ({ request }) => {
   const response = await request.get(endpointsSolicitarAcesso.listarAdministrativo);
   expect([401, 403]).toContain(response.status());
 });
+

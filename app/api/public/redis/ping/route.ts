@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
@@ -16,14 +16,14 @@ function isAuthorized(req: NextRequest): boolean {
 
 export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) {
-    return apiFail(req, "Não autorizado", {
+    return apiFail(req, "NÃ£o autorizado", {
       status: 401,
       code: "UNAUTHORIZED",
     });
   }
 
   if (!isRedisConfigured()) {
-    return apiFail(req, "Redis não configurado", {
+    return apiFail(req, "Redis nÃ£o configurado", {
       status: 503,
       code: "REDIS_NOT_CONFIGURED",
       details: "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
@@ -52,3 +52,4 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+

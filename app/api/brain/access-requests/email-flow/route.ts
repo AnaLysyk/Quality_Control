@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { listAuditLogs } from "@/data/auditLogRepository";
 import { listBrainEmailFlow, isAccessRequestEmail, type BrainEmailFlowEntry } from "@/data/brainEmailFlowRepository";
@@ -10,7 +10,7 @@ const PUBLIC_ROUTES = [
     id: "create-public-request",
     method: "POST",
     path: "/api/access-requests/public",
-    label: "Criação pública da solicitação",
+    label: "CriaÃ§Ã£o pÃºblica da solicitaÃ§Ã£o",
     expectedLog: "access_request.created",
     expectedEmailKind: "access_request.received",
   },
@@ -18,7 +18,7 @@ const PUBLIC_ROUTES = [
     id: "lookup-by-key",
     method: "GET",
     path: "/api/access-requests/by-key/[key]",
-    label: "Consulta pública por código",
+    label: "Consulta pÃºblica por cÃ³digo",
     expectedLog: "access_request.updated",
     expectedEmailKind: null,
   },
@@ -26,7 +26,7 @@ const PUBLIC_ROUTES = [
     id: "resubmit-by-key",
     method: "POST",
     path: "/api/access-requests/by-key/[key]",
-    label: "Reenvio público de ajuste",
+    label: "Reenvio pÃºblico de ajuste",
     expectedLog: "access_request.updated",
     expectedEmailKind: null,
   },
@@ -34,7 +34,7 @@ const PUBLIC_ROUTES = [
     id: "admin-accept",
     method: "POST",
     path: "/api/admin/access-requests/[id]/accept",
-    label: "Aprovação administrativa",
+    label: "AprovaÃ§Ã£o administrativa",
     expectedLog: "access_request.accepted",
     expectedEmailKind: "access_request.approved",
   },
@@ -42,7 +42,7 @@ const PUBLIC_ROUTES = [
     id: "admin-reject",
     method: "POST",
     path: "/api/admin/access-requests/[id]/reject",
-    label: "Rejeição administrativa",
+    label: "RejeiÃ§Ã£o administrativa",
     expectedLog: "access_request.rejected",
     expectedEmailKind: "access_request.rejected",
   },
@@ -50,7 +50,7 @@ const PUBLIC_ROUTES = [
     id: "admin-adjustment",
     method: "POST",
     path: "/api/admin/access-requests/[id]/request-adjustment",
-    label: "Solicitação de ajuste",
+    label: "SolicitaÃ§Ã£o de ajuste",
     expectedLog: "access_request.updated",
     expectedEmailKind: "access_request.adjustment",
   },
@@ -105,7 +105,7 @@ export async function GET(req: Request) {
   }
 
   if (!accessResult.context.hasGlobalVisibility) {
-    return NextResponse.json({ error: "Sem permissão para abrir o fluxo público de solicitações no Brain" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para abrir o fluxo pÃºblico de solicitaÃ§Ãµes no Brain" }, { status: 403 });
   }
 
   const url = new URL(req.url);
@@ -180,11 +180,12 @@ export async function GET(req: Request) {
       emails: accessRequestEmails.slice(0, 50).map(sanitizeEmail),
       notes: [
         "Para abrir o HTML real do e-mail no Brain, ative EMAIL_CAPTURE_MODE=file ou ACCESS_REQUEST_EMAIL_BYPASS=true em ambiente local/teste.",
-        "O Brain usa auditoria, solicitações e outbox capturado para montar a validação ponta a ponta.",
+        "O Brain usa auditoria, solicitaÃ§Ãµes e outbox capturado para montar a validaÃ§Ã£o ponta a ponta.",
       ],
     });
   } catch (error) {
     console.error("[brain/access-requests/email-flow] GET error", error);
-    return NextResponse.json({ error: "Erro ao montar fluxo de e-mails das solicitações" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao montar fluxo de e-mails das solicitaÃ§Ãµes" }, { status: 500 });
   }
 }
+

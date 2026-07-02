@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -144,7 +144,7 @@ export default function RequestsPage() {
       return;
     }
 
-    const msg = language === "en-US" ? "Password reset request sent." : "Solicitação de reset de senha enviada.";
+    const msg = language === "en-US" ? "Password reset request sent." : "SolicitaÃ§Ã£o de reset de senha enviada.";
     setMessage(msg);
     toast.success(msg);
     void refetch();
@@ -175,7 +175,7 @@ export default function RequestsPage() {
     }
 
     setDeletionReason("");
-    const msg = language === "en-US" ? "Profile deletion request sent." : "Solicitação de exclusão de perfil enviada.";
+    const msg = language === "en-US" ? "Profile deletion request sent." : "SolicitaÃ§Ã£o de exclusÃ£o de perfil enviada.";
     setMessage(msg);
     toast.success(msg);
     void refetch();
@@ -204,7 +204,7 @@ export default function RequestsPage() {
       return;
     }
 
-    const msg = language === "en-US" ? "Request resubmitted." : "Solicitação reenviada.";
+    const msg = language === "en-US" ? "Request resubmitted." : "SolicitaÃ§Ã£o reenviada.";
     setMessage(msg);
     toast.success(msg);
     void refetch();
@@ -265,8 +265,8 @@ export default function RequestsPage() {
             </div>
 
             <div className="mt-5 space-y-3">
-              <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary,#0b1a3c)">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{t("requestsPage.newEmail")}</span>
+              <label className="flex flex-col gap-2 text-sm text-[var(--tc-text-primary,#0b1a3c)]">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{t("requestsPage.newEmail")}</span>
                 <input
                   type="email"
                   inputMode="email"
@@ -293,8 +293,8 @@ export default function RequestsPage() {
             </div>
 
             <div className="mt-5 space-y-3">
-              <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary,#0b1a3c)">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{t("requestsPage.newCompany")}</span>
+              <label className="flex flex-col gap-2 text-sm text-[var(--tc-text-primary,#0b1a3c)]">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{t("requestsPage.newCompany")}</span>
                 <input
                   type="text"
                   autoComplete="organization"
@@ -317,7 +317,7 @@ export default function RequestsPage() {
               <div>
                 <p className="tc-panel-kicker">{language === "en-US" ? "Password" : "Senha"}</p>
                 <h2 className="tc-panel-title">{language === "en-US" ? "Request password reset" : "Solicitar reset de senha"}</h2>
-                <p className="tc-panel-description">{language === "en-US" ? "A reset link will be sent to your email after approval." : "Um link de reset será enviado ao seu e-mail após aprovação."}</p>
+                <p className="tc-panel-description">{language === "en-US" ? "A reset link will be sent to your email after approval." : "Um link de reset serÃ¡ enviado ao seu e-mail apÃ³s aprovaÃ§Ã£o."}</p>
               </div>
             </div>
 
@@ -332,14 +332,14 @@ export default function RequestsPage() {
             <div className="tc-panel-header">
               <div>
                 <p className="tc-panel-kicker">{language === "en-US" ? "Account" : "Conta"}</p>
-                <h2 className="tc-panel-title">{language === "en-US" ? "Request profile deletion" : "Solicitar exclusão de perfil"}</h2>
-                <p className="tc-panel-description">{language === "en-US" ? "Your account will be deactivated after administrative approval." : "Sua conta será desativada após aprovação administrativa."}</p>
+                <h2 className="tc-panel-title">{language === "en-US" ? "Request profile deletion" : "Solicitar exclusÃ£o de perfil"}</h2>
+                <p className="tc-panel-description">{language === "en-US" ? "Your account will be deactivated after administrative approval." : "Sua conta serÃ¡ desativada apÃ³s aprovaÃ§Ã£o administrativa."}</p>
               </div>
             </div>
 
             <div className="mt-5 space-y-3">
-              <label className="flex flex-col gap-2 text-sm text-(--tc-text-primary,#0b1a3c)">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{language === "en-US" ? "Reason" : "Motivo"}</span>
+              <label className="flex flex-col gap-2 text-sm text-[var(--tc-text-primary,#0b1a3c)]">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{language === "en-US" ? "Reason" : "Motivo"}</span>
                 <textarea
                   value={deletionReason}
                   onChange={(event) => setDeletionReason(event.target.value)}
@@ -356,7 +356,7 @@ export default function RequestsPage() {
         </div>
 
         {message ? (
-          <div className="rounded-[18px] border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm font-medium text-(--tc-text-primary,#0b1a3c)">
+          <div className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm font-medium text-[var(--tc-text-primary,#0b1a3c)]">
             {message}
           </div>
         ) : null}
@@ -368,7 +368,7 @@ export default function RequestsPage() {
               <h2 className="tc-panel-title">{t("requestsPage.historyTitle")}</h2>
               <p className="tc-panel-description">{t("requestsPage.historyDescription")}</p>
             </div>
-            {loading ? <span className="text-sm font-medium text-(--tc-text-muted,#6b7280)">{t("requestsPage.loading")}</span> : null}
+            {loading ? <span className="text-sm font-medium text-[var(--tc-text-muted,#6b7280)]">{t("requestsPage.loading")}</span> : null}
           </div>
 
           <div className="mt-5 space-y-3">
@@ -381,10 +381,10 @@ export default function RequestsPage() {
                 <article key={request.id} className="tc-panel-muted">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-base font-semibold text-(--tc-text-primary,#0b1a3c)">{REQUEST_TYPE_LABEL[request.type]}</p>
-                      <p className="mt-1 text-sm text-(--tc-text-muted,#6b7280)">{t("requestsPage.createdAt", { date: new Date(request.createdAt).toLocaleString(language === "pt-BR" ? "pt-BR" : "en-US") })}</p>
+                      <p className="text-base font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{REQUEST_TYPE_LABEL[request.type]}</p>
+                      <p className="mt-1 text-sm text-[var(--tc-text-muted,#6b7280)]">{t("requestsPage.createdAt", { date: new Date(request.createdAt).toLocaleString(language === "pt-BR" ? "pt-BR" : "en-US") })}</p>
                       {request.reviewNote ? (
-                        <p className="mt-3 text-sm text-(--tc-text-muted,#6b7280)">{t("requestsPage.note", { note: request.reviewNote })}</p>
+                        <p className="mt-3 text-sm text-[var(--tc-text-muted,#6b7280)]">{t("requestsPage.note", { note: request.reviewNote })}</p>
                       ) : null}
                     </div>
 
@@ -401,10 +401,10 @@ export default function RequestsPage() {
                         onClick={() => void resubmitRequest(request.id, request.payload)}
                         className="tc-button-primary text-xs"
                       >
-                        {language === "en-US" ? "Resubmit" : "Reenviar solicitação"}
+                        {language === "en-US" ? "Resubmit" : "Reenviar solicitaÃ§Ã£o"}
                       </button>
-                      <span className="text-xs text-(--tc-text-muted,#6b7280)">
-                        {language === "en-US" ? "Adjust and resubmit for review" : "Ajuste e reenvie para análise"}
+                      <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">
+                        {language === "en-US" ? "Adjust and resubmit for review" : "Ajuste e reenvie para anÃ¡lise"}
                       </span>
                     </div>
                   ) : null}
@@ -417,3 +417,4 @@ export default function RequestsPage() {
     </div>
   );
 }
+

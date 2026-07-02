@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -44,7 +44,7 @@ function ToolbarLoadingBubble({ icon: Icon, ariaLabel }: { icon: IconType; ariaL
       aria-label={ariaLabel}
       aria-busy="true"
       disabled
-      className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] opacity-75"
+      className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)]/70 bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text,#0f172a)] shadow-[0_8px_20px_rgba(15,23,42,0.12)] opacity-75"
     >
       <Icon size={18} className="animate-pulse" />
     </button>
@@ -124,7 +124,7 @@ function ToolbarGhostButton({
       onFocus={onPrime}
       onTouchStart={onPrime}
       aria-label={mounted ? loadingLabel : ariaLabel}
-      className="relative flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001) disabled:cursor-progress disabled:opacity-75"
+      className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)]/70 bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text,#0f172a)] shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-[var(--tc-accent,#ef0001)]/60 hover:text-[var(--tc-accent,#ef0001)] disabled:cursor-progress disabled:opacity-75"
       disabled={mounted}
     >
       <Icon size={18} className={mounted ? "animate-pulse" : undefined} />
@@ -245,9 +245,9 @@ export function DeferredNotificationsButton() {
     return (
       <span className="relative shrink-0">
         <ToolbarGhostButton
-          ariaLabel="Abrir notificações"
+          ariaLabel="Abrir notificaÃ§Ãµes"
           icon={FiBell}
-          loadingLabel="Carregando notificações"
+          loadingLabel="Carregando notificaÃ§Ãµes"
           mounted
           onOpen={() => {}}
           onPrime={() => {}}
@@ -264,15 +264,15 @@ export function DeferredNotificationsButton() {
   return (
     <span className="relative shrink-0">
       <ToolbarGhostButton
-        ariaLabel="Abrir notificações"
+        ariaLabel="Abrir notificaÃ§Ãµes"
         icon={FiBell}
-        loadingLabel="Carregando notificações"
+        loadingLabel="Carregando notificaÃ§Ãµes"
         mounted={mounted}
         onOpen={open}
         onPrime={prime}
       />
       {unreadCount > 0 ? (
-        <span className="pointer-events-none absolute -right-1 -top-1 min-w-5 rounded-full bg-(--tc-accent,#ef0001) px-1.5 py-0.5 text-center text-[10px] font-semibold text-white shadow-[0_6px_16px_rgba(239,0,1,0.35)]">
+        <span className="pointer-events-none absolute -right-1 -top-1 min-w-5 rounded-full bg-[var(--tc-accent,#ef0001)] px-1.5 py-0.5 text-center text-[10px] font-semibold text-white shadow-[0_6px_16px_rgba(239,0,1,0.35)]">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       ) : null}
@@ -324,7 +324,7 @@ export function ThemeToggleButton() {
       onClick={handleToggle}
       aria-label={ariaLabel}
       title={ariaLabel}
-      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001) disabled:cursor-progress disabled:opacity-75"
+      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)]/70 bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text,#0f172a)] shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-[var(--tc-accent,#ef0001)]/60 hover:text-[var(--tc-accent,#ef0001)] disabled:cursor-progress disabled:opacity-75"
     >
       <Icon size={18} />
     </button>
@@ -477,7 +477,7 @@ export function DeferredProfileButton() {
       className={`relative flex h-12 w-12 items-center justify-center rounded-full text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) focus:ring-offset-2 focus:ring-offset-transparent ${
         effectiveAvatarUrl
           ? "bg-transparent p-0 hover:shadow-[0_12px_26px_rgba(15,23,42,0.24)]"
-          : "border border-white/12 bg-(--tc-surface-dark,#0f1828) hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)]"
+          : "border border-white/12 bg-[var(--tc-surface-dark,#0f1828)] hover:border-[var(--tc-primary,#4e8df5)] hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)]"
       } ${resolvedTheme === "dark" ? "dark" : ""} ${isLoadingComponent ? "cursor-progress opacity-80" : ""}`}
       disabled={isLoadingComponent}
     >
@@ -493,3 +493,4 @@ export function DeferredProfileButton() {
     </button>
   );
 }
+

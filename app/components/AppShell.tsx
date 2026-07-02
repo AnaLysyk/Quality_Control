@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -64,34 +64,34 @@ const APP_SHELL_COPY = {
     sections: {
       home: "Home",
       dashboard: "Dashboard",
-      metrics: "Métricas",
-      apps: "Aplicações",
+      metrics: "MÃ©tricas",
+      apps: "AplicaÃ§Ãµes",
       runs: "Runs",
       defects: "Defeitos",
       support: "Suporte",
       testPlans: "Planos de teste",
-      automations: "Automações",
+      automations: "AutomaÃ§Ãµes",
       profile: "Perfil",
-      settings: "Configurações",
+      settings: "ConfiguraÃ§Ãµes",
       commandCenter: "Command Center",
-      requests: "Solicitações",
+      requests: "SolicitaÃ§Ãµes",
       documents: "Documentos",
-      users: "Usuários",
+      users: "UsuÃ¡rios",
       companies: "Empresas",
       brandIdentity: "Identidade visual",
     },
     notes: {
-      dashboard: "Leitura operacional da empresa, com sinais de execução, risco e desempenho.",
-      runs: "Acompanhe as execuções manuais e integradas com contexto claro e leitura rápida.",
-      apps: "Catálogo visual das aplicações monitoradas, integrações conectadas e projetos vinculados.",
-      defects: "Triagem dos defeitos e pontos de atenção que precisam de resposta do time.",
-      support: "Painel unificado de suporte para abrir tickets, acompanhar comentários e consultar o andamento.",
-      testPlans: "Panorama dos planos, campanhas e vínculos com as aplicações da empresa.",
-      automations: "Área técnica para fluxos de endpoint, ambientes, presets e automações guiadas.",
-      profile: "Cadastro institucional, identidade visual, usuários e configurações do contexto atual.",
-      home: "Entrada institucional da empresa, com contexto salvo, aplicações e navegação principal.",
-      commandCenter: "Visão executiva do ambiente administrativo, com acesso rápido aos módulos centrais.",
-      default: "Contexto visual da página com a assinatura da Testing Company e leitura imediata do módulo.",
+      dashboard: "Leitura operacional da empresa, com sinais de execuÃ§Ã£o, risco e desempenho.",
+      runs: "Acompanhe as execuÃ§Ãµes manuais e integradas com contexto claro e leitura rÃ¡pida.",
+      apps: "CatÃ¡logo visual das aplicaÃ§Ãµes monitoradas, integraÃ§Ãµes conectadas e projetos vinculados.",
+      defects: "Triagem dos defeitos e pontos de atenÃ§Ã£o que precisam de resposta do time.",
+      support: "Painel unificado de suporte para abrir tickets, acompanhar comentÃ¡rios e consultar o andamento.",
+      testPlans: "Panorama dos planos, campanhas e vÃ­nculos com as aplicaÃ§Ãµes da empresa.",
+      automations: "Ãrea tÃ©cnica para fluxos de endpoint, ambientes, presets e automaÃ§Ãµes guiadas.",
+      profile: "Cadastro institucional, identidade visual, usuÃ¡rios e configuraÃ§Ãµes do contexto atual.",
+      home: "Entrada institucional da empresa, com contexto salvo, aplicaÃ§Ãµes e navegaÃ§Ã£o principal.",
+      commandCenter: "VisÃ£o executiva do ambiente administrativo, com acesso rÃ¡pido aos mÃ³dulos centrais.",
+      default: "Contexto visual da pÃ¡gina com a assinatura da Testing Company e leitura imediata do mÃ³dulo.",
     },
     badges: {
       platform: "Plataforma",
@@ -99,7 +99,7 @@ const APP_SHELL_COPY = {
     },
     aria: {
       openMenu: "Abrir menu",
-      pageCover: "Capa da página {title}",
+      pageCover: "Capa da pÃ¡gina {title}",
       companyLogo: "Logo da empresa {name}",
       companyIdentity: "Identidade da empresa {name}",
       platformLogo: "Logo Testing Company",
@@ -108,18 +108,18 @@ const APP_SHELL_COPY = {
       platform: "Testing Company",
       admin: "Testing Company Admin",
       company: "Empresa {name}",
-      companyProfile: "Perfil empresa • {name}",
+      companyProfile: "Perfil empresa â€¢ {name}",
       companyUser: "Vinculado a {name}",
-      leader: "Lider TC • Testing Company",
-      support: "Suporte técnico • Testing Company",
-      tcUser: "Usuário TC • Testing Company",
+      leader: "Lider TC â€¢ Testing Company",
+      support: "Suporte tÃ©cnico â€¢ Testing Company",
+      tcUser: "UsuÃ¡rio TC â€¢ Testing Company",
     },
     profiles: {
       empresa: "Empresa",
       company_user: "Acesso empresarial",
-      testing_company_user: "Usuário TC",
+      testing_company_user: "UsuÃ¡rio TC",
       leader_tc: "Lider TC",
-      technical_support: "Suporte técnico",
+      technical_support: "Suporte tÃ©cnico",
     },
   },
   "en-US": {
@@ -171,11 +171,11 @@ const APP_SHELL_COPY = {
       platform: "Testing Company",
       admin: "Testing Company Admin",
       company: "Company {name}",
-      companyProfile: "Company profile • {name}",
+      companyProfile: "Company profile â€¢ {name}",
       companyUser: "Linked to {name}",
-      leader: "TC lead • Testing Company",
-      support: "Technical support • Testing Company",
-      tcUser: "TC user • Testing Company",
+      leader: "TC lead â€¢ Testing Company",
+      support: "Technical support â€¢ Testing Company",
+      tcUser: "TC user â€¢ Testing Company",
     },
     profiles: {
       empresa: "Company",
@@ -206,18 +206,18 @@ function replaceName(template: string, name: string) {
 
 function normalizeSectionKey(value: string) {
   const normalized = value.trim().toLowerCase();
-  if (normalized === "aplicacoes" || normalized === "aplicações") return "apps";
+  if (normalized === "aplicacoes" || normalized === "aplicaÃ§Ãµes") return "apps";
   if (normalized === "defeitos") return "defects";
   if (normalized === "suporte" || normalized === "chamados" || normalized === "meus chamados" || normalized === "support") return "support";
   if (normalized === "planos de teste" || normalized === "planos-de-teste") return "testPlans";
-  if (normalized === "automacoes" || normalized === "automações" || normalized === "automations") return "automations";
+  if (normalized === "automacoes" || normalized === "automaÃ§Ãµes" || normalized === "automations") return "automations";
   if (normalized === "perfil" || normalized === "profile") return "profile";
-  if (normalized === "configurações" || normalized === "settings") return "settings";
+  if (normalized === "configuraÃ§Ãµes" || normalized === "settings") return "settings";
   if (normalized === "command center") return "commandCenter";
-  if (normalized === "métricas" || normalized === "metrics") return "metrics";
-  if (normalized === "usuários" || normalized === "users") return "users";
+  if (normalized === "mÃ©tricas" || normalized === "metrics") return "metrics";
+  if (normalized === "usuÃ¡rios" || normalized === "users") return "users";
   if (normalized === "documentos" || normalized === "documents") return "documents";
-  if (normalized === "solicitações" || normalized === "requests") return "requests";
+  if (normalized === "solicitaÃ§Ãµes" || normalized === "requests") return "requests";
   if (normalized === "empresas" || normalized === "companies") return "companies";
   if (normalized === "identidade visual" || normalized === "brand identity" || normalized === "brand-identity") return "brandIdentity";
   if (normalized === "home" || normalized === "dashboard" || normalized === "runs") return normalized as "home" | "dashboard" | "runs";
@@ -433,7 +433,7 @@ function isCompanyDefectsRoute(pathname: string) {
 
 function isCompanyAppsRoute(pathname: string) {
   const section = getCompanyRouteSection(pathname);
-  return section === "aplicacoes" || section === "aplicações";
+  return section === "aplicacoes" || section === "aplicaÃ§Ãµes";
 }
 
 function isCompanyRunDetailRoute(pathname: string) {
@@ -685,7 +685,7 @@ export default function AppShell({ children }: AppShellProps) {
         />
       ) : null}
 
-      {/* Botão de menu mobile/hamburguer */}
+      {/* BotÃ£o de menu mobile/hamburguer */}
       {!hideGlobalSidebar ? (
         <button
           type="button"
@@ -794,3 +794,4 @@ export default function AppShell({ children }: AppShellProps) {
     </div>
   );
 }
+

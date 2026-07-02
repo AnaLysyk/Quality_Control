@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Server-side permission checker for API route handlers.
  *
  * Bridges the legacy PermissionMatrix format (Record<module, action[]>) to the
@@ -7,9 +7,9 @@
  * Usage:
  * ```ts
  * const user = await authenticateRequest(req);
- * if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+ * if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
  * if (!checkPermission(user, "test_repository:create")) {
- *   return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+ *   return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
  * }
  * ```
  */
@@ -21,7 +21,7 @@ import type { AuthUser } from "@/lib/jwtAuth";
  * Resolves whether `user` has the given `module:action` permission.
  *
  * Resolution order:
- * 1. If `user.isGlobalAdmin` → always true.
+ * 1. If `user.isGlobalAdmin` â†’ always true.
  * 2. Compute effective PermissionMatrix from `resolveEffectivePermissionMatrix`.
  * 3. Check if the module key contains the requested action.
  */
@@ -57,3 +57,4 @@ export function checkAllPermissions(user: AuthUser, permissions: string[]): bool
 export function checkAnyPermission(user: AuthUser, permissions: string[]): boolean {
   return permissions.some((p) => checkPermission(user, p));
 }
+

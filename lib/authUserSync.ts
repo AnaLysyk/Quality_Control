@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { AuthUser } from "@/contracts/auth";
 
@@ -26,3 +26,4 @@ export function subscribeAuthUserSync(listener: (user: AuthUser | null) => void)
     window.removeEventListener(AUTH_USER_SYNC_EVENT, handleSync as EventListener);
   };
 }
+

@@ -1,4 +1,4 @@
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type AdminClientAccessLike = {
   isGlobalAdmin?: boolean | null;
@@ -27,3 +27,4 @@ export function hasAdminClientToolAccess(user?: AdminClientAccessLike | null) {
   const roles = collectRoles(user);
   return roles.includes(SYSTEM_ROLES.LEADER_TC) || roles.includes(SYSTEM_ROLES.TECHNICAL_SUPPORT);
 }
+

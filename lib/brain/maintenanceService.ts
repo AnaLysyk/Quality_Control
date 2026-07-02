@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { prisma } from "@/lib/prismaClient";
 import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
@@ -100,7 +100,7 @@ export async function runBrainDailyMaintenance(input: DailyMaintenanceInput = {}
             companySlug,
             targetNodeId: weak.edge.fromId,
             type: "weak_relation",
-            title: `Relação fraca ${weak.edge.type}`,
+            title: `RelaÃ§Ã£o fraca ${weak.edge.type}`,
             description: `${weak.fromLabel} -> ${weak.toLabel} (confidence ${weak.confidence.toFixed(2)})`,
             confidence: Math.max(0.3, Math.min(0.9, weak.confidence)),
             status: "suggested",
@@ -128,8 +128,8 @@ export async function runBrainDailyMaintenance(input: DailyMaintenanceInput = {}
             companySlug,
             targetNodeId: node.id,
             type: "orphan_node",
-            title: `Nó órfão: ${node.label}`,
-            description: "Nó sem relações de entrada/saída.",
+            title: `NÃ³ Ã³rfÃ£o: ${node.label}`,
+            description: "NÃ³ sem relaÃ§Ãµes de entrada/saÃ­da.",
             confidence: 0.88,
             status: "suggested",
             createdBy: "system",
@@ -156,8 +156,8 @@ export async function runBrainDailyMaintenance(input: DailyMaintenanceInput = {}
             kind: "suggestion",
             companySlug,
             status: "pending",
-            title: "Sugestão pendente de revisão",
-            summary: `Revisar sugestão ${suggestionId}`,
+            title: "SugestÃ£o pendente de revisÃ£o",
+            summary: `Revisar sugestÃ£o ${suggestionId}`,
             suggestionId,
           },
         }),
@@ -171,7 +171,7 @@ export async function runBrainDailyMaintenance(input: DailyMaintenanceInput = {}
       entityType: "BrainGraph",
       entityId: companySlug ?? "global",
       userId: input.actorUserId ?? null,
-      reason: "Execução diária de manutenção Brain",
+      reason: "ExecuÃ§Ã£o diÃ¡ria de manutenÃ§Ã£o Brain",
       after: {
         companySlug,
         scoreUpdates: scores.updated,
@@ -203,3 +203,4 @@ export async function runBrainDailyMaintenance(input: DailyMaintenanceInput = {}
     },
   };
 }
+

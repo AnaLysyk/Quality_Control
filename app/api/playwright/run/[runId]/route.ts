@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
@@ -19,11 +19,11 @@ export async function GET(
   { params }: { params: Promise<{ runId: string }> },
 ) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const { runId } = await params;
   if (!runId || !/^[a-f0-9\-]{32,36}$/.test(runId)) {
-    return NextResponse.json({ error: "runId inválido" }, { status: 400 });
+    return NextResponse.json({ error: "runId invÃ¡lido" }, { status: 400 });
   }
 
   await ensureAutomationTables();
@@ -47,14 +47,14 @@ export async function GET(
   );
 
   if (!runRes.rows.length) {
-    return NextResponse.json({ error: "Run não encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Run nÃ£o encontrada" }, { status: 404 });
   }
 
   const run = runRes.rows[0];
   const allowed = resolveAutomationAllowedCompanySlugs(user);
   const access = resolveAutomationAccess(user, allowed.length);
   if (!access.canOpen || (!access.hasGlobalCompanyVisibility && !allowed.includes(run.company_slug))) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const resultRes = await automationPool.query<{
@@ -140,3 +140,4 @@ export async function GET(
 
   return NextResponse.json({ run, results: resultRes.rows, comparison });
 }
+

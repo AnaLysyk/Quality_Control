@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 /**
- * Profile Shell — container da tela de perfil
- * Renderiza header, tabs, ações e conteúdo
+ * Profile Shell â€” container da tela de perfil
+ * Renderiza header, tabs, aÃ§Ãµes e conteÃºdo
  */
 
 import { ReactNode } from "react";
@@ -44,7 +44,7 @@ export function ProfileShell({
 }
 
 /**
- * Internal renderer para conteúdo
+ * Internal renderer para conteÃºdo
  */
 export function ProfileShellContent({
   tab,
@@ -61,3 +61,4 @@ export function ProfileShellContent({
 
   return <>{children}</>;
 }
+

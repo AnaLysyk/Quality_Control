@@ -1,4 +1,4 @@
-import { authenticateRequest } from "@/lib/jwtAuth";
+﻿import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { getRunMockRole } from "@/lib/rbac/runs";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
 
   if (!effectiveAuth) {
-    return apiFail(request, "Não autorizado", { status: 401, code: "AUTH_REQUIRED", extra: { error: { message: "Não autorizado" } } });
+    return apiFail(request, "NÃ£o autorizado", { status: 401, code: "AUTH_REQUIRED", extra: { error: { message: "NÃ£o autorizado" } } });
   }
 
   const companySlug = auth?.companySlug ?? null;
@@ -44,3 +44,4 @@ export async function GET(request: Request) {
     return apiFail(request, "Erro interno", { status: 500, code: "INTERNAL_ERROR", extra: { error: { message: "Erro interno" } } });
   }
 }
+

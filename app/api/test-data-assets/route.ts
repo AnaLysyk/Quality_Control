@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -277,3 +277,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

@@ -1,4 +1,4 @@
-import supertest from 'supertest';
+﻿import supertest from 'supertest';
 
 // Integration test: verify that saving a company's Qase token + project codes
 // results in Applications being created by the backend (syncCompanyApplications).
@@ -48,3 +48,4 @@ describe('Qase persistence integration', () => {
     expect(items.length).toBeGreaterThanOrEqual(codes.length);
   });
 });
+

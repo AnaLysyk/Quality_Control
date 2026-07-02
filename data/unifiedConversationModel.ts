@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type ConversationScopeKind = "global" | "company" | "project" | "direct" | "support";
 export type ConversationMemoryStatus = "candidate" | "approved" | "ignored";
@@ -161,3 +161,4 @@ export function getUnifiedConversationModel() {
     },
   };
 }
+

@@ -1,4 +1,4 @@
-import { test } from "../../../../../support/fixtures/test";
+﻿import { test } from "../../../../../support/fixtures/test";
 import {
   executarRecuperacaoSenhaPorPerfil,
   perfisEsqueciSenha,
@@ -13,3 +13,4 @@ test.describe("Esqueci senha - fluxo por perfil", () => {
     });
   }
 });
+

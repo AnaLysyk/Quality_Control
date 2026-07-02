@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { updateApplication } from "../../../../lib/applicationsStore";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -27,3 +27,4 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
 }
+

@@ -1,4 +1,4 @@
-import type { AdjustmentFieldOptionView } from "../../_types/accessRequests.types";
+﻿import type { AdjustmentFieldOptionView } from "../../_types/accessRequests.types";
 
 export function AdjustmentFieldsPanel({
   options,
@@ -20,7 +20,7 @@ export function AdjustmentFieldsPanel({
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Campos liberados</p>
           <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">O que pode ser corrigido</h3>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Necessário para Solicitar ajuste.
+            NecessÃ¡rio para Solicitar ajuste.
           </p>
         </div>
 
@@ -54,7 +54,7 @@ export function AdjustmentFieldsPanel({
 
       {selectedFields.length > 0 ? (
         <div className="border-t border-slate-100 p-5 pt-4">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Observações por campo</p>
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">ObservaÃ§Ãµes por campo</p>
           <div className="mt-3 grid gap-3">
             {selectedFields.map((field) => {
               const option = options.find((item) => item.field === field);
@@ -65,7 +65,7 @@ export function AdjustmentFieldsPanel({
                     type="text"
                     value={comments[field] ?? ""}
                     onChange={(event) => onCommentChange(field, event.target.value)}
-                    placeholder="Instrução específica para este campo"
+                    placeholder="InstruÃ§Ã£o especÃ­fica para este campo"
                     className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-400"
                     data-testid={`access-request-adjustment-comment-${field}`}
                   />
@@ -78,3 +78,4 @@ export function AdjustmentFieldsPanel({
     </section>
   );
 }
+

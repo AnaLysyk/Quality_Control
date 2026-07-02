@@ -1,4 +1,4 @@
-/** @jest-environment jsdom */
+﻿/** @jest-environment jsdom */
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import ReleaseManualList from "@/components/ReleaseManualList";
@@ -28,3 +28,4 @@ describe("ReleaseManualList e DefectList", () => {
     expect(screen.getByTestId("defect-list")).toHaveTextContent(companyId);
   });
 });
+

@@ -1,4 +1,4 @@
-import type { AccessContext } from "@/lib/auth/session";
+﻿import type { AccessContext } from "@/lib/auth/session";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 function normalize(value?: string | null) {
@@ -49,3 +49,4 @@ function isCompanyWikiEditor(access: AccessContext | null) {
 export function canEditCompanyWiki(access: AccessContext | null, companySlug: string) {
   return isCompanyWikiEditor(access) && hasCompanyWikiScope(access, companySlug);
 }
+

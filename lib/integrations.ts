@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { findLocalCompanyBySlug } from "@/lib/auth/localStore";
 
@@ -32,3 +32,4 @@ export async function getQaseIntegrationSettings(slug: string) {
   const projects = Array.isArray(cfg.projects) ? cfg.projects.map(String) : [];
   return { token: token ?? null, projects: projects.length ? projects : undefined };
 }
+

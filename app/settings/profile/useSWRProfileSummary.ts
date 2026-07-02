@@ -1,4 +1,4 @@
-import useSWR from "swr";
+﻿import useSWR from "swr";
 import { profileSwrOptions, swrProfileFetcher } from "./swrFetch";
 
 export function useSWRProfileSummary(userId?: string) {
@@ -15,3 +15,4 @@ export function useSWRProfileSummary(userId?: string) {
     refetch: mutate,
   };
 }
+

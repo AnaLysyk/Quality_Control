@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/perfis/fluxo-ajustes-recusa.ui.spec.ts --headed --workers=1 --reporter=list
  */
@@ -213,3 +213,4 @@ test.describe("Solicitacao de acesso - ajustes, conversa, aprovacao e recusa por
     });
   }
 });
+

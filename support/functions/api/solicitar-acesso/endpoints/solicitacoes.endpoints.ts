@@ -1,4 +1,4 @@
-export const endpointsTelaSolicitacoes = {
+﻿export const endpointsTelaSolicitacoes = {
   listar: "/api/admin/access-requests",
   listarEmpresas: "/api/clients",
   listarUsuarios: "/api/admin/users",
@@ -10,3 +10,4 @@ export const endpointsTelaSolicitacoes = {
   solicitarAjuste: (id: string) =>
     `/api/admin/access-requests/${encodeURIComponent(id)}/request-adjustment`,
 } as const;
+

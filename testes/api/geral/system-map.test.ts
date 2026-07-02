@@ -1,4 +1,4 @@
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import path from "node:path";
 
 import { SYSTEM_MODULES } from "@/lib/navigation/module-map";
@@ -39,3 +39,4 @@ describe("mapa do sistema", () => {
     }
   });
 });
+

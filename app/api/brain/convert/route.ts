@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
 
@@ -46,12 +46,12 @@ function textBuffer(input: string) {
 function decodePayload(payload: ConvertPayload) {
   if (payload.contentBase64) {
     const buffer = Buffer.from(payload.contentBase64, "base64");
-    if (buffer.length > MAX_BYTES) throw new Error("Arquivo acima do limite permitido para conversão no Brain.");
+    if (buffer.length > MAX_BYTES) throw new Error("Arquivo acima do limite permitido para conversÃ£o no Brain.");
     return buffer;
   }
 
   const buffer = Buffer.from(payload.text ?? "", "utf8");
-  if (buffer.length > MAX_BYTES) throw new Error("Conteúdo acima do limite permitido para conversão no Brain.");
+  if (buffer.length > MAX_BYTES) throw new Error("ConteÃºdo acima do limite permitido para conversÃ£o no Brain.");
   return buffer;
 }
 
@@ -101,11 +101,11 @@ export async function POST(request: NextRequest) {
   try {
     payload = (await request.json()) as ConvertPayload;
   } catch {
-    return jsonError("Payload inválido para conversão.");
+    return jsonError("Payload invÃ¡lido para conversÃ£o.");
   }
 
   const target = payload.targetFormat;
-  if (!target) return jsonError("Informe o formato de saída.");
+  if (!target) return jsonError("Informe o formato de saÃ­da.");
 
   const originalName = safeName(payload.filename || "brain-file.txt");
   const baseName = originalName.replace(/\.[^.]+$/, "") || "brain-file";
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
   try {
     buffer = decodePayload(payload);
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Arquivo inválido.");
+    return jsonError(error instanceof Error ? error.message : "Arquivo invÃ¡lido.");
   }
 
   try {
@@ -164,8 +164,9 @@ export async function POST(request: NextRequest) {
       return responseFile(`${baseName}.pdf`, "application/pdf", textToPdfBuffer(bufferToText(buffer), baseName));
     }
 
-    return jsonError("Formato de saída não suportado.");
+    return jsonError("Formato de saÃ­da nÃ£o suportado.");
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Não foi possível converter o arquivo.");
+    return jsonError(error instanceof Error ? error.message : "NÃ£o foi possÃ­vel converter o arquivo.");
   }
 }
+

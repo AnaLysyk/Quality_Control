@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FiActivity, FiFileText, FiMail, FiZap } from "react-icons/fi";
 import type { BrainEdge, BrainGraphSummary, BrainNode } from "../_types/brain.types";
@@ -53,3 +53,4 @@ export function BrainCreatedGeneratedPanel({ summary, nodes, edges }: BrainCreat
     </section>
   );
 }
+

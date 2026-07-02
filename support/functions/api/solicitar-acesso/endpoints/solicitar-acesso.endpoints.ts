@@ -1,4 +1,4 @@
-export const endpointsSolicitarAcesso = {
+﻿export const endpointsSolicitarAcesso = {
   criarPublica: "/api/access-requests/public",
   listarAdministrativo: "/api/admin/access-requests",
   consultarPorChave: (chave: string) =>
@@ -17,3 +17,4 @@ export const endpointsAutenticacao = {
   validarRedefinicao: "/api/auth/reset-password/validate",
   confirmarRedefinicao: "/api/auth/reset-password/confirm",
 } as const;
+

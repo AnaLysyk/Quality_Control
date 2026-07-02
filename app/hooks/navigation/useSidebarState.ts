@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -82,3 +82,4 @@ export function useSidebarState() {
 
   return { collapsed, toggleCollapsed, openSections, toggleSection, openSection };
 }
+

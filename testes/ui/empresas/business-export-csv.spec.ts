@@ -1,4 +1,4 @@
-import fs from "fs";
+﻿import fs from "fs";
 import { test, expect } from "@playwright/test";
 import {
   autenticarPerfilRuns,
@@ -33,3 +33,4 @@ test("exporta relatorio CSV com dados do kanban", async ({ page, context }) => {
   expect(csv.length).toBeGreaterThan(10);
   expect(csv).toContain("Erro no login");
 });
+

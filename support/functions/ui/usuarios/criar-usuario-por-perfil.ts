@@ -145,3 +145,4 @@ export function temEmpresaE2E(me: {
     me.companies?.some((company) => company.slug === EMPRESA_E2E.slug || company.id === EMPRESA_E2E.id)
   );
 }
+

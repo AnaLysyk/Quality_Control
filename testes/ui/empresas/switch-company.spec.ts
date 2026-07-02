@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.setTimeout(120000);
@@ -19,3 +19,4 @@ test("admin seleciona empresa no dashboard global", async ({ page, context }) =>
   await expect(companyButton).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("heading", { name: "Empresa Cliente E2E" }).first()).toBeVisible();
 });
+

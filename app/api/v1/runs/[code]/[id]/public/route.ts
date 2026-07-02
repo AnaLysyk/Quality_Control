@@ -1,4 +1,4 @@
-import { authenticateRequest } from "@/lib/jwtAuth";
+﻿import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { resolveRunRole, getRunMockRole, canEditRun } from "@/lib/rbac/runs";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
@@ -49,10 +49,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
 
   if (!effectiveAuth) {
-    return apiFail(request, "Não autorizado", {
+    return apiFail(request, "NÃ£o autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Não autorizado" } },
+      extra: { error: { message: "NÃ£o autorizado" } },
     });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
@@ -99,3 +99,4 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     });
   }
 }
+

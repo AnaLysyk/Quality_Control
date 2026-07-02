@@ -1,4 +1,4 @@
-import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
+﻿import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 
 /**
  * Checks if a user exists in the database by email or id.
@@ -7,3 +7,4 @@ import { findLocalUserByEmailOrId } from "@/lib/auth/localStore";
 export async function findUserByEmailOrId(identifier: string) {
   return findLocalUserByEmailOrId(identifier);
 }
+

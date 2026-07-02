@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { listClients } from "@/data/clientsRepository";
 import { getAccessContext } from "@/lib/auth/session";
 
@@ -52,3 +52,4 @@ export async function GET(req: Request) {
   results.sort((a, b) => b.score - a.score);
   return NextResponse.json({ companies: results }, { status: 200 });
 }
+

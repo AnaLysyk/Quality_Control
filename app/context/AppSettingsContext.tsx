@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -325,7 +325,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     return undefined;
   }, [settings.theme]);
 
-  // Sync LanguageContext → AppSettings when user toggles LanguageSelector
+  // Sync LanguageContext â†’ AppSettings when user toggles LanguageSelector
   useEffect(() => {
     if (syncingRef.current) return;
     const mapped = localeToLanguage(locale);
@@ -338,7 +338,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [locale, setLanguage, settings.language]);
 
-  // Sync AppSettings → LanguageContext when settings change (e.g. from server)
+  // Sync AppSettings â†’ LanguageContext when settings change (e.g. from server)
   useEffect(() => {
     if (syncingRef.current) return;
     const mapped = languageToLocale(settings.language);
@@ -377,3 +377,4 @@ export function useAppSettings() {
   if (!ctx) throw new Error("useAppSettings deve ser usado dentro de AppSettingsProvider");
   return ctx;
 }
+

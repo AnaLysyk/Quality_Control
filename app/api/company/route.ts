@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { createLocalCompany, findLocalCompanyById, listLocalCompanies } from "@/lib/auth/localStore";
@@ -10,7 +10,7 @@ export const revalidate = 0;
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
 
   const isGlobalAdmin = access.isGlobalAdmin === true || (access.role ?? "").toLowerCase() === "leader_tc";
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   const company = await findLocalCompanyById(access.companyId);
   if (!company) {
-    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa nÃ£o encontrada" }, { status: 404 });
   }
   return NextResponse.json({ items: [company] }, { status: 200 });
 }
@@ -35,14 +35,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
 
   const data = await req.json().catch(() => null);
   const name = typeof data?.name === "string" ? data.name.trim() : "";
   const slug = typeof data?.slug === "string" ? data.slug.trim() : "";
   if (!name) {
-    return NextResponse.json({ error: "name e obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "name e obrigatÃ³rio" }, { status: 400 });
   }
 
   const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
@@ -62,3 +62,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erro ao criar empresa" }, { status: 500 });
   }
 }
+

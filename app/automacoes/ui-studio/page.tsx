@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -15,10 +15,10 @@ export default function AutomacoesUiStudioPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3">
+      <div className="flex flex-wrap gap-2 rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3">
         <Link
           href="/casos-de-teste"
-          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
         >
           <FiClipboard className="h-4 w-4" />
           Casos
@@ -26,7 +26,7 @@ export default function AutomacoesUiStudioPage() {
         <Link
           href="/automacoes/ui-studio"
           className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${
-            mode === "flows" ? "border-(--tc-accent,#ef0001) bg-[#fff5f5] text-(--tc-accent,#ef0001)" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text,#0b1a3c)"
+            mode === "flows" ? "border-[var(--tc-accent,#ef0001)] bg-[#fff5f5] text-[var(--tc-accent,#ef0001)]" : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text,#0b1a3c)]"
           }`}
         >
           <FiGitBranch className="h-4 w-4" />
@@ -35,7 +35,7 @@ export default function AutomacoesUiStudioPage() {
         <Link
           href="/automacoes/ui-studio?view=scripts"
           className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${
-            mode === "scripts" ? "border-(--tc-accent,#ef0001) bg-[#fff5f5] text-(--tc-accent,#ef0001)" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text,#0b1a3c)"
+            mode === "scripts" ? "border-[var(--tc-accent,#ef0001)] bg-[#fff5f5] text-[var(--tc-accent,#ef0001)]" : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text,#0b1a3c)]"
           }`}
         >
           <FiCode className="h-4 w-4" />
@@ -54,4 +54,5 @@ export default function AutomacoesUiStudioPage() {
     </div>
   );
 }
+
 

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { prisma } from "@/lib/prismaClient";
 
@@ -19,3 +19,4 @@ export async function getClienteBySlug(slug: string): Promise<ClienteSummary | n
   if (!company) return null;
   return { id: company.id, slug: company.slug, name: company.name };
 }
+

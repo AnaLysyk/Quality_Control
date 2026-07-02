@@ -1,4 +1,4 @@
-import RunDetailClient from "./RunDetailClient";
+﻿import RunDetailClient from "./RunDetailClient";
 
 export const dynamic = "force-dynamic";
 
@@ -11,3 +11,4 @@ type PageProps = {
 export default function RunDetailPage({ params }: PageProps) {
   return <RunDetailClient runId={params.id} />;
 }
+

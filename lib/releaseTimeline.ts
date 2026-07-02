@@ -1,4 +1,4 @@
-import { readManualReleaseStore } from "@/data/manualData";
+﻿import { readManualReleaseStore } from "@/data/manualData";
 import { readQualityGateHistory } from "@/lib/qualityGateHistory";
 import { getReleaseBySlug } from "@/release/data";
 
@@ -115,3 +115,4 @@ export async function getReleaseTimeline(companySlug: string, releaseSlug: strin
   events.sort((a, b) => String(b.occurred_at).localeCompare(String(a.occurred_at)));
   return events;
 }
+

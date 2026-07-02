@@ -1,4 +1,4 @@
-// Mocks for dependencies (synchronous for Jest CommonJS environment)
+﻿// Mocks for dependencies (synchronous for Jest CommonJS environment)
 jest.mock('../../../lib/redis', () => ({
   getRedis: jest.fn(),
 }));
@@ -127,3 +127,4 @@ describe('session.store', () => {
     expect(ctx?.companySlugs).toEqual(['slug1']);
   });
 });
+

@@ -1,4 +1,4 @@
-import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
+﻿import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { normalizeAuthenticatedUser, type AuthenticatedUserLike } from "@/lib/auth/normalizeAuthenticatedUser";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
@@ -123,3 +123,4 @@ export function resolveVisibleCompanySlugs(
     .map((company) => company.slug)
     .filter((slug, index, self) => slug.length > 0 && self.indexOf(slug) === index);
 }
+

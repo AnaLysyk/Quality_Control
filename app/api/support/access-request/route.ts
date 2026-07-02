@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { createAccessRequest, listAccessRequests } from "@/data/accessRequestsStore";
 import { findLocalCompanyById, findLocalCompanyBySlug } from "@/lib/auth/localStore";
@@ -96,11 +96,11 @@ export async function POST(req: Request) {
 
   const limiter = await rateLimit(req, `access-request:${email}`, 10, 60 * 10);
   if (limiter.limited) {
-    return NextResponse.json({ ok: true, message: "Sua solicitação foi recebida. Se os dados informados forem válidos, enviaremos atualizações pelo e-mail informado." });
+    return NextResponse.json({ ok: true, message: "Sua solicitaÃ§Ã£o foi recebida. Se os dados informados forem vÃ¡lidos, enviaremos atualizaÃ§Ãµes pelo e-mail informado." });
   }
 
   if (password.length < 8) {
-    return NextResponse.json({ message: "Senha obrigatória com pelo menos 8 caracteres" }, { status: 400 });
+    return NextResponse.json({ message: "Senha obrigatÃ³ria com pelo menos 8 caracteres" }, { status: 400 });
   }
 
   let resolvedCompanyName = company || "";
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
 
       if (!resolvedClientId) {
         return NextResponse.json(
-          { message: "Selecione uma empresa cadastrada para vincular ao perfil Usuário" },
+          { message: "Selecione uma empresa cadastrada para vincular ao perfil UsuÃ¡rio" },
           { status: 400 },
         );
       }
@@ -129,7 +129,7 @@ export async function POST(req: Request) {
 
     const selectedCompany = await findLocalCompanyById(resolvedClientId);
     if (!selectedCompany) {
-      return NextResponse.json({ message: "Empresa selecionada não encontrada" }, { status: 404 });
+      return NextResponse.json({ message: "Empresa selecionada nÃ£o encontrada" }, { status: 404 });
     }
 
     resolvedCompanyName = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || "Empresa";
@@ -159,7 +159,7 @@ export async function POST(req: Request) {
     phone: phone || null,
     passwordHash: hashPasswordSha256(password),
     role,
-    company: resolvedCompanyName || "(não informado)",
+    company: resolvedCompanyName || "(nÃ£o informado)",
     clientId: resolvedClientId,
     accessType,
     profileType,
@@ -185,7 +185,7 @@ export async function POST(req: Request) {
       }).catch(() => null);
 
   if (duplicate) {
-    return NextResponse.json({ ok: true, message: "Sua solicitação foi recebida. Se os dados informados forem válidos, enviaremos atualizações pelo e-mail informado." });
+    return NextResponse.json({ ok: true, message: "Sua solicitaÃ§Ã£o foi recebida. Se os dados informados forem vÃ¡lidos, enviaremos atualizaÃ§Ãµes pelo e-mail informado." });
   }
 
   let createdRequest: { id: string; email: string; status: string } | null = null;
@@ -257,7 +257,7 @@ export async function POST(req: Request) {
         });
       } catch (jsonError) {
         console.error("Fallback JSON store falhou:", jsonError);
-        return NextResponse.json({ message: "Erro interno ao registrar solicitação" }, { status: 500 });
+        return NextResponse.json({ message: "Erro interno ao registrar solicitaÃ§Ã£o" }, { status: 500 });
       }
     }
   }
@@ -295,7 +295,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);
   if (!authUser) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
   if (!isTechnicalSupportUser(authUser) && !isSupportAdminUser(authUser)) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
@@ -318,3 +318,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ items });
   }
 }
+

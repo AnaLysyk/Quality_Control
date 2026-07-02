@@ -1,4 +1,4 @@
-export type AppCompany = {
+﻿export type AppCompany = {
   id: string;
   name: string;
   slug: string;
@@ -18,3 +18,4 @@ export type AppUser = {
   status: "active" | "inactive";
   company: AppCompany | null;
 };
+

@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+﻿import { expect, type Page } from "@playwright/test";
 
 import {
   criarEmailTeste,
@@ -81,7 +81,7 @@ async function esperarFormularioConsultaHidratado(page: Page) {
           return typeof props?.onSubmit === "function";
         }),
       {
-        message: "Esperando o formulário de consulta concluir a hidratação.",
+        message: "Esperando o formulÃ¡rio de consulta concluir a hidrataÃ§Ã£o.",
         timeout: 60000,
       },
     )
@@ -98,15 +98,15 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
     timeout: 60000,
   });
 
-  await passo("Tela pública de solicitação aberta", page);
+  await passo("Tela pÃºblica de solicitaÃ§Ã£o aberta", page);
 
   await abrirFormularioSolicitacaoPorPerfil(page);
 
-  await passo(`Formulário aberto para ${perfil.labelTelaStatus}`, page);
+  await passo(`FormulÃ¡rio aberto para ${perfil.labelTelaStatus}`, page);
 
   const dadosPreenchidos = await preencherFormularioSolicitacaoPorPerfil(page, perfil, email);
 
-  await passo(`Formulário preenchido para ${perfil.labelTelaStatus}`, page);
+  await passo(`FormulÃ¡rio preenchido para ${perfil.labelTelaStatus}`, page);
 
   await page.screenshot({
     path: `test-results/access-requests/visual-formulario-${perfil.value}.png`,
@@ -145,15 +145,15 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
 
   expect(respostaSubmit.status(), corpoSubmit).toBe(201);
 
-  await passo(`Solicitação enviada para ${perfil.labelTelaStatus}`, page);
+  await passo(`SolicitaÃ§Ã£o enviada para ${perfil.labelTelaStatus}`, page);
 
   await esperarEmailCapturado({
     to: email,
-    subject: /Solicita.*acesso recebida|Solicitação de acesso recebida/i,
+    subject: /Solicita.*acesso recebida|SolicitaÃ§Ã£o de acesso recebida/i,
     contains: [email],
   });
 
-  await passo(`E-mail de confirmação validado para ${perfil.labelTelaStatus}`, page);
+  await passo(`E-mail de confirmaÃ§Ã£o validado para ${perfil.labelTelaStatus}`, page);
 
   const chave = await capturarChaveDoEmailSolicitacao(email);
 
@@ -170,7 +170,7 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
   await page.getByTestId("request-access-lookup-email-input").fill(emailConsulta);
   await page.getByTestId("request-access-lookup-code-input").fill(chave);
 
-  await passo(`Consulta pública preenchida para ${perfil.labelTelaStatus}`, page);
+  await passo(`Consulta pÃºblica preenchida para ${perfil.labelTelaStatus}`, page);
 
   await esperarFormularioConsultaHidratado(page);
 
@@ -202,7 +202,7 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
     ]).then(([response]) => response);
   }
 
-  expect(respostaConsulta, "A consulta pública deve chamar a API by-key").not.toBeNull();
+  expect(respostaConsulta, "A consulta pÃºblica deve chamar a API by-key").not.toBeNull();
 
   const corpoConsulta = await respostaConsulta!.text().catch(() => "");
   expect(respostaConsulta!.ok(), corpoConsulta).toBe(true);
@@ -229,10 +229,10 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
     timeout: 90000,
   });
 
-  await expect(page.getByRole("heading", { name: "Acompanhamento da solicitação" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Acompanhamento da solicitaÃ§Ã£o" })).toBeVisible();
 
   await expect(page.getByTestId("access-request-status-label")).toContainText(
-    "Aguardando análise",
+    "Aguardando anÃ¡lise",
   );
 
   await expect(page.getByTestId("access-request-status-email")).toContainText(email);
@@ -241,10 +241,11 @@ export async function executarConsultaStatusSolicitacaoPorPerfil(page: Page, per
     perfil.perfilEsperadoNoStatus ?? perfil.labelTelaStatus,
   );
 
-  await passo(`Status público validado para ${perfil.labelTelaStatus}`, page);
+  await passo(`Status pÃºblico validado para ${perfil.labelTelaStatus}`, page);
 
   await page.screenshot({
     path: `test-results/access-requests/visual-status-${perfil.value}.png`,
     fullPage: true,
   });
 }
+

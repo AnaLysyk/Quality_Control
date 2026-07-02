@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { autenticarPerfilRuns, rotaRunsEmpresa } from "../../../support/functions/ui/runs/rotas-runs";
 
 test.describe("runs - busca", () => {
@@ -15,3 +15,4 @@ test.describe("runs - busca", () => {
     await expect(page.getByTestId("test-run-list")).toBeVisible({ timeout: 10000 });
   });
 });
+

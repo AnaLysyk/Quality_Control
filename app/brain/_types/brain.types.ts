@@ -1,4 +1,4 @@
-export type BrainNodeType =
+﻿export type BrainNodeType =
   | "module"
   | "company"
   | "project"
@@ -316,3 +316,4 @@ export type BuiltBrainGraph = {
   removalHistory: BrainAccessRequestRemovalHistoryItem[];
   auditLogs: BrainAuditLogItem[];
 };
+

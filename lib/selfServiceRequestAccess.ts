@@ -1,4 +1,4 @@
-import type { RequestRecord } from "@/data/requestsStore";
+﻿import type { RequestRecord } from "@/data/requestsStore";
 import { isSupportAdminUser, isTechnicalSupportUser } from "@/lib/supportAccess";
 
 type SelfServiceRequestUser = {
@@ -28,3 +28,4 @@ export function canAccessSelfServiceRequest(
   if (!scope || !user?.id) return false;
   return scope === "all" || request.userId === user.id;
 }
+

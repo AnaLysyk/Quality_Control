@@ -1,4 +1,4 @@
-import type { BrowserContext } from "@playwright/test";
+﻿import type { BrowserContext } from "@playwright/test";
 
 import { simularAutenticacao, type OpcoesAutenticacaoSimulada } from "../apoio/simular-autenticacao";
 
@@ -48,3 +48,4 @@ export async function autenticarPerfilRuns(
     clientSlug: EMPRESA_CLIENTE_E2E.slug,
   });
 }
+

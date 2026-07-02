@@ -1,4 +1,4 @@
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type ScopeRoleKey =
   | SystemRole;
@@ -84,3 +84,4 @@ export function canCreateCompanyUsersByScope(policy: UserScopePolicy | null | un
   if (!policy) return false;
   return policy.creatableUserKinds.includes("company") && policy.companyAccessScope !== "none";
 }
+

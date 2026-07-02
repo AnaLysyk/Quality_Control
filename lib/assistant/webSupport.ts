@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 type WebSupportResult = {
   title: string;
@@ -7,7 +7,7 @@ type WebSupportResult = {
   source: string;
 };
 
-const WEB_INTENT_PATTERN = /\b(internet|web|google|pesquisa|pesquisar|buscar online|procura online|not[ií]cia|noticias|notícias|atual|hoje|agora|última|ultima|latest|documenta[cç][aã]o oficial|docs oficiais|site oficial|pre[cç]o|vers[aã]o atual)\b/i;
+const WEB_INTENT_PATTERN = /\b(internet|web|google|pesquisa|pesquisar|buscar online|procura online|not[iÃ­]cia|noticias|notÃ­cias|atual|hoje|agora|Ãºltima|ultima|latest|documenta[cÃ§][aÃ£]o oficial|docs oficiais|site oficial|pre[cÃ§]o|vers[aÃ£]o atual)\b/i;
 const URL_PATTERN = /https?:\/\/[^\s)]+/gi;
 
 function compactText(value: unknown, max = 700) {
@@ -174,8 +174,8 @@ export async function buildWebSupportContext(message: string) {
   if (results.length === 0) {
     return [
       "[Apoio externo/web]",
-      "O usuário pediu apoio externo, mas não encontrei resultado externo disponível nesta execução.",
-      "Se houver BRAVE_SEARCH_API_KEY ou TAVILY_API_KEY configurado, o assistente usará busca web. Links enviados pelo usuário são lidos diretamente quando acessíveis.",
+      "O usuÃ¡rio pediu apoio externo, mas nÃ£o encontrei resultado externo disponÃ­vel nesta execuÃ§Ã£o.",
+      "Se houver BRAVE_SEARCH_API_KEY ou TAVILY_API_KEY configurado, o assistente usarÃ¡ busca web. Links enviados pelo usuÃ¡rio sÃ£o lidos diretamente quando acessÃ­veis.",
     ].join("\n");
   }
 
@@ -191,3 +191,4 @@ export async function buildWebSupportContext(message: string) {
     "Use estes dados apenas como apoio. Priorize o Brain e o contexto interno do sistema quando houver conflito.",
   ].join("\n\n");
 }
+

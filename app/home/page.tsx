@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (
@@ -7,4 +7,5 @@ export default function HomePage() {
     </div>
   );
 }
+
 

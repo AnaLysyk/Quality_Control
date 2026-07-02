@@ -1,4 +1,4 @@
-import { test, expect } from "../../../../../support/fixtures/test";
+﻿import { test, expect } from "../../../../../support/fixtures/test";
 import { BASE_URL } from "../../../../../support/functions/api/autenticacao/autenticar-por-cookie";
 import {
   SENHA_USUARIO_NOVO,
@@ -13,7 +13,7 @@ import { validarMeuPerfilUsuarioCriado } from "../../../../../support/functions/
 
 test.setTimeout(180000);
 
-test.describe("Criar usuário - Admin da empresa", () => {
+test.describe("Criar usuÃ¡rio - Admin da empresa", () => {
   const createdUserIds: string[] = [];
 
   test.afterAll(async ({ request }) => {
@@ -22,7 +22,7 @@ test.describe("Criar usuário - Admin da empresa", () => {
     }
   });
 
-  test("cria Admin da empresa, lista o usuário, valida login e vínculo com empresa", async ({ page }) => {
+  test("cria Admin da empresa, lista o usuÃ¡rio, valida login e vÃ­nculo com empresa", async ({ page }) => {
     const suffix = `${Date.now().toString().slice(-6)}-${Math.random().toString(36).slice(2, 5)}`;
     const email = `e2e-admin-empresa-${suffix}@demo.test`;
     const name = `Teste Admin Empresa ${suffix}`;
@@ -50,3 +50,4 @@ test.describe("Criar usuário - Admin da empresa", () => {
     expect(temEmpresaE2E(me)).toBeTruthy();
   });
 });
+

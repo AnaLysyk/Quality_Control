@@ -1,4 +1,4 @@
-import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
+﻿import "../../infraestrutura/ambiente/carregar-variaveis-ambiente";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
@@ -188,3 +188,4 @@ if (require.main === module) {
     process.exit(1);
   });
 }
+

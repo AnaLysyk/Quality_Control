@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
@@ -37,3 +37,4 @@ export default function PlaywrightStudioPage() {
     </div>
   );
 }
+

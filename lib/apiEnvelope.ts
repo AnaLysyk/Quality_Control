@@ -1,4 +1,4 @@
-export type ApiEnvelopeMeta = {
+﻿export type ApiEnvelopeMeta = {
   requestId?: string;
   timestamp?: string;
 };
@@ -69,3 +69,4 @@ export function unwrapEnvelopeData<T>(json: unknown): T | null {
   }
   return (json ?? null) as T | null;
 }
+

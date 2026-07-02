@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
 import { buildBrainNodeActions, resolveBrainAction } from "@/lib/brain/actions";
@@ -56,3 +56,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json(resolution, { status: resolution.allowed ? 200 : 403 });
 }
+

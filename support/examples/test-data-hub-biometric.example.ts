@@ -1,5 +1,5 @@
-/**
- * Example: Test Data Hub — Biometric Upload with Assets
+﻿/**
+ * Example: Test Data Hub â€” Biometric Upload with Assets
  *
  * This test demonstrates how to use the Test Data Hub to:
  * 1. Resolve biometric assets by ID
@@ -113,7 +113,7 @@ test.describe("Biometric Upload with Test Data Hub", () => {
       expect(rightIndex).toBeDefined();
 
       await page.getByTestId("finger-right-index-upload").setInputFiles(rightIndex!.filePath);
-      await expect(page.getByTestId("finger-right-index-status")).toHaveText("✓");
+      await expect(page.getByTestId("finger-right-index-status")).toHaveText("âœ“");
     });
 
     // ============================================================
@@ -125,7 +125,7 @@ test.describe("Biometric Upload with Test Data Hub", () => {
       expect(leftThumb).toBeDefined();
 
       await page.getByTestId("finger-left-thumb-upload").setInputFiles(leftThumb!.filePath);
-      await expect(page.getByTestId("finger-left-thumb-status")).toHaveText("✓");
+      await expect(page.getByTestId("finger-left-thumb-status")).toHaveText("âœ“");
     });
 
     // ============================================================
@@ -137,7 +137,7 @@ test.describe("Biometric Upload with Test Data Hub", () => {
       expect(facePhoto).toBeDefined();
 
       await page.getByTestId("face-photo-upload").setInputFiles(facePhoto!.filePath);
-      await expect(page.getByTestId("face-photo-status")).toHaveText("✓");
+      await expect(page.getByTestId("face-photo-status")).toHaveText("âœ“");
     });
 
     // ============================================================
@@ -294,18 +294,18 @@ test.describe("Test Data Hub Security", () => {
     // This test serves as documentation of what NOT to do
     // ============================================================
     // WRONG: Committing sensitive data to GitHub
-    // ❌ const base64 = "iVBORw0KGgo..."; // NEVER do this!
-    // ❌ const filePath = require("fs").readFileSync("./biometrics/finger.png");
+    // âŒ const base64 = "iVBORw0KGgo..."; // NEVER do this!
+    // âŒ const filePath = require("fs").readFileSync("./biometrics/finger.png");
     //
     // RIGHT: Use assetId and let fixture resolve at runtime
-    // ✅ const assets = await testAssets.resolve(["asset_finger_right_index_001"]);
+    // âœ… const assets = await testAssets.resolve(["asset_finger_right_index_001"]);
     //
     // RIGHT: Asset ID is generic, can be rotated
-    // ✅ "asset_finger_right_index_001" can be updated to point to different data
+    // âœ… "asset_finger_right_index_001" can be updated to point to different data
     //    without changing test code.
     //
     // RIGHT: Download URL expires
-    // ✅ URL is valid for only 15 minutes, can't be reused indefinitely.
+    // âœ… URL is valid for only 15 minutes, can't be reused indefinitely.
 
     expect(true).toBe(true); // This test just documents the rules
   });
@@ -326,3 +326,4 @@ test.describe("Test Data Hub Security", () => {
     expect(true).toBe(true);
   });
 });
+

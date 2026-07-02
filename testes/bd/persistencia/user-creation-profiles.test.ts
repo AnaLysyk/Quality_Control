@@ -1,9 +1,9 @@
-/**
- * Teste de integração: criação de usuários de todos os perfis e persistência no banco.
+﻿/**
+ * Teste de integraÃ§Ã£o: criaÃ§Ã£o de usuÃ¡rios de todos os perfis e persistÃªncia no banco.
  *
- * Requer conexão com PostgreSQL (DATABASE_URL configurado).
- * Usa pgCreateLocalUser / pgUpsertLocalLink diretamente — sem HTTP.
- * Todos os dados criados são removidos ao final via afterAll.
+ * Requer conexÃ£o com PostgreSQL (DATABASE_URL configurado).
+ * Usa pgCreateLocalUser / pgUpsertLocalLink diretamente â€” sem HTTP.
+ * Todos os dados criados sÃ£o removidos ao final via afterAll.
  */
 
 import { randomUUID } from "crypto";
@@ -18,7 +18,7 @@ import { hashPasswordSha256 } from "@/lib/passwordHash";
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
 
-// IDs dos recursos criados pelo teste — limpos no afterAll
+// IDs dos recursos criados pelo teste â€” limpos no afterAll
 const createdUserIds: string[] = [];
 const createdCompanyIds: string[] = [];
 
@@ -40,7 +40,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function createUser(overrides: Partial<Parameters<typeof pgCreateLocalUser>[0]> & { name: string; email: string }) {
   const user = await pgCreateLocalUser({
@@ -51,13 +51,13 @@ async function createUser(overrides: Partial<Parameters<typeof pgCreateLocalUser
   return user;
 }
 
-// ─── testes por perfil ────────────────────────────────────────────────────────
+// â”€â”€â”€ testes por perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("Criação de usuários — persistência por perfil", () => {
+describePg("CriaÃ§Ã£o de usuÃ¡rios â€” persistÃªncia por perfil", () => {
 
-  // ── 1. Usuário Regular ────────────────────────────────────────────────────
-  describe("Perfil: Usuário Regular", () => {
-    it("cria o usuário com role=user e persiste no banco", async () => {
+  // â”€â”€ 1. UsuÃ¡rio Regular â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  describe("Perfil: UsuÃ¡rio Regular", () => {
+    it("cria o usuÃ¡rio com role=user e persiste no banco", async () => {
       const email = testEmail("regular");
       const created = await createUser({
         name: "Usuario Regular Teste",
@@ -76,7 +76,7 @@ describePg("Criação de usuários — persistência por perfil", () => {
       expect(created.active).toBe(true);
       expect(created.status).toBe("active");
 
-      // Persistência no banco
+      // PersistÃªncia no banco
       const row = await prisma.user.findUnique({ where: { id: created.id } });
       expect(row).not.toBeNull();
       expect(row!.email).toBe(email);
@@ -86,9 +86,9 @@ describePg("Criação de usuários — persistência por perfil", () => {
     });
   });
 
-  // ── 2. IT Developer (Desenvolvedor Global) ────────────────────────────────
+  // â”€â”€ 2. IT Developer (Desenvolvedor Global) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: IT Developer (Desenvolvedor Global)", () => {
-    it("cria o usuário com role=it_dev, is_global_admin=true e persiste no banco", async () => {
+    it("cria o usuÃ¡rio com role=it_dev, is_global_admin=true e persiste no banco", async () => {
       const email = testEmail("itdev");
       const created = await createUser({
         name: "IT Developer Teste",
@@ -112,9 +112,9 @@ describePg("Criação de usuários — persistência por perfil", () => {
     });
   });
 
-  // ── 3. Admin Global ───────────────────────────────────────────────────────
+  // â”€â”€ 3. Admin Global â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Admin Global", () => {
-    it("cria o usuário com is_global_admin=true, globalRole=global_admin e persiste no banco", async () => {
+    it("cria o usuÃ¡rio com is_global_admin=true, globalRole=global_admin e persiste no banco", async () => {
       const email = testEmail("globaladmin");
       const created = await createUser({
         name: "Admin Global Teste",
@@ -135,7 +135,7 @@ describePg("Criação de usuários — persistência por perfil", () => {
     });
   });
 
-  // ── 4. Viewer (vinculado a empresa) ──────────────────────────────────────
+  // â”€â”€ 4. Viewer (vinculado a empresa) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Viewer (vinculado a empresa)", () => {
     let companyId: string;
 
@@ -149,7 +149,7 @@ describePg("Criação de usuários — persistência por perfil", () => {
       createdCompanyIds.push(companyId);
     });
 
-    it("cria o usuário, vincula como viewer e persiste no banco e na membership", async () => {
+    it("cria o usuÃ¡rio, vincula como viewer e persiste no banco e na membership", async () => {
       const email = testEmail("viewer");
       const created = await createUser({
         name: "Viewer Teste",
@@ -167,12 +167,12 @@ describePg("Criação de usuários — persistência por perfil", () => {
 
       expect(membershipRole).toBe("viewer");
 
-      // Persistência do usuário
+      // PersistÃªncia do usuÃ¡rio
       const row = await prisma.user.findUnique({ where: { id: created.id } });
       expect(row).not.toBeNull();
       expect(row!.is_global_admin).toBe(false);
 
-      // Persistência da membership
+      // PersistÃªncia da membership
       const membership = await prisma.membership.findFirst({
         where: { userId: created.id, companyId },
       });
@@ -181,7 +181,7 @@ describePg("Criação de usuários — persistência por perfil", () => {
     });
   });
 
-  // ── 5. Administrador de Empresa (company_admin) ───────────────────────────
+  // â”€â”€ 5. Administrador de Empresa (company_admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Administrador de Empresa (Company Admin)", () => {
     let companyId: string;
 
@@ -195,7 +195,7 @@ describePg("Criação de usuários — persistência por perfil", () => {
       createdCompanyIds.push(companyId);
     });
 
-    it("cria o usuário, vincula como company_admin e persiste no banco e na membership", async () => {
+    it("cria o usuÃ¡rio, vincula como company_admin e persiste no banco e na membership", async () => {
       const email = testEmail("compadmin");
       const created = await createUser({
         name: "Company Admin Teste",
@@ -223,9 +223,9 @@ describePg("Criação de usuários — persistência por perfil", () => {
     });
   });
 
-  // ── 6. Usuário convidado (status=invited) ─────────────────────────────────
-  describe("Perfil: Usuário Convidado (status=invited)", () => {
-    it("cria usuário com status=invited e persiste no banco", async () => {
+  // â”€â”€ 6. UsuÃ¡rio convidado (status=invited) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  describe("Perfil: UsuÃ¡rio Convidado (status=invited)", () => {
+    it("cria usuÃ¡rio com status=invited e persiste no banco", async () => {
       const email = testEmail("invited");
       const created = await createUser({
         name: "Convidado Teste",
@@ -244,9 +244,9 @@ describePg("Criação de usuários — persistência por perfil", () => {
     });
   });
 
-  // ── 7. Unicidade: email duplicado deve ser rejeitado ──────────────────────
-  describe("Restrição: e-mail duplicado", () => {
-    it("lança DUPLICATE_EMAIL ao tentar criar dois usuários com o mesmo e-mail", async () => {
+  // â”€â”€ 7. Unicidade: email duplicado deve ser rejeitado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  describe("RestriÃ§Ã£o: e-mail duplicado", () => {
+    it("lanÃ§a DUPLICATE_EMAIL ao tentar criar dois usuÃ¡rios com o mesmo e-mail", async () => {
       const email = testEmail("dupcheck");
       await createUser({ name: "Dup Check A", email });
 
@@ -290,3 +290,4 @@ describePg("Criação de usuários — persistência por perfil", () => {
     });
   });
 });
+

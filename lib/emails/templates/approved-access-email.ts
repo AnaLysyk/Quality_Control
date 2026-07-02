@@ -56,7 +56,7 @@ export function buildApprovedAccessEmail(data: ApprovedAccessEmailData) {
 
               <div style="text-align:center;margin-bottom:20px;">
                 <span style="display:inline-block;padding:12px 22px;border-radius:999px;background:#dcfce7;color:#047857;font-size:17px;font-weight:800;">
-                  ✓ ${escapeHtml(data.profileLabel)} aprovado
+                  ? ${escapeHtml(data.profileLabel)} aprovado
                 </span>
               </div>
 
@@ -81,7 +81,7 @@ export function buildApprovedAccessEmail(data: ApprovedAccessEmailData) {
                 <tr>
                   <td colspan="2" style="padding-bottom:18px;">
                     <h3 style="margin:0;font-size:21px;font-weight:900;color:#061a44;">
-                      <span style="color:#e30613;">▣</span> Resumo da aprovação
+                      <span style="color:#e30613;">?</span> Resumo da aprovação
                     </h3>
                   </td>
                 </tr>
@@ -96,20 +96,20 @@ export function buildApprovedAccessEmail(data: ApprovedAccessEmailData) {
                 <tr>
                   <td width="50%" style="padding-right:10px;">
                     <a href="${escapeHtml(data.accessUrl)}" style="display:block;text-align:center;text-decoration:none;padding:18px 20px;border-radius:14px;background:linear-gradient(135deg,#001b4d 0%,#e30613 100%);color:#ffffff;font-size:16px;font-weight:900;">
-                      🔒 Acessar plataforma →
+                      ?? Acessar plataforma ?
                     </a>
                   </td>
 
                   <td width="50%" style="padding-left:10px;">
                     <a href="${escapeHtml(data.statusUrl)}" style="display:block;text-align:center;text-decoration:none;padding:17px 20px;border-radius:14px;background:#ffffff;border:2px solid #e30613;color:#061a44;font-size:16px;font-weight:900;">
-                      📋 Consultar status da solicitação
+                      ?? Consultar status da solicitação
                     </a>
                   </td>
                 </tr>
               </table>
 
               <div style="margin-top:24px;padding:16px 18px;border-radius:16px;background:#f8fbff;border:1px solid #dbe3f0;color:#24365f;font-size:14px;line-height:1.6;">
-                <strong style="color:#061a44;">ℹ</strong>
+                <strong style="color:#061a44;">?</strong>
                 Se você não solicitou este acesso ou acredita que este e-mail foi enviado por engano,
                 entre em contato com o administrador da sua empresa.
               </div>
@@ -196,3 +196,4 @@ function escapeHtml(value: string) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+

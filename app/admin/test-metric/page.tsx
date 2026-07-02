@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 const CompanyMetricsCard = dynamicImport(
   () => import("@/components/CompanyMetricsCard").then((mod) => mod.CompanyMetricsCard),
-  { ssr: false, loading: () => <div>Carregando métricas...</div> }
+  { ssr: false, loading: () => <div>Carregando mÃ©tricas...</div> }
 );
 import type { DefectsSummary } from "@/components/CompanyMetricsCard";
 import { extractMessageFromJson, extractRequestIdFromJson, formatMessageWithRequestId, unwrapEnvelopeData } from "@/lib/apiEnvelope";
@@ -119,8 +119,8 @@ function formatDate(iso?: string) {
 }
 
 function gateLabel(status: GateStatus) {
-  if (status === "approved") return "Estável";
-  if (status === "warning") return "Atenção";
+  if (status === "approved") return "EstÃ¡vel";
+  if (status === "warning") return "AtenÃ§Ã£o";
   if (status === "failed") return "Risco";
   return "Sem dados";
 }
@@ -143,7 +143,7 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
   if (!validPoints.length) {
     return (
       <div className="flex h-44 items-center justify-center rounded-2xl border border-white/18 bg-white/12 text-[11px] font-medium text-white/68">
-        Sem série de pass rate na janela
+        Sem sÃ©rie de pass rate na janela
       </div>
     );
   }
@@ -259,8 +259,8 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
 
         {/* Zone pill badges on right */}
         {([
-          { key: "healthy", label: "Saudável", bg: "rgba(16,185,129,0.28)", color: "rgba(167,243,208,0.96)" },
-          { key: "attention", label: "Atenção",  bg: "rgba(245,158,11,0.28)", color: "rgba(253,230,138,0.96)" },
+          { key: "healthy", label: "SaudÃ¡vel", bg: "rgba(16,185,129,0.28)", color: "rgba(167,243,208,0.96)" },
+          { key: "attention", label: "AtenÃ§Ã£o",  bg: "rgba(245,158,11,0.28)", color: "rgba(253,230,138,0.96)" },
           { key: "risk",     label: "Risco",     bg: "rgba(239,68,68,0.28)",  color: "rgba(252,165,165,0.96)" },
         ] as const).map(({ key, label, bg, color }) => (
           <g key={key}>
@@ -306,8 +306,8 @@ function GlobalTrendSparkline({ points }: { points: TrendPoint[] }) {
       </svg>
       <div className="flex flex-wrap gap-4 px-4 pb-3 text-[11px] text-white/72">
         <span className="inline-flex items-center gap-1.5"><span className="h-0.5 w-5 rounded-full bg-[rgba(147,197,253,0.96)]" />Pass rate</span>
-        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />Saudável ≥85%</span>
-        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />Atenção 70–85%</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />SaudÃ¡vel â‰¥85%</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-300/80" />AtenÃ§Ã£o 70â€“85%</span>
         <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-400/80" />Risco &lt;70%</span>
       </div>
     </div>
@@ -371,7 +371,7 @@ export default function TestMetricPage() {
         setOverview(json);
         setActiveIndex(0);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao carregar métricas");
+        setError(err instanceof Error ? err.message : "Erro ao carregar mÃ©tricas");
         setOverview(null);
       } finally {
         setLoading(false);
@@ -392,18 +392,18 @@ export default function TestMetricPage() {
         const raw = await res.json().catch(() => null);
         const json = unwrapEnvelopeData<AdminDefectsResponse>(raw);
         if (!res.ok || !json) {
-          if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen: null, error: "Defeitos indisponíveis no momento" });
+          if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen: null, error: "Defeitos indisponÃ­veis no momento" });
           return;
         }
         if (typeof json.error === "string" && json.error) {
-          if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen: 0, error: "Integração de defeitos indisponível neste ambiente" });
+          if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen: 0, error: "IntegraÃ§Ã£o de defeitos indisponÃ­vel neste ambiente" });
           return;
         }
         const items = Array.isArray(json.items) ? json.items : [];
         const criticalOpen = items.filter((d) => isCriticalSeverity(d.severity) && isDefectOpen(d.status)).length;
         if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen, error: null });
       } catch {
-        if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen: null, error: "Defeitos indisponíveis no momento" });
+        if (!cancelled) setGlobalDefects({ loaded: true, criticalOpen: null, error: "Defeitos indisponÃ­veis no momento" });
       }
     };
     load();
@@ -507,7 +507,7 @@ export default function TestMetricPage() {
         const appSet = new Set<string>();
         let openTotal = 0;
         items.forEach((d) => {
-          const raw = typeof d.app === "string" && d.app.trim() ? d.app.trim() : "Sem aplicação";
+          const raw = typeof d.app === "string" && d.app.trim() ? d.app.trim() : "Sem aplicaÃ§Ã£o";
           const app = normalizeAppLabel(raw) ?? raw;
           appSet.add(app);
           const st = (d.kanbanStatus ?? "").toString().toLowerCase();
@@ -599,12 +599,12 @@ export default function TestMetricPage() {
           <section className="tc-hero-panel">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="space-y-3">
-                <p className="text-xs uppercase tracking-[0.5em] text-white/80">Admin · Métricas</p>
+                <p className="text-xs uppercase tracking-[0.5em] text-white/80">Admin Â· MÃ©tricas</p>
                 <h1 className="text-4xl md:text-5xl font-extrabold text-white">
-                  Visão global multiempresa
+                  VisÃ£o global multiempresa
                 </h1>
                 <p className="max-w-3xl text-sm leading-7 text-white/85">
-                  Entenda a saúde de qualidade de todas as empresas em segundos. Busque e compare sem trocar de tela.
+                  Entenda a saÃºde de qualidade de todas as empresas em segundos. Busque e compare sem trocar de tela.
                 </p>
               </div>
 
@@ -617,7 +617,7 @@ export default function TestMetricPage() {
                       onClick={() => setPeriod(days as 7 | 30 | 90)}
                         className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                         period === days
-                          ? "bg-white text-(--tc-primary,#011848)"
+                          ? "bg-white text-[var(--tc-primary,#011848)]"
                           : "text-white/75 hover:bg-white/10 hover:text-white"
                       }`}
                     >
@@ -625,7 +625,7 @@ export default function TestMetricPage() {
                     </button>
                   ))}
                 </div>
-                <div className="text-xs font-medium text-white/80">Última execução: {formatDate(activeCompany?.latestRelease?.createdAt)}</div>
+                <div className="text-xs font-medium text-white/80">Ãšltima execuÃ§Ã£o: {formatDate(activeCompany?.latestRelease?.createdAt)}</div>
               </div>
             </div>
 
@@ -634,9 +634,9 @@ export default function TestMetricPage() {
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Empresas monitoradas</div>
                 <div className="mt-1 text-3xl font-extrabold text-white">{companyCounts.total}</div>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">🟢 {companyCounts.stable}</span>
-                  <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-semibold text-amber-700">🟡 {companyCounts.attention}</span>
-                  <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 font-semibold text-red-700">🔴 {companyCounts.risk}</span>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">ðŸŸ¢ {companyCounts.stable}</span>
+                  <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-semibold text-amber-700">ðŸŸ¡ {companyCounts.attention}</span>
+                  <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 font-semibold text-red-700">ðŸ”´ {companyCounts.risk}</span>
                   <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-semibold text-slate-700">Sem dados {companyCounts.noData}</span>
                 </div>
               </div>
@@ -644,7 +644,7 @@ export default function TestMetricPage() {
               <div className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Pass rate global</div>
                 <div className="mt-1 text-3xl font-extrabold text-white">
-                  {overview?.globalPassRate == null ? "—" : `${overview.globalPassRate}%`}
+                  {overview?.globalPassRate == null ? "â€”" : `${overview.globalPassRate}%`}
                 </div>
                 <div className="mt-2 text-xs text-white/75">
                   Cobertura: {overview?.coverage?.percent ?? 0}% ({overview?.coverage?.withStats ?? 0}/{overview?.coverage?.total ?? 0})
@@ -654,13 +654,13 @@ export default function TestMetricPage() {
               <div className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/70">Releases em risco</div>
                 <div className="mt-1 text-3xl font-extrabold text-white">{releaseRiskCount}</div>
-                <div className="mt-2 text-xs font-medium text-white/78">no período ({period}d)</div>
+                <div className="mt-2 text-xs font-medium text-white/78">no perÃ­odo ({period}d)</div>
               </div>
 
               <div className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white shadow-[0_14px_34px_rgba(1,24,72,0.24)] backdrop-blur-sm">
-                <div className="text-[11px] uppercase tracking-[0.24em] text-white/72">Defeitos críticos abertos</div>
+                <div className="text-[11px] uppercase tracking-[0.24em] text-white/72">Defeitos crÃ­ticos abertos</div>
                 <div className="mt-1 text-3xl font-extrabold text-white">
-                  {!globalDefects.loaded ? "…" : globalDefects.criticalOpen == null ? "—" : globalDefects.criticalOpen}
+                  {!globalDefects.loaded ? "â€¦" : globalDefects.criticalOpen == null ? "â€”" : globalDefects.criticalOpen}
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <div className="text-xs font-medium text-white/78">{globalDefects.error ? globalDefects.error : "Fonte: Qase (global)"}</div>
@@ -679,7 +679,7 @@ export default function TestMetricPage() {
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/72">Qualidade por janela</div>
                 <div className="text-xs font-medium text-white/78">
                   {(overview?.trendSummary?.delta ?? 0) === 0
-                    ? "Sem variação"
+                    ? "Sem variaÃ§Ã£o"
                     : `${overview?.trendSummary?.direction === "up" ? "+" : "-"}${Math.abs(overview?.trendSummary?.delta ?? 0)} pp`}
                 </div>
               </div>
@@ -688,8 +688,8 @@ export default function TestMetricPage() {
                 <div className="grid gap-3 pt-2 sm:grid-cols-3">
                   {([
                     { key: "first", label: "Primeira leitura",     data: globalTrendMeta.first, accent: "border-blue-400/40"    },
-                    { key: "worst", label: "Pior ponto do período", data: globalTrendMeta.worst, accent: "border-red-400/40"     },
-                    { key: "last",  label: "Última leitura",        data: globalTrendMeta.last,  accent: "border-emerald-400/40" },
+                    { key: "worst", label: "Pior ponto do perÃ­odo", data: globalTrendMeta.worst, accent: "border-red-400/40"     },
+                    { key: "last",  label: "Ãšltima leitura",        data: globalTrendMeta.last,  accent: "border-emerald-400/40" },
                   ] as const).map(({ key, label, data, accent }) => {
                     const tone =
                       (data.value ?? 0) >= 85 ? { text: "text-emerald-300", dot: "bg-emerald-400" }
@@ -702,8 +702,8 @@ export default function TestMetricPage() {
                           <span className="text-[10px] uppercase tracking-[0.22em] text-white/56">{label}</span>
                         </div>
                         <div className={`text-2xl font-black tracking-tight ${tone.text}`}>{data.value ?? 0}%</div>
-                        <div className="text-[11px] text-white/60">{data.label} · {data.total} runs</div>
-                        <div className="text-[11px] text-white/48">falhas {data.failRate ?? 0}% · bloqueados {data.blockedRate ?? 0}%</div>
+                        <div className="text-[11px] text-white/60">{data.label} Â· {data.total} runs</div>
+                        <div className="text-[11px] text-white/48">falhas {data.failRate ?? 0}% Â· bloqueados {data.blockedRate ?? 0}%</div>
                       </div>
                     );
                   })}
@@ -715,9 +715,9 @@ export default function TestMetricPage() {
           <section className="tc-panel space-y-5">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="space-y-1">
-                <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Empresas</h2>
-                <p className="text-sm font-medium text-(--tc-text-primary,#0b1a3c)/82">
-                  Busque por empresa, aplicação ou release. O carrossel foca automaticamente.
+                <h2 className="text-lg sm:text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Empresas</h2>
+                <p className="text-sm font-medium text-[var(--tc-text-primary,#0b1a3c)]/82">
+                  Busque por empresa, aplicaÃ§Ã£o ou release. O carrossel foca automaticamente.
                 </p>
               </div>
 
@@ -725,16 +725,16 @@ export default function TestMetricPage() {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar empresa, aplicação ou release"
-                className="w-full md:w-105 rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-3 text-sm text-(--tc-text,#0f172a) placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
+                placeholder="Buscar empresa, aplicaÃ§Ã£o ou release"
+                className="w-full md:w-105 rounded-2xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/30"
               />
             </div>
 
-            {loading && <p className="text-sm text-(--tc-text-muted)">Carregando métricas...</p>}
+            {loading && <p className="text-sm text-[var(--tc-text-muted)]">Carregando mÃ©tricas...</p>}
             {error && !loading && <p className="text-sm text-red-600">{error}</p>}
 
             {!loading && !error && companies.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-(--tc-border)/60 bg-(--tc-surface) p-6 text-sm text-(--tc-text-muted)">
+              <div className="rounded-2xl border border-dashed border-[var(--tc-border)]/60 bg-[var(--tc-surface)] p-6 text-sm text-[var(--tc-text-muted)]">
                 Nenhuma empresa encontrada.
               </div>
             )}
@@ -745,23 +745,23 @@ export default function TestMetricPage() {
                   <button
                     type="button"
                     onClick={() => focusCompany(activeIndex - 1)}
-                    className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2) disabled:opacity-40"
+                    className="rounded-2xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] hover:bg-[var(--tc-surface-2)] disabled:opacity-40"
                     disabled={activeIndex <= 0}
                     aria-label="Empresa anterior"
                   >
-                    ←
+                    â†
                   </button>
-                  <div className="text-sm text-(--tc-text-muted)">
+                  <div className="text-sm text-[var(--tc-text-muted)]">
                     {activeIndex + 1} / {companies.length}
                   </div>
                   <button
                     type="button"
                     onClick={() => focusCompany(activeIndex + 1)}
-                    className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2) disabled:opacity-40"
+                    className="rounded-2xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] hover:bg-[var(--tc-surface-2)] disabled:opacity-40"
                     disabled={activeIndex >= companies.length - 1}
-                    aria-label="Próxima empresa"
+                    aria-label="PrÃ³xima empresa"
                   >
-                    →
+                    â†’
                   </button>
                 </div>
 
@@ -801,7 +801,7 @@ export default function TestMetricPage() {
                       type="button"
                       onClick={() => focusCompany(idx)}
                       className={`h-2.5 w-2.5 rounded-full transition ${
-                        idx === activeIndex ? "bg-(--tc-accent,#ef0001)" : "bg-slate-300 hover:bg-slate-400"
+                        idx === activeIndex ? "bg-[var(--tc-accent,#ef0001)]" : "bg-slate-300 hover:bg-slate-400"
                       }`}
                       aria-label={`Selecionar ${c.name}`}
                       title={c.name}
@@ -814,40 +814,40 @@ export default function TestMetricPage() {
 
           <section className="tc-panel space-y-5">
             <div className="space-y-1">
-              <h2 className="text-lg sm:text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">Atenção agora</h2>
-              <p className="text-sm text-(--tc-text-secondary,#4b5563)">
-                Só entra aqui o que exige ação. Sem ruído.
+              <h2 className="text-lg sm:text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">AtenÃ§Ã£o agora</h2>
+              <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                SÃ³ entra aqui o que exige aÃ§Ã£o. Sem ruÃ­do.
               </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) p-5 space-y-3">
+              <div className="rounded-2xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Quebras de gate (empresas)</h3>
-                  <span className="text-xs text-(--tc-text-muted)">{attentionNow.companiesNeedingAttention.length} no total</span>
+                  <h3 className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Quebras de gate (empresas)</h3>
+                  <span className="text-xs text-[var(--tc-text-muted)]">{attentionNow.companiesNeedingAttention.length} no total</span>
                 </div>
 
                 {attentionNow.companiesNeedingAttention.length === 0 ? (
-                  <div className="text-sm text-(--tc-text-muted)">Nenhuma empresa em risco/atenção no período.</div>
+                  <div className="text-sm text-[var(--tc-text-muted)]">Nenhuma empresa em risco/atenÃ§Ã£o no perÃ­odo.</div>
                 ) : (
                   <div className="space-y-2">
                     {attentionNow.companiesNeedingAttention.slice(0, 6).map((c) => (
-                      <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-(--tc-border)/60 bg-(--tc-surface-2) px-4 py-3">
+                      <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface-2)] px-4 py-3">
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={c.name}>{c.name}</div>
-                          <div className="text-[11px] text-(--tc-text-muted)">
-                            Status: {gateLabel(c.gate.status)} · Pass rate: {c.passRate == null ? "—" : `${c.passRate}%`}
+                          <div className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] truncate" title={c.name}>{c.name}</div>
+                          <div className="text-[11px] text-[var(--tc-text-muted)]">
+                            Status: {gateLabel(c.gate.status)} Â· Pass rate: {c.passRate == null ? "â€”" : `${c.passRate}%`}
                           </div>
                         </div>
                         {c.slug ? (
                           <Link
                             href={buildCompanyPathForAccess(c.slug, "home", companyRouteInput)}
-                            className="shrink-0 rounded-xl bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold text-white hover:bg-(--tc-accent,#d30001)"
+                            className="shrink-0 rounded-xl bg-[var(--tc-accent,#ef0001)] px-3 py-2 text-xs font-semibold text-white hover:bg-[var(--tc-accent,#d30001)]"
                           >
                             Abrir
                           </Link>
                         ) : (
-                          <span className="text-xs text-(--tc-text-muted)">sem slug</span>
+                          <span className="text-xs text-[var(--tc-text-muted)]">sem slug</span>
                         )}
                       </div>
                     ))}
@@ -855,33 +855,33 @@ export default function TestMetricPage() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) p-5 space-y-3">
+              <div className="rounded-2xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Releases em risco sem execução recente</h3>
-                  <span className="text-xs text-(--tc-text-muted)">≥ {attentionNow.staleDays} dias</span>
+                  <h3 className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Releases em risco sem execuÃ§Ã£o recente</h3>
+                  <span className="text-xs text-[var(--tc-text-muted)]">â‰¥ {attentionNow.staleDays} dias</span>
                 </div>
 
                 {attentionNow.staleRiskReleases.length === 0 ? (
-                  <div className="text-sm text-(--tc-text-muted)">Nenhuma release em risco com execução “antiga”.</div>
+                  <div className="text-sm text-[var(--tc-text-muted)]">Nenhuma release em risco com execuÃ§Ã£o â€œantigaâ€.</div>
                 ) : (
                   <div className="space-y-2">
                     {attentionNow.staleRiskReleases.slice(0, 6).map(({ company, release }) => (
                       <div
                         key={`${company.id}-${release.slug ?? release.title ?? "release"}`}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-(--tc-border)/60 bg-(--tc-surface-2) px-4 py-3"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface-2)] px-4 py-3"
                       >
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c) truncate" title={release.title ?? release.slug ?? ""}>
+                          <div className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] truncate" title={release.title ?? release.slug ?? ""}>
                             {release.title ?? release.slug ?? "Release"}
                           </div>
-                          <div className="text-[11px] text-(--tc-text-muted)">
-                            {company.name} · {formatDate(release.createdAt ?? release.created_at)}
+                          <div className="text-[11px] text-[var(--tc-text-muted)]">
+                            {company.name} Â· {formatDate(release.createdAt ?? release.created_at)}
                           </div>
                         </div>
                         {company.slug ? (
                           <Link
                             href={buildCompanyPathForAccess(company.slug, "runs", companyRouteInput)}
-                            className="shrink-0 rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-3 py-2 text-xs font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2)"
+                            className="shrink-0 rounded-xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-3 py-2 text-xs font-semibold text-[var(--tc-text-primary,#0b1a3c)] hover:bg-[var(--tc-surface-2)]"
                           >
                             Ver
                           </Link>
@@ -896,7 +896,7 @@ export default function TestMetricPage() {
             <div className="flex items-center justify-end">
               <Link
                 href="/admin/defeitos"
-                className="rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2)"
+                className="rounded-xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] hover:bg-[var(--tc-surface-2)]"
               >
                 Ver defeitos (global)
               </Link>
@@ -907,3 +907,4 @@ export default function TestMetricPage() {
       </div>
   );
 }
+

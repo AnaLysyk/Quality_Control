@@ -1,4 +1,4 @@
-export type BrainCommandRisk = "low" | "medium" | "high";
+﻿export type BrainCommandRisk = "low" | "medium" | "high";
 
 export type BrainCommandDefinition = {
   command: string;
@@ -19,7 +19,7 @@ export type BrainCommandDefinition = {
 export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   {
     command: "/focar",
-    description: "Define um nó como foco principal de investigação.",
+    description: "Define um nÃ³ como foco principal de investigaÃ§Ã£o.",
     requiredPermission: "brain:read",
     parameters: [{ name: "entity", type: "string", required: true, description: "ID/chave da entidade" }],
     example: "/focar TC-1042",
@@ -29,11 +29,11 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/expandir",
-    description: "Expande vizinhança de um nó no grafo.",
+    description: "Expande vizinhanÃ§a de um nÃ³ no grafo.",
     requiredPermission: "brain:read",
     parameters: [
       { name: "entity", type: "string", required: true, description: "ID/chave da entidade" },
-      { name: "depth", type: "number", description: "Profundidade da expansão (1-4)" },
+      { name: "depth", type: "number", description: "Profundidade da expansÃ£o (1-4)" },
     ],
     example: "/expandir TC-1042 depth=2",
     risk: "low",
@@ -42,7 +42,7 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/explicar-relacao",
-    description: "Explica caminho ou relação entre duas entidades.",
+    description: "Explica caminho ou relaÃ§Ã£o entre duas entidades.",
     requiredPermission: "brain:read",
     parameters: [
       { name: "from", type: "string", required: true, description: "Entidade origem" },
@@ -55,7 +55,7 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/investigar",
-    description: "Abre investigação guiada para uma entidade.",
+    description: "Abre investigaÃ§Ã£o guiada para uma entidade.",
     requiredPermission: "brain:read",
     parameters: [{ name: "entity", type: "string", required: true, description: "Entidade alvo" }],
     example: "/investigar RUN-009",
@@ -95,9 +95,9 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/memorizar",
-    description: "Cria memória operacional no Brain.",
+    description: "Cria memÃ³ria operacional no Brain.",
     requiredPermission: "brain:write",
-    parameters: [{ name: "texto", type: "string", required: true, description: "Conteúdo da memória" }],
+    parameters: [{ name: "texto", type: "string", required: true, description: "ConteÃºdo da memÃ³ria" }],
     example: "/memorizar decisao",
     risk: "medium",
     requiresConfirmation: false,
@@ -105,9 +105,9 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/arquivar-memoria",
-    description: "Arquiva memória existente no Brain.",
+    description: "Arquiva memÃ³ria existente no Brain.",
     requiredPermission: "brain:write",
-    parameters: [{ name: "memoryId", type: "string", required: true, description: "ID da memória" }],
+    parameters: [{ name: "memoryId", type: "string", required: true, description: "ID da memÃ³ria" }],
     example: "/arquivar memoria mem_123",
     risk: "medium",
     requiresConfirmation: true,
@@ -115,11 +115,11 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/mesclar-nos",
-    description: "Solicita mesclagem de nós duplicados.",
+    description: "Solicita mesclagem de nÃ³s duplicados.",
     requiredPermission: "brain:write",
     parameters: [
-      { name: "nodeA", type: "string", required: true, description: "Nó principal" },
-      { name: "nodeB", type: "string", required: true, description: "Nó secundário" },
+      { name: "nodeA", type: "string", required: true, description: "NÃ³ principal" },
+      { name: "nodeB", type: "string", required: true, description: "NÃ³ secundÃ¡rio" },
     ],
     example: "/mesclar-nos NODE_A NODE_B",
     risk: "high",
@@ -138,7 +138,7 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/mostrar-casos-sem-automacao",
-    description: "Mostra casos sem vínculo de automação.",
+    description: "Mostra casos sem vÃ­nculo de automaÃ§Ã£o.",
     requiredPermission: "brain:read",
     parameters: [],
     example: "/mostrar casos sem automacao",
@@ -148,7 +148,7 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/mostrar-usuarios-sem-empresa",
-    description: "Mostra usuários sem vínculo de empresa.",
+    description: "Mostra usuÃ¡rios sem vÃ­nculo de empresa.",
     requiredPermission: "brain:read-sensitive",
     parameters: [],
     example: "/mostrar usuarios sem empresa",
@@ -158,7 +158,7 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/mostrar-defeitos-sem-run",
-    description: "Mostra defeitos sem vínculo de run.",
+    description: "Mostra defeitos sem vÃ­nculo de run.",
     requiredPermission: "brain:read",
     parameters: [],
     example: "/mostrar defeitos sem run",
@@ -168,7 +168,7 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
   },
   {
     command: "/gerar-relatorio-brain",
-    description: "Gera relatório operacional do Brain.",
+    description: "Gera relatÃ³rio operacional do Brain.",
     requiredPermission: "brain:read",
     parameters: [{ name: "company", type: "string", description: "Slug da empresa" }],
     example: "/gerar-relatorio brain",
@@ -181,3 +181,4 @@ export const BRAIN_COMMAND_CATALOG: BrainCommandDefinition[] = [
 export function getBrainCommandDefinition(command: string) {
   return BRAIN_COMMAND_CATALOG.find((item) => item.command === command);
 }
+

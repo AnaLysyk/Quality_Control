@@ -1,4 +1,4 @@
-import { CLARIFY_REPLY, REPEATED_REPLY_MESSAGES } from "@/lib/assistant/messages";
+﻿import { CLARIFY_REPLY, REPEATED_REPLY_MESSAGES } from "@/lib/assistant/messages";
 
 describe("assistant fallback messages humanization", () => {
   it("clarify reply uses humanized conversational wording", () => {
@@ -10,3 +10,4 @@ describe("assistant fallback messages humanization", () => {
     expect(REPEATED_REPLY_MESSAGES.use_brain.toLowerCase()).toContain("mesmo assunto");
   });
 });
+

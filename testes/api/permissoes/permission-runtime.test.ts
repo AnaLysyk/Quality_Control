@@ -1,4 +1,4 @@
-import { SYSTEM_ROLES } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES } from "@/lib/auth/roles";
 import { getVisibleRouteIds } from "@/lib/navigation/get-visible-routes";
 import { SYSTEM_ROUTE_BY_ID } from "@/lib/navigation/route-map";
 import { canAccess, canAccessRoute } from "@/lib/permissions/can-access";
@@ -70,3 +70,4 @@ describe("runtime central de permissoes", () => {
     expect(canAccessRoute(contextFor(SYSTEM_ROLES.LEADER_TC, {}), route!)).toBe(false);
   });
 });
+

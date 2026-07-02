@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -30,16 +30,16 @@ function assertAccess(user: Awaited<ReturnType<typeof authenticateRequest>>, com
   return true;
 }
 
-// ── GET /api/automations/assets?companySlug=xxx ───────────────────────────────
+// â”€â”€ GET /api/automations/assets?companySlug=xxx â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function GET(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const url = new URL(request.url);
   const companySlug = url.searchParams.get("companySlug") ?? "";
-  if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  if (!companySlug) return NextResponse.json({ error: "companySlug obrigatÃ³rio" }, { status: 400 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
 
   await ensureAutomationTables();
 
@@ -57,18 +57,18 @@ export async function GET(request: Request) {
   return NextResponse.json({ assets: rows });
 }
 
-// ── POST /api/automations/assets ──────────────────────────────────────────────
+// â”€â”€ POST /api/automations/assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
   const { companySlug, name, kind, sizeBytes, url: assetUrl } = parsed.data;
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
 
   await ensureAutomationTables();
 
@@ -82,18 +82,18 @@ export async function POST(request: Request) {
   return NextResponse.json({ asset: rows[0] });
 }
 
-// ── DELETE /api/automations/assets ───────────────────────────────────────────
+// â”€â”€ DELETE /api/automations/assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function DELETE(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = DeleteSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
   const { id, companySlug } = parsed.data;
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
 
   await ensureAutomationTables();
 
@@ -104,3 +104,4 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+

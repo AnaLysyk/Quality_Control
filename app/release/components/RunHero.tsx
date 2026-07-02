@@ -1,4 +1,4 @@
-import ExportPDFButton from "@/components/ExportPDFButton";
+﻿import ExportPDFButton from "@/components/ExportPDFButton";
 import ManualReleaseActions from "@/components/ManualReleaseActions";
 import { EditReleaseButton } from "@/components/EditReleaseButton";
 import { QualityGateHistory } from "../QualityGateHistory";
@@ -26,9 +26,9 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
 
   return (
     <>
-      {/* ── Header row: title + metadata ── */}
+      {/* â”€â”€ Header row: title + metadata â”€â”€ */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-5">
-        {/* Left — identity */}
+        {/* Left â€” identity */}
         <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-3">
             <div
@@ -38,7 +38,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
               <span className="leading-none">{vm.appMeta.label}</span>
             </div>
             <span className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-              {vm.source === "API" ? "Integração Qase" : "Manual"}
+              {vm.source === "API" ? "IntegraÃ§Ã£o Qase" : "Manual"}
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">
@@ -49,7 +49,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
           )}
         </div>
 
-        {/* Right — key indicators */}
+        {/* Right â€” key indicators */}
         <div className="flex items-start gap-3 shrink-0">
           {/* Gate badge */}
           <div
@@ -80,7 +80,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
         </div>
       </div>
 
-      {/* ── Metadata row ── */}
+      {/* â”€â”€ Metadata row â”€â”€ */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px] text-white/60 mb-5">
         {vm.runId && (
           <span>
@@ -100,7 +100,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
         )}
       </div>
 
-      {/* ── Actions row ── */}
+      {/* â”€â”€ Actions row â”€â”€ */}
       <div className="flex flex-wrap items-center gap-2 mb-2">
         <a
           data-testid="release-export"
@@ -154,3 +154,4 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
     </>
   );
 }
+

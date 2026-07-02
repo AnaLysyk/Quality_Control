@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, Variants } from "framer-motion";
 import { ReactNode } from "react";
@@ -65,3 +65,4 @@ export function MotionSlideX({ children, delay = 0, className }: MotionProps) {
     </motion.div>
   );
 }
+

@@ -165,32 +165,32 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
           ]}
         />
 
-        <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+        <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-(--tc-primary,#011848) text-[#011848] dark:text-white">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--tc-primary,#011848)] text-[#011848] dark:text-white">
                 <FiMap className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-accent,#ef0001)">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--tc-accent,#ef0001)]">
                   GovernanÃ§a interna
                 </p>
-                <h1 className="mt-1 text-2xl font-black tracking-[-0.03em] text-(--tc-text-primary,#0b1a3c) sm:text-3xl">
+                <h1 className="mt-1 text-2xl font-black tracking-[-0.03em] text-[var(--tc-text-primary,#0b1a3c)] sm:text-3xl">
                   Mapa do Sistema
                 </h1>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                   Fonte de verdade inicial para mÃ³dulos, rotas, permissÃµes, perfis esperados e estado tÃ©cnico das telas.
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3">
-                <div className="text-xs font-semibold text-(--tc-text-muted,#64748b)">MÃ³dulos</div>
+              <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3">
+                <div className="text-xs font-semibold text-[var(--tc-text-muted,#64748b)]">MÃ³dulos</div>
                 <div className="mt-1 text-2xl font-black">{modules.length}</div>
               </div>
-              <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3">
-                <div className="text-xs font-semibold text-(--tc-text-muted,#64748b)">Rotas</div>
+              <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3">
+                <div className="text-xs font-semibold text-[var(--tc-text-muted,#64748b)]">Rotas</div>
                 <div className="mt-1 text-2xl font-black">{routes.length}</div>
               </div>
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
@@ -207,16 +207,16 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-5">
+        <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-5">
           <div className="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_240px_200px_auto]">
-            <label className="flex items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3">
-              <FiSearch className="h-4 w-4 shrink-0 text-(--tc-text-muted,#64748b)" />
+            <label className="flex items-center gap-3 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3">
+              <FiSearch className="h-4 w-4 shrink-0 text-[var(--tc-text-muted,#64748b)]" />
               <input
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar rota, arquivo, permissÃ£o..."
-                className="w-full bg-transparent text-sm outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
+                className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--tc-text-muted,#94a3b8)]"
                 aria-label="Buscar no mapa do sistema"
               />
             </label>
@@ -224,7 +224,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
             <select
               value={moduleFilter}
               onChange={(event) => setModuleFilter(event.target.value)}
-              className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm font-semibold outline-none"
+              className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3 text-sm font-semibold outline-none"
               aria-label="Filtrar por mÃ³dulo"
             >
               <option value="todos">Todos os mÃ³dulos</option>
@@ -238,7 +238,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm font-semibold outline-none"
+              className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3 text-sm font-semibold outline-none"
               aria-label="Filtrar por status"
             >
               <option value="todos">Todos os status</option>
@@ -253,34 +253,34 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
               type="button"
               onClick={clearFilters}
               disabled={!hasFilters}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <FiX className="h-4 w-4" />
               Limpar
             </button>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
             <span>
-              Exibindo <strong className="text-(--tc-text-primary,#0b1a3c)">{filteredRoutes.length}</strong> de{" "}
+              Exibindo <strong className="text-[var(--tc-text-primary,#0b1a3c)]">{filteredRoutes.length}</strong> de{" "}
               {routes.length} rotas.
             </span>
             <span>Este mapa governa as rotas e permissÃµes usadas pelo menu.</span>
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+        <section className="overflow-hidden rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
           {filteredRoutes.length === 0 ? (
             <div className="px-6 py-16 text-center">
               <h2 className="text-lg font-bold">Nenhuma rota encontrada</h2>
-              <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+              <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                 Ajuste os filtros ou limpe a busca para voltar ao mapa completo.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-400 w-full border-collapse text-left text-sm">
-                <thead className="bg-(--tc-primary,#011848) text-[#011848] dark:text-white">
+                <thead className="bg-[var(--tc-primary,#011848)] text-[#011848] dark:text-white">
                   <tr>
                     <th className="px-4 py-4 font-semibold">MÃ³dulo</th>
                     <th className="px-4 py-4 font-semibold">Rota</th>
@@ -298,13 +298,13 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
                     return (
                       <tr
                         key={routeDefinition.id}
-                        className="align-top transition hover:bg-(--tc-surface-alt,#f8fafc)"
+                        className="align-top transition hover:bg-[var(--tc-surface-alt,#f8fafc)]"
                       >
                         <td className="px-4 py-4">
-                          <div className="font-bold text-(--tc-text-primary,#0b1a3c)">
+                          <div className="font-bold text-[var(--tc-text-primary,#0b1a3c)]">
                             {moduleDefinition?.name ?? routeDefinition.moduleId}
                           </div>
-                          <div className="mt-1 text-xs text-(--tc-text-muted,#64748b)">
+                          <div className="mt-1 text-xs text-[var(--tc-text-muted,#64748b)]">
                             {routeDefinition.id}
                           </div>
                         </td>
@@ -314,10 +314,10 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
                           </code>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="font-semibold text-(--tc-text-primary,#0b1a3c)">
+                          <div className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
                             {routeDefinition.label}
                           </div>
-                          <p className="mt-1 min-w-60 leading-5 text-(--tc-text-secondary,#4b5563)">
+                          <p className="mt-1 min-w-60 leading-5 text-[var(--tc-text-secondary,#4b5563)]">
                             {routeDefinition.description}
                           </p>
                         </td>
@@ -337,7 +337,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
                             {routeDefinition.expectedProfiles.map((profile) => (
                               <span
                                 key={profile}
-                                className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-2 py-1 text-xs font-medium"
+                                className="rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-2 py-1 text-xs font-medium"
                               >
                                 {PROFILE_LABELS[profile]}
                               </span>
@@ -348,12 +348,12 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
                           <StatusBadge status={routeDefinition.status} />
                         </td>
                         <td className="px-4 py-4">
-                          <code className="block min-w-64 break-all text-xs leading-5 text-(--tc-text-secondary,#4b5563)">
+                          <code className="block min-w-64 break-all text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">
                             {routeDefinition.mainFile}
                           </code>
                         </td>
                         <td className="px-4 py-4">
-                          <p className="min-w-64 leading-5 text-(--tc-text-secondary,#4b5563)">
+                          <p className="min-w-64 leading-5 text-[var(--tc-text-secondary,#4b5563)]">
                             {routeDefinition.notes ?? "Sem observaÃ§Ã£o."}
                           </p>
                         </td>
@@ -369,4 +369,5 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
     </main>
   );
 }
+
 

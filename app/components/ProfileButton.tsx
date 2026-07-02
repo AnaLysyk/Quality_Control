@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -51,14 +51,14 @@ function MenuItem(props: {
         className={`group relative flex w-full items-start gap-3 rounded-2xl px-3.5 py-2.5 text-left shadow-[0_10px_26px_rgba(15,23,42,0.06)] transition hover:-translate-y-px ${
           isDarkTheme
             ? "border border-[#29466e] bg-[linear-gradient(180deg,#0d1a35_0%,#112243_100%)] hover:border-[#ff8a9c] hover:bg-[linear-gradient(180deg,#102042_0%,#15294f_100%)]"
-            : "border border-[#d8ddea] bg-[linear-gradient(180deg,#ffffff_0%,#fffafb_100%)] hover:border-(--tc-accent) hover:bg-[linear-gradient(180deg,#ffffff_0%,#fff5f7_100%)]"
+            : "border border-[#d8ddea] bg-[linear-gradient(180deg,#ffffff_0%,#fffafb_100%)] hover:border-[var(--tc-accent)] hover:bg-[linear-gradient(180deg,#ffffff_0%,#fff5f7_100%)]"
         }`}
       >
         <span
           className={`mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-[14px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] transition ${
             isDarkTheme
               ? "border border-[#355483] bg-[linear-gradient(180deg,#12264c_0%,#0d1c38_100%)] text-white group-hover:border-[#ff8a9c] group-hover:text-[#ffd4db]"
-              : "border border-[#c8d4ea] bg-[linear-gradient(180deg,#ffffff_0%,#f6f9ff_100%)] text-[#081f4d] group-hover:border-(--tc-accent) group-hover:text-(--tc-accent)"
+              : "border border-[#c8d4ea] bg-[linear-gradient(180deg,#ffffff_0%,#f6f9ff_100%)] text-[#081f4d] group-hover:border-[var(--tc-accent)] group-hover:text-[var(--tc-accent)]"
           }`}
           aria-hidden
         >
@@ -76,7 +76,7 @@ function MenuItem(props: {
           className={`mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-transparent transition ${
             isDarkTheme
               ? "text-[#d2def8] group-hover:border-[#ff8a9c] group-hover:bg-[#4d1220] group-hover:text-white"
-              : "text-[#4a6697] group-hover:border-[#f2c8cf] group-hover:bg-rose-50 group-hover:text-(--tc-accent)"
+              : "text-[#4a6697] group-hover:border-[#f2c8cf] group-hover:bg-rose-50 group-hover:text-[var(--tc-accent)]"
           }`}
         >
           <FiChevronRight aria-hidden size={16} />
@@ -253,7 +253,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
         className={`relative flex h-12 w-12 items-center justify-center rounded-full text-white shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition focus:outline-none focus:ring-2 focus:ring-(--tc-primary,#4e8df5) focus:ring-offset-2 focus:ring-offset-transparent ${
           effectiveAvatarUrl
             ? "bg-transparent p-0 hover:shadow-[0_12px_26px_rgba(15,23,42,0.24)]"
-            : "border border-white/12 bg-(--tc-surface-dark,#0f1828) hover:border-(--tc-primary,#4e8df5) hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)]"
+            : "border border-white/12 bg-[var(--tc-surface-dark,#0f1828)] hover:border-[var(--tc-primary,#4e8df5)] hover:shadow-[0_12px_26px_rgba(78,141,245,0.25)]"
         }`}
       >
         <UserAvatar
@@ -312,7 +312,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
                 />
 
                 <div className="min-w-0 pt-0.5">
-                  <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>
+                  <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-[var(--tc-accent)]"}`}>
                     {activeIdentity.kind === "company" ? t("profile.companyLabel") : t("profile.accountLabel")}
                   </p>
                   <div className={`wrap-break-word text-[1.05rem] font-extrabold leading-tight ${isDarkTheme ? "text-white" : "text-[#081f4d]"}`}>
@@ -341,7 +341,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
                 className={`inline-flex h-9 w-9 items-center justify-center rounded-[14px] shadow-[0_8px_20px_rgba(15,23,42,0.08)] transition ${
                   isDarkTheme
                     ? "border border-[#355483] bg-[#102042] text-white hover:border-[#ff8a9c] hover:text-[#ffd4db]"
-                    : "border border-border bg-surface text-(--tc-text-secondary,#5e79a8) hover:border-(--tc-accent) hover:text-(--tc-accent)"
+                    : "border border-border bg-surface text-[var(--tc-text-secondary,#5e79a8)] hover:border-[var(--tc-accent)] hover:text-[var(--tc-accent)]"
                 }`}
                 aria-label={t("profile.closeMenu")}
                 onClick={() => {
@@ -380,10 +380,10 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
                   <button
                     type="button"
                     aria-label={`${t("profile.copy")} ${copyActionLabel}`}
-                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border text-white shadow-[0_10px_22px_rgba(15,23,42,0.12)] transition hover:bg-(--tc-accent) disabled:opacity-50 ${
+                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border text-white shadow-[0_10px_22px_rgba(15,23,42,0.12)] transition hover:bg-[var(--tc-accent)] disabled:opacity-50 ${
                       isDarkTheme
                         ? "border-[#355483] bg-[#16315f] hover:border-[#ff8a9c] hover:text-white"
-                        : "border-[#ccd8ee] bg-[#102755] hover:border-(--tc-accent)"
+                        : "border-[#ccd8ee] bg-[#102755] hover:border-[var(--tc-accent)]"
                     }`}
                     onClick={() => void copyProfileCardValue()}
                     disabled={!profileCardValue}
@@ -418,7 +418,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
           <div className={`h-px ${isDarkTheme ? "bg-[linear-gradient(90deg,rgba(255,138,156,0)_0%,rgba(255,138,156,0.16)_18%,rgba(132,170,255,0.24)_50%,rgba(255,138,156,0.16)_82%,rgba(255,138,156,0)_100%)]" : "bg-[linear-gradient(90deg,rgba(239,0,1,0)_0%,rgba(239,0,1,0.10)_18%,rgba(10,31,82,0.14)_50%,rgba(239,0,1,0.10)_82%,rgba(239,0,1,0)_100%)]"}`} />
 
           <div className="px-3.5 py-3">
-            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>{t("profile.accountSection")}</p>
+            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-[var(--tc-accent)]"}`}>{t("profile.accountSection")}</p>
             <ul aria-label={t("profile.menuOptions")} className="mt-2 space-y-2">
               <MenuItem
                 isDarkTheme={isDarkTheme}
@@ -437,7 +437,7 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
           <div className={`h-px ${isDarkTheme ? "bg-[linear-gradient(90deg,rgba(255,138,156,0)_0%,rgba(255,138,156,0.16)_18%,rgba(132,170,255,0.24)_50%,rgba(255,138,156,0.16)_82%,rgba(255,138,156,0)_100%)]" : "bg-[linear-gradient(90deg,rgba(239,0,1,0)_0%,rgba(239,0,1,0.10)_18%,rgba(10,31,82,0.14)_50%,rgba(239,0,1,0.10)_82%,rgba(239,0,1,0)_100%)]"}`} />
 
           <div className="px-3.5 py-3">
-            <p className={`text-[11px] font-extrabold uppercase tracking-[0.2em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-(--tc-accent)"}`}>
+            <p className={`text-[11px] font-extrabold uppercase tracking-[0.2em] ${isDarkTheme ? "text-[#ff8a9c]" : "text-[var(--tc-accent)]"}`}>
               {t("profileMenu.language")}
             </p>
             <div className="mt-2">
@@ -468,3 +468,4 @@ export default function ProfileButton({ defaultOpen = false }: ProfileButtonProp
     </div>
   );
 }
+

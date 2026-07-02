@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 import CompanyIntelligenceDashboardClient from "./CompanyIntelligenceDashboardClient";
 import CompanyDashboardPrintShell from "./CompanyDashboardPrintShell";
 import { loadCompanyDashboardData } from "./companyDashboardData";
@@ -36,3 +36,4 @@ export default async function CompanyDashboardPage({ params, searchParams }: Pag
     </CompanyDashboardPrintShell>
   );
 }
+

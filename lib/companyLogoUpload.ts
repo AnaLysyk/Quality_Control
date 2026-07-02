@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+﻿import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -85,3 +85,4 @@ export async function uploadAndPersistCompanyLogo(companyId: string, file: File)
 
   return { logoUrl };
 }
+

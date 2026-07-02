@@ -1,4 +1,4 @@
-export type TestPlanCaseStep = {
+﻿export type TestPlanCaseStep = {
   id: string;
   action?: string | null;
   expectedResult?: string | null;
@@ -307,4 +307,5 @@ export function isCaseEffectivelyEmpty(testCase: TestPlanCase) {
       ))
   );
 }
+
 

@@ -1,4 +1,4 @@
-import type { AccessRequestProfilePreview } from "../../_types/accessRequests.types";
+﻿import type { AccessRequestProfilePreview } from "../../_types/accessRequests.types";
 
 type StatusBubblesProps = {
   profile: AccessRequestProfilePreview;
@@ -51,17 +51,17 @@ export function StatusBubbles({
           tone={profile.passwordProvided ? "ok" : "warn"}
         />
         <ValidationItem
-          label="Obrigatórios"
+          label="ObrigatÃ³rios"
           value={missingRequiredFields ? "Pendentes" : "OK"}
           tone={missingRequiredFields ? "warn" : "ok"}
         />
         <ValidationItem
           label="Empresa"
-          value={companyPending ? "Obrigatória" : "Validada"}
+          value={companyPending ? "ObrigatÃ³ria" : "Validada"}
           tone={companyPending ? "warn" : "ok"}
         />
         <ValidationItem
-          label="Alterações"
+          label="AlteraÃ§Ãµes"
           value={`${changedCount} campo(s)`}
           tone={commentsLocked ? "neutral" : changedCount > 0 ? "warn" : "neutral"}
         />
@@ -69,3 +69,4 @@ export function StatusBubbles({
     </section>
   );
 }
+

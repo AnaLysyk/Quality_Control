@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/lib/prismaClient";
 import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "@/lib/core/auth/pgStore";
 import { syncCompanyApplications } from "@/lib/applicationsStore";
 
@@ -51,3 +51,4 @@ seedQualityControlInternalCompany()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

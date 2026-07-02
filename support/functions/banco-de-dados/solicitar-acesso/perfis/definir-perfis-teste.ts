@@ -36,3 +36,4 @@ export const perfisNegadosSolicitacoes = [
 
 export const rotaSolicitacoes = "/admin/access-requests";
 export const rotaSolicitacoesRemovida = "/admin/requests";
+

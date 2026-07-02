@@ -1,4 +1,4 @@
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import path from "node:path";
 
 import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
@@ -30,3 +30,4 @@ export function findLocalBiometricFixture(slug: string) {
   const normalizedSlug = slug.trim().toLowerCase();
   return LOCAL_BIOMETRIC_FIXTURES.find((fixture) => fixture.slug === normalizedSlug) ?? null;
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { readManualReleaseCases, writeManualReleaseCases, type ManualCaseItem } from "@/lib/manualReleaseStore";
 
@@ -48,7 +48,7 @@ function normalizeItem(raw: Record<string, unknown>): ManualCaseItem | null {
 
 export async function GET(req: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const { slug } = await context.params;
   const store = await readManualReleaseCases();
@@ -58,7 +58,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
 
 export async function POST(req: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const { slug } = await context.params;
   const body = (await req.json().catch(() => null)) as unknown;
@@ -81,7 +81,7 @@ export async function POST(req: Request, context: { params: Promise<{ slug: stri
 
 export async function PATCH(req: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const { slug } = await context.params;
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
@@ -106,7 +106,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
 
 export async function PUT(req: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const { slug } = await context.params;
   const body = (await req.json().catch(() => null)) as unknown;
@@ -125,14 +125,14 @@ export async function PUT(req: Request, context: { params: Promise<{ slug: strin
 
 export async function DELETE(req: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const { slug } = await context.params;
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ message: "JSON invalido" }, { status: 400 });
 
   const id = body.id ?? body.caseId ?? body.case_id;
-  if (!id) return NextResponse.json({ message: "ID obrigatório" }, { status: 400 });
+  if (!id) return NextResponse.json({ message: "ID obrigatÃ³rio" }, { status: 400 });
 
   const store = await readManualReleaseCases();
   const list = Array.isArray(store[slug]) ? store[slug] : [];
@@ -140,3 +140,4 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
   await writeManualReleaseCases(store);
   return NextResponse.json({ ok: true });
 }
+

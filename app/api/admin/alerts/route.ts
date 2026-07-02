@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getMockRole } from "@/lib/rbac/defects";
 import { readAlertsStore } from "@/lib/qualityAlert";
@@ -15,3 +15,4 @@ export async function GET(req: Request) {
   const alerts = await readAlertsStore();
   return NextResponse.json({ alerts }, { status: 200 });
 }
+

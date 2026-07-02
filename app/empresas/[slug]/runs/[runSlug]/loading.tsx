@@ -1,6 +1,6 @@
-export default function RunPageLoading() {
+﻿export default function RunPageLoading() {
   return (
-    <div className="w-full py-6 sm:py-8 text-(--tc-text,#0b1a3c) animate-pulse">
+    <div className="w-full py-6 sm:py-8 text-[var(--tc-text,#0b1a3c)] animate-pulse">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header card skeleton */}
         <div className="overflow-hidden rounded-4xl bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] p-6 sm:p-8 shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
@@ -23,7 +23,7 @@ export default function RunPageLoading() {
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="rounded-2xl px-4 py-4 flex items-center justify-between border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff)"
+              className="rounded-2xl px-4 py-4 flex items-center justify-between border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)]"
             >
               <div className="flex items-center gap-2">
                 <div className="h-3.5 w-3.5 rounded-full bg-slate-200" />
@@ -51,7 +51,7 @@ export default function RunPageLoading() {
         </div>
 
         {/* Kanban skeleton */}
-        <div className="rounded-2xl border border-(--tc-border)/30 bg-(--tc-primary)/4 p-4">
+        <div className="rounded-2xl border border-[var(--tc-border)]/30 bg-[var(--tc-primary)]/4 p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 w-full">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="rounded-xl p-5 border border-slate-200 bg-slate-50 min-h-40 space-y-3">
@@ -66,3 +66,5 @@ export default function RunPageLoading() {
     </div>
   );
 }
+
+

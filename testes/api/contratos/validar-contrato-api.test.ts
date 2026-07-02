@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+﻿import { describe, expect, it } from "@jest/globals";
 
 import {
   formatarErrosContrato,
@@ -64,3 +64,4 @@ describe("validarContratoApi", () => {
     );
   });
 });
+

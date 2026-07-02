@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import AutomationCompanyTools from "../AutomationCompanyTools";
 import { useAutomationModuleContext } from "../_components/AutomationModuleContext";
@@ -14,4 +14,5 @@ export default function AutomacoesToolsPage() {
     />
   );
 }
+
 

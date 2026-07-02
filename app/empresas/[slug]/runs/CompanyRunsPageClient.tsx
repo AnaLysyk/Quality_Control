@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -210,7 +210,7 @@ function normalizeManualRuns(data: unknown[], t: (key: string, params?: Record<s
       sourceType === "qase"
         ? "Qase"
         : sourceType === "automation"
-          ? "Automação"
+          ? "AutomaÃ§Ã£o"
           : sourceType === "local"
             ? "Local"
             : t("runsPage.manualSource");
@@ -232,7 +232,7 @@ function normalizeManualRuns(data: unknown[], t: (key: string, params?: Record<s
       statusLabel: resolveStatusLabel(typeof rec.status === "string" ? rec.status : null, t),
       sourceType,
       sourceLabel,
-      providerLabel: sourceType === "qase" ? t("runsPage.providerQase") : sourceType === "automation" ? "Automação" : null,
+      providerLabel: sourceType === "qase" ? t("runsPage.providerQase") : sourceType === "automation" ? "AutomaÃ§Ã£o" : null,
       applicationLabel: String(rec.app ?? rec.qaseProject ?? t("runsPage.manualAppFallback")),
       projectCode: normalizeProjectCode(rec.qaseProject ?? rec.app),
       summary: t("runsPage.manualSummary", { pass: stats.pass, fail: stats.fail, blocked: stats.blocked, notRun: stats.notRun }),
@@ -341,7 +341,7 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], t: (key: string, params?
         sourceType === "qase"
           ? "Qase"
           : sourceType === "automation"
-            ? "Automação"
+            ? "AutomaÃ§Ã£o"
             : sourceType === "local"
               ? "Local"
               : t("runsPage.integratedSource"),
@@ -349,7 +349,7 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], t: (key: string, params?
         sourceType === "qase"
           ? t("runsPage.providerQase")
           : sourceType === "automation"
-            ? "Automação"
+            ? "AutomaÃ§Ã£o"
             : providerLabel,
       applicationLabel,
       projectCode: normalizeProjectCode(run.qaseProject ?? run.project ?? run.app),
@@ -672,10 +672,10 @@ export default function CompanyRunsPageClient() {
 
   return (
     <div className="w-full space-y-4 py-4 sm:py-6" data-testid="runs-page">
-      <header className="rounded-[28px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-4 shadow-sm sm:p-5 dark:bg-slate-950">
+      <header className="rounded-[28px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-sm sm:p-5 dark:bg-slate-950">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#6b7280)">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]">
               <FiSearch className="h-4 w-4" />
             </span>
             <input
@@ -683,7 +683,7 @@ export default function CompanyRunsPageClient() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("runsPage.searchPlaceholder")}
-              className="w-full rounded-2xl border border-(--tc-border,#d9e1ec) bg-(--tc-surface,#f8fafc) py-3 pr-4 pl-11 text-sm font-medium text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/15 dark:bg-slate-950 dark:text-slate-100"
+              className="w-full rounded-2xl border border-[var(--tc-border,#d9e1ec)] bg-[var(--tc-surface,#f8fafc)] py-3 pr-4 pl-11 text-sm font-medium text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/15 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -698,7 +698,7 @@ export default function CompanyRunsPageClient() {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-2xl border border-(--tc-border,#d9e1ec) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-medium text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) dark:bg-slate-950 dark:text-slate-100"
+              className="rounded-2xl border border-[var(--tc-border,#d9e1ec)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-medium text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] dark:bg-slate-950 dark:text-slate-100"
             />
             <input
               aria-label="Data final"
@@ -706,7 +706,7 @@ export default function CompanyRunsPageClient() {
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-2xl border border-(--tc-border,#d9e1ec) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-medium text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) dark:bg-slate-950 dark:text-slate-100"
+              className="rounded-2xl border border-[var(--tc-border,#d9e1ec)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-medium text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] dark:bg-slate-950 dark:text-slate-100"
             />
             {(dateFrom || dateTo) ? (
               <button
@@ -715,7 +715,7 @@ export default function CompanyRunsPageClient() {
                   setDateFrom("");
                   setDateTo("");
                 }}
-                className="rounded-2xl border border-(--tc-border,#d9e1ec) px-4 py-3 text-sm font-semibold text-(--tc-text-muted,#6b7280) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-text,#0b1a3c) dark:text-slate-300"
+                className="rounded-2xl border border-[var(--tc-border,#d9e1ec)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-text,#0b1a3c)] dark:text-slate-300"
               >
                 Limpar data
               </button>
@@ -725,11 +725,11 @@ export default function CompanyRunsPageClient() {
         {error ? <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">{error}</div> : null}
       </header>
 
-      <section className="rounded-[28px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) shadow-sm dark:bg-slate-950" data-testid="runs-list">
+      <section className="rounded-[28px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] shadow-sm dark:bg-slate-950" data-testid="runs-list">
         <div className="overflow-x-auto">
           <table className="min-w-full border-separate border-spacing-0">
-            <thead className="sticky top-0 z-10 bg-(--tc-surface,#ffffff) dark:bg-slate-950">
-              <tr className="text-left text-[11px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+            <thead className="sticky top-0 z-10 bg-[var(--tc-surface,#ffffff)] dark:bg-slate-950">
+              <tr className="text-left text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                 {[
                   { key: "name", label: "Run" },
                   { key: "applicationLabel", label: "Aplicacao" },
@@ -738,8 +738,8 @@ export default function CompanyRunsPageClient() {
                   { key: "createdAt", label: "Data" },
                   { key: "passRate", label: "Aprovacao" },
                 ].map((column) => (
-                  <th key={column.key} className="border-b border-(--tc-border,#e5e7eb) px-4 py-4">
-                    <button type="button" onClick={() => toggleSort(column.key as RunSortKey)} className="inline-flex items-center gap-2 transition hover:text-(--tc-text,#0b1a3c)">
+                  <th key={column.key} className="border-b border-[var(--tc-border,#e5e7eb)] px-4 py-4">
+                    <button type="button" onClick={() => toggleSort(column.key as RunSortKey)} className="inline-flex items-center gap-2 transition hover:text-[var(--tc-text,#0b1a3c)]">
                       <span>{column.label}</span>
                       {sortIcon(column.key as RunSortKey)}
                     </button>
@@ -763,7 +763,7 @@ export default function CompanyRunsPageClient() {
                       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-900">
                         <FiLayers className="h-7 w-7 text-slate-400" />
                       </div>
-                      <p className="mt-4 text-sm font-medium text-(--tc-text-muted,#6b7280)">{t("runsPage.empty")}</p>
+                      <p className="mt-4 text-sm font-medium text-[var(--tc-text-muted,#6b7280)]">{t("runsPage.empty")}</p>
                       <div className="mt-5">
                         <CreateManualReleaseButton
                           companySlug={companySlug}
@@ -800,18 +800,18 @@ export default function CompanyRunsPageClient() {
                         }
                       }}
                       className={[
-                        "cursor-pointer border-b border-(--tc-border,#edf2f7) transition",
+                        "cursor-pointer border-b border-[var(--tc-border,#edf2f7)] transition",
                         "hover:bg-slate-50 dark:hover:bg-slate-900/60",
                         selected ? "bg-rose-50/80 dark:bg-rose-950/30" : index % 2 === 0 ? "bg-white dark:bg-slate-950" : "bg-slate-50/60 dark:bg-slate-900/20",
                       ].join(" ")}
                     >
                       <td className={`border-l-4 ${rowTone} px-4 py-4 align-top`}>
-                        <p className="truncate text-sm font-bold text-(--tc-text,#0b1a3c)">{run.name}</p>
-                        <p className="mt-1 truncate text-xs text-(--tc-text-muted,#6b7280)">{run.slug}</p>
+                        <p className="truncate text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{run.name}</p>
+                        <p className="mt-1 truncate text-xs text-[var(--tc-text-muted,#6b7280)]">{run.slug}</p>
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <p className="truncate text-sm font-semibold text-(--tc-text,#0b1a3c)">{run.applicationLabel}</p>
-                        {run.projectCode ? <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{run.projectCode}</p> : null}
+                        <p className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationLabel}</p>
+                        {run.projectCode ? <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.projectCode}</p> : null}
                       </td>
                       <td className="px-4 py-4 align-top">
                         <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${statusColor(run.statusLabel)}`}>
@@ -827,10 +827,10 @@ export default function CompanyRunsPageClient() {
                           }`}>
                             {run.sourceLabel}
                           </span>
-                          {run.providerLabel ? <p className="text-xs text-(--tc-text-muted,#6b7280)">{run.providerLabel}</p> : null}
+                          {run.providerLabel ? <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">{run.providerLabel}</p> : null}
                         </div>
                       </td>
-                      <td className="px-4 py-4 align-top text-sm text-(--tc-text,#0b1a3c)">{formatDate(run.createdAt, language, t)}</td>
+                      <td className="px-4 py-4 align-top text-sm text-[var(--tc-text,#0b1a3c)]">{formatDate(run.createdAt, language, t)}</td>
                       <td className="px-4 py-4 align-top">
                         <div className="flex items-center gap-3">
                           <div className="relative flex h-11 w-11 items-center justify-center">
@@ -850,8 +850,8 @@ export default function CompanyRunsPageClient() {
                             </svg>
                             <span className={`absolute text-[11px] font-black ${rate.text}`}>{run.passRate !== null ? `${run.passRate}%` : "-"}</span>
                           </div>
-                          <div className="min-w-0 text-xs text-(--tc-text-muted,#6b7280)">
-                            <p className="font-semibold text-(--tc-text,#0b1a3c)">{run.stats.pass}/{run.stats.total}</p>
+                          <div className="min-w-0 text-xs text-[var(--tc-text-muted,#6b7280)]">
+                            <p className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.stats.pass}/{run.stats.total}</p>
                             <p>pass rate</p>
                           </div>
                         </div>
@@ -865,8 +865,8 @@ export default function CompanyRunsPageClient() {
         </div>
 
         {!loading && sortedRuns.length > 0 ? (
-          <div className="flex items-center justify-between gap-3 border-t border-(--tc-border,#e5e7eb) px-4 py-4">
-            <p className="text-sm text-(--tc-text-muted,#6b7280)">{t("runsPage.pageLabel", { page, totalPages })}</p>
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--tc-border,#e5e7eb)] px-4 py-4">
+            <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{t("runsPage.pageLabel", { page, totalPages })}</p>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -874,7 +874,7 @@ export default function CompanyRunsPageClient() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 aria-label={t("runsPage.prevPage")}
                 title={t("runsPage.prevPage")}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) transition hover:border-(--tc-accent,#ef0001) disabled:opacity-40"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] transition hover:border-[var(--tc-accent,#ef0001)] disabled:opacity-40"
               >
                 <FiChevronLeft className="h-4 w-4" />
               </button>
@@ -884,7 +884,7 @@ export default function CompanyRunsPageClient() {
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 aria-label={t("runsPage.nextPage")}
                 title={t("runsPage.nextPage")}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) transition hover:border-(--tc-accent,#ef0001) disabled:opacity-40"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] transition hover:border-[var(--tc-accent,#ef0001)] disabled:opacity-40"
               >
                 <FiChevronRight className="h-4 w-4" />
               </button>
@@ -902,28 +902,28 @@ export default function CompanyRunsPageClient() {
           onClick={() => setSelectedRun(null)}
         >
           <div
-            className="max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-2xl dark:bg-slate-950"
+            className="max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-2xl dark:bg-slate-950"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-(--tc-border,#e5e7eb) px-5 py-4">
+            <div className="flex items-center justify-between gap-3 border-b border-[var(--tc-border,#e5e7eb)] px-5 py-4">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">Execucao</p>
-                <h2 className="truncate text-xl font-black text-(--tc-text,#0b1a3c)">{activeRun.name}</h2>
-                <p className="truncate text-sm text-(--tc-text-muted,#6b7280)">
-                  {activeRun.applicationLabel} · {formatDate(activeRun.createdAt, language, t)}
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Execucao</p>
+                <h2 className="truncate text-xl font-black text-[var(--tc-text,#0b1a3c)]">{activeRun.name}</h2>
+                <p className="truncate text-sm text-[var(--tc-text-muted,#6b7280)]">
+                  {activeRun.applicationLabel} Â· {formatDate(activeRun.createdAt, language, t)}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedRun(null)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-text,#0b1a3c)"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)] text-[var(--tc-text-muted,#6b7280)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-text,#0b1a3c)]"
                 aria-label="Fechar modal"
               >
                 <FiX className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="border-b border-(--tc-border,#e5e7eb) px-5 pt-4">
+            <div className="border-b border-[var(--tc-border,#e5e7eb)] px-5 pt-4">
               <div className="flex flex-wrap gap-2">
                 {[
                   { key: "resumo", label: "Resumo" },
@@ -940,8 +940,8 @@ export default function CompanyRunsPageClient() {
                       className={[
                         "rounded-full border px-4 py-2 text-sm font-semibold transition",
                         active
-                          ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) text-white"
-                          : "border-(--tc-border,#d9e1ec) bg-transparent text-(--tc-text-muted,#6b7280) hover:border-(--tc-accent,#ef0001) hover:text-(--tc-text,#0b1a3c)",
+                          ? "border-[var(--tc-accent,#ef0001)] bg-[var(--tc-accent,#ef0001)] text-white"
+                          : "border-[var(--tc-border,#d9e1ec)] bg-transparent text-[var(--tc-text-muted,#6b7280)] hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-text,#0b1a3c)]",
                       ].join(" ")}
                     >
                       {tab.label}
@@ -955,46 +955,46 @@ export default function CompanyRunsPageClient() {
               {detailTab === "resumo" ? (
                 <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
                   <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
-                      <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                    <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f8fafc)] p-4">
+                      <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                         <FiGrid className="h-3.5 w-3.5" /> Registro
                       </p>
-                      <p className="mt-2 text-lg font-black text-(--tc-text,#0b1a3c)">{activeRun.slug}</p>
+                      <p className="mt-2 text-lg font-black text-[var(--tc-text,#0b1a3c)]">{activeRun.slug}</p>
                     </div>
-                    <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Status</p>
-                      <p className="mt-2 text-lg font-black text-(--tc-text,#0b1a3c)">{activeRun.statusLabel}</p>
+                    <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f8fafc)] p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Status</p>
+                      <p className="mt-2 text-lg font-black text-[var(--tc-text,#0b1a3c)]">{activeRun.statusLabel}</p>
                     </div>
-                    <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Origem</p>
-                      <p className="mt-2 text-lg font-black text-(--tc-text,#0b1a3c)">{activeRun.sourceLabel}</p>
+                    <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f8fafc)] p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Origem</p>
+                      <p className="mt-2 text-lg font-black text-[var(--tc-text,#0b1a3c)]">{activeRun.sourceLabel}</p>
                     </div>
-                    <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Aprovacao</p>
-                      <p className="mt-2 text-lg font-black text-(--tc-text,#0b1a3c)">{activeRun.passRate !== null ? `${activeRun.passRate}%` : "-"}</p>
+                    <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f8fafc)] p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Aprovacao</p>
+                      <p className="mt-2 text-lg font-black text-[var(--tc-text,#0b1a3c)]">{activeRun.passRate !== null ? `${activeRun.passRate}%` : "-"}</p>
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
-                    <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                  <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f8fafc)] p-4">
+                    <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                       <FiBookOpen className="h-3.5 w-3.5" /> Resumo
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-(--tc-text,#0b1a3c)">{activeRun.summary}</p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--tc-text,#0b1a3c)]">{activeRun.summary}</p>
                     <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                      <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 dark:bg-slate-950">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Plano</p>
-                        <p className="mt-1 font-semibold text-(--tc-text,#0b1a3c)">{activeRun.testPlanName ?? "-"}</p>
+                      <div className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-3 dark:bg-slate-950">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Plano</p>
+                        <p className="mt-1 font-semibold text-[var(--tc-text,#0b1a3c)]">{activeRun.testPlanName ?? "-"}</p>
                       </div>
-                      <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 dark:bg-slate-950">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Responsavel</p>
-                        <p className="mt-1 font-semibold text-(--tc-text,#0b1a3c)">{activeRun.responsibleLabel ?? "-"}</p>
+                      <div className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-3 dark:bg-slate-950">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Responsavel</p>
+                        <p className="mt-1 font-semibold text-[var(--tc-text,#0b1a3c)]">{activeRun.responsibleLabel ?? "-"}</p>
                       </div>
-                      <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 dark:bg-slate-950">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Aplicacao</p>
-                        <p className="mt-1 font-semibold text-(--tc-text,#0b1a3c)">{activeRun.applicationLabel}</p>
+                      <div className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-3 dark:bg-slate-950">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Aplicacao</p>
+                        <p className="mt-1 font-semibold text-[var(--tc-text,#0b1a3c)]">{activeRun.applicationLabel}</p>
                       </div>
-                      <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-3 dark:bg-slate-950">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Tipo</p>
-                        <p className="mt-1 font-semibold text-(--tc-text,#0b1a3c)">{activeRun.sourceType}</p>
+                      <div className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-3 dark:bg-slate-950">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Tipo</p>
+                        <p className="mt-1 font-semibold text-[var(--tc-text,#0b1a3c)]">{activeRun.sourceType}</p>
                       </div>
                     </div>
                   </div>
@@ -1003,8 +1003,8 @@ export default function CompanyRunsPageClient() {
 
               {detailTab === "fluxo" ? (
                 <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-                  <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
-                    <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">
+                  <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f8fafc)] p-4">
+                    <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--tc-text-muted,#6b7280)]">
                       <FiActivity className="h-3.5 w-3.5" /> Fluxo completo
                     </p>
                     <div className="mt-4 space-y-4">
@@ -1012,10 +1012,10 @@ export default function CompanyRunsPageClient() {
                         <div key={title} className="flex gap-3">
                           <div className="mt-1 h-3 w-3 rounded-full bg-emerald-500" />
                           <div className="min-w-0">
-                            <p className="font-semibold text-(--tc-text,#0b1a3c)">
+                            <p className="font-semibold text-[var(--tc-text,#0b1a3c)]">
                               {index + 1}. {title}
                             </p>
-                            <p className="text-sm text-(--tc-text-muted,#6b7280)">
+                            <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">
                               {index === 0
                                 ? "Dados recebidos para esta run."
                                 : index === 1
@@ -1029,32 +1029,32 @@ export default function CompanyRunsPageClient() {
                       ))}
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
-                    <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">
+                  <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f8fafc)] p-4">
+                    <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--tc-text-muted,#6b7280)]">
                       <FiBarChart2 className="h-3.5 w-3.5" /> Metricas
                     </p>
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 dark:bg-slate-950">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Pass</p>
+                      <div className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 dark:bg-slate-950">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Pass</p>
                         <p className="mt-2 text-2xl font-black text-emerald-600">{activeRun.stats.pass}</p>
                       </div>
-                      <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 dark:bg-slate-950">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Fail</p>
+                      <div className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 dark:bg-slate-950">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Fail</p>
                         <p className="mt-2 text-2xl font-black text-rose-600">{activeRun.stats.fail}</p>
                       </div>
-                      <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 dark:bg-slate-950">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Blocked</p>
+                      <div className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 dark:bg-slate-950">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Blocked</p>
                         <p className="mt-2 text-2xl font-black text-amber-600">{activeRun.stats.blocked}</p>
                       </div>
-                      <div className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 dark:bg-slate-950">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Not run</p>
+                      <div className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 dark:bg-slate-950">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Not run</p>
                         <p className="mt-2 text-2xl font-black text-slate-600">{activeRun.stats.notRun}</p>
                       </div>
                     </div>
                     {activeRun.stats.total > 0 ? (
                       <div className="mt-4">
                         <PassRateBar pass={activeRun.stats.pass} fail={activeRun.stats.fail} blocked={activeRun.stats.blocked} total={activeRun.stats.total} />
-                        <p className="mt-1 text-right text-[10px] text-(--tc-text-muted,#6b7280)">{activeRun.stats.total} casos total</p>
+                        <p className="mt-1 text-right text-[10px] text-[var(--tc-text-muted,#6b7280)]">{activeRun.stats.total} casos total</p>
                       </div>
                     ) : null}
                   </div>
@@ -1075,27 +1075,27 @@ export default function CompanyRunsPageClient() {
                     { label: "Cliente", value: formatRawValue(activeRun.raw["clientName"]) },
                     { label: "Status bruto", value: formatRawValue(activeRun.raw["status"]) },
                   ].map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f8fafc) p-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{item.label}</p>
-                      <p className="mt-2 wrap-break-word text-sm font-semibold text-(--tc-text,#0b1a3c)">{item.value}</p>
+                    <div key={item.label} className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f8fafc)] p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">{item.label}</p>
+                      <p className="mt-2 wrap-break-word text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{item.value}</p>
                     </div>
                   ))}
                 </div>
               ) : null}
 
               {detailTab === "bruto" ? (
-                <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#0b1220) p-4">
+                <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#0b1220)] p-4">
                   <pre className="max-h-[56vh] overflow-auto whitespace-pre-wrap wrap-break-word text-xs leading-6 text-slate-100">
                     {JSON.stringify(activeRun.raw, null, 2)}
                   </pre>
                 </div>
               ) : null}
 
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#e5e7eb) pt-4">
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">Clique fora do modal ou pressione Esc para fechar.</p>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border,#e5e7eb)] pt-4">
+                <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Clique fora do modal ou pressione Esc para fechar.</p>
                 <Link
                   href={companySlug ? `/empresas/${encodeURIComponent(companySlug)}/runs/${encodeURIComponent(activeRun.slug)}` : `/release/${encodeURIComponent(activeRun.slug)}`}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[var(--tc-accent,#ef0001)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
                 >
                   <FiExternalLink className="h-4 w-4" />
                   Abrir run
@@ -1108,3 +1108,5 @@ export default function CompanyRunsPageClient() {
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-import { test, expect } from "../../../support/fixtures/test";
+﻿import { test, expect } from "../../../support/fixtures/test";
 import type { Page } from "@playwright/test";
 import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
@@ -97,3 +97,4 @@ test.describe("responsive layout audit - company", () => {
     });
   }
 });
+

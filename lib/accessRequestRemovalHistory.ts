@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 import { readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
@@ -48,3 +48,4 @@ export async function listAccessRequestRemovalHistory() {
   const store = await readPersistentJson<RemovalHistoryStore>(STORE_KEY, { items: [] });
   return [...(Array.isArray(store.items) ? store.items : [])].sort((a, b) => b.removedAt.localeCompare(a.removedAt));
 }
+

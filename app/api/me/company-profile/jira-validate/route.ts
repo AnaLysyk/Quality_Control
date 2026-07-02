@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { canManageInstitutionalCompanyAccess, resolveCurrentCompanyFromAccess } from "@/lib/companyProfileAccess";
@@ -9,15 +9,15 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
   if (!canManageInstitutionalCompanyAccess(access)) {
-    return NextResponse.json({ error: "Sem permissão para validar a integração da empresa" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para validar a integraÃ§Ã£o da empresa" }, { status: 403 });
   }
 
   const { company, status } = await resolveCurrentCompanyFromAccess(access);
   if (!company) {
-    const message = status === 401 ? "Não autenticado" : status === 403 ? "Sem empresa vinculada" : "Empresa não encontrada";
+    const message = status === 401 ? "NÃ£o autenticado" : status === 403 ? "Sem empresa vinculada" : "Empresa nÃ£o encontrada";
     return NextResponse.json({ error: message }, { status });
   }
 
@@ -46,3 +46,4 @@ export async function POST(req: NextRequest) {
     { status: 200 },
   );
 }
+

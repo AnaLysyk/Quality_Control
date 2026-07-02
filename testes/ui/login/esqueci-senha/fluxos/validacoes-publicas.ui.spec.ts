@@ -1,4 +1,4 @@
-import { expect, test } from "../../../../../support/fixtures/test";
+﻿import { expect, test } from "../../../../../support/fixtures/test";
 import {
   validarRespostaGenericaEsqueciSenha,
   validarTokenInvalidoEsqueciSenha,
@@ -20,3 +20,4 @@ test.describe("Esqueci senha - validacoes publicas", () => {
     await validarTokenInvalidoEsqueciSenha(page);
   });
 });
+

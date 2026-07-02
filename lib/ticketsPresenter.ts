@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { listLocalUsers, listLocalCompanies } from "@/lib/auth/localStore";
 import type { TicketRecord } from "@/lib/ticketsStore";
@@ -50,3 +50,4 @@ export async function attachAssigneeToTicket(item: TicketRecord | null) {
 
 // Backwards-compatible alias
 export const attachAssigneeToSuporte = attachAssigneeToTicket;
+

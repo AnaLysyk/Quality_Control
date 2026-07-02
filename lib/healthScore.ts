@@ -1,4 +1,4 @@
-type GoalStatus = "met" | "risk" | "violated";
+﻿type GoalStatus = "met" | "risk" | "violated";
 type Trend = "improving" | "stable" | "degrading";
 type ReleaseStatus = "ok" | "risk" | "violated";
 
@@ -38,17 +38,17 @@ export function calculateHealthScore(input: HealthInput): HealthOutput {
   // Trend
   if (input.trend === "degrading") {
     score -= 20;
-    reasons.push("Tendência degradando");
+    reasons.push("TendÃªncia degradando");
   }
 
-  // Releases (última release conta)
+  // Releases (Ãºltima release conta)
   const lastRelease = input.releases[0];
   if (lastRelease === "violated") {
     score -= 25;
-    reasons.push("Última release violada");
+    reasons.push("Ãšltima release violada");
   } else if (lastRelease === "risk") {
     score -= 10;
-    reasons.push("Última release em risco");
+    reasons.push("Ãšltima release em risco");
   }
 
   const finalScore = Math.max(0, score);
@@ -58,3 +58,4 @@ export function calculateHealthScore(input: HealthInput): HealthOutput {
     reasons,
   };
 }
+

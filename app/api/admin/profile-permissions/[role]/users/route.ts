@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
@@ -24,7 +24,7 @@ async function requirePermissionManager(req: NextRequest) {
       admin: null,
       access: null,
       response: NextResponse.json(
-        { error: status === 401 ? "Você precisa estar autenticado para acessar a Gestão de Perfis." : "Você não tem permissão para acessar a Gestão de Perfis." },
+        { error: status === 401 ? "VocÃª precisa estar autenticado para acessar a GestÃ£o de Perfis." : "VocÃª nÃ£o tem permissÃ£o para acessar a GestÃ£o de Perfis." },
         { status },
       ),
     };
@@ -45,7 +45,7 @@ async function requirePermissionManager(req: NextRequest) {
     return {
       admin,
       access,
-      response: NextResponse.json({ error: "Você não tem permissão para visualizar a matriz de perfis." }, { status: 403 }),
+      response: NextResponse.json({ error: "VocÃª nÃ£o tem permissÃ£o para visualizar a matriz de perfis." }, { status: 403 }),
     };
   }
 
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
     if (guard.response) return guard.response;
 
     const role = await resolveRole(params);
-    if (!role) return NextResponse.json({ error: "Perfil inválido." }, { status: 400 });
+    if (!role) return NextResponse.json({ error: "Perfil invÃ¡lido." }, { status: 400 });
 
     const profilePermissions = await resolveProfilePermissionDefaults(role);
     const users = await prisma.user.findMany({
@@ -151,6 +151,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
     });
   } catch (error) {
     console.error("[admin.profile-permissions.users.get]", error);
-    return NextResponse.json({ error: "Não foi possível carregar usuários do perfil agora." }, { status: 500 });
+    return NextResponse.json({ error: "NÃ£o foi possÃ­vel carregar usuÃ¡rios do perfil agora." }, { status: 500 });
   }
 }
+

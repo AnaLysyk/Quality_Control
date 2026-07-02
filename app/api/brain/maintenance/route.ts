@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
 import { runBrainDailyMaintenance } from "@/lib/brain/maintenanceService";
@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, result });
   } catch (error) {
     console.error("[brain/maintenance] POST error:", error);
-    return NextResponse.json({ error: "Erro ao executar manutenção diária do Brain" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao executar manutenÃ§Ã£o diÃ¡ria do Brain" }, { status: 500 });
   }
 }
+

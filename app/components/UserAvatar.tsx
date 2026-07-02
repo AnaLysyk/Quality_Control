@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { FiCamera } from "react-icons/fi";
@@ -72,7 +72,7 @@ export default function UserAvatar({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={normalizedSrc}
-            alt={name ? `Foto de ${name}` : "Foto do usuário"}
+            alt={name ? `Foto de ${name}` : "Foto do usuÃ¡rio"}
             className={`block h-full w-full object-cover ${imageClassName}`}
             onError={() => {
               markFailedImageSrc(normalizedSrc);
@@ -104,7 +104,7 @@ export default function UserAvatar({
         <button
           type="button"
           onClick={onEdit}
-          className={`absolute bottom-1 right-1 inline-flex items-center justify-center rounded-full border-2 border-white bg-(--tc-primary) text-white shadow-[0_12px_24px_rgba(15,23,42,0.2)] transition hover:scale-[1.03] hover:bg-(--tc-accent) ${buttonSizeClassMap[size]} ${buttonClassName}`}
+          className={`absolute bottom-1 right-1 inline-flex items-center justify-center rounded-full border-2 border-white bg-[var(--tc-primary)] text-white shadow-[0_12px_24px_rgba(15,23,42,0.2)] transition hover:scale-[1.03] hover:bg-[var(--tc-accent)] ${buttonSizeClassMap[size]} ${buttonClassName}`}
           aria-label={buttonLabel}
           title={buttonLabel}
         >
@@ -114,3 +114,4 @@ export default function UserAvatar({
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
+﻿import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import { resolveRoleDefaults, type Role } from "@/lib/permissions/roleDefaults";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
@@ -85,3 +85,4 @@ export function canManageSupportWorkflow(user: SupportAccessUser) {
     hasSupportAccess(user, "support", "status")
   );
 }
+

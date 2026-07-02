@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/contracts/auth";
+﻿import type { AuthUser } from "@/contracts/auth";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { normalizeAuthenticatedUser } from "@/lib/auth/normalizeAuthenticatedUser";
 import { resolveEntityImage } from "@/lib/resolveEntityImage";
@@ -229,3 +229,4 @@ export function resolveActiveIdentity({
     email,
   };
 }
+

@@ -1,15 +1,15 @@
-/**
- * Intent Analyzer - Extrai intenção semântica das mensagens do usuário.
+﻿/**
+ * Intent Analyzer - Extrai intenÃ§Ã£o semÃ¢ntica das mensagens do usuÃ¡rio.
  * 
- * Usa análise de padrões, contexto conversacional e heurísticas para
- * entender o que o usuário realmente quer fazer.
+ * Usa anÃ¡lise de padrÃµes, contexto conversacional e heurÃ­sticas para
+ * entender o que o usuÃ¡rio realmente quer fazer.
  */
 import "server-only";
 
 import type { AssistantConversationTurn, AssistantScreenContext } from "./types";
 import { normalizeSearch } from "./helpers";
 
-/* ──────────────────── Intent Types ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Intent Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export type UserIntent = {
   primary: IntentCategory;
@@ -39,36 +39,36 @@ export type ExtractedEntity = {
   position: number;
 };
 
-/* ──────────────────── Pattern Definitions ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Pattern Definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const QUESTION_PATTERNS = [
   /^(o que|como|por que|porque|quando|onde|qual|quais|quem|quanto)/,
   /\?$/,
-  /(pode me|pode explicar|seria possivel|é possivel)/,
+  /(pode me|pode explicar|seria possivel|Ã© possivel)/,
 ];
 
 const COMMAND_PATTERNS = [
-  /^(mostra|mostre|lista|liste|busca|busque|cria|crie|abre|abra|faz|faça|gera|gere)/,
+  /^(mostra|mostre|lista|liste|busca|busque|cria|crie|abre|abra|faz|faÃ§a|gera|gere)/,
   /^(procura|procure|encontra|encontre|localiza|localize)/,
   /^(explica|explique|resume|resuma|analisa|analise)/,
 ];
 
 const URGENCY_PATTERNS = [
-  /(urgente|critico|crítico|bloqueado|bloqueando|produção|producao)/,
-  /(agora|rapido|rápido|imediato|imediatamente)/,
+  /(urgente|critico|crÃ­tico|bloqueado|bloqueando|produÃ§Ã£o|producao)/,
+  /(agora|rapido|rÃ¡pido|imediato|imediatamente)/,
   /(socorro|help|ajuda.*urgente)/,
 ];
 
 const FRUSTRATION_PATTERNS = [
-  /(nao funciona|não funciona|erro|falha|bug|quebrou|parou)/,
+  /(nao funciona|nÃ£o funciona|erro|falha|bug|quebrou|parou)/,
   /(de novo|outra vez|mais uma vez|sempre)/,
-  /(nao entendi|não entendi|confuso|dificil|difícil)/,
+  /(nao entendi|nÃ£o entendi|confuso|dificil|difÃ­cil)/,
 ];
 
 const NAVIGATION_PATTERNS = [
   /(ir para|vai para|acessar|acessa|navegar|navega)/,
-  /(abrir|abre|entrar|entra|ver página|ver pagina)/,
-  /(modulo de|módulo de|tela de|área de|area de)/,
+  /(abrir|abre|entrar|entra|ver pÃ¡gina|ver pagina)/,
+  /(modulo de|mÃ³dulo de|tela de|Ã¡rea de|area de)/,
 ];
 
 const CREATION_PATTERNS = [
@@ -85,18 +85,18 @@ const ANALYSIS_PATTERNS = [
 
 const TROUBLESHOOTING_PATTERNS = [
   /(erro|falha|bug|problema|issue)/,
-  /(nao consigo|não consigo|nao aparece|não aparece)/,
-  /(porque nao|por que não|deveria.*mas)/,
+  /(nao consigo|nÃ£o consigo|nao aparece|nÃ£o aparece)/,
+  /(porque nao|por que nÃ£o|deveria.*mas)/,
 ];
 
-/* ──────────────────── Entity Extraction ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Entity Extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const ENTITY_PATTERNS: Array<{ type: ExtractedEntity["type"]; pattern: RegExp }> = [
   { type: "ticket", pattern: /\b(SP-\d+|TC-\d+|#\d{3,8})\b/gi },
-  { type: "priority", pattern: /\b(alta|média|media|baixa|crítica|critica|urgente|bloqueante)\b/gi },
+  { type: "priority", pattern: /\b(alta|mÃ©dia|media|baixa|crÃ­tica|critica|urgente|bloqueante)\b/gi },
   { type: "status", pattern: /\b(aberto|fechado|em andamento|pendente|resolvido|cancelado)\b/gi },
   { type: "module", pattern: /\b(suporte|tickets|chamados|releases|dashboard|kanban|empresas|usuarios|perfis)\b/gi },
-  { type: "date", pattern: /\b(\d{1,2}\/\d{1,2}\/\d{2,4}|hoje|ontem|semana passada|ultimo mes|próximos dias)\b/gi },
+  { type: "date", pattern: /\b(\d{1,2}\/\d{1,2}\/\d{2,4}|hoje|ontem|semana passada|ultimo mes|prÃ³ximos dias)\b/gi },
   { type: "number", pattern: /\b(\d{3,})\b/g },
 ];
 
@@ -119,17 +119,17 @@ function extractEntities(message: string): ExtractedEntity[] {
   return entities.sort((a, b) => a.position - b.position);
 }
 
-/* ──────────────────── Topic Extraction ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Topic Extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const TOPIC_KEYWORDS: Record<string, string[]> = {
-  tickets: ["ticket", "chamado", "suporte", "atendimento", "solicitacao", "solicitação"],
-  users: ["usuario", "usuário", "perfil", "acesso", "permissao", "permissão"],
-  testing: ["teste", "caso de teste", "qa", "qualidade", "validacao", "validação"],
-  releases: ["release", "versao", "versão", "deploy", "producao", "produção"],
-  dashboard: ["dashboard", "metricas", "métricas", "indicadores", "estatisticas"],
-  companies: ["empresa", "cliente", "companhia", "organizacao", "organização"],
-  integrations: ["integracao", "integração", "api", "webhook", "conexao", "conexão"],
-  documentation: ["documento", "documentacao", "documentação", "arquivo", "anexo"],
+  tickets: ["ticket", "chamado", "suporte", "atendimento", "solicitacao", "solicitaÃ§Ã£o"],
+  users: ["usuario", "usuÃ¡rio", "perfil", "acesso", "permissao", "permissÃ£o"],
+  testing: ["teste", "caso de teste", "qa", "qualidade", "validacao", "validaÃ§Ã£o"],
+  releases: ["release", "versao", "versÃ£o", "deploy", "producao", "produÃ§Ã£o"],
+  dashboard: ["dashboard", "metricas", "mÃ©tricas", "indicadores", "estatisticas"],
+  companies: ["empresa", "cliente", "companhia", "organizacao", "organizaÃ§Ã£o"],
+  integrations: ["integracao", "integraÃ§Ã£o", "api", "webhook", "conexao", "conexÃ£o"],
+  documentation: ["documento", "documentacao", "documentaÃ§Ã£o", "arquivo", "anexo"],
 };
 
 function extractTopics(message: string): string[] {
@@ -145,7 +145,7 @@ function extractTopics(message: string): string[] {
   return topics;
 }
 
-/* ──────────────────── Main Analyzer ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Main Analyzer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function analyzeIntent(
   message: string,
@@ -156,10 +156,10 @@ export function analyzeIntent(
   const entities = extractEntities(message);
   const topics = extractTopics(message);
 
-  // Detectar se é pergunta
+  // Detectar se Ã© pergunta
   const isQuestion = QUESTION_PATTERNS.some((p) => p.test(normalized));
 
-  // Detectar se é comando
+  // Detectar se Ã© comando
   const isCommand = COMMAND_PATTERNS.some((p) => p.test(normalized));
 
   // Detectar sentimento
@@ -172,7 +172,7 @@ export function analyzeIntent(
     sentiment = "curious";
   }
 
-  // Determinar categoria primária com scores
+  // Determinar categoria primÃ¡ria com scores
   const scores: Record<IntentCategory, number> = {
     information_seeking: 0,
     action_request: 0,
@@ -187,13 +187,13 @@ export function analyzeIntent(
   };
 
   // Greeting
-  if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí)\b/.test(normalized)) {
+  if (/^(oi|ola|olÃ¡|bom dia|boa tarde|boa noite|e ai|e aÃ­)\b/.test(normalized)) {
     scores.greeting += 80;
   }
 
   // Information seeking
   if (isQuestion) scores.information_seeking += 30;
-  if (/(o que é|como funciona|me explica|pode explicar)/.test(normalized)) {
+  if (/(o que Ã©|como funciona|me explica|pode explicar)/.test(normalized)) {
     scores.information_seeking += 40;
   }
 
@@ -221,11 +221,11 @@ export function analyzeIntent(
     scores.analysis += 50;
   }
 
-  // Clarification (continuação de conversa)
+  // Clarification (continuaÃ§Ã£o de conversa)
   if (history.length > 0) {
     const lastAssistant = history.filter((h) => h.from === "assistant").pop();
     if (lastAssistant?.text?.includes("?")) {
-      // Se o assistente fez uma pergunta e o usuário responde curto
+      // Se o assistente fez uma pergunta e o usuÃ¡rio responde curto
       if (message.length < 50) {
         scores.clarification += 40;
       }
@@ -233,7 +233,7 @@ export function analyzeIntent(
   }
 
   // Confirmation
-  if (/^(sim|nao|não|ok|confirma|confirmo|pode|pode sim|claro|isso|exato)$/i.test(normalized)) {
+  if (/^(sim|nao|nÃ£o|ok|confirma|confirmo|pode|pode sim|claro|isso|exato)$/i.test(normalized)) {
     scores.confirmation += 70;
   }
 
@@ -261,7 +261,7 @@ export function analyzeIntent(
   };
 }
 
-/* ──────────────────── Conversation Context ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Conversation Context â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function getConversationMomentum(history: AssistantConversationTurn[]): {
   recentTopics: string[];
@@ -280,7 +280,7 @@ export function getConversationMomentum(history: AssistantConversationTurn[]): {
     }
     if (turn.from === "assistant" && turn.tool) {
       lastToolUsed = turn.tool;
-      // Detectar se há ação pendente
+      // Detectar se hÃ¡ aÃ§Ã£o pendente
       if (turn.text?.includes("confirma") || turn.text?.includes("deseja prosseguir")) {
         pendingAction = turn.tool;
       }
@@ -295,7 +295,7 @@ export function getConversationMomentum(history: AssistantConversationTurn[]): {
   };
 }
 
-/* ──────────────────── Smart Suggestions ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Smart Suggestions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function generateSmartSuggestions(
   intent: UserIntent,
@@ -315,16 +315,16 @@ export function generateSmartSuggestions(
 
     case "creation":
       if (intent.topics.includes("tickets")) {
-        suggestions.push("Estruturar informações para criar um chamado");
+        suggestions.push("Estruturar informaÃ§Ãµes para criar um chamado");
       }
       break;
 
     case "information_seeking":
-      suggestions.push("Posso buscar informações sobre esse tema");
+      suggestions.push("Posso buscar informaÃ§Ãµes sobre esse tema");
       break;
 
     case "navigation":
-      suggestions.push("Posso guiar você até a área desejada");
+      suggestions.push("Posso guiar vocÃª atÃ© a Ã¡rea desejada");
       break;
   }
 
@@ -335,8 +335,9 @@ export function generateSmartSuggestions(
 
   // Baseado no momentum
   if (momentum.lastToolUsed === "create_ticket" && momentum.pendingAction) {
-    suggestions.push("Continuar criação do ticket");
+    suggestions.push("Continuar criaÃ§Ã£o do ticket");
   }
 
   return suggestions.slice(0, 3);
 }
+

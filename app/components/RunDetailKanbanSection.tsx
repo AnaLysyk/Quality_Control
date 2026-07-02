@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Kanban from "./Kanban";
@@ -58,3 +58,4 @@ export function RunDetailKanbanSection({
     </>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { createContext, useContext } from "react";
 
@@ -30,3 +30,4 @@ export function useAutomationModuleContext() {
   }
   return context;
 }
+

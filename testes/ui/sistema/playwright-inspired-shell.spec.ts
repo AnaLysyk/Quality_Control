@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("Playwright-inspired shell", () => {
@@ -42,3 +42,4 @@ test.describe("Playwright-inspired shell", () => {
     await expect(page.getByTestId("sidebar-docs-shell")).toBeVisible();
   });
 });
+

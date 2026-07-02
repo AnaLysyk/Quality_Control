@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getUserOverride, type UserPermissionsOverride } from "./store/permissionsStore";
 import { type Role } from "./permissions/roleDefaults";
@@ -67,3 +67,4 @@ export async function resolvePermissionAccessForUser(userId: string): Promise<Re
     permissions,
   };
 }
+

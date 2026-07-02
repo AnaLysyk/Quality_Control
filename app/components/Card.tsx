@@ -1,4 +1,4 @@
-import { ComponentProps, ReactNode } from "react";
+﻿import { ComponentProps, ReactNode } from "react";
 import clsx from "clsx";
 
 type CardProps = {
@@ -10,7 +10,7 @@ export function Card({ children, className, ...rest }: CardProps) {
   return (
     <div
       className={clsx(
-        "card-tc border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary)",
+        "card-tc border border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-primary)]",
         className
       )}
       {...rest}
@@ -33,3 +33,4 @@ export function SectionCard({ children, className, ...rest }: CardProps) {
     </Card>
   );
 }
+

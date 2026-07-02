@@ -711,7 +711,7 @@ export default function AdminPermissionsPage() {
     );
   }
 
-  const sortMark = sortDirection === "asc" ? "↑" : "↓";
+  const sortMark = sortDirection === "asc" ? "?" : "?";
 
   return (
     <main className="profile-permissions-page min-h-screen bg-[#f8fafc] px-4 py-0 text-[#0f172a] lg:px-6">
@@ -896,7 +896,7 @@ export default function AdminPermissionsPage() {
                     onClick={() => setSortDirection((current) => (current === "asc" ? "desc" : "asc"))}
                     className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
                   >
-                    {sortDirection === "asc" ? "Crescente ↑" : "Decrescente ↓"}
+                    {sortDirection === "asc" ? "Crescente ?" : "Decrescente ?"}
                   </button>
 
                   <select
@@ -1238,6 +1238,7 @@ export default function AdminPermissionsPage() {
     </main>
   );
 }
+
 
 
 

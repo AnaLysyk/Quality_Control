@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { listLocalCompanies, type LocalAuthCompany } from "@/lib/auth/localStore";
@@ -87,7 +87,7 @@ function mapManualRelease(release: ManualRelease): ReleaseEntry {
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const legacy = { error: status === 401 ? "Não autenticado" : "Sem permissão" };
+    const legacy = { error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" };
     return apiFail(req, legacy.error, {
       status,
       code: status === 401 ? "UNAUTHENTICATED" : "FORBIDDEN",
@@ -180,3 +180,4 @@ export async function GET(req: NextRequest) {
 
   return apiOk(req, payload, "OK", { extra: payload });
 }
+

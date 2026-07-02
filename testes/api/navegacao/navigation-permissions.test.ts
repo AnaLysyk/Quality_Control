@@ -1,4 +1,4 @@
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { NAV_CATALOG, type NavModuleDef } from "@/lib/navigation/navigationCatalog";
 import { buildNavigationForUser } from "@/lib/navigation/navigationPermissions";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
@@ -62,3 +62,4 @@ describe("navigation permission filtering", () => {
     expect(items).not.toContain("users-create-leader-tc");
   });
 });
+

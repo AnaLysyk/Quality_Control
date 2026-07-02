@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FiGitBranch, FiInfo } from "react-icons/fi";
 import type { BrainEdge, BrainNode } from "../_types/brain.types";
@@ -75,3 +75,4 @@ export function BrainGraphPanel({ nodes, edges, selectedNodeId, onSelectNode }: 
     </div>
   );
 }
+

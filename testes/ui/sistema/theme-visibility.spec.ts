@@ -1,4 +1,4 @@
-import { test, expect } from "../../../support/fixtures/test";
+﻿import { test, expect } from "../../../support/fixtures/test";
 import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
 type Theme = "light" | "dark";
@@ -91,7 +91,7 @@ async function assertThemeVisible(page: import("@playwright/test").Page, route: 
     };
   });
 
-  expect(result.textCount, `Sem texto visível em ${route} (${theme})`).toBeGreaterThan(0);
+  expect(result.textCount, `Sem texto visÃ­vel em ${route} (${theme})`).toBeGreaterThan(0);
 }
 
 test.describe("theme visibility - public", () => {
@@ -146,3 +146,4 @@ test.describe("theme visibility - company", () => {
     });
   }
 });
+

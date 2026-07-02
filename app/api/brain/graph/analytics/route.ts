@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
 import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
@@ -99,3 +99,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao recalcular scores do Brain" }, { status: 500 });
   }
 }
+

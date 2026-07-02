@@ -1,4 +1,4 @@
-import { runBrainDailyMaintenance } from "@/lib/brain/maintenanceService";
+﻿import { runBrainDailyMaintenance } from "@/lib/brain/maintenanceService";
 
 async function main() {
   const companySlug = process.argv.find((item) => item.startsWith("--company="))?.split("=")[1] ?? null;
@@ -10,3 +10,4 @@ main().catch((error) => {
   console.error("[brain-maintenance] failed", error);
   process.exit(1);
 });
+

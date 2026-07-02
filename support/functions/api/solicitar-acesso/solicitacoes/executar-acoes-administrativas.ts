@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext } from "@playwright/test";
+Ôªøimport { expect, type APIRequestContext } from "@playwright/test";
 
 import {
   dadosAjusteSolicitacao,
@@ -32,7 +32,7 @@ function obterIdSolicitacao(body: unknown): string {
 
   const value = candidates.find((candidate) => typeof candidate === "string" && candidate.trim());
 
-  expect(value, `Resposta n„o retornou id/key da solicitaÁ„o: ${JSON.stringify(body)}`).toBeTruthy();
+  expect(value, `Resposta n√£o retornou id/key da solicita√ß√£o: ${JSON.stringify(body)}`).toBeTruthy();
 
   return String(value);
 }
@@ -113,8 +113,8 @@ export async function aprovarSolicitacaoViaApi(
     data: {
       email: created.payload.email,
       name: created.payload.full_name,
-      comment: "Aprovado apÛs validaÁ„o dos dados.",
-      admin_notes: "Aprovado apÛs validaÁ„o dos dados.",
+      comment: "Aprovado ap√≥s valida√ß√£o dos dados.",
+      admin_notes: "Aprovado ap√≥s valida√ß√£o dos dados.",
       access_type: "technical_support",
     },
   });
@@ -126,4 +126,5 @@ export async function aprovarSolicitacaoViaApi(
 
   expect(text).toMatch(/closed|approved|ok|true/i);
 }
+
 

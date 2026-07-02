@@ -1,4 +1,4 @@
-import type { BrainNode } from "@prisma/client";
+﻿import type { BrainNode } from "@prisma/client";
 
 import type { BrainRuntimeContext } from "@/lib/brain/runtime";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
@@ -85,3 +85,4 @@ export function redactBrainNodeForUser<T extends Pick<BrainNode, "metadata">>(
     metadata: redactBrainMetadataForUser(context, metadata),
   };
 }
+

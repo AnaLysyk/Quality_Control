@@ -1,4 +1,4 @@
-export const BrainModuleEvents = {
+﻿export const BrainModuleEvents = {
   testCase: {
     created: "test_case.created",
     updated: "test_case.updated",
@@ -54,3 +54,4 @@ export type BrainChatAnswer = {
     missingPermissions: string[];
   };
 };
+

@@ -1,4 +1,4 @@
-jest.mock("@/lib/jwtAuth", () => ({
+﻿jest.mock("@/lib/jwtAuth", () => ({
   authenticateRequest: jest.fn(),
 }));
 
@@ -107,3 +107,4 @@ describe("api/automations/qc/page-smoke", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+

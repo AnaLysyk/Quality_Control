@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+﻿import { PrismaClient } from "@prisma/client";
 import {
   getPrismaClientOptions,
   resetPrismaAdapter,
@@ -75,3 +75,4 @@ export function reconnectAutomationPrisma() {
   console.info("[automation-prisma] Reconnecting after connection loss...");
   currentAutomationPrisma = recreateAutomationPrismaClient();
 }
+

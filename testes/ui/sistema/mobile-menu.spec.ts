@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test("mobile menu opens on small viewport", async ({ page, context }) => {
@@ -25,3 +25,4 @@ test("mobile menu opens on small viewport", async ({ page, context }) => {
 
   await expect(page.locator("#app-shell-mobile-sidebar")).toBeVisible({ timeout: 8000 });
 });
+

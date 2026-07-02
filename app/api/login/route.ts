@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 
 export async function POST(request: Request) {
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
   if (!user || !password) {
     const response = NextResponse.json(
-      { error: "Login e senha são obrigatórios" },
+      { error: "Login e senha sÃ£o obrigatÃ³rios" },
       { status: 400 }
     );
 
@@ -70,3 +70,4 @@ export async function POST(request: Request) {
 
   return response;
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import {
   canAccessCompanyDefects,
@@ -21,7 +21,7 @@ function normalizeString(value: unknown) {
 export async function GET(request: Request) {
   const user = await authenticateRequest(request);
   if (!user) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const url = new URL(request.url);
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       : user.companySlug ?? resolveAllowedCompanySlugs(user)[0] ?? null;
 
   if (!companySlug) {
-    return NextResponse.json({ message: "Empresa não informada" }, { status: 400 });
+    return NextResponse.json({ message: "Empresa nÃ£o informada" }, { status: 400 });
   }
   if (!canAccessCompanyDefects(user, companySlug)) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
@@ -75,3 +75,4 @@ export async function GET(request: Request) {
     responsibleOptions: dataset.responsibleOptions,
   });
 }
+

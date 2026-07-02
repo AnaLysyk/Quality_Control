@@ -1,4 +1,4 @@
-export type Status = "PASS" | "FAIL" | "BLOCKED" | "NOT_RUN";
+﻿export type Status = "PASS" | "FAIL" | "BLOCKED" | "NOT_RUN";
 
 export type Card = {
   id: number;
@@ -12,3 +12,4 @@ export type Card = {
   link?: string | null;
   created_at?: string | null;
 };
+

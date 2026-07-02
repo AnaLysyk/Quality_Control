@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { writeAlertsStore, type QualityAlert } from "@/lib/qualityAlert";
 
 const IS_TEST_ENV =
@@ -46,3 +46,4 @@ export async function POST(req: Request) {
   await writeAlertsStore(alerts);
   return NextResponse.json({ ok: true, total: alerts.length });
 }
+

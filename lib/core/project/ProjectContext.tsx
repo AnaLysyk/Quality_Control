@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
@@ -223,3 +223,4 @@ export function useProjectContext(): ProjectContextValue {
   if (!ctx) throw new Error("useProjectContext must be used inside ProjectProvider");
   return ctx;
 }
+

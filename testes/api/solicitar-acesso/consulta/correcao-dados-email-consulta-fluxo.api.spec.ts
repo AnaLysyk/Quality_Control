@@ -182,7 +182,7 @@ function gerarRelatorio(data: {
 </head>
 <body>
   <h1>Correção de dados - e-mail e consulta</h1>
-  <p>Validação do fluxo: admin solicita ajuste → e-mail → link público → correção → retorno para análise.</p>
+  <p>Validação do fluxo: admin solicita ajuste ? e-mail ? link público ? correção ? retorno para análise.</p>
 
   <div class="card">
     <h2>Link de consulta capturado no e-mail</h2>
@@ -357,4 +357,5 @@ test.describe("Solicitar acesso - correção de dados via e-mail", () => {
     }
   });
 });
+
 

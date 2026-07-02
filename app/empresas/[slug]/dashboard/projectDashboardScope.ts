@@ -1,4 +1,4 @@
-import { normalizeDefectStatus } from "@/lib/defectNormalization";
+﻿import { normalizeDefectStatus } from "@/lib/defectNormalization";
 import type { CompanyDashboardData } from "./companyDashboardData";
 
 type DashboardScopeInput = {
@@ -143,7 +143,7 @@ export function applyProjectDashboardScope(
           id: projectCode ? `qase_${projectCode.toLowerCase()}` : `project_${projectSlug}`,
           name: projectName,
           slug: projectSlug,
-          description: "Operação de qualidade do projeto selecionado.",
+          description: "OperaÃ§Ã£o de qualidade do projeto selecionado.",
           imageUrl: null,
           qaseProjectCode: projectCode,
           source: projectCode ? "qase" : "manual",
@@ -157,9 +157,9 @@ export function applyProjectDashboardScope(
 
   return {
     ...data,
-    companyName: `${data.companyName} · ${projectName}`,
+    companyName: `${data.companyName} Â· ${projectName}`,
     companyInitials: initials(projectName),
-    subtitle: `Dashboard do projeto ${projectName}. Métricas, runs, defeitos e indicadores filtrados pela operação deste projeto dentro da empresa ${data.companyName}.`,
+    subtitle: `Dashboard do projeto ${projectName}. MÃ©tricas, runs, defeitos e indicadores filtrados pela operaÃ§Ã£o deste projeto dentro da empresa ${data.companyName}.`,
     heroStats: {
       ...data.heroStats,
       total: runs.length,
@@ -179,3 +179,4 @@ export function applyProjectDashboardScope(
     projectCodes: uniqueProjectCodes([projectCode, ...scopedApplications.map((application) => application.qaseProjectCode)]),
   };
 }
+

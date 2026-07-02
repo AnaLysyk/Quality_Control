@@ -58,3 +58,4 @@ describe("codigo de consulta da solicitacao de acesso", () => {
     expect(isAccessRequestLookupCodeExpired(expiresAt)).toBe(true);
   });
 });
+

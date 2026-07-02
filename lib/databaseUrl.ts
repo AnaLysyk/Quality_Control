@@ -1,4 +1,4 @@
-export type DatabaseScope = "default" | "automation";
+﻿export type DatabaseScope = "default" | "automation";
 
 function normalizeEnv(value?: string | null) {
   return (value ?? "").trim().replace(/^['\"]|['\"]$/g, "");
@@ -33,3 +33,4 @@ export function resolveDatabaseUrlFromEnv(scope: DatabaseScope = "default") {
 
   return normalizeEnv(databaseUrl);
 }
+

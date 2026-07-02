@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import useSWR from "swr";
@@ -93,8 +93,8 @@ const CONTEXT_LABELS: Record<string, string> = { company: "Empresa", project: "P
 const AUDIENCE_LABELS: Record<string, string> = { all: "Todos", empresa: "Admin empresa", company_user: "Usuario empresa", testing_company_user: "Usuario TC", leader_tc: "Lider TC", technical_support: "Suporte tecnico", release_actor: "Responsavel", brain: "Brain" };
 const STATUS_LABELS: Record<string, string> = { planned: "Planejado", at_risk: "Em risco", blocked: "Bloqueado", done: "Concluido", cancelled: "Cancelado" };
 
-const inputClass = "w-full rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)";
-const textareaClass = "w-full rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)";
+const inputClass = "w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]";
+const textareaClass = "w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]";
 
 const initialFilters: FilterState = { companySlug: "", projectSlug: "", releaseId: "", status: "", criticality: "", context: "", audienceProfile: "", ownerName: "" };
 
@@ -129,11 +129,11 @@ async function fetcher(path: string) {
 }
 
 function Badge({ children }: { children: ReactNode }) {
-  return <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[11px] font-bold text-(--tc-text-muted,#6b7280)">{children}</span>;
+  return <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[11px] font-bold text-[var(--tc-text-muted,#6b7280)]">{children}</span>;
 }
 
 function FieldLabel({ children }: { children: ReactNode }) {
-  return <label className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">{children}</label>;
+  return <label className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">{children}</label>;
 }
 
 function splitLines(value: string) {
@@ -213,10 +213,10 @@ function EventBadges({ event }: { event: CalendarEvent }) {
 
 function StatCard({ label, value, note }: { label: string; value: string | number; note: string }) {
   return (
-    <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{label}</p>
-      <p className="mt-1 text-2xl font-black text-(--tc-text,#0b1a3c)">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{note}</p>
+    <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">{label}</p>
+      <p className="mt-1 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-[var(--tc-text-muted,#6b7280)]">{note}</p>
     </div>
   );
 }
@@ -321,18 +321,18 @@ export function ReleaseCalendarPanel() {
 
   return (
     <main className="space-y-5">
-      <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
+      <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-              <FiCalendar className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Agenda de release
+            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+              <FiCalendar className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Agenda de release
             </span>
-            <h1 className="mt-3 text-2xl font-black text-(--tc-text,#0b1a3c)">Calendario operacional de entrega</h1>
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+            <h1 className="mt-3 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">Calendario operacional de entrega</h1>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
               Calendario unico para Lider TC e Suporte Tecnico acompanharem marcacoes de empresas, projetos, usuarios, horarios, riscos e entregas sem poluir a tela.
             </p>
           </div>
-          <button type="button" onClick={() => void mutate()} className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-bold text-(--tc-text,#0b1a3c)">
+          <button type="button" onClick={() => void mutate()} className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
             <FiRefreshCw className="h-4 w-4" /> Atualizar
           </button>
         </div>
@@ -350,9 +350,9 @@ export function ReleaseCalendarPanel() {
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
-        <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-          <FiFilter className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Filtros de visao
+      <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
+        <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+          <FiFilter className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Filtros de visao
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-8">
           <div className="space-y-1"><FieldLabel>Empresa</FieldLabel><input list="release-calendar-companies" value={filters.companySlug} onChange={(event) => setFilters((current) => ({ ...current, companySlug: event.target.value }))} className={inputClass} placeholder="testing-company" /></div>
@@ -362,7 +362,7 @@ export function ReleaseCalendarPanel() {
           <div className="space-y-1"><FieldLabel>Contexto</FieldLabel><select aria-label="Filtrar por contexto" value={filters.context} onChange={(event) => setFilters((current) => ({ ...current, context: event.target.value }))} className={inputClass}><option value="">Todos</option>{CONTEXT_OPTIONS.map((context) => <option key={context} value={context}>{contextLabel(context)}</option>)}</select></div>
           <div className="space-y-1"><FieldLabel>Perfil</FieldLabel><select aria-label="Filtrar por perfil" value={filters.audienceProfile} onChange={(event) => setFilters((current) => ({ ...current, audienceProfile: event.target.value }))} className={inputClass}><option value="">Todos</option>{AUDIENCE_PROFILE_OPTIONS.map((profile) => <option key={profile} value={profile}>{audienceLabel(profile)}</option>)}</select></div>
           <div className="space-y-1"><FieldLabel>Status</FieldLabel><select aria-label="Filtrar por status" value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))} className={inputClass}><option value="">Todos</option>{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select></div>
-          <div className="flex items-end"><button type="button" onClick={() => setFilters(initialFilters)} className="w-full rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-black text-(--tc-text,#0b1a3c)">Limpar</button></div>
+          <div className="flex items-end"><button type="button" onClick={() => setFilters(initialFilters)} className="w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-black text-[var(--tc-text,#0b1a3c)]">Limpar</button></div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" onClick={() => setFilters((current) => ({ ...current, audienceProfile: "leader_tc" }))} className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-black text-indigo-700"><FiUserCheck /> Visao Lider TC</button>
@@ -375,9 +375,9 @@ export function ReleaseCalendarPanel() {
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
-        <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
+        <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <div><div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)"><FiGrid className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Calendario visual</div><p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">Cada dia mostra ate tres marcacoes e esconde o excesso com contador.</p></div>
+            <div><div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]"><FiGrid className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Calendario visual</div><p className="mt-2 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">Cada dia mostra ate tres marcacoes e esconde o excesso com contador.</p></div>
             <Badge>{calendarDays.length} dias</Badge>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
@@ -386,38 +386,38 @@ export function ReleaseCalendarPanel() {
               const hiddenCount = Math.max(day.events.length - visibleEvents.length, 0);
               const selected = day.key === activeDayKey;
               return (
-                <button key={day.key} type="button" onClick={() => setSelectedDayKey(day.key)} className={`min-h-44 rounded-2xl border p-4 text-left transition ${selected ? "border-(--tc-accent,#ef0001) bg-rose-50" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) hover:bg-white"}`}>
-                  <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{formatDay(day.key)}</p><p className="mt-1 text-3xl font-black text-(--tc-text,#0b1a3c)">{formatDayNumber(day.key)}</p></div><Badge>{day.events.length}</Badge></div>
+                <button key={day.key} type="button" onClick={() => setSelectedDayKey(day.key)} className={`min-h-44 rounded-2xl border p-4 text-left transition ${selected ? "border-[var(--tc-accent,#ef0001)] bg-rose-50" : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] hover:bg-white"}`}>
+                  <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">{formatDay(day.key)}</p><p className="mt-1 text-3xl font-black text-[var(--tc-text,#0b1a3c)]">{formatDayNumber(day.key)}</p></div><Badge>{day.events.length}</Badge></div>
                   <div className="mt-4 space-y-2">
-                    {visibleEvents.map((event) => <div key={event.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2"><div className="flex items-center justify-between gap-2"><span className="truncate text-xs font-black text-(--tc-text,#0b1a3c)">{event.markerLabel}</span><span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black ${statusTone(event.status)}`}>{statusLabel(event.status)}</span></div><p className="mt-1 truncate text-[11px] font-semibold text-(--tc-text-muted,#6b7280)">{contextLabel(event.context)} · {event.ownerName ?? event.releaseName}</p></div>)}
-                    {hiddenCount ? <div className="rounded-xl border border-dashed border-(--tc-border,#d7deea) bg-white px-3 py-2 text-xs font-black text-(--tc-text-muted,#6b7280)">+{hiddenCount} marcacoes</div> : null}
+                    {visibleEvents.map((event) => <div key={event.id} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2"><div className="flex items-center justify-between gap-2"><span className="truncate text-xs font-black text-[var(--tc-text,#0b1a3c)]">{event.markerLabel}</span><span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black ${statusTone(event.status)}`}>{statusLabel(event.status)}</span></div><p className="mt-1 truncate text-[11px] font-semibold text-[var(--tc-text-muted,#6b7280)]">{contextLabel(event.context)} Â· {event.ownerName ?? event.releaseName}</p></div>)}
+                    {hiddenCount ? <div className="rounded-xl border border-dashed border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-xs font-black text-[var(--tc-text-muted,#6b7280)]">+{hiddenCount} marcacoes</div> : null}
                   </div>
                 </button>
               );
-            }) : <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Nenhuma marcacao para os filtros atuais.</div>}
+            }) : <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-6 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Nenhuma marcacao para os filtros atuais.</div>}
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)"><FiClock className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Marcacoes do dia</div>
-          <h2 className="mt-2 text-xl font-black text-(--tc-text,#0b1a3c)">{activeDayKey ? formatDay(activeDayKey) : "Selecione um dia"}</h2>
+        <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]"><FiClock className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Marcacoes do dia</div>
+          <h2 className="mt-2 text-xl font-black text-[var(--tc-text,#0b1a3c)]">{activeDayKey ? formatDay(activeDayKey) : "Selecione um dia"}</h2>
           <div className="mt-4 space-y-3">
             {selectedDayEvents.length ? selectedDayEvents.map((event) => (
-              <article key={event.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{formatDate(event.startAt)} → {formatDate(event.endAt)}</p><h3 className="mt-1 text-base font-black text-(--tc-text,#0b1a3c)">{event.title}</h3></div><select aria-label={`Alterar status de ${event.title}`} value={event.status} disabled={updatingId === event.id} onChange={(changeEvent) => void handleStatusChange(event.id, changeEvent.target.value)} className="rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[11px] font-bold text-(--tc-text,#0b1a3c)">{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select></div>
-                <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{event.description || "Sem descricao cadastrada."}</p>
+              <article key={event.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">{formatDate(event.startAt)} â†’ {formatDate(event.endAt)}</p><h3 className="mt-1 text-base font-black text-[var(--tc-text,#0b1a3c)]">{event.title}</h3></div><select aria-label={`Alterar status de ${event.title}`} value={event.status} disabled={updatingId === event.id} onChange={(changeEvent) => void handleStatusChange(event.id, changeEvent.target.value)} className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[11px] font-bold text-[var(--tc-text,#0b1a3c)]">{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select></div>
+                <p className="mt-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{event.description || "Sem descricao cadastrada."}</p>
                 <EventBadges event={event} />
-                {event.participantNames.length ? <p className="mt-3 text-xs font-semibold leading-5 text-(--tc-text-muted,#6b7280)">Participantes: {event.participantNames.join(", ")}</p> : null}
+                {event.participantNames.length ? <p className="mt-3 text-xs font-semibold leading-5 text-[var(--tc-text-muted,#6b7280)]">Participantes: {event.participantNames.join(", ")}</p> : null}
               </article>
-            )) : <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Clique em um dia do calendario para abrir as marcacoes.</div>}
+            )) : <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-6 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Clique em um dia do calendario para abrir as marcacoes.</div>}
           </div>
         </section>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <div className="space-y-5">
-          <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)"><FiPlus className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Cadastrar marcacao de calendario</div>
+          <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]"><FiPlus className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Cadastrar marcacao de calendario</div>
             <form className="mt-4 space-y-4" onSubmit={handleCreateEvent}>
               {formError ? <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{formError}</div> : null}
               <div className="grid gap-3 md:grid-cols-2">
@@ -442,32 +442,33 @@ export function ReleaseCalendarPanel() {
                 <div className="space-y-1"><FieldLabel>Notificacoes</FieldLabel><textarea aria-label="Notificacoes" value={form.notificationRules} onChange={(event) => setForm((current) => ({ ...current, notificationRules: event.target.value }))} className={`min-h-28 ${textareaClass}`} /></div>
                 <div className="space-y-1 md:col-span-2"><FieldLabel>Brain</FieldLabel><textarea aria-label="Brain" value={form.brianRules} onChange={(event) => setForm((current) => ({ ...current, brianRules: event.target.value }))} className={`min-h-24 ${textareaClass}`} /></div>
               </div>
-              <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-black text-white disabled:opacity-60"><FiPlus className="h-4 w-4" /> {saving ? "Salvando..." : "Criar marcacao"}</button>
+              <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-black text-white disabled:opacity-60"><FiPlus className="h-4 w-4" /> {saving ? "Salvando..." : "Criar marcacao"}</button>
             </form>
           </section>
 
-          <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)"><FiClock className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Linha do tempo detalhada</div>
+          <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]"><FiClock className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Linha do tempo detalhada</div>
             <div className="mt-4 space-y-4">
               {events.length ? events.map((event) => (
-                <article key={event.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                <article key={event.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{event.releaseName} · {event.type}</p><h2 className="mt-1 text-base font-black text-(--tc-text,#0b1a3c)">{event.title}</h2><p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#6b7280)">{formatDate(event.startAt)} → {formatDate(event.endAt)}</p></div>
-                    <div className="flex flex-wrap items-center gap-2"><select aria-label={`Status do evento ${event.title}`} value={event.status} disabled={updatingId === event.id} onChange={(changeEvent) => void handleStatusChange(event.id, changeEvent.target.value)} className="rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[11px] font-bold text-(--tc-text,#0b1a3c)">{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select><Badge>{event.criticality}</Badge></div>
+                    <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">{event.releaseName} Â· {event.type}</p><h2 className="mt-1 text-base font-black text-[var(--tc-text,#0b1a3c)]">{event.title}</h2><p className="mt-1 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]">{formatDate(event.startAt)} â†’ {formatDate(event.endAt)}</p></div>
+                    <div className="flex flex-wrap items-center gap-2"><select aria-label={`Status do evento ${event.title}`} value={event.status} disabled={updatingId === event.id} onChange={(changeEvent) => void handleStatusChange(event.id, changeEvent.target.value)} className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[11px] font-bold text-[var(--tc-text,#0b1a3c)]">{STATUS_OPTIONS.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select><Badge>{event.criticality}</Badge></div>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{event.description}</p>
+                  <p className="mt-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{event.description}</p>
                   <EventBadges event={event} />
-                  <div className="mt-4 grid gap-3 md:grid-cols-3"><div className="rounded-xl border border-(--tc-border,#d7deea) bg-white p-3"><p className="flex items-center gap-2 text-xs font-black text-(--tc-text,#0b1a3c)"><FiCheckCircle /> Checklist</p><ul className="mt-2 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{event.checklist.map((item) => <li key={item}>• {item}</li>)}</ul></div><div className="rounded-xl border border-(--tc-border,#d7deea) bg-white p-3"><p className="flex items-center gap-2 text-xs font-black text-(--tc-text,#0b1a3c)"><FiBell /> Notificacoes</p><ul className="mt-2 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{event.notificationRules.map((item) => <li key={item}>• {item}</li>)}</ul></div><div className="rounded-xl border border-(--tc-border,#d7deea) bg-white p-3"><p className="flex items-center gap-2 text-xs font-black text-(--tc-text,#0b1a3c)"><FiTarget /> Brain</p><ul className="mt-2 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{event.brianRules.map((item) => <li key={item}>• {item}</li>)}</ul></div></div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-3"><div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-3"><p className="flex items-center gap-2 text-xs font-black text-[var(--tc-text,#0b1a3c)]"><FiCheckCircle /> Checklist</p><ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{event.checklist.map((item) => <li key={item}>â€¢ {item}</li>)}</ul></div><div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-3"><p className="flex items-center gap-2 text-xs font-black text-[var(--tc-text,#0b1a3c)]"><FiBell /> Notificacoes</p><ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{event.notificationRules.map((item) => <li key={item}>â€¢ {item}</li>)}</ul></div><div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-3"><p className="flex items-center gap-2 text-xs font-black text-[var(--tc-text,#0b1a3c)]"><FiTarget /> Brain</p><ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{event.brianRules.map((item) => <li key={item}>â€¢ {item}</li>)}</ul></div></div>
                 </article>
-              )) : <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Nenhum evento encontrado para os filtros atuais.</div>}
+              )) : <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-6 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Nenhum evento encontrado para os filtros atuais.</div>}
             </div>
           </section>
         </div>
 
         <div className="space-y-4">
-          <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm"><div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)"><FiCheckCircle className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Regras da agenda</div><div className="mt-4 space-y-3">{data?.rules.map((rule) => <article key={rule.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4"><h2 className="text-sm font-black text-(--tc-text,#0b1a3c)">{rule.title}</h2><p className="mt-2 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{rule.description}</p><ul className="mt-3 space-y-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{rule.acceptanceCriteria.map((item) => <li key={item}>• {item}</li>)}</ul></article>)}</div></section>
+          <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm"><div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]"><FiCheckCircle className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Regras da agenda</div><div className="mt-4 space-y-3">{data?.rules.map((rule) => <article key={rule.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4"><h2 className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">{rule.title}</h2><p className="mt-2 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{rule.description}</p><ul className="mt-3 space-y-1 text-xs leading-5 text-[var(--tc-text-muted,#6b7280)]">{rule.acceptanceCriteria.map((item) => <li key={item}>â€¢ {item}</li>)}</ul></article>)}</div></section>
         </div>
       </section>
     </main>
   );
 }
+

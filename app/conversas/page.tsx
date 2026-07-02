@@ -1,4 +1,4 @@
-import { UnifiedConversationsHub } from "./_components/UnifiedConversationsHub";
+﻿import { UnifiedConversationsHub } from "./_components/UnifiedConversationsHub";
 
 export const dynamic = "force-dynamic";
 
@@ -10,3 +10,4 @@ export const metadata = {
 export default function ConversasPage() {
   return <UnifiedConversationsHub />;
 }
+

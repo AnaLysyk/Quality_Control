@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
@@ -281,7 +281,7 @@ export function AvatarLibraryDialog({
                 key={`${item.kind}-${item.label}-${item.value}`}
                 type="button"
                 onClick={() => select({ avatarKind: item.kind, avatarValue: item.value, avatarLabel: item.label })}
-                className={`group flex h-14 w-14 flex-col items-center justify-center overflow-hidden rounded-full border bg-white text-(--tc-primary) transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_12px_28px_rgba(15,23,42,0.10)] ${
+                className={`group flex h-14 w-14 flex-col items-center justify-center overflow-hidden rounded-full border bg-white text-[var(--tc-primary)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_12px_28px_rgba(15,23,42,0.10)] ${
                   active ? "border-sky-400 ring-4 ring-sky-100" : "border-slate-200"
                 }`}
                 title={item.label}
@@ -363,7 +363,7 @@ export function AvatarLibraryDialog({
                 <button
                   type="button"
                   onClick={applyGifUrl}
-                  className="rounded-xl bg-(--tc-primary) px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-white"
+                  className="rounded-xl bg-[var(--tc-primary)] px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-white"
                 >
                   Usar
                 </button>
@@ -411,7 +411,7 @@ export function AvatarLibraryDialog({
                         key={`${item.kind}-${item.label}-${item.value}`}
                         type="button"
                         onClick={() => select({ avatarKind: item.kind, avatarValue: item.value, avatarLabel: item.label })}
-                        className={`group flex h-14 w-14 flex-col items-center justify-center overflow-hidden rounded-full border bg-white text-(--tc-primary) transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_12px_28px_rgba(15,23,42,0.10)] ${
+                        className={`group flex h-14 w-14 flex-col items-center justify-center overflow-hidden rounded-full border bg-white text-[var(--tc-primary)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_12px_28px_rgba(15,23,42,0.10)] ${
                           active ? "border-sky-400 ring-4 ring-sky-100" : "border-slate-200"
                         }`}
                         title={item.label}
@@ -432,3 +432,4 @@ export function AvatarLibraryDialog({
     </Dialog.Root>
   );
 }
+

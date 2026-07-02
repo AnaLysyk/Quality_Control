@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { findUserByEmailOrId } from "@/lib/simpleAuth";
@@ -210,3 +210,4 @@ export async function authenticateRequest(req: Request): Promise<AuthUser | null
   const identifier = resolveRequestIdentifier(req);
   return identifier ? resolveLocalAuthUser(identifier) : null;
 }
+

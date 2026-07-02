@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
 import { type Locale, type Translations, translations } from "@/i18n/translations";
@@ -52,3 +52,4 @@ export function useTranslation() {
   const { t, locale } = useLanguage();
   return { t, locale };
 }
+

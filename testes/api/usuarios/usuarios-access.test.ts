@@ -1,4 +1,4 @@
-import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
+﻿import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
 
 describe("acesso da feature de usuarios", () => {
   it("permite gestao completa para Lider TC", () => {
@@ -49,3 +49,4 @@ describe("acesso da feature de usuarios", () => {
     expect(resolverAcessoUsuarios(null).canViewPermissions).toBe(false);
   });
 });
+

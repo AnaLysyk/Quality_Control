@@ -1,4 +1,4 @@
-jest.mock("@/lib/brain/access", () => ({
+﻿jest.mock("@/lib/brain/access", () => ({
   resolveBrainAccess: jest.fn(),
 }));
 
@@ -76,3 +76,4 @@ describe("brain commands confirmation contract", () => {
     );
   });
 });
+

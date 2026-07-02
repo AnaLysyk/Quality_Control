@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+﻿import { expect, type Page } from "@playwright/test";
 import { BASE_URL } from "../../api/autenticacao/autenticar-por-cookie";
 
 async function paginaTemCampoComValor(page: Page, valor: string) {
@@ -43,3 +43,4 @@ export async function validarMeuPerfilUsuarioCriado(
     })
     .toBe(true);
 }
+

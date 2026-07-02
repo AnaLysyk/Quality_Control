@@ -1,1 +1,2 @@
-export * from "../autenticacao/autenticar-revisor";
+﻿export * from "../autenticacao/autenticar-revisor";
+

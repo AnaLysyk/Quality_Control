@@ -1,4 +1,4 @@
-const APP_META: Record<string, { label: string; color: string }> = {
+﻿const APP_META: Record<string, { label: string; color: string }> = {
   sfq: { label: "SMART", color: "#2563eb" },
   smart: { label: "SMART", color: "#2563eb" },
   print: { label: "PRINT", color: "#9333ea" },
@@ -38,3 +38,4 @@ export function getAppColorClass(key: string) {
 }
 
 export type AppMeta = ReturnType<typeof getAppMeta>;
+

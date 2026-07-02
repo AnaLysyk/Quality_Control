@@ -1,4 +1,4 @@
-import type { NavModule } from "./navigationCatalog";
+﻿import type { NavModule } from "./navigationCatalog";
 
 export type NavContext = {
   isCompanyContext: boolean;
@@ -66,3 +66,4 @@ export function detectNavContext(pathname: string): NavContext {
 
   return { isCompanyContext: false, companySlug: null, activeModule: null, segment: null };
 }
+

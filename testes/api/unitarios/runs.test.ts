@@ -1,4 +1,4 @@
-import { resolveRunRole, canCreateRun, canEditRun, canDeleteRun, canLinkDefect } from "../../../lib/rbac/runs";
+﻿import { resolveRunRole, canCreateRun, canEditRun, canDeleteRun, canLinkDefect } from "../../../lib/rbac/runs";
 import { resolveDefectRole } from "../../../lib/rbac/defects";
 
 jest.mock("../../../lib/rbac/defects", () => ({
@@ -6,7 +6,7 @@ jest.mock("../../../lib/rbac/defects", () => ({
   getPerfilSimulado: jest.fn()
 }));
 
-describe("rbac/runs - Matriz Permissiva para Casos de Execução", () => {
+describe("rbac/runs - Matriz Permissiva para Casos de ExecuÃ§Ã£o", () => {
   const resolveDefectRoleMock = resolveDefectRole as jest.Mock;
 
   afterEach(() => {
@@ -14,7 +14,7 @@ describe("rbac/runs - Matriz Permissiva para Casos de Execução", () => {
   });
 
   describe("resolveRunRole", () => {
-    it("deve delegar a resolução exata para resolveDefectRole via payload recebido", async () => {
+    it("deve delegar a resoluÃ§Ã£o exata para resolveDefectRole via payload recebido", async () => {
       resolveDefectRoleMock.mockResolvedValue("leader_tc");
       
       const role = await resolveRunRole({ id: "user", isGlobalAdmin: true }, "cliente-slug");
@@ -23,7 +23,7 @@ describe("rbac/runs - Matriz Permissiva para Casos de Execução", () => {
       expect(resolveDefectRoleMock).toHaveBeenCalledWith({ id: "user", isGlobalAdmin: true }, "cliente-slug");
     });
 
-    it("deve esmagar falhas na resolução (throws) retornando um perfil fechado de base (testing_company_user)", async () => {
+    it("deve esmagar falhas na resoluÃ§Ã£o (throws) retornando um perfil fechado de base (testing_company_user)", async () => {
       resolveDefectRoleMock.mockRejectedValue(new Error("Database offline"));
 
       const roleFallback = await resolveRunRole({ id: "user", isGlobalAdmin: false }, "cliente-slug");
@@ -65,3 +65,4 @@ describe("rbac/runs - Matriz Permissiva para Casos de Execução", () => {
     });
   });
 });
+

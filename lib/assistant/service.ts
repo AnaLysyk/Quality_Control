@@ -1,5 +1,5 @@
-/**
- * Assistant service — orchestrator.
+﻿/**
+ * Assistant service â€” orchestrator.
  *
  * This file is intentionally thin. It coordinates:
  *   1. context resolution
@@ -50,7 +50,7 @@ import {
   type AssistantExecutorResult,
 } from "./tools";
 
-/* ──────────────────── Conversation helpers ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Conversation helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function normalizeConversationHistory(history: AssistantClientRequest["history"]) {
   if (!Array.isArray(history)) return [] as AssistantConversationTurn[];
@@ -102,7 +102,7 @@ function getLatestUserTopic(history: AssistantConversationTurn[], message?: stri
   return null;
 }
 
-/* ──────────────────── Low-signal detection ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Low-signal detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function isLowSignalMessage(message: string, context: AssistantScreenContext) {
   const normalized = normalizeSearch(message);
@@ -115,16 +115,16 @@ function isLowSignalMessage(message: string, context: AssistantScreenContext) {
   // Use intent analyzer for smarter detection
   const intent = analyzeIntent(message, context, []);
   
-  // Se tem entidades extraídas, não é low signal
+  // Se tem entidades extraÃ­das, nÃ£o Ã© low signal
   if (intent.entities.length > 0) return false;
   
-  // Se tem tópicos identificados, não é low signal
+  // Se tem tÃ³picos identificados, nÃ£o Ã© low signal
   if (intent.topics.length > 0) return false;
   
-  // Se é uma confirmação ou clarificação válida
+  // Se Ã© uma confirmaÃ§Ã£o ou clarificaÃ§Ã£o vÃ¡lida
   if (intent.primary === "confirmation" || intent.primary === "clarification") return false;
   
-  // Se tem confiança alta no intent
+  // Se tem confianÃ§a alta no intent
   if (intent.confidence > 0.7 && intent.primary !== "unknown") return false;
 
   const tokenCount = normalized.split(/\s+/).filter(Boolean).length;
@@ -137,7 +137,7 @@ function isLowSignalMessage(message: string, context: AssistantScreenContext) {
 }
 
 function isGreetingMessage(message: string) {
-  return /^(oi+|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí|hello|hi)\b/i.test(normalizeSearch(message));
+  return /^(oi+|ola|olÃ¡|bom dia|boa tarde|boa noite|e ai|e aÃ­|hello|hi)\b/i.test(normalizeSearch(message));
 }
 
 function isHumanSmallTalk(message: string) {
@@ -145,10 +145,10 @@ function isHumanSmallTalk(message: string) {
     .replace(/[!?.,;]/g, "")
     .trim();
 
-  return /^(tudo|tudo bem|td|td bem|beleza|blz|ok|okay|certo|show|fechou|sim|ss|aham|uhum|tranquilo|de boa|e vc|e voce|e você)$/.test(normalized);
+  return /^(tudo|tudo bem|td|td bem|beleza|blz|ok|okay|certo|show|fechou|sim|ss|aham|uhum|tranquilo|de boa|e vc|e voce|e vocÃª)$/.test(normalized);
 }
 
-/* ──────────────────── Repeat / collapse guards ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Repeat / collapse guards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function shouldShortCircuitRepeatedPrompt(
   history: AssistantConversationTurn[],
@@ -192,18 +192,18 @@ function chooseAccessRequestsTool(message: string, context: AssistantScreenConte
 
   const normalized = normalizeSearch(message);
 
-  if (/\b(acoes|acao|posso fazer|executar|comandos|funcoes|função|funcao)\b/.test(normalized)) {
+  if (/\b(acoes|acao|posso fazer|executar|comandos|funcoes|funÃ§Ã£o|funcao)\b/.test(normalized)) {
     return "list_available_actions";
   }
 
-  if (/\b(explica|explicar|fluxo|solicitacao|solicitacoes|aprovar|aprovacao|recusar|rejeitar|ajuste|pendencia|pendencias|decisao|falta|historico|histórico)\b/.test(normalized)) {
+  if (/\b(explica|explicar|fluxo|solicitacao|solicitacoes|aprovar|aprovacao|recusar|rejeitar|ajuste|pendencia|pendencias|decisao|falta|historico|histÃ³rico)\b/.test(normalized)) {
     return "get_screen_context";
   }
 
   return null;
 }
 
-/* ──────────────────── Shortcut replies ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Shortcut replies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function buildRecentDuplicateReply(tool: AssistantToolName, context: AssistantScreenContext): AssistantExecutorResult {
   return {
@@ -234,9 +234,9 @@ function buildClarifyReply(
         reply: compactMultiline([
           "Tudo bem por aqui. Estou no Brain contigo.",
           "",
-          "Pode me mandar uma frase solta mesmo. Eu tento entender a intenção antes de responder.",
+          "Pode me mandar uma frase solta mesmo. Eu tento entender a intenÃ§Ã£o antes de responder.",
           "",
-          "Posso resumir o Brain, explicar o grafo, buscar contexto, sugerir próximo passo ou te ajudar a transformar uma ideia em ação dentro da plataforma.",
+          "Posso resumir o Brain, explicar o grafo, buscar contexto, sugerir prÃ³ximo passo ou te ajudar a transformar uma ideia em aÃ§Ã£o dentro da plataforma.",
         ].join("\n")),
       };
     }
@@ -245,11 +245,11 @@ function buildClarifyReply(
       return {
         tool: "suggest_next_step",
         success: true,
-        summary: "conversa curta contextual em solicitações",
+        summary: "conversa curta contextual em solicitaÃ§Ãµes",
         reply: compactMultiline([
-          "Tudo certo. Continuo na tela de Solicitações de acesso.",
+          "Tudo certo. Continuo na tela de SolicitaÃ§Ãµes de acesso.",
           "",
-          "Pode falar do seu jeito. Eu consigo buscar pessoa, filtrar status, abrir solicitação, acionar PDF, explicar o fluxo ou orientar aprovação, recusa e ajuste.",
+          "Pode falar do seu jeito. Eu consigo buscar pessoa, filtrar status, abrir solicitaÃ§Ã£o, acionar PDF, explicar o fluxo ou orientar aprovaÃ§Ã£o, recusa e ajuste.",
         ].join("\n")),
       };
     }
@@ -295,7 +295,7 @@ function buildClarifyReply(
         "",
         "Me conta o que voce quer fazer agora. Pode ser uma frase simples, tipo buscar algo, entender a tela, revisar um registro, criar uma acao ou me pedir para sugerir o caminho.",
         "",
-        "Se preferir, eu começo resumindo o que estou vendo nesta tela.",
+        "Se preferir, eu comeÃ§o resumindo o que estou vendo nesta tela.",
       ].join("\n")),
     };
   }
@@ -314,7 +314,7 @@ function buildClarifyReply(
   };
 }
 
-/* ──────────────────── Tool dispatcher ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Tool dispatcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 async function executeTool(user: AuthUser, context: AssistantScreenContext, tool: AssistantToolName, message: string): Promise<AssistantExecutorResult> {
   switch (tool) {
@@ -337,11 +337,11 @@ async function executeToolAction(user: AuthUser, context: AssistantScreenContext
     case "create_comment": return executeCreateComment(user, action);
     case "create_test_case": return executeCreateTestCase(user, context, action);
     default:
-      return { tool: "suggest_next_step", success: false, summary: "ação não suportada", reply: "Essa ação não está disponível neste MVP do agente." };
+      return { tool: "suggest_next_step", success: false, summary: "aÃ§Ã£o nÃ£o suportada", reply: "Essa aÃ§Ã£o nÃ£o estÃ¡ disponÃ­vel neste MVP do agente." };
   }
 }
 
-/* ──────────────────── Public entry-point ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Public entry-point â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function reply(
   tool: AssistantToolName,
@@ -415,7 +415,7 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
 
   let result: AssistantExecutorResult;
 
-  // Enriquecer com contexto do Brain (inclui busca semântica pela query do usuário)
+  // Enriquecer com contexto do Brain (inclui busca semÃ¢ntica pela query do usuÃ¡rio)
   let brainContext: string | null = null;
   try {
     const brainAccess = await buildBrainAccessContextFromAuthUser(user);
@@ -424,11 +424,11 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
       entityType: context.entityType,
       entityId: context.entityId,
       access: brainAccess,
-      userQuery: message, // Permite busca semântica nos nós e memórias
+      userQuery: message, // Permite busca semÃ¢ntica nos nÃ³s e memÃ³rias
     });
   } catch { /* brain context is optional */ }
 
-  // Se há contexto do brain, anexar à mensagem para enriquecer respostas
+  // Se hÃ¡ contexto do brain, anexar Ã  mensagem para enriquecer respostas
   const enrichedMessage = brainContext
     ? `${message}\n\n---\n[Brain Context]\n${brainContext}`
     : message;
@@ -464,3 +464,4 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
 
   return reply(result.tool, context, result);
 }
+

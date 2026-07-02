@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { ReactNode } from "react";
 import { useCurrentWorkspaceContext, type Permission } from "@/hooks/useCurrentWorkspaceContext";
@@ -33,3 +33,4 @@ export function PermissionGate({ require, mode = "all", children, fallback = nul
 
   return allowed ? <>{children}</> : <>{fallback}</>;
 }
+

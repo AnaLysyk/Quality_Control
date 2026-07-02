@@ -93,3 +93,4 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
   await page.getByRole("button", { name: /Recusar solicita/i }).click();
   await expect(rejectRow).toContainText(/Rejeitada/i, { timeout: 20000 });
 });
+

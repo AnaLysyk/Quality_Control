@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { BrainScreenContext } from "./context";
 import type { BrainScreenRegistration } from "./registry";
@@ -18,4 +18,5 @@ export type BrainAgentDecision = {
   requiresConfirmation: boolean;
   suggestedActions: string[];
 };
+
 

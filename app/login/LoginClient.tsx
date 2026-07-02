@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -189,7 +189,7 @@ export default function LoginClient() {
         router.refresh();
       } else {
         const data = await res.json().catch(() => null);
-        setError((data?.error as string) || (data?.message as string) || "Não foi possível autenticar");
+        setError((data?.error as string) || (data?.message as string) || "NÃ£o foi possÃ­vel autenticar");
       }
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : "Erro inesperado ao tentar autenticar");
@@ -247,7 +247,7 @@ export default function LoginClient() {
           <div className="space-y-4">
             <div>
               <label htmlFor="user" className="block text-sm font-medium text-[#011848] mb-1">
-                Usuário
+                UsuÃ¡rio
               </label>
               <input
                 id="user"
@@ -255,7 +255,7 @@ export default function LoginClient() {
                 type="text"
                 required
                 className="form-control-user w-full px-4 py-3 border border-[#011848]/20 rounded-lg focus:ring-2 focus:ring-[#ef0001] focus:border-transparent transition-all duration-200 bg-white text-[#011848] placeholder:text-[#9aa3b2] caret-[#ef0001]"
-                placeholder="usuário"
+                placeholder="usuÃ¡rio"
                 autoComplete="off"
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
@@ -338,3 +338,4 @@ export default function LoginClient() {
     </div>
   );
 }
+

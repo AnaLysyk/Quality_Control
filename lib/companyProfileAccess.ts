@@ -1,4 +1,4 @@
-import type { AccessContext } from "@/lib/auth/session";
+﻿import type { AccessContext } from "@/lib/auth/session";
 import {
   findLocalCompanyById,
   listLocalCompanies,
@@ -39,3 +39,4 @@ export async function resolveCurrentCompanyFromAccess(access: AccessContext | nu
 
   return { company, status: 200 };
 }
+

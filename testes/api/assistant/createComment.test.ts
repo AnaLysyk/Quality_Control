@@ -1,9 +1,9 @@
-/* ── Mock server-only and all store/RBAC dependencies ── */
+﻿/* â”€â”€ Mock server-only and all store/RBAC dependencies â”€â”€ */
 
 const mockTicket = {
   id: "t1",
   code: "SP-000042",
-  title: "Bug no formulário",
+  title: "Bug no formulÃ¡rio",
   description: "Ao salvar, perde dados",
   type: "bug" as const,
   priority: "high" as const,
@@ -55,7 +55,7 @@ import { getTicketById } from "@/lib/ticketsStore";
 import type { AuthUser } from "@/lib/jwtAuth";
 import type { AssistantScreenContext, AssistantToolAction } from "@/lib/assistant/types";
 
-/* ── Helpers ── */
+/* â”€â”€ Helpers â”€â”€ */
 
 function makeUser(overrides: Partial<AuthUser> = {}): AuthUser {
   return {
@@ -93,30 +93,30 @@ beforeEach(() => {
   (getTicketById as jest.Mock).mockResolvedValue(mockTicket);
 });
 
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*  buildCommentCreationAction                      */
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("buildCommentCreationAction", () => {
-  /* ── Ticket not found ── */
+  /* â”€â”€ Ticket not found â”€â”€ */
 
   it("returns error when ticket is not found", async () => {
     (findVisibleTicket as jest.Mock).mockResolvedValue(null);
     const result = await buildCommentCreationAction(makeUser(), makeContext(), "comentar no chamado SP-999");
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("ID/código");
+    expect(result.reply).toContain("ID/cÃ³digo");
   });
 
-  /* ── No permission ── */
+  /* â”€â”€ No permission â”€â”€ */
 
   it("returns error when user cannot comment", async () => {
     (canCommentTicket as jest.Mock).mockReturnValue(false);
     const result = await buildCommentCreationAction(makeUser(), makeContext(), "comentar no chamado SP-000042");
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("não pode comentar");
+    expect(result.reply).toContain("nÃ£o pode comentar");
   });
 
-  /* ── Generic comment request → builds draft from ticket ── */
+  /* â”€â”€ Generic comment request â†’ builds draft from ticket â”€â”€ */
 
   it("generates a technical draft for generic comment request", async () => {
     const result = await buildCommentCreationAction(makeUser(), makeContext(), "montar comentario tecnico para SP-000042");
@@ -128,13 +128,13 @@ describe("buildCommentCreationAction", () => {
     expect((toolAction as AssistantToolAction).input.body).toBeTruthy();
   });
 
-  /* ── Comment with actual content ── */
+  /* â”€â”€ Comment with actual content â”€â”€ */
 
   it("prepares a comment with the user's own text", async () => {
     const result = await buildCommentCreationAction(
       makeUser(),
       makeContext(),
-      "comentar no chamado SP-000042 com atualização: reproduzi o bug no Chrome 120 e confirmo o problema",
+      "comentar no chamado SP-000042 com atualizaÃ§Ã£o: reproduzi o bug no Chrome 120 e confirmo o problema",
     );
     expect(result.success).toBe(true);
     expect(result.actions).toBeDefined();
@@ -142,7 +142,7 @@ describe("buildCommentCreationAction", () => {
     expect(toolAction.input.body).toContain("reproduzi");
   });
 
-  /* ── Duplicate comment ── */
+  /* â”€â”€ Duplicate comment â”€â”€ */
 
   it("rejects duplicate comment", async () => {
     (listTicketComments as jest.Mock).mockResolvedValue([
@@ -158,7 +158,7 @@ describe("buildCommentCreationAction", () => {
     expect(result.success).toBe(true);
   });
 
-  /* ── Validation failure (too short after extraction) ── */
+  /* â”€â”€ Validation failure (too short after extraction) â”€â”€ */
 
   it("returns validation issues for empty body", async () => {
     const result = await buildCommentCreationAction(
@@ -166,14 +166,14 @@ describe("buildCommentCreationAction", () => {
       makeContext(),
       "comentar no chamado SP-000042",
     );
-    // short body → generic request → builds draft from ticket context
+    // short body â†’ generic request â†’ builds draft from ticket context
     expect(result.success).toBe(true);
   });
 });
 
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*  executeCreateComment                            */
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("executeCreateComment", () => {
   function makeAction(overrides: Partial<AssistantToolAction["input"]> = {}): AssistantToolAction {
@@ -197,14 +197,14 @@ describe("executeCreateComment", () => {
   it("rejects invalid body", async () => {
     const result = await executeCreateComment(makeUser(), makeAction({ body: "" }));
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("validações");
+    expect(result.reply).toContain("validaÃ§Ãµes");
   });
 
   it("rejects when ticket not found", async () => {
     (getTicketById as jest.Mock).mockResolvedValue(null);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("não está disponível");
+    expect(result.reply).toContain("nÃ£o estÃ¡ disponÃ­vel");
   });
 
   it("rejects when user can't view ticket", async () => {
@@ -217,7 +217,7 @@ describe("executeCreateComment", () => {
     (canCommentTicket as jest.Mock).mockReturnValue(false);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("não pode comentar");
+    expect(result.reply).toContain("nÃ£o pode comentar");
   });
 
   it("rejects duplicate comment", async () => {
@@ -240,6 +240,7 @@ describe("executeCreateComment", () => {
     (createTicketComment as jest.Mock).mockResolvedValueOnce(null);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("Não consegui publicar");
+    expect(result.reply).toContain("NÃ£o consegui publicar");
   });
 });
+

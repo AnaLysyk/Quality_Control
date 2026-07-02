@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { shouldUseSecureCookies } from "@/lib/auth/cookies";
 
 export async function POST(req: Request) {
@@ -14,3 +14,4 @@ export async function POST(req: Request) {
 
   return response;
 }
+

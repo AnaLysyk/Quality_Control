@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import {
   getLocalUserById,
@@ -198,3 +198,4 @@ export async function buildLocalSessionForUser(
     requestedCompanySlug: requestedCompany?.slug ?? null,
   };
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ReactNode, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -38,3 +38,4 @@ export function RequireCapability({ capability, children, fallback }: RequireCap
   if (!allowed) return (fallback as ReactNode) ?? null;
   return <>{children}</>;
 }
+

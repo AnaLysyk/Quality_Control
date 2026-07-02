@@ -1,4 +1,4 @@
-import { defineConfig, devices } from "@playwright/test";
+﻿import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "https://quality-control-qwqs.onrender.com";
 
@@ -24,3 +24,4 @@ export default defineConfig({
     },
   ],
 });
+

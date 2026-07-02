@@ -1,4 +1,4 @@
-export type AutomationWorkflowStatus = "not_started" | "draft" | "published";
+﻿export type AutomationWorkflowStatus = "not_started" | "draft" | "published";
 
 export function normalizeAutomationWorkflowStatus(
   value: unknown,
@@ -22,3 +22,4 @@ export function aggregateAutomationWorkflowStatus(
   if (values.includes("not_started")) return "not_started";
   return fallback;
 }
+

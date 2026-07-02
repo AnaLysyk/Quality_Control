@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -123,23 +123,23 @@ type ApiEnvelope<T> = {
 type TabId = "overview" | "items" | "evidence" | "defects" | "history" | "qase";
 
 const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-  { id: "overview", label: "Visão geral", icon: FiBarChart2 },
+  { id: "overview", label: "VisÃ£o geral", icon: FiBarChart2 },
   { id: "items", label: "Itens", icon: FiCheckCircle },
-  { id: "evidence", label: "Evidências", icon: FiFileText },
+  { id: "evidence", label: "EvidÃªncias", icon: FiFileText },
   { id: "defects", label: "Defeitos", icon: FiAlertTriangle },
-  { id: "history", label: "Histórico", icon: FiClock },
+  { id: "history", label: "HistÃ³rico", icon: FiClock },
   { id: "qase", label: "Qase", icon: FiCloud },
 ];
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "Rascunho",
   scheduled: "Agendada",
-  in_progress: "Em execução",
+  in_progress: "Em execuÃ§Ã£o",
   paused: "Pausada",
   completed: "Finalizada",
   cancelled: "Cancelada",
   aborted: "Abortada",
-  not_run: "Não executado",
+  not_run: "NÃ£o executado",
   passed: "Passou",
   failed: "Falhou",
   blocked: "Bloqueado",
@@ -258,7 +258,7 @@ export default function RunDetailClient({ runId }: { runId: string }) {
       payload.blockedReason = reason;
     }
     if (status === "skipped" && item.isRequired) {
-      const reason = typeof window !== "undefined" ? window.prompt("Justificativa para pular item obrigatório") : "Item pulado pela UI";
+      const reason = typeof window !== "undefined" ? window.prompt("Justificativa para pular item obrigatÃ³rio") : "Item pulado pela UI";
       if (!reason) return;
       payload.skipReason = reason;
     }
@@ -291,7 +291,7 @@ export default function RunDetailClient({ runId }: { runId: string }) {
   }
 
   if (!run) {
-    return <main className="min-h-screen px-6 py-10 text-white"><div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-white/8 p-6">Run não encontrada.</div></main>;
+    return <main className="min-h-screen px-6 py-10 text-white"><div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-white/8 p-6">Run nÃ£o encontrada.</div></main>;
   }
 
   return (
@@ -302,7 +302,7 @@ export default function RunDetailClient({ runId }: { runId: string }) {
             <div>
               <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-orange-300"><FiGitBranch /> Run operacional</p>
               <h1 className="mt-2 text-3xl font-black text-white">{run.title}</h1>
-              <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/62">{run.description || "Execução local criada a partir de plano de teste, com itens, evidências, defeitos e sync Qase rastreáveis."}</p>
+              <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/62">{run.description || "ExecuÃ§Ã£o local criada a partir de plano de teste, com itens, evidÃªncias, defeitos e sync Qase rastreÃ¡veis."}</p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-white/68">
                 <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1">Projeto: {run.projectId}</span>
                 <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1">Plano: {run.planId}</span>
@@ -350,12 +350,12 @@ export default function RunDetailClient({ runId }: { runId: string }) {
         {activeTab === "overview" ? (
           <section className="grid gap-4 lg:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-white/8 p-5 lg:col-span-2">
-              <h2 className="text-lg font-black">Saúde da execução</h2>
+              <h2 className="text-lg font-black">SaÃºde da execuÃ§Ã£o</h2>
               <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-white" style={{ width: `${Math.min(100, Math.max(0, run.summary.progressPercent))}%` }} />
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <StatCard label="Não executado" value={run.summary.notRunCount} />
+                <StatCard label="NÃ£o executado" value={run.summary.notRunCount} />
                 <StatCard label="Bloqueado" value={run.summary.blockedCount} />
                 <StatCard label="Reteste" value={run.summary.retestCount} />
               </div>
@@ -363,7 +363,7 @@ export default function RunDetailClient({ runId }: { runId: string }) {
             <div className="rounded-2xl border border-white/10 bg-white/8 p-5">
               <h2 className="text-lg font-black">Risco</h2>
               <p className="mt-3 text-sm font-semibold leading-6 text-white/65">
-                {run.summary.failedCount || run.summary.blockedCount ? "Há risco operacional: existem falhas ou bloqueios na execução." : "Sem risco crítico registrado até o momento."}
+                {run.summary.failedCount || run.summary.blockedCount ? "HÃ¡ risco operacional: existem falhas ou bloqueios na execuÃ§Ã£o." : "Sem risco crÃ­tico registrado atÃ© o momento."}
               </p>
               <p className="mt-4 text-xs font-semibold text-white/50">Atualizado em {formatDate(run.updatedAt)}</p>
             </div>
@@ -381,8 +381,8 @@ export default function RunDetailClient({ runId }: { runId: string }) {
                     <th className="px-4 py-3">Resp.</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Tempo</th>
-                    <th className="px-4 py-3">Defeito/Evidência</th>
-                    <th className="px-4 py-3">Ações</th>
+                    <th className="px-4 py-3">Defeito/EvidÃªncia</th>
+                    <th className="px-4 py-3">AÃ§Ãµes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
@@ -398,7 +398,7 @@ export default function RunDetailClient({ runId }: { runId: string }) {
                       <td className="px-4 py-3 text-white/65">{Math.round((item.durationSeconds || 0) / 60)}m / {item.estimatedMinutes}m</td>
                       <td className="px-4 py-3 text-xs font-semibold text-white/65">
                         <p>Defeito: {item.defectId || "N/D"}</p>
-                        <p>Evidências: {item.evidenceIds.length}</p>
+                        <p>EvidÃªncias: {item.evidenceIds.length}</p>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1.5">
@@ -422,10 +422,10 @@ export default function RunDetailClient({ runId }: { runId: string }) {
               <article key={evidence.id} className="rounded-2xl border border-white/10 bg-white/8 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-white/50">{evidence.type || "evidence"}</p>
                 <h3 className="mt-2 font-black">{evidence.name || evidence.id}</h3>
-                <p className="mt-1 text-xs font-semibold text-white/55">{evidence.caseKey} — {evidence.caseTitle}</p>
-                {evidence.url ? <a href={evidence.url} className="mt-3 inline-flex text-sm font-black text-sky-200">Abrir evidência</a> : null}
+                <p className="mt-1 text-xs font-semibold text-white/55">{evidence.caseKey} â€” {evidence.caseTitle}</p>
+                {evidence.url ? <a href={evidence.url} className="mt-3 inline-flex text-sm font-black text-sky-200">Abrir evidÃªncia</a> : null}
               </article>
-            )) : <EmptyState text="Nenhuma evidência vinculada ainda." />}
+            )) : <EmptyState text="Nenhuma evidÃªncia vinculada ainda." />}
           </section>
         ) : null}
 
@@ -435,10 +435,10 @@ export default function RunDetailClient({ runId }: { runId: string }) {
               <article key={item.id} className="rounded-2xl border border-white/10 bg-white/8 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-red-200">Defeito</p>
                 <h3 className="mt-2 font-black">{item.defectId}</h3>
-                <p className="mt-1 text-sm font-semibold text-white/65">{item.caseKey} — {item.caseTitle}</p>
+                <p className="mt-1 text-sm font-semibold text-white/65">{item.caseKey} â€” {item.caseTitle}</p>
                 <p className="mt-2 text-xs text-white/50">Motivo: {item.failureReason || item.blockedReason || "N/D"}</p>
               </article>
-            )) : <EmptyState text="Nenhum defeito vinculado à run." />}
+            )) : <EmptyState text="Nenhum defeito vinculado Ã  run." />}
           </section>
         ) : null}
 
@@ -447,11 +447,11 @@ export default function RunDetailClient({ runId }: { runId: string }) {
             {allAttempts.length ? allAttempts.slice().reverse().map((attempt) => (
               <article key={attempt.id} className="rounded-2xl border border-white/10 bg-white/8 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-black">Tentativa {attempt.attemptNumber} — {attempt.caseKey}</p>
+                  <p className="font-black">Tentativa {attempt.attemptNumber} â€” {attempt.caseKey}</p>
                   <StatusPill status={attempt.status} />
                 </div>
                 <p className="mt-1 text-sm font-semibold text-white/60">{attempt.caseTitle}</p>
-                <p className="mt-2 text-xs text-white/45">Executor: {attempt.executorId || "N/D"} • {formatDate(attempt.createdAt)}</p>
+                <p className="mt-2 text-xs text-white/45">Executor: {attempt.executorId || "N/D"} â€¢ {formatDate(attempt.createdAt)}</p>
               </article>
             )) : <EmptyState text="Nenhuma tentativa registrada ainda." />}
           </section>
@@ -460,7 +460,7 @@ export default function RunDetailClient({ runId }: { runId: string }) {
         {activeTab === "qase" ? (
           <section className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="rounded-2xl border border-white/10 bg-white/8 p-5">
-              <h2 className="text-lg font-black">Sincronização Qase</h2>
+              <h2 className="text-lg font-black">SincronizaÃ§Ã£o Qase</h2>
               <p className="mt-3 text-sm font-semibold text-white/60">Projeto: {run.qaseProjectCode || "N/D"}</p>
               <p className="mt-1 text-sm font-semibold text-white/60">Run ID: {run.qaseRunId || "N/D"}</p>
               <p className="mt-1 text-sm font-semibold text-white/60">Pendentes/falhos: {qasePending.length}</p>
@@ -486,3 +486,4 @@ export default function RunDetailClient({ runId }: { runId: string }) {
 function EmptyState({ text }: { text: string }) {
   return <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-6 text-sm font-semibold text-white/60">{text}</div>;
 }
+

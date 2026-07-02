@@ -405,3 +405,4 @@ export function BrainNeuralCanvas({
     </section>
   );
 }
+

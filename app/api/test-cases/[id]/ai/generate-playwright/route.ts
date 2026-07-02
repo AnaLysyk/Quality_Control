@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { canAccessTestCaseRecord } from "@/lib/test-cases/testCasePermissions";
 import { getTestCaseRecord } from "@/lib/test-cases/testCaseRepository";
@@ -25,9 +25,9 @@ type GeneratedDraftOutput = {
 
 function validateGeneratedOutput(output: GeneratedDraftOutput, caseTag: string) {
   const errors: string[] = [];
-  if (!output.specFile?.trim()) errors.push("specFile obrigatório.");
-  if (!output.specCode?.trim()) errors.push("specCode obrigatório.");
-  if (!output.command?.trim()) errors.push("command obrigatório.");
+  if (!output.specFile?.trim()) errors.push("specFile obrigatÃ³rio.");
+  if (!output.specCode?.trim()) errors.push("specCode obrigatÃ³rio.");
+  if (!output.command?.trim()) errors.push("command obrigatÃ³rio.");
   if (output.command && !output.command.trim().startsWith("npx playwright test")) {
     errors.push("command deve iniciar com 'npx playwright test'.");
   }
@@ -35,7 +35,7 @@ function validateGeneratedOutput(output: GeneratedDraftOutput, caseTag: string) 
     errors.push(`tags deve conter ${caseTag}.`);
   }
   if (!output.review || typeof output.review !== "object") {
-    errors.push("review obrigatório.");
+    errors.push("review obrigatÃ³rio.");
   }
   return errors;
 }
@@ -46,22 +46,22 @@ function sanitizeTag(tag: string) {
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const { id } = await params;
   const record = await getTestCaseRecord(id);
-  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
+  if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, record)) {
-    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const project = typeof body.playwrightProject === "string" && body.playwrightProject.trim() ? body.playwrightProject.trim() : "chromium";
   const environment = typeof body.environment === "string" && body.environment.trim() ? body.environment.trim() : "homolog";
-  const describeLabel = typeof body.testDescribe === "string" && body.testDescribe.trim() ? body.testDescribe.trim() : "Repositório de Casos";
+  const describeLabel = typeof body.testDescribe === "string" && body.testDescribe.trim() ? body.testDescribe.trim() : "RepositÃ³rio de Casos";
   const caseKey = record.testCase.key || "tc-sem-chave";
   const caseTag = `@${sanitizeTag(caseKey)}`;
-  const baseTitle = record.testCase.title || "caso sem título";
+  const baseTitle = record.testCase.title || "caso sem tÃ­tulo";
   const specFile = typeof body.specFile === "string" && body.specFile.trim()
     ? body.specFile.trim()
     : `tests-e2e/repository/${sanitizeTag(caseKey)}.spec.ts`;
@@ -96,7 +96,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     fixturePath,
     fixtureCode,
     review: {
-      assertions: "Adicionar expects específicos por passo antes de publicar.",
+      assertions: "Adicionar expects especÃ­ficos por passo antes de publicar.",
       locators: "Preferir getByRole/getByTestId no refinamento.",
       risks: [],
     },
@@ -120,12 +120,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         schemaErrors,
       },
       "failed",
-      `Output schema inválido: ${schemaErrors.join(" ")}`,
+      `Output schema invÃ¡lido: ${schemaErrors.join(" ")}`,
     );
 
     return NextResponse.json(
       {
-        message: "Output schema inválido para draft de automação.",
+        message: "Output schema invÃ¡lido para draft de automaÃ§Ã£o.",
         errors: schemaErrors,
       },
       { status: 422 },

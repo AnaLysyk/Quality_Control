@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 
@@ -20,7 +20,7 @@ export default function ExpandableDescription({ html, limit = 150 }: ExpandableD
       return { truncated: plainText, shouldTruncate: false };
     }
     return {
-      truncated: `${plainText.slice(0, limit)}…`,
+      truncated: `${plainText.slice(0, limit)}â€¦`,
       shouldTruncate: true,
     };
   }, [html, limit]);
@@ -39,9 +39,10 @@ export default function ExpandableDescription({ html, limit = 150 }: ExpandableD
           className="text-[#7CD343] text-sm font-medium hover:underline"
           onClick={() => setExpanded((v) => !v)}
         >
-          {expanded ? "Ver menos ↑" : "Ver mais ↓"}
+          {expanded ? "Ver menos â†‘" : "Ver mais â†“"}
         </button>
       )}
     </div>
   );
 }
+

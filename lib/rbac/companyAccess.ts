@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/lib/jwtAuth";
+﻿import type { AuthUser } from "@/lib/jwtAuth";
 import { SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 
@@ -14,3 +14,4 @@ export function isCompanyUser(user: AuthUser | null) {
   }
   return false;
 }
+

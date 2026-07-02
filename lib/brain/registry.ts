@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type BrainScreenActionKind = "navigate" | "open-modal" | "run-command" | "destructive";
 
@@ -47,4 +47,5 @@ export function getRegisteredScreen(id: string) {
 export function listRegisteredScreens() {
   return Array.from(screenRegistry.values()).sort((left, right) => left.title.localeCompare(right.title));
 }
+
 

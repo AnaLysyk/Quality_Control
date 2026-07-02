@@ -566,20 +566,20 @@ export function OperationsWorkspaceClient() {
   return (
     <div className="min-h-screen bg-(--page-bg,#fff) px-4 py-6 text-(--page-text,#0b1a3c) sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
-        <header className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 sm:p-6">
+        <header className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 sm:p-6">
           <h1 className="text-2xl font-extrabold tracking-tight">Operações</h1>
-          <p className="mt-2 text-sm text-(--tc-text-muted,#6b7280)">
+          <p className="mt-2 text-sm text-[var(--tc-text-muted,#6b7280)]">
             Monitore em tempo real as aplicações, módulos, runs, defeitos e eventos das empresas.
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) px-2.5 py-1">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--tc-text-muted,#6b7280)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--tc-border,#d7deea)] px-2.5 py-1">
               <FiClock className="h-3.5 w-3.5" />
               {lastUpdatedAt ? `Atualizado há ${formatAgo(lastUpdatedAt)}` : "Sem atualização"}
             </span>
             <button
               type="button"
               onClick={() => setAutoRefresh((current) => !current)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) px-2.5 py-1 font-semibold"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--tc-border,#d7deea)] px-2.5 py-1 font-semibold"
             >
               {autoRefresh ? <FiCheckCircle className="h-3.5 w-3.5 text-emerald-600" /> : <FiXCircle className="h-3.5 w-3.5 text-rose-600" />}
               Atualização automática {autoRefresh ? "ativada" : "desativada"}
@@ -598,14 +598,14 @@ export function OperationsWorkspaceClient() {
                   }));
                 }
               }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 font-semibold text-(--tc-text,#0b1a3c) transition hover:border-[rgba(1,24,72,0.3)]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[rgba(1,24,72,0.3)]"
             >
-              🧠 Perguntar IA
+              ?? Perguntar IA
             </button>
           </div>
         </header>
 
-        <section className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 sm:p-6">
+        <section className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 sm:p-6">
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
             <FiFilter className="h-4 w-4" />
             Filtros principais
@@ -613,19 +613,19 @@ export function OperationsWorkspaceClient() {
 
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-12">
             <div className="md:col-span-2 lg:col-span-4">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Empresa</label>
-              <div className="space-y-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2.5">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)]">Empresa</label>
+              <div className="space-y-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-2.5">
                 <div className="relative">
-                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
                   <input
                     type="search"
                     value={companyFilterQuery}
                     onChange={(event) => setCompanyFilterQuery(event.target.value)}
                     placeholder="Buscar empresa"
-                    className="min-h-10 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) pl-9 pr-3 text-sm"
+                    className="min-h-10 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] pl-9 pr-3 text-sm"
                   />
                 </div>
-                <div className="max-h-32 space-y-1 overflow-auto rounded-xl bg-(--tc-surface,#fff) p-1.5">
+                <div className="max-h-32 space-y-1 overflow-auto rounded-xl bg-[var(--tc-surface,#fff)] p-1.5">
                 {renderedVisibleCompanies.map((company) => (
                   <label key={company.slug} className="flex items-center gap-2 rounded px-1.5 py-1 text-sm">
                     <input
@@ -637,7 +637,7 @@ export function OperationsWorkspaceClient() {
                   </label>
                 ))}
                 {renderedVisibleCompanies.length === 0 ? (
-                  <p className="px-1.5 py-1 text-xs text-(--tc-text-muted,#6b7280)">
+                  <p className="px-1.5 py-1 text-xs text-[var(--tc-text-muted,#6b7280)]">
                     {!hydrated
                       ? "Carregando empresas disponíveis."
                       : visibleCompanies.length === 0
@@ -652,23 +652,23 @@ export function OperationsWorkspaceClient() {
             </div>
 
             <label className="grid gap-1 text-sm lg:col-span-3">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Aplicação</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)]">Aplicação</span>
               <div className="relative">
-                <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
                 <input
                   type="search"
                   value={applicationFilterQuery}
                   onChange={(event) => setApplicationFilterQuery(event.target.value)}
                   disabled={!canSelectApplication || loadingApplications}
                   placeholder="Buscar aplicação"
-                  className="min-h-10 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) pl-9 pr-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-10 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] pl-9 pr-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
               <select
                 value={draftApplication}
                 onChange={(event) => setDraftApplication(event.target.value)}
                 disabled={!canSelectApplication || loadingApplications}
-                className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-11 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-3 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {draftCompanySlugs.length === 0 ? (
                   <option value="all">Selecione uma empresa primeiro</option>
@@ -691,23 +691,23 @@ export function OperationsWorkspaceClient() {
             </label>
 
             <label className="grid gap-1 text-sm lg:col-span-3">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Módulo</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)]">Módulo</span>
               <div className="relative">
-                <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
                 <input
                   type="search"
                   value={moduleFilterQuery}
                   onChange={(event) => setModuleFilterQuery(event.target.value)}
                   disabled={draftApplication === "all" || !canSelectApplication}
                   placeholder="Buscar módulo"
-                  className="min-h-10 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) pl-9 pr-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-10 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] pl-9 pr-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
               <select
                 value={draftModule}
                 onChange={(event) => setDraftModule(event.target.value as ModuleView)}
                 disabled={draftApplication === "all" || !canSelectApplication}
-                className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-11 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-3 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {draftApplication === "all" ? (
                   <option value="none">Selecione uma aplicação primeiro</option>
@@ -726,11 +726,11 @@ export function OperationsWorkspaceClient() {
             </label>
 
             <label className="grid gap-1 text-sm lg:col-span-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Período</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)]">Período</span>
               <select
                 value={draftPeriodPreset}
                 onChange={(event) => setDraftPeriodPreset(event.target.value as PeriodPreset)}
-                className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3"
+                className="min-h-11 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-3"
               >
                 <option value="24h">Últimas 24h</option>
                 <option value="7d">Últimos 7 dias</option>
@@ -744,11 +744,11 @@ export function OperationsWorkspaceClient() {
           <div className="mt-3 grid gap-3 lg:grid-cols-4">
             {statusOptions.length > 0 ? (
               <label className="grid gap-1 text-sm">
-                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">{statusFieldLabel(draftModule)}</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)]">{statusFieldLabel(draftModule)}</span>
                 <select
                   value={draftStatus}
                   onChange={(event) => setDraftStatus(event.target.value)}
-                  className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3"
+                  className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-3"
                 >
                   {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
@@ -760,21 +760,21 @@ export function OperationsWorkspaceClient() {
             {draftPeriodPreset === "custom" ? (
               <>
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Data inicial</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)]">Data inicial</span>
                   <input
                     type="date"
                     value={draftDateFrom}
                     onChange={(event) => setDraftDateFrom(event.target.value)}
-                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3"
+                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-3"
                   />
                 </label>
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">Data final</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)]">Data final</span>
                   <input
                     type="date"
                     value={draftDateTo}
                     onChange={(event) => setDraftDateTo(event.target.value)}
-                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3"
+                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-3"
                   />
                 </label>
               </>
@@ -782,7 +782,7 @@ export function OperationsWorkspaceClient() {
 
             {draftModule !== "none" && draftModule !== "Automacoes" && draftModule !== "Integracoes" ? (
               <label className="grid gap-1 text-sm lg:col-span-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280)">
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)]">
                   {draftModule === "Runs"
                     ? "Buscar run por ID ou nome"
                     : draftModule === "Defeitos"
@@ -790,12 +790,12 @@ export function OperationsWorkspaceClient() {
                       : "Buscar aplicação"}
                 </span>
                 <div className="relative">
-                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
                   <input
                     value={draftSearch}
                     onChange={(event) => setDraftSearch(event.target.value)}
                     placeholder={draftModule === "Runs" ? "Ex.: RUN-123" : draftModule === "Defeitos" ? "Ex.: DEF-10" : "Ex.: Quality Control"}
-                    className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) pl-9 pr-3"
+                    className="min-h-11 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] pl-9 pr-3"
                   />
                 </div>
               </label>
@@ -806,21 +806,21 @@ export function OperationsWorkspaceClient() {
             <button
               type="button"
               onClick={applyFilters}
-              className="rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white"
+              className="rounded-xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-semibold text-white"
             >
               Aplicar filtros
             </button>
             <button
               type="button"
               onClick={clearFilters}
-              className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-4 py-2 text-sm font-semibold"
+              className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-sm font-semibold"
             >
               Limpar
             </button>
             <button
               type="button"
               onClick={() => setRefreshNonce((current) => current + 1)}
-              className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-4 py-2 text-sm font-semibold"
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-sm font-semibold"
             >
               <FiRefreshCw className="h-4 w-4" />
               Atualizar
@@ -828,14 +828,14 @@ export function OperationsWorkspaceClient() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 sm:p-6">
+        <section className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 sm:p-6">
           {applied.companySlugs.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-6 text-sm text-(--tc-text-muted,#6b7280)">
+            <div className="rounded-xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">
               <p className="font-semibold text-(--page-text,#0b1a3c)">Selecione uma empresa para começar.</p>
               <p className="mt-1">Depois escolha a aplicação e o módulo que deseja monitorar.</p>
             </div>
           ) : loading ? (
-            <p className="text-sm text-(--tc-text-muted,#6b7280)">Carregando dados operacionais...</p>
+            <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Carregando dados operacionais...</p>
           ) : error ? (
             <p className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</p>
           ) : applied.application === "all" ? (
@@ -850,17 +850,17 @@ export function OperationsWorkspaceClient() {
                       setDraftApplication(app.name);
                       setApplied((current) => ({ ...current, application: app.name, module: "none", status: "all", search: "" }));
                     }}
-                    className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4 text-left"
+                    className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-4 text-left"
                   >
                     <p className="font-semibold text-(--page-text,#0b1a3c)">{app.name}</p>
-                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Status geral: {app.total > 0 ? "Com eventos" : "Sem eventos"}</p>
-                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Última atividade: {hydrated ? new Date(app.lastIso).toLocaleString("pt-BR") : "--/--/---- --:--:--"}</p>
-                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">Módulos disponíveis: {app.modules.size}</p>
-                    <p className="mt-1 text-xs font-semibold text-(--tc-accent,#ef0001)">Abrir</p>
+                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">Status geral: {app.total > 0 ? "Com eventos" : "Sem eventos"}</p>
+                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">Última atividade: {hydrated ? new Date(app.lastIso).toLocaleString("pt-BR") : "--/--/---- --:--:--"}</p>
+                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">Módulos disponíveis: {app.modules.size}</p>
+                    <p className="mt-1 text-xs font-semibold text-[var(--tc-accent,#ef0001)]">Abrir</p>
                   </button>
                 ))}
                 {applicationsSummary.length === 0 ? (
-                  <p className="text-sm text-(--tc-text-muted,#6b7280)">Sem aplicações encontradas para o recorte.</p>
+                  <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Sem aplicações encontradas para o recorte.</p>
                 ) : null}
               </div>
             </div>
@@ -880,7 +880,7 @@ export function OperationsWorkspaceClient() {
                       setDraftModule(module);
                       setApplied((current) => ({ ...current, module, status: "all", search: "" }));
                     }}
-                    className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-3 py-2 text-left text-sm font-semibold"
+                    className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-3 py-2 text-left text-sm font-semibold"
                   >
                     {module}
                   </button>
@@ -892,7 +892,7 @@ export function OperationsWorkspaceClient() {
               <h2 className="mb-3 text-lg font-bold">Runs em tempo real</h2>
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="border-b border-(--tc-border,#d7deea) text-left text-xs uppercase tracking-widest text-(--tc-text-muted,#6b7280)">
+                  <tr className="border-b border-[var(--tc-border,#d7deea)] text-left text-xs uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">
                     <th className="px-2 py-2">Run</th>
                     <th className="px-2 py-2">Status da run</th>
                     <th className="px-2 py-2">Aplicação</th>
@@ -907,7 +907,7 @@ export function OperationsWorkspaceClient() {
                 </thead>
                 <tbody>
                   {filteredSignals.map((item) => (
-                    <tr key={item.id} className="border-b border-(--tc-border,#eef2f7)">
+                    <tr key={item.id} className="border-b border-[var(--tc-border,#eef2f7)]">
                       <td className="px-2 py-2 font-semibold">{item.runCode || item.title}</td>
                       <td className="px-2 py-2">{item.status}</td>
                       <td className="px-2 py-2">{item.application}</td>
@@ -919,7 +919,7 @@ export function OperationsWorkspaceClient() {
                       <td className="px-2 py-2">{hydrated ? formatAgo(item.updatedAtIso) : "--"}</td>
                       <td className="px-2 py-2">
                         {singleCompanySlug ? (
-                          <Link href={buildCompanyPathForAccess(singleCompanySlug, "runs", companyRouteInput)} className="text-(--tc-accent,#ef0001)">
+                          <Link href={buildCompanyPathForAccess(singleCompanySlug, "runs", companyRouteInput)} className="text-[var(--tc-accent,#ef0001)]">
                             Abrir
                           </Link>
                         ) : (
@@ -930,14 +930,14 @@ export function OperationsWorkspaceClient() {
                   ))}
                 </tbody>
               </table>
-              {filteredSignals.length === 0 ? <p className="mt-3 text-sm text-(--tc-text-muted,#6b7280)">Nenhuma run encontrada para o recorte.</p> : null}
+              {filteredSignals.length === 0 ? <p className="mt-3 text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma run encontrada para o recorte.</p> : null}
             </div>
           ) : applied.module === "Defeitos" ? (
             <div className="overflow-auto">
               <h2 className="mb-3 text-lg font-bold">Defeitos em tempo real</h2>
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="border-b border-(--tc-border,#d7deea) text-left text-xs uppercase tracking-widest text-(--tc-text-muted,#6b7280)">
+                  <tr className="border-b border-[var(--tc-border,#d7deea)] text-left text-xs uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">
                     <th className="px-2 py-2">Defeito</th>
                     <th className="px-2 py-2">Título</th>
                     <th className="px-2 py-2">Severidade</th>
@@ -951,7 +951,7 @@ export function OperationsWorkspaceClient() {
                 </thead>
                 <tbody>
                   {filteredSignals.map((item) => (
-                    <tr key={item.id} className="border-b border-(--tc-border,#eef2f7)">
+                    <tr key={item.id} className="border-b border-[var(--tc-border,#eef2f7)]">
                       <td className="px-2 py-2 font-semibold">{item.defectCode || item.id}</td>
                       <td className="px-2 py-2">{item.title}</td>
                       <td className="px-2 py-2">{item.severity}</td>
@@ -962,7 +962,7 @@ export function OperationsWorkspaceClient() {
                       <td className="px-2 py-2">{hydrated ? formatAgo(item.updatedAtIso) : "--"}</td>
                       <td className="px-2 py-2">
                         {singleCompanySlug ? (
-                          <Link href={buildCompanyPathForAccess(singleCompanySlug, "defeitos", companyRouteInput)} className="text-(--tc-accent,#ef0001)">
+                          <Link href={buildCompanyPathForAccess(singleCompanySlug, "defeitos", companyRouteInput)} className="text-[var(--tc-accent,#ef0001)]">
                             Abrir
                           </Link>
                         ) : (
@@ -973,21 +973,21 @@ export function OperationsWorkspaceClient() {
                   ))}
                 </tbody>
               </table>
-              {filteredSignals.length === 0 ? <p className="mt-3 text-sm text-(--tc-text-muted,#6b7280)">Nenhum defeito encontrado para o recorte.</p> : null}
+              {filteredSignals.length === 0 ? <p className="mt-3 text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhum defeito encontrado para o recorte.</p> : null}
             </div>
           ) : (
             <div>
               <h2 className="text-lg font-bold">{applied.module}</h2>
               <div className="mt-3 space-y-2">
                 {filteredSignals.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
+                  <div key={item.id} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-2">
                     <p className="font-semibold">{item.title}</p>
-                    <p className="text-xs text-(--tc-text-muted,#6b7280)">
+                    <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">
                       {item.companyName} · {item.application} · {item.status} · {hydrated ? new Date(item.updatedAtIso).toLocaleString("pt-BR") : "--/--/---- --:--:--"}
                     </p>
                   </div>
                 ))}
-                {filteredSignals.length === 0 ? <p className="text-sm text-(--tc-text-muted,#6b7280)">Sem resultados para o módulo no recorte aplicado.</p> : null}
+                {filteredSignals.length === 0 ? <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Sem resultados para o módulo no recorte aplicado.</p> : null}
               </div>
             </div>
           )}
@@ -996,3 +996,4 @@ export function OperationsWorkspaceClient() {
     </div>
   );
 }
+

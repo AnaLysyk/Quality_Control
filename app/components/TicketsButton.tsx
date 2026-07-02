@@ -387,7 +387,7 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Abrir suporte"
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb)/70 bg-(--tc-surface,#ffffff) text-(--tc-text,#0f172a) shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-(--tc-accent,#ef0001)/60 hover:text-(--tc-accent,#ef0001)"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)]/70 bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text,#0f172a)] shadow-[0_8px_20px_rgba(15,23,42,0.12)] transition hover:border-[var(--tc-accent,#ef0001)]/60 hover:text-[var(--tc-accent,#ef0001)]"
       >
         <FiMessageSquare size={18} />
       </button>
@@ -750,3 +750,4 @@ export default function TicketsButton({ defaultOpen = false }: TicketsButtonProp
     </div>
   );
 }
+

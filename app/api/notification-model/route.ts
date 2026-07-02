@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getNotificationOperationModel } from "@/data/notificationOperationModel";
 import { buildNotificationBrianInsights } from "@/lib/notificationBrianInsights";
@@ -66,3 +66,4 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ preference }, { status: 201, headers: NO_STORE_HEADERS });
 }
+

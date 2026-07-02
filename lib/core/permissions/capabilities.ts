@@ -1,4 +1,4 @@
-import type { CompanyRole, Capability, GlobalRole, Permission, UserRole } from "./permissions.types";
+﻿import type { CompanyRole, Capability, GlobalRole, Permission, UserRole } from "./permissions.types";
 import { SYSTEM_ROLES } from "@/lib/auth/roles";
 
 const rolePermissions: Record<UserRole, Permission[]> = {
@@ -99,3 +99,4 @@ export function resolveCapabilities(input: {
   const role = input.companyRole ?? SYSTEM_ROLES.TESTING_COMPANY_USER;
   return roleCapabilities[role] ?? roleCapabilities[SYSTEM_ROLES.TESTING_COMPANY_USER];
 }
+

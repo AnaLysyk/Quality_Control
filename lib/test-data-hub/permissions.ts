@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
 
@@ -182,14 +182,15 @@ export function canLinkAssetToCase(user: AuthUser | null, companySlug: string): 
  */
 export function permissionDenied(reason: PermissionDenialReason, details?: string): Error {
   const messages: Record<PermissionDenialReason, string> = {
-    not_authenticated: "Usuário não autenticado",
+    not_authenticated: "UsuÃ¡rio nÃ£o autenticado",
     company_mismatch: "Sem acesso a essa empresa",
     project_mismatch: "Sem acesso a esse projeto",
-    sensitivity_too_high: "Nível de sensibilidade restrito para seu perfil",
-    insufficient_role: "Seu perfil não tem permissão para essa ação",
-    asset_in_use: "Asset está em uso e não pode ser deletado. Archive ou substitua.",
-    policy_violation: "Violação de política de uso do asset",
+    sensitivity_too_high: "NÃ­vel de sensibilidade restrito para seu perfil",
+    insufficient_role: "Seu perfil nÃ£o tem permissÃ£o para essa aÃ§Ã£o",
+    asset_in_use: "Asset estÃ¡ em uso e nÃ£o pode ser deletado. Archive ou substitua.",
+    policy_violation: "ViolaÃ§Ã£o de polÃ­tica de uso do asset",
   };
 
   return new PermissionError(reason, details || messages[reason]);
 }
+

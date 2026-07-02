@@ -1,4 +1,4 @@
-import AxeBuilder from "@axe-core/playwright";
+﻿import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
 
 export async function verificarAcessibilidadeDaPagina(page: Page) {
@@ -10,3 +10,4 @@ export async function verificarAcessibilidadeDaPagina(page: Page) {
   );
   expect(violacoesGraves, JSON.stringify(violacoesGraves, null, 2)).toEqual([]);
 }
+

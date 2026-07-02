@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useClientContext, type ClientAccess } from "@/lib/core/company/CompanyContext";
 import { useProjectContext, type ProjectRecord } from "@/lib/core/project/ProjectContext";
@@ -8,38 +8,38 @@ import { useProjectContext, type ProjectRecord } from "@/lib/core/project/Projec
  * Format: <module>:<action>
  */
 export type Permission =
-  // ── Test Repository ────────────────────────────────────────────────────────
+  // â”€â”€ Test Repository â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   | "test_repository:read"
   | "test_repository:create"
   | "test_repository:update"
   | "test_repository:delete"
   | "test_repository:import"
-  // ── Test Plans ─────────────────────────────────────────────────────────────
+  // â”€â”€ Test Plans â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   | "test_plan:read"
   | "test_plan:create"
   | "test_plan:update"
   | "test_plan:delete"
-  // ── Test Runs ──────────────────────────────────────────────────────────────
+  // â”€â”€ Test Runs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   | "test_run:read"
   | "test_run:create"
   | "test_run:update"
   | "test_run:delete"
-  // ── Playwright / Automation ────────────────────────────────────────────────
+  // â”€â”€ Playwright / Automation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   | "playwright:read"
   | "playwright:execute"
-  // ── Defect Tracking ────────────────────────────────────────────────────────
+  // â”€â”€ Defect Tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   | "defect:read"
   | "defect:create"
   | "defect:update"
   | "defect:delete"
   | "defect:assign"
   | "defect:status"
-  // ── Release Management ─────────────────────────────────────────────────────
+  // â”€â”€ Release Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   | "release:read"
   | "release:create"
   | "release:approve"
   | "release:block"
-  // ── Admin ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   | "admin:access"
   | "admin:users"
   | "admin:clients"
@@ -84,7 +84,7 @@ const BASE_PERMISSIONS: Permission[] = [
 ];
 
 /**
- * Full admin / leader_tc permissions — can do everything including delete and approve.
+ * Full admin / leader_tc permissions â€” can do everything including delete and approve.
  */
 const LEADER_PERMISSIONS: Permission[] = [
   ...BASE_PERMISSIONS,
@@ -114,7 +114,7 @@ const LEADER_PERMISSIONS: Permission[] = [
   "admin:settings",
 ];
 
-/** Testing-company user — creates and updates, but no delete or admin. */
+/** Testing-company user â€” creates and updates, but no delete or admin. */
 const TC_USER_PERMISSIONS: Permission[] = [
   ...BASE_PERMISSIONS,
   "test_repository:create",
@@ -130,7 +130,7 @@ const TC_USER_PERMISSIONS: Permission[] = [
   "defect:status",
 ];
 
-/** Company/empresa user — read access only to QA modules. */
+/** Company/empresa user â€” read access only to QA modules. */
 const EMPRESA_PERMISSIONS: Permission[] = [
   ...BASE_PERMISSIONS,
 ];
@@ -170,3 +170,4 @@ export function useCurrentWorkspaceContext(): CurrentWorkspaceContextValue {
     projectError: project.error,
   };
 }
+

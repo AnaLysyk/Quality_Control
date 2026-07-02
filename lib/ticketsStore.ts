@@ -874,3 +874,4 @@ export const createTicket = createSuporte;
 export const importTickets = importSuportes;
 export const deleteTicketForUser = deleteSuporteForUser;
 export const updateTicketForUser = updateSuporteForUser;
+

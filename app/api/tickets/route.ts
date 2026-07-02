@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { resolvePrimaryCompanySlug } from "@/lib/auth/normalizeAuthenticatedUser";
@@ -18,10 +18,10 @@ function resolveDisplayName(user: { full_name?: string | null; name?: string | n
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
   if (!canViewSupportBoard(user)) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const url = new URL(req.url);
@@ -76,10 +76,10 @@ export async function POST(req: Request) {
   try {
     const user = await authenticateRequest(req);
     if (!user) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
     }
     if (!canCreateSupportTickets(user)) {
-      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
     }
     const body = await req.json().catch(() => ({}));
     const requestedCompanyId = typeof body?.companyId === "string" ? body.companyId : null;
@@ -114,8 +114,8 @@ export async function POST(req: Request) {
     });
 
     if (!ticket) {
-      console.warn("[tickets POST] createTicket returned null — body:", body);
-      return NextResponse.json({ error: "Informe título ou descrição" }, { status: 400 });
+      console.warn("[tickets POST] createTicket returned null â€” body:", body);
+      return NextResponse.json({ error: "Informe tÃ­tulo ou descriÃ§Ã£o" }, { status: 400 });
     }
 
     appendTicketEvent({
@@ -142,3 +142,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

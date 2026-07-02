@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import useSWR from "swr";
 
@@ -8,7 +8,7 @@ const fetcher = (url: string) =>
     return res.json();
   });
 
-/* ─── Types ─── */
+/* â”€â”€â”€ Types â”€â”€â”€ */
 
 export type BrainNode = {
   id: string;
@@ -71,7 +71,7 @@ export type BrainMemory = {
   createdAt: string;
 };
 
-/* ─── Hooks ─── */
+/* â”€â”€â”€ Hooks â”€â”€â”€ */
 
 export function useBrainGraph(nodeId?: string | null, depth = 2) {
   const params = new URLSearchParams();
@@ -134,3 +134,4 @@ export function useBrainTimeline(nodeId: string | null) {
     dedupingInterval: 15000,
   });
 }
+

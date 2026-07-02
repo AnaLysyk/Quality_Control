@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+﻿import { expect, type Page } from "@playwright/test";
 
 export async function validarDashboardAtualPronto(page: Page) {
   await expect(page.getByRole("heading", { name: /Recorte anal.tico/i })).toBeVisible({ timeout: 30000 });
@@ -32,3 +32,4 @@ export async function criarDefeitoManual(page: Page, title: string, options: { r
   await page.getByTestId("defect-create").click();
   await expect(page.getByText(title).first()).toBeVisible({ timeout: 20000 });
 }
+

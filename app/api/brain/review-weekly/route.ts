@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getBrainGaps } from "@/lib/brain";
 import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
@@ -83,6 +83,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("[brain/review-weekly] GET error:", error);
-    return NextResponse.json({ error: "Erro ao montar revisão semanal do Brain" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao montar revisÃ£o semanal do Brain" }, { status: 500 });
   }
 }
+

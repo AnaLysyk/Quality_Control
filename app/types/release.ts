@@ -1,4 +1,4 @@
-export type ReleaseSource = "MANUAL" | "API";
+﻿export type ReleaseSource = "MANUAL" | "API";
 export type ReleaseStatus = "DRAFT" | "ACTIVE" | "FINALIZED" | "open" | "in_progress" | "done";
 
 export type Stats = {
@@ -57,3 +57,4 @@ export function calcPercent(s: Stats) {
   const t = calcTotal(s);
   return t ? Math.round((s.pass / t) * 100) : 0;
 }
+

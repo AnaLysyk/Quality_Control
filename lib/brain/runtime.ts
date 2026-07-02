@@ -1,4 +1,4 @@
-import type { BrainAccessContext } from "@/lib/brain/access";
+﻿import type { BrainAccessContext } from "@/lib/brain/access";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 
 export type BrainConversationContext = {
@@ -72,3 +72,4 @@ export function updateBrainConversationContext(
     lastIntent: patch.lastIntent ?? previous.lastIntent ?? null,
   };
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getRunOperationModel } from "@/data/runOperationModel";
 
@@ -12,3 +12,4 @@ export async function GET() {
     return NextResponse.json({ error: "Erro ao carregar modelo operacional de Run" }, { status: 500 });
   }
 }
+

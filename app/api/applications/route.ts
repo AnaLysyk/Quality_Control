@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { listApplications, createApplication } from "../../../lib/applicationsStore";
 import { getCompanyIntegratedDefects } from "../../../lib/companyDefects";
 import { syncApplicationToBrain } from "@/lib/brain-sync";
@@ -99,4 +99,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
 }
-// Duplicate block removed — this route already exports a GET/POST above
+// Duplicate block removed â€” this route already exports a GET/POST above
+

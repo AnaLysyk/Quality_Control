@@ -1,4 +1,4 @@
-process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
+﻿process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 process.env.USE_JSON_STORE = "true";
 
 jest.mock("server-only", () => ({}));
@@ -117,3 +117,4 @@ describePg("access request accept route", () => {
     expect(companiesWithSameName).toBe(1);
   });
 });
+

@@ -1,4 +1,4 @@
-import { authenticateRequest } from "@/lib/jwtAuth";
+﻿import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { canCreateRun, getRunMockRole, resolveRunRole } from "@/lib/rbac/runs";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
@@ -246,10 +246,10 @@ export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
   const mockRole = await getRunMockRole();
   if (!auth && !mockRole) {
-    return apiFail(request, "Não autorizado", {
+    return apiFail(request, "NÃ£o autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Não autorizado" } },
+      extra: { error: { message: "NÃ£o autorizado" } },
     });
   }
   if (auth && !hasGlobalCompanyVisibility(auth) && !isCompanyUser(auth)) {
@@ -321,14 +321,14 @@ export async function GET(request: Request) {
 
   // If requested, aggregate runs across all configured projects for this company
   if (all) {
-    // Only discover Qase projects when no projects are already configured — avoids
+    // Only discover Qase projects when no projects are already configured â€” avoids
     // fetching the entire project list on every page load when settings are present.
     let discoveredProjects: string[] = [];
     if (configuredProjects.length === 0) {
       try {
         discoveredProjects = await fetchAllQaseProjectCodes(baseUrl, tokenToUse);
       } catch {
-        // Ignore — keep configured projects only
+        // Ignore â€” keep configured projects only
       }
     }
 
@@ -426,10 +426,10 @@ export async function POST(request: Request) {
     auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
 
   if (!effectiveAuth) {
-    return apiFail(request, "Não autorizado", {
+    return apiFail(request, "NÃ£o autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "Não autorizado" } },
+      extra: { error: { message: "NÃ£o autorizado" } },
     });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
@@ -528,3 +528,4 @@ export async function POST(request: Request) {
   const out = { data: asRecord(json)?.result ?? null };
   return apiOk(request, out, "OK", { extra: out });
 }
+

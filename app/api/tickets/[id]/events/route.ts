@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById } from "@/lib/ticketsStore";
 import { listTicketEvents } from "@/lib/ticketEventsStore";
@@ -12,16 +12,16 @@ function resolveDisplayName(user: { full_name?: string | null; name?: string | n
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const ticket = await getTicketById(id);
   if (!ticket) {
-    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado nÃ£o encontrado" }, { status: 404 });
   }
   if (!canViewTicket(user, ticket)) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const url = new URL(req.url);
@@ -48,3 +48,4 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 
   return NextResponse.json({ items: enriched }, { status: 200 });
 }
+

@@ -42,3 +42,4 @@ main().catch((error) => {
   console.error("[EMAIL TEST] ERRO:", error);
   process.exitCode = 1;
 });
+

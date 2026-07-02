@@ -1,4 +1,4 @@
-export type CompanyAccess = {
+﻿export type CompanyAccess = {
   id: string;
   name: string;
   slug: string;
@@ -6,3 +6,4 @@ export type CompanyAccess = {
   role: "ADMIN" | "USER";
   linkActive: boolean;
 };
+

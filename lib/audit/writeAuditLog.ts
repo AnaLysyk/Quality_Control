@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+﻿import type { Prisma } from "@prisma/client";
 
 export type AuditLogInput = {
   actorUserId?: string | null;
@@ -37,3 +37,4 @@ export function writeAuditLog(input: AuditLogInput): void {
     }
   })();
 }
+

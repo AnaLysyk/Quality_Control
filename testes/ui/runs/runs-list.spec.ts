@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { autenticarPerfilRuns, rotaRunsEmpresa } from "../../../support/functions/ui/runs/rotas-runs";
 
 test.describe("runs - lista", () => {
-  test("user vÃª runs da empresa ativa", async ({ page, context }) => {
+  test("user vÃƒÂª runs da empresa ativa", async ({ page, context }) => {
     await autenticarPerfilRuns(context, "company_user");
 
     await page.goto(rotaRunsEmpresa(), { waitUntil: "networkidle" });
@@ -11,3 +11,4 @@ test.describe("runs - lista", () => {
     await expect(page.getByTestId("test-run-list")).toBeVisible();
   });
 });
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/empresa/empresa-aceita-solicitacao-propria.ui.spec.ts --headed --workers=1 --reporter=list
  */
@@ -127,14 +127,14 @@ async function aguardarStatusPublico(request: APIRequestContext, accessKey: stri
     .toBe(status);
 }
 
-test.describe("Solicitações de acesso - Empresa aprova no próprio escopo", () => {
+test.describe("SolicitaÃ§Ãµes de acesso - Empresa aprova no prÃ³prio escopo", () => {
   test.setTimeout(360000);
 
   test.beforeEach(() => {
     limparEmailsCapturados();
   });
 
-  test("Empresa deve aceitar solicitação vinculada à própria empresa", async ({ browser }) => {
+  test("Empresa deve aceitar solicitaÃ§Ã£o vinculada Ã  prÃ³pria empresa", async ({ browser }) => {
     const adminContext = await browser.newContext();
     const empresaPage = await browser.newPage();
     const approvedContext = await browser.newContext();
@@ -162,7 +162,7 @@ test.describe("Solicitações de acesso - Empresa aprova no próprio escopo", ()
       await aguardarSolicitacaoNaApi(empresaPage.request, emailSolicitante);
       await abrirSolicitacaoNaTela(empresaPage, emailSolicitante);
 
-      await empresaPage.getByLabel("Tipo de perfil").selectOption("Usuário da empresa");
+      await empresaPage.getByLabel("Tipo de perfil").selectOption("UsuÃ¡rio da empresa");
       await empresaPage
         .getByPlaceholder(/Descreva o ajuste/i)
         .fill("Solicitacao aprovada pela Empresa dentro do proprio escopo.");
@@ -206,3 +206,4 @@ test.describe("Solicitações de acesso - Empresa aprova no próprio escopo", ()
     }
   });
 });
+

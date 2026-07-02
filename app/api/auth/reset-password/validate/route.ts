@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { hasPasswordResetToken } from "@/lib/auth/passwordResetToken";
 
@@ -12,3 +12,4 @@ export async function POST(req: Request) {
   const valid = await hasPasswordResetToken(token);
   return NextResponse.json({ valid }, { status: 200 });
 }
+

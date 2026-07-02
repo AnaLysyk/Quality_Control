@@ -1,4 +1,4 @@
-export type FavoriteType =
+﻿export type FavoriteType =
   | "page"
   | "module"
   | "company"
@@ -40,3 +40,4 @@ export type CreateFavoriteInput = {
   type: FavoriteType;
   context?: FavoriteContext;
 };
+

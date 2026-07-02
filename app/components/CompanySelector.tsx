@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -66,7 +66,7 @@ export function CompanySelector({
   }, [ctaLabel]);
 
   // Prefer semantic class for text color
-  const tone = accent === "dark" ? "text-(--tc-text-inverse)" : "text-text";
+  const tone = accent === "dark" ? "text-[var(--tc-text-inverse)]" : "text-text";
   const hasCompanies = companies.length > 0;
   const showSkeleton = !hydrated || loading;
   const showError = hydrated && !loading && Boolean(error);
@@ -77,7 +77,7 @@ export function CompanySelector({
     <div data-testid="company-selector" className={`space-y-6 ${tone}`}>
       <div className="space-y-2">
         <h1 className="text-2xl sm:text-3xl font-extrabold">{title}</h1>
-        {description && <p className="text-sm text-(--tc-text-secondary,#4b5563)">{description}</p>}
+        {description && <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">{description}</p>}
       </div>
 
       {showSkeleton && (
@@ -139,13 +139,13 @@ export function CompanySelector({
                 } ${isActive ? "border-accent/70 ring-2 ring-accent/30" : ""}`}
               >
                 {isActive && (
-                  <span className="absolute right-4 top-4 inline-flex items-center rounded-full bg-(--tc-accent,#ef0001)/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">
+                  <span className="absolute right-4 top-4 inline-flex items-center rounded-full bg-[var(--tc-accent,#ef0001)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">
                     Atual
                   </span>
                 )}
                 <div className="space-y-2">
                   <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
-                    {company.role === "ADMIN" ? "Admin" : "Usuário"}
+                    {company.role === "ADMIN" ? "Admin" : "UsuÃ¡rio"}
                     {!company.clientActive && (
                       <span className="rounded-full bg-surface2 px-2 py-0.5 text-[10px] font-semibold text-muted">
                         Inativo
@@ -181,3 +181,4 @@ export function CompanySelector({
     </div>
   );
 }
+

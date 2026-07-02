@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { listAllRequests } from "@/data/requestsStore";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
@@ -57,3 +57,4 @@ export async function GET(req: NextRequest) {
     { headers: NO_STORE_HEADERS },
   );
 }
+

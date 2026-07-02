@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -51,13 +51,13 @@ type DashboardClientProps = {
 
 const GATE_LABEL: Record<ManualRun["gateStatus"], string> = {
   approved: "Ok",
-  warning: "Atenção",
+  warning: "AtenÃ§Ã£o",
   failed: "Risco",
   no_data: "Sem dados",
 };
 
 function formatHours(value: number | null) {
-  if (value == null || Number.isNaN(value)) return "—";
+  if (value == null || Number.isNaN(value)) return "â€”";
   return `${value}h`;
 }
 
@@ -122,17 +122,17 @@ export default function DashboardClient({
       <div className="flex w-full max-w-none flex-col gap-8">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">Dashboard</p>
+            <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent,#ef0001)]">Dashboard</p>
             <h1 className="mt-2 text-3xl font-extrabold">Qualidade da empresa</h1>
-            <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-              Visão geral de risco, SLA e execuções recentes.
+            <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+              VisÃ£o geral de risco, SLA e execuÃ§Ãµes recentes.
             </p>
           </div>
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <a
               data-testid="export-quality"
               href={`/api/empresas/${encodeURIComponent(companySlug)}/quality/export`}
-              className="rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text,#0b1a3c)"
+              className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--tc-text,#0b1a3c)]"
             >
               Exportar CSV
             </a>
@@ -171,41 +171,41 @@ export default function DashboardClient({
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Quality Score</p>
-            <div className="mt-2 text-4xl font-extrabold text-(--tc-accent,#ef0001)" data-testid="quality-score">
+            <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">Quality Score</p>
+            <div className="mt-2 text-4xl font-extrabold text-[var(--tc-accent,#ef0001)]" data-testid="quality-score">
               {summary.qualityScore}
             </div>
             <div
               data-testid={healthTestId}
-              className="mt-2 inline-flex rounded-full border border-(--tc-border,#e5e7eb) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
+              className="mt-2 inline-flex rounded-full border border-[var(--tc-border,#e5e7eb)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
             >
-              {healthStatus === "healthy" ? "Saudável" : healthStatus === "attention" ? "Atenção" : "Crítico"}
+              {healthStatus === "healthy" ? "SaudÃ¡vel" : healthStatus === "attention" ? "AtenÃ§Ã£o" : "CrÃ­tico"}
             </div>
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm" data-testid="mttr-card">
-            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">MTTR médio</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">MTTR mÃ©dio</p>
             <div className="mt-2 text-3xl font-extrabold" data-testid="mttr">
               {mttrDisplay}
             </div>
-            <div className="text-xs text-(--tc-text-muted)" data-testid="metric-mttr">
+            <div className="text-xs text-[var(--tc-text-muted)]" data-testid="metric-mttr">
               {mttrDisplay}
             </div>
-            <div className="mt-1 text-xs text-(--tc-text-muted)" data-testid="mttr-trend">
-              Tendência: {trendDirection === "up" ? "melhora" : trendDirection === "down" ? "piora" : "estável"}
+            <div className="mt-1 text-xs text-[var(--tc-text-muted)]" data-testid="mttr-trend">
+              TendÃªncia: {trendDirection === "up" ? "melhora" : trendDirection === "down" ? "piora" : "estÃ¡vel"}
             </div>
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm" data-testid="sla-card">
-            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">SLA</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">SLA</p>
             <div className="mt-2 text-3xl font-extrabold">{summary.slaOverdue}</div>
-            <p className="text-xs text-(--tc-text-muted)">Defeitos fora do SLA</p>
+            <p className="text-xs text-[var(--tc-text-muted)]">Defeitos fora do SLA</p>
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">Defeitos</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">Defeitos</p>
             <div className="mt-2 text-3xl font-extrabold">{summary.openDefects}</div>
-            <div className="text-xs text-(--tc-text-muted)" data-testid="metric-defects-closed">
+            <div className="text-xs text-[var(--tc-text-muted)]" data-testid="metric-defects-closed">
               Fechados: {summary.closedDefects}
             </div>
           </div>
@@ -217,15 +217,15 @@ export default function DashboardClient({
               <h2 className="text-lg font-semibold">Qualidade por run</h2>
               <div
                 data-testid={trendDirection === "up" ? "quality-trend-improving" : "quality-trend-stable"}
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted)"
+                className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]"
               >
-                {trendDirection === "up" ? "Melhorando" : trendDirection === "down" ? "Piorando" : "Estável"}
+                {trendDirection === "up" ? "Melhorando" : trendDirection === "down" ? "Piorando" : "EstÃ¡vel"}
               </div>
             </div>
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="text-xs uppercase text-(--tc-text-muted)">
+                  <tr className="text-xs uppercase text-[var(--tc-text-muted)]">
                     <th className="text-left py-2">Run</th>
                     <th className="text-left py-2">Pass rate</th>
                     <th className="text-left py-2">Gate</th>
@@ -233,23 +233,23 @@ export default function DashboardClient({
                 </thead>
                 <tbody>
                   {localRuns.slice(0, 8).map((run) => (
-                    <tr key={run.slug} className="border-t border-(--tc-border,#e5e7eb)">
+                    <tr key={run.slug} className="border-t border-[var(--tc-border,#e5e7eb)]">
                       <td className="py-2">
                         <Link
                           data-testid="run-drilldown-link"
                           href={`../defeitos?run=${encodeURIComponent(run.slug)}`}
-                          className="font-semibold text-(--tc-accent,#ef0001)"
+                          className="font-semibold text-[var(--tc-accent,#ef0001)]"
                         >
                           {run.name}
                         </Link>
                       </td>
-                      <td className="py-2">{run.passRate ?? "—"}%</td>
+                      <td className="py-2">{run.passRate ?? "â€”"}%</td>
                       <td className="py-2">{GATE_LABEL[run.gateStatus]}</td>
                     </tr>
                   ))}
                   {localRuns.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="py-4 text-sm text-(--tc-text-muted)">
+                      <td colSpan={3} className="py-4 text-sm text-[var(--tc-text-muted)]">
                         Nenhuma run registrada.
                       </td>
                     </tr>
@@ -267,7 +267,7 @@ export default function DashboardClient({
                 <strong>{gateCounts.approved}</strong>
               </div>
               <div className="flex items-center justify-between">
-                <span>Em atenção</span>
+                <span>Em atenÃ§Ã£o</span>
                 <strong>{gateCounts.warning}</strong>
               </div>
               <div className="flex items-center justify-between">
@@ -281,14 +281,14 @@ export default function DashboardClient({
         <section className="rounded-3xl bg-white p-6 shadow-sm" data-testid="alerts">
           <h2 className="text-lg font-semibold">Alertas recentes</h2>
           <div className="mt-4 grid gap-3">
-            {alerts.length === 0 && <p className="text-sm text-(--tc-text-muted)">Nenhum alerta recente.</p>}
+            {alerts.length === 0 && <p className="text-sm text-[var(--tc-text-muted)]">Nenhum alerta recente.</p>}
             {alerts.map((alert, index) => (
-              <div key={`${alert.type}-${index}`} className="rounded-2xl border border-(--tc-border,#e5e7eb) px-4 py-3 text-sm">
+              <div key={`${alert.type}-${index}`} className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] px-4 py-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <strong className="text-(--tc-text-primary,#0b1a3c)">{alert.message}</strong>
-                  <span className="text-xs uppercase text-(--tc-text-muted)">{alert.severity}</span>
+                  <strong className="text-[var(--tc-text-primary,#0b1a3c)]">{alert.message}</strong>
+                  <span className="text-xs uppercase text-[var(--tc-text-muted)]">{alert.severity}</span>
                 </div>
-                <p className="text-xs text-(--tc-text-muted)">{new Date(alert.timestamp).toLocaleString("pt-BR")}</p>
+                <p className="text-xs text-[var(--tc-text-muted)]">{new Date(alert.timestamp).toLocaleString("pt-BR")}</p>
               </div>
             ))}
           </div>
@@ -305,12 +305,12 @@ export default function DashboardClient({
                   <div
                     key={run.slug}
                     data-testid="release-card"
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-4"
+                    className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] p-4"
                   >
-                    <Link href={`../runs/${encodeURIComponent(run.slug)}`} className="text-sm font-semibold text-(--tc-accent,#ef0001)">
+                    <Link href={`../runs/${encodeURIComponent(run.slug)}`} className="text-sm font-semibold text-[var(--tc-accent,#ef0001)]">
                       {run.name}
                     </Link>
-                    <div className="mt-2 text-xs text-(--tc-text-muted)">
+                    <div className="mt-2 text-xs text-[var(--tc-text-muted)]">
                       Gate: <span data-testid="release-status">{GATE_LABEL[run.gateStatus]}</span>
                     </div>
                     {isRisk && (
@@ -325,7 +325,7 @@ export default function DashboardClient({
                 );
               })}
               {localRuns.length === 0 && (
-                <p className="text-sm text-(--tc-text-muted)">Nenhuma release manual registrada.</p>
+                <p className="text-sm text-[var(--tc-text-muted)]">Nenhuma release manual registrada.</p>
               )}
             </div>
           </div>
@@ -333,17 +333,17 @@ export default function DashboardClient({
           <div className="rounded-3xl bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Metas de qualidade</h2>
             <div className="mt-4 grid gap-3">
-              {goals.length === 0 && <p className="text-sm text-(--tc-text-muted)">Sem metas registradas.</p>}
+              {goals.length === 0 && <p className="text-sm text-[var(--tc-text-muted)]">Sem metas registradas.</p>}
               {goals.map((goal, index) => (
-                <div key={`${goal.goal}-${index}`} data-testid="quality-goal-item" className="rounded-2xl border border-(--tc-border,#e5e7eb) px-4 py-3 text-sm">
+                <div key={`${goal.goal}-${index}`} data-testid="quality-goal-item" className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] px-4 py-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">{goal.goal}</span>
-                    <span data-testid="quality-goal-status" className="text-xs uppercase text-(--tc-text-muted)">
+                    <span data-testid="quality-goal-status" className="text-xs uppercase text-[var(--tc-text-muted)]">
                       {parseStatusLabel(goal.status)}
                     </span>
                   </div>
-                  <div className="text-xs text-(--tc-text-muted)">
-                    {goal.value ?? "—"} / {goal.target ?? "—"}
+                  <div className="text-xs text-[var(--tc-text-muted)]">
+                    {goal.value ?? "â€”"} / {goal.target ?? "â€”"}
                   </div>
                 </div>
               ))}
@@ -354,3 +354,5 @@ export default function DashboardClient({
     </div>
   );
 }
+
+

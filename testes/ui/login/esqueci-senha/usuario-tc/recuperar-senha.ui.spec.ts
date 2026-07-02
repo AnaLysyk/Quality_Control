@@ -1,4 +1,4 @@
-import { test } from "../../../../../support/fixtures/test";
+﻿import { test } from "../../../../../support/fixtures/test";
 import {
   executarRecuperacaoSenhaPorPerfil,
   obterPerfilEsqueciSenha,
@@ -11,3 +11,4 @@ test.describe("Esqueci senha - Usuario TC", () => {
     await executarRecuperacaoSenhaPorPerfil(page, obterPerfilEsqueciSenha("usuario-tc"));
   });
 });
+

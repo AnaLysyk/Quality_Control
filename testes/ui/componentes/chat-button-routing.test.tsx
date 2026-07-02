@@ -1,4 +1,4 @@
-/** @jest-environment jsdom */
+﻿/** @jest-environment jsdom */
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -76,9 +76,9 @@ describe("ChatButton API routing", () => {
           detail: {
             source: "brain",
             nodeId: "node-123",
-            nodeLabel: "Nó QA",
+            nodeLabel: "NÃ³ QA",
             agentMode: "qa",
-            initialMessage: "analisa esse nó",
+            initialMessage: "analisa esse nÃ³",
           },
         }),
       );
@@ -97,3 +97,4 @@ describe("ChatButton API routing", () => {
     expect(requestBody.brainContext.source).toBe("brain");
   });
 });
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
@@ -60,13 +60,13 @@ function profileLabel(profileType: string) {
   const labels: Record<string, string> = {
     company: "Empresas do Sistema",
     empresa: "Empresa",
-    company_user: "Usuário da Empresa",
-    leader_tc: "Líder TC",
-    technical_support: "Suporte Técnico",
-    testing_company_user: "Usuário TC",
-    user: "Usuário TC",
-    viewer: "Usuário TC",
-    usuario: "Usuário",
+    company_user: "UsuÃ¡rio da Empresa",
+    leader_tc: "LÃ­der TC",
+    technical_support: "Suporte TÃ©cnico",
+    testing_company_user: "UsuÃ¡rio TC",
+    user: "UsuÃ¡rio TC",
+    viewer: "UsuÃ¡rio TC",
+    usuario: "UsuÃ¡rio",
   };
 
   return labels[profileType] ?? profileType.replace(/_/g, " ");
@@ -299,12 +299,12 @@ export async function GET(req: Request) {
     type: "module",
     module: "Contexto",
     label: "Quality Control",
-    description: "Mapa completo de empresas, usuários, projetos, chamados, defeitos, notas e fluxos visíveis pelo perfil atual.",
+    description: "Mapa completo de empresas, usuÃ¡rios, projetos, chamados, defeitos, notas e fluxos visÃ­veis pelo perfil atual.",
     status: "ok",
     size: "lg",
     information: access.hasGlobalVisibility
-      ? "Perfil global: o Brain organiza o conhecimento por perfil, usuário, empresa e módulos."
-      : "Perfil com escopo restrito: o Brain mostra perfis, empresas, usuários e fluxos permitidos.",
+      ? "Perfil global: o Brain organiza o conhecimento por perfil, usuÃ¡rio, empresa e mÃ³dulos."
+      : "Perfil com escopo restrito: o Brain mostra perfis, empresas, usuÃ¡rios e fluxos permitidos.",
     metadata: {
       visibility: access.hasGlobalVisibility ? "global" : "scoped",
       role: access.user.role,
@@ -335,13 +335,13 @@ export async function GET(req: Request) {
       module: "Perfis",
       label: profileLabel(profileType),
       description: isCompanyProfile
-        ? "Perfil Empresas do Sistema agrupa as empresas visíveis. Ao abrir uma empresa, o Brain mostra os módulos, usuários e movimentos daquele contexto."
-        : `Perfil ${profileLabel(profileType)} agrupa usuários. Ao abrir um usuário, o Brain mostra o que ele vê, criou, executou, comentou ou movimentou.`,
+        ? "Perfil Empresas do Sistema agrupa as empresas visÃ­veis. Ao abrir uma empresa, o Brain mostra os mÃ³dulos, usuÃ¡rios e movimentos daquele contexto."
+        : `Perfil ${profileLabel(profileType)} agrupa usuÃ¡rios. Ao abrir um usuÃ¡rio, o Brain mostra o que ele vÃª, criou, executou, comentou ou movimentou.`,
       status: "ok",
       size: "lg",
       information: isCompanyProfile
-        ? `Perfil Empresas do Sistema conecta ${companies.length} empresa(s) visíveis.`
-        : `Perfil ${profileLabel(profileType)} conecta ${usersInProfile.length} usuário(s) visíveis.`,
+        ? `Perfil Empresas do Sistema conecta ${companies.length} empresa(s) visÃ­veis.`
+        : `Perfil ${profileLabel(profileType)} conecta ${usersInProfile.length} usuÃ¡rio(s) visÃ­veis.`,
       metadata: {
         profileType,
         subjectKind: "profile",
@@ -373,7 +373,7 @@ export async function GET(req: Request) {
       description: company.notes || company.internal_notes || `Empresa ${name} no escopo do Brain.`,
       status: company.active === false || company.status === "inactive" ? "warning" : "ok",
       size: "lg",
-      information: `${name} conecta projetos, usuários, chamados, defeitos, notas e documentos visíveis neste perfil.`,
+      information: `${name} conecta projetos, usuÃ¡rios, chamados, defeitos, notas e documentos visÃ­veis neste perfil.`,
       createdAt: date(company.createdAt),
       updatedAt: date(company.updatedAt),
       metadata: { slug: company.slug, status: company.status, profileType: "company", subjectKind: "company", subjectId: company.id },
@@ -382,7 +382,7 @@ export async function GET(req: Request) {
       id: `profile-company-${company.id}`,
       source: profileNodeId("company"),
       target: companyNodeId,
-      label: "contém empresa",
+      label: "contÃ©m empresa",
       type: "contains",
       status: "ok",
       companyId: company.id,
@@ -404,7 +404,7 @@ export async function GET(req: Request) {
       description: project.description ?? `Projeto ${project.name}.`,
       status: statusFromGeneric(project.status),
       size: "md",
-      information: `Projeto ${project.name} organiza fluxos, evidências, defeitos e execuções da empresa.`,
+      information: `Projeto ${project.name} organiza fluxos, evidÃªncias, defeitos e execuÃ§Ãµes da empresa.`,
       createdAt: date(project.createdAt),
       updatedAt: date(project.updatedAt),
       metadata: { slug: project.slug, status: project.status },
@@ -447,10 +447,10 @@ export async function GET(req: Request) {
       companyId: userCompanyId ?? undefined,
       companyName: company?.company_name || company?.name,
       label: user.full_name || user.name || user.email,
-      description: `${user.email} · perfil ${profileLabel(profileType)} · visão lógica do usuário.`,
+      description: `${user.email} Â· perfil ${profileLabel(profileType)} Â· visÃ£o lÃ³gica do usuÃ¡rio.`,
       status: user.active && user.status !== "inactive" ? "ok" : "warning",
       size: "md",
-      information: `${user.full_name || user.name || user.email} é usuário do perfil ${profileLabel(profileType)}. Chamados: ${userTickets.length}; comentários: ${userComments.length}; notas/documentos: ${userNotes.length}; logs/eventos: ${userTicketEvents.length + userAuditLogs.length}; última movimentação: ${lastMovement ? lastMovement.toLocaleDateString("pt-BR") : "não identificada"}.`,
+      information: `${user.full_name || user.name || user.email} Ã© usuÃ¡rio do perfil ${profileLabel(profileType)}. Chamados: ${userTickets.length}; comentÃ¡rios: ${userComments.length}; notas/documentos: ${userNotes.length}; logs/eventos: ${userTicketEvents.length + userAuditLogs.length}; Ãºltima movimentaÃ§Ã£o: ${lastMovement ? lastMovement.toLocaleDateString("pt-BR") : "nÃ£o identificada"}.`,
       createdAt: date(user.createdAt),
       updatedAt: date(user.updatedAt),
       metadata: {
@@ -477,7 +477,7 @@ export async function GET(req: Request) {
       id: `profile-${profileType}-user-${user.id}`,
       source: profileNodeId(profileType),
       target: userNodeId,
-      label: "contém usuário",
+      label: "contÃ©m usuÃ¡rio",
       type: "contains",
       status: "ok",
       companyId: userCompanyId ?? undefined,
@@ -489,7 +489,7 @@ export async function GET(req: Request) {
         id: `company-${userCompanyId}-user-${user.id}`,
         source: `company:${userCompanyId}`,
         target: userNodeId,
-        label: "possui usuário",
+        label: "possui usuÃ¡rio",
         type: "contains",
         status: "ok",
         companyId: userCompanyId,
@@ -503,7 +503,7 @@ export async function GET(req: Request) {
       id: `user-link-${link.userId}-${link.companyId}`,
       source: `user:${link.userId}`,
       target: `company:${link.companyId}`,
-      label: "vinculado à empresa",
+      label: "vinculado Ã  empresa",
       type: "permission_allows",
       status: link.status === "active" ? "ok" : "warning",
       companyId: link.companyId,
@@ -533,11 +533,11 @@ export async function GET(req: Request) {
       module: "Suporte",
       companyId,
       companyName: company?.company_name || company?.name,
-      label: ticket.code ? `${ticket.code} · ${ticket.title}` : ticket.title,
+      label: ticket.code ? `${ticket.code} Â· ${ticket.title}` : ticket.title,
       description: ticket.description,
       status: statusFromGeneric(ticket.status),
       size: "lg",
-      information: `Chamado ${ticket.code} está em ${ticket.status}, prioridade ${ticket.priority}, criado por ${ticket.createdByName || ticket.createdByEmail || ticket.creator.email}.`,
+      information: `Chamado ${ticket.code} estÃ¡ em ${ticket.status}, prioridade ${ticket.priority}, criado por ${ticket.createdByName || ticket.createdByEmail || ticket.creator.email}.`,
       createdBy: ticket.createdBy,
       createdByEmail: ticket.createdByEmail || ticket.creator.email,
       createdAt: date(ticket.createdAt),
@@ -548,7 +548,7 @@ export async function GET(req: Request) {
     });
     if (companyId) addEdge({ id: `company-${companyId}-ticket-${ticket.id}`, source: `company:${companyId}`, target: `ticket:${ticket.id}`, label: "possui chamado", type: "contains", status: "ok", companyId });
     addEdge({ id: `ticket-${ticket.id}-creator-${ticket.createdBy}`, source: `user:${ticket.createdBy}`, target: `ticket:${ticket.id}`, label: "criou chamado", type: "created_by", status: "ok", companyId, metadata: { subjectKind: "user", subjectId: ticket.createdBy } });
-    if (ticket.assignedToUserId) addEdge({ id: `ticket-${ticket.id}-assignee-${ticket.assignedToUserId}`, source: `user:${ticket.assignedToUserId}`, target: `ticket:${ticket.id}`, label: "responsável por chamado", type: "action", status: "ok", companyId, metadata: { subjectKind: "user", subjectId: ticket.assignedToUserId } });
+    if (ticket.assignedToUserId) addEdge({ id: `ticket-${ticket.id}-assignee-${ticket.assignedToUserId}`, source: `user:${ticket.assignedToUserId}`, target: `ticket:${ticket.id}`, label: "responsÃ¡vel por chamado", type: "action", status: "ok", companyId, metadata: { subjectKind: "user", subjectId: ticket.assignedToUserId } });
   }
 
   for (const comment of comments) {
@@ -557,11 +557,11 @@ export async function GET(req: Request) {
       type: "comment",
       module: "Suporte",
       companyId: comment.ticket.companyId ?? undefined,
-      label: comment.body.slice(0, 72) || "Comentário de chamado",
+      label: comment.body.slice(0, 72) || "ComentÃ¡rio de chamado",
       description: comment.body,
       status: "ok",
       size: "sm",
-      information: `Comentário de ${comment.authorName || comment.author.email} no chamado ${comment.ticket.code}.`,
+      information: `ComentÃ¡rio de ${comment.authorName || comment.author.email} no chamado ${comment.ticket.code}.`,
       createdBy: comment.authorUserId,
       createdByEmail: comment.author.email,
       createdAt: date(comment.createdAt),
@@ -569,8 +569,8 @@ export async function GET(req: Request) {
       entityId: comment.id,
       metadata: { actorUserId: comment.authorUserId, subjectKind: "user", subjectId: comment.authorUserId },
     });
-    addEdge({ id: `ticket-${comment.ticketId}-comment-${comment.id}`, source: `ticket:${comment.ticketId}`, target: `ticket-comment:${comment.id}`, label: "tem comentário", type: "has_comment", status: "ok", companyId: comment.ticket.companyId ?? undefined });
-    addEdge({ id: `comment-${comment.id}-author-${comment.authorUserId}`, source: `user:${comment.authorUserId}`, target: `ticket-comment:${comment.id}`, label: "escreveu comentário", type: "created_by", status: "ok", companyId: comment.ticket.companyId ?? undefined, metadata: { subjectKind: "user", subjectId: comment.authorUserId } });
+    addEdge({ id: `ticket-${comment.ticketId}-comment-${comment.id}`, source: `ticket:${comment.ticketId}`, target: `ticket-comment:${comment.id}`, label: "tem comentÃ¡rio", type: "has_comment", status: "ok", companyId: comment.ticket.companyId ?? undefined });
+    addEdge({ id: `comment-${comment.id}-author-${comment.authorUserId}`, source: `user:${comment.authorUserId}`, target: `ticket-comment:${comment.id}`, label: "escreveu comentÃ¡rio", type: "created_by", status: "ok", companyId: comment.ticket.companyId ?? undefined, metadata: { subjectKind: "user", subjectId: comment.authorUserId } });
   }
 
   for (const event of events) {
@@ -602,10 +602,10 @@ export async function GET(req: Request) {
       companyId: defect.companyId,
       companyName: company?.company_name || company?.name,
       label: defect.title,
-      description: defect.description ?? "Defeito aberto sem descrição.",
+      description: defect.description ?? "Defeito aberto sem descriÃ§Ã£o.",
       status: "pending",
       size: "lg",
-      information: `Defeito aberto para ${company?.company_name || company?.name || "empresa"} e aguardando tratamento/correlação.`,
+      information: `Defeito aberto para ${company?.company_name || company?.name || "empresa"} e aguardando tratamento/correlaÃ§Ã£o.`,
       createdAt: date(defect.createdAt),
       updatedAt: date(defect.updatedAt),
       entityType: "defect",
@@ -617,7 +617,7 @@ export async function GET(req: Request) {
 
   for (const card of kanbanCards) {
     const company = card.clientSlug ? companyBySlug.get(card.clientSlug) : null;
-    const label = card.title || card.bug || `Cartão ${card.id}`;
+    const label = card.title || card.bug || `CartÃ£o ${card.id}`;
     addNode({
       id: `kanban-defect:${card.id}`,
       type: "defect",
@@ -626,16 +626,16 @@ export async function GET(req: Request) {
       companyName: company?.company_name || company?.name,
       projectName: card.project,
       label,
-      description: card.bug || card.link || "Cartão Kanban relacionado a defeito ou execução.",
+      description: card.bug || card.link || "CartÃ£o Kanban relacionado a defeito ou execuÃ§Ã£o.",
       status: statusFromGeneric(card.status),
       size: "md",
-      information: `Cartão ${label} está em ${card.status || "status não informado"}.`,
+      information: `CartÃ£o ${label} estÃ¡ em ${card.status || "status nÃ£o informado"}.`,
       createdAt: date(card.createdAt),
       entityType: "kanban_card",
       entityId: String(card.id),
       metadata: { runId: card.runId, caseId: card.caseId, link: card.link, clientSlug: card.clientSlug },
     });
-    if (company) addEdge({ id: `company-${company.id}-kanban-${card.id}`, source: `company:${company.id}`, target: `kanban-defect:${card.id}`, label: "possui cartão de defeito", type: "contains", status: statusFromGeneric(card.status), companyId: company.id });
+    if (company) addEdge({ id: `company-${company.id}-kanban-${card.id}`, source: `company:${company.id}`, target: `kanban-defect:${card.id}`, label: "possui cartÃ£o de defeito", type: "contains", status: statusFromGeneric(card.status), companyId: company.id });
   }
 
   for (const note of visibleNotes) {
@@ -668,7 +668,7 @@ export async function GET(req: Request) {
       description: `${log.action} em ${log.entity_type}.`,
       status: "ok",
       size: "sm",
-      information: `Log ${log.action} por ${log.actor_email || "ator não informado"}.`,
+      information: `Log ${log.action} por ${log.actor_email || "ator nÃ£o informado"}.`,
       createdBy: log.actor_user_id ?? undefined,
       createdByEmail: log.actor_email ?? undefined,
       createdAt: date(log.created_at),
@@ -704,3 +704,4 @@ export async function GET(req: Request) {
     },
   });
 }
+

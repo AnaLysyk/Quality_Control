@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { BrainAccessContext } from "@/lib/brain/access";
 import { qaseBrainSource } from "@/lib/brain/integrations/qaseSource";
@@ -117,3 +117,4 @@ export async function getBrainHealth(access: BrainAccessContext | null = null) {
     generatedAt: new Date().toISOString(),
   };
 }
+

@@ -67,3 +67,4 @@ export type AvatarChoice = {
   avatarValue: string;
   avatarLabel: string;
 };
+

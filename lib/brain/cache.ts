@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { BrainRuntimeContext } from "@/lib/brain/runtime";
 
@@ -65,3 +65,4 @@ export function invalidateBrainCache(reason = "manual") {
     invalidatedAt: new Date(permissionVersionBump).toISOString(),
   };
 }
+

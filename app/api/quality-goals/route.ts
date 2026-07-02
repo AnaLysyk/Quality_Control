@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { readGoalStatusStore } from "@/lib/qualityGoalAlerts";
 
 export const runtime = "nodejs";
@@ -29,3 +29,4 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ items: filtered }, { status: 200 });
 }
+

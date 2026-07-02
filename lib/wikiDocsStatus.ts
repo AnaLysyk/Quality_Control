@@ -1,4 +1,4 @@
-import type { DocStatus, WikiCategory, WikiDoc } from "@/data/platformDocsStore";
+﻿import type { DocStatus, WikiCategory, WikiDoc } from "@/data/platformDocsStore";
 
 type WikiDocVisibilityInput = Pick<WikiDoc, "status" | "createdBy" | "updatedBy" | "categoryId">;
 
@@ -51,3 +51,4 @@ export function filterWikiCategoriesForDocs<T extends Pick<WikiCategory, "id">>(
 export function shouldNotifyWikiDocPublished(previousStatus: DocStatus | null | undefined, nextStatus: DocStatus) {
   return nextStatus === "published" && previousStatus !== "published";
 }
+

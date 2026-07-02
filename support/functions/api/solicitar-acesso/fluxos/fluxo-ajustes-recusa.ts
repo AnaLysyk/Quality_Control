@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext } from "@playwright/test";
+﻿import { expect, type APIRequestContext } from "@playwright/test";
 
 import { obterSenhaTesteSolicitacaoAcesso } from "../autenticacao/autenticar-revisor";
 import {
@@ -389,3 +389,4 @@ export async function validarEmailCapturadoQuandoDisponivel(params: {
     return null;
   }
 }
+

@@ -1,4 +1,4 @@
-import { listClients } from "../../../data/clientsRepository";
+﻿import { listClients } from "../../../data/clientsRepository";
 
 jest.mock("../../../lib/auth/localStore", () => ({
   listLocalCompanies: jest.fn().mockResolvedValue([
@@ -18,3 +18,4 @@ describe("clientsRepository", () => {
     expect(clients[2]).toEqual({ slug: "client-c", name: "Empresa" });
   });
 });
+

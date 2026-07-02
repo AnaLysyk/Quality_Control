@@ -1,4 +1,4 @@
-import { normalizeLegacyRole } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole } from "@/lib/auth/roles";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
 export type PermissionMatrix = Record<string, string[]>;
@@ -129,3 +129,4 @@ export function toVisibilityMap(permissions: PermissionMatrix | null | undefined
   }
   return visibility;
 }
+

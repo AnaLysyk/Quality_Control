@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -206,7 +206,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
         const payload = (await response.json().catch(() => null)) as MetaResponse | { error?: string } | null;
 
         if (!response.ok) {
-          throw new Error((payload as { error?: string } | null)?.error || "Falha ao carregar metadata biométrica.");
+          throw new Error((payload as { error?: string } | null)?.error || "Falha ao carregar metadata biomÃ©trica.");
         }
 
         if (!active) return;
@@ -217,7 +217,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
         setForm((current) => applyMetaDefaults(current, nextMeta));
       } catch (error) {
         if (!active) return;
-        setMetaError(error instanceof Error ? error.message : "Falha ao carregar metadata biométrica.");
+        setMetaError(error instanceof Error ? error.message : "Falha ao carregar metadata biomÃ©trica.");
       } finally {
         if (active) setMetaLoading(false);
       }
@@ -270,12 +270,12 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
     }
 
     if (!selectedFixture) {
-      setRunError("Selecione uma digital válida.");
+      setRunError("Selecione uma digital vÃ¡lida.");
       return;
     }
 
     if (!Number.isFinite(effectiveIndex)) {
-      setRunError("Informe um índice de dedo válido para a fixture escolhida.");
+      setRunError("Informe um Ã­ndice de dedo vÃ¡lido para a fixture escolhida.");
       return;
     }
 
@@ -312,13 +312,13 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
       const payload = (await response.json().catch(() => null)) as RunnerResponse | { error?: string } | null;
 
       if (!response.ok) {
-        throw new Error((payload as { error?: string } | null)?.error || "Falha ao executar o fluxo biométrico.");
+        throw new Error((payload as { error?: string } | null)?.error || "Falha ao executar o fluxo biomÃ©trico.");
       }
 
       setResult((payload as RunnerResponse).result);
       setForm((current) => ({ ...current, password: "" }));
     } catch (error) {
-      setRunError(error instanceof Error ? error.message : "Falha ao executar o fluxo biométrico.");
+      setRunError(error instanceof Error ? error.message : "Falha ao executar o fluxo biomÃ©trico.");
     } finally {
       setIsSubmitting(false);
     }
@@ -326,29 +326,29 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
 
   return (
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
-      <article className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
+      <article className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">Fluxo executável</p>
-            <h3 className="mt-2 text-3xl font-black tracking-[-0.04em] text-(--tc-text,#0b1a3c)">Biometria Griaule</h3>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
-              Runner visual para anexar digital e face na API biométrica da Griaule, preservando a regra real de Base64 da Wallet.
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Fluxo executÃ¡vel</p>
+            <h3 className="mt-2 text-3xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)]">Biometria Griaule</h3>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
+              Runner visual para anexar digital e face na API biomÃ©trica da Griaule, preservando a regra real de Base64 da Wallet.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-            <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
-            {canConfigure ? "Configuração liberada" : "Escopo operacional"}
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
+            <FiShield className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
+            {canConfigure ? "ConfiguraÃ§Ã£o liberada" : "Escopo operacional"}
           </div>
         </div>
 
         <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Empresa</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Empresa</span>
               <select
                 value={form.companySlug}
                 onChange={(event) => setForm((current) => ({ ...current, companySlug: event.target.value }))}
-                className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               >
                 {companies.map((company) => (
                   <option key={company.slug} value={company.slug}>
@@ -359,71 +359,71 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
             </label>
 
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Digital</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Digital</span>
               <select
                 value={form.selectedFixture}
                 onChange={(event) => setForm((current) => ({ ...current, selectedFixture: event.target.value }))}
-                className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               >
                 {fingerprintFixtures.map((fixture) => (
                   <option key={fixture.slug} value={fixture.slug}>
                     {fixture.label}
-                    {fixture.isStandard ? "" : " · avulsa"}
+                    {fixture.isStandard ? "" : " Â· avulsa"}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Processo ID</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Processo ID</span>
               <input
                 value={form.processId}
                 onChange={(event) => setForm((current) => ({ ...current, processId: event.target.value }))}
                 placeholder="84"
-                className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Protocolo</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Protocolo</span>
               <input
                 value={form.protocol}
                 onChange={(event) => setForm((current) => ({ ...current, protocol: event.target.value }))}
                 placeholder="220260000084"
-                className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Modo</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Modo</span>
               <select
                 value={form.mode}
                 onChange={(event) => setForm((current) => ({ ...current, mode: event.target.value as "above" | "below" }))}
-                className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               >
-                <option value="below">Below · reduzir para o limite</option>
-                <option value="above">Above · inflar acima do alvo</option>
+                <option value="below">Below Â· reduzir para o limite</option>
+                <option value="above">Above Â· inflar acima do alvo</option>
               </select>
             </label>
 
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Índice do dedo</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Ãndice do dedo</span>
               <input
                 value={form.manualIndex}
                 onChange={(event) => setForm((current) => ({ ...current, manualIndex: event.target.value }))}
                 placeholder="8"
                 disabled={selectedFixture?.index !== null}
-                className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#6b7280)"
+                className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#6b7280)]"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Face</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Face</span>
               <select
                 value={form.faceFixture}
                 onChange={(event) => setForm((current) => ({ ...current, faceFixture: event.target.value }))}
                 disabled={!form.includeFace}
-                className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#6b7280)"
+                className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#6b7280)]"
               >
                 {faceFixtures.map((fixture) => (
                   <option key={fixture.slug} value={fixture.slug}>
@@ -434,23 +434,23 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
             </label>
 
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Alvo Base64</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Alvo Base64</span>
               <input
                 value={form.target}
                 onChange={(event) => setForm((current) => ({ ...current, target: event.target.value }))}
                 placeholder={form.mode === "below" ? "500000" : "520000"}
-                className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               />
             </label>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-4">
-            <label className="inline-flex items-center gap-3 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-4">
+            <label className="inline-flex items-center gap-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
               <input
                 type="checkbox"
                 checked={form.includeFace}
                 onChange={(event) => setForm((current) => ({ ...current, includeFace: event.target.checked }))}
-                className="h-4 w-4 rounded border-(--tc-border,#d7deea)"
+                className="h-4 w-4 rounded border-[var(--tc-border,#d7deea)]"
               />
               Enviar face junto da digital
             </label>
@@ -459,53 +459,53 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
               <button
                 type="button"
                 onClick={() => setShowAdvanced((current) => !current)}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
               >
                 <FiServer className="h-4 w-4" />
                 {showAdvanced ? "Ocultar ambiente" : "Ajustar ambiente"}
               </button>
             ) : (
-              <div className="text-sm font-semibold text-(--tc-text-muted,#6b7280)">Usuário TC consome o preset já configurado.</div>
+              <div className="text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">UsuÃ¡rio TC consome o preset jÃ¡ configurado.</div>
             )}
           </div>
 
           {showAdvanced && canConfigure ? (
-            <div className="grid gap-4 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 md:grid-cols-2">
+            <div className="grid gap-4 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4 md:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Host</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Host</span>
                 <input
                   value={form.host}
                   onChange={(event) => setForm((current) => ({ ...current, host: event.target.value }))}
                   placeholder={meta?.defaults.host || "172.16.1.146"}
-                  className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                  className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Porta</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Porta</span>
                 <input
                   value={form.port}
                   onChange={(event) => setForm((current) => ({ ...current, port: event.target.value }))}
                   placeholder={meta?.defaults.port ? String(meta.defaults.port) : "8100"}
-                  className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                  className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Usuário API</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">UsuÃ¡rio API</span>
                 <input
                   value={form.user}
                   onChange={(event) => setForm((current) => ({ ...current, user: event.target.value }))}
                   placeholder={meta?.defaults.user || "admin"}
-                  className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                  className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Senha API</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Senha API</span>
                 <input
                   type="password"
                   value={form.password}
                   onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
                   placeholder="Usa SC_BIOMETRICS_API_PASSWORD se vazio"
-                  className="min-h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm font-semibold text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                  className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                 />
               </label>
             </div>
@@ -519,13 +519,13 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
           ) : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-sm text-(--tc-text-secondary,#4b5563)">
-              Informe processo ou protocolo. O backend resolve token, GET antes, PUT biométrico e GET depois.
+            <div className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
+              Informe processo ou protocolo. O backend resolve token, GET antes, PUT biomÃ©trico e GET depois.
             </div>
             <button
               type="submit"
               disabled={metaLoading || isSubmitting || fingerprintFixtures.length === 0}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--tc-primary,#011848)] px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? <FiLoader className="h-4 w-4 animate-spin" /> : <FiPlay className="h-4 w-4" />}
               Executar runner
@@ -535,14 +535,14 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
       </article>
 
       <aside className="space-y-4">
-        <article className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+        <article className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
             <FiCpu className="h-4 w-4" />
-            Preset biométrico
+            Preset biomÃ©trico
           </div>
 
           {metaLoading ? (
-            <div className="mt-5 flex items-center gap-2 text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
+            <div className="mt-5 flex items-center gap-2 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)]">
               <FiLoader className="h-4 w-4 animate-spin" />
               Carregando fixtures locais...
             </div>
@@ -553,26 +553,26 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
           ) : (
             <div className="mt-5 space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Limite de referência</p>
-                  <p className="mt-2 text-2xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{meta?.defaults.referenceLimit.toLocaleString("pt-BR")}</p>
+                <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Limite de referÃªncia</p>
+                  <p className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{meta?.defaults.referenceLimit.toLocaleString("pt-BR")}</p>
                 </div>
-                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Wallet observada</p>
-                  <p className="mt-2 text-2xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{meta?.defaults.walletObservedLimit.toLocaleString("pt-BR")}</p>
+                <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Wallet observada</p>
+                  <p className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{meta?.defaults.walletObservedLimit.toLocaleString("pt-BR")}</p>
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
-                <div className="flex items-center gap-2 text-sm font-bold text-(--tc-text,#0b1a3c)">
-                  <FiImage className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+              <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+                <div className="flex items-center gap-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
+                  <FiImage className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
                   Fixtures detectadas
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(meta?.fixtures || []).map((fixture) => (
                     <span
                       key={fixture.slug}
-                      className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)"
+                      className="inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]"
                     >
                       {fixture.label}
                     </span>
@@ -581,12 +581,12 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
               </div>
 
               {canConfigure && meta?.defaults.host ? (
-                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
-                  <div className="flex items-center gap-2 text-sm font-bold text-(--tc-text,#0b1a3c)">
-                    <FiServer className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+                <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+                  <div className="flex items-center gap-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
+                    <FiServer className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
                     Preset atual
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
+                  <p className="mt-3 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
                     {meta.defaults.user}@{meta.defaults.host}:{meta.defaults.port}
                   </p>
                 </div>
@@ -595,15 +595,15 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
           )}
         </article>
 
-        <article className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+        <article className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
             <FiActivity className="h-4 w-4" />
-            Última execução
+            Ãšltima execuÃ§Ã£o
           </div>
 
           {!result ? (
-            <div className="mt-5 rounded-3xl border border-dashed border-(--tc-border,#d7deea) px-4 py-5 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
-              Execute o runner para validar a cadeia completa: autenticação, leitura inicial, PUT biométrico e leitura final.
+            <div className="mt-5 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-5 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
+              Execute o runner para validar a cadeia completa: autenticaÃ§Ã£o, leitura inicial, PUT biomÃ©trico e leitura final.
             </div>
           ) : (
             <div className="mt-5 space-y-3">
@@ -621,76 +621,76 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                     {formatDuration(result.durationMs)}
                   </div>
                   <p className="mt-2 text-sm text-sky-700">
-                    {result.mode} · {result.fingerprintBase64Length.toLocaleString("pt-BR")} chars
+                    {result.mode} Â· {result.fingerprintBase64Length.toLocaleString("pt-BR")} chars
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
-                <p className="text-sm font-bold text-(--tc-text,#0b1a3c)">{result.fingerprintLabel}</p>
-                <div className="mt-3 grid gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
+              <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+                <p className="text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{result.fingerprintLabel}</p>
+                <div className="mt-3 grid gap-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                   <p>
-                    Empresa: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.companySlug || "global"}</span>
+                    Empresa: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.companySlug || "global"}</span>
                   </p>
                   <p>
-                    Índice: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.fingerprintIndex}</span>
+                    Ãndice: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.fingerprintIndex}</span>
                   </p>
                   <p>
-                    Formato: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.fingerprintFormat}</span>
+                    Formato: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.fingerprintFormat}</span>
                   </p>
                   <p>
-                    Alvo: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.target.toLocaleString("pt-BR")}</span>
+                    Alvo: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.target.toLocaleString("pt-BR")}</span>
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-white p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Antes</p>
-                  <div className="mt-3 space-y-2 text-sm text-(--tc-text-secondary,#4b5563)">
+                <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Antes</p>
+                  <div className="mt-3 space-y-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                     <p>
-                      Digitais: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.beforeSummary.fingerprintCount}</span>
+                      Digitais: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.fingerprintCount}</span>
                     </p>
                     <p>
-                      Face: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.beforeSummary.faceCount}</span>
+                      Face: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.faceCount}</span>
                     </p>
                     <p>
-                      Índice presente: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.beforeSummary.selectedFingerprintPresent ? "Sim" : "Não"}</span>
+                      Ãndice presente: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.selectedFingerprintPresent ? "Sim" : "NÃ£o"}</span>
                     </p>
                     <p>
-                      Conteúdo: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.beforeSummary.selectedFingerprintContentLength.toLocaleString("pt-BR")}</span>
+                      ConteÃºdo: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.selectedFingerprintContentLength.toLocaleString("pt-BR")}</span>
                     </p>
                   </div>
                 </div>
-                <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-white p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Depois</p>
-                  <div className="mt-3 space-y-2 text-sm text-(--tc-text-secondary,#4b5563)">
+                <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Depois</p>
+                  <div className="mt-3 space-y-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                     <p>
-                      Digitais: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.afterSummary.fingerprintCount}</span>
+                      Digitais: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.fingerprintCount}</span>
                     </p>
                     <p>
-                      Face: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.afterSummary.faceCount}</span>
+                      Face: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.faceCount}</span>
                     </p>
                     <p>
-                      Índice presente: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.afterSummary.selectedFingerprintPresent ? "Sim" : "Não"}</span>
+                      Ãndice presente: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.selectedFingerprintPresent ? "Sim" : "NÃ£o"}</span>
                     </p>
                     <p>
-                      Conteúdo: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.afterSummary.selectedFingerprintContentLength.toLocaleString("pt-BR")}</span>
+                      ConteÃºdo: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.selectedFingerprintContentLength.toLocaleString("pt-BR")}</span>
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4 text-sm leading-7 text-(--tc-text-secondary,#4b5563)">
+              <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
                 <p>
-                  Saída versionada: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.outputPath}</span>
+                  SaÃ­da versionada: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.outputPath}</span>
                 </p>
                 <p>
-                  Último snapshot: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.latestOutputPath}</span>
+                  Ãšltimo snapshot: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.latestOutputPath}</span>
                 </p>
                 {result.host ? (
                   <p>
-                    Host: <span className="font-semibold text-(--tc-text,#0b1a3c)">{result.host}</span>
+                    Host: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.host}</span>
                   </p>
                 ) : null}
               </div>
@@ -701,3 +701,4 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
     </section>
   );
 }
+

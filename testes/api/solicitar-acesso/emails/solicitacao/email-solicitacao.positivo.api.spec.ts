@@ -142,3 +142,4 @@ test.describe("Solicitações de acesso - ciclo de e-mail API", () => {
     expect(listarEmailsCapturados()).toHaveLength(totalBeforeUnknown);
   });
 });
+

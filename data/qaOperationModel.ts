@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type QaEntityKind =
   | "company"
@@ -359,3 +359,4 @@ export function getQaOperationModel() {
     },
   };
 }
+

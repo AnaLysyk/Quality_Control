@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+﻿import fs from "node:fs/promises";
 import path from "node:path";
 import { test as base, expect, type TestInfo, type TestStatus } from "@playwright/test";
 import { createQaseClient, QaseError } from "../../lib/qaseSdk";
@@ -27,7 +27,7 @@ const internalRunCompany = process.env.PLAYWRIGHT_INTERNAL_RUN_COMPANY || "testi
 const internalRunApp = process.env.PLAYWRIGHT_INTERNAL_RUN_APP || "automation-workspace";
 const internalPlanId = process.env.PLAYWRIGHT_INTERNAL_PLAN_ID || "plan_tc_auto_playwright";
 const internalPlanName =
-  process.env.PLAYWRIGHT_INTERNAL_PLAN_NAME || "Testing Company - Regressão automatizada Playwright";
+  process.env.PLAYWRIGHT_INTERNAL_PLAN_NAME || "Testing Company - RegressÃ£o automatizada Playwright";
 const INTERNAL_CASE_ID_REGEX = /@(?:case|tc-case|manualcase|internalcase)[:=#-]?([A-Z0-9_-]+)/gi;
 
 const qaseClient = createQaseClient({
@@ -319,7 +319,7 @@ async function syncInternalRunResult(testInfo: TestInfo) {
     ...current,
     status: stats.notRun === 0 ? "done" : "ACTIVE",
     stats,
-    observations: `Última atualização automática: ${stripAnnotations(testInfo.title)} -> ${status}.`,
+    observations: `Ãšltima atualizaÃ§Ã£o automÃ¡tica: ${stripAnnotations(testInfo.title)} -> ${status}.`,
     updatedAt: new Date().toISOString(),
   };
   await writeManualReleasesLocal(releases);
@@ -420,3 +420,4 @@ test.afterEach(async ({}, testInfo) => {
 });
 
 export { test, expect };
+

@@ -1,4 +1,4 @@
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type EditableProfileRole = SystemRole;
 export type StoredEditableUserRole =
@@ -69,3 +69,4 @@ export function resolveEditableProfileUserState(role: EditableProfileRole, compa
     allow_multi_company_link: true,
   };
 }
+

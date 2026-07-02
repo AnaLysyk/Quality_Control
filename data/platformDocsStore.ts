@@ -1,8 +1,8 @@
-import "server-only";
+﻿import "server-only";
 
 import crypto from "node:crypto";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type DocStatus = "draft" | "published" | "outdated";
 
@@ -47,7 +47,7 @@ export type PlatformDocsStore = {
   docs: WikiDoc[];
 };
 
-// ─── Prisma helpers ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Prisma helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function getPrisma() {
   const { prisma } = await import("@/lib/prismaClient");
@@ -151,7 +151,7 @@ async function upsertStore(companySlug: string | null, store: PlatformDocsStore)
   });
 }
 
-// ─── Platform-level wiki (companySlug = null) ─────────────────────────────────
+// â”€â”€â”€ Platform-level wiki (companySlug = null) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function readPlatformDocs(): Promise<PlatformDocsStore> {
   const prisma = await getPrisma();
@@ -166,7 +166,7 @@ export async function writePlatformDocs(store: PlatformDocsStore): Promise<void>
   await upsertStore(null, store);
 }
 
-// ─── Company-scoped wiki ──────────────────────────────────────────────────────
+// â”€â”€â”€ Company-scoped wiki â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function readCompanyDocs(companySlug: string): Promise<PlatformDocsStore> {
   const prisma = await getPrisma();
@@ -181,7 +181,7 @@ export async function writeCompanyDocs(companySlug: string, store: PlatformDocsS
   await upsertStore(companySlug, store);
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function newId(): string {
   return crypto.randomUUID();
@@ -202,3 +202,4 @@ export function sanitizeSlug(raw: string): string {
     .replace(/^-|-$/g, "")
     .slice(0, 80);
 }
+

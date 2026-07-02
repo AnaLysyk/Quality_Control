@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -18,11 +18,11 @@ export function LanguageSelector({ variant = "icon", className = "" }: LanguageS
         type="button"
         onClick={toggleLocale}
         className={`${styles.iconButton} ${className}`}
-        title={locale === "pt" ? "Switch to English" : "Mudar para Português"}
-        aria-label={locale === "pt" ? "Switch to English" : "Mudar para Português"}
+        title={locale === "pt" ? "Switch to English" : "Mudar para PortuguÃªs"}
+        aria-label={locale === "pt" ? "Switch to English" : "Mudar para PortuguÃªs"}
       >
         <span className={styles.flagIcon}>
-          {locale === "pt" ? "🇧🇷" : "🇺🇸"}
+          {locale === "pt" ? "ðŸ‡§ðŸ‡·" : "ðŸ‡ºðŸ‡¸"}
         </span>
         <span className={styles.langCode}>{locale.toUpperCase()}</span>
       </button>
@@ -35,7 +35,7 @@ export function LanguageSelector({ variant = "icon", className = "" }: LanguageS
         type="button"
         onClick={toggleLocale}
         className={`${styles.textButton} ${className}`}
-        title={locale === "pt" ? "Switch to English" : "Mudar para Português"}
+        title={locale === "pt" ? "Switch to English" : "Mudar para PortuguÃªs"}
       >
         {locale === "pt" ? "EN" : "PT"}
       </button>
@@ -50,7 +50,7 @@ export function LanguageSelector({ variant = "icon", className = "" }: LanguageS
         className={`${styles.currentLang} ${locale === "pt" ? styles.active : ""}`}
         onClick={() => setLocale("pt")}
       >
-        <span className={styles.flagIcon}>🇧🇷</span>
+        <span className={styles.flagIcon}>ðŸ‡§ðŸ‡·</span>
         <span>PT</span>
       </button>
       <span className={styles.divider}>|</span>
@@ -59,7 +59,7 @@ export function LanguageSelector({ variant = "icon", className = "" }: LanguageS
         className={`${styles.currentLang} ${locale === "en" ? styles.active : ""}`}
         onClick={() => setLocale("en")}
       >
-        <span className={styles.flagIcon}>🇺🇸</span>
+        <span className={styles.flagIcon}>ðŸ‡ºðŸ‡¸</span>
         <span>EN</span>
       </button>
     </div>
@@ -67,3 +67,4 @@ export function LanguageSelector({ variant = "icon", className = "" }: LanguageS
 }
 
 export default LanguageSelector;
+

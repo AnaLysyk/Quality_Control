@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { exportTickets, type TicketRecord } from "@/lib/ticketsStore";
 import { isItDev } from "@/lib/rbac/tickets";
@@ -7,7 +7,7 @@ import { addAuditLogSafe } from "@/data/auditLogRepository";
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const allowAll = isItDev(user);
@@ -29,3 +29,4 @@ export async function GET(req: Request) {
 
   return NextResponse.json(payload, { status: 200 });
 }
+

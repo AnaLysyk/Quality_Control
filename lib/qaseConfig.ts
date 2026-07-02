@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { findLocalCompanyBySlug } from "@/lib/auth/localStore";
 
@@ -137,3 +137,4 @@ export async function getClientQaseSettings(slug: string): Promise<QaseSettings 
     baseUrl,
   };
 }
+

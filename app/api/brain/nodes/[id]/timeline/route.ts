@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+﻿import { type NextRequest, NextResponse } from "next/server";
 
 import { getNodeTimeline } from "@/lib/brain";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
@@ -32,3 +32,4 @@ export async function GET(
     return NextResponse.json({ error: "Erro ao buscar timeline" }, { status: 500 });
   }
 }
+

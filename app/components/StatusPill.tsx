@@ -1,4 +1,4 @@
-import { StatusKey } from "@/utils/statusColors";
+﻿import { StatusKey } from "@/utils/statusColors";
 import clsx from "clsx";
 import styles from "./StatusPill.module.css";
 
@@ -22,7 +22,7 @@ export default function StatusPill({
   return (
     <div
       className={clsx(
-        "flex items-center gap-2 rounded-full bg-white/5 border border-(--tc-border)/20 px-3 py-2",
+        "flex items-center gap-2 rounded-full bg-white/5 border border-[var(--tc-border)]/20 px-3 py-2",
         styles.pill,
         colorClass,
         className,
@@ -33,11 +33,12 @@ export default function StatusPill({
         {label}
       </span>
       {value !== undefined && (
-        <span className="text-(--tc-text-inverse)">
+        <span className="text-[var(--tc-text-inverse)]">
           {value}{" "}
-          {percent !== undefined && <span className="text-(--tc-text-muted)">({percent}%)</span>}
+          {percent !== undefined && <span className="text-[var(--tc-text-muted)]">({percent}%)</span>}
         </span>
       )}
     </div>
   );
 }
+

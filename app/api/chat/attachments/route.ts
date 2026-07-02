@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+﻿import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -69,10 +69,10 @@ function sourceLabelFor(file: File) {
 
 export async function POST(req: NextRequest) {
   const access = await getAccessContext(req);
-  if (!access) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!access) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const form = await req.formData().catch(() => null);
-  if (!form) return NextResponse.json({ error: "Formulário inválido" }, { status: 400 });
+  if (!form) return NextResponse.json({ error: "FormulÃ¡rio invÃ¡lido" }, { status: 400 });
 
   const files = form
     .getAll("files")
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
 
   for (const file of files) {
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
-      return NextResponse.json({ error: `Tipo de arquivo não permitido: ${file.name || "sem nome"}` }, { status: 400 });
+      return NextResponse.json({ error: `Tipo de arquivo nÃ£o permitido: ${file.name || "sem nome"}` }, { status: 400 });
     }
     if (file.size <= 0) {
       return NextResponse.json({ error: `Arquivo vazio: ${file.name || "sem nome"}` }, { status: 400 });
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     const safeName = safeSegment(file.name || "arquivo") || "arquivo";
     const key = path.posix.join("chat", userSegment, `${Date.now()}-${randomUUID()}-${safeName}${extensionFor(file)}`);
     const target = resolveTarget(key);
-    if (!target) return NextResponse.json({ error: "Arquivo inválido" }, { status: 400 });
+    if (!target) return NextResponse.json({ error: "Arquivo invÃ¡lido" }, { status: 400 });
 
     await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.writeFile(target, Buffer.from(await file.arrayBuffer()));
@@ -118,3 +118,4 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, attachments }, { headers: NO_STORE_HEADERS });
 }
+

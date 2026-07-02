@@ -1,5 +1,5 @@
-/**
- * Profile Engine Components — exports
+﻿/**
+ * Profile Engine Components â€” exports
  */
 
 // Forms
@@ -16,3 +16,4 @@ export { ProfileShell, ProfileShellContent } from "./ProfileShell";
 export { ProfileHeader } from "./ProfileHeader";
 export { ProfileActions } from "./ProfileActions";
 export { ProfileTabs } from "./ProfileTabs";
+

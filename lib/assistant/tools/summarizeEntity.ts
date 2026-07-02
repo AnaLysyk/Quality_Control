@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { listTicketComments } from "@/lib/ticketCommentsStore";
@@ -10,7 +10,7 @@ import { buildPromptActions, displayName, displayRole, findVisibleTicket, getVis
 import type { AssistantExecutorResult } from "./types";
 
 /**
- * Busca memórias relevantes do Brain para uma entidade
+ * Busca memÃ³rias relevantes do Brain para uma entidade
  */
 async function getBrainInsights(refType: string, refId: string): Promise<string[]> {
   try {
@@ -28,7 +28,7 @@ async function getBrainInsights(refType: string, refId: string): Promise<string[
     if (!node?.memories?.length) return [];
 
     return node.memories.map(
-      (m) => `💡 **[${m.memoryType}]** ${m.title}`
+      (m) => `ðŸ’¡ **[${m.memoryType}]** ${m.title}`
     );
   } catch {
     return [];
@@ -38,13 +38,13 @@ async function getBrainInsights(refType: string, refId: string): Promise<string[
 export async function toolSummarizeEntity(user: AuthUser, context: AssistantScreenContext, message: string): Promise<AssistantExecutorResult> {
   const normalized = normalizeSearch(message);
 
-  // ─── Resumir perfil do usuário ───
-  if (normalized.includes("perfil") || normalized.includes("meus dados") || normalized.includes("meu usuario") || normalized.includes("meu usuário")) {
+  // â”€â”€â”€ Resumir perfil do usuÃ¡rio â”€â”€â”€
+  if (normalized.includes("perfil") || normalized.includes("meus dados") || normalized.includes("meu usuario") || normalized.includes("meu usuÃ¡rio")) {
     const currentUser = await getLocalUserById(user.id);
     const insights = await getBrainInsights("User", user.id);
     
     const replyParts = [
-      `## 👤 Perfil: ${displayName(currentUser)}`,
+      `## ðŸ‘¤ Perfil: ${displayName(currentUser)}`,
       "",
       `| Campo | Valor |`,
       `|-------|-------|`,
@@ -55,13 +55,13 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
     ];
 
     if (insights.length) {
-      replyParts.push("", "### 🧠 Insights do Brain:", ...insights);
+      replyParts.push("", "### ðŸ§  Insights do Brain:", ...insights);
     }
 
     replyParts.push(
       "",
       "---",
-      "💡 Posso usar esse contexto para estruturar chamados, comentários ou outras ações."
+      "ðŸ’¡ Posso usar esse contexto para estruturar chamados, comentÃ¡rios ou outras aÃ§Ãµes."
     );
 
     return {
@@ -69,7 +69,7 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
       success: true,
       summary: "perfil atual",
       actions: [
-        { kind: "prompt", label: "Explicar minhas permissões", prompt: "Explicar meu escopo de acesso" },
+        { kind: "prompt", label: "Explicar minhas permissÃµes", prompt: "Explicar meu escopo de acesso" },
         { kind: "prompt", label: "Meus tickets recentes", prompt: "Buscar tickets criados por mim" },
         ...buildPromptActions(context).slice(0, 1),
       ],
@@ -77,56 +77,56 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
     };
   }
 
-  // ─── Resumir ticket ───
+  // â”€â”€â”€ Resumir ticket â”€â”€â”€
   const ticket = await findVisibleTicket(user, message);
   if (ticket) {
     const comments = await listTicketComments(ticket.id, { limit: 20, offset: 0 });
     const insights = await getBrainInsights("Ticket", ticket.id);
     
-    // Análise de urgência
-    const urgencyEmoji = ticket.priority === "high" ? "🔴" : ticket.priority === "medium" ? "🟠" : "🟢";
-    const statusEmoji = ticket.status === "open" ? "📬" : ticket.status === "in_progress" ? "⚙️" : "✅";
+    // AnÃ¡lise de urgÃªncia
+    const urgencyEmoji = ticket.priority === "high" ? "ðŸ”´" : ticket.priority === "medium" ? "ðŸŸ " : "ðŸŸ¢";
+    const statusEmoji = ticket.status === "open" ? "ðŸ“¬" : ticket.status === "in_progress" ? "âš™ï¸" : "âœ…";
     
     const replyParts = [
-      `## ${statusEmoji} ${ticket.code} — ${ticket.title}`,
+      `## ${statusEmoji} ${ticket.code} â€” ${ticket.title}`,
       "",
       `| Atributo | Valor |`,
       `|----------|-------|`,
       `| **Status** | ${ticket.status} |`,
       `| **Prioridade** | ${urgencyEmoji} ${ticket.priority} |`,
       `| **Tipo** | ${ticket.type} |`,
-      `| **Criado por** | ${ticket.createdByName ?? "não identificado"} |`,
+      `| **Criado por** | ${ticket.createdByName ?? "nÃ£o identificado"} |`,
       `| **Criado em** | ${formatDateTime(ticket.createdAt)} |`,
-      `| **Responsável** | ${ticket.assignedToName ?? "⚠️ não definido"} |`,
+      `| **ResponsÃ¡vel** | ${ticket.assignedToName ?? "âš ï¸ nÃ£o definido"} |`,
       `| **Atualizado** | ${formatDateTime(ticket.updatedAt)} |`,
-      `| **Comentários** | ${comments.length} |`,
+      `| **ComentÃ¡rios** | ${comments.length} |`,
       "",
-      "### 📝 Descrição:",
-      ticket.description || "_Sem descrição detalhada._",
+      "### ðŸ“ DescriÃ§Ã£o:",
+      ticket.description || "_Sem descriÃ§Ã£o detalhada._",
     ];
 
     if (comments.length > 0) {
       replyParts.push(
         "",
-        "### 💬 Últimos comentários:",
-        ...comments.slice(0, 3).map((c) => `- **${c.authorName ?? "Anônimo"}**: ${c.body?.slice(0, 100)}${(c.body?.length ?? 0) > 100 ? "..." : ""}`)
+        "### ðŸ’¬ Ãšltimos comentÃ¡rios:",
+        ...comments.slice(0, 3).map((c) => `- **${c.authorName ?? "AnÃ´nimo"}**: ${c.body?.slice(0, 100)}${(c.body?.length ?? 0) > 100 ? "..." : ""}`)
       );
     }
 
     if (insights.length) {
-      replyParts.push("", "### 🧠 Conhecimento do Brain:", ...insights);
+      replyParts.push("", "### ðŸ§  Conhecimento do Brain:", ...insights);
     }
 
-    // Sugestões contextuais
+    // SugestÃµes contextuais
     const suggestions: Array<{ kind: "prompt"; label: string; prompt: string }> = [
       { kind: "prompt", label: "Gerar caso de teste", prompt: `Gerar caso de teste para ${ticket.code}` },
     ];
     
     if (!ticket.assignedToUserId) {
-      suggestions.push({ kind: "prompt", label: "Sugerir responsável", prompt: `Quem deveria ser responsável pelo ${ticket.code}?` });
+      suggestions.push({ kind: "prompt", label: "Sugerir responsÃ¡vel", prompt: `Quem deveria ser responsÃ¡vel pelo ${ticket.code}?` });
     }
     
-    suggestions.push({ kind: "prompt", label: "Montar comentário", prompt: `Montar comentário técnico para ${ticket.code}` });
+    suggestions.push({ kind: "prompt", label: "Montar comentÃ¡rio", prompt: `Montar comentÃ¡rio tÃ©cnico para ${ticket.code}` });
 
     return {
       tool: "summarize_entity",
@@ -137,17 +137,17 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
     };
   }
 
-  // ─── Resumir empresa ───
+  // â”€â”€â”€ Resumir empresa â”€â”€â”€
   if (context.module === "company" || normalized.includes("empresa")) {
     const companies = await getVisibleCompanies(user);
     const current = companies.find((c) => normalizeSearch(c.slug) === normalizeSearch(context.companySlug ?? "")) ?? companies[0];
     
     if (current) {
       const insights = await getBrainInsights("Company", current.id);
-      const statusEmoji = current.active === false ? "⚪" : "🟢";
+      const statusEmoji = current.active === false ? "âšª" : "ðŸŸ¢";
       
       const replyParts = [
-        `## 🏢 ${current.name}`,
+        `## ðŸ¢ ${current.name}`,
         "",
         `| Atributo | Valor |`,
         `|----------|-------|`,
@@ -156,13 +156,13 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
       ];
 
       if (insights.length) {
-        replyParts.push("", "### 🧠 Conhecimento do Brain:", ...insights);
+        replyParts.push("", "### ðŸ§  Conhecimento do Brain:", ...insights);
       }
 
       replyParts.push(
         "",
         "---",
-        "💡 Posso buscar tickets, usuários ou gerar relatórios desta empresa."
+        "ðŸ’¡ Posso buscar tickets, usuÃ¡rios ou gerar relatÃ³rios desta empresa."
       );
 
       return {
@@ -171,7 +171,7 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
         summary: current.slug,
         actions: [
           { kind: "prompt", label: "Tickets da empresa", prompt: `Buscar tickets da empresa ${current.name}` },
-          { kind: "prompt", label: "Usuários da empresa", prompt: `Listar usuários da empresa ${current.name}` },
+          { kind: "prompt", label: "UsuÃ¡rios da empresa", prompt: `Listar usuÃ¡rios da empresa ${current.name}` },
           ...buildPromptActions(context).slice(0, 1),
         ],
         reply: replyParts.join("\n"),
@@ -179,7 +179,7 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
     }
   }
 
-  // ─── Fallback: contexto atual ───
+  // â”€â”€â”€ Fallback: contexto atual â”€â”€â”€
   const currentUser = await getLocalUserById(user.id);
   return {
     tool: "summarize_entity",
@@ -187,11 +187,11 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
     summary: "contexto atual",
     actions: buildPromptActions(context),
     reply: compactMultiline([
-      `## 📍 Contexto Atual`,
+      `## ðŸ“ Contexto Atual`,
       "",
-      `**Usuário:** ${displayName(currentUser)}`,
+      `**UsuÃ¡rio:** ${displayName(currentUser)}`,
       `**Tela:** ${context.screenLabel}`,
-      `**Módulo:** ${context.module}`,
+      `**MÃ³dulo:** ${context.module}`,
       `**Perfil:** ${displayRole(user)}`,
       `**Empresa:** ${context.companySlug ?? user.companySlug ?? "global"}`,
       "",
@@ -199,3 +199,4 @@ export async function toolSummarizeEntity(user: AuthUser, context: AssistantScre
     ].join("\n")),
   };
 }
+

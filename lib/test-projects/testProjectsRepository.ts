@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { listApplications, type AppRecord } from "@/lib/applicationsStore";
 import { getClientQaseSettings } from "@/lib/qaseConfig";
@@ -112,7 +112,7 @@ function normalizePriority(value: unknown): TestCasePriority | undefined {
   if (raw.includes("critical") || raw.includes("blocker") || raw.includes("cr")) return "critical";
   if (raw.includes("high") || raw.includes("alta")) return "high";
   if (raw.includes("low") || raw.includes("baixa")) return "low";
-  if (raw.includes("medium") || raw.includes("normal") || raw.includes("media") || raw.includes("média")) return "medium";
+  if (raw.includes("medium") || raw.includes("normal") || raw.includes("media") || raw.includes("mÃ©dia")) return "medium";
   return undefined;
 }
 
@@ -148,8 +148,8 @@ function normalizeQaseStep(raw: unknown, testCaseId: string, index: number, now:
     id: `${testCaseId}-step-${index + 1}`,
     testCaseId,
     order: index + 1,
-    action: action ?? "Passo sem ação informada",
-    expectedResult: expectedResult ?? "Resultado esperado não informado",
+    action: action ?? "Passo sem aÃ§Ã£o informada",
+    expectedResult: expectedResult ?? "Resultado esperado nÃ£o informado",
     data,
     notes: null,
     createdAt: now,
@@ -530,3 +530,4 @@ export async function listTestProjects(input: {
     warnings,
   };
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById, findLocalCompanyById, findLocalCompanyBySlug } from "@/lib/auth/localStore";
@@ -16,12 +16,12 @@ function errorResponse(status: number, code: string, message: string) {
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return errorResponse(401, "NO_SESSION", "Não autorizado");
+    return errorResponse(401, "NO_SESSION", "NÃ£o autorizado");
   }
 
   const user = await getLocalUserById(access.userId);
   if (!user) {
-    return errorResponse(401, "USER_NOT_FOUND", "Usuário não encontrado");
+    return errorResponse(401, "USER_NOT_FOUND", "UsuÃ¡rio nÃ£o encontrado");
   }
 
   const displayName =
@@ -65,3 +65,4 @@ export async function GET(req: Request) {
     },
   }, { headers: NO_STORE_HEADERS });
 }
+

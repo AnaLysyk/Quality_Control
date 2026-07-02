@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { BrainAccessContext } from "@/lib/brain/access";
 import type { BrainGraphSource } from "@/lib/brain/sources";
@@ -93,3 +93,4 @@ export const qaseBrainSource: BrainGraphSource<QaseSourceContext> = {
     return { id: "qase", label: "Qase/Kase", status: "ok", nodes: settings.projects.length, edges: 0 };
   },
 };
+

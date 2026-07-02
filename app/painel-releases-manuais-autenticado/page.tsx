@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -20,7 +20,7 @@ export default function PainelReleasesManuaisAutenticado() {
   if (!user || !companyId) {
     return (
       <div className="p-6 text-red-600">
-        Você precisa estar autenticado e vinculado a uma empresa para acessar este painel.
+        VocÃª precisa estar autenticado e vinculado a uma empresa para acessar este painel.
       </div>
     );
   }
@@ -33,3 +33,4 @@ export default function PainelReleasesManuaisAutenticado() {
     </div>
   );
 }
+

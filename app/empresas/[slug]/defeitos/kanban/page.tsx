@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -151,19 +151,19 @@ export default function CompanyKanbanPage() {
     <div className="min-h-screen bg-(--page-bg,#f5f6fa) text-(--page-text,#0b1a3c) px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="rounded-3xl bg-white p-6 shadow-sm space-y-2">
-          <p className="text-xs uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">{copy.kicker}</p>
+          <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent,#ef0001)]">{copy.kicker}</p>
           <h1 className="text-3xl font-extrabold">{copy.title}</h1>
-          <p className="text-sm text-(--tc-text-secondary,#4b5563)">
+          <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
             {copy.subtitle}
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-2">
-            <label className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">
+            <label className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">
               {copy.runLabel}
             </label>
             <select
               value={selectedRun ?? ""}
               onChange={(e) => handleRunChange(e.target.value)}
-              className="rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-2 text-sm"
+              className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-white px-4 py-2 text-sm"
               aria-label={copy.selectRunAria}
             >
               <option value="">{copy.selectRunPlaceholder}</option>
@@ -173,14 +173,14 @@ export default function CompanyKanbanPage() {
                 </option>
               ))}
             </select>
-            {loadingRuns && <span className="text-xs text-(--tc-text-muted)">{copy.loadingRuns}</span>}
+            {loadingRuns && <span className="text-xs text-[var(--tc-text-muted)]">{copy.loadingRuns}</span>}
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
         </header>
 
         <div className="rounded-3xl bg-white p-6 shadow-sm">
           {!selectedRun && !loadingRuns && (
-            <p className="text-sm text-(--tc-text-muted)">{copy.selectRunPrompt}</p>
+            <p className="text-sm text-[var(--tc-text-muted)]">{copy.selectRunPrompt}</p>
           )}
           {selectedRun && (
             <Kanban
@@ -199,3 +199,5 @@ export default function CompanyKanbanPage() {
     </div>
   );
 }
+
+

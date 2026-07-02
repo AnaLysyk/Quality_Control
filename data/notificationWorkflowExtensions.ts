@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { NotificationWorkflow } from "@/data/notificationOperationModel";
 
@@ -121,3 +121,4 @@ export const notificationWorkflowExtensions: NotificationWorkflow[] = [
     preferenceRules: ["Nao pode ser desativada", "Auditoria obrigatoria", "Brain recebe contexto"],
   },
 ];
+

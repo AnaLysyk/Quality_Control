@@ -58,3 +58,4 @@ export async function criarReleaseComExecucaoFalha() {
   releases.push(runRisk);
   await fs.promises.writeFile(file, JSON.stringify(releases, null, 2), "utf8");
 }
+

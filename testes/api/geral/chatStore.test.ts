@@ -1,4 +1,4 @@
-const mockRedisStore = new Map<string, string>();
+﻿const mockRedisStore = new Map<string, string>();
 const mockRedis = {
   get: jest.fn(async (key: string) => mockRedisStore.get(key) ?? null),
   set: jest.fn(async (key: string, value: string) => {
@@ -146,3 +146,4 @@ describe("chatStore", () => {
     expect(await listChatThreadMessages("user-a", "user-b")).toEqual([]);
   });
 });
+

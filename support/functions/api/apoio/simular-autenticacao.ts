@@ -1,1 +1,2 @@
-export { simularAutenticacao } from "../../ui/apoio/simular-autenticacao";
+﻿export { simularAutenticacao } from "../../ui/apoio/simular-autenticacao";
+

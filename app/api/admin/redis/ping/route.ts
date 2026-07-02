@@ -38,3 +38,4 @@ export async function GET(req: NextRequest) {
     return apiOk(req, payload, "Erro no Redis", { extra: payload });
   }
 }
+

@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+﻿import { expect, type Page } from "@playwright/test";
 
 import { slugifyRelease as slugifyRun } from "../../../../lib/slugifyRelease";
 import { EMPRESA_CLIENTE_E2E, rotaDetalheRunEmpresa } from "./rotas-runs";
@@ -72,3 +72,4 @@ export async function criarRunManualPelaTela(
     url: rotaDetalheRunEmpresa(slugCriado, companySlug),
   };
 }
+

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+﻿import { describe, expect, it } from "@jest/globals";
 
 import {
   canAccessGlobalSupportScope,
@@ -83,3 +83,4 @@ describe("supportAccess", () => {
     expect(canManageSupportWorkflow(user)).toBe(false);
   });
 });
+

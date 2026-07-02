@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -38,10 +38,10 @@ const COPY = {
     coverTotal: "Total",
     coverQase: "Qase",
     coverCases: "Casos",
-    filterApp: "Aplicação",
+    filterApp: "AplicaÃ§Ã£o",
     filterAll: "Todas",
     filterSearch: "Buscar",
-    searchPlaceholder: "Título, descrição, projeto ou origem",
+    searchPlaceholder: "TÃ­tulo, descriÃ§Ã£o, projeto ou origem",
     refresh: "Atualizar",
     newPlan: "Novo plano",
     projectLabel: "Projeto:",
@@ -49,9 +49,9 @@ const COPY = {
     projectNone: "Sem Qase",
     manualLabel: "Manual:",
     localLabel: "Local:",
-    automationLabel: "Automação:",
+    automationLabel: "AutomaÃ§Ã£o:",
     integratedLabel: "Integrado:",
-    loadingApps: "Carregando aplicações...",
+    loadingApps: "Carregando aplicaÃ§Ãµes...",
     loadingPlans: "Carregando planos de teste...",
     emptyPlans: "Nenhum plano encontrado para os filtros atuais.",
     noDate: "Sem data",
@@ -63,8 +63,8 @@ const COPY = {
     deletePlan: "Excluir",
     confirmDelete: (title: string) => `Remover o plano "${title}"?`,
     casesCount: (n: number) => `${n} casos`,
-    noDescription: "Plano sem descrição detalhada.",
-    unknownApp: "Aplicação não identificada",
+    noDescription: "Plano sem descriÃ§Ã£o detalhada.",
+    unknownApp: "AplicaÃ§Ã£o nÃ£o identificada",
     modalEditLabel: "Editar plano",
     modalNewLabel: "Novo plano",
     modalQaseTitle: "Plano integrado Qase",
@@ -72,74 +72,74 @@ const COPY = {
     modalLocalTitle: "Plano local",
     modalAutomationTitle: "Plano automatizado",
     modalQaseDesc: "Visualize os casos vinculados, adicione novos IDs e expanda cada item para consultar os detalhes do Qase.",
-    modalManualDesc: "Os casos manuais ficam visiveis no próprio plano, com título rápido e campos completos para detalhamento.",
-    modalLocalDesc: "O plano local fica no repositório da empresa e permite montar os casos sem depender do Qase.",
-    modalAutomationDesc: "O plano automatizado registra a origem de automação e mantém os casos preparados para execução integrada.",
+    modalManualDesc: "Os casos manuais ficam visiveis no prÃ³prio plano, com tÃ­tulo rÃ¡pido e campos completos para detalhamento.",
+    modalLocalDesc: "O plano local fica no repositÃ³rio da empresa e permite montar os casos sem depender do Qase.",
+    modalAutomationDesc: "O plano automatizado registra a origem de automaÃ§Ã£o e mantÃ©m os casos preparados para execuÃ§Ã£o integrada.",
     closeModalAria: "Fechar modal",
-    titleLabel: "Título",
+    titleLabel: "TÃ­tulo",
     titlePlaceholder: "Ex: Regressao sprint 32",
-    appLabel: "Aplicação",
+    appLabel: "AplicaÃ§Ã£o",
     selectApp: "Selecione",
     sourceLabel: "Origem",
     sourceManual: "Manual local",
     sourceLocal: "Local",
     sourceAutomation: "Automatizado",
     sourceQase: "Qase",
-    noQaseWarning: "A aplicação escolhida não possui projeto Qase vinculado. Para criar no Qase, selecione uma aplicação com codigo de projeto.",
-    descLabel: "Descrição do plano",
+    noQaseWarning: "A aplicaÃ§Ã£o escolhida nÃ£o possui projeto Qase vinculado. Para criar no Qase, selecione uma aplicaÃ§Ã£o com codigo de projeto.",
+    descLabel: "DescriÃ§Ã£o do plano",
     descPlaceholder: "Contexto, objetivo e recorte do plano.",
     casesSection: "Casos do plano",
     casesLinked: (n: number) => `${n} caso${n === 1 ? "" : "s"} vinculado${n === 1 ? "" : "s"}`,
-    casesQaseDesc: "Cada caso mostra ID, título, link direto e expande os detalhes sob demanda.",
-    casesManualDesc: "No manual, cada caso pode ser criado só com título e ganhar detalhes completos quando você expandir.",
+    casesQaseDesc: "Cada caso mostra ID, tÃ­tulo, link direto e expande os detalhes sob demanda.",
+    casesManualDesc: "No manual, cada caso pode ser criado sÃ³ com tÃ­tulo e ganhar detalhes completos quando vocÃª expandir.",
     addManualCase: "Adicionar caso manual",
     qaseIdsLabel: "IDs dos casos Qase",
     qaseIdsPlaceholder: "IDs numericos separados por linha ou virgula. Ex: 101, 102, 103",
     linkCases: "Vincular casos",
-    qaseIdsNote: "O plano do Qase aceita apenas case IDs numericos. Ao expandir um item, a tela consulta descrição, pre-condicoes, pos-condicoes, severidade e passos do caso.",
+    qaseIdsNote: "O plano do Qase aceita apenas case IDs numericos. Ao expandir um item, a tela consulta descriÃ§Ã£o, pre-condicoes, pos-condicoes, severidade e passos do caso.",
     loadingPlanDetail: "Carregando detalhes do plano...",
     emptyQaseCases: "Adicione IDs de casos do Qase para visualizar a lista.",
-    emptyManualCases: "Adicione um caso manual para montar título, passos e criterios do plano.",
+    emptyManualCases: "Adicione um caso manual para montar tÃ­tulo, passos e criterios do plano.",
     openLink: "Abrir link",
     removeCase: "Remover",
     loadingCaseDetail: "Carregando detalhes do caso do Qase...",
-    descriptionLabel: "Descrição",
-    noQaseDescription: "Sem descrição detalhada no Qase.",
+    descriptionLabel: "DescriÃ§Ã£o",
+    noQaseDescription: "Sem descriÃ§Ã£o detalhada no Qase.",
     preconditionsLabel: "Pre-condicoes",
     noPreconditions: "Sem pre-condicoes cadastradas.",
     postconditionsLabel: "Pos-condicoes e severidade",
     noPostconditions: "Sem pos-condicoes cadastradas.",
     severityLabel: "Severidade:",
-    severityNotSet: "Não informada",
+    severityNotSet: "NÃ£o informada",
     stepsLabel: "Passos",
     stepLabel: (n: number) => `Passo ${n}`,
-    noSteps: "O caso do Qase não retornou passos estruturados.",
+    noSteps: "O caso do Qase nÃ£o retornou passos estruturados.",
     expectedResult: "Resultado esperado",
-    notSpecified: "Não informado.",
+    notSpecified: "NÃ£o informado.",
     dataLabel: "Dados",
     caseIdLabel: "ID do caso",
-    caseTitleLabel: "Título do caso",
+    caseTitleLabel: "TÃ­tulo do caso",
     caseTitlePlaceholder: "Ex: Login com operador",
-    caseDescLabel: "Descrição",
+    caseDescLabel: "DescriÃ§Ã£o",
     caseDescPlaceholder: "Descreva o objetivo e o contexto do caso.",
     casePrecondLabel: "Pre-condicoes",
-    casePrecondPlaceholder: "Estado inicial necessário antes do teste.",
+    casePrecondPlaceholder: "Estado inicial necessÃ¡rio antes do teste.",
     casePostcondLabel: "Pos-condicoes",
-    casePostcondPlaceholder: "Estado esperado apos a execução.",
+    casePostcondPlaceholder: "Estado esperado apos a execuÃ§Ã£o.",
     caseSeverityLabel: "Severidade",
-    stepsDesc: "Crie o caso só com título e detalhe os passos apenas quando precisar.",
+    stepsDesc: "Crie o caso sÃ³ com tÃ­tulo e detalhe os passos apenas quando precisar.",
     addStep: "Adicionar passo",
     removeStep: "Remover passo",
-    actionLabel: "Ação",
+    actionLabel: "AÃ§Ã£o",
     actionPlaceholder: "O que deve ser executado neste passo.",
     expectedResultLabel: "Resultado esperado",
     expectedResultPlaceholder: "Qual resultado deve aparecer apos o passo.",
     stepDataLabel: "Dados do passo",
-    stepDataPlaceholder: "Dados, massa ou observação opcional.",
-    noStepsManual: "Este caso ainda não tem passos. Se quiser, pode salvar apenas com o título e detalhar depois.",
-    noAction: "Sem ação descrita.",
-    appInFocus: "Aplicação em foco:",
-    noApp: "Sem aplicação",
+    stepDataPlaceholder: "Dados, massa ou observaÃ§Ã£o opcional.",
+    noStepsManual: "Este caso ainda nÃ£o tem passos. Se quiser, pode salvar apenas com o tÃ­tulo e detalhar depois.",
+    noAction: "Sem aÃ§Ã£o descrita.",
+    appInFocus: "AplicaÃ§Ã£o em foco:",
+    noApp: "Sem aplicaÃ§Ã£o",
     cancel: "Cancelar",
     saving: "Salvando...",
     savePlan: "Salvar plano",
@@ -154,21 +154,21 @@ const COPY = {
       { value: "high", label: "Alta" },
       { value: "critical", label: "Critica" },
     ],
-    errLoadApps: "Não foi possível carregar as aplicações da empresa.",
-    errLoadPlans: "Não foi possível consultar os planos de teste.",
-    errOpenPlan: "Não foi possível abrir o plano selecionado.",
-    errDeletePlan: "Não foi possível remover o plano.",
-    errSelectApp: "Selecione uma aplicação especifica para salvar um plano.",
-    errTitle: "Informe o título do plano.",
-    errCaseTitle: (id: string) => `Informe o título do caso manual ${id}.`,
+    errLoadApps: "NÃ£o foi possÃ­vel carregar as aplicaÃ§Ãµes da empresa.",
+    errLoadPlans: "NÃ£o foi possÃ­vel consultar os planos de teste.",
+    errOpenPlan: "NÃ£o foi possÃ­vel abrir o plano selecionado.",
+    errDeletePlan: "NÃ£o foi possÃ­vel remover o plano.",
+    errSelectApp: "Selecione uma aplicaÃ§Ã£o especifica para salvar um plano.",
+    errTitle: "Informe o tÃ­tulo do plano.",
+    errCaseTitle: (id: string) => `Informe o tÃ­tulo do caso manual ${id}.`,
     errMinQaseCase: "Informe ao menos um case ID numerico para o plano do Qase.",
-    errSavePlan: "Não foi possível salvar o plano.",
-    errNoAppQase: "Nenhuma aplicação com projeto Qase vinculado esta disponível para criar o plano.",
-    errNoApp: "Nenhuma aplicação disponível para criar o plano.",
+    errSavePlan: "NÃ£o foi possÃ­vel salvar o plano.",
+    errNoAppQase: "Nenhuma aplicaÃ§Ã£o com projeto Qase vinculado esta disponÃ­vel para criar o plano.",
+    errNoApp: "Nenhuma aplicaÃ§Ã£o disponÃ­vel para criar o plano.",
     errAddQaseIds: "Informe pelo menos um case ID numerico para adicionar ao plano do Qase.",
-    errNoValidIds: "Nenhum case ID numerico válido foi encontrado.",
-    errLoadCase: "Não foi possível carregar o caso do Qase.",
-    errLoadApp: "Erro ao carregar aplicações",
+    errNoValidIds: "Nenhum case ID numerico vÃ¡lido foi encontrado.",
+    errLoadCase: "NÃ£o foi possÃ­vel carregar o caso do Qase.",
+    errLoadApp: "Erro ao carregar aplicaÃ§Ãµes",
     errLoadPlan: "Erro ao carregar planos",
     errOpenPlanShort: "Erro ao abrir plano",
     errDeletePlanShort: "Erro ao remover plano",
@@ -372,10 +372,10 @@ const EMPTY_DRAFT: PlanDraft = {
 
 const PROFILE_LABEL: Record<string, string> = {
   empresa: "Empresa",
-  technical_support: "Suporte Técnico",
-  leader_tc: "Líder TC",
-  testing_company_user: "Usuário TC",
-  company_user: "Usuário da Empresa",
+  technical_support: "Suporte TÃ©cnico",
+  leader_tc: "LÃ­der TC",
+  testing_company_user: "UsuÃ¡rio TC",
+  company_user: "UsuÃ¡rio da Empresa",
 };
 
 function formatDate(value?: string | null, noDateLabel = "Sem data") {
@@ -623,7 +623,7 @@ export default function TestPlansPage() {
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 py-2 text-center text-sm font-bold text-[#011848] shadow-[0_2px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-[#f0f4ff] sm:justify-start"
         >
           <FiBookOpen className="h-4 w-4 shrink-0" />
-          Abrir documentação do código
+          Abrir documentaÃ§Ã£o do cÃ³digo
         </Link>
         <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
           <FiLayers className="h-4 w-4 shrink-0" />
@@ -1023,16 +1023,16 @@ export default function TestPlansPage() {
   return (
     <div data-testid="test-plan-repository" className="min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-none space-y-6">
-        <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-5 shadow-sm dark:shadow-none">
+        <section className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-5 shadow-sm dark:shadow-none">
           <div className="mb-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">Repositório de Planos de Teste</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">RepositÃ³rio de Planos de Teste</p>
             <div className="mt-2 flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c) sm:text-2xl">
-                  Planos vinculados ao repositório central
+                <h1 className="text-xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)] sm:text-2xl">
+                  Planos vinculados ao repositÃ³rio central
                 </h1>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                  Crie planos manuais ou integrados e vincule apenas casos já existentes no repositório central.
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
+                  Crie planos manuais ou integrados e vincule apenas casos jÃ¡ existentes no repositÃ³rio central.
                 </p>
               </div>
               <button
@@ -1044,24 +1044,24 @@ export default function TestPlansPage() {
                         source: "planos-de-teste",
                         agentMode: "qa",
                         panelMode: "side",
-                        initialMessage: "Analise os planos de teste: cobertura, status de execução, lacunas e próximas prioridades.",
+                        initialMessage: "Analise os planos de teste: cobertura, status de execuÃ§Ã£o, lacunas e prÃ³ximas prioridades.",
                       },
                     }));
                   }
                 }}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1.5 text-xs font-semibold text-(--tc-text,#0b1a3c) transition hover:border-[rgba(1,24,72,0.3)] hover:text-(--tc-primary,#011848)"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[rgba(1,24,72,0.3)] hover:text-[var(--tc-primary,#011848)]"
               >
-                🧠 Perguntar IA
+                ðŸ§  Perguntar IA
               </button>
             </div>
           </div>
           <div className="grid gap-4 xl:grid-cols-[minmax(0,280px)_minmax(0,1fr)_auto] xl:items-end">
-            <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+            <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
               {copy.filterApp}
               <select
                 value={selectedApplicationId}
                 onChange={(event) => setSelectedApplicationId(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                className="mt-2 w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
               >
                 <option value="">{copy.filterAll}</option>
                 {applications.map((application) => (
@@ -1073,13 +1073,13 @@ export default function TestPlansPage() {
               </select>
             </label>
 
-            <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+            <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
               {copy.filterSearch}
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={copy.searchPlaceholder}
-                className="mt-2 w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                className="mt-2 w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
               />
             </label>
 
@@ -1087,7 +1087,7 @@ export default function TestPlansPage() {
               <button
                 type="button"
                 onClick={() => void loadPlans()}
-                className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
+                className="inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)]"
               >
                 <FiRefreshCcw className="h-4 w-4" />
                 {copy.refresh}
@@ -1098,7 +1098,7 @@ export default function TestPlansPage() {
                   onClick={() => openCreate("qase")}
                   disabled={!draftCanUseQase}
                   data-testid="test-plan-new-button"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FiPlus className="h-4 w-4" />
                   {copy.newPlanQase}
@@ -1107,7 +1107,7 @@ export default function TestPlansPage() {
                   type="button"
                   onClick={() => openCreate("local")}
                   disabled={!canCreateManual}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FiPlus className="h-4 w-4" />
                   {copy.newPlanLocal}
@@ -1116,7 +1116,7 @@ export default function TestPlansPage() {
                   type="button"
                   onClick={() => openCreate("automation")}
                   disabled={!canCreateManual}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FiPlus className="h-4 w-4" />
                   {copy.newPlanAutomation}
@@ -1125,27 +1125,27 @@ export default function TestPlansPage() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-            <span data-testid="test-plan-context-chip" className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+            <span data-testid="test-plan-context-chip" className="rounded-full border border-[var(--tc-border,#dfe5f1)] px-3 py-1.5">
               {roleLabel}
               {slug ? ` - ${slug}` : ""}
             </span>
-            <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+            <span className="rounded-full border border-[var(--tc-border,#dfe5f1)] px-3 py-1.5">
               {copy.projectLabel}{" "}
               {projectCode ??
                 selectedApplication?.qaseProjectCode ??
                 (isAllApplicationsSelected ? copy.projectAll : copy.projectNone)}
             </span>
-            <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+            <span className="rounded-full border border-[var(--tc-border,#dfe5f1)] px-3 py-1.5">
               {copy.manualLabel} {totals.manual}
             </span>
-            <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+            <span className="rounded-full border border-[var(--tc-border,#dfe5f1)] px-3 py-1.5">
               {copy.localLabel} {totals.local}
             </span>
-            <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+            <span className="rounded-full border border-[var(--tc-border,#dfe5f1)] px-3 py-1.5">
               {copy.automationLabel} {totals.automation}
             </span>
-            <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1.5">
+            <span className="rounded-full border border-[var(--tc-border,#dfe5f1)] px-3 py-1.5">
               {copy.integratedLabel} {totals.qase}
             </span>
           </div>
@@ -1165,79 +1165,79 @@ export default function TestPlansPage() {
 
         <section className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-4">
-            <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                Visão geral
+            <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
+                VisÃ£o geral
               </p>
-              <p className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">
+              <p className="mt-2 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">
                 {totals.total}
               </p>
-              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+              <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                 Planos no filtro atual
               </p>
             </div>
 
-            <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+            <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                 Casos vinculados
               </p>
-              <p className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">
+              <p className="mt-2 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">
                 {totalTests}
               </p>
-              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
-                Casos disponíveis nos planos
+              <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                Casos disponÃ­veis nos planos
               </p>
             </div>
 
-            <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
-                Execuções
+            <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
+                ExecuÃ§Ãµes
               </p>
-              <p className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">
-                —
+              <p className="mt-2 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">
+                â€”
               </p>
-              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
-                Usar tela de Execuções
+              <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                Usar tela de ExecuÃ§Ãµes
               </p>
             </div>
 
-            <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+            <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                 Defeitos / Brian
               </p>
-              <p className="mt-2 text-2xl font-black text-(--tc-text,#0b1a3c)">
-                —
+              <p className="mt-2 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">
+                â€”
               </p>
-              <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+              <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                 Mantido fora deste patch
               </p>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 shadow-sm">
+          <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent,#ef0001)">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-accent,#ef0001)]">
                   Planos de Teste
                 </p>
-                <h2 className="mt-1 text-lg font-black text-(--tc-text,#0b1a3c)">
-                  Plano → Casos vinculados → Execução → Resultado
+                <h2 className="mt-1 text-lg font-black text-[var(--tc-text,#0b1a3c)]">
+                  Plano â†’ Casos vinculados â†’ ExecuÃ§Ã£o â†’ Resultado
                 </h2>
               </div>
-              <p className="text-sm text-(--tc-text-secondary,#4b5563)">
+              <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
                 {filteredPlans.length} plano{filteredPlans.length === 1 ? "" : "s"} exibido{filteredPlans.length === 1 ? "" : "s"}
               </p>
             </div>
           </div>
 
           {loadingApplications ? (
-            <p className="text-sm text-(--tc-text-muted,#6b7280)">{copy.loadingApps}</p>
+            <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{copy.loadingApps}</p>
           ) : loadingPlans ? (
-            <p className="text-sm text-(--tc-text-muted,#6b7280)">{copy.loadingPlans}</p>
+            <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{copy.loadingPlans}</p>
           ) : filteredPlans.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-(--tc-border,#d8dee9) bg-(--tc-surface,#f9fafb) p-10 text-center">
-              <FiClipboard size={30} className="mx-auto text-(--tc-text-muted,#6b7280)" />
-              <p className="mt-3 text-sm text-(--tc-text-secondary,#4b5563)">
+            <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d8dee9)] bg-[var(--tc-surface,#f9fafb)] p-10 text-center">
+              <FiClipboard size={30} className="mx-auto text-[var(--tc-text-muted,#6b7280)]" />
+              <p className="mt-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                 {copy.emptyPlans}
               </p>
             </div>
@@ -1247,7 +1247,7 @@ export default function TestPlansPage() {
                 <article
                   data-testid="test-plan-card"
                   key={`${plan.source}:${plan.id}`}
-                  className="rounded-3xl border border-(--tc-border,#d7deea) bg-[linear-gradient(180deg,var(--tc-surface-card-1,#f7f9fd)_0%,var(--tc-surface-card-2,#ffffff)_100%)] p-5 shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition hover:border-[rgba(239,0,1,0.28)] hover:shadow-[0_18px_44px_rgba(15,23,42,0.08)] dark:shadow-none"
+                  className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[linear-gradient(180deg,var(--tc-surface-card-1,#f7f9fd)_0%,var(--tc-surface-card-2,#ffffff)_100%)] p-5 shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition hover:border-[rgba(239,0,1,0.28)] hover:shadow-[0_18px_44px_rgba(15,23,42,0.08)] dark:shadow-none"
                 >
                   <button
                     type="button"
@@ -1258,7 +1258,7 @@ export default function TestPlansPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span data-testid="test-plan-key" className="rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#55657f]">
+                          <span data-testid="test-plan-key" className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#55657f]">
                             {plan.id}
                           </span>
                           <span
@@ -1353,7 +1353,7 @@ export default function TestPlansPage() {
             }
           }}
         >
-          <div data-testid="test-plan-create-modal" className="max-h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-y-auto rounded-4xl border border-(--tc-border) bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)]">
+          <div data-testid="test-plan-create-modal" className="max-h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-y-auto rounded-4xl border border-[var(--tc-border)] bg-white shadow-[0_30px_120px_rgba(15,23,42,0.42)]">
             <div className="bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-5 text-white">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -1393,20 +1393,20 @@ export default function TestPlansPage() {
             <div className="space-y-6 px-6 py-6">
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px_220px]">
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                     {copy.titleLabel}
                   </span>
                   <input
                     data-testid="test-plan-title-input"
                     value={draft.title}
                     onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                     placeholder={copy.titlePlaceholder}
                   />
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                     {copy.appLabel}
                   </span>
                   <select
@@ -1429,7 +1429,7 @@ export default function TestPlansPage() {
                       }));
                     }}
                     disabled={Boolean(draft.id)}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <option value="">{copy.selectApp}</option>
                     {applications.map((application) => (
@@ -1442,7 +1442,7 @@ export default function TestPlansPage() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                  <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                     {copy.sourceLabel}
                   </span>
                   <select
@@ -1475,7 +1475,7 @@ export default function TestPlansPage() {
                       }));
                     }}
                     disabled={Boolean(draft.id)}
-                    className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <option value="manual">{copy.sourceManual}</option>
                     <option value="local">{copy.sourceLocal}</option>
@@ -1492,7 +1492,7 @@ export default function TestPlansPage() {
               ) : null}
 
               <label className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                   {copy.descLabel}
                 </span>
                 <textarea
@@ -1500,21 +1500,21 @@ export default function TestPlansPage() {
                   value={draft.description}
                   onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
                   rows={4}
-                  className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                  className="w-full rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                   placeholder={copy.descPlaceholder}
                 />
               </label>
 
-              <section className="rounded-3xl border border-(--tc-border,#dfe5f1) bg-[#f5f7fb] p-5">
+              <section className="rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[#f5f7fb] p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
                       {copy.casesSection}
                     </p>
-                    <h3 className="mt-2 text-2xl font-black text-(--tc-text,#0f172a)">
+                    <h3 className="mt-2 text-2xl font-black text-[var(--tc-text,#0f172a)]">
                       {copy.casesLinked(draft.cases.length)}
                     </h3>
-                    <p className="mt-2 text-sm text-(--tc-text-muted,#4b5563)">
+                    <p className="mt-2 text-sm text-[var(--tc-text-muted,#4b5563)]">
                       {draft.source === "qase"
                         ? copy.casesQaseDesc
                         : copy.casesManualDesc}
@@ -1525,7 +1525,7 @@ export default function TestPlansPage() {
                     <button
                       type="button"
                       onClick={handleAddManualCase}
-                      className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-3 text-sm font-semibold text-white shadow-sm"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-[var(--tc-accent,#ef0001)] px-4 py-3 text-sm font-semibold text-white shadow-sm"
                     >
                       <FiPlus className="h-4 w-4" />
                       {copy.addManualCase}
@@ -1534,10 +1534,10 @@ export default function TestPlansPage() {
                 </div>
 
                 {draft.source === "qase" ? (
-                  <div className="mt-5 rounded-3xl border border-(--tc-border,#dfe5f1) bg-white p-4">
+                  <div className="mt-5 rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-white p-4">
                     <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
                       <label className="space-y-2">
-                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-(--tc-text-muted,#6b7280)">
+                        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--tc-text-muted,#6b7280)]">
                           {copy.qaseIdsLabel}
                         </span>
                         <textarea
@@ -1545,7 +1545,7 @@ export default function TestPlansPage() {
                           value={qaseCaseIdsInput}
                           onChange={(event) => setQaseCaseIdsInput(event.target.value)}
                           rows={3}
-                          className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                           placeholder={copy.qaseIdsPlaceholder}
                         />
                       </label>
@@ -1553,13 +1553,13 @@ export default function TestPlansPage() {
                         type="button"
                         onClick={handleAddQaseCases}
                         data-testid="test-plan-add-case-button"
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)]"
                       >
                         <FiPlus className="h-4 w-4" />
                         {copy.linkCases}
                       </button>
                     </div>
-                    <p className="mt-3 text-xs text-(--tc-text-muted,#6b7280)">
+                    <p className="mt-3 text-xs text-[var(--tc-text-muted,#6b7280)]">
                       {copy.qaseIdsNote}
                     </p>
                   </div>
@@ -1567,11 +1567,11 @@ export default function TestPlansPage() {
 
                 <div data-testid="test-plan-linked-cases" className="mt-5 space-y-3">
                   {loadingPlanDetail ? (
-                    <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-4 text-sm text-(--tc-text-muted,#6b7280)">
+                    <div className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-white px-4 py-4 text-sm text-[var(--tc-text-muted,#6b7280)]">
                       {copy.loadingPlanDetail}
                     </div>
                   ) : draft.cases.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-(--tc-border,#dfe5f1) bg-white px-4 py-6 text-center text-sm text-(--tc-text-muted,#6b7280)">
+                    <div className="rounded-2xl border border-dashed border-[var(--tc-border,#dfe5f1)] bg-white px-4 py-6 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
                       {draft.source === "qase"
                         ? copy.emptyQaseCases
                         : copy.emptyManualCases}
@@ -1587,7 +1587,7 @@ export default function TestPlansPage() {
                         <div
                           data-testid="test-plan-case-option"
                           key={`${draft.source}:${testCase.id}:${index}`}
-                          className="overflow-hidden rounded-3xl border border-(--tc-border,#dfe5f1) bg-white shadow-sm"
+                          className="overflow-hidden rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-white shadow-sm"
                         >
                           <div className="flex items-stretch gap-3 px-4 py-4">
                             <div className="min-w-0 flex-1">
@@ -1601,7 +1601,7 @@ export default function TestPlansPage() {
                                 >
                                   {draft.source === "qase" ? copy.sourceQase : copy.sourceManual}
                                 </span>
-                                <span className="rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                <span className="rounded-full border border-[var(--tc-border,#dfe5f1)] px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                   ID {testCase.id}
                                 </span>
                                 {testCase.link ? (
@@ -1609,7 +1609,7 @@ export default function TestPlansPage() {
                                     href={testCase.link}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center gap-1 rounded-full border border-(--tc-border,#dfe5f1) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-(--tc-text,#0f172a)"
+                                    className="inline-flex items-center gap-1 rounded-full border border-[var(--tc-border,#dfe5f1)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text,#0f172a)]"
                                   >
                                     {copy.openLink}
                                     <FiExternalLink className="h-3 w-3" />
@@ -1625,17 +1625,17 @@ export default function TestPlansPage() {
                                 className="mt-3 flex w-full items-start justify-between gap-4 text-left"
                               >
                                 <div className="min-w-0">
-                                  <h4 className="truncate text-base font-bold text-(--tc-text,#0f172a)">
+                                  <h4 className="truncate text-base font-bold text-[var(--tc-text,#0f172a)]">
                                     {formatCaseTitle(testCase, draft.source, index, copy)}
                                   </h4>
                                   {meta ? (
-                                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">
+                                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted,#6b7280)]">
                                       {meta}
                                     </p>
                                   ) : null}
                                 </div>
 
-                                <span className="mt-1 text-(--tc-text-muted,#6b7280)">
+                                <span className="mt-1 text-[var(--tc-text-muted,#6b7280)]">
                                   {isExpanded ? (
                                     <FiChevronUp className="h-5 w-5" />
                                   ) : (
@@ -1655,54 +1655,54 @@ export default function TestPlansPage() {
                           </div>
 
                           {detailError ? (
-                            <div className="border-t border-(--tc-border,#e5e7eb) bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-white/10 dark:bg-amber-400/10 dark:text-amber-100">
+                            <div className="border-t border-[var(--tc-border,#e5e7eb)] bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-white/10 dark:bg-amber-400/10 dark:text-amber-100">
                               {detailError}
                             </div>
                           ) : null}
 
                           {isExpanded ? (
-                            <div data-testid="test-plan-detail" className="border-t border-(--tc-border,#e5e7eb) px-4 py-4 dark:border-white/10">
+                            <div data-testid="test-plan-detail" className="border-t border-[var(--tc-border,#e5e7eb)] px-4 py-4 dark:border-white/10">
                               {draft.source === "qase" ? (
                                 detailLoading ? (
-                                  <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) px-4 py-4 text-sm text-(--tc-text-muted,#6b7280)">
+                                  <div className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-4 text-sm text-[var(--tc-text-muted,#6b7280)]">
                                     {copy.loadingCaseDetail}
                                   </div>
                                 ) : (
                                   <div className="space-y-4">
                                     <div className="grid gap-4 xl:grid-cols-2">
-                                      <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
-                                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+                                      <div className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
                                           {copy.descriptionLabel}
                                         </p>
-                                        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--tc-text-muted,#4b5563)]">
                                           {trimText(testCase.description) ?? copy.noQaseDescription}
                                         </p>
                                       </div>
                                       <div className="grid gap-4">
-                                        <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
-                                          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+                                        <div className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
+                                          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
                                             {copy.preconditionsLabel}
                                           </p>
-                                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--tc-text-muted,#4b5563)]">
                                             {trimText(testCase.preconditions) ?? copy.noPreconditions}
                                           </p>
                                         </div>
-                                        <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
-                                          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+                                        <div className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
+                                          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
                                             {copy.postconditionsLabel}
                                           </p>
-                                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--tc-text-muted,#4b5563)]">
                                             {trimText(testCase.postconditions) ?? copy.noPostconditions}
                                           </p>
-                                          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                             {copy.severityLabel} {trimText(testCase.severity) ?? copy.severityNotSet}
                                           </p>
                                         </div>
                                       </div>
                                     </div>
 
-                                    <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
-                                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+                                    <div className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
+                                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
                                         {copy.stepsLabel}
                                       </p>
                                       {Array.isArray(testCase.steps) && testCase.steps.length ? (
@@ -1710,26 +1710,26 @@ export default function TestPlansPage() {
                                           {testCase.steps.map((step, stepIndex) => (
                                             <div
                                               key={`${testCase.id}:${step.id}:${stepIndex}`}
-                                              className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white p-4"
+                                              className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-white p-4"
                                             >
-                                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                                 {copy.stepLabel(stepIndex + 1)}
                                               </p>
-                                              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-(--tc-text,#0f172a)">
+                                              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--tc-text,#0f172a)]">
                                                 {trimText(step.action) ?? copy.noAction}
                                               </p>
-                                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                              <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                                 {copy.expectedResult}
                                               </p>
-                                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--tc-text-muted,#4b5563)]">
                                                 {trimText(step.expectedResult) ?? copy.notSpecified}
                                               </p>
                                               {trimText(step.data) ? (
                                                 <>
-                                                  <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                                  <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                                     {copy.dataLabel}
                                                   </p>
-                                                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-(--tc-text-muted,#4b5563)">
+                                                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--tc-text-muted,#4b5563)]">
                                                     {trimText(step.data)}
                                                   </p>
                                                 </>
@@ -1738,7 +1738,7 @@ export default function TestPlansPage() {
                                           ))}
                                         </div>
                                       ) : (
-                                        <p className="mt-3 text-sm text-(--tc-text-muted,#4b5563)">
+                                        <p className="mt-3 text-sm text-[var(--tc-text-muted,#4b5563)]">
                                           {copy.noSteps}
                                         </p>
                                       )}
@@ -1749,7 +1749,7 @@ export default function TestPlansPage() {
                                 <div className="space-y-4">
                                   <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
                                     <label className="space-y-2">
-                                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                         {copy.caseIdLabel}
                                       </span>
                                       <input
@@ -1761,13 +1761,13 @@ export default function TestPlansPage() {
                                             id: nextId,
                                           }));
                                         }}
-                                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-mono text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                        className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-mono text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                         placeholder="TC-000"
                                       />
                                     </label>
 
                                     <label className="space-y-2">
-                                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                         {copy.caseTitleLabel}
                                       </span>
                                       <input
@@ -1778,7 +1778,7 @@ export default function TestPlansPage() {
                                             title: event.target.value,
                                           }))
                                         }
-                                        className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                        className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                         placeholder={copy.caseTitlePlaceholder}
                                       />
                                     </label>
@@ -1786,7 +1786,7 @@ export default function TestPlansPage() {
 
                                   <div className="grid gap-4 xl:grid-cols-2">
                                     <label className="space-y-2">
-                                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                         {copy.caseDescLabel}
                                       </span>
                                       <textarea
@@ -1798,14 +1798,14 @@ export default function TestPlansPage() {
                                           }))
                                         }
                                         rows={4}
-                                        className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                        className="w-full rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                         placeholder={copy.caseDescPlaceholder}
                                       />
                                     </label>
 
                                     <div className="grid gap-4">
                                       <label className="space-y-2">
-                                        <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                        <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                           {copy.casePrecondLabel}
                                         </span>
                                         <textarea
@@ -1817,14 +1817,14 @@ export default function TestPlansPage() {
                                             }))
                                           }
                                           rows={3}
-                                          className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                          className="w-full rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                           placeholder={copy.casePrecondPlaceholder}
                                         />
                                       </label>
 
                                       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
                                         <label className="space-y-2">
-                                          <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                          <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                             {copy.casePostcondLabel}
                                           </span>
                                           <textarea
@@ -1836,13 +1836,13 @@ export default function TestPlansPage() {
                                               }))
                                             }
                                             rows={3}
-                                            className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                            className="w-full rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                             placeholder={copy.casePostcondPlaceholder}
                                           />
                                         </label>
 
                                         <label className="space-y-2">
-                                          <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                          <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                             {copy.caseSeverityLabel}
                                           </span>
                                           <select
@@ -1853,7 +1853,7 @@ export default function TestPlansPage() {
                                                 severity: event.target.value,
                                               }))
                                             }
-                                            className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                            className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                           >
                                             {copy.severityOptions.map((option) => (
                                               <option key={option.value || "none"} value={option.value}>
@@ -1866,20 +1866,20 @@ export default function TestPlansPage() {
                                     </div>
                                   </div>
 
-                                  <div className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface-alt,#f8fafc) p-4">
+                                  <div className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                       <div>
-                                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
                                           {copy.stepsLabel}
                                         </p>
-                                        <p className="mt-2 text-sm text-(--tc-text-muted,#4b5563)">
+                                        <p className="mt-2 text-sm text-[var(--tc-text-muted,#4b5563)]">
                                           {copy.stepsDesc}
                                         </p>
                                       </div>
                                       <button
                                         type="button"
                                         onClick={() => handleAddManualStep(testCase.id)}
-                                        className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#dfe5f1) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
+                                        className="inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-white px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)]"
                                       >
                                         <FiPlus className="h-4 w-4" />
                                         {copy.addStep}
@@ -1891,10 +1891,10 @@ export default function TestPlansPage() {
                                         {testCase.steps.map((step, stepIndex) => (
                                           <div
                                             key={`${testCase.id}:${step.id}:${stepIndex}`}
-                                            className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-white p-4 dark:border-white/10 dark:bg-[#101827]"
+                                            className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-white p-4 dark:border-white/10 dark:bg-[#101827]"
                                           >
                                             <div className="flex flex-wrap items-center justify-between gap-3">
-                                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                                 {copy.stepLabel(stepIndex + 1)}
                                               </p>
                                               <button
@@ -1908,7 +1908,7 @@ export default function TestPlansPage() {
 
                                             <div className="mt-4 grid gap-4 xl:grid-cols-2">
                                               <label className="space-y-2">
-                                                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                                   {copy.actionLabel}
                                                 </span>
                                                 <textarea
@@ -1922,13 +1922,13 @@ export default function TestPlansPage() {
                                                     )
                                                   }
                                                   rows={3}
-                                                  className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                                  className="w-full rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                                   placeholder={copy.actionPlaceholder}
                                                 />
                                               </label>
 
                                               <label className="space-y-2">
-                                                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                                   {copy.expectedResultLabel}
                                                 </span>
                                                 <textarea
@@ -1942,14 +1942,14 @@ export default function TestPlansPage() {
                                                     )
                                                   }
                                                   rows={3}
-                                                  className="w-full rounded-3xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                                  className="w-full rounded-3xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                                   placeholder={copy.expectedResultPlaceholder}
                                                 />
                                               </label>
                                             </div>
 
                                             <label className="mt-4 block space-y-2">
-                                              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">
+                                              <span className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                                                 {copy.stepDataLabel}
                                               </span>
                                               <input
@@ -1962,7 +1962,7 @@ export default function TestPlansPage() {
                                                     event.target.value,
                                                   )
                                                 }
-                                                className="w-full rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm text-(--tc-text,#0f172a) outline-none focus:border-(--tc-accent,#ef0001)"
+                                                className="w-full rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text,#0f172a)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                                                 placeholder={copy.stepDataPlaceholder}
                                               />
                                             </label>
@@ -1970,7 +1970,7 @@ export default function TestPlansPage() {
                                         ))}
                                       </div>
                                     ) : (
-                                      <div className="mt-4 rounded-2xl border border-dashed border-(--tc-border,#dfe5f1) bg-white px-4 py-5 text-sm text-(--tc-text-muted,#4b5563)">
+                                      <div className="mt-4 rounded-2xl border border-dashed border-[var(--tc-border,#dfe5f1)] bg-white px-4 py-5 text-sm text-[var(--tc-text-muted,#4b5563)]">
                                         {copy.noStepsManual}
                                       </div>
                                     )}
@@ -1986,10 +1986,10 @@ export default function TestPlansPage() {
                 </div>
               </section>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#e5e7eb) pt-4">
-                <div className="text-xs text-(--tc-text-muted,#6b7280)">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border,#e5e7eb)] pt-4">
+                <div className="text-xs text-[var(--tc-text-muted,#6b7280)]">
                   {copy.appInFocus}{" "}
-                  <span className="font-semibold text-(--tc-text,#0f172a)">
+                  <span className="font-semibold text-[var(--tc-text,#0f172a)]">
                     {draftApplication?.name ?? copy.noApp}
                   </span>
                   {draftApplication?.qaseProjectCode ? ` | Qase ${draftApplication.qaseProjectCode}` : ""}
@@ -1998,7 +1998,7 @@ export default function TestPlansPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="rounded-2xl border border-(--tc-border,#dfe5f1) bg-(--tc-surface,#f8fafc) px-4 py-3 text-sm font-semibold text-(--tc-text,#0f172a)"
+                    className="rounded-2xl border border-[var(--tc-border,#dfe5f1)] bg-[var(--tc-surface,#f8fafc)] px-4 py-3 text-sm font-semibold text-[var(--tc-text,#0f172a)]"
                   >
                     {copy.cancel}
                   </button>
@@ -2007,7 +2007,7 @@ export default function TestPlansPage() {
                     onClick={() => void handleSave()}
                     disabled={saving || loadingPlanDetail}
                     data-testid="test-plan-save-button"
-                    className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+                    className="rounded-2xl bg-[var(--tc-accent,#ef0001)] px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
                   >
                     {saving ? copy.saving : draft.id ? copy.savePlan : copy.createPlan}
                   </button>
@@ -2020,3 +2020,5 @@ export default function TestPlansPage() {
     </div>
   );
 }
+
+

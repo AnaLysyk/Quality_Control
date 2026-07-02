@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { listClients } from "@/data/clientsRepository";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
@@ -26,7 +26,7 @@ async function fetchSummary(slug: string) {
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const msg = status === 401 ? "Não autenticado" : "Sem permissão";
+    const msg = status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o";
     return NextResponse.json({ error: msg }, { status });
   }
 
@@ -55,3 +55,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ companies: results }, { status: 200 });
 }
+

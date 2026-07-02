@@ -1,4 +1,4 @@
-export function formatCompanyDisplayName(slug: string): string {
+﻿export function formatCompanyDisplayName(slug: string): string {
   const raw = (slug ?? "").trim();
   if (!raw) return "";
 
@@ -21,3 +21,4 @@ export function formatCompanyDisplayName(slug: string): string {
 
   return titled.join(" ");
 }
+

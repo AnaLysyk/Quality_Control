@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Shared data-access helpers and presenters used by multiple tools.
- * Server-only — uses stores and RBAC.
+ * Server-only â€” uses stores and RBAC.
  */
 import "server-only";
 
@@ -14,19 +14,19 @@ import { normalizeSearch, formatDateTime } from "./helpers";
 import { extractTicketReference } from "./pure/parsing";
 import type { AssistantAction, AssistantScreenContext } from "./types";
 
-/* ──────────────────── Constants ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export const MAX_RESULTS = 6;
 export { extractTicketReference };
 
-/* ──────────────────── User helpers ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ User helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function displayRole(user: AuthUser) {
-  return user.permissionRole ?? user.role ?? user.companyRole ?? "usuário";
+  return user.permissionRole ?? user.role ?? user.companyRole ?? "usuÃ¡rio";
 }
 
 export function displayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
-  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || "usuário";
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || "usuÃ¡rio";
 }
 
 export function isSupportOperator(user: AuthUser) {
@@ -64,18 +64,18 @@ export function isProtectedPlatformProfile(user: { globalRole?: string | null; r
   return r === "support" || r === "it_dev" || r === "dev" || r === "developer" || r === "technical_support";
 }
 
-/* ──────────────────── Permission helpers ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Permission helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function summarizePermissionMatrix(permissions: PermissionMatrix | null | undefined) {
   const entries = Object.entries(permissions ?? {}).filter(([, actions]) => Array.isArray(actions) && actions.length > 0);
-  if (!entries.length) return "sem módulos liberados";
+  if (!entries.length) return "sem mÃ³dulos liberados";
   return entries
     .slice(0, 6)
     .map(([moduleId, actions]) => `${moduleId}: ${actions.join(", ")}`)
     .join(" | ");
 }
 
-/* ──────────────────── Ticket helpers ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Ticket helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function scoreTicketMatch(ticket: TicketRecord, text: string) {
   const query = normalizeSearch(text);
@@ -97,9 +97,9 @@ export function scoreTicketMatch(ticket: TicketRecord, text: string) {
 export function formatTicketCard(ticket: Awaited<ReturnType<typeof attachAssigneeToTicket>>) {
   if (!ticket) return "";
   return [
-    `${ticket.code} — ${ticket.title}`,
+    `${ticket.code} â€” ${ticket.title}`,
     `status: ${ticket.status} | prioridade: ${ticket.priority} | tipo: ${ticket.type}`,
-    `criador: ${ticket.createdByName ?? "não identificado"} | responsável: ${ticket.assignedToName ?? "não definido"}`,
+    `criador: ${ticket.createdByName ?? "nÃ£o identificado"} | responsÃ¡vel: ${ticket.assignedToName ?? "nÃ£o definido"}`,
     `atualizado em: ${formatDateTime(ticket.updatedAt)}`,
   ].join("\n");
 }
@@ -129,7 +129,7 @@ export async function findVisibleTicket(user: AuthUser, input: string) {
     .find((e) => e.score > 0)?.ticket ?? null;
 }
 
-/* ──────────────────── Visible users ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Visible users â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export type VisibleUsersContext = {
   users: Array<{ id: string; name: string; email: string; login: string; role: string }>;
@@ -197,7 +197,7 @@ export async function getVisibleUsers(user: AuthUser): Promise<VisibleUsersConte
   };
 }
 
-/* ──────────────────── Visible companies ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Visible companies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export async function getVisibleCompanies(user: AuthUser) {
   if (
@@ -215,18 +215,18 @@ export async function getVisibleCompanies(user: AuthUser) {
   return companies.filter((c) => allowedIds.has(c.id) || allowedSlugs.has(normalizeSearch(c.slug)));
 }
 
-/* ──────────────────── Actions builder ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Actions builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function buildPromptActions(context: AssistantScreenContext): AssistantAction[] {
   return context.suggestedPrompts.slice(0, 4).map((prompt) => ({ kind: "prompt", label: prompt, prompt }));
 }
 
-/* ──────────────────── Filter helpers ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Filter helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function getStatusFilters(message: string) {
   const n = normalizeSearch(message);
-  if (n.includes("concluido") || n.includes("concluído")) return new Set(["done"]);
-  if (n.includes("revisao") || n.includes("revisão")) return new Set(["review"]);
+  if (n.includes("concluido") || n.includes("concluÃ­do")) return new Set(["done"]);
+  if (n.includes("revisao") || n.includes("revisÃ£o")) return new Set(["review"]);
   if (n.includes("andamento")) return new Set(["doing"]);
   if (n.includes("backlog")) return new Set(["backlog"]);
   return null;
@@ -235,7 +235,8 @@ export function getStatusFilters(message: string) {
 export function getPriorityFilters(message: string) {
   const n = normalizeSearch(message);
   if (n.includes("urgente") || n.includes("alta")) return new Set(["high"]);
-  if (n.includes("media") || n.includes("média")) return new Set(["medium"]);
+  if (n.includes("media") || n.includes("mÃ©dia")) return new Set(["medium"]);
   if (n.includes("baixa")) return new Set(["low"]);
   return null;
 }
+

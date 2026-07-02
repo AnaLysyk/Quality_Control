@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/lib/jwtAuth";
+﻿import type { AuthUser } from "@/lib/jwtAuth";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { listLocalLinksForUser } from "@/lib/auth/localStore";
 
@@ -26,3 +26,4 @@ export async function assertCompanyAccess(user: AuthUser | null, companyId?: str
 export function requireCompanyIdPresent(companyId?: string | null) {
   if (!companyId) throw new Error("MISSING_COMPANY_ID");
 }
+

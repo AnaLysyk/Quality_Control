@@ -1,4 +1,4 @@
-export type OperationModuleKey =
+﻿export type OperationModuleKey =
   | "dashboard"
   | "runs"
   | "applications"
@@ -157,3 +157,4 @@ export function classifyRunStatus(value: unknown): RunStatusKey {
   if (["draft", "saved", "pending", "pendente"].includes(normalized)) return "pending";
   return "unknown";
 }
+

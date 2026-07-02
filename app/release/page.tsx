@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +30,7 @@ export default function ReleasesPage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-12">
         <CompanySelector
           title="Escolha uma empresa"
-          description="As runs disponíveis são filtradas pela empresa selecionada."
+          description="As runs disponÃ­veis sÃ£o filtradas pela empresa selecionada."
           buildHref={(company) =>
             buildCompanyPathForAccess(company.clientSlug, "releases", {
               ...routeInput,
@@ -45,3 +45,4 @@ export default function ReleasesPage() {
     </div>
   );
 }
+

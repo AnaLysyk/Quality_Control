@@ -1,4 +1,4 @@
-export type DocumentationArea =
+﻿export type DocumentationArea =
   | "Runs"
   | "Empresas"
   | "Automacao"
@@ -91,3 +91,4 @@ export const documentationEntries: DocumentationEntry[] = [
       "Integracoes devem ter erro tratado e fallback visivel. Dados externos nao devem bloquear a renderizacao basica do shell da empresa.",
   },
 ];
+

@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const PaginationSchema = z
   .object({
@@ -18,3 +18,4 @@ export const PaginationQuerySchema = z
   .strip();
 
 export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
+

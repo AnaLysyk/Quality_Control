@@ -1,4 +1,4 @@
-import type { SystemPermission } from "@/lib/navigation/navigation.types";
+﻿import type { SystemPermission } from "@/lib/navigation/navigation.types";
 
 export type BrainIntegrationProvider = "qase" | "jira";
 
@@ -28,3 +28,4 @@ export type BrainExternalNode = {
   actions: string[];
   metadata: Record<string, unknown>;
 };
+

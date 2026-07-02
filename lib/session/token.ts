@@ -1,4 +1,4 @@
-const TOKEN_COOKIE_NAMES = ["access_token", "auth_token"];
+﻿const TOKEN_COOKIE_NAMES = ["access_token", "auth_token"];
 
 function readCookieValue(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -17,3 +17,4 @@ export function getClientAuthToken(): string | null {
   }
   return null;
 }
+

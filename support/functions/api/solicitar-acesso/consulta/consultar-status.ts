@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext } from "@playwright/test";
+﻿import { expect, type APIRequestContext } from "@playwright/test";
 
 import { validarContratoApi } from "../../contratos/validar-contrato-api";
 import {
@@ -85,4 +85,5 @@ export async function solicitarAjusteViaApiV2(request: APIRequestContext, id: st
 
   return body.item;
 }
+
 

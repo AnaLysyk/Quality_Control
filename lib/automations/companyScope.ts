@@ -1,4 +1,4 @@
-export type AutomationCompanyScope = "all" | "griaule" | "testing-company";
+﻿export type AutomationCompanyScope = "all" | "griaule" | "testing-company";
 
 const COMPANY_SCOPE_ALIASES: Record<Exclude<AutomationCompanyScope, "all">, string[]> = {
   griaule: ["griaule"],
@@ -32,3 +32,4 @@ export function isTestingCompanyScope(activeCompanySlug: string | null | undefin
 export function isGriauleScope(activeCompanySlug: string | null | undefined) {
   return normalizeAutomationCompanyScope(activeCompanySlug) === "griaule";
 }
+

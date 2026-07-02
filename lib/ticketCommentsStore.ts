@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
@@ -183,3 +183,4 @@ export async function findTicketCommentById(commentId: string) {
   const item = store.items.find((comment) => comment.id === commentId);
   return item ? { ...item } : null;
 }
+

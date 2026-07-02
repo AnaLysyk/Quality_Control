@@ -1,4 +1,4 @@
-import useSWR from "swr";
+﻿import useSWR from "swr";
 import { profileSwrOptions, swrProfileFetcher } from "./swrFetch";
 
 export function useSWRCompanyUsers(shouldFetch: boolean, companyScopeKey: string | null) {
@@ -11,3 +11,4 @@ export function useSWRCompanyUsers(shouldFetch: boolean, companyScopeKey: string
     refetch: mutate,
   };
 }
+

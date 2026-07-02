@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -19,3 +19,4 @@ export function useAuthUser() {
     normalizedUser,
   };
 }
+

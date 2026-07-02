@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { AppSettingsProvider, useAppSettings, type Theme as ThemeMode } from "@/context/AppSettingsContext";
 
@@ -16,3 +16,4 @@ export function useTheme() {
     setMode: setTheme,
   };
 }
+

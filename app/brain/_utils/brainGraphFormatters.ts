@@ -1,4 +1,4 @@
-import type { BrainNodeStatus, BrainNodeType } from "../_types/brain.types";
+﻿import type { BrainNodeStatus, BrainNodeType } from "../_types/brain.types";
 
 export function normalizeBrainText(value: string) {
   return value
@@ -15,47 +15,47 @@ export function statusLabel(status: string) {
   if (status === "rejected") return "Rejeitada";
   if (status === "in_progress") return "Aguardando ajuste";
   if (status === "open") return "Aberta";
-  return status || "Não informado";
+  return status || "NÃ£o informado";
 }
 
 export function nodeTypeLabel(type: BrainNodeType) {
   const labels: Record<BrainNodeType, string> = {
-    module: "Módulo",
+    module: "MÃ³dulo",
     company: "Empresa",
     project: "Projeto",
     screen: "Tela",
     entity: "Entidade",
     person: "Pessoa",
-    access_request: "Solicitação",
+    access_request: "SolicitaÃ§Ã£o",
     requester: "Solicitante",
     profile: "Perfil",
     status: "Status",
-    action: "Ação",
-    integration: "Integração",
+    action: "AÃ§Ã£o",
+    integration: "IntegraÃ§Ã£o",
     event: "Evento",
-    permission: "Permissão",
+    permission: "PermissÃ£o",
     log: "Log",
     email: "E-mail",
-    comment: "Comentário",
+    comment: "ComentÃ¡rio",
     document: "Documento",
     defect: "Defeito",
-    automation: "Automação",
+    automation: "AutomaÃ§Ã£o",
     test_case: "Caso de teste",
-    execution: "Execução",
+    execution: "ExecuÃ§Ã£o",
     pdf: "PDF",
     adjustment: "Ajuste",
-    decision: "Decisão",
+    decision: "DecisÃ£o",
   };
   return labels[type] ?? type;
 }
 
 export function nodeStatusLabel(status?: BrainNodeStatus) {
   if (status === "ok") return "ok";
-  if (status === "warning") return "atenção";
-  if (status === "missing") return "não encontrado";
+  if (status === "warning") return "atenÃ§Ã£o";
+  if (status === "missing") return "nÃ£o encontrado";
   if (status === "pending") return "pendente";
   if (status === "error") return "erro";
-  if (status === "orphan") return "órfão";
+  if (status === "orphan") return "Ã³rfÃ£o";
   return "ok";
 }
 
@@ -64,7 +64,7 @@ export function formatCounter(value: number) {
 }
 
 export function formatDateTime(value: string | null | undefined) {
-  if (!value) return "Não informado";
+  if (!value) return "NÃ£o informado";
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return value;
   return date.toLocaleString("pt-BR");
@@ -75,3 +75,4 @@ export function makeStableId(prefix: string, value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "nao-informado"}`;
 }
+

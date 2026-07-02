@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { hasCapability, type Capability } from "@/lib/permissions";
 
@@ -34,13 +34,13 @@ function canCreateCountry(user: Awaited<ReturnType<typeof authenticateRequest>>)
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const url = new URL(req.url);
   const companyId = url.searchParams.get("companyId") ?? user.companyId ?? "";
   if (!companyId) {
-    return NextResponse.json({ message: "companyId obrigatório" }, { status: 400 });
+    return NextResponse.json({ message: "companyId obrigatÃ³rio" }, { status: 400 });
   }
 
   if (!canCreateCountry(user)) {
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   if (!name) {
-    return NextResponse.json({ message: "Nome obrigatório" }, { status: 400 });
+    return NextResponse.json({ message: "Nome obrigatÃ³rio" }, { status: 400 });
   }
 
   const country: Country = {
@@ -67,3 +67,4 @@ export async function POST(req: Request) {
   store.push(country);
   return NextResponse.json({ ok: true, country }, { status: 201 });
 }
+

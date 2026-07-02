@@ -1,4 +1,4 @@
-import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
+﻿import { matchesAccessRequestLookup, normalizeAccessRequestLookup } from "@/lib/accessRequestLookup";
 import type { ParsedAccessRequest } from "@/lib/accessRequestMessage";
 
 function makeParsed(overrides?: Partial<ParsedAccessRequest>): ParsedAccessRequest {
@@ -47,7 +47,7 @@ function makeParsed(overrides?: Partial<ParsedAccessRequest>): ParsedAccessReque
 
 describe("accessRequestLookup", () => {
   it("normalizes case and accents", () => {
-    expect(normalizeAccessRequestLookup(" Áná Páula ")).toBe("ana paula");
+    expect(normalizeAccessRequestLookup(" ÃnÃ¡ PÃ¡ula ")).toBe("ana paula");
   });
 
   it("matches current triage values", () => {
@@ -79,3 +79,4 @@ describe("accessRequestLookup", () => {
     ).toBe(true);
   });
 });
+

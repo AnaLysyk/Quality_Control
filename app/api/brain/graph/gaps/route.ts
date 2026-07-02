@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getBrainGaps } from "@/lib/brain";
 import { resolveBrainAccess } from "@/lib/brain/access";
@@ -34,3 +34,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Erro ao calcular lacunas do grafo" }, { status: 500 });
   }
 }
+

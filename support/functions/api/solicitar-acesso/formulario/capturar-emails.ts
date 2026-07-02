@@ -1,1 +1,2 @@
-export * from "../emails/capturar-emails";
+﻿export * from "../emails/capturar-emails";
+

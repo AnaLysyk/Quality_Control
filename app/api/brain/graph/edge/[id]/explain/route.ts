@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 
 import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
@@ -76,3 +76,4 @@ export async function GET(
     return NextResponse.json({ error: "Erro ao explicar relacao" }, { status: 500 });
   }
 }
+

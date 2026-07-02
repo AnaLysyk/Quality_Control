@@ -812,7 +812,7 @@ export default function UsersPermissionsPage() {
     );
   }
 
-  const sortMark = sortDirection === "asc" ? "↑" : "↓";
+  const sortMark = sortDirection === "asc" ? "?" : "?";
 
   return (
     <main className="qc-users-permissions-page min-h-screen px-4 py-4 text-[#0f172a] lg:px-6">
@@ -1035,7 +1035,7 @@ export default function UsersPermissionsPage() {
                     >
                       Usuário
                       <span className={sortKey === "name" ? "text-cyan-300" : "text-slate-500"}>
-                        {sortKey === "name" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                        {sortKey === "name" ? (sortDirection === "asc" ? "?" : "?") : "?"}
                       </span>
                     </button>
                   </th>
@@ -1054,7 +1054,7 @@ export default function UsersPermissionsPage() {
                     >
                       Perfil
                       <span className={sortKey === "role" ? "text-cyan-300" : "text-slate-500"}>
-                        {sortKey === "role" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                        {sortKey === "role" ? (sortDirection === "asc" ? "?" : "?") : "?"}
                       </span>
                     </button>
                   </th>
@@ -1073,7 +1073,7 @@ export default function UsersPermissionsPage() {
                     >
                       Status
                       <span className={sortKey === "status" ? "text-cyan-300" : "text-slate-500"}>
-                        {sortKey === "status" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                        {sortKey === "status" ? (sortDirection === "asc" ? "?" : "?") : "?"}
                       </span>
                     </button>
                   </th>
@@ -1092,7 +1092,7 @@ export default function UsersPermissionsPage() {
                     >
                       Último ajuste
                       <span className={sortKey === "updatedAt" ? "text-cyan-300" : "text-slate-500"}>
-                        {sortKey === "updatedAt" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                        {sortKey === "updatedAt" ? (sortDirection === "asc" ? "?" : "?") : "?"}
                       </span>
                     </button>
                   </th>
@@ -1111,7 +1111,7 @@ export default function UsersPermissionsPage() {
                     >
                       Permissões
                       <span className={sortKey === "permissions" ? "text-cyan-300" : "text-slate-500"}>
-                        {sortKey === "permissions" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                        {sortKey === "permissions" ? (sortDirection === "asc" ? "?" : "?") : "?"}
                       </span>
                     </button>
                   </th>
@@ -1370,6 +1370,7 @@ export default function UsersPermissionsPage() {
     </main>
   );
 }
+
 
 
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -48,16 +48,16 @@ export default function EmpresasIndexPage() {
     <div className="min-h-screen bg-(--page-bg,#eef2f7) text-(--page-text,#0b1a3c) px-4 py-12">
       <div className="mx-auto max-w-5xl space-y-10">
         <header className="space-y-2 text-center">
-          <p className="text-xs uppercase tracking-[0.5em] text-(--tc-accent,#ef0001)">Empresas</p>
+          <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent,#ef0001)]">Empresas</p>
           <h1 className="text-3xl font-bold">Selecione a empresa ativa</h1>
-          <p className="text-sm text-(--tc-text-muted,#6b7280)">
-            Os módulos do painel só carregam dados para empresas vinculadas. Escolha uma empresa para continuar.
+          <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">
+            Os mÃ³dulos do painel sÃ³ carregam dados para empresas vinculadas. Escolha uma empresa para continuar.
           </p>
         </header>
 
-        <div className="rounded-[28px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-8 shadow-[0_20px_55px_rgba(15,23,42,0.12)]">
+        <div className="rounded-[28px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-8 shadow-[0_20px_55px_rgba(15,23,42,0.12)]">
           <CompanySelector
-            title="Empresas disponíveis"
+            title="Empresas disponÃ­veis"
             description="Acesse o hub completo de cada empresa, incluindo releases, runs e defeitos."
             buildHref={(company) =>
               buildCompanyPathForAccess(company.clientSlug, "home", {
@@ -80,3 +80,4 @@ export default function EmpresasIndexPage() {
     </div>
   );
 }
+

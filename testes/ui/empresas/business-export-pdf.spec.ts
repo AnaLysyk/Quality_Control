@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import {
   autenticarPerfilRuns,
 } from "../../../support/functions/ui/runs/rotas-runs";
@@ -25,3 +25,4 @@ test("exporta relatorio PDF da run", async ({ page, context }) => {
   expect(response.headers()["content-type"]).toContain("application/pdf");
   expect((await response.body()).length).toBeGreaterThan(1000);
 });
+

@@ -1,0 +1,449 @@
+﻿
+  app\brain\_components\BrainDashboard.tsx:1:"use client";
+  app\brain\_components\BrainDashboard.tsx:2:
+  app\brain\_components\BrainDashboard.tsx:3:import { useEffect, useMemo, useRef, 
+useState } from "react";
+  app\brain\_components\BrainDashboard.tsx:4:import { FiDatabase, FiRefreshCw, 
+FiShield } from "react-icons/fi";
+> app\brain\_components\BrainDashboard.tsx:5:import { fetchBrainDashboardData } from 
+"../_api/brain.client";
+> app\brain\_components\BrainDashboard.tsx:6:import { buildMockBrainGraph } from 
+"../_data/brainMockGraph";
+  app\brain\_components\BrainDashboard.tsx:7:import type { BrainContextCompany, 
+BrainContextProject, BrainContextResponse, BrainEdge, BrainGraphSummary, BrainNode, 
+BrainNodeStatus, BrainNodeType, BuiltBrainGraph } from "../_types/brain.types";
+  app\brain\_components\BrainDashboard.tsx:8:import { buildAccessRequestsBrainGraph 
+} from "../_utils/brainGraphBuilder";
+  app\brain\_components\BrainDashboard.tsx:9:import { getVisibleGraph } from 
+"../_utils/brainGraphLayout";
+  app\brain\_components\BrainDashboard.tsx:10:import { BrainContextSelector } from 
+"./BrainContextSelector";
+> app\brain\_components\BrainDashboard.tsx:11:import { BrainNeuralCanvas } from 
+"./BrainNeuralCanvas";
+  app\brain\_components\BrainDashboard.tsx:12:
+  app\brain\_components\BrainDashboard.tsx:13:function uniqueById<T extends { id: 
+string }>(items: T[]) {
+  app\brain\_components\BrainDashboard.tsx:14:  return Array.from(new 
+Map(items.map((item) => [item.id, item])).values());
+  app\brain\_components\BrainDashboard.tsx:15:}
+  app\brain\_components\BrainDashboard.tsx:59:    modules: new Set(nodes.map((node) 
+=> node.module)).size,
+  app\brain\_components\BrainDashboard.tsx:60:    accessRequestNodes: 
+nodes.filter((node) => node.type === "access_request").length,
+  app\brain\_components\BrainDashboard.tsx:61:    requestsWithoutNode: 
+base.summary.requestsWithoutNode,
+  app\brain\_components\BrainDashboard.tsx:62:    orphanNodes: nodes.filter((node) 
+=> !connected.has(node.id)).length,
+> app\brain\_components\BrainDashboard.tsx:63:    pendingNodes: nodes.filter((node) 
+=> ["pending", "missing", "warning", "error", 
+"orphan"].includes(node.status)).length,
+  app\brain\_components\BrainDashboard.tsx:64:    missingKnowledge: 
+pendingMappings.length,
+  app\brain\_components\BrainDashboard.tsx:65:    eventsToday: nodes.filter((node) 
+=> node.createdAt && new Date(node.createdAt).toDateString() === new 
+Date().toDateString()).length,
+  app\brain\_components\BrainDashboard.tsx:66:    generatedByBrain: 
+nodes.filter((node) => node.generatedBy === "brain").length,
+  app\brain\_components\BrainDashboard.tsx:67:    generatedByAutomation: 
+nodes.filter((node) => node.generatedBy === "automation").length,
+  app\brain\_components\BrainDashboard.tsx:70:    pendingMappings: 
+uniqueById([...base.summary.pendingMappings, ...pendingMappings].map((item) => ({ 
+id: item, item }))).map((entry) => entry.item),
+  app\brain\_components\BrainDashboard.tsx:71:  };
+  app\brain\_components\BrainDashboard.tsx:72:}
+  app\brain\_components\BrainDashboard.tsx:73:
+> app\brain\_components\BrainDashboard.tsx:74:function mergeWithNeuralMock(graph: 
+BuiltBrainGraph): BuiltBrainGraph {
+> app\brain\_components\BrainDashboard.tsx:75:  const mock = buildMockBrainGraph();
+  app\brain\_components\BrainDashboard.tsx:76:  const nodes = 
+uniqueById([...mock.nodes, ...graph.nodes]);
+  app\brain\_components\BrainDashboard.tsx:77:  const edges = 
+uniqueById([...mock.edges, ...graph.edges]);
+  app\brain\_components\BrainDashboard.tsx:78:  return {
+  app\brain\_components\BrainDashboard.tsx:79:    ...graph,
+  app\brain\_components\BrainDashboard.tsx:83:  };
+  app\brain\_components\BrainDashboard.tsx:84:}
+  app\brain\_components\BrainDashboard.tsx:85:
+  app\brain\_components\BrainDashboard.tsx:86:function emptyGraph() {
+> app\brain\_components\BrainDashboard.tsx:87:  return buildMockBrainGraph();
+  app\brain\_components\BrainDashboard.tsx:88:}
+  app\brain\_components\BrainDashboard.tsx:89:
+  app\brain\_components\BrainDashboard.tsx:90:function 
+contextCompaniesFromNodes(nodes: BrainNode[]): BrainContextCompany[] {
+  app\brain\_components\BrainDashboard.tsx:91:  const companies = nodes
+  app\brain\_components\BrainDashboard.tsx:172:}
+  app\brain\_components\BrainDashboard.tsx:173:
+  app\brain\_components\BrainDashboard.tsx:174:function makeCoreNode(core: 
+BrainCoreDefinition, nodes: BrainNode[]): BrainNode {
+  app\brain\_components\BrainDashboard.tsx:175:  const coreNodes = 
+nodes.filter((node) => matchesCore(node, core));
+> app\brain\_components\BrainDashboard.tsx:176:  const pendingCount = 
+coreNodes.filter((node) => ["pending", "missing", "warning", "error", 
+"orphan"].includes(node.status)).length;
+  app\brain\_components\BrainDashboard.tsx:177:  const status: BrainNodeStatus = 
+!coreNodes.length ? "missing" : pendingCount ? "pending" : "ok";
+  app\brain\_components\BrainDashboard.tsx:178:  return {
+  app\brain\_components\BrainDashboard.tsx:179:    id: `core:${core.id}`,
+  app\brain\_components\BrainDashboard.tsx:180:    type: "module",
+  app\brain\_components\BrainDashboard.tsx:393:function 
+defaultProjectForBrain(context: BrainContextResponse | null) {
+  app\brain\_components\BrainDashboard.tsx:394:  return 
+brainCanSeeAllCompanies(context) ? null : context?.defaultContext.projectId ?? null;
+  app\brain\_components\BrainDashboard.tsx:395:}
+  app\brain\_components\BrainDashboard.tsx:396:export function 
+BrainNeuralDashboard() {
+> app\brain\_components\BrainDashboard.tsx:397:  const [graph, setGraph] = 
+useState<BuiltBrainGraph>(() => emptyGraph());
+  app\brain\_components\BrainDashboard.tsx:398:  const [brainContext, 
+setBrainContext] = useState<BrainContextResponse | null>(null);
+> app\brain\_components\BrainDashboard.tsx:399:  const [, setDataErrors] = 
+useState<string[]>([]);
+  app\brain\_components\BrainDashboard.tsx:400:  const [loadingData, setLoadingData] 
+= useState(true);
+  app\brain\_components\BrainDashboard.tsx:401:  const [selectedCompanyId, 
+setSelectedCompanyId] = useState<string | null>(null);
+  app\brain\_components\BrainDashboard.tsx:402:  const [selectedProjectId, 
+setSelectedProjectId] = useState<string | null>(null);
+  app\brain\_components\BrainDashboard.tsx:403:  const [activeModule, 
+setActiveModule] = useState<string | null>(null);
+  app\brain\_components\BrainDashboard.tsx:409:  const [period, setPeriod] = 
+useState<"all" | "today" | "7d" | "30d">("all");
+  app\brain\_components\BrainDashboard.tsx:410:  const [localGraphOnly, 
+setLocalGraphOnly] = useState(false);
+  app\brain\_components\BrainDashboard.tsx:411:  const [selectedNode, 
+setSelectedNode] = useState<BrainNode | null>(null);
+  app\brain\_components\BrainDashboard.tsx:412:  const [expandedNodeId, 
+setExpandedNodeId] = useState<string | null>(null);
+> app\brain\_components\BrainDashboard.tsx:413:  const [graphSource, setGraphSource] 
+= useState<"database" | "fallback" | "partial">("fallback");
+  app\brain\_components\BrainDashboard.tsx:414:  const [debugMode, setDebugMode] = 
+useState(false);
+  app\brain\_components\BrainDashboard.tsx:415:  const appliedQueryFocusRef = 
+useRef(false);
+  app\brain\_components\BrainDashboard.tsx:416:
+  app\brain\_components\BrainDashboard.tsx:417:  useEffect(() => {
+  app\brain\_components\BrainDashboard.tsx:430:  }, []);
+  app\brain\_components\BrainDashboard.tsx:431:
+  app\brain\_components\BrainDashboard.tsx:432:  useEffect(() => {
+  app\brain\_components\BrainDashboard.tsx:433:    let cancelled = false;
+> app\brain\_components\BrainDashboard.tsx:434:    fetchBrainDashboardData()
+  app\brain\_components\BrainDashboard.tsx:435:      .then((data) => {
+  app\brain\_components\BrainDashboard.tsx:436:        if (cancelled) return;
+  app\brain\_components\BrainDashboard.tsx:437:        const built = 
+buildAccessRequestsBrainGraph({
+  app\brain\_components\BrainDashboard.tsx:438:          requests: data.requests,
+  app\brain\_components\BrainDashboard.tsx:442:          domainEdges: 
+data.domainGraph.edges,
+  app\brain\_components\BrainDashboard.tsx:443:          realBrainNodes: 
+data.graph.nodes,
+  app\brain\_components\BrainDashboard.tsx:444:          realBrainEdges: 
+data.graph.edges,
+  app\brain\_components\BrainDashboard.tsx:445:        });
+> app\brain\_components\BrainDashboard.tsx:446:        const merged = 
+mergeWithNeuralMock(built);
+  app\brain\_components\BrainDashboard.tsx:447:        setBrainContext(data.context);
+  app\brain\_components\BrainDashboard.tsx:448:        
+setSelectedCompanyId(defaultCompanyForBrain(data.context));
+  app\brain\_components\BrainDashboard.tsx:449:        
+setSelectedProjectId(defaultProjectForBrain(data.context));
+  app\brain\_components\BrainDashboard.tsx:450:        
+setActiveModule(data.context?.defaultContext.module ?? null);
+> app\brain\_components\BrainDashboard.tsx:451:        setGraph(merged);
+  app\brain\_components\BrainDashboard.tsx:452:        setSelectedNode(null);
+> app\brain\_components\BrainDashboard.tsx:453:        setDataErrors(data.errors);
+> app\brain\_components\BrainDashboard.tsx:454:        
+setGraphSource(data.errors.length ? "partial" : "database");
+  app\brain\_components\BrainDashboard.tsx:455:      })
+> app\brain\_components\BrainDashboard.tsx:456:      .catch((error) => {
+  app\brain\_components\BrainDashboard.tsx:457:        if (cancelled) return;
+  app\brain\_components\BrainDashboard.tsx:458:        const fallback = emptyGraph();
+> app\brain\_components\BrainDashboard.tsx:459:        setDataErrors([error 
+instanceof Error ? error.message : "Erro ao carregar Brain. Usando grafo inicial."]);
+> app\brain\_components\BrainDashboard.tsx:460:        setGraph(fallback);
+  app\brain\_components\BrainDashboard.tsx:461:        setSelectedNode(null);
+> app\brain\_components\BrainDashboard.tsx:462:        setGraphSource("fallback");
+  app\brain\_components\BrainDashboard.tsx:463:      })
+  app\brain\_components\BrainDashboard.tsx:464:      .finally(() => {
+  app\brain\_components\BrainDashboard.tsx:465:        if (!cancelled) 
+setLoadingData(false);
+  app\brain\_components\BrainDashboard.tsx:466:      });
+  app\brain\_components\BrainDashboard.tsx:524:      }),
+  app\brain\_components\BrainDashboard.tsx:525:    [activeModule, 
+brainContext?.permissions.canViewGlobalBrain, brainContext?.permissions.canViewLogs, 
+contextCompanies, contextProjects, filteredGraph.edges, filteredGraph.nodes, 
+graph.nodes, nodeStatus, nodeType, period, searchText, selectedCompanyId, 
+selectedNode, selectedProjectId, showOrphansOnly, showPendingOnly],
+  app\brain\_components\BrainDashboard.tsx:526:  );
+  app\brain\_components\BrainDashboard.tsx:527:
+> app\brain\_components\BrainDashboard.tsx:528:  const pendingCount = 
+graph.summary.pendingNodes ?? graph.nodes.filter((node) => ["pending", "missing", 
+"warning", "error", "orphan"].includes(node.status)).length;
+  app\brain\_components\BrainDashboard.tsx:529:  const selectedNodeConnections = 
+useMemo(
+  app\brain\_components\BrainDashboard.tsx:530:    () => selectedNode ? 
+visibleGraph.edges.filter((edge) => edge.source === selectedNode.id || edge.target 
+=== selectedNode.id) : [],
+  app\brain\_components\BrainDashboard.tsx:531:    [selectedNode, 
+visibleGraph.edges],
+  app\brain\_components\BrainDashboard.tsx:532:  );
+  app\brain\_components\BrainDashboard.tsx:533:  const visibleConnected = useMemo(() 
+=> new Set(visibleGraph.edges.flatMap((edge) => [edge.source, edge.target])), 
+[visibleGraph.edges]);
+  app\brain\_components\BrainDashboard.tsx:534:  const visiblePendingNodes = useMemo(
+> app\brain\_components\BrainDashboard.tsx:535:    () => 
+visibleGraph.nodes.filter((node) => ["pending", "missing", "warning", "error", 
+"orphan"].includes(node.status)),
+  app\brain\_components\BrainDashboard.tsx:536:    [visibleGraph.nodes],
+  app\brain\_components\BrainDashboard.tsx:537:  );
+  app\brain\_components\BrainDashboard.tsx:538:  const visibleOrphanNodes = useMemo(
+  app\brain\_components\BrainDashboard.tsx:539:    () => 
+visibleGraph.nodes.filter((node) => !visibleConnected.has(node.id)),
+  app\brain\_components\BrainDashboard.tsx:813:  }
+  app\brain\_components\BrainDashboard.tsx:814:
+  app\brain\_components\BrainDashboard.tsx:815:  function handleRefresh() {
+  app\brain\_components\BrainDashboard.tsx:816:    setLoadingData(true);
+> app\brain\_components\BrainDashboard.tsx:817:    fetchBrainDashboardData()
+  app\brain\_components\BrainDashboard.tsx:818:      .then((data) => {
+  app\brain\_components\BrainDashboard.tsx:819:        const built = 
+buildAccessRequestsBrainGraph({
+  app\brain\_components\BrainDashboard.tsx:820:          requests: data.requests,
+  app\brain\_components\BrainDashboard.tsx:821:          removalHistory: 
+data.removalHistory,
+  app\brain\_components\BrainDashboard.tsx:824:          domainEdges: 
+data.domainGraph.edges,
+  app\brain\_components\BrainDashboard.tsx:825:          realBrainNodes: 
+data.graph.nodes,
+  app\brain\_components\BrainDashboard.tsx:826:          realBrainEdges: 
+data.graph.edges,
+  app\brain\_components\BrainDashboard.tsx:827:        });
+> app\brain\_components\BrainDashboard.tsx:828:        const merged = 
+mergeWithNeuralMock(built);
+  app\brain\_components\BrainDashboard.tsx:829:        setBrainContext(data.context);
+> app\brain\_components\BrainDashboard.tsx:830:        setGraph(merged);
+> app\brain\_components\BrainDashboard.tsx:831:        setDataErrors(data.errors);
+> app\brain\_components\BrainDashboard.tsx:832:        
+setGraphSource(data.errors.length ? "partial" : "database");
+  app\brain\_components\BrainDashboard.tsx:833:      })
+> app\brain\_components\BrainDashboard.tsx:834:      .catch((error) => {
+> app\brain\_components\BrainDashboard.tsx:835:        setDataErrors([error 
+instanceof Error ? error.message : "Não consegui carregar o grafo completo agora. 
+Estou mostrando os dados iniciais disponíveis."]);
+> app\brain\_components\BrainDashboard.tsx:836:        setGraphSource("fallback");
+  app\brain\_components\BrainDashboard.tsx:837:      })
+  app\brain\_components\BrainDashboard.tsx:838:      .finally(() => 
+setLoadingData(false));
+  app\brain\_components\BrainDashboard.tsx:839:  }
+  app\brain\_components\BrainDashboard.tsx:840:
+  app\brain\_components\BrainDashboard.tsx:841:  const filterHud = (
+> app\brain\_components\BrainDashboard.tsx:842:    <div className="brain-filter-hud 
+pointer-events-auto absolute left-1/2 top-6 z-30 w-[min(760px,calc(100%-48px))] 
+-translate-x-1/2">
+  app\brain\_components\BrainDashboard.tsx:843:      <BrainContextSelector
+  app\brain\_components\BrainDashboard.tsx:844:          nodes={graph.nodes}
+  app\brain\_components\BrainDashboard.tsx:845:          companies={contextCompanies}
+  app\brain\_components\BrainDashboard.tsx:846:          projects={contextProjects}
+  app\brain\_components\BrainDashboard.tsx:881:
+  app\brain\_components\BrainDashboard.tsx:882:  return (
+  app\brain\_components\BrainDashboard.tsx:883:    <main className="relative 
+h-[calc(100dvh-88px)] min-h-[620px] overflow-hidden bg-[#020713] text-white">
+  app\brain\_components\BrainDashboard.tsx:884:      <div className="absolute 
+inset-0">
+> app\brain\_components\BrainDashboard.tsx:885:        <BrainNeuralCanvas
+  app\brain\_components\BrainDashboard.tsx:886:          nodes={visibleGraph.nodes}
+  app\brain\_components\BrainDashboard.tsx:887:          edges={visibleGraph.edges}
+  app\brain\_components\BrainDashboard.tsx:888:          
+selectedNodeId={selectedNode?.id ?? null}
+  app\brain\_components\BrainDashboard.tsx:889:          
+onSelectNode={handleSelectNode}
+  app\brain\_api\brain.client.ts:43:type BrainGraphApiResponse = {
+  app\brain\_api\brain.client.ts:44:  nodes?: BrainGraphApiNode[];
+  app\brain\_api\brain.client.ts:45:  edges?: BrainGraphApiEdge[];
+  app\brain\_api\brain.client.ts:46:  root?: BrainGraphApiNode | null;
+> app\brain\_api\brain.client.ts:47:  error?: string;
+  app\brain\_api\brain.client.ts:48:};
+  app\brain\_api\brain.client.ts:49:
+  app\brain\_api\brain.client.ts:50:type BrainDomainApiResponse = {
+  app\brain\_api\brain.client.ts:51:  nodes?: BrainNode[];
+  app\brain\_api\brain.client.ts:52:  edges?: BrainEdge[];
+> app\brain\_api\brain.client.ts:53:  error?: string;
+  app\brain\_api\brain.client.ts:54:};
+  app\brain\_api\brain.client.ts:55:
+  app\brain\_api\brain.client.ts:56:type AccessRequestsApiResponse = {
+  app\brain\_api\brain.client.ts:57:  items?: RawSupportRequest[];
+> app\brain\_api\brain.client.ts:58:  error?: string;
+  app\brain\_api\brain.client.ts:59:};
+  app\brain\_api\brain.client.ts:60:
+  app\brain\_api\brain.client.ts:61:type RemovalHistoryApiResponse = {
+  app\brain\_api\brain.client.ts:62:  items?: BrainAccessRequestRemovalHistoryItem[];
+> app\brain\_api\brain.client.ts:63:  error?: string;
+  app\brain\_api\brain.client.ts:64:};
+  app\brain\_api\brain.client.ts:65:
+  app\brain\_api\brain.client.ts:66:type AuditLogsApiResponse = {
+  app\brain\_api\brain.client.ts:67:  items?: BrainAuditLogItem[];
+  app\brain\_api\brain.client.ts:68:  data?: { items?: BrainAuditLogItem[] };
+> app\brain\_api\brain.client.ts:69:  error?: string;
+  app\brain\_api\brain.client.ts:70:};
+  app\brain\_api\brain.client.ts:71:
+  app\brain\_api\brain.client.ts:72:function getItemsFromEnvelope(value: unknown): 
+RawSupportRequest[] {
+  app\brain\_api\brain.client.ts:73:  const data = 
+unwrapEnvelopeData<AccessRequestsApiResponse>(value) ?? {};
+  app\brain\_api\brain.client.ts:129:  const controller = new AbortController();
+  app\brain\_api\brain.client.ts:130:  const timer = window.setTimeout(() => 
+controller.abort(), timeoutMs);
+  app\brain\_api\brain.client.ts:131:  try {
+  app\brain\_api\brain.client.ts:132:    const response = await fetch(url, { 
+credentials: "include", cache: "no-store", signal: controller.signal });
+> app\brain\_api\brain.client.ts:133:    const json = await response.json().catch(() 
+=> ({}));
+  app\brain\_api\brain.client.ts:134:    if (!response.ok) {
+> app\brain\_api\brain.client.ts:135:      const message = typeof json?.error === 
+"string" ? json.error : typeof json?.message === "string" ? json.message : `Falha ao 
+buscar ${url}`;
+> app\brain\_api\brain.client.ts:136:      throw new Error(message);
+  app\brain\_api\brain.client.ts:137:    }
+  app\brain\_api\brain.client.ts:138:    return json as T;
+> app\brain\_api\brain.client.ts:139:  } catch (error) {
+> app\brain\_api\brain.client.ts:140:    if (error instanceof DOMException && 
+error.name === "AbortError") {
+> app\brain\_api\brain.client.ts:141:      throw new Error(`Tempo esgotado ao buscar 
+${url}. Usando dados iniciais disponiveis.`);
+  app\brain\_api\brain.client.ts:142:    }
+> app\brain\_api\brain.client.ts:143:    throw error;
+  app\brain\_api\brain.client.ts:144:  } finally {
+  app\brain\_api\brain.client.ts:145:    window.clearTimeout(timer);
+  app\brain\_api\brain.client.ts:146:  }
+  app\brain\_api\brain.client.ts:147:}
+  app\brain\_api\brain.client.ts:148:
+  app\brain\_api\brain.client.ts:149:export async function 
+fetchBrainGraphForDashboard() {
+> app\brain\_api\brain.client.ts:150:  const graph = await 
+fetchJson<BrainGraphApiResponse>("/api/brain/graph?depth=2");
+  app\brain\_api\brain.client.ts:151:  return {
+  app\brain\_api\brain.client.ts:152:    nodes: Array.isArray(graph.nodes) ? 
+graph.nodes : [],
+  app\brain\_api\brain.client.ts:153:    edges: Array.isArray(graph.edges) ? 
+graph.edges : [],
+  app\brain\_api\brain.client.ts:154:  };
+  app\brain\_api\brain.client.ts:155:}
+  app\brain\_api\brain.client.ts:156:
+  app\brain\_api\brain.client.ts:157:export async function 
+fetchBrainDomainGraphForDashboard() {
+> app\brain\_api\brain.client.ts:158:  const graph = await 
+fetchJson<BrainDomainApiResponse>("/api/brain/domain", 12000);
+  app\brain\_api\brain.client.ts:159:  return {
+  app\brain\_api\brain.client.ts:160:    nodes: Array.isArray(graph.nodes) ? 
+graph.nodes : [],
+  app\brain\_api\brain.client.ts:161:    edges: Array.isArray(graph.edges) ? 
+graph.edges : [],
+  app\brain\_api\brain.client.ts:162:  };
+  app\brain\_api\brain.client.ts:163:}
+  app\brain\_api\brain.client.ts:164:
+  app\brain\_api\brain.client.ts:165:export async function 
+fetchBrainContextForDashboard() {
+> app\brain\_api\brain.client.ts:166:  return 
+fetchJson<BrainContextResponse>("/api/brain/context");
+  app\brain\_api\brain.client.ts:167:}
+  app\brain\_api\brain.client.ts:168:
+  app\brain\_api\brain.client.ts:169:export async function 
+fetchAccessRequestsForBrainDashboard() {
+  app\brain\_api\brain.client.ts:170:  const json = await 
+fetchJson<AccessRequestsApiResponse>("/api/admin/access-requests");
+  app\brain\_api\brain.client.ts:180:  const json = await fetchJson<AuditLogsApiRespo
+nse>("/api/admin/audit-logs?entityType=access_request&limit=100");
+  app\brain\_api\brain.client.ts:181:  return getAuditLogsFromEnvelope(json);
+  app\brain\_api\brain.client.ts:182:}
+  app\brain\_api\brain.client.ts:183:
+> app\brain\_api\brain.client.ts:184:export async function fetchBrainDashboardData() 
+{
+  app\brain\_api\brain.client.ts:185:  const [contextResult, graphResult, 
+domainResult, requestsResult, removalHistoryResult, auditLogsResult] = await 
+Promise.allSettled([
+  app\brain\_api\brain.client.ts:186:    fetchBrainContextForDashboard(),
+  app\brain\_api\brain.client.ts:187:    fetchBrainGraphForDashboard(),
+  app\brain\_api\brain.client.ts:188:    fetchBrainDomainGraphForDashboard(),
+  app\brain\_api\brain.client.ts:197:    domainGraph: domainResult.status === 
+"fulfilled" ? domainResult.value : { nodes: [], edges: [] },
+  app\brain\_api\brain.client.ts:198:    requests: requestsResult.status === 
+"fulfilled" ? requestsResult.value : [],
+  app\brain\_api\brain.client.ts:199:    removalHistory: removalHistoryResult.status 
+=== "fulfilled" ? removalHistoryResult.value : [],
+  app\brain\_api\brain.client.ts:200:    auditLogs: auditLogsResult.status === 
+"fulfilled" ? auditLogsResult.value : [],
+> app\brain\_api\brain.client.ts:201:    errors: [
+> app\brain\_api\brain.client.ts:202:      contextResult.status === "rejected" ? 
+contextResult.reason instanceof Error ? contextResult.reason.message : "Erro ao 
+carregar contexto" : "",
+> app\brain\_api\brain.client.ts:203:      graphResult.status === "rejected" ? 
+graphResult.reason instanceof Error ? graphResult.reason.message : "Erro ao carregar 
+grafo" : "",
+> app\brain\_api\brain.client.ts:204:      domainResult.status === "rejected" ? 
+domainResult.reason instanceof Error ? domainResult.reason.message : "Erro ao 
+carregar mapa completo do Brain" : "",
+> app\brain\_api\brain.client.ts:205:      requestsResult.status === "rejected" ? 
+requestsResult.reason instanceof Error ? requestsResult.reason.message : "Erro ao 
+carregar solicitacoes" : "",
+> app\brain\_api\brain.client.ts:206:      removalHistoryResult.status === 
+"rejected" ? removalHistoryResult.reason instanceof Error ? 
+removalHistoryResult.reason.message : "Historico de remocao indisponivel" : "",
+> app\brain\_api\brain.client.ts:207:      auditLogsResult.status === "rejected" ? 
+auditLogsResult.reason instanceof Error ? `Audit logs pendentes: 
+${auditLogsResult.reason.message}` : "Audit logs pendentes" : "",
+  app\brain\_api\brain.client.ts:208:    ].filter(Boolean),
+  app\brain\_api\brain.client.ts:209:  };
+  app\brain\_api\brain.client.ts:210:}
+  app\brain\_components\BrainNeuralCanvas.tsx:15:import { BrainNeuralEdge } from 
+"./BrainNeuralEdge";
+  app\brain\_components\BrainNeuralCanvas.tsx:16:import { BrainNeuronNode } from 
+"./BrainNeuronNode";
+  app\brain\_components\BrainNeuralCanvas.tsx:17:import { BrainNodeOverlay } from 
+"./BrainNodeOverlay";
+  app\brain\_components\BrainNeuralCanvas.tsx:18:
+> app\brain\_components\BrainNeuralCanvas.tsx:19:type BrainNeuralCanvasProps = {
+  app\brain\_components\BrainNeuralCanvas.tsx:20:  nodes: BrainNode[];
+  app\brain\_components\BrainNeuralCanvas.tsx:21:  edges: BrainEdge[];
+  app\brain\_components\BrainNeuralCanvas.tsx:22:  selectedNodeId: string | null;
+  app\brain\_components\BrainNeuralCanvas.tsx:23:  onSelectNode: (node: BrainNode) 
+=> void;
+  app\brain\_components\BrainNeuralCanvas.tsx:172:    };
+  app\brain\_components\BrainNeuralCanvas.tsx:173:  });
+  app\brain\_components\BrainNeuralCanvas.tsx:174:}
+  app\brain\_components\BrainNeuralCanvas.tsx:175:
+> app\brain\_components\BrainNeuralCanvas.tsx:176:export function BrainNeuralCanvas({
+  app\brain\_components\BrainNeuralCanvas.tsx:177:  nodes,
+  app\brain\_components\BrainNeuralCanvas.tsx:178:  edges,
+  app\brain\_components\BrainNeuralCanvas.tsx:179:  selectedNodeId,
+  app\brain\_components\BrainNeuralCanvas.tsx:180:  onSelectNode,
+  app\brain\_components\BrainNeuralCanvas.tsx:182:  localGraphOnly,
+  app\brain\_components\BrainNeuralCanvas.tsx:183:  onToggleLocalGraph,
+  app\brain\_components\BrainNeuralCanvas.tsx:184:  loading = false,
+  app\brain\_components\BrainNeuralCanvas.tsx:185:  debugMode = false,
+> app\brain\_components\BrainNeuralCanvas.tsx:186:}: BrainNeuralCanvasProps) {
+  app\brain\_components\BrainNeuralCanvas.tsx:187:  const containerRef = 
+useRef<HTMLElement | null>(null);
+  app\brain\_components\BrainNeuralCanvas.tsx:188:  const [canvasSize, 
+setCanvasSize] = useState({ width: 1200, height: 720 });
+  app\brain\_components\BrainNeuralCanvas.tsx:189:  const [manualPositions, 
+setManualPositions] = useState<Record<string, { x: number; y: number }>>({});
+  app\brain\_components\BrainNeuralCanvas.tsx:190:  const [overlayNode, 
+setOverlayNode] = useState<BrainNode | null>(null);
+  app\globals.css:559:  gap: 0.8rem;
+  app\globals.css:560:  grid-template-columns: repeat(2, minmax(0, 1fr));
+  app\globals.css:561:}
+  app\globals.css:562:
+> app\globals.css:563:.support-create-modal-error {
+  app\globals.css:564:  margin: 0;
+  app\globals.css:565:  border-radius: 0.95rem;
+  app\globals.css:566:  border: 1px solid rgba(239, 0, 1, 0.18);
+  app\globals.css:567:  background: rgba(254, 242, 242, 0.95);
+  app\globals.css:784::root.dark .support-board-alert {
+  app\globals.css:785:  background: rgba(15, 23, 37, 0.92);
+  app\globals.css:786:}
+  app\globals.css:787:
+> app\globals.css:788::root.dark .support-board-alert-error,
+  app\globals.css:789::root.dark .support-board-no-results {
+  app\globals.css:790:  border-color: rgba(248, 113, 113, 0.3);
+  app\globals.css:791:  background: rgba(69, 10, 10, 0.3);
+  app\globals.css:792:  color: #fecaca;
+
+

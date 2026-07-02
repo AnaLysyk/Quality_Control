@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAdminUserItem } from "@/lib/adminUsers";
@@ -36,17 +36,17 @@ function pickEditableUserPatch(body: Record<string, unknown>, canEditPrivileged:
 
 export async function GET(req: Request, context: { params: Promise<{ userId: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
 
   const { userId } = await context.params;
   const target = await getLocalUserById(userId);
-  if (!target) return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
+  if (!target) return NextResponse.json({ message: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
 
   const targetItem = await getAdminUserItem(userId);
   const targetCompanyIds = Array.isArray(targetItem?.companyIds) ? targetItem.companyIds : [];
   const permissions = resolveUserProfilePermissions(authUser, target, targetCompanyIds, authUser.id === userId ? "self" : "view");
   if (!permissions.canEdit && authUser.id !== userId && !permissions.canChangeRole && !permissions.canManageCompanyLinks && !permissions.canDeactivate) {
-    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const links = await listLocalLinksForUser(userId);
@@ -63,34 +63,34 @@ export async function GET(req: Request, context: { params: Promise<{ userId: str
 
 export async function PATCH(req: Request, context: { params: Promise<{ userId: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
 
   const access = await getAccessContext(req);
   const { userId } = await context.params;
   const target = await getLocalUserById(userId);
-  if (!target) return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
+  if (!target) return NextResponse.json({ message: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
 
   const targetItem = await getAdminUserItem(userId);
   const targetCompanyIds = Array.isArray(targetItem?.companyIds) ? targetItem.companyIds : [];
   const permissions = resolveUserProfilePermissions(authUser, target, targetCompanyIds, authUser.id === userId ? "self" : "edit");
-  if (!permissions.canEdit) return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+  if (!permissions.canEdit) return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body) return NextResponse.json({ message: "Payload inválido" }, { status: 400 });
+  if (!body) return NextResponse.json({ message: "Payload invÃ¡lido" }, { status: 400 });
 
   const privileged = Boolean(access && (access.role === "leader_tc" || access.companyRole === "leader_tc" || access.isGlobalAdmin));
   const patch = pickEditableUserPatch(body, privileged);
 
   if (Object.keys(patch).length === 0) {
-    return NextResponse.json({ message: "Nenhum campo editável informado" }, { status: 400 });
+    return NextResponse.json({ message: "Nenhum campo editÃ¡vel informado" }, { status: 400 });
   }
 
   if (!privileged && "role" in patch) {
-    return NextResponse.json({ message: "Sem permissão para alterar perfil de acesso" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissÃ£o para alterar perfil de acesso" }, { status: 403 });
   }
 
   const updated = await updateLocalUser(userId, patch as never);
-  if (!updated) return NextResponse.json({ message: "Usuário não encontrado" }, { status: 404 });
+  if (!updated) return NextResponse.json({ message: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
 
   addAuditLogSafe({
     actorUserId: authUser.id,
@@ -118,3 +118,4 @@ export async function PATCH(req: Request, context: { params: Promise<{ userId: s
 
   return NextResponse.json({ item: item ?? updated, links, profileContext }, { status: 200 });
 }
+

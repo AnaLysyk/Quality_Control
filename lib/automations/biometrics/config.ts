@@ -1,4 +1,4 @@
-import { DEFAULT_WALLET_LIMIT, MAX_FINGERPRINT_BASE64_LENGTH } from "./constants";
+﻿import { DEFAULT_WALLET_LIMIT, MAX_FINGERPRINT_BASE64_LENGTH } from "./constants";
 
 export function getBiometricConfigPreview() {
   return {
@@ -9,3 +9,4 @@ export function getBiometricConfigPreview() {
     walletObservedLimit: DEFAULT_WALLET_LIMIT,
   };
 }
+

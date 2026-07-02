@@ -1,4 +1,4 @@
-import type { SystemRole } from "@/lib/auth/roles";
+﻿import type { SystemRole } from "@/lib/auth/roles";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 import { canAccess } from "@/lib/permissions/can-access";
 import {
@@ -92,3 +92,4 @@ export function buildNavigationForUser(
 export function getNavigationRoute(item: NavItemDef | NavModuleDef) {
   return item.routeId ? SYSTEM_ROUTE_BY_ID.get(item.routeId) ?? null : null;
 }
+

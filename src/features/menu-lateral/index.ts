@@ -1,4 +1,4 @@
-export { NAV_CATALOG } from "./catalogo/menuLateral.catalog";
+﻿export { NAV_CATALOG } from "./catalogo/menuLateral.catalog";
 export type {
   NavItemDef,
   NavModule,
@@ -15,3 +15,4 @@ export {
   type PerfilVisual,
   type PerfilVisualInput,
 } from "./acessos/resolverPerfilVisual";
+

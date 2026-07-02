@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
@@ -169,3 +169,4 @@ export async function toolListAvailableActions(user: AuthUser, context: Assistan
     reply: compactMultiline(replyParts.join("\n")),
   };
 }
+

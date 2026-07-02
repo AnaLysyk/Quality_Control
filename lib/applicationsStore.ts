@@ -1,4 +1,4 @@
-import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
+﻿import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 
 const USE_POSTGRES = shouldUsePostgresPersistence();
 async function getPrisma() {
@@ -229,3 +229,4 @@ export async function syncCompanyApplications(input: {
 
   return synced;
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 
 import { addMemory, connectNodes, upsertNode } from "@/lib/brain";
@@ -181,3 +181,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao ingerir evento no Brain" }, { status: 500 });
   }
 }
+

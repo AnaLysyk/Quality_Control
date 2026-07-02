@@ -1,11 +1,11 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { criarDefeitoManual } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
 const DEFECTS_URL = "/empresas/demo/defeitos";
 
 test.describe("rbac - defeitos", () => {
-  test("user nÃ£o vÃª aÃ§Ãµes protegidas", async ({ page, context }) => {
+  test("user nÃƒÂ£o vÃƒÂª aÃƒÂ§ÃƒÂµes protegidas", async ({ page, context }) => {
     await simularAutenticacao(context, { role: "user", companies: ["DEMO"], clientSlug: "DEMO" });
 
     await page.goto(DEFECTS_URL, { waitUntil: "domcontentloaded" });
@@ -13,12 +13,12 @@ test.describe("rbac - defeitos", () => {
     await expect(page.getByTestId("defect-delete")).toHaveCount(0);
   });
 
-  test("company vÃª editar/link em defeito manual, mas nÃ£o delete", async ({ page, context }) => {
+  test("company vÃƒÂª editar/link em defeito manual, mas nÃƒÂ£o delete", async ({ page, context }) => {
     await simularAutenticacao(context, { role: "company", companies: ["DEMO"], clientSlug: "DEMO" });
 
     await page.goto(DEFECTS_URL, { waitUntil: "domcontentloaded" });
 
-    // garante um defeito manual para checar botÃµes
+    // garante um defeito manual para checar botÃƒÂµes
     await page.getByTestId("defect-title").fill("Defeito manual - company");
     await page.getByTestId("defect-create").click();
 
@@ -26,12 +26,12 @@ test.describe("rbac - defeitos", () => {
     await expect(page.getByTestId("defect-delete")).toHaveCount(0);
   });
 
-  test("admin vÃª todas as aÃ§Ãµes", async ({ page, context }) => {
+  test("admin vÃƒÂª todas as aÃƒÂ§ÃƒÂµes", async ({ page, context }) => {
     await simularAutenticacao(context, { role: "admin", companies: ["DEMO"], clientSlug: "DEMO" });
 
     await page.goto(DEFECTS_URL, { waitUntil: "domcontentloaded" });
 
-    // garante um defeito manual para checar botÃµes
+    // garante um defeito manual para checar botÃƒÂµes
     await page.getByTestId("defect-title").fill("Defeito manual - admin");
     await page.getByTestId("defect-create").click();
 
@@ -39,3 +39,4 @@ test.describe("rbac - defeitos", () => {
     await expect(page.getByTestId("defect-delete")).toBeVisible();
   });
 });
+

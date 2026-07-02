@@ -1,4 +1,4 @@
-import { AUTOMATION_CASES } from "../../../data/automationCases";
+﻿import { AUTOMATION_CASES } from "../../../data/automationCases";
 
 describe("automationCases", () => {
   it("should have valid export or data", () => {
@@ -6,3 +6,4 @@ describe("automationCases", () => {
     expect(Array.isArray(AUTOMATION_CASES)).toBe(true);
   });
 });
+

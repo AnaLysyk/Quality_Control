@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+﻿import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 
 import { cn } from "@/components/ui/cn";
 
@@ -79,3 +79,4 @@ export function TcBadge({ className, tone = "neutral", ...props }: TcBadgeProps)
     />
   );
 }
+

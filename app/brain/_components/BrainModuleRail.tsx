@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { ComponentType } from "react";
 import { FiActivity, FiCpu, FiFileText, FiGitBranch, FiKey, FiMessageCircle, FiShield, FiUsers } from "react-icons/fi";
@@ -85,3 +85,4 @@ export function BrainModuleRail({ nodes, edges, activeModule, onSelectModule }: 
     </aside>
   );
 }
+

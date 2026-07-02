@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -16,7 +16,7 @@ export default function SidebarHeader({ collapsed, onToggle, logoSrc, logoHref, 
   if (collapsed) {
     return (
       <div className="flex flex-col items-center gap-1.5 border-b border-slate-200 bg-white px-1.5 py-2.5">
-        <Link href={logoHref} onClick={onClose} title="Ir para início">
+        <Link href={logoHref} onClick={onClose} title="Ir para inÃ­cio">
           <div className="relative h-8 w-8 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
             <Image src={logoSrc} alt="Logo" fill sizes="32px" className="object-contain p-1" />
           </div>
@@ -55,3 +55,4 @@ export default function SidebarHeader({ collapsed, onToggle, logoSrc, logoHref, 
     </div>
   );
 }
+

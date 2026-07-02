@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/escopo/empresa-ve-somente-suas-solicitacoes.ui.spec.ts --headed --workers=1 --reporter=list
  */
@@ -93,7 +93,7 @@ async function validarApiEscopo(page: Page, esperado: string, proibido: string) 
 async function validarUiEscopo(page: Page, esperado: string, proibido: string) {
   await page.goto("/admin/access-requests", { waitUntil: "domcontentloaded" });
 
-  await expect(page.getByRole("heading", { name: "Solicitações de acesso" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "SolicitaÃ§Ãµes de acesso" })).toBeVisible({
     timeout: 60000,
   });
   await expect(page.getByTestId("access-requests-list")).toBeVisible();
@@ -105,7 +105,7 @@ async function validarUiEscopo(page: Page, esperado: string, proibido: string) {
 
   await search.fill(proibido);
   await expect(page.getByText(proibido)).toHaveCount(0);
-  await expect(page.getByText("Nenhuma solicitação encontrada para o filtro atual.")).toBeVisible({
+  await expect(page.getByText("Nenhuma solicitaÃ§Ã£o encontrada para o filtro atual.")).toBeVisible({
     timeout: 30000,
   });
 }
@@ -164,10 +164,10 @@ async function validarBloqueioDiretoOutraEmpresa(
   );
 }
 
-test.describe("Solicitações de acesso - escopo por empresa", () => {
+test.describe("SolicitaÃ§Ãµes de acesso - escopo por empresa", () => {
   test.setTimeout(240000);
 
-  test("cada empresa deve ver somente as solicitações realizadas para ela", async ({ browser }) => {
+  test("cada empresa deve ver somente as solicitaÃ§Ãµes realizadas para ela", async ({ browser }) => {
     const adminContext = await browser.newContext();
     const pageA = await browser.newPage();
     const pageB = await browser.newPage();
@@ -232,3 +232,4 @@ test.describe("Solicitações de acesso - escopo por empresa", () => {
     }
   });
 });
+

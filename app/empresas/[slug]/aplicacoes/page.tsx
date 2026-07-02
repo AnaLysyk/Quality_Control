@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -22,62 +22,62 @@ import { useI18n } from "@/hooks/useI18n";
 
 const COPY = {
   "pt-BR": {
-    pageTitle: "Aplicações",
-    totalVisible: "Total visível",
-    totalVisibleDesc: "Aplicações disponíveis no painel.",
+    pageTitle: "AplicaÃ§Ãµes",
+    totalVisible: "Total visÃ­vel",
+    totalVisibleDesc: "AplicaÃ§Ãµes disponÃ­veis no painel.",
     manual: "Manuais",
     manualDesc: "Cadastros locais mantidos pela empresa.",
     integrated: "Integradas",
-    integratedDesc: "Projetos sincronizados por integração.",
+    integratedDesc: "Projetos sincronizados por integraÃ§Ã£o.",
     blocked: "Bloqueadas",
     blockedDesc: "Projetos sem acesso liberado no provedor.",
-    blockedTitle: "Integrações bloqueadas",
-    blockedKicker: "Projetos indisponíveis",
-    blockedExplanation: "Estes projetos não entram nos seletores da plataforma porque o acesso no Qase falhou ou não está autorizado.",
+    blockedTitle: "IntegraÃ§Ãµes bloqueadas",
+    blockedKicker: "Projetos indisponÃ­veis",
+    blockedExplanation: "Estes projetos nÃ£o entram nos seletores da plataforma porque o acesso no Qase falhou ou nÃ£o estÃ¡ autorizado.",
     blockedCount: (n: number) => `${n} projeto(s) fora de uso`,
-    blockedDefaultMsg: "Projeto indisponível no Qase.",
-    searchPlaceholder: "Buscar aplicação por nome, slug, descrição ou integração",
-    newApp: "Nova aplicação",
+    blockedDefaultMsg: "Projeto indisponÃ­vel no Qase.",
+    searchPlaceholder: "Buscar aplicaÃ§Ã£o por nome, slug, descriÃ§Ã£o ou integraÃ§Ã£o",
+    newApp: "Nova aplicaÃ§Ã£o",
     itemsShown: (n: number) => `${n} item(ns) exibido(s)`,
-    loading: "Carregando aplicações...",
-    emptyAll: "Nenhuma aplicação encontrada para esta empresa. Cadastre projetos da Qase no perfil da empresa ou registre uma aplicação manual.",
-    emptyFilter: "Nenhuma aplicação corresponde ao filtro informado.",
+    loading: "Carregando aplicaÃ§Ãµes...",
+    emptyAll: "Nenhuma aplicaÃ§Ã£o encontrada para esta empresa. Cadastre projetos da Qase no perfil da empresa ou registre uma aplicaÃ§Ã£o manual.",
+    emptyFilter: "Nenhuma aplicaÃ§Ã£o corresponde ao filtro informado.",
     active: "Ativo",
     inactive: "Inativo",
-    noDescription: "Sem descrição operacional cadastrada.",
+    noDescription: "Sem descriÃ§Ã£o operacional cadastrada.",
     createdAt: "Criada em",
     openImage: "Abrir imagem",
     edit: "Editar",
     close: "Fechar",
-    modalCreateTitle: "Nova aplicação",
+    modalCreateTitle: "Nova aplicaÃ§Ã£o",
     modalCreateEyebrow: "Cadastro manual",
-    modalEditTitle: "Editar aplicação",
-    modalEditEyebrow: (name: string) => `Aplicação ${name}`,
-    saveApp: "Salvar aplicação",
-    saveChanges: "Salvar alterações",
+    modalEditTitle: "Editar aplicaÃ§Ã£o",
+    modalEditEyebrow: (name: string) => `AplicaÃ§Ã£o ${name}`,
+    saveApp: "Salvar aplicaÃ§Ã£o",
+    saveChanges: "Salvar alteraÃ§Ãµes",
     openCurrent: "Abrir atual",
-    modalSubtitle: "Use link ou anexo para definir a imagem da aplicação.",
+    modalSubtitle: "Use link ou anexo para definir a imagem da aplicaÃ§Ã£o.",
     closeModalAria: "Fechar modal",
-    previewAlt: (name: string) => name || "Preview da aplicação",
+    previewAlt: (name: string) => name || "Preview da aplicaÃ§Ã£o",
     previewLabel: "Preview da imagem",
     attachPhoto: "Anexar foto",
     attachNote: "Se houver anexo, ele prevalece sobre o link informado.",
     labelName: "Nome",
-    placeholderName: "Nome da aplicação",
+    placeholderName: "Nome da aplicaÃ§Ã£o",
     labelImageLink: "Link da imagem",
-    labelDescription: "Descrição",
-    placeholderDescription: "Resumo operacional da aplicação",
+    labelDescription: "DescriÃ§Ã£o",
+    placeholderDescription: "Resumo operacional da aplicaÃ§Ã£o",
     cancel: "Cancelar",
     saving: "Salvando...",
     noDate: "Sem data",
-    errLoad: "Erro ao carregar aplicações da empresa.",
+    errLoad: "Erro ao carregar aplicaÃ§Ãµes da empresa.",
     errSave: "Erro ao salvar",
-    errSaveApp: "Erro ao atualizar a aplicação.",
-    errCreateName: "Informe o nome da aplicação manual.",
-    errCreate: "Erro ao criar aplicação",
-    errCreateApp: "Erro ao criar a aplicação manual.",
+    errSaveApp: "Erro ao atualizar a aplicaÃ§Ã£o.",
+    errCreateName: "Informe o nome da aplicaÃ§Ã£o manual.",
+    errCreate: "Erro ao criar aplicaÃ§Ã£o",
+    errCreateApp: "Erro ao criar a aplicaÃ§Ã£o manual.",
     errUpload: "Erro ao enviar imagem",
-    errLoadShort: "Erro ao carregar aplicações",
+    errLoadShort: "Erro ao carregar aplicaÃ§Ãµes",
     sourceQase: (code: string) => `Qase: ${code}`,
     sourceJira: "Jira",
     sourceManual: "Manual",
@@ -293,10 +293,10 @@ function ApplicationModal({
       onClick={onClose}
     >
       <div
-        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-[min(78rem,calc(100vw-1rem))] overflow-y-auto rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) shadow-[0_32px_90px_rgba(15,23,42,0.42)]"
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-[min(78rem,calc(100vw-1rem))] overflow-y-auto rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] shadow-[0_32px_90px_rgba(15,23,42,0.42)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#e5e7eb) bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-5 py-4 text-white sm:px-6 sm:py-5">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--tc-border,#e5e7eb)] bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-5 py-4 text-white sm:px-6 sm:py-5">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-white/72">{eyebrow}</p>
             <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white [text-shadow:0_2px_10px_rgba(15,23,42,0.3)] sm:text-3xl">
@@ -316,7 +316,7 @@ function ApplicationModal({
 
         <div className="grid gap-5 px-5 py-5 sm:px-6 sm:py-6 xl:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)]">
           <div className="space-y-4 xl:sticky xl:top-0">
-            <div className="overflow-hidden rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc)">
+            <div className="overflow-hidden rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)]">
               {previewUrl ? (
                 <img src={previewUrl} alt={copy.previewAlt(draft.name)} className="h-48 w-full object-cover sm:h-56" />
               ) : (
@@ -329,9 +329,9 @@ function ApplicationModal({
               )}
             </div>
 
-            <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+            <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
               <div className="flex flex-wrap gap-2">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2.5 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2.5 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]">
                   <FiPaperclip size={15} />
                   {copy.attachPhoto}
                   <input type="file" accept="image/*" className="hidden" onChange={onFileChange} />
@@ -347,27 +347,27 @@ function ApplicationModal({
                   </button>
                 ) : null}
               </div>
-              <p className="mt-3 text-xs text-(--tc-text-muted,#6b7280)">{copy.attachNote}</p>
+              <p className="mt-3 text-xs text-[var(--tc-text-muted,#6b7280)]">{copy.attachNote}</p>
             </div>
           </div>
 
           <div className="min-w-0 space-y-4">
-            <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
+            <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
               {copy.labelName}
               <input
-                className="mt-1.5 w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-sm text-(--tc-text,#0b1a3c) outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)"
+                className="mt-1.5 w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-sm text-[var(--tc-text,#0b1a3c)] outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)"
                 value={draft.name}
                 onChange={(event) => onDraftChange("name", event.target.value)}
                 placeholder={copy.placeholderName}
               />
             </label>
 
-            <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
+            <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
               {copy.labelImageLink}
               <div className="relative mt-1.5">
-                <FiLink2 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" size={15} />
+                <FiLink2 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" size={15} />
                 <input
-                  className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) py-3 pl-11 pr-4 text-sm text-(--tc-text,#0b1a3c) outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)"
+                  className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] py-3 pl-11 pr-4 text-sm text-[var(--tc-text,#0b1a3c)] outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)"
                   value={draft.imageUrl}
                   onChange={(event) => onDraftChange("imageUrl", event.target.value)}
                   placeholder="https://cdn.../app-logo.png"
@@ -375,10 +375,10 @@ function ApplicationModal({
               </div>
             </label>
 
-            <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
+            <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
               {copy.labelDescription}
               <textarea
-                className="mt-1.5 w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-3 text-sm text-(--tc-text,#0b1a3c) outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)"
+                className="mt-1.5 w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-sm text-[var(--tc-text,#0b1a3c)] outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)"
                 value={draft.description}
                 onChange={(event) => onDraftChange("description", event.target.value)}
                 rows={6}
@@ -395,7 +395,7 @@ function ApplicationModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#e5e7eb) px-4 py-2.5 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:bg-(--tc-surface-2,#f3f4f6)"
+                className="inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border,#e5e7eb)] px-4 py-2.5 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f3f4f6)]"
               >
                 <FiX size={14} />
                 {copy.cancel}
@@ -404,7 +404,7 @@ function ApplicationModal({
                 type="button"
                 disabled={busy}
                 onClick={onSubmit}
-                className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[var(--tc-accent,#ef0001)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
               >
                 <FiSave size={14} />
                 {busy ? copy.saving : submitLabel}
@@ -608,7 +608,7 @@ export default function CompanyAppsPage() {
   return (
     <div className="min-h-screen bg-(--page-bg,#f5f6fa) px-3 py-6 text-(--page-text,#0b1a3c) sm:px-4 sm:py-8 lg:px-5 xl:px-6">
       <div className="w-full space-y-6">
-        <header className="overflow-hidden rounded-4xl border border-(--tc-border,#e5e7eb) bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-5 py-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.24)] sm:px-6 sm:py-6">
+        <header className="overflow-hidden rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-5 py-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.24)] sm:px-6 sm:py-6">
           <div className="max-w-3xl">
             <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">{copy.pageTitle}</h1>
           </div>
@@ -678,13 +678,13 @@ export default function CompanyAppsPage() {
           </section>
         ) : null}
 
-        <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-5 shadow-sm sm:p-6">
+        <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex w-full flex-col gap-3 xl:max-w-3xl xl:flex-row">
               <label className="relative block flex-1">
-                <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" size={16} />
+                <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" size={16} />
                 <input
-                  className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) py-3 pl-11 pr-4 text-sm text-(--tc-text,#0b1a3c) outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)"
+                  className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] py-3 pl-11 pr-4 text-sm text-[var(--tc-text,#0b1a3c)] outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder={copy.searchPlaceholder}
@@ -693,30 +693,30 @@ export default function CompanyAppsPage() {
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--tc-accent,#ef0001)] px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 sm:w-auto"
               >
                 <FiPlus size={15} />
                 {copy.newApp}
               </button>
             </div>
-            <div className="w-fit max-w-full rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f3f4f6) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+            <div className="w-fit max-w-full rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f3f4f6)] px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
               {copy.itemsShown(filteredApps.length)}
             </div>
           </div>
 
           {loading ? (
-            <div className="mt-6 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-8 text-center text-sm text-(--tc-text-muted,#6b7280)">
+            <div className="mt-6 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
               {copy.loading}
             </div>
           ) : filteredApps.length === 0 && apps.length === 0 && blockedApps.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-8 text-center">
-              <FiPackage size={32} className="mx-auto text-(--tc-text-muted,#6b7280)" />
-              <p className="mt-3 text-sm text-(--tc-text-muted,#6b7280)">
+            <div className="mt-6 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-8 text-center">
+              <FiPackage size={32} className="mx-auto text-[var(--tc-text-muted,#6b7280)]" />
+              <p className="mt-3 text-sm text-[var(--tc-text-muted,#6b7280)]">
                 {copy.emptyAll}
               </p>
             </div>
           ) : filteredApps.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-8 text-center text-sm text-(--tc-text-muted,#6b7280)">
+            <div className="mt-6 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
               {copy.emptyFilter}
             </div>
           ) : (
@@ -726,24 +726,24 @@ export default function CompanyAppsPage() {
                 return (
                   <article
                     key={app.id}
-                    className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-5 shadow-sm transition hover:border-(--tc-accent,#ef0001)/30 hover:shadow-md"
+                    className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-5 shadow-sm transition hover:border-[var(--tc-accent,#ef0001)]/30 hover:shadow-md"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                       {app.imageUrl ? (
                         <img
                           src={app.imageUrl}
                           alt={app.name}
-                          className="h-16 w-16 shrink-0 rounded-2xl border border-(--tc-border,#e5e7eb) object-cover"
+                          className="h-16 w-16 shrink-0 rounded-2xl border border-[var(--tc-border,#e5e7eb)] object-cover"
                         />
                       ) : (
-                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-(--tc-surface,#fff) text-(--tc-text-muted,#6b7280)">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[var(--tc-surface,#fff)] text-[var(--tc-text-muted,#6b7280)]">
                           <FiPackage size={22} />
                         </div>
                       )}
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg font-bold text-(--tc-text,#0b1a3c)">{app.name}</h3>
+                          <h3 className="text-lg font-bold text-[var(--tc-text,#0b1a3c)]">{app.name}</h3>
                           <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] ${sourceMeta.className}`}>
                             {sourceMeta.label}
                           </span>
@@ -759,16 +759,16 @@ export default function CompanyAppsPage() {
                         </div>
 
                         {app.description ? (
-                          <p className="mt-2 line-clamp-3 text-sm text-(--tc-text-secondary,#4b5563)">{app.description}</p>
+                          <p className="mt-2 line-clamp-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">{app.description}</p>
                         ) : (
-                          <p className="mt-2 text-sm text-(--tc-text-muted,#6b7280)">{copy.noDescription}</p>
+                          <p className="mt-2 text-sm text-[var(--tc-text-muted,#6b7280)]">{copy.noDescription}</p>
                         )}
 
                         <div className="mt-4 flex flex-wrap gap-2">
-                          <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-3 py-1.5 text-xs font-medium text-(--tc-text-secondary,#4b5563)">
+                          <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-3 py-1.5 text-xs font-medium text-[var(--tc-text-secondary,#4b5563)]">
                             Slug: {app.slug}
                           </span>
-                          <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-3 py-1.5 text-xs font-medium text-(--tc-text-secondary,#4b5563)">
+                          <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-3 py-1.5 text-xs font-medium text-[var(--tc-text-secondary,#4b5563)]">
                             {copy.createdAt} {formatAppDate(app.createdAt, copy.noDate)}
                           </span>
                           {app.imageUrl ? (
@@ -776,7 +776,7 @@ export default function CompanyAppsPage() {
                               href={app.imageUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-3 py-1.5 text-xs font-medium text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                              className="inline-flex items-center gap-1 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-3 py-1.5 text-xs font-medium text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                             >
                               <FiExternalLink size={12} />
                               {copy.openImage}
@@ -788,7 +788,7 @@ export default function CompanyAppsPage() {
                       <button
                         type="button"
                         onClick={() => startEdit(app)}
-                        className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-3 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001) sm:w-auto"
+                        className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-3 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] sm:w-auto"
                       >
                         <FiEdit2 size={14} />
                         {copy.edit}
@@ -842,7 +842,7 @@ export default function CompanyAppsPage() {
               href={editingApp.imageUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#e5e7eb) px-4 py-2.5 text-sm font-semibold text-(--tc-text,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+              className="inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border,#e5e7eb)] px-4 py-2.5 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
             >
               <FiExternalLink size={14} />
               {copy.openCurrent}
@@ -853,3 +853,5 @@ export default function CompanyAppsPage() {
     </div>
   );
 }
+
+

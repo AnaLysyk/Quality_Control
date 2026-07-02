@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { listSeedTestCaseRecords } from "./testCaseMappers";
@@ -562,3 +562,4 @@ export function buildTestCaseMetrics(records: TestCaseRecord[]) {
     automationCoverage: total > 0 ? Math.round(((automated + hybrid) / total) * 100) : 0,
   };
 }
+

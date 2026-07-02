@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
 import { resolveBrainAccess } from "@/lib/brain/access";
@@ -82,3 +82,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Erro ao montar pendencias do Brain" }, { status: 500 });
   }
 }
+

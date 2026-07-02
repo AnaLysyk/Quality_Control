@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +76,7 @@ const FALLBACK_DEFECTS: DefectItem[] = [
   },
   {
     id: "df-3",
-    title: "Dashboard sem atualizar métricas",
+    title: "Dashboard sem atualizar mÃ©tricas",
     status: "pending",
     run_id: "run-789",
     projectCode: "PRINT",
@@ -103,7 +103,7 @@ const STATUS_LABEL: Record<string, string> = {
   fail: "Em falha",
   blocked: "Bloqueado",
   pending: "Aguardando teste",
-  done: "Concluído",
+  done: "ConcluÃ­do",
 };
 
 const STATUS_LABEL_EN: Record<string, string> = {
@@ -134,12 +134,12 @@ export default function AdminDefeitosPage() {
       isPt
         ? {
             sessionExpired: "Sessao expirada. Faca login novamente.",
-            noPermission: "Sem permissão",
+            noPermission: "Sem permissÃ£o",
             loadError: "Erro ao carregar dados",
             loadingDefects: "Carregando defeitos...",
             defects: "Defeitos",
             globalPanel: "Painel de defeitos (global)",
-            panelSubtitle: "Visão consolidada de falhas por empresa e por run. Clique para entrar no contexto da empresa.",
+            panelSubtitle: "VisÃ£o consolidada de falhas por empresa e por run. Clique para entrar no contexto da empresa.",
             openDefects: "Defeitos abertos",
             companiesWithDefects: "Empresas com defeitos",
             defectsQaseManual: "Defeitos (Qase + manuais)",
@@ -157,8 +157,8 @@ export default function AdminDefeitosPage() {
             noRunWithDefects: "Nenhuma run com defeitos.",
             openRun: "Abrir run",
             company: "Empresa",
-            defectsByApp: "Defeitos por aplicação",
-            noAppWithDefects: "Nenhuma aplicação com defeitos.",
+            defectsByApp: "Defeitos por aplicaÃ§Ã£o",
+            noAppWithDefects: "Nenhuma aplicaÃ§Ã£o com defeitos.",
             statusFallback: "status",
           }
         : {
@@ -359,23 +359,23 @@ export default function AdminDefeitosPage() {
       `}</style>
       <div className="min-h-screen bg-(--page-bg,#f7f9fb) text-(--page-text,#0b1a3c) p-6 md:p-10 space-y-6">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.32em] text-(--tc-accent,#ef0001)">{ui.defects}</p>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-(--tc-text-primary,#0b1a3c)">
+          <p className="text-xs uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)]">{ui.defects}</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">
             {ui.globalPanel}
           </h1>
-          <p className="text-sm text-(--tc-text-secondary,#4b5563)">
+          <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
             {ui.panelSubtitle}
           </p>
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
-        {loading && <p className="text-sm text-(--tc-text-muted,#6b7280)">{ui.loadingDefects}</p>}
+        {loading && <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{ui.loadingDefects}</p>}
 
         {isAdmin && (
-          <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-(--tc-text-secondary,#4b5563)">
+                <label className="text-sm font-medium text-[var(--tc-text-secondary,#4b5563)]">
                   {isPt ? "Filtrar por empresa:" : "Filter by company:"}
                 </label>
                 <select
@@ -383,7 +383,7 @@ export default function AdminDefeitosPage() {
                   value={selectedCompany}
                   onChange={(e) => setSelectedCompany(e.target.value)}
                   disabled={loadingCompanies}
-                  className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#eef4ff) px-4 py-2 text-(--tc-text-primary,#011848) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40 min-w-50"
+                  className="rounded-lg border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-2 text-[var(--tc-text-primary,#011848)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40 min-w-50"
                 >
                   <option value="">{isPt ? "Todas as empresas" : "All companies"}</option>
                   {companies.map((company) => (
@@ -393,13 +393,13 @@ export default function AdminDefeitosPage() {
                   ))}
                 </select>
                 {loadingCompanies && (
-                  <span className="text-xs text-(--tc-text-muted,#6b7280)">
+                  <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">
                     {isPt ? "Carregando..." : "Loading..."}
                   </span>
                 )}
               </div>
               {selectedCompany && (
-                <span className="text-sm text-(--tc-accent,#ef0001)">
+                <span className="text-sm text-[var(--tc-accent,#ef0001)]">
                   {isPt ? "Exibindo defeitos de:" : "Showing defects for:"}{" "}
                   <strong>{companies.find((c) => c.slug === selectedCompany)?.name || selectedCompany}</strong>
                 </span>
@@ -410,22 +410,22 @@ export default function AdminDefeitosPage() {
 
         {!loading && (
           <>
-            {/* visão macro por empresa */}
+            {/* visÃ£o macro por empresa */}
             <section className="grid gap-4 md:grid-cols-3">
               <MetricCard label={ui.openDefects} value={defects.length} color="text-red-600" icon={<FiAlertTriangle />} />
               <MetricCard label={ui.companiesWithDefects} value={companyCards.length} icon={<FiTrendingDown />} />
               <MetricCard label={ui.defectsQaseManual} value={defects.length} icon={<FiZap />} />
             </section>
 
-            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-4">
+            <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">{ui.companiesWithDefects}</h2>
-                  <p className="text-sm text-(--tc-text-secondary,#4b5563)">{ui.clickToOpenContext}</p>
+                  <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{ui.companiesWithDefects}</h2>
+                  <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">{ui.clickToOpenContext}</p>
                 </div>
               </div>
               {companyCards.length === 0 ? (
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">{ui.noCompaniesWithDefects}</p>
+                <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{ui.noCompaniesWithDefects}</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {companyCards.map((c) => {
@@ -437,21 +437,21 @@ export default function AdminDefeitosPage() {
                     return (
                       <div
                         key={c.slug ?? c.name}
-                        className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm space-y-3 hover:shadow-md transition"
+                        className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm space-y-3 hover:shadow-md transition"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">{c.name}</p>
-                            <p className="text-xs text-(--tc-text-muted,#6b7280)">{total} {ui.defectsCount}</p>
+                            <p className="text-lg font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{c.name}</p>
+                            <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">{total} {ui.defectsCount}</p>
                           </div>
                           <a
                             href={`/admin/defeitos/${c.slug || "empresa"}`}
-                            className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                            className="text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
                           >
                             {ui.viewDefects}
                           </a>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-(--tc-text-secondary,#4b5563)">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[var(--tc-text-secondary,#4b5563)]">
                           <StatusPill label={statusLabel.fail} value={fail} colorClass="text-red-600" />
                           <StatusPill label={statusLabel.blocked} value={blocked} colorClass="text-amber-600" />
                           <StatusPill label={statusLabel.pending} value={pending} colorClass="text-blue-600" />
@@ -464,26 +464,26 @@ export default function AdminDefeitosPage() {
               )}
             </section>
 
-            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
+            <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">{ui.recentDefects}</h2>
-                <span className="text-sm text-(--tc-text-muted,#6b7280)">{ui.topN}</span>
+                <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{ui.recentDefects}</h2>
+                <span className="text-sm text-[var(--tc-text-muted,#6b7280)]">{ui.topN}</span>
               </div>
               {defects.length === 0 ? (
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">{ui.noDefectsFound}</p>
+                <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{ui.noDefectsFound}</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {defects.slice(0, 6).map((d) => (
                     <div
                       key={d.id}
-                      className="rounded-xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm space-y-2 hover:shadow-md transition"
+                      className="rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm space-y-2 hover:shadow-md transition"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <p className="font-semibold text-(--tc-text-primary,#0b1a3c)">{d.title}</p>
+                        <p className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{d.title}</p>
                         <span className="text-xs text-red-600">{d.status || ui.statusFallback}</span>
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs">
-                        <span className="text-(--tc-text-secondary,#4b5563)">{ui.project}: {d.projectCode}</span>
+                        <span className="text-[var(--tc-text-secondary,#4b5563)]">{ui.project}: {d.projectCode}</span>
                         {isAdmin && d.companyName && (
                           <span className="rounded-full border border-blue-400/60 bg-blue-50 px-2 py-0.5 text-blue-700">
                             {d.companyName}
@@ -496,14 +496,14 @@ export default function AdminDefeitosPage() {
                         )}
                       </div>
                       {d.run_id ? (
-                        <p className="text-xs text-(--tc-text-muted,#6b7280)">{ui.run}: {String(d.run_id)}</p>
+                        <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">{ui.run}: {String(d.run_id)}</p>
                       ) : null}
                       {d.url ? (
                         <a
                           href={d.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                          className="text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
                         >
                           {ui.openInQase}
                         </a>
@@ -515,10 +515,10 @@ export default function AdminDefeitosPage() {
             </section>
 
             {/* Defeitos por run (grafico simples) */}
-            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
-              <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">{ui.defectsByRun}</h2>
+            <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-3">
+              <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{ui.defectsByRun}</h2>
               {defectsByRun.length === 0 ? (
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">{ui.noRunWithDefects}</p>
+                <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{ui.noRunWithDefects}</p>
               ) : (
                 <div className="space-y-2">
                   {defectsByRun.map((r, idx) => {
@@ -527,19 +527,19 @@ export default function AdminDefeitosPage() {
                     return (
                       <div key={r.slug ?? idx} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">{r.slug}</span>
+                          <span className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{r.slug}</span>
                           <a
                             href={`/runs/${r.slug}`}
-                            className="text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                            className="text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
                           >
                             {ui.openRun}
                           </a>
                         </div>
-                        <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
+                        <div className="h-2 rounded-full bg-[var(--tc-input-bg,#eef4ff)]">
                           <div className={`h-full rounded-full bg-red-500 ${widthClass}`} />
                         </div>
-                        <p className="text-xs text-(--tc-text-secondary,#4b5563)">
-                          {r.count} {ui.defectsCount} • {r.app} • {r.client ?? ui.company}
+                        <p className="text-xs text-[var(--tc-text-secondary,#4b5563)]">
+                          {r.count} {ui.defectsCount} â€¢ {r.app} â€¢ {r.client ?? ui.company}
                         </p>
                       </div>
                     );
@@ -548,11 +548,11 @@ export default function AdminDefeitosPage() {
               )}
             </section>
 
-            {/* Defeitos por aplicação */}
-            <section className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm space-y-3">
-              <h2 className="text-xl font-semibold text-(--tc-text-primary,#0b1a3c)">{ui.defectsByApp}</h2>
+            {/* Defeitos por aplicaÃ§Ã£o */}
+            <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-3">
+              <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{ui.defectsByApp}</h2>
               {defectsByApp.length === 0 ? (
-                <p className="text-sm text-(--tc-text-muted,#6b7280)">{ui.noAppWithDefects}</p>
+                <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{ui.noAppWithDefects}</p>
               ) : (
                 <div className="space-y-2">
                   {defectsByApp.map((a, idx) => {
@@ -561,12 +561,12 @@ export default function AdminDefeitosPage() {
                     return (
                       <div key={idx} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-semibold text-(--tc-text-primary,#0b1a3c)">{a.app}</span>
+                          <span className="font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{a.app}</span>
                         </div>
-                        <div className="h-2 rounded-full bg-(--tc-input-bg,#eef4ff)">
+                        <div className="h-2 rounded-full bg-[var(--tc-input-bg,#eef4ff)]">
                           <div className={`h-full rounded-full bg-amber-500 ${widthClass}`} />
                         </div>
-                        <p className="text-xs text-(--tc-text-secondary,#4b5563)">{a.count} {ui.defectsCount}</p>
+                        <p className="text-xs text-[var(--tc-text-secondary,#4b5563)]">{a.count} {ui.defectsCount}</p>
                       </div>
                     );
                   })}
@@ -582,8 +582,8 @@ export default function AdminDefeitosPage() {
 
 function StatusPill({ label, value, colorClass }: { label: string; value: number; colorClass: string }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-(--tc-border,#e5e7eb)/60 bg-(--tc-input-bg,#eef4ff) px-3 py-2">
-      <span className="text-xs font-semibold text-(--tc-text-primary,#0b1a3c)">{label}</span>
+    <div className="flex items-center justify-between rounded-lg border border-[var(--tc-border,#e5e7eb)]/60 bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2">
+      <span className="text-xs font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{label}</span>
       <span className={`text-sm font-bold ${colorClass}`}>{value}</span>
     </div>
   );
@@ -591,14 +591,15 @@ function StatusPill({ label, value, colorClass }: { label: string; value: number
 
 function MetricCard({ label, value, color, icon }: { label: string; value: number; color?: string; icon?: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-5 shadow-sm flex items-center gap-3">
-      <div className="h-12 w-12 rounded-xl bg-(--tc-input-bg,#eef4ff) border border-(--tc-border,#e5e7eb) flex items-center justify-center text-(--tc-accent,#ef0001)">
+    <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-5 shadow-sm flex items-center gap-3">
+      <div className="h-12 w-12 rounded-xl bg-[var(--tc-input-bg,#eef4ff)] border border-[var(--tc-border,#e5e7eb)] flex items-center justify-center text-[var(--tc-accent,#ef0001)]">
         {icon}
       </div>
       <div>
-        <p className="text-sm text-(--tc-text-muted,#6b7280)">{label}</p>
-        <p className={`text-3xl font-bold ${color ?? "text-(--tc-text-primary,#0b1a3c)"}`}>{value}</p>
+        <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{label}</p>
+        <p className={`text-3xl font-bold ${color ?? "text-[var(--tc-text-primary,#0b1a3c)]"}`}>{value}</p>
       </div>
     </div>
   );
 }
+

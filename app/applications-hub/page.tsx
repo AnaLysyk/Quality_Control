@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -42,19 +42,20 @@ export default function ApplicationsPage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-12">
         <CompanySelector
           title="Escolha uma empresa"
-          description="As aplicações listadas estarão disponíveis após selecionar a empresa."
+          description="As aplicaÃ§Ãµes listadas estarÃ£o disponÃ­veis apÃ³s selecionar a empresa."
           buildHref={(company) =>
             buildCompanyPathForAccess(company.clientSlug, "aplicacoes", {
               ...routeInput,
               clientSlug: company.clientSlug,
             })
           }
-          ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar aplicações" : "Ver aplicações")}
+          ctaLabel={(company) => (company.role === "ADMIN" ? "Gerenciar aplicaÃ§Ãµes" : "Ver aplicaÃ§Ãµes")}
         />
       </div>
     </div>
   );
 }
+
 
 
 

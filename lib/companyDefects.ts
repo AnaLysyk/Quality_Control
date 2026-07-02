@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { readManualReleaseStore } from "@/data/manualData";
 import { normalizeDefectStatus, resolveClosedAt, resolveOpenedAt, type DefectStatus } from "@/lib/defectNormalization";
@@ -664,3 +664,4 @@ export async function getIntegratedDefectQaseHistory(
     return { events: [], notice: null };
   }
 }
+

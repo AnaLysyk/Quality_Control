@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+﻿import { describe, expect, it } from "@jest/globals";
 
 import { buildBrainNodeActions, resolveBrainAction } from "@/lib/brain/actions";
 import { buildBrainSearchIndex, searchBrainIndex } from "@/lib/brain/searchIndex";
@@ -84,3 +84,4 @@ describe("Brain product contract", () => {
     }
   });
 });
+

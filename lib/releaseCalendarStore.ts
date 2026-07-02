@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 
@@ -274,3 +274,4 @@ export async function getReleaseCalendarSummary() {
     supportVisible: events.filter((event) => audienceMatches(event, "technical_support")).length,
   };
 }
+

@@ -1,4 +1,4 @@
-export type BrianImpulseType =
+﻿export type BrianImpulseType =
   | "defect.created"
   | "defect.updated"
   | "defect.status_changed"
@@ -442,3 +442,4 @@ export type BrianSemanticTelemetryEvent = {
   timestamp: string;
   attributes: Record<string, string | number | boolean | null>;
 };
+

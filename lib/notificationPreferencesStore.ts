@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getRedis } from "@/lib/redis";
 import { getNotificationOperationModel, type NotificationChannel } from "@/data/notificationOperationModel";
@@ -159,3 +159,4 @@ export async function getNotificationPreferenceSummary() {
     user: store.preferences.filter((item) => item.target === "user").length,
   };
 }
+

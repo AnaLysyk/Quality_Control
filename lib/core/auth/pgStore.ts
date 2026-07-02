@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 import { randomUUID } from "crypto";
 import { prisma, reconnectPrisma } from "@/lib/prismaClient";
 import {
@@ -14,7 +14,7 @@ import type {
   LocalAuthStore,
 } from "./localStore";
 
-// ── Converters ────────────────────────────────────────────────────────────────
+// â”€â”€ Converters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type PrismaUser = {
   id: string;
@@ -169,7 +169,7 @@ function toLocalCompany(c: PrismaCompany): LocalAuthCompany {
     cep: c.cep,
     linkedin_url: c.linkedin_url,
     qase_token: c.qase_token ?? undefined,
-    // Persistência e leitura apenas do array canônico
+    // PersistÃªncia e leitura apenas do array canÃ´nico
     qase_project_code: legacyProjectCode,
     qase_project_codes: normalizedProjectCodes,
     jira_base_url: c.jira_base_url,
@@ -196,12 +196,12 @@ function toLocalMembership(m: PrismaMembership): LocalAuthMembership {
   };
 }
 
-// keep identity here — database stores legacy labels now
+// keep identity here â€” database stores legacy labels now
 function mapRoleEnumToLegacy(_r?: string | null): string {
   return (_r ?? "user");
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const nl = (v: string) => v.trim().toLowerCase();
 
@@ -266,7 +266,7 @@ async function pgFindUserByIdentityToken(token: string, excludeUserId?: string):
   });
 }
 
-// ── User ──────────────────────────────────────────────────────────────────────
+// â”€â”€ User â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function pgFindLocalUserByEmailOrId(identifier: string): Promise<LocalAuthUser | null> {
   const n = nl(identifier);
@@ -429,7 +429,7 @@ export async function pgUpdateLocalUser(
   }
 }
 
-// ── Company ───────────────────────────────────────────────────────────────────
+// â”€â”€ Company â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function pgFindLocalCompanyById(id: string): Promise<LocalAuthCompany | null> {
   const c = await withPrismaConnectionRetry(() => prisma.company.findUnique({ where: { id }, include: { integrations: true } }));
@@ -492,7 +492,7 @@ export async function pgCreateLocalCompany(
       notes: (input.notes as string | null | undefined) ?? null,
       cep: (input.cep as string | null | undefined) ?? null,
       linkedin_url: (input.linkedin_url as string | null | undefined) ?? null,
-      // Persistência apenas do array canônico
+      // PersistÃªncia apenas do array canÃ´nico
       qase_project_codes: normalizedProjectCodes,
       jira_base_url: (input.jira_base_url as string | null | undefined) ?? null,
       jira_email: (input.jira_email as string | null | undefined) ?? null,
@@ -618,7 +618,7 @@ export async function pgDeleteLocalCompany(id: string): Promise<boolean> {
   }
 }
 
-// ── Membership ────────────────────────────────────────────────────────────────
+// â”€â”€ Membership â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function pgUpsertLocalLink(input: {
   userId: string;
@@ -676,7 +676,7 @@ export async function pgListLocalMemberships(): Promise<LocalAuthMembership[]> {
   return memberships.map(toLocalMembership);
 }
 
-// ── Full store read (used by resolveUserCompanies etc.) ───────────────────────
+// â”€â”€ Full store read (used by resolveUserCompanies etc.) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function pgReadLocalAuthStore(): Promise<LocalAuthStore> {
   const [users, companies, memberships] = await withPrismaConnectionRetry(() => Promise.all([
@@ -720,3 +720,4 @@ export async function pgSuggestNextUniqueLogin(input: {
   while (!(await check(`${base}.${counter}`))) counter++;
   return `${base}.${counter}`;
 }
+

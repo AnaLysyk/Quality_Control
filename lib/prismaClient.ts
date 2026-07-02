@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+﻿import { PrismaClient } from "@prisma/client";
 import { getPrismaClientOptions, resetPrismaAdapter } from "@/lib/prismaClientOptions";
 
-// Singleton pattern: reutiliza a instância entre hot-reloads no dev
-// e evita "too many connections" em produção.
+// Singleton pattern: reutiliza a instÃ¢ncia entre hot-reloads no dev
+// e evita "too many connections" em produÃ§Ã£o.
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function hasDatabaseUrl() {
@@ -76,3 +76,4 @@ export function reconnectPrisma() {
   console.info("[prisma] Reconnecting after connection loss...");
   currentPrisma = recreatePrismaClient();
 }
+

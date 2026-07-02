@@ -1,4 +1,4 @@
-import { AUTOMATION_CASES, type AutomationCaseDefinition } from "@/data/automationCases";
+﻿import { AUTOMATION_CASES, type AutomationCaseDefinition } from "@/data/automationCases";
 import { AUTOMATION_STUDIO_BLUEPRINTS } from "@/data/automationStudio";
 import type { TestAutomationLink, TestCase, TestCaseExternalSync, TestCaseRecord, TestCaseStep } from "./types";
 import { createTestCaseVersion } from "./testCaseSnapshots";
@@ -147,3 +147,4 @@ export function mapAutomationCaseSteps(testCase: AutomationCaseDefinition, creat
 export function listSeedTestCaseRecords(): TestCaseRecord[] {
   return AUTOMATION_CASES.map(mapAutomationCaseToCentralRecord);
 }
+

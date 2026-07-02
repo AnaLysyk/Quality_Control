@@ -1,4 +1,4 @@
-import {
+﻿import {
   buildApplicationMatchKeys,
   classifyRunStatus,
   computePassRate,
@@ -59,3 +59,4 @@ describe("operationsWorkspace helpers", () => {
     expect(classifyRunStatus("")).toBe("unknown");
   });
 });
+

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import styles from "./page.module.css";
 import { TechnicalSupportHomeGuard } from "./TechnicalSupportHomeGuard";
@@ -78,7 +78,7 @@ function resolveCompanyStatus(company: ReturnType<typeof mapCompanyRecord>): Sta
 
   return {
     title: "Empresa ativa",
-    detail: "Contexto institucional liberado para operação.",
+    detail: "Contexto institucional liberado para operaÃ§Ã£o.",
     tone: "positive",
   };
 }
@@ -87,26 +87,26 @@ function resolveIntegrationStatus(company: ReturnType<typeof mapCompanyRecord>):
   if (company.qase_is_active === true && company.qase_is_valid === true) {
     return {
       title: "Qase ativa",
-      detail: `${company.qase_project_codes?.length ?? 0} projeto(s) disponíveis para sincronizacao.`,
+      detail: `${company.qase_project_codes?.length ?? 0} projeto(s) disponÃ­veis para sincronizacao.`,
       tone: "positive",
     };
   }
   if (company.jira_is_active === true && company.jira_is_valid === true) {
     return {
       title: "Jira ativa",
-      detail: "Integração pronta para sincronizacao institucional.",
+      detail: "IntegraÃ§Ã£o pronta para sincronizacao institucional.",
       tone: "positive",
     };
   }
   if ((company.qase_project_codes?.length ?? 0) > 0 || company.has_qase_token || company.has_jira_api_token) {
     return {
-      title: "Integração pendente",
-      detail: "Existe configuração salva, mas ela ainda não esta ativa.",
+      title: "IntegraÃ§Ã£o pendente",
+      detail: "Existe configuraÃ§Ã£o salva, mas ela ainda nÃ£o esta ativa.",
       tone: "warning",
     };
   }
   return {
-    title: "Sem integração",
+    title: "Sem integraÃ§Ã£o",
     detail: "A empresa segue apenas com contexto manual neste momento.",
     tone: "neutral",
   };
@@ -185,14 +185,14 @@ export default async function CompanyHomePage({ params }: PageProps) {
   const quickLinks = [
     {
       title: "Dashboard",
-      detail: "Visão estrategica da qualidade, tendencia, regressao e risco da empresa.",
+      detail: "VisÃ£o estrategica da qualidade, tendencia, regressao e risco da empresa.",
       href: "dashboard",
       icon: FiGrid,
       note: "Leitura executiva",
     },
     {
-      title: "Métricas",
-      detail: "Painel operacional por run, origem, status e leitura detalhada da execução.",
+      title: "MÃ©tricas",
+      detail: "Painel operacional por run, origem, status e leitura detalhada da execuÃ§Ã£o.",
       href: "metrics",
       icon: FiActivity,
       note: `${totalRuns} runs no contexto`,
@@ -212,25 +212,25 @@ export default async function CompanyHomePage({ params }: PageProps) {
       note: `${openDefects} aberto(s)`,
     },
     {
-      title: "Aplicações",
-      detail: "Catalogo das aplicações e projetos vinculados a empresa.",
+      title: "AplicaÃ§Ãµes",
+      detail: "Catalogo das aplicaÃ§Ãµes e projetos vinculados a empresa.",
       href: "aplicacoes",
       icon: FiBriefcase,
-      note: `${applications.length} aplicação(oes)`,
+      note: `${applications.length} aplicaÃ§Ã£o(oes)`,
     },
     {
       title: "Planos de teste",
-      detail: "Planos vinculados as aplicações integradas e campanhas da empresa.",
+      detail: "Planos vinculados as aplicaÃ§Ãµes integradas e campanhas da empresa.",
       href: "planos-de-teste",
       icon: FiClipboard,
       note: `${applications.filter((app) => Boolean(app.qaseProjectCode)).length} com Qase`,
     },
     {
       title: "Perfil da empresa",
-      detail: "Cadastro institucional, logo, integrações e usuários.",
+      detail: "Cadastro institucional, logo, integraÃ§Ãµes e usuÃ¡rios.",
       href: "/settings/profile",
       icon: FiShield,
-      note: "Configurações da empresa",
+      note: "ConfiguraÃ§Ãµes da empresa",
     },
   ];
 
@@ -238,25 +238,25 @@ export default async function CompanyHomePage({ params }: PageProps) {
     <div className="relative isolate min-h-screen bg-(--page-bg,#f5f6fa) px-4 py-8 text-(--page-text,#0b1a3c) sm:px-5 lg:px-6 xl:px-8 2xl:px-10">
       <TechnicalSupportHomeGuard />
       <div className="relative z-10 flex w-full max-w-none flex-col gap-6">
-        <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 shadow-sm sm:p-7">
+        <section className="rounded-[30px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm sm:p-7">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             {quickLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`group rounded-3xl border border-(--tc-border,#e5e7eb) p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(15,23,42,0.08)] ${styles.elevatedSurface}`}
+                className={`group rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(15,23,42,0.08)] ${styles.elevatedSurface}`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-primary,#0b1a3c)">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-alt,#f8fafc)] text-[var(--tc-text-primary,#0b1a3c)]">
                     <item.icon className="h-5 w-5" />
                   </div>
-                  <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-alt,#f8fafc) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-secondary,#475569)">
+                  <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-alt,#f8fafc)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-secondary,#475569)]">
                     {item.note}
                   </span>
                 </div>
-                <h3 className="mt-4 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{item.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{item.detail}</p>
-                <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-(--tc-accent,#ef0001)">
+                <h3 className="mt-4 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{item.detail}</p>
+                <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--tc-accent,#ef0001)]">
                   Abrir
                   <FiArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </div>
@@ -266,95 +266,95 @@ export default async function CompanyHomePage({ params }: PageProps) {
         </section>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)]">
-          <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 shadow-sm sm:p-7">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-accent,#ef0001)">Contexto salvo</p>
-            <h2 className="mt-2 text-2xl font-extrabold text-(--tc-text,#0b1a3c)">Projetos e aplicações da empresa</h2>
-            <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-              Bloco institucional da home. Aqui ficam os vínculos salvos que contextualizam a empresa, sem misturar com o painel operacional.
+          <section className="rounded-[30px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm sm:p-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--tc-accent,#ef0001)]">Contexto salvo</p>
+            <h2 className="mt-2 text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Projetos e aplicaÃ§Ãµes da empresa</h2>
+            <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+              Bloco institucional da home. Aqui ficam os vÃ­nculos salvos que contextualizam a empresa, sem misturar com o painel operacional.
             </p>
 
-            <div className={`mt-5 rounded-3xl border border-(--tc-border,#e5e7eb) p-5 ${styles.subtleSurface}`}>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Projetos vinculados</div>
+            <div className={`mt-5 rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.subtleSurface}`}>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Projetos vinculados</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {Array.from(projectCodes).length > 0 ? (
                   Array.from(projectCodes).map((code) => (
-                    <span key={code} className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-(--tc-text-primary,#334155)">
+                    <span key={code} className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-primary,#334155)]">
                       {code}
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-(--tc-text-secondary,#4b5563)">Nenhum projeto salvo ainda.</span>
+                  <span className="text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum projeto salvo ainda.</span>
                 )}
               </div>
             </div>
 
-            <div className={`mt-4 rounded-3xl border border-(--tc-border,#e5e7eb) p-5 ${styles.subtleSurface}`}>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Aplicações cadastradas</div>
+            <div className={`mt-4 rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.subtleSurface}`}>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">AplicaÃ§Ãµes cadastradas</div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {applications.length > 0 ? (
                   applications.map((app) => (
-                    <div key={app.id} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) px-4 py-3">
-                      <div className="text-sm font-semibold text-(--tc-text,#0b1a3c)">{app.name}</div>
-                      <div className="mt-1 text-xs uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                    <div key={app.id} className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] px-4 py-3">
+                      <div className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{app.name}</div>
+                      <div className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                         {app.qaseProjectCode ?? app.slug}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <span className="text-sm text-(--tc-text-secondary,#4b5563)">Nenhuma aplicação cadastrada ainda.</span>
+                  <span className="text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhuma aplicaÃ§Ã£o cadastrada ainda.</span>
                 )}
               </div>
             </div>
           </section>
 
-          <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-6 shadow-sm sm:p-7">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-accent,#ef0001)">Leitura rápida</p>
-            <h2 className="mt-2 text-2xl font-extrabold text-(--tc-text,#0b1a3c)">Estado atual da empresa</h2>
+          <section className="rounded-[30px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm sm:p-7">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--tc-accent,#ef0001)]">Leitura rÃ¡pida</p>
+            <h2 className="mt-2 text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Estado atual da empresa</h2>
             <div className="mt-5 grid gap-4">
-              <div className={`rounded-3xl border border-(--tc-border,#e5e7eb) p-5 ${styles.elevatedSurface}`}>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Empresa</div>
-                <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{companyStatus.title}</div>
-                <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{companyStatus.detail}</div>
+              <div className={`rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.elevatedSurface}`}>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Empresa</div>
+                <div className="mt-3 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{companyStatus.title}</div>
+                <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{companyStatus.detail}</div>
               </div>
-              <div className={`rounded-3xl border border-(--tc-border,#e5e7eb) p-5 ${styles.elevatedSurface}`}>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Integração</div>
-                <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{integrationStatus.title}</div>
-                <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{integrationStatus.detail}</div>
+              <div className={`rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.elevatedSurface}`}>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">IntegraÃ§Ã£o</div>
+                <div className="mt-3 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{integrationStatus.title}</div>
+                <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{integrationStatus.detail}</div>
               </div>
-              <div className={`rounded-3xl border border-(--tc-border,#e5e7eb) p-5 ${styles.elevatedSurface}`}>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Proximo passo recomendado</div>
-                <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">
-                  {totalRuns > 0 ? "Abrir dashboard inteligente" : "Configurar primeira operação"}
+              <div className={`rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.elevatedSurface}`}>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Proximo passo recomendado</div>
+                <div className="mt-3 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">
+                  {totalRuns > 0 ? "Abrir dashboard inteligente" : "Configurar primeira operaÃ§Ã£o"}
                 </div>
-                <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+                <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                   {totalRuns > 0
-                    ? "Use o dashboard para leitura estrategica e as métricas para o acompanhamento operacional das runs."
-                    : "Comece por perfil, integrações ou criação da primeira run manual."}
+                    ? "Use o dashboard para leitura estrategica e as mÃ©tricas para o acompanhamento operacional das runs."
+                    : "Comece por perfil, integraÃ§Ãµes ou criaÃ§Ã£o da primeira run manual."}
                 </div>
               </div>
-              <div className={`rounded-3xl border border-(--tc-border,#e5e7eb) p-5 ${styles.elevatedSurface}`}>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Última execução</div>
-                <div className="mt-3 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{formatDate(latestExecutionAt)}</div>
-                <div className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-                  Referencia rápida da operação, sem transformar a home em dashboard.
+              <div className={`rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.elevatedSurface}`}>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Ãšltima execuÃ§Ã£o</div>
+                <div className="mt-3 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{formatDate(latestExecutionAt)}</div>
+                <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                  Referencia rÃ¡pida da operaÃ§Ã£o, sem transformar a home em dashboard.
                 </div>
               </div>
             </div>
           </section>
         </div>
 
-        <section className="rounded-[30px] border border-(--tc-border,#e5e7eb) bg-white p-6 shadow-sm sm:p-7">
+        <section className="rounded-[30px] border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm sm:p-7">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--tc-accent,#ef0001)">Fechamento da home</p>
-              <h2 className="mt-2 text-2xl font-extrabold text-(--tc-text,#0b1a3c)">Home institucional separada do dashboard</h2>
-              <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
-                A home volta a ser entrada de contexto e navegacao. O dashboard fica estrategico e a area de métricas concentra a leitura operacional.
+              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--tc-accent,#ef0001)]">Fechamento da home</p>
+              <h2 className="mt-2 text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Home institucional separada do dashboard</h2>
+              <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                A home volta a ser entrada de contexto e navegacao. O dashboard fica estrategico e a area de mÃ©tricas concentra a leitura operacional.
               </p>
             </div>
             <Link
               href="dashboard"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-(--tc-primary,#0b1a3c) px-5 py-3 text-sm font-semibold text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--tc-primary,#0b1a3c)] px-5 py-3 text-sm font-semibold text-white"
             >
               Ir para dashboard
               <FiArrowRight className="h-4 w-4" />
@@ -365,3 +365,5 @@ export default async function CompanyHomePage({ params }: PageProps) {
     </div>
   );
 }
+
+

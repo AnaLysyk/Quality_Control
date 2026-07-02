@@ -1,4 +1,4 @@
-import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
+﻿import { resolveDatabaseUrlFromEnv } from "@/lib/databaseUrl";
 import type { DatabaseScope } from "@/lib/databaseUrl";
 
 function normalizeEnv(value?: string | null) {
@@ -22,4 +22,5 @@ export function shouldUsePostgresPersistence(scope: DatabaseScope = "default") {
   }
   return hasSupportedDatabaseUrl(resolveDatabaseUrlFromEnv(scope));
 }
+
 

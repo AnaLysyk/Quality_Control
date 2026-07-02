@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { FormEvent } from "react";
 import { useMemo, useState, useEffect, useRef } from "react";
@@ -178,7 +178,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     setError(null);
 
     if (choice.avatarValue.startsWith("data:image/") && choice.avatarValue.length > 500000) {
-      setError("Imagem muito grande para salvar na empresa. Use GIF por URL, emoji, ícone ou uma imagem menor.");
+      setError("Imagem muito grande para salvar na empresa. Use GIF por URL, emoji, Ã­cone ou uma imagem menor.");
       return;
     }
 
@@ -213,12 +213,12 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     }
 
     if (rawCnpj.length < 14) {
-      setCnpjMessage("Digite os 14 dígitos do CNPJ.");
+      setCnpjMessage("Digite os 14 dÃ­gitos do CNPJ.");
       return;
     }
 
     if (!isCnpjValid(rawCnpj)) {
-      setCnpjMessage("❌ CNPJ inválido (checksum falhou).");
+      setCnpjMessage("âŒ CNPJ invÃ¡lido (checksum falhou).");
       return;
     }
 
@@ -308,7 +308,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     }
 
     if (!isCnpjValid(rawCnpj)) {
-      setCnpjMessage("❌ CNPJ inválido (checksum falhou).");
+      setCnpjMessage("âŒ CNPJ invÃ¡lido (checksum falhou).");
       return;
     }
 
@@ -318,7 +318,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     cnpjLookupControllerRef.current = controller;
 
     setCnpjLoading(true);
-    setCnpjMessage("✓ CNPJ válido. Consultando BrasilAPI...");
+    setCnpjMessage("âœ“ CNPJ vÃ¡lido. Consultando BrasilAPI...");
 
     try {
       const data = await lookupCnpjCompany(rawCnpj, controller.signal);
@@ -364,9 +364,9 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
       }
 
       if (companyName || companyAddress || data?.cep || data?.numero || data?.complemento || contactPhone || cnae || contactEmail) {
-        setCnpjMessage("✓ CNPJ válido. Dados preenchidos pela BrasilAPI.");
+        setCnpjMessage("âœ“ CNPJ vÃ¡lido. Dados preenchidos pela BrasilAPI.");
       } else {
-        setCnpjMessage("✓ CNPJ válido, mas sem dados adicionais na BrasilAPI.");
+        setCnpjMessage("âœ“ CNPJ vÃ¡lido, mas sem dados adicionais na BrasilAPI.");
       }
     } catch (error) {
       if (!isMountedRef.current || lookupId !== cnpjLookupIdRef.current) return;
@@ -494,12 +494,12 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
       });
       const payload = (await response.json().catch(() => null)) as { username?: string; error?: string } | null;
       if (!response.ok) {
-        throw new Error(payload?.error || "Não foi possível gerar o usuário da empresa.");
+        throw new Error(payload?.error || "NÃ£o foi possÃ­vel gerar o usuÃ¡rio da empresa.");
       }
       const generated = (payload?.username ?? "").trim().toLowerCase();
       if (generated) setCompanyUsername(generated);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Não foi possível gerar o usuário da empresa.";
+      const message = err instanceof Error ? err.message : "NÃ£o foi possÃ­vel gerar o usuÃ¡rio da empresa.";
       toast.error(message);
     } finally {
       setGeneratingUsername(false);
@@ -656,7 +656,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
       });
       const data = (await res.json().catch(() => null)) as { items?: QaseProjectOption[]; error?: string } | null;
       if (!res.ok) {
-        throw new Error(data?.error || "Não foi possível consultar os projetos da Qase.");
+        throw new Error(data?.error || "NÃ£o foi possÃ­vel consultar os projetos da Qase.");
       }
 
       const items = Array.isArray(data?.items)
@@ -717,7 +717,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     }
     // avoid duplicates
     if (qaseProjects.some((p) => p.code === code) || selectedQaseProjectCodes.includes(code)) {
-      setQaseProjectsError("Projeto já adicionado.");
+      setQaseProjectsError("Projeto jÃ¡ adicionado.");
       return;
     }
     const project: QaseProjectOption = { code, title: name, status: "unknown" };
@@ -792,7 +792,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     if (taxId.trim()) {
       const rawCnpj = normalizeCnpj(taxId);
       if (!isCnpjValid(rawCnpj)) {
-        setError("CNPJ inválido. Verifique o número.");
+        setError("CNPJ invÃ¡lido. Verifique o nÃºmero.");
         return;
       }
     }
@@ -809,7 +809,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           return;
         }
         if (!primaryProject || !selectedCodes.includes(primaryProject)) {
-          setError("Selecione o projeto principal da integração.");
+          setError("Selecione o projeto principal da integraÃ§Ã£o.");
           return;
         }
       }
@@ -880,14 +880,14 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             if (appsRes.ok) {
               const appsJson = await appsRes.json().catch(() => null);
               const apps = Array.isArray(appsJson?.items) ? appsJson.items : [];
-              if (apps.length) messages.push(`Aplicações geradas: ${apps.length}`);
+              if (apps.length) messages.push(`AplicaÃ§Ãµes geradas: ${apps.length}`);
             }
           } catch {
             // ignore
           }
         }
         if (messages.length) {
-          toast.success(messages.join(" — "));
+          toast.success(messages.join(" â€” "));
         } else {
           toast.success("Empresa cadastrada");
         }
@@ -912,7 +912,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
   const isViewMode = mode === 'view' && !isEditing;
   const isEditMode = mode === 'create' || mode === 'edit' || (mode === 'view' && isEditing);
   const modalTitle = mode === 'create' ? 'Cadastrar empresa' : isViewMode ? 'Empresa' : 'Editar empresa';
-  const submitButtonText = mode === 'create' ? 'Salvar empresa' : mode === 'edit' ? 'Salvar mudanças' : 'Salvar';
+  const submitButtonText = mode === 'create' ? 'Salvar empresa' : mode === 'edit' ? 'Salvar mudanÃ§as' : 'Salvar';
 
   function handleCloseOrCancel() {
     // From view->edit, cancel returns to read-only view.
@@ -931,7 +931,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
       <form
         aria-label={modalTitle}
         onSubmit={handleSubmit}
-        className="w-full max-w-5xl max-h-[calc(100vh-48px)] overflow-hidden rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) shadow-[0_28px_90px_rgba(2,8,23,0.36)]"
+        className="w-full max-w-5xl max-h-[calc(100vh-48px)] overflow-hidden rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_28px_90px_rgba(2,8,23,0.36)]"
       >
         <div className="flex items-start justify-between gap-3 border-b border-white/10 bg-[linear-gradient(135deg,#011848_0%,#10285d_48%,#6f102f_100%)] px-5 py-4 text-white sm:px-6">
           <div>
@@ -939,7 +939,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             <h3 className="mt-1 text-2xl font-black tracking-tight text-white">{modalTitle}</h3>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-white/78">
               {mode === 'create' 
-                ? 'Preencha os dados principais e configure a integração se necessário.'
+                ? 'Preencha os dados principais e configure a integraÃ§Ã£o se necessÃ¡rio.'
                 : isViewMode
                 ? 'Visualize os dados da empresa.'
                 : 'Edite os dados da empresa.'}
@@ -949,7 +949,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-lg leading-none text-white/80 transition hover:bg-white/18 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             onClick={handleCloseOrCancel}
-            aria-label="Fechar ou cancelar edição"
+            aria-label="Fechar ou cancelar ediÃ§Ã£o"
           >
             x
           </button>
@@ -964,9 +964,9 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
 
         <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
           <label className="block text-sm">
-            Nome / razão social
+            Nome / razÃ£o social
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex.: Testing Company LTDA"
@@ -976,10 +976,10 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           </label>
 
           <label className="block text-sm">
-            E-mail do administrador{mode === 'create' ? <span className="ml-1 text-(--tc-accent)">*</span> : null}
+            E-mail do administrador{mode === 'create' ? <span className="ml-1 text-[var(--tc-accent)]">*</span> : null}
             <input
               type="email"
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={adminEmail}
               onChange={(e) => setAdminEmail(e.target.value)}
               placeholder="admin@empresa.com"
@@ -988,7 +988,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               autoComplete="email"
             />
             {mode === 'create' && (
-              <span className="mt-1 block text-xs text-(--tc-text-muted)">Usado para envio das credenciais de acesso.</span>
+              <span className="mt-1 block text-xs text-[var(--tc-text-muted)]">Usado para envio das credenciais de acesso.</span>
             )}
           </label>
 
@@ -1002,14 +1002,14 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                 className="h-4 w-4"
                 disabled={isViewMode}
               />
-              <span className="text-sm text-(--tc-text)">{active ? 'Ativa' : 'Inativa'}</span>
+              <span className="text-sm text-[var(--tc-text)]">{active ? 'Ativa' : 'Inativa'}</span>
             </div>
           </label>
 
           <label className="block text-sm">
             CNPJ
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={taxId}
               onChange={(e) => setTaxId(normalizeCnpj(e.target.value))}
               placeholder="00.000.000/0000-00"
@@ -1017,7 +1017,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               onBlur={() => void handleCnpjBlur()}
               disabled={isViewMode}
             />
-            <span className="mt-1 block min-h-4 text-xs text-(--tc-text-muted)" aria-live="polite">
+            <span className="mt-1 block min-h-4 text-xs text-[var(--tc-text-muted)]" aria-live="polite">
               {cnpjLoading ? "Consultando BrasilAPI..." : cnpjMessage}
             </span>
           </label>
@@ -1025,7 +1025,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           <label className="block text-sm md:col-span-2">
             CEP
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={zip}
               onChange={(e) => setZip(formatCep(e.target.value))}
               placeholder="00000-000"
@@ -1033,26 +1033,26 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               aria-describedby="company-cep-feedback"
               disabled={isViewMode}
             />
-            <span id="company-cep-feedback" className="mt-1 block min-h-4 text-xs text-(--tc-text-muted)">
+            <span id="company-cep-feedback" className="mt-1 block min-h-4 text-xs text-[var(--tc-text-muted)]">
               {cepLoading ? "Consultando CEP..." : cepMessage}
             </span>
           </label>
 
           <label className="block text-sm md:col-span-2">
-            Endereço
+            EndereÃ§o
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Rua, número, cidade"
+              placeholder="Rua, nÃºmero, cidade"
               disabled={isViewMode}
             />
           </label>
 
           <label className="block text-sm">
-            Número
+            NÃºmero
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={addressNumber}
               onChange={(e) => setAddressNumber(e.target.value)}
               placeholder="Ex.: 123"
@@ -1063,10 +1063,10 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           <label className="block text-sm md:col-span-2">
             Complemento / detalhe
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={addressDetail}
               onChange={(e) => setAddressDetail(e.target.value)}
-              placeholder="Bloco, sala, referência"
+              placeholder="Bloco, sala, referÃªncia"
               disabled={isViewMode}
             />
           </label>
@@ -1074,7 +1074,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           <label className="block text-sm">
             Telefone comercial
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+55 11 3333-3333"
@@ -1085,7 +1085,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           <label className="block text-sm">
             Website
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://exemplo.com"
@@ -1096,13 +1096,13 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           <label className="block text-sm">
             LinkedIn da empresa
             <input
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={linkedin}
               onChange={(e) => setLinkedin(e.target.value)}
               placeholder="https://www.linkedin.com/company/..."
               disabled={isViewMode}
             />
-          </label>          <div className="md:col-span-2 rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) p-4">
+          </label>          <div className="md:col-span-2 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <UserAvatar
                 src={companyLogoPreviewSrc}
@@ -1111,16 +1111,16 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                 editable={!isViewMode}
                 onEdit={() => setLogoLibraryOpen(true)}
                 frameClassName="border-4 border-white bg-white shadow-[0_16px_34px_rgba(15,23,42,0.14)] ring-1 ring-(--tc-border)"
-                fallbackClassName="text-xl font-black tracking-[0.18em] text-(--tc-text-muted)"
-                buttonClassName="bg-(--tc-accent,#ef0001) text-white hover:opacity-90"
+                fallbackClassName="text-xl font-black tracking-[0.18em] text-[var(--tc-text-muted)]"
+                buttonClassName="bg-[var(--tc-accent,#ef0001)] text-white hover:opacity-90"
                 buttonLabel="Escolher logo da empresa"
               />
 
               <div className="min-w-0 flex-1 space-y-3">
                 <div>
-                  <p className="text-sm font-semibold text-(--tc-text)">Logo da empresa</p>
-                  <p className="mt-1 text-xs leading-5 text-(--tc-text-muted)">
-                    Informe a logo oficial da empresa. Essa imagem será usada em PDFs, relatórios, cards e áreas institucionais.
+                  <p className="text-sm font-semibold text-[var(--tc-text)]">Logo da empresa</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--tc-text-muted)]">
+                    Informe a logo oficial da empresa. Essa imagem serÃ¡ usada em PDFs, relatÃ³rios, cards e Ã¡reas institucionais.
                   </p>
                 </div>
 
@@ -1138,17 +1138,17 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                     <button
                       type="button"
                       onClick={clearCompanyLogoChoice}
-                      className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-(--tc-text) transition hover:bg-(--tc-surface-2)"
+                      className="rounded-lg border border-[var(--tc-border)] bg-[var(--tc-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--tc-text)] transition hover:bg-[var(--tc-surface-2)]"
                     >
                       Remover
                     </button>
                   ) : null}
                 </div>
 
-                <label className="block text-xs font-semibold text-(--tc-text-muted)">
+                <label className="block text-xs font-semibold text-[var(--tc-text-muted)]">
                   URL / valor salvo
                   <input
-                    className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                    className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
                     value={logoUrl}
                     onChange={(e) => {
                       clearCompanyLogoObjectPreview();
@@ -1160,7 +1160,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                   />
                 </label>
 
-                <p className="text-xs text-(--tc-text-muted)">
+                <p className="text-xs text-[var(--tc-text-muted)]">
                   Logo selecionada: {companyLogoPreviewSrc ? logoLabel : "Sem logo"}
                 </p>
               </div>
@@ -1173,7 +1173,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               kind={logoKind}
               onSelect={handleCompanyLogoLibraryChoice}
             />
-          </div><div className="md:col-span-2 rounded-xl border border-(--tc-border) bg-(--tc-surface-2) p-3">
+          </div><div className="md:col-span-2 rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-3">
             <label className="flex items-start gap-3 text-sm">
               <input
                 type="checkbox"
@@ -1183,19 +1183,19 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                 disabled={isViewMode}
               />
               <span>
-                <span className="block font-semibold text-(--tc-text)">Fan-out de notificações</span>
-                <span className="mt-1 block text-xs text-(--tc-text-muted)">
-                  Quando ativo, mudanças no contexto da empresa notificam também usuários vinculados.
+                <span className="block font-semibold text-[var(--tc-text)]">Fan-out de notificaÃ§Ãµes</span>
+                <span className="mt-1 block text-xs text-[var(--tc-text-muted)]">
+                  Quando ativo, mudanÃ§as no contexto da empresa notificam tambÃ©m usuÃ¡rios vinculados.
                 </span>
               </span>
             </label>
           </div>
 
           <label className="block text-sm md:col-span-2">
-            Usuário da empresa
+            UsuÃ¡rio da empresa
             <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
               <input
-                className="w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                className="w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
                 value={companyUsername}
                 onChange={(e) => setCompanyUsername(e.target.value)}
                 placeholder="login institucional"
@@ -1204,29 +1204,29 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
               <button
                 type="button"
                 onClick={() => void handleGenerateCompanyUsername()}
-                className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-sm font-semibold text-(--tc-text) disabled:opacity-60"
+                className="rounded-lg border border-[var(--tc-border)] bg-[var(--tc-surface)] px-3 py-2 text-sm font-semibold text-[var(--tc-text)] disabled:opacity-60"
                 disabled={isViewMode || generatingUsername || !name.trim()}
               >
-                {generatingUsername ? "Gerando..." : "Gerar usuário"}
+                {generatingUsername ? "Gerando..." : "Gerar usuÃ¡rio"}
               </button>
             </div>
-            <span className="mt-1 block text-xs text-(--tc-text-muted)">
-              Login único do perfil institucional da empresa. Será usado no usuário que acessa o Meu Perfil dessa empresa.
+            <span className="mt-1 block text-xs text-[var(--tc-text-muted)]">
+              Login Ãºnico do perfil institucional da empresa. SerÃ¡ usado no usuÃ¡rio que acessa o Meu Perfil dessa empresa.
             </span>
           </label>
 
           <fieldset className="md:col-span-2 rounded-2xl border border-sky-200/80 bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_100%)] p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] dark:border-sky-700/45 dark:bg-[linear-gradient(180deg,rgba(14,30,55,0.94)_0%,rgba(8,20,38,0.98)_100%)]" disabled={isViewMode}>
-            <legend className="flex items-center gap-2 px-2 text-sm font-bold text-(--tc-text)">
+            <legend className="flex items-center gap-2 px-2 text-sm font-bold text-[var(--tc-text)]">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-sky-600 text-white shadow-sm"><FiLink2 size={12} /></span>
-              Integração
+              IntegraÃ§Ã£o
             </legend>
-            <p className="mt-1 text-xs leading-5 text-(--tc-text-muted)">
-              Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicações. Cada projeto selecionado será tratado como uma aplicação separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
+            <p className="mt-1 text-xs leading-5 text-[var(--tc-text-muted)]">
+              Se a empresa tiver Qase, informe o token, busque os projetos e selecione as aplicaÃ§Ãµes. Cada projeto selecionado serÃ¡ tratado como uma aplicaÃ§Ã£o separada no painel, permitindo gerenciar diferentes produtos ou softwares de forma independente.
             </p>
 
             <div className="mt-3">
-              <p className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100"><FiZap size={13} className="text-sky-500" /> Integração com Qase</p>
-              <p className="mt-1 text-xs text-(--tc-text-muted)">Informe o token da Qase (novo ou já salvo) e clique em &quot;Buscar projetos&quot; para carregar os projetos disponíveis. Selecione os projetos que deseja vincular — cada projeto selecionado será cadastrado como uma aplicação da empresa.</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100"><FiZap size={13} className="text-sky-500" /> IntegraÃ§Ã£o com Qase</p>
+              <p className="mt-1 text-xs text-[var(--tc-text-muted)]">Informe o token da Qase (novo ou jÃ¡ salvo) e clique em &quot;Buscar projetos&quot; para carregar os projetos disponÃ­veis. Selecione os projetos que deseja vincular â€” cada projeto selecionado serÃ¡ cadastrado como uma aplicaÃ§Ã£o da empresa.</p>
             </div>
 
             <div className="mt-4 space-y-4">
@@ -1288,28 +1288,28 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                 ) : null}
 
                 {qaseProjects.length > 0 ? (
-                  <div className="space-y-4 rounded-xl border border-(--tc-border) bg-(--tc-surface) p-4">
+                  <div className="space-y-4 rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface)] p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="flex items-center gap-2 text-sm font-semibold text-(--tc-text)"><FiCloudLightning size={14} className="text-(--tc-accent,#ef0001)" /> Projetos encontrados</p>
-                        <p className="mt-1 text-xs text-(--tc-text-muted)">Selecione os projetos que deseja vincular — cada projeto vira uma aplicação independente.</p>
+                        <p className="flex items-center gap-2 text-sm font-semibold text-[var(--tc-text)]"><FiCloudLightning size={14} className="text-[var(--tc-accent,#ef0001)]" /> Projetos encontrados</p>
+                        <p className="mt-1 text-xs text-[var(--tc-text-muted)]">Selecione os projetos que deseja vincular â€” cada projeto vira uma aplicaÃ§Ã£o independente.</p>
                       </div>
-                      <div className="text-sm text-(--tc-text-muted)">{Math.min(displayLimit, qaseProjects.filter((p) => {
+                      <div className="text-sm text-[var(--tc-text-muted)]">{Math.min(displayLimit, qaseProjects.filter((p) => {
                         const q = searchProjects.trim().toLowerCase();
                         if (onlyValid && p.status !== "valid") return false;
                         if (!q) return true;
                         return p.code.toLowerCase().includes(q) || (p.title || "").toLowerCase().includes(q);
-                      }).length)} carregados • {selectedProjects.length} selecionado{selectedProjects.length !== 1 ? "s" : ""}</div>
+                      }).length)} carregados â€¢ {selectedProjects.length} selecionado{selectedProjects.length !== 1 ? "s" : ""}</div>
                     </div>
 
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-(--tc-text-muted)" />
-                        <input value={searchProjects} onChange={(e) => setSearchProjects(e.target.value)} placeholder="Filtrar projetos" className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) pl-10 pr-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)" />
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted)]" />
+                        <input value={searchProjects} onChange={(e) => setSearchProjects(e.target.value)} placeholder="Filtrar projetos" className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] pl-10 pr-3 py-2 text-sm text-[var(--tc-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)" />
                       </div>
-                      <label className="ml-2 flex items-center gap-2 text-xs text-(--tc-text-muted)">
+                      <label className="ml-2 flex items-center gap-2 text-xs text-[var(--tc-text-muted)]">
                         <input type="checkbox" checked={onlyValid} onChange={(e) => setOnlyValid(e.target.checked)} className="h-4 w-4" />
-                        <span>Mostrar apenas válidos</span>
+                        <span>Mostrar apenas vÃ¡lidos</span>
                       </label>
                     </div>
 
@@ -1331,17 +1331,17 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                             >
                               <input type="checkbox" checked={isSelected} onChange={() => toggleSelectedQaseProject(project.code)} className="h-5 w-5" />
                               <div className="flex items-center gap-3 min-w-0">
-                                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-(--tc-surface-2) text-(--tc-text-muted)"><FiCloudLightning size={14} /></span>
+                                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--tc-surface-2)] text-[var(--tc-text-muted)]"><FiCloudLightning size={14} /></span>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <span className="block font-semibold text-(--tc-text)">{project.title}</span>
+                                    <span className="block font-semibold text-[var(--tc-text)]">{project.title}</span>
                                     {project.status && (
                                       <span className={`text-xs font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full ${project.status === "valid" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : project.status === "invalid" ? "bg-rose-50 text-rose-700 border border-rose-200" : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
-                                        {project.status === "valid" ? "Válido" : project.status === "invalid" ? "Inválido" : "Pendente"}
+                                        {project.status === "valid" ? "VÃ¡lido" : project.status === "invalid" ? "InvÃ¡lido" : "Pendente"}
                                       </span>
                                     )}
                                   </div>
-                                  <span className="block text-xs text-(--tc-text-muted)">{project.code}</span>
+                                  <span className="block text-xs text-[var(--tc-text-muted)]">{project.code}</span>
                                 </div>
                               </div>
                             </label>
@@ -1351,7 +1351,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                     </div>
 
                     <div className="mt-2 flex items-center justify-between">
-                      <div className="text-xs text-(--tc-text-muted)">Exibindo {Math.min(displayLimit, qaseProjects.filter((p) => {
+                      <div className="text-xs text-[var(--tc-text-muted)]">Exibindo {Math.min(displayLimit, qaseProjects.filter((p) => {
                         const q = searchProjects.trim().toLowerCase();
                         if (onlyValid && p.status !== "valid") return false;
                         if (!q) return true;
@@ -1364,7 +1364,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                           if (!q) return true;
                           return p.code.toLowerCase().includes(q) || (p.title || "").toLowerCase().includes(q);
                         }).length > displayLimit ? (
-                          <button type="button" onClick={() => setDisplayLimit((d) => d + 10)} className="rounded-md px-3 py-1 text-xs font-semibold text-(--tc-text) hover:bg-(--tc-surface-2)">Carregar mais</button>
+                          <button type="button" onClick={() => setDisplayLimit((d) => d + 10)} className="rounded-md px-3 py-1 text-xs font-semibold text-[var(--tc-text)] hover:bg-[var(--tc-surface-2)]">Carregar mais</button>
                         ) : null}
                         <button type="button" onClick={() => setProjectsOpen(false)} className="rounded-md border px-3 py-1 text-xs font-semibold">Fechar</button>
                       </div>
@@ -1373,7 +1373,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                     <div className="mt-3">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-medium">{selectedProjects.length} projeto{selectedProjects.length !== 1 ? "s" : ""} selecionado{selectedProjects.length !== 1 ? "s" : ""}</div>
-                        {selectedProjects.length > 0 && <div className="text-xs text-(--tc-text-muted)">{selectedProjects.length} selecionado(s)</div>}
+                        {selectedProjects.length > 0 && <div className="text-xs text-[var(--tc-text-muted)]">{selectedProjects.length} selecionado(s)</div>}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-3">
                         {selectedProjects.map((p) => (
@@ -1381,9 +1381,9 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sky-600 dark:bg-slate-950/70 dark:text-sky-300"><FiCheck size={14} /></div>
                             <div className="flex flex-col text-left">
                               <strong className="text-sm">{p.title}</strong>
-                              <span className="text-xs text-(--tc-text-muted)">{p.code}</span>
+                              <span className="text-xs text-[var(--tc-text-muted)]">{p.code}</span>
                             </div>
-                            <button type="button" onClick={() => removeSelectedProject(p.code)} className="ml-2 text-xs text-(--tc-text-muted)">x</button>
+                            <button type="button" onClick={() => removeSelectedProject(p.code)} className="ml-2 text-xs text-[var(--tc-text-muted)]">x</button>
                           </span>
                         ))}
                       </div>
@@ -1393,7 +1393,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                       <div>
                         <label className="block text-sm">Projeto principal
                           <select
-                            className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+                            className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
                             value={qaseProjectCode}
                             onChange={(e) => {
                               const code = e.target.value;
@@ -1412,15 +1412,15 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
                         </label>
                       </div>
                       <div className="flex flex-col justify-center">
-                        <div className="text-sm font-medium">Aplicações que serão criadas</div>
-                        <div className="mt-1 text-xs text-(--tc-text-muted)">{selectedProjects.length} aplicação{selectedProjects.length !== 1 ? "s" : ""}</div>
+                        <div className="text-sm font-medium">AplicaÃ§Ãµes que serÃ£o criadas</div>
+                        <div className="mt-1 text-xs text-[var(--tc-text-muted)]">{selectedProjects.length} aplicaÃ§Ã£o{selectedProjects.length !== 1 ? "s" : ""}</div>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 rounded-xl border border-dashed border-sky-300 bg-sky-50 px-4 py-4 text-sm text-slate-600 dark:border-sky-700/55 dark:bg-sky-950/30 dark:text-slate-300">
                     <FiSearch size={18} className="shrink-0 text-sky-500" />
-                    <span>Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicações da empresa. Cada projeto da Qase será cadastrado como uma aplicação independente.</span>
+                    <span>Informe o token e clique em &quot;Buscar projetos&quot; para selecionar as aplicaÃ§Ãµes da empresa. Cada projeto da Qase serÃ¡ cadastrado como uma aplicaÃ§Ã£o independente.</span>
                   </div>
                 )}
               </div>
@@ -1429,9 +1429,9 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           </fieldset>
 
           <label className="block text-sm md:col-span-2">
-            Descrição curta
+            DescriÃ§Ã£o curta
             <textarea
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
@@ -1443,11 +1443,11 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           <label className="block text-sm md:col-span-2">
             Notas internas
             <textarea
-              className="mt-1 w-full rounded-lg border border-(--tc-border) bg-(--tc-input-bg,#eef4ff) px-3 py-2 text-sm text-(--tc-text) disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="mt-1 w-full rounded-lg border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-2 text-sm text-[var(--tc-text)] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="Observações adicionais"
+              placeholder="ObservaÃ§Ãµes adicionais"
               disabled={isViewMode}
             />
           </label>
@@ -1461,7 +1461,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
           <button
             type="button"
-            className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-4 py-2 text-sm text-(--tc-text) hover:bg-(--tc-surface-2) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+            className="rounded-lg border border-[var(--tc-border)] bg-[var(--tc-surface)] px-4 py-2 text-sm text-[var(--tc-text)] hover:bg-[var(--tc-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
             onClick={handleCloseOrCancel}
           >
             {isViewMode ? 'Fechar' : 'Cancelar'}
@@ -1470,7 +1470,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           {isViewMode && (
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-(--tc-text-inverse,#ffffff) hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-inverse,#ffffff)] hover:bg-[var(--tc-accent-hover,#c80001)] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               onClick={() => setIsEditing(true)}
             >
               <FiEdit2 size={16} />
@@ -1481,7 +1481,7 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
           {isEditMode && (
             <button
               type="submit"
-              className="rounded-lg bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-(--tc-text-inverse,#ffffff) hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
+              className="rounded-lg bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-inverse,#ffffff)] hover:bg-[var(--tc-accent-hover,#c80001)] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--tc-focus)"
               disabled={busy}
             >
               {busy ? "Salvando..." : submitButtonText}
@@ -1493,3 +1493,4 @@ export function CreateClientModal({ open, onClose, onCreate, onUpdate, onOpenUse
     </div>
   );
 }
+

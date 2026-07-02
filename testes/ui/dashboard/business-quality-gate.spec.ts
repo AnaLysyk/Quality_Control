@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 function slugify(value: string) {
@@ -46,3 +46,4 @@ test("quality gate reprova run com falhas", async ({ page, context }) => {
   const companyGate = page.getByTestId("company-quality-status").first();
   await expect(companyGate).toHaveAttribute("data-status", "failed");
 });
+

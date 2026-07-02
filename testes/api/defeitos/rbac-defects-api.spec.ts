@@ -1,9 +1,9 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { criarDefeitoManual } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
 test.describe("rbac - api defeitos manuais", () => {
-  test("company nÃ£o consegue deletar defeito manual via API (403)", async ({ page, context }) => {
+  test("company nÃƒÂ£o consegue deletar defeito manual via API (403)", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "company",
       companies: ["DEMO"],
@@ -12,7 +12,7 @@ test.describe("rbac - api defeitos manuais", () => {
 
     await page.goto("/empresas/demo/defeitos", { waitUntil: "networkidle" });
 
-    // cria um defeito manual para garantir slug previsÃ­vel
+    // cria um defeito manual para garantir slug previsÃƒÂ­vel
     await page.getByTestId("defect-title").fill("Defeito proibido");
     await page.getByTestId("defect-create").click();
 
@@ -20,3 +20,4 @@ test.describe("rbac - api defeitos manuais", () => {
     expect(response.status()).toBe(403);
   });
 });
+

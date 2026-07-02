@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type BrainScreenContext = {
   route?: string | null;
@@ -34,4 +34,5 @@ export function summarizeBrainScreenContext(context: BrainScreenContext) {
     .filter(Boolean)
     .join(" | ");
 }
+
 

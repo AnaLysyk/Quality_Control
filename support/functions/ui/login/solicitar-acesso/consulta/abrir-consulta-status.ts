@@ -28,3 +28,4 @@ export async function abrirStatusPorLink(page: Page, accessKey: string) {
 
   await expect(result).toBeVisible({ timeout: 90000 });
 }
+

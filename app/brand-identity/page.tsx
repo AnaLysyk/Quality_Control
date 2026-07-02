@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -7,14 +7,14 @@ import styles from "./page.module.css";
 
 export default function BrandIdentityPage() {
   const colors = [
-    { name: "Primary", hex: "#011848", css: "--tc-primary", usage: "Cabeçalhos, textos principais" },
+    { name: "Primary", hex: "#011848", css: "--tc-primary", usage: "CabeÃ§alhos, textos principais" },
     { name: "Primary Dark", hex: "#000f2e", css: "--tc-primary-dark", usage: "Hover states, elementos escuros" },
-    { name: "Accent", hex: "#ef0001", css: "--tc-accent", usage: "Botões, links, destaques" },
+    { name: "Accent", hex: "#ef0001", css: "--tc-accent", usage: "BotÃµes, links, destaques" },
     { name: "Accent Hover", hex: "#c80001", css: "--tc-accent-hover", usage: "Estados hover" },
     { name: "Accent Active", hex: "#a80001", css: "--tc-accent-active", usage: "Estados ativos" },
-    { name: "Background", hex: "#f4f6fb", css: "--page-bg", usage: "Fundo da página" },
+    { name: "Background", hex: "#f4f6fb", css: "--page-bg", usage: "Fundo da pÃ¡gina" },
     { name: "Text Primary", hex: "#0b1a3c", css: "--tc-text-primary", usage: "Texto principal" },
-    { name: "Text Secondary", hex: "#4b5563", css: "--tc-text-secondary", usage: "Texto secundário" },
+    { name: "Text Secondary", hex: "#4b5563", css: "--tc-text-secondary", usage: "Texto secundÃ¡rio" },
     { name: "Surface", hex: "#ffffff", css: "--tc-surface", usage: "Cards, modais" },
   ];
 
@@ -56,7 +56,7 @@ export default function BrandIdentityPage() {
                   className="mx-auto"
                 />
               </div>
-              <h3 className="font-semibold text-[#011848]">Versão Colorida</h3>
+              <h3 className="font-semibold text-[#011848]">VersÃ£o Colorida</h3>
               <p className="text-sm text-[#4b5563]">Para fundos claros</p>
             </div>
             <div className="text-center">
@@ -69,7 +69,7 @@ export default function BrandIdentityPage() {
                   className="mx-auto brightness-0 invert"
                 />
               </div>
-              <h3 className="font-semibold text-[#011848]">Versão Branca</h3>
+              <h3 className="font-semibold text-[#011848]">VersÃ£o Branca</h3>
               <p className="text-sm text-[#4b5563]">Para fundos escuros</p>
             </div>
             <div className="text-center">
@@ -82,7 +82,7 @@ export default function BrandIdentityPage() {
                   className="mx-auto brightness-0 invert"
                 />
               </div>
-              <h3 className="font-semibold text-[#011848]">Versão Azul</h3>
+              <h3 className="font-semibold text-[#011848]">VersÃ£o Azul</h3>
               <p className="text-sm text-[#4b5563]">Para fundos coloridos</p>
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function BrandIdentityPage() {
               <p className="text-lg font-mono text-[#011848] mb-2">
                 function hello() {`{ return "world"; }`}
               </p>
-              <p className="text-sm text-[#4b5563]">Para código e elementos técnicos</p>
+              <p className="text-sm text-[#4b5563]">Para cÃ³digo e elementos tÃ©cnicos</p>
             </div>
           </div>
         </section>
@@ -134,23 +134,23 @@ export default function BrandIdentityPage() {
             <div>
               <h3 className="text-xl font-semibold text-[#011848] mb-4">Qualidade</h3>
               <p className="text-[#4b5563]">
-                Compromisso com excelência e precisão em todos os processos de teste e válidação.
+                Compromisso com excelÃªncia e precisÃ£o em todos os processos de teste e vÃ¡lidaÃ§Ã£o.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-[#011848] mb-4">Inovação</h3>
+              <h3 className="text-xl font-semibold text-[#011848] mb-4">InovaÃ§Ã£o</h3>
               <p className="text-[#4b5563]">
-                Tecnologia de ponta para monitoramento inteligente e análise em tempo real.
+                Tecnologia de ponta para monitoramento inteligente e anÃ¡lise em tempo real.
               </p>
             </div>
             <div>
               <h3 className="text-xl font-semibold text-[#011848] mb-4">Confiabilidade</h3>
               <p className="text-[#4b5563]">
-                Dados precisos e insights acionáveis para tomada de decisão estratégica.
+                Dados precisos e insights acionÃ¡veis para tomada de decisÃ£o estratÃ©gica.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-[#011848] mb-4">Transparência</h3>
+              <h3 className="text-xl font-semibold text-[#011848] mb-4">TransparÃªncia</h3>
               <p className="text-[#4b5563]">
                 Visibilidade completa do processo de qualidade para todas as partes interessadas.
               </p>
@@ -164,19 +164,19 @@ export default function BrandIdentityPage() {
           <div className="space-y-4">
             <div className="border-l-4 border-[#011848] pl-4">
               <h3 className="font-semibold text-[#011848]">Logo</h3>
-              <p className="text-[#4b5563]">Mantenha proporções e não distorça. Use sempre com fundo adequado para legibilidade.</p>
+              <p className="text-[#4b5563]">Mantenha proporÃ§Ãµes e nÃ£o distorÃ§a. Use sempre com fundo adequado para legibilidade.</p>
             </div>
             <div className="border-l-4 border-[#ef0001] pl-4">
               <h3 className="font-semibold text-[#011848]">Cor Accent</h3>
-              <p className="text-[#4b5563]">Use com moderação. Reserve para ações importantes e estados de erro.</p>
+              <p className="text-[#4b5563]">Use com moderaÃ§Ã£o. Reserve para aÃ§Ãµes importantes e estados de erro.</p>
             </div>
             <div className="border-l-4 border-[#4b5563] pl-4">
               <h3 className="font-semibold text-[#011848]">Tipografia</h3>
-              <p className="text-[#4b5563]">Poppins para texto corrido, Geist Mono apenas para código técnico.</p>
+              <p className="text-[#4b5563]">Poppins para texto corrido, Geist Mono apenas para cÃ³digo tÃ©cnico.</p>
             </div>
             <div className="border-l-4 border-[#011848]/50 pl-4">
-              <h3 className="font-semibold text-[#011848]">Espaçamento</h3>
-              <p className="text-[#4b5563]">Mantenha consistência com o sistema de design baseado em múltiplos de 4px.</p>
+              <h3 className="font-semibold text-[#011848]">EspaÃ§amento</h3>
+              <p className="text-[#4b5563]">Mantenha consistÃªncia com o sistema de design baseado em mÃºltiplos de 4px.</p>
             </div>
           </div>
         </section>
@@ -184,3 +184,4 @@ export default function BrandIdentityPage() {
     </div>
   );
 }
+

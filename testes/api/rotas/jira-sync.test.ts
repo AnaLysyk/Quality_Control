@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/lib/prismaClient";
 import { describeDb } from "../../../support/functions/banco-de-dados/descrever-banco";
 import * as jiraSync from "@/lib/jiraSync";
 
@@ -32,3 +32,4 @@ describeDb("jiraSync.syncJiraIssuesToApplications", () => {
     expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({ where: expect.any(Object), create: expect.any(Object), update: expect.any(Object) }));
   });
 });
+

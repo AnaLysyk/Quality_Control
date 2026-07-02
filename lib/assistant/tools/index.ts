@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Re-export all tool executors from a single barrel file.
  */
 export { toolGetScreenContext } from "./getScreenContext";
@@ -12,3 +12,4 @@ export { buildCommentCreationAction, executeCreateComment } from "./createCommen
 export { executeCreateTestCase } from "./createTestCase";
 export { toolSuggestNextStep } from "./suggestNextStep";
 export type { AssistantExecutorResult } from "./types";
+

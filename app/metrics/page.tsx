@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -71,15 +71,15 @@ export default function MetricasPage() {
   return (
     <div className="min-h-screen bg-(--page-bg,#ffffff) text-(--page-text,#0b1a3c)">
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 sm:px-6 sm:pt-10">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-(--tc-text-primary,#0b1a3c)">Métricas</h1>
-        <p className="mt-2 text-sm sm:text-base text-(--tc-text-secondary,#4b5563)">
-          Selecione uma empresa para ver as métricas por aplicação.
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">MÃ©tricas</h1>
+        <p className="mt-2 text-sm sm:text-base text-[var(--tc-text-secondary,#4b5563)]">
+          Selecione uma empresa para ver as mÃ©tricas por aplicaÃ§Ã£o.
         </p>
 
         <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           {clients.length === 0 ? (
-            <p className="text-sm text-(--tc-text-secondary,#4b5563)">
-              Nenhuma empresa vinculada/selecionável para este usuário.
+            <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
+              Nenhuma empresa vinculada/selecionÃ¡vel para este usuÃ¡rio.
             </p>
           ) : (
             <div className="grid gap-3">
@@ -112,3 +112,4 @@ export default function MetricasPage() {
     </div>
   );
 }
+

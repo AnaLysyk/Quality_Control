@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { createQualityRun, updateQualityRunStatus, updateRunItemResult } from "@/lib/runOperationStore";
 
@@ -109,3 +109,4 @@ export async function POST(request: NextRequest) {
     message: "Run Playwright criada e concluida pelo Automation Studio.",
   }, { status: 201 });
 }
+

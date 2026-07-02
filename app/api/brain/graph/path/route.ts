@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { findPathBetweenNodes } from "@/lib/brain";
 import { assertBrainNodeAccess, isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
@@ -108,3 +108,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Erro ao buscar caminho no grafo" }, { status: 500 });
   }
 }
+

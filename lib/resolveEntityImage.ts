@@ -1,4 +1,4 @@
-export type ResolveEntityImageParams = {
+﻿export type ResolveEntityImageParams = {
   isCompanyContext?: boolean;
   companyLogoUrl?: string | null;
   userAvatarUrl?: string | null;
@@ -10,3 +10,4 @@ export function resolveEntityImage(params: ResolveEntityImageParams): string | n
 }
 
 export default resolveEntityImage;
+

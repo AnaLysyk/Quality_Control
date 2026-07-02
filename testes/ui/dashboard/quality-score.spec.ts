@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
@@ -15,3 +15,4 @@ test("release exibe quality score", async ({ page, context }) => {
   await expect(page.getByText("Pass rate", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(/\d{1,3}%/).first()).toBeVisible();
 });
+

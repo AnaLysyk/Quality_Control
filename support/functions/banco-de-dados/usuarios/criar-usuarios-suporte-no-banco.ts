@@ -122,3 +122,4 @@ upsertSupportUsersAndSendWelcomeEmails().catch((error: unknown) => {
 }).finally(async () => {
   await prisma.$disconnect().catch(() => undefined);
 });
+

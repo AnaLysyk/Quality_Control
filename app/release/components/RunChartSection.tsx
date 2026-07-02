@@ -1,4 +1,4 @@
-import StatusChart from "@/components/StatusChart";
+﻿import StatusChart from "@/components/StatusChart";
 import { ManualStatsForm } from "@/components/ManualStatsForm";
 import type { RunDetailViewModel } from "@/lib/runDetailViewModel";
 import type { ReleaseEntry } from "../data";
@@ -21,7 +21,7 @@ export function RunChartSection({ vm }: { vm: RunDetailViewModel }) {
       )}
 
       <div id="pdf-summary" className="pt-6 border-t border-white/10">
-        {/* ── Stats bar (proportional) ── */}
+        {/* â”€â”€ Stats bar (proportional) â”€â”€ */}
         {vm.hasData && (
           <div className="flex h-2.5 w-full rounded-full overflow-hidden mb-6">
             {STATUS_ITEMS.map((item) => {
@@ -40,14 +40,14 @@ export function RunChartSection({ vm }: { vm: RunDetailViewModel }) {
           </div>
         )}
 
-        {/* ── Chart + Stat cards ── */}
+        {/* â”€â”€ Chart + Stat cards â”€â”€ */}
         <div className="flex flex-col xl:flex-row items-center xl:items-stretch gap-8">
-          {/* Donut chart — large presence */}
+          {/* Donut chart â€” large presence */}
           <div className="w-full max-w-md xl:max-w-sm">
-            <StatusChart stats={vm.stats} hasData={vm.hasData} emptyLabel="Sem execuções" />
+            <StatusChart stats={vm.stats} hasData={vm.hasData} emptyLabel="Sem execuÃ§Ãµes" />
           </div>
 
-          {/* Stat cards — right side */}
+          {/* Stat cards â€” right side */}
           <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-3 content-center">
             {STATUS_ITEMS.map((item) => {
               const val = vm.stats[item.key];
@@ -86,7 +86,7 @@ export function RunChartSection({ vm }: { vm: RunDetailViewModel }) {
           </div>
         </div>
 
-        {/* ── Source indicator ── */}
+        {/* â”€â”€ Source indicator â”€â”€ */}
         <p className="text-[11px] text-white/30 mt-4 text-right">
           {vm.source === "API"
             ? "Dados integrados via Qase."
@@ -96,3 +96,4 @@ export function RunChartSection({ vm }: { vm: RunDetailViewModel }) {
     </>
   );
 }
+

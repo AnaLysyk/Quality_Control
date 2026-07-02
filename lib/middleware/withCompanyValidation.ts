@@ -1,4 +1,4 @@
-import { authenticateRequest } from "@/lib/jwtAuth";
+﻿import { authenticateRequest } from "@/lib/jwtAuth";
 import { assertCompanyAccess } from "@/lib/rbac/validateCompanyAccess";
 import type { AuthUser } from "@/lib/jwtAuth";
 
@@ -32,7 +32,7 @@ export function withCompanyValidation(handler: HandlerFn) {
         return new Response(JSON.stringify({ error: "companyId ausente" }), { status: 400, headers: { "Content-Type": "application/json" } });
       }
       if (message === "FORBIDDEN_COMPANY_ACCESS") {
-        return new Response(JSON.stringify({ error: "Sem acesso à empresa" }), { status: 403, headers: { "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Sem acesso Ã  empresa" }), { status: 403, headers: { "Content-Type": "application/json" } });
       }
       return new Response(JSON.stringify({ error: "Erro inesperado" }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
@@ -40,3 +40,4 @@ export function withCompanyValidation(handler: HandlerFn) {
     return await handler(user, companyId!, req);
   };
 }
+

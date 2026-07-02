@@ -1,4 +1,4 @@
-const distDir = process.env.NEXT_DIST_DIR?.trim() || ".next";
+﻿const distDir = process.env.NEXT_DIST_DIR?.trim() || ".next";
 
 // Resolve build version: prefer CI env, fallback to git short hash, then package version
 function resolveAppVersion(): string {
@@ -94,3 +94,4 @@ const nextConfig = {
   },
 };
 module.exports = nextConfig;
+

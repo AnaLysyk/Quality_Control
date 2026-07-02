@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getRunDetailViewModel, type RunDetailViewModel } from "@/lib/runDetailViewModel";
 import { getQaseRunKanban } from "@/integrations/qase";
@@ -57,7 +57,7 @@ function ensureSpace(pdf: PDF, y: number, needed: number): number {
   return y;
 }
 
-// ── Page 1: Header + Stats + Gate/Score ──────────────────────
+// â”€â”€ Page 1: Header + Stats + Gate/Score â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function drawHeader(pdf: PDF, vm: RunDetailViewModel): number {
   // Dark header band
@@ -79,7 +79,7 @@ function drawHeader(pdf: PDF, vm: RunDetailViewModel): number {
     pdf.text(vm.displaySummary.slice(0, 100), MARGIN + 6, MARGIN + 28);
   }
 
-  // Right side — date
+  // Right side â€” date
   pdf.setFontSize(8);
   pdf.setTextColor("#9ca3af");
   pdf.text(new Date().toLocaleDateString("pt-BR"), PAGE_W - MARGIN - 6, MARGIN + 10, {
@@ -95,10 +95,10 @@ function drawMetadata(pdf: PDF, vm: RunDetailViewModel, y: number): number {
   pdf.setFont("helvetica", "normal");
 
   const rows = [
-    ["Aplicação", vm.appMeta.label],
+    ["AplicaÃ§Ã£o", vm.appMeta.label],
     ["Run ID", vm.runId != null ? String(vm.runId) : "-"],
     ["Projeto", vm.projectCode],
-    ["Origem", vm.source === "API" ? "Integração Qase" : "Manual"],
+    ["Origem", vm.source === "API" ? "IntegraÃ§Ã£o Qase" : "Manual"],
     ["Empresa", vm.companySlug !== "demo" ? vm.companySlug : "-"],
   ];
 
@@ -121,7 +121,7 @@ function drawStatsBlock(pdf: PDF, vm: RunDetailViewModel, y: number): number {
   pdf.setFontSize(11);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(C.navy);
-  pdf.text("Resultados da Execução", MARGIN, y);
+  pdf.text("Resultados da ExecuÃ§Ã£o", MARGIN, y);
   y += 8;
 
   // Status bar
@@ -230,7 +230,7 @@ function drawGateScore(pdf: PDF, vm: RunDetailViewModel, y: number): number {
   return y + 24;
 }
 
-// ── Page 2: Kanban summary + case table ──────────────────────
+// â”€â”€ Page 2: Kanban summary + case table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function drawKanbanSummary(pdf: PDF, kanban: KanbanData, y: number): number {
   y = ensureSpace(pdf, y, 30);
@@ -238,7 +238,7 @@ function drawKanbanSummary(pdf: PDF, kanban: KanbanData, y: number): number {
   pdf.setFontSize(11);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(C.navy);
-  pdf.text("Kanban — Resumo por Coluna", MARGIN, y);
+  pdf.text("Kanban â€” Resumo por Coluna", MARGIN, y);
   y += 7;
 
   const cols: { key: keyof KanbanData; label: string; color: string }[] = [
@@ -292,7 +292,7 @@ function drawCaseTable(pdf: PDF, kanban: KanbanData, y: number): number {
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(C.white);
   pdf.text("ID", MARGIN + 2, y + 5);
-  pdf.text("Título", MARGIN + 18, y + 5);
+  pdf.text("TÃ­tulo", MARGIN + 18, y + 5);
   pdf.text("Status", MARGIN + CONTENT_W - 38, y + 5);
   pdf.text("Bug", MARGIN + CONTENT_W - 16, y + 5);
   y += 8;
@@ -372,12 +372,12 @@ function drawFooter(pdf: PDF) {
     pdf.setFontSize(7);
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(C.gray);
-    pdf.text("Testing Company — Relatório de Run", MARGIN, PAGE_H - 8);
-    pdf.text(`Página ${i} de ${pages}`, PAGE_W - MARGIN, PAGE_H - 8, { align: "right" });
+    pdf.text("Testing Company â€” RelatÃ³rio de Run", MARGIN, PAGE_H - 8);
+    pdf.text(`PÃ¡gina ${i} de ${pages}`, PAGE_W - MARGIN, PAGE_H - 8, { align: "right" });
   }
 }
 
-// ── Public API ───────────────────────────────────────────────
+// â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function generateRunPdf(
   companySlug: string,
@@ -406,7 +406,7 @@ export async function generateRunPdf(
   y = drawGateScore(pdf, vm, y);
   y = drawTimeline(pdf, vm, y);
 
-  // Page 2 — kanban
+  // Page 2 â€” kanban
   const totalCases =
     kanban.pass.length + kanban.fail.length + kanban.blocked.length + kanban.notRun.length;
   if (totalCases > 0) {
@@ -421,3 +421,4 @@ export async function generateRunPdf(
   const arrayBuffer = pdf.output("arraybuffer");
   return Buffer.from(arrayBuffer);
 }
+

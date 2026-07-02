@@ -128,3 +128,4 @@ function BrainNeuronNodeComponent({ data, selected }: NodeProps) {
 }
 
 export const BrainNeuronNode = memo(BrainNeuronNodeComponent);
+

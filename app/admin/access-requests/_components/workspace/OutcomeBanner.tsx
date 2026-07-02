@@ -1,9 +1,9 @@
-function bannerCopy(status: string, accepting: boolean, requestingAdjustment: boolean) {
+﻿function bannerCopy(status: string, accepting: boolean, requestingAdjustment: boolean) {
   if (accepting) {
     return {
       tone: "border-sky-200 bg-sky-50 text-sky-900",
-      label: "Processando decisão",
-      title: "Validando solicitação...",
+      label: "Processando decisÃ£o",
+      title: "Validando solicitaÃ§Ã£o...",
     };
   }
 
@@ -27,7 +27,7 @@ function bannerCopy(status: string, accepting: boolean, requestingAdjustment: bo
     return {
       tone: "border-rose-200 bg-rose-50 text-rose-900",
       label: "Fluxo encerrado",
-      title: "Solicitação recusada.",
+      title: "SolicitaÃ§Ã£o recusada.",
     };
   }
 
@@ -61,3 +61,4 @@ export function OutcomeBanner({
     </section>
   );
 }
+

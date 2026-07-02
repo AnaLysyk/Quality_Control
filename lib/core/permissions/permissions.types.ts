@@ -1,4 +1,4 @@
-import type { SystemRole } from "@/lib/auth/roles";
+﻿import type { SystemRole } from "@/lib/auth/roles";
 
 export type UserRole = SystemRole;
 export type CompanyRole = SystemRole;
@@ -26,3 +26,4 @@ export type Permission =
   | "manage_tests"
   | "view_admin"
   | "manage_settings";
+

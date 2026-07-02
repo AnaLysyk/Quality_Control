@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { prisma } from "@/lib/prismaClient";
 import {
@@ -92,3 +92,4 @@ export function countPermissionActions(input: PermissionMatrix | null | undefine
     0,
   );
 }
+

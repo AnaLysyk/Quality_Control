@@ -112,3 +112,4 @@ describe("active identity", () => {
     expect(identity.showCompanyTag).toBe(false);
   });
 });
+

@@ -1,4 +1,4 @@
-import { POST } from "@/api/brain/convert/route";
+﻿import { POST } from "@/api/brain/convert/route";
 
 function makeRequest(body: Record<string, unknown>) {
   return new Request("http://localhost/api/brain/convert", {
@@ -106,3 +106,4 @@ describe("api/brain/convert", () => {
     expect(payload.message).toBeTruthy();
   });
 });
+

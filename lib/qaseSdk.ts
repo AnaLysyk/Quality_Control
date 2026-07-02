@@ -1,4 +1,4 @@
-type RequestOptions = {
+﻿type RequestOptions = {
   params?: Record<string, string | number | undefined>;
   headers?: Record<string, string>;
   cache?: RequestCache;
@@ -203,7 +203,7 @@ export class QaseClient {
     return data;
   }
 
-  // ── Results ────────────────────────────────────────────────────────────────
+  // â”€â”€ Results â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async listResults(projectCode: string, params?: Record<string, string | number | undefined>) {
     const { data } = await this.getWithStatus<{ result?: { entities?: unknown[]; total?: number; count?: number } }>(
@@ -252,7 +252,7 @@ export class QaseClient {
     return data;
   }
 
-  // ── Cases ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Cases â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async listCases(projectCode: string, params?: Record<string, string | number | undefined>) {
     const { data } = await this.getWithStatus<{ result?: { entities?: unknown[]; total?: number; count?: number } }>(
@@ -317,7 +317,7 @@ export class QaseClient {
     return data;
   }
 
-  // ── Authors ────────────────────────────────────────────────────────────────
+  // â”€â”€ Authors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async listAuthors(params?: Record<string, string | number | undefined>) {
     const { data } = await this.getWithStatus<{ result?: { entities?: unknown[]; total?: number; count?: number } }>(
@@ -369,3 +369,4 @@ export class QaseClient {
 export function createQaseClient(options: QaseClientOptions) {
   return new QaseClient(options);
 }
+

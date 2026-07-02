@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rateLimit";
 
 import { readKanbanStore } from "../store";
@@ -105,11 +105,11 @@ export async function GET(request: NextRequest) {
   if (rate.limited) return rate.response;
 
   if (!project || runId === null) {
-    return jsonError("Os parâmetros 'project' e 'runId' são obrigatórios", 400);
+    return jsonError("Os parÃ¢metros 'project' e 'runId' sÃ£o obrigatÃ³rios", 400);
   }
 
   const user = await authenticateRequest(request);
-  if (!user) return jsonError("Não autorizado", 401);
+  if (!user) return jsonError("NÃ£o autorizado", 401);
 
   const preferredCompanySlug = resolvePrimaryCompanySlug(user);
   let effectiveSlug: string | null = null;
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!effectiveSlug && !isAdmin(user)) {
-    return jsonError("O parâmetro 'slug' é obrigatório", 400);
+    return jsonError("O parÃ¢metro 'slug' Ã© obrigatÃ³rio", 400);
   }
 
   const { items: storeItems } = await readKanbanStore();
@@ -178,3 +178,4 @@ export async function GET(request: NextRequest) {
     },
   });
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
 
 // Simple IP-based rate limiter (30 req/min default)
@@ -16,3 +16,4 @@ export async function rateLimit(req: Request, key: string, limit = 30, windowSec
   await redis.set(windowKey, String(count + 1), { ex: windowSec });
   return { limited: false };
 }
+

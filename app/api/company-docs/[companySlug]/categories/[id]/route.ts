@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+﻿import { NextResponse, type NextRequest } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { canEditCompanyWiki } from "@/lib/companyWikiAccess";
 import { readCompanyDocs, writeCompanyDocs, nowIso } from "@/data/platformDocsStore";
@@ -44,3 +44,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ c
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

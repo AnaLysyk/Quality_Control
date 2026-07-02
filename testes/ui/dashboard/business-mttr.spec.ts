@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { criarDefeitoManual } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
@@ -30,3 +30,4 @@ test("mttr aparece apos fechar defeito manual no modal", async ({ page, context 
   await expect(dashboardMttr).toBeVisible();
   await expect(dashboardMttr).not.toHaveText("-");
 });
+

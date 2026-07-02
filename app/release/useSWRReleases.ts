@@ -1,4 +1,4 @@
-import useSWR from "swr";
+﻿import useSWR from "swr";
 
 type ReleaseItem = {
   slug: string;
@@ -31,3 +31,4 @@ export function useSWRReleases() {
     refetch: mutate,
   };
 }
+

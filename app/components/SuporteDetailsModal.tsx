@@ -1,4 +1,4 @@
-import TicketDetailsModal from './TicketDetailsModal';
+﻿import TicketDetailsModal from './TicketDetailsModal';
 
 // Wrapper para aceitar prop 'suporte' e repassar como 'ticket'
 export default function SuporteDetailsModal(props: any) {
@@ -11,3 +11,4 @@ export default function SuporteDetailsModal(props: any) {
 		/>
 	);
 }
+

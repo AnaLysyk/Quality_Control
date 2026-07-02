@@ -192,7 +192,7 @@ function toneFromGate(status: Gate["status"]) {
 function Sparkline({ points }: { points: SparkPoint[] }) {
   const validPoints = points.filter((point) => typeof point.value === "number" && Number.isFinite(point.value));
   if (!validPoints.length) {
-    return <div className="flex h-20 items-center justify-center rounded-xl border border-(--tc-border)/40 bg-(--tc-surface-2) text-[11px] text-(--tc-text-muted)">Sem leitura de qualidade</div>;
+    return <div className="flex h-20 items-center justify-center rounded-xl border border-[var(--tc-border)]/40 bg-[var(--tc-surface-2)] text-[11px] text-[var(--tc-text-muted)]">Sem leitura de qualidade</div>;
   }
 
   const width = 260;
@@ -245,7 +245,7 @@ function Sparkline({ points }: { points: SparkPoint[] }) {
         : "rgba(239,68,68,0.96)";
 
   return (
-    <div className="rounded-xl border border-(--tc-border)/40 bg-(--tc-surface-2) p-2">
+    <div className="rounded-xl border border-[var(--tc-border)]/40 bg-[var(--tc-surface-2)] p-2">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-28 w-full">
         <rect x={left} y={toY(100)} width={plotW} height={toY(85) - toY(100)} rx="10" fill="rgba(16,185,129,0.14)" />
         <rect x={left} y={toY(85)} width={plotW} height={toY(70) - toY(85)} rx="10" fill="rgba(245,158,11,0.14)" />
@@ -277,8 +277,8 @@ function Sparkline({ points }: { points: SparkPoint[] }) {
           {displayPoints[displayPoints.length - 1]?.label ?? "--"}
         </text>
       </svg>
-      <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-(--tc-text-muted)">
-        <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-(--tc-accent,#ef0001)" />Pass rate</span>
+      <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-[var(--tc-text-muted)]">
+        <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--tc-accent,#ef0001)]" />Pass rate</span>
       </div>
     </div>
   );
@@ -296,20 +296,20 @@ function CountStat({
   tone: string;
 }) {
   return (
-    <div className="rounded-2xl border border-(--tc-border)/60 bg-(--tc-surface) px-3.5 py-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-      <div className="text-[11px] uppercase tracking-[0.22em] text-(--tc-text-muted)">{label}</div>
+    <div className="rounded-2xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-3.5 py-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+      <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">{label}</div>
       <div className={`mt-2 text-2xl font-extrabold ${tone}`}>{value}</div>
-      <div className="mt-1 text-[11px] text-(--tc-text-muted)">{pct}% do total</div>
+      <div className="mt-1 text-[11px] text-[var(--tc-text-muted)]">{pct}% do total</div>
     </div>
   );
 }
 
 function SummaryStat({ label, value, note }: { label: string; value: string | number; note: string }) {
   return (
-    <div className="rounded-2xl border border-(--tc-border)/50 bg-(--tc-surface-2) p-3.5">
-      <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">{label}</div>
-      <div className="mt-1 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{value}</div>
-      <div className="text-[11px] text-(--tc-text-muted)">{note}</div>
+    <div className="rounded-2xl border border-[var(--tc-border)]/50 bg-[var(--tc-surface-2)] p-3.5">
+      <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--tc-text-muted)]">{label}</div>
+      <div className="mt-1 text-2xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">{value}</div>
+      <div className="text-[11px] text-[var(--tc-text-muted)]">{note}</div>
     </div>
   );
 }
@@ -547,15 +547,15 @@ export function CompanyMetricsCard(props: {
 
   return (
     <div
-      className={`flex h-full min-h-156 flex-col rounded-[28px] border bg-(--tc-surface) shadow-sm transition ${
-        focused ? "border-(--tc-accent)/50 shadow-[0_18px_40px_rgba(239,0,1,0.12)]" : "border-(--tc-border)/60"
+      className={`flex h-full min-h-156 flex-col rounded-[28px] border bg-[var(--tc-surface)] shadow-sm transition ${
+        focused ? "border-[var(--tc-accent)]/50 shadow-[0_18px_40px_rgba(239,0,1,0.12)]" : "border-[var(--tc-border)]/60"
       }`}
     >
       <div className="flex h-full flex-col space-y-3.5 p-4 md:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">Empresa</p>
-            <h2 className="mt-1 truncate text-xl font-extrabold text-(--tc-text-primary,#0b1a3c) md:text-2xl" title={company.name}>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">Empresa</p>
+            <h2 className="mt-1 truncate text-xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)] md:text-2xl" title={company.name}>
               {company.name}
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -566,20 +566,20 @@ export function CompanyMetricsCard(props: {
               >
                 {tone.label}
               </span>
-              <span className="text-[11px] text-(--tc-text-muted)">Janela: {periodDays}d</span>
+              <span className="text-[11px] text-[var(--tc-text-muted)]">Janela: {periodDays}d</span>
               {company.active === false ? (
                 <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700">
                   Inativa
                 </span>
               ) : null}
             </div>
-            <div className="mt-2 text-[11px] text-(--tc-text-muted)">{dataAgeLabel}</div>
+            <div className="mt-2 text-[11px] text-[var(--tc-text-muted)]">{dataAgeLabel}</div>
           </div>
 
           <div className="shrink-0 text-right">
-            <div className="text-[11px] uppercase tracking-[0.24em] text-(--tc-text-muted)">Pass rate</div>
-            <div className="text-3xl font-extrabold text-(--tc-accent,#ef0001)">{passRate == null ? "--" : `${passRate}%`}</div>
-            <div className="mt-1 text-[11px] text-(--tc-text-muted)">{total > 0 ? `${total} casos analisados` : "Sem execuções na janela"}</div>
+            <div className="text-[11px] uppercase tracking-[0.24em] text-[var(--tc-text-muted)]">Pass rate</div>
+            <div className="text-3xl font-extrabold text-[var(--tc-accent,#ef0001)]">{passRate == null ? "--" : `${passRate}%`}</div>
+            <div className="mt-1 text-[11px] text-[var(--tc-text-muted)]">{total > 0 ? `${total} casos analisados` : "Sem execuções na janela"}</div>
           </div>
         </div>
 
@@ -590,8 +590,8 @@ export function CompanyMetricsCard(props: {
               onClick={() => onSelectApp(null)}
               className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition ${
                 !activeApp
-                  ? "border-(--tc-accent)/50 bg-(--tc-accent)/10 text-(--tc-accent)"
-                  : "border-(--tc-border)/60 bg-(--tc-surface) text-(--tc-text-muted) hover:bg-(--tc-surface-2)"
+                  ? "border-[var(--tc-accent)]/50 bg-[var(--tc-accent)]/10 text-[var(--tc-accent)]"
+                  : "border-[var(--tc-border)]/60 bg-[var(--tc-surface)] text-[var(--tc-text-muted)] hover:bg-[var(--tc-surface-2)]"
               }`}
             >
               Todas
@@ -603,8 +603,8 @@ export function CompanyMetricsCard(props: {
                 onClick={() => onSelectApp(app)}
                 className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition ${
                   isActiveApp(app)
-                    ? "border-(--tc-accent)/50 bg-(--tc-accent)/10 text-(--tc-accent)"
-                    : "border-(--tc-border)/60 bg-(--tc-surface) text-(--tc-text-muted) hover:bg-(--tc-surface-2)"
+                    ? "border-[var(--tc-accent)]/50 bg-[var(--tc-accent)]/10 text-[var(--tc-accent)]"
+                    : "border-[var(--tc-border)]/60 bg-[var(--tc-surface)] text-[var(--tc-text-muted)] hover:bg-[var(--tc-surface-2)]"
                 }`}
               >
                 {app}
@@ -614,13 +614,13 @@ export function CompanyMetricsCard(props: {
         ) : null}
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_17rem]">
-          <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-(--tc-surface) to-(--tc-surface-2) p-4">
+          <div className="rounded-3xl border border-[var(--tc-border)]/60 bg-linear-to-b from-(--tc-surface) to-(--tc-surface-2) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Distribuicao real de execução</h3>
-                <p className="mt-1 text-[11px] text-(--tc-text-muted)">Grafico e contadores conectados aos resultados reais da empresa.</p>
+                <h3 className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Distribuicao real de execução</h3>
+                <p className="mt-1 text-[11px] text-[var(--tc-text-muted)]">Grafico e contadores conectados aos resultados reais da empresa.</p>
               </div>
-              <span className="rounded-full border border-(--tc-border)/60 bg-(--tc-surface) px-3 py-1 text-[11px] font-semibold text-(--tc-text-muted)">
+              <span className="rounded-full border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-3 py-1 text-[11px] font-semibold text-[var(--tc-text-muted)]">
                 Total {total}
               </span>
             </div>
@@ -644,13 +644,13 @@ export function CompanyMetricsCard(props: {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-(--tc-border)/60 bg-linear-to-b from-(--tc-surface) to-(--tc-surface-2) p-4">
+        <div className="rounded-3xl border border-[var(--tc-border)]/60 bg-linear-to-b from-(--tc-surface) to-(--tc-surface-2) p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">Qualidade das últimas execuções</h3>
-              <p className="mt-1 text-[11px] text-(--tc-text-muted)">Linha de pass rate com apoio de falha e bloqueio.</p>
+              <h3 className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">Qualidade das últimas execuções</h3>
+              <p className="mt-1 text-[11px] text-[var(--tc-text-muted)]">Linha de pass rate com apoio de falha e bloqueio.</p>
             </div>
-            <span className="text-[11px] text-(--tc-text-muted)">
+            <span className="text-[11px] text-[var(--tc-text-muted)]">
               {company.trend.delta === 0 ? "Sem variação" : `${company.trend.direction === "up" ? "+" : "-"}${Math.abs(company.trend.delta)} pp`}
             </span>
           </div>
@@ -659,17 +659,17 @@ export function CompanyMetricsCard(props: {
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {trendCards.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-(--tc-border)/50 bg-(--tc-surface) px-3 py-3">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-(--tc-text-muted)">{item.label}</div>
-                <div className="mt-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{item.value}</div>
-                <div className="text-[11px] text-(--tc-text-muted)">{item.note}</div>
+              <div key={item.label} className="rounded-2xl border border-[var(--tc-border)]/50 bg-[var(--tc-surface)] px-3 py-3">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">{item.label}</div>
+                <div className="mt-1 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{item.value}</div>
+                <div className="text-[11px] text-[var(--tc-text-muted)]">{item.note}</div>
               </div>
             ))}
           </div>
         </div>
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
-          <div className="text-[11px] text-(--tc-text-muted)">
+          <div className="text-[11px] text-[var(--tc-text-muted)]">
             Gate: Pass {company.gate.passRate}% · Fail {company.gate.failRate}% · Blocked {company.gate.blockedRate}% · Not Run {company.gate.notRunRate}%
           </div>
 
@@ -678,7 +678,7 @@ export function CompanyMetricsCard(props: {
               type="button"
               onClick={() => void handleExportPdf()}
               disabled={exportingPdf}
-              className="inline-flex items-center justify-center rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2) disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-3 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] hover:bg-[var(--tc-surface-2)] disabled:opacity-60"
               title="Exportar métricas em PDF"
               aria-label="Exportar métricas em PDF"
             >
@@ -688,19 +688,19 @@ export function CompanyMetricsCard(props: {
               <>
               <Link
                 href={companyHomeHref ?? "/empresas"}
-                className="rounded-xl border border-(--tc-border)/60 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) hover:bg-(--tc-surface-2)"
+                className="rounded-xl border border-[var(--tc-border)]/60 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] hover:bg-[var(--tc-surface-2)]"
               >
                 Abrir empresa
               </Link>
               <Link
                 href={companyRunsHref ?? "/release"}
-                className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:bg-(--tc-accent,#d30001)"
+                className="rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--tc-accent,#d30001)]"
               >
                 Ver runs
               </Link>
               </>
             ) : (
-              <div className="text-sm text-(--tc-text-muted)">Empresa sem slug</div>
+              <div className="text-sm text-[var(--tc-text-muted)]">Empresa sem slug</div>
             )}
           </div>
         </div>
@@ -708,3 +708,4 @@ export function CompanyMetricsCard(props: {
     </div>
   );
 }
+

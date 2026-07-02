@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FiArrowRight, FiBox } from "react-icons/fi";
 import type { BrainEdge, BrainNode } from "../_types/brain.types";
@@ -77,3 +77,4 @@ export function BrainNodeDetailsPanel({ node, nodes, edges }: BrainNodeDetailsPa
     </aside>
   );
 }
+

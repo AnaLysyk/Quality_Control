@@ -1,4 +1,4 @@
-import { test, expect } from "../../../support/fixtures/test";
+﻿import { test, expect } from "../../../support/fixtures/test";
 import { ClientListResponseSchema } from "../../../packages/contracts/src/client";
 import { autenticarUsuario, configurarUsuarioSimulado } from "../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
@@ -45,3 +45,4 @@ test("@smoke perfil suporte - rotas criticas carregam sem erro fatal", async ({ 
     ).toHaveCount(0);
   }
 });
+

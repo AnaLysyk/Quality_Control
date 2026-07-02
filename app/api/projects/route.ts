@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { writeAuditLog } from "@/lib/audit/writeAuditLog";
 import { z } from "zod";
@@ -11,15 +11,15 @@ async function getDb() {
   return prisma;
 }
 
-// ── GET /api/projects?companySlug= ───────────────────────────────────────────
+// â”€â”€ GET /api/projects?companySlug= â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function GET(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const companySlug = searchParams.get("companySlug")?.trim();
-  if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
+  if (!companySlug) return NextResponse.json({ error: "companySlug obrigatÃ³rio" }, { status: 400 });
 
   if (process.env.E2E_USE_JSON === "1") {
     return NextResponse.json({
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
   });
 }
 
-// ── POST /api/projects ────────────────────────────────────────────────────────
+// â”€â”€ POST /api/projects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CreateSchema = z.object({
   companySlug: z.string().trim().min(1),
@@ -80,12 +80,12 @@ const CreateSchema = z.object({
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
-  // Líder TC, suporte técnico e empresa podem cadastrar projetos no contexto permitido.
+  // LÃ­der TC, suporte tÃ©cnico e empresa podem cadastrar projetos no contexto permitido.
   const role = (user.role ?? "").toLowerCase();
   const canCreate = ["admin", "leader_tc", "technical_support", "support", "company_admin", "empresa", "it_dev"].includes(role);
-  if (!canCreate) return NextResponse.json({ error: "Sem permissão para criar projetos" }, { status: 403 });
+  if (!canCreate) return NextResponse.json({ error: "Sem permissÃ£o para criar projetos" }, { status: 403 });
 
   const body = await request.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
@@ -96,13 +96,13 @@ export async function POST(request: Request) {
 
   const db = await getDb();
   const company = await db.company.findUnique({ where: { slug: companySlug }, select: { id: true } });
-  if (!company) return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
+  if (!company) return NextResponse.json({ error: "Empresa nÃ£o encontrada" }, { status: 404 });
 
   const existing = await db.project.findUnique({
     where: { companyId_slug: { companyId: company.id, slug } },
     select: { id: true },
   });
-  if (existing) return NextResponse.json({ error: "Já existe um projeto com esse slug nessa empresa" }, { status: 409 });
+  if (existing) return NextResponse.json({ error: "JÃ¡ existe um projeto com esse slug nessa empresa" }, { status: 409 });
 
   const project = await db.project.create({
     data: {
@@ -147,3 +147,4 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ project: { ...project, createdAt: project.createdAt.toISOString() } }, { status: 201 });
 }
+

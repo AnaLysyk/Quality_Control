@@ -1,4 +1,4 @@
-export const THEME_PREFERENCE_COOKIE = "qc_theme_preference";
+﻿export const THEME_PREFERENCE_COOKIE = "qc_theme_preference";
 export const THEME_RESOLVED_COOKIE = "qc_theme_resolved";
 export const APP_SETTINGS_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -14,3 +14,4 @@ export function normalizeResolvedTheme(value?: string | null): ResolvedTheme | n
   if (value === "light" || value === "dark") return value;
   return null;
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
@@ -80,3 +80,4 @@ export async function GET(req: Request) {
     source: realResults.length ? "brain-index" : "fallback",
   });
 }
+

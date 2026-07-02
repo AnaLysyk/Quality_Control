@@ -1,4 +1,4 @@
-import { apiFail, apiOk } from "@/lib/apiResponse";
+﻿import { apiFail, apiOk } from "@/lib/apiResponse";
 import { createQualityRun, listQualityRuns } from "@/lib/runOperationStore";
 
 export const dynamic = "force-dynamic";
@@ -70,3 +70,4 @@ export async function POST(request: Request) {
     return apiFail(request, "Erro ao criar run", { status: 500, code: "RUN_CREATE_ERROR", details: error });
   }
 }
+

@@ -1,4 +1,4 @@
-import type { AccessContext } from "@/lib/auth/session";
+﻿import type { AccessContext } from "@/lib/auth/session";
 import { canEditCompanyWiki, canReadCompanyWiki } from "@/lib/companyWikiAccess";
 
 function makeAccess(overrides: Partial<AccessContext> = {}): AccessContext {
@@ -54,3 +54,4 @@ describe("company wiki access", () => {
     expect(canEditCompanyWiki(access, "griaule")).toBe(false);
   });
 });
+

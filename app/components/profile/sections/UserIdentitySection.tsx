@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 /**
- * User Identity Section — Dados básicos do usuário
+ * User Identity Section â€” Dados bÃ¡sicos do usuÃ¡rio
  */
 
 import { useProfileContext } from "@/lib/profile/useProfileContext";
@@ -37,3 +37,4 @@ export function UserIdentitySection({
     </div>
   );
 }
+

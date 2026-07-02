@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import * as fs from "fs/promises";
 import * as path from "path";
@@ -244,7 +244,7 @@ function isRecoverablePrismaDatasourceError(error: unknown) {
   );
 }
 
-// ── PostgreSQL mode ──────────────────────────────────────────────────────────
+// â”€â”€ PostgreSQL mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Prefer PostgreSQL whenever DATABASE_URL is configured, unless AUTH_STORE
 // explicitly opts into a non-Postgres backend.
 export const USE_POSTGRES = shouldUsePostgresPersistence();
@@ -1088,3 +1088,4 @@ export function toLegacyRole(companyRole?: string | null, isGlobalAdmin?: boolea
   if (isGlobalAdmin) return SYSTEM_ROLES.LEADER_TC;
   return normalized;
 }
+

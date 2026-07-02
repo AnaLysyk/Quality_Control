@@ -1,4 +1,4 @@
-import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
+﻿import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
 import type { AutomationCompanyScope } from "@/lib/automations/companyScope";
 
 export type AutomationHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -47,7 +47,7 @@ export type AutomationCompanyTool = {
   id: string;
   title: string;
   companySlug: AutomationCompanyScope;
-  group: "Consulta" | "Biometria" | "Sessão" | "Documento";
+  group: "Consulta" | "Biometria" | "SessÃ£o" | "Documento";
   summary: string;
   mode: "proxy" | "internal";
   method: AutomationHttpMethod;
@@ -134,7 +134,7 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
   },
   {
     id: "griaule-process-filter-valid-cpf",
-    title: "Filtrar processos por CPF (válido)",
+    title: "Filtrar processos por CPF (vÃ¡lido)",
     method: "GET",
     path: "/api/processos?cpf={{cpf}}",
     body: "",
@@ -165,7 +165,7 @@ export const AUTOMATION_API_PRESETS: AutomationRequestPreset[] = [
   },
   {
     id: "qc-me",
-    title: "Sessão autenticada",
+    title: "SessÃ£o autenticada",
     method: "GET",
     path: "/api/me",
     body: "",
@@ -197,7 +197,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     title: "Consultar RFB",
     companySlug: "griaule",
     group: "Consulta",
-    summary: "Consulta rápida por CPF com resposta técnica e visual no mesmo lugar.",
+    summary: "Consulta rÃ¡pida por CPF com resposta tÃ©cnica e visual no mesmo lugar.",
     mode: "proxy",
     method: "GET",
     pathTemplate: "/api/bcadastro/cpf/{{cpf}}",
@@ -209,7 +209,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
         id: "cpf",
         label: "CPF",
         type: "text",
-        placeholder: "Digite apenas números",
+        placeholder: "Digite apenas nÃºmeros",
         required: true,
         defaultValue: "12345678900",
       },
@@ -220,7 +220,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     title: "Consultar processo",
     companySlug: "griaule",
     group: "Consulta",
-    summary: "Busca processo por ID e deixa o retorno pronto para validação operacional.",
+    summary: "Busca processo por ID e deixa o retorno pronto para validaÃ§Ã£o operacional.",
     mode: "proxy",
     method: "GET",
     pathTemplate: "/api/processos/{{processId}}",
@@ -242,8 +242,8 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     id: "griaule-token",
     title: "Emitir token (credenciais)",
     companySlug: "griaule",
-    group: "Sessão",
-    summary: "Executa o endpoint de sessão sem precisar abrir Postman ou script local.",
+    group: "SessÃ£o",
+    summary: "Executa o endpoint de sessÃ£o sem precisar abrir Postman ou script local.",
     mode: "proxy",
     method: "POST",
     pathTemplate: "/api/tokens",
@@ -251,8 +251,8 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     bodyTemplate: { username: "{{smartUser}}", password: "{{smartPassword}}" },
     responseFocus: ["status", "headers", "json"],
     fields: [
-      { id: "smartUser", label: "Usuário", type: "text", required: true, placeholder: "E-mail ou login" },
-      { id: "smartPassword", label: "Senha", type: "text", required: true, placeholder: "Senha (não salvar em catálogo)" },
+      { id: "smartUser", label: "UsuÃ¡rio", type: "text", required: true, placeholder: "E-mail ou login" },
+      { id: "smartPassword", label: "Senha", type: "text", required: true, placeholder: "Senha (nÃ£o salvar em catÃ¡logo)" },
     ],
   },
   {
@@ -260,7 +260,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     title: "Anexar biometria",
     companySlug: "griaule",
     group: "Biometria",
-    summary: "Chama o runner interno com processo, digital, face e modo configurável.",
+    summary: "Chama o runner interno com processo, digital, face e modo configurÃ¡vel.",
     mode: "internal",
     method: "POST",
     internalPath: "/api/automations/griaule/biometrics",
@@ -335,7 +335,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     title: "Smoke dashboard admin",
     companySlug: "testing-company",
     group: "Consulta",
-    summary: "Valida se o dashboard administrativo do próprio painel abre autenticado e sem cair no login.",
+    summary: "Valida se o dashboard administrativo do prÃ³prio painel abre autenticado e sem cair no login.",
     mode: "internal",
     method: "POST",
     internalPath: "/api/automations/qc/page-smoke",
@@ -358,10 +358,10 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
   },
   {
     id: "qc-automations-tools",
-    title: "Smoke automações IDE",
+    title: "Smoke automaÃ§Ãµes IDE",
     companySlug: "testing-company",
     group: "Consulta",
-    summary: "Abre o módulo de automação do próprio sistema e confirma que a shell principal respondeu.",
+    summary: "Abre o mÃ³dulo de automaÃ§Ã£o do prÃ³prio sistema e confirma que a shell principal respondeu.",
     mode: "internal",
     method: "POST",
     internalPath: "/api/automations/qc/page-smoke",
@@ -369,7 +369,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
       companySlug: "{{companySlug}}",
       expectedText: "QA IDE",
       targetPath: "/automacoes/tools",
-      titleHint: "Automações",
+      titleHint: "AutomaÃ§Ãµes",
     },
     responseFocus: ["status", "title", "finalUrl", "containsExpectedText"],
     fields: [
@@ -387,7 +387,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     title: "Smoke home da empresa",
     companySlug: "testing-company",
     group: "Consulta",
-    summary: "Testa a home institucional da empresa ativa e garante que a tela principal abre com sessão válida.",
+    summary: "Testa a home institucional da empresa ativa e garante que a tela principal abre com sessÃ£o vÃ¡lida.",
     mode: "internal",
     method: "POST",
     internalPath: "/api/automations/qc/page-smoke",
@@ -439,7 +439,7 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     title: "Smoke defeitos da empresa",
     companySlug: "testing-company",
     group: "Consulta",
-    summary: "Executa leitura rápida da tela de defeitos para validar carregamento e autenticação do painel.",
+    summary: "Executa leitura rÃ¡pida da tela de defeitos para validar carregamento e autenticaÃ§Ã£o do painel.",
     mode: "internal",
     method: "POST",
     internalPath: "/api/automations/qc/page-smoke",
@@ -461,3 +461,4 @@ export const AUTOMATION_COMPANY_TOOLS: AutomationCompanyTool[] = [
     ],
   },
 ];
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/api/solicitar-acesso/esqueci-senha.endpoint.api.spec.ts --project=chromium
  */
@@ -13,3 +13,4 @@ test("endpoint nao revela se um email desconhecido esta cadastrado", async ({ re
   expect(response.status()).toBe(200);
   expect(await response.json()).toMatchObject({ ok: true });
 });
+

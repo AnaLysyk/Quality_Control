@@ -1,4 +1,4 @@
-import type { DefectHistoryEvent } from "@/lib/manualDefectHistoryStore";
+﻿import type { DefectHistoryEvent } from "@/lib/manualDefectHistoryStore";
 
 export type DefectComment = {
   id: string;
@@ -80,3 +80,4 @@ export function summarizeDefectActivity(events: DefectHistoryEvent[]): DefectAct
     comments,
   };
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -33,7 +33,7 @@ const AGENDA_ITEMS: NavItemDef[] = [
   {
     id: "agenda-my-calendar",
     routeId: "agenda.release",
-    label: "Meu calendário",
+    label: "Meu calendÃ¡rio",
     iconKey: "calendar",
     module: "agenda",
     href: "/agenda?view=me",
@@ -44,7 +44,7 @@ const AGENDA_ITEMS: NavItemDef[] = [
   {
     id: "agenda-company-calendar",
     routeId: "agenda.release",
-    label: "Calendário da empresa",
+    label: "CalendÃ¡rio da empresa",
     iconKey: "building",
     module: "agenda",
     href: "/agenda?view=company",
@@ -55,7 +55,7 @@ const AGENDA_ITEMS: NavItemDef[] = [
   {
     id: "agenda-overview",
     routeId: "agenda.release",
-    label: "Visão geral",
+    label: "VisÃ£o geral",
     iconKey: "layout",
     module: "agenda",
     href: "/agenda?view=overview",
@@ -268,10 +268,10 @@ function buildAgendaItems(effectiveRole: SystemRole | null, companySlug: string 
 }
 
 function resolveMenuLabel(item: NavItemDef): string {
-  if (item.id === "requests-list") return "Solicitações";
-  if (item.id === "requests-search") return "Buscar solicitações";
-  if (item.id === "management-profile") return "Gestão de perfil";
-  if (item.id === "management-users") return "Gestão de usuários";
+  if (item.id === "requests-list") return "SolicitaÃ§Ãµes";
+  if (item.id === "requests-search") return "Buscar solicitaÃ§Ãµes";
+  if (item.id === "management-profile") return "GestÃ£o de perfil";
+  if (item.id === "management-users") return "GestÃ£o de usuÃ¡rios";
   return item.label;
 }
 
@@ -291,7 +291,7 @@ function resolveModuleItems(
     {
       id: "admin-permissions-profile",
       routeId: "permissoes.perfil",
-      label: "Gestão de perfil",
+      label: "GestÃ£o de perfil",
       iconKey: "shield",
       module: "permissoes",
       href: "/admin/permissions",
@@ -301,7 +301,7 @@ function resolveModuleItems(
     {
       id: "admin-permissions-user",
       routeId: "permissoes.matriz",
-      label: "Gestão de usuário",
+      label: "GestÃ£o de usuÃ¡rio",
       iconKey: "users",
       module: "permissoes",
       href: "/admin/users/permissions",
@@ -324,7 +324,7 @@ function resolveModuleItems(
 
   return {
     ...mod,
-    label: mod.id === "permissoes" ? "Gestão de permissões" : usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
+    label: mod.id === "permissoes" ? "GestÃ£o de permissÃµes" : usesInternalOverview ? "VisÃ£o Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {
@@ -459,3 +459,4 @@ export function useNavigationItems() {
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }
+

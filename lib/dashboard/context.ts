@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/contracts/auth";
+﻿import type { AuthUser } from "@/contracts/auth";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import type { DashboardCompanyOption, DashboardContextLabels, DashboardContextValue, DashboardScopeKind } from "@/lib/dashboard/types";
 
@@ -98,12 +98,12 @@ export function formatDashboardContextLabel(context: Pick<DashboardContextValue,
   );
   const parts = [
     companyLabel,
-    context.labels.applicationLabel?.trim() || "Todas as aplicações",
+    context.labels.applicationLabel?.trim() || "Todas as aplicaÃ§Ãµes",
     context.labels.moduleLabel?.trim() || null,
-    context.labels.periodLabel?.trim() || "Últimos 30 dias",
+    context.labels.periodLabel?.trim() || "Ãšltimos 30 dias",
   ].filter((value): value is string => Boolean(value));
 
-  return parts.join(" · ");
+  return parts.join(" Â· ");
 }
 
 export function resolveDashboardContext({
@@ -186,3 +186,4 @@ export function resolveDashboardContext({
   value.contextLabel = formatDashboardContextLabel(value);
   return value;
 }
+

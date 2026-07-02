@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -241,24 +241,24 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
   }
 
   return (
-    <section className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-sm sm:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
-        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-          <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
-            <FiTool className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+    <section className="space-y-4 rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-sm sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
+            <FiTool className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
             Tools
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
-            <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
+            <FiShield className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
             {selectedCompany?.name || activeCompanySlug || "Empresa"}
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
-            <FiGrid className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
+            <FiGrid className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
             {access.profileLabel}
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
-          <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+          <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
             <FiGlobe className="h-4 w-4" />
             {currentEnvironment?.title}
           </div>
@@ -266,7 +266,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             type="button"
             onClick={executeTool}
             disabled={loading || !selectedTool}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             <FiPlay className="h-4 w-4" />
             {loading ? "Executando" : "Rodar"}
@@ -275,14 +275,14 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-12">
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
+        <aside className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
           <label className="relative block">
-            <FiSearch className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+            <FiSearch className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar tool"
-              className="min-h-10 w-full rounded-xl border border-(--tc-border,#d7deea) bg-white pr-4 pl-10 text-sm outline-none"
+              className="min-h-10 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-white pr-4 pl-10 text-sm outline-none"
             />
           </label>
           <div className="mt-3 space-y-2">
@@ -293,16 +293,16 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                   key={tool.id}
                   type="button"
                   onClick={() => setSelectedToolId(tool.id)}
-                  className={`w-full rounded-xl border px-3 py-3 text-left ${active ? "border-(--tc-accent,#ef0001) bg-white" : "border-(--tc-border,#d7deea) bg-white/70"}`}
+                  className={`w-full rounded-xl border px-3 py-3 text-left ${active ? "border-[var(--tc-accent,#ef0001)] bg-white" : "border-[var(--tc-border,#d7deea)] bg-white/70"}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-(--tc-text,#0b1a3c)">{tool.title}</p>
-                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-                        {tool.group} • {tool.method}
+                      <p className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{tool.title}</p>
+                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+                        {tool.group} â€¢ {tool.method}
                       </p>
                     </div>
-                    <FiServer className="mt-0.5 h-4 w-4 shrink-0 text-(--tc-accent,#ef0001)" />
+                    <FiServer className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tc-accent,#ef0001)]" />
                   </div>
                 </button>
               );
@@ -310,18 +310,18 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
           </div>
         </aside>
 
-        <article className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 xl:col-span-8 2xl:col-span-5">
+        <article className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 xl:col-span-8 2xl:col-span-5">
           {selectedTool ? (
             <>
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px]">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-accent,#ef0001)">Tool ativa</p>
-                  <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{selectedTool.title}</h2>
-                  <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{selectedTool.summary}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-accent,#ef0001)]">Tool ativa</p>
+                  <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{selectedTool.title}</h2>
+                  <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{selectedTool.summary}</p>
                 </div>
-                <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                   Ambiente
-                  <select value={selectedEnvironmentId} onChange={(event) => setSelectedEnvironmentId(event.target.value)} className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none">
+                  <select value={selectedEnvironmentId} onChange={(event) => setSelectedEnvironmentId(event.target.value)} className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none">
                     {AUTOMATION_ENVIRONMENTS.map((environment) => (
                       <option key={environment.id} value={environment.id}>
                         {environment.title}
@@ -333,13 +333,13 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {selectedTool.fields.map((field) => (
-                  <label key={field.id} className={`grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c) ${field.type === "textarea" ? "md:col-span-2" : ""}`}>
+                  <label key={field.id} className={`grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] ${field.type === "textarea" ? "md:col-span-2" : ""}`}>
                     {field.label}
                     {field.type === "select" ? (
                       <select
                         value={String(values[field.id] ?? "")}
                         onChange={(event) => setValues((current) => ({ ...current, [field.id]: event.target.value }))}
-                        className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none"
+                        className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
                       >
                         {(field.options ?? []).map((option) => (
                           <option key={option.value} value={option.value}>
@@ -353,14 +353,14 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                         onChange={(event) => setValues((current) => ({ ...current, [field.id]: event.target.value }))}
                         rows={4}
                         placeholder={field.placeholder}
-                        className="rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3 text-sm outline-none"
+                        className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3 text-sm outline-none"
                       />
                     ) : field.type === "switch" ? (
                       <button
                         type="button"
                         onClick={() => setValues((current) => ({ ...current, [field.id]: !Boolean(current[field.id]) }))}
                         className={`inline-flex min-h-11 items-center justify-between rounded-xl border px-4 py-2 text-sm font-semibold ${
-                          Boolean(values[field.id]) ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)"
+                          Boolean(values[field.id]) ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text-muted,#6b7280)]"
                         }`}
                       >
                         <span>{Boolean(values[field.id]) ? "Ativo" : "Desligado"}</span>
@@ -377,14 +377,14 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                           }))
                         }
                         placeholder={field.placeholder}
-                        className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none"
+                        className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
                       />
                     )}
                   </label>
                 ))}
               </div>
 
-              <div className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] p-4 text-white">
+              <div className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[#081227] p-4 text-white">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
                   <FiServer className="h-4 w-4" />
                   Request gerada
@@ -404,39 +404,39 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
               </div>
             </>
           ) : (
-            <div className="rounded-xl border border-dashed border-(--tc-border,#d7deea) px-4 py-6 text-sm text-(--tc-text-muted,#6b7280)">
-              Nenhuma tool disponível para a empresa atual.
+            <div className="rounded-xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-6 text-sm text-[var(--tc-text-muted,#6b7280)]">
+              Nenhuma tool disponÃ­vel para a empresa atual.
             </div>
           )}
         </article>
 
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-12 2xl:col-span-4">
+        <aside className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3 xl:col-span-12 2xl:col-span-4">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Resultado</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Resultado</p>
             <button
               type="button"
               onClick={copyResult}
               disabled={!result}
               aria-label="Copiar resultado"
               title="Copiar resultado"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:opacity-40"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)] disabled:opacity-40"
             >
               <FiCopy className="h-4 w-4" />
             </button>
           </div>
 
           <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">  
-            <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Status</p>
-              <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{result?.status ? `${result.status} ${result.statusText ?? ""}` : "--"}</p>
+            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Status</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{result?.status ? `${result.status} ${result.statusText ?? ""}` : "--"}</p>
             </div>
-            <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Duração</p>
-              <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{typeof result?.durationMs === "number" ? `${result.durationMs} ms` : "--"}</p>
+            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">DuraÃ§Ã£o</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{typeof result?.durationMs === "number" ? `${result.durationMs} ms` : "--"}</p>
             </div>
-            <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Tipo</p>
-              <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{selectedTool?.mode === "internal" ? "Runner interno" : "Proxy HTTP"}</p>
+            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Tipo</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{selectedTool?.mode === "internal" ? "Runner interno" : "Proxy HTTP"}</p>
             </div>
           </div>
 
@@ -447,7 +447,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">{copyFeedback}</div>
           ) : null}
 
-          <div className="mt-4 inline-flex rounded-xl border border-(--tc-border,#d7deea) bg-white p-1">
+          <div className="mt-4 inline-flex rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-1">
             {[
               { id: "summary", label: "Resumo" },
               { id: "json", label: "JSON" },
@@ -457,14 +457,14 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                 key={tab.id}
                 type="button"
                 onClick={() => setResultTab(tab.id as typeof resultTab)}
-                className={`min-h-9 rounded-lg px-3 text-sm font-semibold ${resultTab === tab.id ? "bg-(--tc-surface-2,#f8fafc) text-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280)"}`}
+                className={`min-h-9 rounded-lg px-3 text-sm font-semibold ${resultTab === tab.id ? "bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)]"}`}
               >
                 {tab.label}
               </button>
             ))}
           </div>
 
-          <div className="mt-3 min-h-105 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] p-4">
+          <div className="mt-3 min-h-105 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[#081227] p-4">
             <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs leading-6 text-white">
               {resultTab === "summary"
                 ? JSON.stringify(
@@ -478,12 +478,13 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             </pre>
           </div>
 
-          <div className="mt-3 flex items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
+          <div className="mt-3 flex items-center gap-2 text-xs text-[var(--tc-text-muted,#6b7280)]">
             <FiActivity className="h-4 w-4" />
-            Tool pronta para operação rápida por empresa.
+            Tool pronta para operaÃ§Ã£o rÃ¡pida por empresa.
           </div>
         </aside>
       </div>
     </section>
   );
 }
+

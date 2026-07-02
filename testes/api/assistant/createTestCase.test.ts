@@ -1,4 +1,4 @@
-jest.mock("@/lib/test-cases/testCaseRepository", () => ({
+﻿jest.mock("@/lib/test-cases/testCaseRepository", () => ({
   createManualTestCaseRecord: jest.fn().mockResolvedValue({
     testCase: {
       id: "tc-1",
@@ -146,3 +146,4 @@ describe("executeCreateTestCase", () => {
     );
   });
 });
+

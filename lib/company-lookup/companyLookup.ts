@@ -127,3 +127,4 @@ export async function lookupAddressByCep(cepInput: string): Promise<CepLookupRes
     state: text(data.uf),
   };
 }
+

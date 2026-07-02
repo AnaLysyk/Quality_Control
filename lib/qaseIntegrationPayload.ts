@@ -1,4 +1,4 @@
-import { buildQaseIntegrationPolicy, type QaseSyncMode, type QaseSyncScope } from "@/lib/qaseIntegrationPolicy";
+﻿import { buildQaseIntegrationPolicy, type QaseSyncMode, type QaseSyncScope } from "@/lib/qaseIntegrationPolicy";
 
 export type QaseIntegrationPayloadInput = {
   token?: string | null;
@@ -47,3 +47,4 @@ export function buildQaseIntegrationPayload(input: QaseIntegrationPayloadInput) 
       : [],
   };
 }
+

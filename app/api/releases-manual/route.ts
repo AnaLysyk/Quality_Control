@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
     authUser ??
     (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const releases = await readManualReleases();
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
   const effectiveAuthUser: AuthUser | null =
     authUser ??
     (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
-  if (!effectiveAuthUser) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!effectiveAuthUser) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   try {
     const body = await req.json();
     const name = (body.name ?? "").toString().trim();
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     const closedAt = resolveClosedAt(status, requestedClosedAt, shouldCloseFromStats(stats) ? now : null);
 
     if (!name) {
-      return NextResponse.json({ message: "Nome obrigatório" }, { status: 400 });
+      return NextResponse.json({ message: "Nome obrigatÃ³rio" }, { status: 400 });
     }
 
     const release: Release = {
@@ -185,7 +185,7 @@ export async function POST(req: Request) {
       try {
         await notifyManualRunCreated(release);
       } catch (err) {
-        console.error("Falha ao enviar notificações de run", err);
+        console.error("Falha ao enviar notificaÃ§Ãµes de run", err);
       }
     }
     if (kind === "defect") {
@@ -200,7 +200,7 @@ export async function POST(req: Request) {
           note: release.name ?? null,
         });
       } catch (err) {
-        console.warn("Falha ao registrar histórico do defeito:", err);
+        console.warn("Falha ao registrar histÃ³rico do defeito:", err);
       }
     }
 
@@ -235,3 +235,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Erro ao salvar run manual" }, { status: 500 });
   }
 }
+

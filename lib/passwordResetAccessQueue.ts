@@ -1,4 +1,4 @@
-import {
+﻿import {
   normalizeRequestProfileType,
   resolveReviewQueue,
   toRequestProfileTypeLabel,
@@ -132,3 +132,4 @@ export function mapPasswordResetRequestToAccessQueueItem(request: RequestLike) {
     admin_notes: null,
   };
 }
+

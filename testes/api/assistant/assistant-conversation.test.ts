@@ -1,4 +1,4 @@
-jest.mock("@/lib/prismaClient", () => ({
+﻿jest.mock("@/lib/prismaClient", () => ({
   prisma: {
     brainNode: {
       findUnique: jest.fn(),
@@ -48,7 +48,7 @@ describe("InternalBrainEngine conversational mode", () => {
   it("responds casually to greeting without technical blocks", async () => {
     const { reply, eventTypes } = await collectReply("oi");
 
-    expect(reply.toLowerCase()).toContain("o que você quer resolver agora");
+    expect(reply.toLowerCase()).toContain("o que vocÃª quer resolver agora");
     expect(reply.toLowerCase()).toContain("dashboard");
     expect(reply).not.toContain("###");
     expect(eventTypes.every((t) => t === "text-delta")).toBe(true);
@@ -58,7 +58,7 @@ describe("InternalBrainEngine conversational mode", () => {
     const { reply } = await collectReply("valeu");
 
     expect(reply.toLowerCase()).toContain("disponha");
-    expect(reply.toLowerCase()).toContain("próximo passo");
+    expect(reply.toLowerCase()).toContain("prÃ³ximo passo");
     expect(reply).not.toContain("###");
   });
 
@@ -67,6 +67,7 @@ describe("InternalBrainEngine conversational mode", () => {
 
     expect(reply.toLowerCase()).toContain("claro");
     expect(reply.toLowerCase()).toContain("uma frase");
-    expect(reply).not.toContain("diagnóstico");
+    expect(reply).not.toContain("diagnÃ³stico");
   });
 });
+

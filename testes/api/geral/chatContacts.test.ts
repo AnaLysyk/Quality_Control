@@ -1,4 +1,4 @@
-jest.mock("server-only", () => ({}));
+﻿jest.mock("server-only", () => ({}));
 
 jest.mock("../../../lib/auth/localStore", () => ({
   listLocalCompanies: jest.fn(),
@@ -36,7 +36,7 @@ describe("chatContacts", () => {
       status: "active",
       job_title: "Analista",
       linkedin_url: null,
-      origin_label: "Usuário",
+      origin_label: "UsuÃ¡rio",
     },
     {
       id: "u-beta",
@@ -54,7 +54,7 @@ describe("chatContacts", () => {
       status: "active",
       job_title: "QA",
       linkedin_url: null,
-      origin_label: "Usuário",
+      origin_label: "UsuÃ¡rio",
     },
     {
       id: "u-gamma",
@@ -72,7 +72,7 @@ describe("chatContacts", () => {
       status: "active",
       job_title: "Produto",
       linkedin_url: null,
-      origin_label: "Usuário",
+      origin_label: "UsuÃ¡rio",
     },
     {
       id: "u-multi",
@@ -88,9 +88,9 @@ describe("chatContacts", () => {
       company_ids: ["company-alpha-id", "company-beta-id"],
       active: true,
       status: "active",
-      job_title: "Operações",
+      job_title: "OperaÃ§Ãµes",
       linkedin_url: null,
-      origin_label: "Usuário",
+      origin_label: "UsuÃ¡rio",
     },
   ];
 
@@ -170,3 +170,4 @@ describe("chatContacts", () => {
     expect(visible.map((item) => item.id)).toEqual(["u-beta", "u-gamma", "u-multi"]);
   });
 });
+

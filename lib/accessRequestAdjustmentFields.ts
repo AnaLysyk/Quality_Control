@@ -1,4 +1,4 @@
-import type { AccessRequestAdjustmentField } from "@/lib/accessRequestMessage";
+﻿import type { AccessRequestAdjustmentField } from "@/lib/accessRequestMessage";
 
 export type AccessRequestAdjustmentCategory = "context" | "registration" | "company";
 
@@ -15,30 +15,30 @@ export type AccessRequestAdjustmentFieldDefinition = {
 export const ACCESS_REQUEST_ADJUSTMENT_FIELD_DEFINITIONS: AccessRequestAdjustmentFieldDefinition[] = [
   {
     field: "title",
-    label: "Título",
+    label: "TÃ­tulo",
     category: "context",
     inputType: "text",
     editableByReviewer: false,
     editableByRequester: false,
-    description: "Contexto informado pelo solicitante. Não é ajuste formal de cadastro.",
+    description: "Contexto informado pelo solicitante. NÃ£o Ã© ajuste formal de cadastro.",
   },
   {
     field: "description",
-    label: "Descrição",
+    label: "DescriÃ§Ã£o",
     category: "context",
     inputType: "textarea",
     editableByReviewer: false,
     editableByRequester: false,
-    description: "Descrição original da solicitação. Não deve voltar como campo de ajuste.",
+    description: "DescriÃ§Ã£o original da solicitaÃ§Ã£o. NÃ£o deve voltar como campo de ajuste.",
   },
   {
     field: "notes",
-    label: "Observações",
+    label: "ObservaÃ§Ãµes",
     category: "context",
     inputType: "textarea",
     editableByReviewer: false,
     editableByRequester: false,
-    description: "Observações iniciais do solicitante. Usar apenas como contexto.",
+    description: "ObservaÃ§Ãµes iniciais do solicitante. Usar apenas como contexto.",
   },
   {
     field: "profileType",
@@ -47,7 +47,7 @@ export const ACCESS_REQUEST_ADJUSTMENT_FIELD_DEFINITIONS: AccessRequestAdjustmen
     inputType: "select",
     editableByReviewer: true,
     editableByRequester: true,
-    description: "Perfil de acesso que será aplicado ao cadastro.",
+    description: "Perfil de acesso que serÃ¡ aplicado ao cadastro.",
   },
   {
     field: "company",
@@ -56,7 +56,7 @@ export const ACCESS_REQUEST_ADJUSTMENT_FIELD_DEFINITIONS: AccessRequestAdjustmen
     inputType: "select",
     editableByReviewer: true,
     editableByRequester: true,
-    description: "Empresa vinculada ao usuário.",
+    description: "Empresa vinculada ao usuÃ¡rio.",
   },
   {
     field: "fullName",
@@ -69,12 +69,12 @@ export const ACCESS_REQUEST_ADJUSTMENT_FIELD_DEFINITIONS: AccessRequestAdjustmen
   },
   {
     field: "username",
-    label: "Usuário sugerido",
+    label: "UsuÃ¡rio sugerido",
     category: "registration",
     inputType: "text",
     editableByReviewer: true,
     editableByRequester: true,
-    description: "Login sugerido para o usuário.",
+    description: "Login sugerido para o usuÃ¡rio.",
   },
   {
     field: "email",
@@ -101,11 +101,11 @@ export const ACCESS_REQUEST_ADJUSTMENT_FIELD_DEFINITIONS: AccessRequestAdjustmen
     inputType: "select",
     editableByReviewer: true,
     editableByRequester: true,
-    description: "Cargo ou função informada para o cadastro.",
+    description: "Cargo ou funÃ§Ã£o informada para o cadastro.",
   },
   {
     field: "companyName",
-    label: "Razão social",
+    label: "RazÃ£o social",
     category: "company",
     inputType: "text",
     editableByReviewer: true,
@@ -132,12 +132,12 @@ export const ACCESS_REQUEST_ADJUSTMENT_FIELD_DEFINITIONS: AccessRequestAdjustmen
   },
   {
     field: "companyAddress",
-    label: "Endereço",
+    label: "EndereÃ§o",
     category: "company",
     inputType: "text",
     editableByReviewer: true,
     editableByRequester: true,
-    description: "Endereço da empresa.",
+    description: "EndereÃ§o da empresa.",
   },
   {
     field: "companyPhone",
@@ -168,21 +168,21 @@ export const ACCESS_REQUEST_ADJUSTMENT_FIELD_DEFINITIONS: AccessRequestAdjustmen
   },
   {
     field: "companyDescription",
-    label: "Descrição da empresa",
+    label: "DescriÃ§Ã£o da empresa",
     category: "company",
     inputType: "textarea",
     editableByReviewer: true,
     editableByRequester: true,
-    description: "Descrição usada no cadastro da empresa.",
+    description: "DescriÃ§Ã£o usada no cadastro da empresa.",
   },
   {
     field: "companyNotes",
-    label: "Observações da empresa",
+    label: "ObservaÃ§Ãµes da empresa",
     category: "company",
     inputType: "textarea",
     editableByReviewer: true,
     editableByRequester: true,
-    description: "Observações cadastrais da empresa.",
+    description: "ObservaÃ§Ãµes cadastrais da empresa.",
   },
 ];
 
@@ -209,3 +209,4 @@ export function getAccessRequestAdjustmentFieldDefinition(field: string) {
 export function isAccessRequestContextField(field: string) {
   return getAccessRequestAdjustmentFieldDefinition(field)?.category === "context";
 }
+

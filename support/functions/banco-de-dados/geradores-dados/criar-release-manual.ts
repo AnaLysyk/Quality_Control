@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/lib/prismaClient";
 
 async function main() {
   const company = await prisma.company.findFirst();
@@ -30,3 +30,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

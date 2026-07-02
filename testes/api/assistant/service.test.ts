@@ -1,12 +1,12 @@
-/**
+﻿/**
  * Integration tests for the assistant orchestrator (service.ts).
  *
  * These tests verify the "glue" between routing, tools, and guards.
- * All tool executors and stores are mocked — we test the orchestrator flow,
+ * All tool executors and stores are mocked â€” we test the orchestrator flow,
  * not the tool implementations (those have their own suites).
  */
 
-/* ── Mock everything server-side ── */
+/* â”€â”€ Mock everything server-side â”€â”€ */
 
 jest.mock("@/lib/assistantAuditLog", () => ({
   appendAssistantAuditEntry: jest.fn().mockResolvedValue(undefined),
@@ -66,7 +66,7 @@ import { appendAssistantAuditEntry } from "@/lib/assistantAuditLog";
 import type { AuthUser } from "@/lib/jwtAuth";
 import type { AssistantClientRequest, AssistantToolAction } from "@/lib/assistant/types";
 
-/* ── Helpers ── */
+/* â”€â”€ Helpers â”€â”€ */
 
 function makeUser(overrides: Partial<AuthUser> = {}): AuthUser {
   return {
@@ -94,15 +94,15 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-/* ──────────────────────────────────────────────── */
-/*  Routing — message intent → correct tool        */
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Routing â€” message intent â†’ correct tool        */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("routing", () => {
   it("routes empty message as low-signal (clarify)", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toMatch(/nao consegui|não consegui/i);
+    expect(result.reply).toMatch(/nao consegui|nÃ£o consegui/i);
     expect(result.context.module).toBe("support");
   });
 
@@ -146,26 +146,26 @@ describe("routing", () => {
   });
 });
 
-/* ──────────────────────────────────────────────── */
-/*  Low-signal → clarify reply                     */
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Low-signal â†’ clarify reply                     */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("low-signal detection", () => {
   it("returns clarify reply for very short ambiguous input", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "abc" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toMatch(/nao consegui|não consegui/i);
+    expect(result.reply).toMatch(/nao consegui|nÃ£o consegui/i);
   });
 
   it("returns clarify reply for single digit", async () => {
     const result = await runAssistantRequest(makeUser(), makeRequest({ message: "42" }));
     expect(result.tool).toBe("suggest_next_step");
-    expect(result.reply).toMatch(/nao consegui|não consegui/i);
+    expect(result.reply).toMatch(/nao consegui|nÃ£o consegui/i);
   });
 
   it("does NOT clarify when awaiting ticket payload", async () => {
     const history = [
-      { from: "assistant" as const, text: "Preciso do conteúdo real do chamado.", tool: "create_ticket" as const },
+      { from: "assistant" as const, text: "Preciso do conteÃºdo real do chamado.", tool: "create_ticket" as const },
     ];
     const result = await runAssistantRequest(
       makeUser(),
@@ -176,9 +176,9 @@ describe("low-signal detection", () => {
   });
 });
 
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*  Repeat guard                                   */
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("repeat guard", () => {
   it("short-circuits exact repeated prompt to same tool", async () => {
@@ -208,9 +208,9 @@ describe("repeat guard", () => {
   });
 });
 
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*  Tool action dispatch                           */
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("tool action dispatch", () => {
   it("dispatches create_ticket action to executor", async () => {
@@ -234,18 +234,18 @@ describe("tool action dispatch", () => {
   it("returns error for unsupported tool action", async () => {
     const action = {
       kind: "tool" as const,
-      label: "Ação desconhecida",
+      label: "AÃ§Ã£o desconhecida",
       tool: "suggest_next_step" as "create_ticket",
       input: {},
     };
     const result = await runAssistantRequest(makeUser(), makeRequest({ action }));
-    expect(result.reply).toMatch(/nao esta disponivel|não está disponível/i);
+    expect(result.reply).toMatch(/nao esta disponivel|nÃ£o estÃ¡ disponÃ­vel/i);
   });
 });
 
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*  Audit logging                                  */
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("audit logging", () => {
   it("logs every request to audit", async () => {
@@ -281,9 +281,9 @@ describe("audit logging", () => {
   });
 });
 
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /*  Reply structure                                */
-/* ──────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("reply structure", () => {
   it("always includes tool, reply, and context", async () => {
@@ -341,3 +341,4 @@ describe("reply structure", () => {
     expect(result.context.companySlug).toBe("griaule");
   });
 });
+

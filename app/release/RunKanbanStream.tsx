@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { RunDetailKanbanSection } from "@/components/RunDetailKanbanSection";
@@ -101,3 +101,4 @@ function KanbanContent(props: Props) {
 export function RunKanbanStream(props: Props) {
   return <KanbanContent {...props} />;
 }
+

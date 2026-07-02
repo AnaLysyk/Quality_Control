@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+﻿import { expect } from "@playwright/test";
 import { esperarEmailCapturado } from "./capturar-emails";
 
 export function extrairChaveDeStatusDoEmail(corpo: string) {
@@ -30,3 +30,4 @@ export async function capturarChaveDoEmailSolicitacao(email: string) {
 
   return chave!;
 }
+

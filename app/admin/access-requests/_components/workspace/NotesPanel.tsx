@@ -1,4 +1,4 @@
-const INTERNAL_NOTES_LIMIT = 1200;
+﻿const INTERNAL_NOTES_LIMIT = 1200;
 
 export function NotesPanel({
   value,
@@ -20,9 +20,9 @@ export function NotesPanel({
     <section className="rounded-[1.65rem] border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-100 px-5 py-4">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Interno</p>
-        <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Notas internas da análise</h3>
+        <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Notas internas da anÃ¡lise</h3>
         <p className="mt-1 text-sm leading-6 text-slate-500">
-          Registro privado do revisor. Não aparece para o solicitante e deve acompanhar o cadastro quando o usuário for criado.
+          Registro privado do revisor. NÃ£o aparece para o solicitante e deve acompanhar o cadastro quando o usuÃ¡rio for criado.
         </p>
       </div>
 
@@ -31,7 +31,7 @@ export function NotesPanel({
           value={limitedValue}
           maxLength={INTERNAL_NOTES_LIMIT}
           onChange={(event) => onChange(event.target.value.slice(0, INTERNAL_NOTES_LIMIT))}
-          placeholder={locked ? "Solicitação finalizada." : "Ex.: validar empresa antes da aprovação; e-mail confirmado por contato interno; manter observação no cadastro do usuário..."}
+          placeholder={locked ? "SolicitaÃ§Ã£o finalizada." : "Ex.: validar empresa antes da aprovaÃ§Ã£o; e-mail confirmado por contato interno; manter observaÃ§Ã£o no cadastro do usuÃ¡rio..."}
           rows={9}
           disabled={locked}
           className="w-full resize-y rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white disabled:bg-slate-100 disabled:text-slate-600"
@@ -44,7 +44,7 @@ export function NotesPanel({
               {limitedValue.length}/{INTERNAL_NOTES_LIMIT}
             </span>
             <p className="mt-1 text-xs font-semibold text-slate-500">
-              Visível somente para revisores/admins.
+              VisÃ­vel somente para revisores/admins.
             </p>
           </div>
 
@@ -61,3 +61,4 @@ export function NotesPanel({
     </section>
   );
 }
+

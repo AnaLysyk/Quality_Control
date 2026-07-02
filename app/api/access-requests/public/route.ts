@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { createAccessRequestFromPayload } from "@/lib/accessRequestsV2/service";
 import { rateLimit } from "@/lib/rateLimit";
 
 const GENERIC_MESSAGE =
-  "Sua solicitação foi recebida. Se os dados informados forem válidos, enviaremos atualizações pelo e-mail informado.";
+  "Sua solicitaÃ§Ã£o foi recebida. Se os dados informados forem vÃ¡lidos, enviaremos atualizaÃ§Ãµes pelo e-mail informado.";
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -71,3 +71,4 @@ export async function POST(req: Request) {
     { status: 201 },
   );
 }
+

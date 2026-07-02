@@ -30,3 +30,4 @@ export default async function SolicitacoesPage({ searchParams }: PageProps) {
   redirect(`/admin/access-requests${toQueryString(resolved)}`);
 }
 
+

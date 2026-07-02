@@ -1,4 +1,4 @@
-import { listAccessRequests, getAccessRequestById } from "../../../data/accessRequestsStore";
+﻿import { listAccessRequests, getAccessRequestById } from "../../../data/accessRequestsStore";
 
 jest.mock("../../../lib/persistenceMode", () => ({
   shouldUsePostgresPersistence: () => false,
@@ -17,3 +17,4 @@ describe("accessRequestsStore", () => {
     expect(list).toBeInstanceOf(Array);
   });
 });
+

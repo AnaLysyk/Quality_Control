@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+﻿import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { hashPasswordSha256 } from "../../../../../lib/passwordHash";
@@ -159,3 +159,4 @@ writeFileSync(
 );
 
 console.log(`[e2e] Massa de perfis criada em ${dataDir} (${users.length} usuarios).`);
+

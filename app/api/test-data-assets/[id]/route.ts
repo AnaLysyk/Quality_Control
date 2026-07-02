@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -224,3 +224,4 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

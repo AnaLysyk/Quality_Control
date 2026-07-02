@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test("admin ve ranking de empresas", async ({ page, context }) => {
@@ -13,3 +13,4 @@ test("admin ve ranking de empresas", async ({ page, context }) => {
   await expect(page.getByText(/Comparativo operacional do ambiente/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /Abrir contexto/i }).first()).toBeVisible();
 });
+

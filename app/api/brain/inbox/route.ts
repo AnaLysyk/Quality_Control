@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
 import { prisma } from "@/lib/prismaClient";
@@ -42,12 +42,12 @@ export async function PATCH(req: Request) {
 
   const id = String(body.id ?? "").trim();
   if (!id) {
-    return NextResponse.json({ error: "id é obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "id Ã© obrigatÃ³rio" }, { status: 400 });
   }
 
   const item = await prisma.brainInboxItem.findUnique({ where: { id } });
   if (!item) {
-    return NextResponse.json({ error: "Item de inbox não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Item de inbox nÃ£o encontrado" }, { status: 404 });
   }
 
   const action = body.action ?? "review";
@@ -92,3 +92,4 @@ export async function PATCH(req: Request) {
 
   return NextResponse.json({ item: updated });
 }
+

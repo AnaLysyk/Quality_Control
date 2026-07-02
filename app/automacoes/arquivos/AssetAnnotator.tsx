@@ -584,7 +584,7 @@ export default function AssetAnnotator({ assetId, assetName, assetUrl, companySl
                   type="button"
                   onClick={() => void handleSaveDrafts()}
                   disabled={saving}
-                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-(--tc-primary,#011848) px-3 text-sm font-semibold text-white disabled:opacity-40 hover:opacity-90"
+                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-[var(--tc-primary,#011848)] px-3 text-sm font-semibold text-white disabled:opacity-40 hover:opacity-90"
                 >
                   {saving ? <FiLoader className="h-3.5 w-3.5 animate-spin" /> : <FiCheck className="h-3.5 w-3.5" />}
                   Salvar lista
@@ -628,7 +628,7 @@ export default function AssetAnnotator({ assetId, assetName, assetUrl, companySl
               </div>
             ) : regions.length === 0 && !pending && draftRegions.length === 0 ? (
               <div className="px-4 py-6 text-center">
-                <div className="mb-2 text-3xl">◻</div>
+                <div className="mb-2 text-3xl">?</div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma seleção ainda.</p>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Arraste na imagem para começar.</p>
               </div>
@@ -740,4 +740,5 @@ export default function AssetAnnotator({ assetId, assetName, assetUrl, companySl
     </div>
   );
 }
+
 

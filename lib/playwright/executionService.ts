@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 import { spawn } from "child_process";
 import EventEmitter from "events";
 import { createHash } from "crypto";
@@ -8,7 +8,7 @@ import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
 import { prepareWorkspace, cleanupWorkspace, getRunDir } from "./workspaceService";
 import type { PlaywrightConfigOptions, ScriptFile } from "./workspaceService";
 
-// ── In-memory SSE bus keyed by runId ────────────────────────────────────────
+// â”€â”€ In-memory SSE bus keyed by runId â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type RunEmitter = EventEmitter & {
   finished: boolean;
@@ -20,7 +20,7 @@ export function getRunEmitter(runId: string): RunEmitter | null {
   return runBus.get(runId) ?? null;
 }
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface StartRunOptions {
   companySlug: string;
@@ -46,7 +46,7 @@ function browserLabel(config: PlaywrightConfigOptions): string {
   return list.length > 1 ? `matrix:${list.join("+")}` : list[0];
 }
 
-// ── DB helpers ───────────────────────────────────────────────────────────────
+// â”€â”€ DB helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function createRunRecord(opts: {
   companySlug: string;
@@ -191,10 +191,10 @@ async function upsertSpecSnapshots(
   }
 }
 
-// ── Line parser — parses Playwright's list reporter output ──────────────────
+// â”€â”€ Line parser â€” parses Playwright's list reporter output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const PASSED_RE = /✓\s+\[.*?\]\s+(.+?)\s+\((\d+(?:\.\d+)?)(ms|s)\)/;
-const FAILED_RE = /✘\s+\[.*?\]\s+(.+?)\s+\((\d+(?:\.\d+)?)(ms|s)\)/;
+const PASSED_RE = /âœ“\s+\[.*?\]\s+(.+?)\s+\((\d+(?:\.\d+)?)(ms|s)\)/;
+const FAILED_RE = /âœ˜\s+\[.*?\]\s+(.+?)\s+\((\d+(?:\.\d+)?)(ms|s)\)/;
 const FLAKY_RE  = /~\s+\[.*?\]\s+(.+?)\s+\((\d+(?:\.\d+)?)(ms|s)\)/;
 const SKIP_RE   = /-\s+\[.*?\]\s+(.+)/;
 
@@ -228,7 +228,7 @@ function parseDuration(value: string, unit: string): number {
   return unit === "s" ? Math.round(n * 1000) : Math.round(n);
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Creates a DB record, writes workspace to disk, spawns `npx playwright test`,
@@ -292,7 +292,7 @@ export async function startPlaywrightRun(opts: StartRunOptions): Promise<string>
   emitter.finished = false;
   runBus.set(runId, emitter);
 
-  // Execute asynchronously — do NOT await
+  // Execute asynchronously â€” do NOT await
   void executeRun(runId, opts, emitter);
 
   return runId;
@@ -306,7 +306,7 @@ async function executeRun(
   const emit = (line: string) => emitter.emit("line", line);
 
   try {
-    emit(`[system] Preparando workspace para ${opts.companySlug}…`);
+    emit(`[system] Preparando workspace para ${opts.companySlug}â€¦`);
     const workDir = await prepareWorkspace(
       opts.companySlug,
       runId,
@@ -315,7 +315,7 @@ async function executeRun(
     );
     emit(`[system] Workspace: ${workDir}`);
     const runBrowsers = resolvedBrowsers(opts.config);
-    emit(`[system] Iniciando Playwright (${runBrowsers.join(", ")}, headless=${opts.config.headless})…`);
+    emit(`[system] Iniciando Playwright (${runBrowsers.join(", ")}, headless=${opts.config.headless})â€¦`);
 
     await updateRunStatus(runId, "running");
 
@@ -383,7 +383,7 @@ async function executeRun(
       // Snapshot update is best-effort and should not break the run status.
     }
 
-    emit(`[system] Execução concluída — status=${finalStatus} (exit code ${exitCode})`);
+    emit(`[system] ExecuÃ§Ã£o concluÃ­da â€” status=${finalStatus} (exit code ${exitCode})`);
     await updateRunStatus(runId, finalStatus, exitCode);
 
     // Emit Brian event for run completion
@@ -412,3 +412,4 @@ async function executeRun(
     await cleanupWorkspace(opts.companySlug, runId).catch(() => {});
   }
 }
+

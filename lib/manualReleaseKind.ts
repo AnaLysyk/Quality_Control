@@ -1,4 +1,4 @@
-import type { Release } from "@/types/release";
+﻿import type { Release } from "@/types/release";
 
 export type ManualReleaseKind = "run" | "defect";
 
@@ -15,3 +15,4 @@ export function resolveManualReleaseKind(release: Release): ManualReleaseKind {
 
   return "run";
 }
+

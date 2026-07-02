@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+﻿import { NextResponse, type NextRequest } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { canEditCompanyWiki, canReadCompanyWiki } from "@/lib/companyWikiAccess";
 import { readCompanyDocs } from "@/data/platformDocsStore";
@@ -27,3 +27,4 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ comp
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

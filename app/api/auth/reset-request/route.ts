@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { findLocalUserByEmailOrId, listLocalCompanies, listLocalLinksForUser } from "@/lib/auth/localStore";
@@ -29,12 +29,12 @@ async function parseResetRequestBody(req: Request): Promise<ResetRequestBody> {
 
 async function validateResetUser(login: string, email: string) {
   if (!login || !email) {
-    return NextResponse.json({ error: "Usuário e email obrigatorios" }, { status: 400 });
+    return NextResponse.json({ error: "UsuÃ¡rio e email obrigatorios" }, { status: 400 });
   }
 
   const user = await findLocalUserByEmailOrId(login);
   if (!user || (user.email ?? "").toLowerCase() !== email) {
-    return NextResponse.json({ error: "Usuário e email não conferem" }, { status: 400 });
+    return NextResponse.json({ error: "UsuÃ¡rio e email nÃ£o conferem" }, { status: 400 });
   }
   return user;
 }
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
   try {
     requestRecord = await createPasswordResetRequest(user, login, rawProfileType, preferredCompany);
   } catch {
-    return NextResponse.json({ error: "Erro ao registrar solicitação" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao registrar solicitaÃ§Ã£o" }, { status: 500 });
   }
 
   if (requestRecord) {
@@ -128,5 +128,6 @@ export async function POST(req: Request) {
     metadata: { method: "forgot_password", companyLabel: preferredCompanyName ?? null },
   });
 
-  return NextResponse.json({ ok: true, message: "Solicitação enviada. O Suporte técnico será notificado." });
+  return NextResponse.json({ ok: true, message: "SolicitaÃ§Ã£o enviada. O Suporte tÃ©cnico serÃ¡ notificado." });
 }
+

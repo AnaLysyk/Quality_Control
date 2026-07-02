@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import type { NavItemDef, NavModuleDef } from "@/lib/navigation/navigationCatalog";
@@ -68,3 +68,4 @@ export function useActiveNavigation(modules: NavModuleDef[], currentPath: string
 
   return { activeModuleId, isModuleActive, isItemActive };
 }
+

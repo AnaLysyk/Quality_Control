@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+﻿import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -49,12 +49,12 @@ export async function POST(req: Request) {
   try {
     const access = await getAccessContext(req);
     if (!access) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
     }
 
     const user = await getLocalUserById(access.userId);
     if (!user) {
-      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
     }
 
     const form = await req.formData().catch(() => null);
@@ -64,15 +64,15 @@ export async function POST(req: Request) {
 
     const file = form.get("file");
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Arquivo obrigatório" }, { status: 400 });
+      return NextResponse.json({ error: "Arquivo obrigatÃ³rio" }, { status: 400 });
     }
 
     if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Envie uma imagem válida" }, { status: 400 });
+      return NextResponse.json({ error: "Envie uma imagem vÃ¡lida" }, { status: 400 });
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "A imagem deve ter no máximo 5 MB" }, { status: 400 });
+      return NextResponse.json({ error: "A imagem deve ter no mÃ¡ximo 5 MB" }, { status: 400 });
     }
 
     const ext = path.extname(file.name || "").toLowerCase() || ".png";
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
     const avatarUrl = `/api/s3/object?key=${encodeURIComponent(key)}`;
     const updated = await updateLocalUser(user.id, { avatar_url: avatarUrl });
     if (!updated) {
-      return NextResponse.json({ error: "Não foi possível atualizar o avatar" }, { status: 500 });
+      return NextResponse.json({ error: "NÃ£o foi possÃ­vel atualizar o avatar" }, { status: 500 });
     }
 
     addAuditLogSafe({
@@ -142,7 +142,8 @@ export async function POST(req: Request) {
       { status: 200 },
     );
   } catch (error) {
-    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "Não foi possível enviar a foto";
+    const message = error instanceof Error && error.message.trim() ? error.message.trim() : "NÃ£o foi possÃ­vel enviar a foto";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

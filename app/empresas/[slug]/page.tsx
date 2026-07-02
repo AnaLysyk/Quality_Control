@@ -10,3 +10,4 @@ export default async function CompanyRootRedirect({
   const { slug } = await params;
   redirect(`/empresas/${encodeURIComponent(slug)}/home`);
 }
+

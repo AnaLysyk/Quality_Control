@@ -1,11 +1,11 @@
-import "server-only";
+﻿import "server-only";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
 
 const WORKSPACE_ROOT = path.join(os.tmpdir(), "pw-workspaces");
 
-/** Sanitize to prevent path traversal — keep only safe characters */
+/** Sanitize to prevent path traversal â€” keep only safe characters */
 function sanitizeSegment(s: string): string {
   return s.replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 64);
 }
@@ -118,3 +118,4 @@ ${projects}
 });
 `;
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type NotificationChannel = "in_app" | "email" | "push" | "chat" | "brain";
 export type NotificationCriticality = "critical" | "high" | "normal" | "low";
@@ -295,3 +295,4 @@ export function getNotificationOperationModel() {
     },
   };
 }
+

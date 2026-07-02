@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { generateRunPdf } from "@/lib/runPdfGenerator";
 import { getRunDetailViewModel } from "@/lib/runDetailViewModel";
 
@@ -40,7 +40,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   if (safeFormat === "pdf") {
     const pdfBuffer = await generateRunPdf(slug, releaseSlug);
     if (!pdfBuffer) {
-      return NextResponse.json({ error: "Run não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Run nÃ£o encontrada" }, { status: 404 });
     }
     headers.set("Content-Type", "application/pdf");
     return new NextResponse(new Uint8Array(pdfBuffer), { headers });
@@ -49,8 +49,9 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   // CSV
   const vm = await getRunDetailViewModel(releaseSlug, slug !== "demo" ? slug : undefined);
   if (!vm) {
-    return NextResponse.json({ error: "Run não encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Run nÃ£o encontrada" }, { status: 404 });
   }
   headers.set("Content-Type", "text/csv; charset=utf-8");
   return new NextResponse(buildCsv(vm), { headers });
 }
+

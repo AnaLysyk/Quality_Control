@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { traceImpact } from "@/lib/brain";
 import { assertBrainNodeAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
@@ -45,3 +45,4 @@ export async function GET(
     return NextResponse.json({ error: "Erro ao calcular impacto" }, { status: 500 });
   }
 }
+

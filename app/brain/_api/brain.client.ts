@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
 import { parsePasswordResetAccessRequestMessage } from "@/lib/passwordResetAccessQueue";
@@ -208,3 +208,4 @@ export async function fetchBrainDashboardData() {
     ].filter(Boolean),
   };
 }
+

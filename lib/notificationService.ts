@@ -1062,3 +1062,4 @@ export async function notifyTicketUpdated(input: {
     dedupeKey: `suporte:${suporte.id}:updated:${Date.now()}`,
   });
 }
+

@@ -78,3 +78,4 @@ test("auth: /api/me without session returns 401", async ({ request }) => {
   const body = JSON.parse(bodyText);
   expect(body.error?.code).toBe("NO_SESSION");
 });
+

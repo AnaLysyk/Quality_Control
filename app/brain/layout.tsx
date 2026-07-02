@@ -1,4 +1,4 @@
-import { BrainAccessRequestFlowPanel } from "./_components/BrainAccessRequestFlowPanel";
+﻿import { BrainAccessRequestFlowPanel } from "./_components/BrainAccessRequestFlowPanel";
 
 export default function BrainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,3 +8,4 @@ export default function BrainLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+

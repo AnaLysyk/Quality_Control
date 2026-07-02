@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
@@ -134,3 +134,4 @@ export async function appendSuporteEvent(input: {
 }
 
 export const listSuporteEvents = listTicketEvents;
+

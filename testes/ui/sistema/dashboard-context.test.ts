@@ -1,4 +1,4 @@
-import { resolveDashboardContext } from "@/lib/dashboard/context";
+﻿import { resolveDashboardContext } from "@/lib/dashboard/context";
 
 describe("resolveDashboardContext", () => {
   it("locks company scope for company users", () => {
@@ -53,3 +53,4 @@ describe("resolveDashboardContext", () => {
     expect(context.selectedCompanySlugs).toEqual(["griaule"]);
   });
 });
+

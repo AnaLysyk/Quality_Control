@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -86,41 +86,41 @@ export default function CreateSupportTicketButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
+        className="rounded-xl bg-[var(--tc-accent)] px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
       >
         Criar chamado de suporte
       </button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <div className="my-auto w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-(--tc-border)/30 bg-white text-(--tc-text,#0f172a) shadow-[0_25px_80px_rgba(15,23,42,0.4)] dark:border-white/10 dark:bg-(--tc-surface-dark,#0f1828) dark:text-(--tc-text-inverse,#fff) p-6">
+          <div className="my-auto w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-[var(--tc-border)]/30 bg-white text-[var(--tc-text,#0f172a)] shadow-[0_25px_80px_rgba(15,23,42,0.4)] dark:border-white/10 dark:bg-[var(--tc-surface-dark,#0f1828)] dark:text-[var(--tc-text-inverse,#fff)] p-6">
             <h2 className="text-lg font-bold mb-4">Novo chamado de suporte</h2>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-semibold text-(--tc-text-muted)">Título</label>
+                <label className="text-sm font-semibold text-[var(--tc-text-muted)]">TÃ­tulo</label>
                 <input
-                  className="w-full rounded-xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                  className="w-full rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface,#f8fafc)] px-3 py-2 text-sm text-[var(--tc-text,#0f172a)] shadow-sm outline-none transition focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-[var(--tc-surface-darker,#0c1220)] dark:text-[var(--tc-text-inverse,#fff)]"
                   value={form.title}
                   onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="Título do chamado"
+                  placeholder="TÃ­tulo do chamado"
                 />
               </div>
               <div>
-                <label className="text-sm font-semibold text-(--tc-text-muted)">Descrição</label>
+                <label className="text-sm font-semibold text-[var(--tc-text-muted)]">DescriÃ§Ã£o</label>
                 <textarea
-                  className="w-full rounded-xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent) focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-(--tc-surface-darker,#0c1220) dark:text-(--tc-text-inverse,#fff)"
+                  className="w-full rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface,#f8fafc)] px-3 py-2 text-sm text-[var(--tc-text,#0f172a)] shadow-sm outline-none transition focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-[var(--tc-surface-darker,#0c1220)] dark:text-[var(--tc-text-inverse,#fff)]"
                   rows={4}
                   value={form.description}
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="Descreva o problema ou solicitação"
+                  placeholder="Descreva o problema ou solicitaÃ§Ã£o"
                 />
               </div>
               {supportOperators.length > 0 && (
                 <div>
-                  <label className="text-sm font-semibold text-(--tc-text-muted)">Atribuir ao suporte técnico</label>
+                  <label className="text-sm font-semibold text-[var(--tc-text-muted)]">Atribuir ao suporte tÃ©cnico</label>
                   <select
                     id="create-support-assignee"
-                    aria-label="Atribuir ao suporte técnico"
-                    className="w-full rounded-xl border border-(--tc-border) bg-(--tc-surface,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0f172a) shadow-sm outline-none transition focus:border-(--tc-accent)"
+                    aria-label="Atribuir ao suporte tÃ©cnico"
+                    className="w-full rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface,#f8fafc)] px-3 py-2 text-sm text-[var(--tc-text,#0f172a)] shadow-sm outline-none transition focus:border-[var(--tc-accent)]"
                     value={assignedTo ?? ""}
                     onChange={(e) => setAssignedTo(e.target.value || null)}
                   >
@@ -137,7 +137,7 @@ export default function CreateSupportTicketButton() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-xl border border-(--tc-border)/60 px-4 py-2 text-sm font-semibold text-(--tc-text,#0f172a) transition hover:border-(--tc-text-primary,#0b1a3c) hover:text-(--tc-text-primary,#0b1a3c) dark:border-white/20 dark:text-(--tc-text-inverse,#fff)"
+                className="rounded-xl border border-[var(--tc-border)]/60 px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0f172a)] transition hover:border-[var(--tc-text-primary,#0b1a3c)] hover:text-[var(--tc-text-primary,#0b1a3c)] dark:border-white/20 dark:text-[var(--tc-text-inverse,#fff)]"
               >
                 Cancelar
               </button>
@@ -145,7 +145,7 @@ export default function CreateSupportTicketButton() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={saving || !form.title.trim()}
-                className="rounded-xl bg-(--tc-accent) px-4 py-2 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
+                className="rounded-xl bg-[var(--tc-accent)] px-4 py-2 text-sm font-semibold text-white shadow transition hover:brightness-110 disabled:opacity-60"
               >
                 {saving ? "Salvando..." : "Salvar chamado"}
               </button>
@@ -156,3 +156,4 @@ export default function CreateSupportTicketButton() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-/** @jest-environment jsdom */
+﻿/** @jest-environment jsdom */
 
 import "@testing-library/jest-dom";
 import React from "react";
@@ -40,7 +40,7 @@ describe("CreateCompanyForm", () => {
 
     render(<CreateCompanyForm />);
 
-    const cnpjInput = screen.getByPlaceholderText("CNPJ (opcional para preenchimento automático)");
+    const cnpjInput = screen.getByPlaceholderText("CNPJ (opcional para preenchimento automÃ¡tico)");
     const nameInput = screen.getByPlaceholderText("Nome da empresa");
 
     fireEvent.change(cnpjInput, { target: { value: "11.111.111/1111-11" } });
@@ -87,7 +87,7 @@ describe("CreateCompanyForm", () => {
 
     render(<CreateCompanyForm />);
 
-    const cnpjInput = screen.getByPlaceholderText("CNPJ (opcional para preenchimento automático)");
+    const cnpjInput = screen.getByPlaceholderText("CNPJ (opcional para preenchimento automÃ¡tico)");
     const nameInput = screen.getByPlaceholderText("Nome da empresa");
 
     fireEvent.change(cnpjInput, { target: { value: "19131243000197" } });
@@ -109,3 +109,4 @@ describe("CreateCompanyForm", () => {
     expect(nameInput).toHaveValue("Nome manual");
   });
 });
+

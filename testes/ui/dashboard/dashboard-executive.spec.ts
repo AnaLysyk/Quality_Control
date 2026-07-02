@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
@@ -19,3 +19,4 @@ test("company loads the current dashboard shell and key summary blocks", async (
   await expect(page.getByText("Concluidas", { exact: true })).toBeVisible({ timeout: 30000 });
   await expect(page.getByRole("link", { name: /Ver lista completa/i })).toBeVisible({ timeout: 30000 });
 });
+

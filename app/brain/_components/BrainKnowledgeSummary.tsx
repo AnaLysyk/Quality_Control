@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { BrainGraphSummary } from "../_types/brain.types";
 import { formatCounter } from "../_utils/brainGraphFormatters";
@@ -30,3 +30,4 @@ export function BrainKnowledgeSummary({ summary }: BrainKnowledgeSummaryProps) {
     </div>
   );
 }
+

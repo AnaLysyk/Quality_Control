@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -64,9 +64,9 @@ export function ReleasesList({ className }: ReleasesListProps) {
     <div className={className}>
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-(--tc-text-inverse)">Runs monitoradas</h2>
-          <p className="text-(--tc-text-secondary)">
-            Selecione a aplicação para acessar a run desejada.
+          <h2 className="text-2xl font-bold text-[var(--tc-text-inverse)]">Runs monitoradas</h2>
+          <p className="text-[var(--tc-text-secondary)]">
+            Selecione a aplicaÃ§Ã£o para acessar a run desejada.
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
@@ -76,18 +76,18 @@ export function ReleasesList({ className }: ReleasesListProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar runs"
-            className="w-full rounded-xl border border-(--tc-border) bg-(--tc-surface-dark) px-4 py-3 text-sm text-(--tc-text-inverse) placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40 md:w-90"
+            className="w-full rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface-dark)] px-4 py-3 text-sm text-[var(--tc-text-inverse)] placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent)/40 md:w-90"
           />
         </div>
       </div>
 
-      {loading && <p className="mt-4 text-sm text-(--tc-text-muted)">Carregando runs...</p>}
+      {loading && <p className="mt-4 text-sm text-[var(--tc-text-muted)]">Carregando runs...</p>}
       {!loading && error && (
-        <p className="mt-4 text-sm text-red-500">Não foi possível carregar as runs agora.</p>
+        <p className="mt-4 text-sm text-red-500">NÃ£o foi possÃ­vel carregar as runs agora.</p>
       )}
       {!loading && !error && !filtered.length && (
-        <p className="mt-4 text-sm text-(--tc-text-muted)">
-          Nenhum resultado encontrado. Ajuste a busca ou clique em uma aplicação.
+        <p className="mt-4 text-sm text-[var(--tc-text-muted)]">
+          Nenhum resultado encontrado. Ajuste a busca ou clique em uma aplicaÃ§Ã£o.
         </p>
       )}
 
@@ -106,9 +106,9 @@ export function ReleasesList({ className }: ReleasesListProps) {
                 </span>
                 <Link
                   href={`/applications-panel/${appKey}`}
-                  className="cursor-pointer text-sm font-semibold text-(--tc-accent) transition hover:brightness-110"
+                  className="cursor-pointer text-sm font-semibold text-[var(--tc-accent)] transition hover:brightness-110"
                 >
-                  {"Ver todas as runs desta aplicação ->"}
+                  {"Ver todas as runs desta aplicaÃ§Ã£o ->"}
                 </Link>
               </div>
 
@@ -118,26 +118,26 @@ export function ReleasesList({ className }: ReleasesListProps) {
                     key={`${release.slug ?? "release"}-${release.createdAt ?? index}`}
                     href={`/release/${release.slug}`}
                     aria-label={`Abrir run ${formatRunTitle(release.title, release.slug)}`}
-                    className={`group card-tc min-h-40 cursor-pointer rounded-xl border border-(--tc-border)/40 bg-white p-4 text-[#0b1a3c] transition hover:border-(--tc-accent)/60 hover:bg-(--tc-surface-hover) hover:shadow-[0_10px_30px_var(--tc-accent-soft)] ${appColorClass}`}
+                    className={`group card-tc min-h-40 cursor-pointer rounded-xl border border-[var(--tc-border)]/40 bg-white p-4 text-[#0b1a3c] transition hover:border-[var(--tc-accent)]/60 hover:bg-[var(--tc-surface-hover)] hover:shadow-[0_10px_30px_var(--tc-accent-soft)] ${appColorClass}`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="wrap-break-word text-[12px] leading-tight tracking-[0.14em] text-(--tc-text-muted) uppercase">
+                      <span className="wrap-break-word text-[12px] leading-tight tracking-[0.14em] text-[var(--tc-text-muted)] uppercase">
                         {release.slug.replace(/_/g, " ")}
                       </span>
                     </div>
 
                     <div className="mt-2 space-y-1">
-                      <h3 className="text-base font-semibold text-(--tc-text-inverse)">
+                      <h3 className="text-base font-semibold text-[var(--tc-text-inverse)]">
                         {formatRunTitle(release.title, release.slug)}
                       </h3>
-                      <p className="line-clamp-2 text-sm leading-relaxed text-(--tc-text-secondary)">
+                      <p className="line-clamp-2 text-sm leading-relaxed text-[var(--tc-text-secondary)]">
                         {formatRunText(release.summary, "Sem resumo informado.")}
                       </p>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-(--tc-text-muted)">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--tc-text-muted)]">
                       <span className="inline-flex items-center gap-2">
-                        <span className="inline-flex items-center justify-center rounded-full bg-(--tc-surface-dark) px-2 py-1 text-white">
+                        <span className="inline-flex items-center justify-center rounded-full bg-[var(--tc-surface-dark)] px-2 py-1 text-white">
                           {release.source === "MANUAL" ? "Manual" : "Integrado Qase"}
                         </span>
                         <span>
@@ -148,7 +148,7 @@ export function ReleasesList({ className }: ReleasesListProps) {
                         </span>
                       </span>
 
-                      <span className="inline-flex items-center gap-2 text-sm font-semibold text-(--tc-accent)">
+                      <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--tc-accent)]">
                         {"Abrir run ->"}
                       </span>
                     </div>
@@ -162,3 +162,4 @@ export function ReleasesList({ className }: ReleasesListProps) {
     </div>
   );
 }
+

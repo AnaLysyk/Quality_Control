@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+﻿import { type NextRequest, NextResponse } from "next/server";
 
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { syncBrain } from "@/lib/brain-sync";
@@ -27,3 +27,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erro ao sincronizar Brain" }, { status: 500 });
   }
 }
+

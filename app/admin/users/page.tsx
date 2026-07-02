@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -152,7 +152,7 @@ function UserAvatar({ user, size = "md" }: { user: UserItem; size?: "md" | "lg" 
   }
 
   return (
-    <div className={`flex aspect-square items-center justify-center rounded-full bg-slate-100 font-bold text-(--tc-text-primary,#0b1a3c) ${sizeClassName}`}>
+    <div className={`flex aspect-square items-center justify-center rounded-full bg-slate-100 font-bold text-[var(--tc-text-primary,#0b1a3c)] ${sizeClassName}`}>
       {getInitials(user.name)}
     </div>
   );
@@ -160,9 +160,9 @@ function UserAvatar({ user, size = "md" }: { user: UserItem; size?: "md" | "lg" 
 
 function UserInlineField({ label, value, valueClassName = "" }: { label: string; value: string; valueClassName?: string }) {
   return (
-    <p className="text-[15px] leading-7 text-(--tc-text-secondary,#4b5563) sm:text-base">
-      <span className="font-medium text-(--tc-text-secondary,#4b5563)">{label}: </span>
-      <span className={`font-semibold text-(--tc-text-primary,#0b1a3c) ${valueClassName}`} title={value}>
+    <p className="text-[15px] leading-7 text-[var(--tc-text-secondary,#4b5563)] sm:text-base">
+      <span className="font-medium text-[var(--tc-text-secondary,#4b5563)]">{label}: </span>
+      <span className={`font-semibold text-[var(--tc-text-primary,#0b1a3c)] ${valueClassName}`} title={value}>
         {value}
       </span>
     </p>
@@ -185,21 +185,21 @@ function UserCard({
       type="button"
       onClick={() => onSelect?.(user)}
       disabled={!onSelect}
-      className={`group w-full rounded-[22px] border border-(--tc-border,#d7deea) bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition sm:px-5 sm:py-5 ${
-        onSelect ? "hover:border-(--tc-accent,#ef0001)/22 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]" : "cursor-default"
+      className={`group w-full rounded-[22px] border border-[var(--tc-border,#d7deea)] bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition sm:px-5 sm:py-5 ${
+        onSelect ? "hover:border-[var(--tc-accent,#ef0001)]/22 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]" : "cursor-default"
       }`}
     >
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-5">
         <div className="flex min-w-0 items-start gap-3 sm:gap-4">
           <UserAvatar user={user} size="lg" />
           <div className="min-w-0">
-            <p className="truncate text-[1.9rem] font-semibold leading-none tracking-tight text-(--tc-text-primary,#0b1a3c) sm:text-[2rem]">
+            <p className="truncate text-[1.9rem] font-semibold leading-none tracking-tight text-[var(--tc-text-primary,#0b1a3c)] sm:text-[2rem]">
               {user.name}
             </p>
             <div className="mt-3 space-y-1">
-              <UserInlineField label="Usuário" value={getUserHandle(user)} valueClassName="break-all" />
+              <UserInlineField label="UsuÃ¡rio" value={getUserHandle(user)} valueClassName="break-all" />
               <UserInlineField label="E-mail" value={user.email} valueClassName="break-all" />
-              <UserInlineField label="Cargo" value={user.job_title || "Não informado"} valueClassName="break-words" />
+              <UserInlineField label="Cargo" value={user.job_title || "NÃ£o informado"} valueClassName="break-words" />
               {showCompanyField && companyLabel ? <UserInlineField label="Empresa" value={companyLabel} valueClassName="break-words" /> : null}
             </div>
           </div>
@@ -233,16 +233,16 @@ function UserStatusSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 sm:p-5">
-      <div className="flex items-center justify-between border-b border-(--tc-border,#d7deea) pb-4">
-        <h3 className="text-lg font-bold text-(--tc-text-primary,#0b1a3c)">{title}</h3>
-        <span className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-3 py-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+    <section className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4 sm:p-5">
+      <div className="flex items-center justify-between border-b border-[var(--tc-border,#d7deea)] pb-4">
+        <h3 className="text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">{title}</h3>
+        <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-3 py-1 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
           {count}
         </span>
       </div>
 
       {count === 0 ? (
-        <div className="mt-4 rounded-[18px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-6 text-sm text-(--tc-text-secondary,#4b5563)">
+        <div className="mt-4 rounded-[18px] border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-6 text-sm text-[var(--tc-text-secondary,#4b5563)]">
           {emptyMessage}
         </div>
       ) : (
@@ -264,15 +264,15 @@ function CompanyUsersSection({
   onSelect?: (user: UserItem) => void;
 }) {
   return (
-    <section className="rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-3.5 sm:p-4">
-      <div className="flex flex-col gap-2 border-b border-(--tc-border,#d7deea) pb-4 sm:flex-row sm:items-end sm:justify-between">
+    <section className="rounded-[20px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-3.5 sm:p-4">
+      <div className="flex flex-col gap-2 border-b border-[var(--tc-border,#d7deea)] pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h4 className="truncate text-lg font-bold text-(--tc-text-primary,#0b1a3c)">{company.name}</h4>
-          <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+          <h4 className="truncate text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">{company.name}</h4>
+          <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
             {company.users.length} perfil{company.users.length === 1 ? "" : "is"} vinculado{company.users.length === 1 ? "" : "s"}
           </p>
         </div>
-        <span className="inline-flex w-fit rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+        <span className="inline-flex w-fit rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
           {company.users.length} usuario{company.users.length === 1 ? "" : "s"}
         </span>
       </div>
@@ -394,12 +394,12 @@ function UserManagementQueueExperience({
   ];
 
   return (
-    <section className="tc-queue-shell mt-5 overflow-hidden rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) shadow-[0_18px_54px_rgba(15,23,42,0.09)]">
-      <div className="border-b border-(--tc-border,#d7deea) bg-[linear-gradient(135deg,var(--tc-surface,#ffffff)_0%,var(--tc-surface-2,#f8fafc)_58%,rgba(14,165,233,0.08)_100%)] p-3 sm:p-4">
+    <section className="tc-queue-shell mt-5 overflow-hidden rounded-[24px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_18px_54px_rgba(15,23,42,0.09)]">
+      <div className="border-b border-[var(--tc-border,#d7deea)] bg-[linear-gradient(135deg,var(--tc-surface,#ffffff)_0%,var(--tc-surface-2,#f8fafc)_58%,rgba(14,165,233,0.08)_100%)] p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">{title}</p>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{description}</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">{title}</p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{description}</p>
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -414,32 +414,32 @@ function UserManagementQueueExperience({
               </button>
             ) : null}
 
-            <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-(--tc-text-primary,#0b1a3c) shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
-              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Total</span>
-              <span className="text-base font-black leading-none text-(--tc-primary,#011848)">{users.length}</span>
+            <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3.5 text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Total</span>
+              <span className="text-base font-black leading-none text-[var(--tc-primary,#011848)]">{users.length}</span>
             </div>
           </div>
         </div>
 
         <div className="mt-3 grid gap-2 xl:grid-cols-[minmax(260px,1fr)_190px_190px]">
           <label className="relative">
-            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
             <input
               ref={searchInputRef}
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Buscar por nome, usuário, e-mail ou empresa"
-              className="h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) pl-11 pr-4 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) outline-none transition placeholder:text-(--tc-text-muted,#94a3b8) focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+              placeholder="Buscar por nome, usuÃ¡rio, e-mail ou empresa"
+              className="h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] pl-11 pr-4 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] outline-none transition placeholder:text-[var(--tc-text-muted,#94a3b8)] focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
               data-testid="users-search-input"
             />
           </label>
 
           <select
-            aria-label="Filtrar usuários por status"
-            title="Filtrar usuários por status"
+            aria-label="Filtrar usuÃ¡rios por status"
+            title="Filtrar usuÃ¡rios por status"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as UserStatusFilter)}
-            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+            className="h-12 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -449,11 +449,11 @@ function UserManagementQueueExperience({
           </select>
 
           <select
-            aria-label="Ordenar usuários"
-            title="Ordenar usuários"
+            aria-label="Ordenar usuÃ¡rios"
+            title="Ordenar usuÃ¡rios"
             value={sortMode}
             onChange={(event) => setSortMode(event.target.value as UserSortMode)}
-            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+            className="h-12 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
           >
             <option value="name_asc">Nome A-Z</option>
             <option value="name_desc">Nome Z-A</option>
@@ -473,7 +473,7 @@ function UserManagementQueueExperience({
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
                 statusFilter === option.value
                   ? "border-sky-600 bg-sky-700 text-white shadow-[0_12px_24px_rgba(14,116,144,0.18)]"
-                  : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-secondary,#4b5563) hover:border-sky-300 hover:text-(--tc-text-primary,#0b1a3c)"
+                  : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-secondary,#4b5563)] hover:border-sky-300 hover:text-[var(--tc-text-primary,#0b1a3c)]"
               }`}
             >
               <FiCircle className={`h-2 w-2 ${statusFilter === option.value ? "text-white" : userStatusDotClass(option.value)}`} />
@@ -485,25 +485,25 @@ function UserManagementQueueExperience({
       </div>
 
       {loading ? (
-        <div className="p-8 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Carregando usuários...</div>
+        <div className="p-8 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Carregando usuÃ¡rios...</div>
       ) : filteredUsers.length === 0 ? (
         <div className="flex min-h-90 items-center justify-center p-8 text-center">
           <div className="max-w-md">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text-muted,#6b7280)]">
               <FiSearch className="h-7 w-7" />
             </div>
-            <h3 className="mt-5 text-xl font-black text-(--tc-text-primary,#0b1a3c)">{emptyTitle}</h3>
-            <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{emptyDescription}</p>
+            <h3 className="mt-5 text-xl font-black text-[var(--tc-text-primary,#0b1a3c)]">{emptyTitle}</h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{emptyDescription}</p>
           </div>
         </div>
       ) : (
         <>
           <div className="hidden max-h-[calc(100vh-332px)] overflow-auto lg:block">
             <table className="w-full min-w-230 border-separate border-spacing-0">
-              <thead className="sticky top-0 z-10 bg-(--tc-surface,#ffffff) shadow-[0_1px_0_var(--tc-border,#d7deea)]">
+              <thead className="sticky top-0 z-10 bg-[var(--tc-surface,#ffffff)] shadow-[0_1px_0_var(--tc-border,#d7deea)]">
                 <tr>
-                  {["Usuário", "Perfil", "Empresa", "Cargo", "Status", "Ação"].map((column) => (
-                    <th key={column} className="whitespace-nowrap border-b border-(--tc-border,#d7deea) px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                  {["UsuÃ¡rio", "Perfil", "Empresa", "Cargo", "Status", "AÃ§Ã£o"].map((column) => (
+                    <th key={column} className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                       {column}
                     </th>
                   ))}
@@ -528,33 +528,33 @@ function UserManagementQueueExperience({
                     className={`group transition ${onSelect ? "cursor-pointer" : ""} ${
                       active
                         ? "bg-sky-50/90 shadow-[inset_4px_0_0_#0284c7] dark:bg-sky-950/35"
-                        : "odd:bg-(--tc-surface,#ffffff) even:bg-(--tc-surface-2,#f8fafc) hover:bg-sky-50/65 dark:hover:bg-sky-950/25"
+                        : "odd:bg-[var(--tc-surface,#ffffff)] even:bg-[var(--tc-surface-2,#f8fafc)] hover:bg-sky-50/65 dark:hover:bg-sky-950/25"
                     }`}
                   >
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 align-middle">
                       <div className="flex min-w-0 items-center gap-3">
                         <UserAvatar user={user} />
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-(--tc-text-primary,#0b1a3c)">{user.name}</p>
-                          <p className="mt-0.5 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{getUserHandle(user)} · {user.email}</p>
+                          <p className="truncate text-sm font-black text-[var(--tc-text-primary,#0b1a3c)]">{user.name}</p>
+                          <p className="mt-0.5 truncate text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">{getUserHandle(user)} Â· {user.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 align-middle">
                       <span className={`inline-flex max-w-52 rounded-full border px-3 py-1.5 text-xs font-black ${roleTone(user)}`}>
                         <span className="truncate">{profileBadgeMode === "company" ? user.company_names?.[0] || "Sem empresa" : profileLabel(user)}</span>
                       </span>
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] align-middle">
                       {user.company_names?.[0] || "Sem empresa"}
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
-                      {user.job_title || "Não informado"}
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] align-middle">
+                      {user.job_title || "NÃ£o informado"}
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 align-middle">
                       <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ${statusTone(user)}`}>{statusLabel(user)}</span>
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-(--tc-accent,#ef0001) align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-[var(--tc-accent,#ef0001)] align-middle">
                       {active ? "Selecionado" : onSelect ? "Ver detalhes" : "Somente leitura"}
                     </td>
                   </tr>
@@ -574,43 +574,43 @@ function UserManagementQueueExperience({
                 className={`w-full rounded-[24px] border p-4 text-left shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 disabled:cursor-default ${
                   user.id === selectedId
                     ? "border-sky-300 bg-sky-50 shadow-[inset_4px_0_0_#0284c7] dark:border-sky-700/60 dark:bg-sky-950/35"
-                    : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"
+                    : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)]"
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <UserAvatar user={user} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-black text-(--tc-text-primary,#0b1a3c)">{user.name}</p>
+                      <p className="truncate text-sm font-black text-[var(--tc-text-primary,#0b1a3c)]">{user.name}</p>
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${statusTone(user)}`}>{statusLabel(user)}</span>
                     </div>
-                    <p className="mt-1 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{user.email}</p>
-                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{profileBadgeMode === "company" ? user.company_names?.[0] || "Sem empresa" : profileLabel(user)} · {user.company_names?.[0] || "Sem empresa"}</p>
+                    <p className="mt-1 truncate text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">{user.email}</p>
+                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{profileBadgeMode === "company" ? user.company_names?.[0] || "Sem empresa" : profileLabel(user)} Â· {user.company_names?.[0] || "Sem empresa"}</p>
                   </div>
                 </div>
               </button>
             ))}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-5 py-4">
-            <p className="text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
-              Página {pageIndex + 1} de {pageCount} · {filteredUsers.length} resultado(s) · {userStatusFilterLabel(statusFilter)} · {userSortLabel(sortMode)}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-5 py-4">
+            <p className="text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)]">
+              PÃ¡gina {pageIndex + 1} de {pageCount} Â· {filteredUsers.length} resultado(s) Â· {userStatusFilterLabel(statusFilter)} Â· {userSortLabel(sortMode)}
             </p>
 
             <div className="flex items-center gap-2">
               <select
-                aria-label="Quantidade de usuários por página"
-                title="Quantidade de usuários por página"
+                aria-label="Quantidade de usuÃ¡rios por pÃ¡gina"
+                title="Quantidade de usuÃ¡rios por pÃ¡gina"
                 value={pageSize}
                 onChange={(event) => {
                   setPageSize(Number(event.target.value));
                   setPageIndex(0);
                 }}
-                className="h-10 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 text-sm font-bold text-(--tc-text-primary,#0b1a3c)"
+                className="h-10 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 text-sm font-bold text-[var(--tc-text-primary,#0b1a3c)]"
               >
                 {[10, 12, 20, 50].map((size) => (
                   <option key={size} value={size}>
-                    {size}/página
+                    {size}/pÃ¡gina
                   </option>
                 ))}
               </select>
@@ -619,8 +619,8 @@ function UserManagementQueueExperience({
                 type="button"
                 onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
                 disabled={pageIndex === 0}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-40"
-                aria-label="Página anterior"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-40"
+                aria-label="PÃ¡gina anterior"
               >
                 <FiChevronLeft />
               </button>
@@ -629,8 +629,8 @@ function UserManagementQueueExperience({
                 type="button"
                 onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
                 disabled={pageIndex >= pageCount - 1}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-40"
-                aria-label="Próxima página"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-40"
+                aria-label="PrÃ³xima pÃ¡gina"
               >
                 <FiChevronRight />
               </button>
@@ -688,7 +688,7 @@ export default function AdminUsersPage() {
       const companiesJson = (await companiesRes.json().catch(() => ([]))) as CompanyOption[] | { error?: string };
 
       if (!usersRes.ok) {
-        setError(usersJson.error || "Não foi possível carregar os usuários.");
+        setError(usersJson.error || "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
         setUsers([]);
       } else {
         const items = Array.isArray(usersJson.items) ? usersJson.items : [];
@@ -703,7 +703,7 @@ export default function AdminUsersPage() {
     } catch (err) {
       setUsers([]);
       setCompanies([]);
-      setError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
+      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
     } finally {
       setLoading(false);
     }
@@ -713,7 +713,7 @@ export default function AdminUsersPage() {
     load().catch((err) => {
       setUsers([]);
       setCompanies([]);
-      setError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
+      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
       setLoading(false);
     });
   }, [load]);
@@ -925,9 +925,9 @@ export default function AdminUsersPage() {
   const createModalConfig = useMemo<CreateModalConfig>(() => {
     if (activeTab === "company") {
       return {
-        title: "Criar usuário da empresa",
-        subtitle: "Selecione a empresa e cadastre o responsável já no contexto dela.",
-        submitLabel: "Criar usuário da empresa",
+        title: "Criar usuÃ¡rio da empresa",
+        subtitle: "Selecione a empresa e cadastre o responsÃ¡vel jÃ¡ no contexto dela.",
+        submitLabel: "Criar usuÃ¡rio da empresa",
         initialRole: "company_user",
         lockRole: true,
         showCompanyField: true,
@@ -951,9 +951,9 @@ export default function AdminUsersPage() {
 
     if (activeTab === "support") {
       return {
-        title: "Criar Suporte Técnico",
+        title: "Criar Suporte TÃ©cnico",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte Técnico",
+        submitLabel: "Criar Suporte TÃ©cnico",
         initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
@@ -963,9 +963,9 @@ export default function AdminUsersPage() {
     }
 
     return {
-        title: "Criar usuário TC",
-        subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessário.",
-        submitLabel: "Criar usuário TC",
+        title: "Criar usuÃ¡rio TC",
+        subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessÃ¡rio.",
+        submitLabel: "Criar usuÃ¡rio TC",
       initialRole: "testing_company_user",
       lockRole: true,
       showCompanyField: true,
@@ -995,33 +995,33 @@ export default function AdminUsersPage() {
   const currentTabCopy = useMemo(() => {
     if (activeTab === "testing") {
       return {
-        title: "Fila de usuários TC",
-        description: "Listagem operacional dos usuários internos vinculados às empresas.",
-        emptyTitle: "Nenhum usuário TC encontrado",
-        emptyDescription: "Ajuste os filtros ou crie um novo usuário TC direto nesta tela.",
+        title: "Fila de usuÃ¡rios TC",
+        description: "Listagem operacional dos usuÃ¡rios internos vinculados Ã s empresas.",
+        emptyTitle: "Nenhum usuÃ¡rio TC encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo usuÃ¡rio TC direto nesta tela.",
       };
     }
     if (activeTab === "admin") {
       return {
-        title: "Fila de Líderes TC",
-        description: "Listagem dos perfis de liderança com acesso administrativo.",
-        emptyTitle: "Nenhum Líder TC encontrado",
-        emptyDescription: "Ajuste os filtros ou crie um novo Líder TC direto nesta tela.",
+        title: "Fila de LÃ­deres TC",
+        description: "Listagem dos perfis de lideranÃ§a com acesso administrativo.",
+        emptyTitle: "Nenhum LÃ­der TC encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo LÃ­der TC direto nesta tela.",
       };
     }
     if (activeTab === "support") {
       return {
-        title: "Fila de suporte técnico",
-        description: "Listagem dos perfis técnicos internos da Testing Company.",
-        emptyTitle: "Nenhum suporte técnico encontrado",
-        emptyDescription: "Ajuste os filtros ou crie um novo suporte técnico direto nesta tela.",
+        title: "Fila de suporte tÃ©cnico",
+        description: "Listagem dos perfis tÃ©cnicos internos da Testing Company.",
+        emptyTitle: "Nenhum suporte tÃ©cnico encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo suporte tÃ©cnico direto nesta tela.",
       };
     }
     return {
-      title: "Fila de usuários da empresa",
-      description: "Listagem apenas dos usuários vinculados às empresas. Empresas institucionais ficam em Gestão de Empresas.",
-      emptyTitle: "Nenhum usuário da empresa encontrado",
-      emptyDescription: "Ajuste os filtros ou crie um usuário da empresa direto nesta tela.",
+      title: "Fila de usuÃ¡rios da empresa",
+      description: "Listagem apenas dos usuÃ¡rios vinculados Ã s empresas. Empresas institucionais ficam em GestÃ£o de Empresas.",
+      emptyTitle: "Nenhum usuÃ¡rio da empresa encontrado",
+      emptyDescription: "Ajuste os filtros ou crie um usuÃ¡rio da empresa direto nesta tela.",
     };
   }, [activeTab]);
 
@@ -1032,10 +1032,10 @@ export default function AdminUsersPage() {
   if (!userAccess.canViewUsers) {
     return (
       <AccessDeniedState
-        moduleName="Usuários"
+        moduleName="UsuÃ¡rios"
         requiredPermission="users.view"
-        title="Acesso à gestão de usuários negado"
-        description="Seu perfil não possui permissão para consultar os usuários da plataforma."
+        title="Acesso Ã  gestÃ£o de usuÃ¡rios negado"
+        description="Seu perfil nÃ£o possui permissÃ£o para consultar os usuÃ¡rios da plataforma."
       />
     );
   }
@@ -1046,40 +1046,40 @@ export default function AdminUsersPage() {
         <Breadcrumb
           items={[
             { label: "Admin", href: "/admin/dashboard" },
-            { label: "Gestão de usuários" },
+            { label: "GestÃ£o de usuÃ¡rios" },
           ]}
         />
 
         <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
           <div className="flex flex-col gap-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuários</p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuários da plataforma</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuÃ¡rios</p>
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">UsuÃ¡rios da plataforma</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                Gerencie usuários por contexto: usuários da empresa, usuários TC, liderança e suporte técnico.
+                Gerencie usuÃ¡rios por contexto: usuÃ¡rios da empresa, usuÃ¡rios TC, lideranÃ§a e suporte tÃ©cnico.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visíveis
+                <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visÃ­veis
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUsers className="h-4 w-4" /> {companyUsersCount} Usuário da empresa
+                <FiUsers className="h-4 w-4" /> {companyUsersCount} UsuÃ¡rio da empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiUser className="h-4 w-4" /> {testingUsersCount} Usuario TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiShield className="h-4 w-4" /> {adminUsersCount} Líder TC
+                <FiShield className="h-4 w-4" /> {adminUsersCount} LÃ­der TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiTool className="h-4 w-4" /> {supportUsersCount} Suporte Técnico
+                <FiTool className="h-4 w-4" /> {supportUsersCount} Suporte TÃ©cnico
               </span>
             </div>
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+        <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
           <Tabs
             value={activeTab}
             onValueChange={(value) => {
@@ -1087,32 +1087,32 @@ export default function AdminUsersPage() {
               setCreateRolePreset(null);
             }}
           >
-            <div className="border-b border-(--tc-border,#d7deea) pb-5">
-              <h2 className="text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Gestão por contexto</h2>
+            <div className="border-b border-[var(--tc-border,#d7deea)] pb-5">
+              <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">GestÃ£o por contexto</h2>
               <div className="mt-4">
-                <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
+                <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-[var(--tc-surface-alt,#f8fafc)] p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                   <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Usuários da empresa
+                    UsuÃ¡rios da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Usuários TC
+                    UsuÃ¡rios TC
                   </TabsTrigger>
                   <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Líder TC
+                    LÃ­der TC
                   </TabsTrigger>
                   <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Suporte Técnico
+                    Suporte TÃ©cnico
                   </TabsTrigger>
                 </TabsList>
               </div>
               <div className="hidden">
-                <label className="flex flex-1 items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
-                  <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
+                <label className="flex flex-1 items-center gap-3 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                  <FiSearch className="h-4 w-4 text-[var(--tc-text-muted,#6b7280)]" />
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar por nome, usuário, e-mail ou empresa"
-                    className="w-full bg-transparent outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
+                    placeholder="Buscar por nome, usuÃ¡rio, e-mail ou empresa"
+                    className="w-full bg-transparent outline-none placeholder:text-[var(--tc-text-muted,#94a3b8)]"
                   />
                 </label>
 
@@ -1124,7 +1124,7 @@ export default function AdminUsersPage() {
                       setSelectedUser(null);
                       setOpenCreate(true);
                     }}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-70"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--tc-accent,#ef0001)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-70"
                   >
                     <FiUserPlus className="h-4 w-4" /> {createModalConfig.submitLabel}
                   </button>
@@ -1135,16 +1135,16 @@ export default function AdminUsersPage() {
             {error ? <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div> : null}
 
             {activeTab === "company" ? (
-              <div className="mt-5 rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-4">
-                <label className="block text-xs font-black uppercase tracking-[0.18em] text-(--tc-accent,#ef0001)">
-                  Empresa do usuário
+              <div className="mt-5 rounded-[22px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
+                <label className="block text-xs font-black uppercase tracking-[0.18em] text-[var(--tc-accent,#ef0001)]">
+                  Empresa do usuÃ¡rio
                 </label>
                 <select
                   value={companyUserCompanyFilter}
                   onChange={(event) => setCompanyUserCompanyFilter(event.target.value)}
-                  className="mt-2 h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+                  className="mt-2 h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
                   data-testid="company-user-company-filter"
-                  aria-label="Filtrar usuários da empresa por empresa"
+                  aria-label="Filtrar usuÃ¡rios da empresa por empresa"
                 >
                   {companyUserCompanyFilterOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1152,8 +1152,8 @@ export default function AdminUsersPage() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-2 text-xs font-semibold text-(--tc-text-secondary,#4b5563)">
-                  Usuários da empresa precisam ficar separados pela empresa onde trabalham. Empresa institucional fica em Gestão de Empresas.
+                <p className="mt-2 text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">
+                  UsuÃ¡rios da empresa precisam ficar separados pela empresa onde trabalham. Empresa institucional fica em GestÃ£o de Empresas.
                 </p>
               </div>
             ) : null}
@@ -1183,7 +1183,7 @@ export default function AdminUsersPage() {
             {false ? (
               <div className="mt-6 grid gap-5 xl:grid-cols-2">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
+                  <div key={index} className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-5">
                     <div className="h-4 w-28 animate-pulse rounded-full bg-slate-200" />
                     <div className="mt-4 space-y-3">
                       {Array.from({ length: 3 }).map((__, rowIndex) => (
@@ -1196,18 +1196,18 @@ export default function AdminUsersPage() {
             ) : (
               <div className="hidden">
                 {hasSearch ? (
-                  <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm font-medium text-(--tc-text-secondary,#4b5563)">
+                  <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3 text-sm font-medium text-[var(--tc-text-secondary,#4b5563)]">
                     {currentTabTotal} resultado{currentTabTotal === 1 ? "" : "s"} encontrado{currentTabTotal === 1 ? "" : "s"}
                   </div>
                 ) : null}
 
                 <TabsContent value="company" className="mt-0">
                   {companySections.length === 0 && companyAccountSections.length === 0 ? (
-                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
-                      <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
+                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
+                      <FiUsers className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuário da empresa encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou usuários da empresa.</p>
+                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuÃ¡rio da empresa encontrado</h3>
+                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual nÃ£o encontrou usuÃ¡rios da empresa.</p>
                       </div>
                     </div>
                   ) : (
@@ -1240,13 +1240,13 @@ export default function AdminUsersPage() {
                           <div className="space-y-4">
                             <section className="space-y-4">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-base font-bold text-(--tc-text-primary,#0b1a3c)">Empresa</h4>
-                                <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-primary,#0b1a3c)">
+                                <h4 className="text-base font-bold text-[var(--tc-text-primary,#0b1a3c)]">Empresa</h4>
+                                <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
                                   {group.accountSections.reduce((total, section) => total + section.users.length, 0)}
                                 </span>
                               </div>
                               {group.accountSections.length === 0 ? (
-                                <div className="rounded-[18px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-6 text-sm text-(--tc-text-secondary,#4b5563)">
+                                <div className="rounded-[18px] border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-6 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                                   Nenhuma empresa {group.id === "active" ? "ativa" : "inativa"} neste recorte.
                                 </div>
                               ) : (
@@ -1261,14 +1261,14 @@ export default function AdminUsersPage() {
                             </section>
                             <section className="space-y-4">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-base font-bold text-(--tc-text-primary,#0b1a3c)">Usuários da empresa</h4>
-                                <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text-primary,#0b1a3c)">
+                                <h4 className="text-base font-bold text-[var(--tc-text-primary,#0b1a3c)]">UsuÃ¡rios da empresa</h4>
+                                <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
                                   {group.sections.reduce((total, section) => total + section.users.length, 0)}
                                 </span>
                               </div>
                               {group.sections.length === 0 ? (
-                                <div className="rounded-[18px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-6 text-sm text-(--tc-text-secondary,#4b5563)">
-                                  Nenhum usuário da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
+                                <div className="rounded-[18px] border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-6 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                                  Nenhum usuÃ¡rio da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
                                 </div>
                               ) : (
                                 group.sections.map((company) => (
@@ -1289,11 +1289,11 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="testing" className="mt-0">
                   {testingCompanyUsers.length === 0 ? (
-                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
-                      <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
+                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
+                      <FiUsers className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuário TC</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Não há usuários TC com os filtros atuais.</p>
+                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuÃ¡rio TC</h3>
+                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">NÃ£o hÃ¡ usuÃ¡rios TC com os filtros atuais.</p>
                       </div>
                     </div>
                   ) : (
@@ -1303,13 +1303,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: testingActiveUsers,
-                          emptyMessage: "Nenhum usuário ativo neste recorte.",
+                          emptyMessage: "Nenhum usuÃ¡rio ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: testingInactiveUsers,
-                          emptyMessage: "Nenhum usuário inativo neste recorte.",
+                          emptyMessage: "Nenhum usuÃ¡rio inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -1336,11 +1336,11 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="admin" className="mt-0">
                   {adminUsers.length === 0 ? (
-                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
-                      <FiShield className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
+                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
+                      <FiShield className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum Lider TC encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou Lider TC com esse status.</p>
+                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum Lider TC encontrado</h3>
+                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual nÃ£o encontrou Lider TC com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -1350,13 +1350,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: adminActiveUsers,
-                          emptyMessage: "Nenhum Líder TC ativo neste recorte.",
+                          emptyMessage: "Nenhum LÃ­der TC ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: adminInactiveUsers,
-                          emptyMessage: "Nenhum Líder TC inativo neste recorte.",
+                          emptyMessage: "Nenhum LÃ­der TC inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -1383,11 +1383,11 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="support" className="mt-0">
                   {supportUsers.length === 0 ? (
-                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
-                      <FiTool className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
+                    <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
+                      <FiTool className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
-                        <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum suporte técnico encontrado</h3>
-                        <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">A busca atual não encontrou usuários técnicos com esse status.</p>
+                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte tÃ©cnico encontrado</h3>
+                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual nÃ£o encontrou usuÃ¡rios tÃ©cnicos com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -1397,13 +1397,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: supportActiveUsers,
-                          emptyMessage: "Nenhum suporte técnico ativo neste recorte.",
+                          emptyMessage: "Nenhum suporte tÃ©cnico ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: supportInactiveUsers,
-                          emptyMessage: "Nenhum suporte técnico inativo neste recorte.",
+                          emptyMessage: "Nenhum suporte tÃ©cnico inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -1478,3 +1478,4 @@ export default function AdminUsersPage() {
     </div>
   );
 }
+

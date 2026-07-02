@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 
@@ -283,3 +283,4 @@ export async function getNotificationEventsSummary() {
     releaseCalendar: store.events.filter((item) => item.sourceType === "release_calendar").length,
   };
 }
+

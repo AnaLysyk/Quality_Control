@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "./store";
 import type { Status } from "./types";
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
   }
 
   const auth = await getAuthContext(request);
-  if (!auth) return jsonError("Não autorizado", 401);
+  if (!auth) return jsonError("NÃ£o autorizado", 401);
 
   let effectiveSlug: string | null = null;
   if (requestedSlug) {
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
   if (!body) return jsonError("JSON invalido", 400);
 
   const auth = await getAuthContext(request);
-  if (!auth) return jsonError("Não autorizado", 401);
+  if (!auth) return jsonError("NÃ£o autorizado", 401);
 
   const record = body as Record<string, unknown>;
   const project = asProject(record.project);
@@ -138,9 +138,9 @@ export async function POST(request: NextRequest) {
     effectiveSlug = auth.companySlugs[0] ?? null;
   }
 
-  if (!effectiveSlug) return jsonError("slug e obrigatório", 400);
+  if (!effectiveSlug) return jsonError("slug e obrigatÃ³rio", 400);
   if (!project || runId === null || !title || !status) {
-    return jsonError("Campos obrigatorios: project, runId, title, status válido", 400);
+    return jsonError("Campos obrigatorios: project, runId, title, status vÃ¡lido", 400);
   }
 
   const caseId = asOptionalCaseId(record.case_id ?? record.caseId ?? record.id);
@@ -164,3 +164,4 @@ export async function POST(request: NextRequest) {
   await writeKanbanStore(store);
   return NextResponse.json(card, { status: 201 });
 }
+

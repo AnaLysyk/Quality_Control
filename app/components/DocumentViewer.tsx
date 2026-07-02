@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FiDownload, FiFileText, FiX, FiZoomIn, FiZoomOut } from "react-icons/fi";
@@ -110,18 +110,18 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4">
-      <div className="relative flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-[0_24px_80px_rgba(15,23,42,0.45)]">
-        <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#d7deea) px-4 py-4 sm:px-6">
+      <div className="relative flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-[0_24px_80px_rgba(15,23,42,0.45)]">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--tc-border,#d7deea)] px-4 py-4 sm:px-6">
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-lg font-bold text-(--tc-text-primary,#0b1a3c)">{item.title}</h2>
+            <h2 className="truncate text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">{item.title}</h2>
             {item.fileName ? (
-              <p className="mt-1 wrap-break-word text-xs text-(--tc-text-muted,#6b7280)">{item.fileName}</p>
+              <p className="mt-1 wrap-break-word text-xs text-[var(--tc-text-muted,#6b7280)]">{item.fileName}</p>
             ) : null}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
             aria-label={copy.close}
           >
             <FiX className="h-5 w-5" />
@@ -135,9 +135,9 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
                 {blobUrl ? (
                   <img src={blobUrl} alt={item.title} className={`${styles.viewerImage} ${zoomClassName}`} />
                 ) : blobError ? (
-                  <p className="text-sm text-red-600">Não foi possível carregar o arquivo.</p>
+                  <p className="text-sm text-red-600">NÃ£o foi possÃ­vel carregar o arquivo.</p>
                 ) : (
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-(--tc-border) border-t-(--tc-accent,#ef0001)" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--tc-border)] border-t-(--tc-accent,#ef0001)" />
                 )}
               </div>
             </div>
@@ -153,8 +153,8 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
                 />
               ) : blobError ? (
                 <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-                  <p className="text-sm text-red-600">Não foi possível carregar o PDF.</p>
-                  <a href={downloadUrl} className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)">
+                  <p className="text-sm text-red-600">NÃ£o foi possÃ­vel carregar o PDF.</p>
+                  <a href={downloadUrl} className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]">
                     <FiDownload className="h-4 w-4" /> {copy.viewerDownload ?? "Baixar"}
                   </a>
                 </div>
@@ -168,15 +168,15 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
 
           {!isImage && !isPdf ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
-              <div className="flex h-18 w-18 items-center justify-center rounded-3xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)">
+              <div className="flex h-18 w-18 items-center justify-center rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]">
                 <FiFileText className="h-8 w-8" />
               </div>
-              <p className="max-w-md text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+              <p className="max-w-md text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                 {copy.viewerUnsupported ?? "Visualizacao indisponivel para este tipo de arquivo."}
               </p>
               <a
                 href={downloadUrl}
-                className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
               >
                 <FiDownload className="h-4 w-4" /> {copy.viewerDownload ?? "Baixar"}
               </a>
@@ -184,15 +184,15 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#d7deea) px-4 py-4 sm:px-6">
-          <div className="flex min-h-10 items-center gap-2 text-sm text-(--tc-text-secondary,#4b5563)">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border,#d7deea)] px-4 py-4 sm:px-6">
+          <div className="flex min-h-10 items-center gap-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
             {isImage ? (
               <>
                 <button
                   type="button"
                   onClick={() => setZoomIndex((current) => normalizeZoomIndex(current - 1))}
                   disabled={zoomIndex === 0}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Zoom out"
                 >
                   <FiZoomOut className="h-4 w-4" />
@@ -202,7 +202,7 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
                   type="button"
                   onClick={() => setZoomIndex((current) => normalizeZoomIndex(current + 1))}
                   disabled={zoomIndex === ZOOM_LEVELS.length - 1}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001) disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Zoom in"
                 >
                   <FiZoomIn className="h-4 w-4" />
@@ -215,14 +215,14 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
           <div className="flex items-center gap-2">
             <a
               href={downloadUrl}
-              className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
             >
               <FiDownload className="h-4 w-4" /> {copy.viewerDownload ?? "Baixar"}
             </a>
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
             >
               {copy.close}
             </button>
@@ -232,3 +232,4 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
     </div>
   );
 }
+

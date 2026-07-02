@@ -1,4 +1,4 @@
-import { ReleasePageContent } from "@/release/ReleaseTemplate";
+﻿import { ReleasePageContent } from "@/release/ReleaseTemplate";
 
 export const dynamic = "force-dynamic";
 
@@ -10,3 +10,4 @@ export default async function CompanyReleaseDetailPage({ params }: PageProps) {
   const { slug, releaseSlug } = await params;
   return <ReleasePageContent slug={releaseSlug} companySlug={slug} />;
 }
+

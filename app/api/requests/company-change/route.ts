@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { addRequest } from "@/data/requestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -11,14 +11,14 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 export async function POST(request: Request) {
   const authUser = await authenticateRequest(request);
   if (!authUser) {
-    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
   }
   const body = (await request.json().catch(() => null)) as unknown;
   const rec = asRecord(body);
   const newCompanyName = typeof rec?.newCompanyName === "string" ? rec.newCompanyName : undefined;
 
   if (!newCompanyName) {
-    return NextResponse.json({ message: "newCompanyName é obrigatório" }, { status: 400 });
+    return NextResponse.json({ message: "newCompanyName Ã© obrigatÃ³rio" }, { status: 400 });
   }
 
   try {
@@ -43,8 +43,9 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     const code = asRecord(err)?.code;
     if (code === "DUPLICATE") {
-      return NextResponse.json({ message: "Já existe uma solicitação pendente" }, { status: 409 });
+      return NextResponse.json({ message: "JÃ¡ existe uma solicitaÃ§Ã£o pendente" }, { status: 409 });
     }
-    return NextResponse.json({ message: "Erro ao criar solicitação" }, { status: 500 });
+    return NextResponse.json({ message: "Erro ao criar solicitaÃ§Ã£o" }, { status: 500 });
   }
 }
+

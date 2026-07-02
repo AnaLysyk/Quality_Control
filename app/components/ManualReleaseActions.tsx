@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -77,7 +77,7 @@ function mergePlanCases(plan: TestPlanItem, currentCases: ManualCaseItem[]) {
 async function loadPlanOptions(companySlug: string, applicationId: string) {
   const res = await fetchApi(`/api/test-plans?companySlug=${encodeURIComponent(companySlug)}&applicationId=${encodeURIComponent(applicationId)}`, { cache: "no-store" });
   const payload = await res.json().catch(() => null);
-  if (!res.ok) throw new Error((typeof payload?.error === "string" && payload.error) || "Não foi possível carregar os planos.");
+  if (!res.ok) throw new Error((typeof payload?.error === "string" && payload.error) || "NÃ£o foi possÃ­vel carregar os planos.");
   return Array.isArray(payload?.plans) ? (payload.plans as TestPlanItem[]) : [];
 }
 
@@ -129,7 +129,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
     try {
       const res = await fetchApi(`/api/releases-manual/${slug}`, { cache: "no-store", credentials: "include" });
       const payload = (await res.json().catch(() => null)) as ManualReleaseDetailsResponse | null;
-      if (!res.ok || !payload) throw new Error("Não foi possível carregar os responsáveis.");
+      if (!res.ok || !payload) throw new Error("NÃ£o foi possÃ­vel carregar os responsÃ¡veis.");
       const options = Array.isArray(payload.availableResponsibles) ? payload.availableResponsibles : [];
       const currentId = (payload.assignedToUserId?.trim() || payload.createdByUserId?.trim() || options[0]?.userId || "");
       setResponsibleOptions(options);
@@ -137,11 +137,11 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
       setResponsibleSaved(currentId);
       setResponsibleLabel(payload.assignedToName?.trim() || payload.createdByName?.trim() || null);
     } catch (error) {
-      console.error("Erro ao carregar responsável da run manual", error);
+      console.error("Erro ao carregar responsÃ¡vel da run manual", error);
       setResponsibleOptions([]);
       setResponsibleDraft("");
       setResponsibleSaved("");
-      setResponsibleError("Não foi possível carregar os usuários vinculados.");
+      setResponsibleError("NÃ£o foi possÃ­vel carregar os usuÃ¡rios vinculados.");
     } finally {
       setResponsibleLoading(false);
     }
@@ -153,7 +153,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
     try {
       const res = await fetchApi(`/api/releases-manual/${slug}`, { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ assignedToUserId: responsibleDraft || null }) });
       const payload = (await res.json().catch(() => null)) as ManualReleaseDetailsResponse | null;
-      if (!res.ok || !payload) throw new Error(payload?.message || "Não foi possível atualizar o responsável.");
+      if (!res.ok || !payload) throw new Error(payload?.message || "NÃ£o foi possÃ­vel atualizar o responsÃ¡vel.");
       const options = Array.isArray(payload.availableResponsibles) ? payload.availableResponsibles : responsibleOptions;
       const currentId = (payload.assignedToUserId?.trim() || payload.createdByUserId?.trim() || options[0]?.userId || "");
       setResponsibleOptions(options);
@@ -163,8 +163,8 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
       setResponsibleOpen(false);
       router.refresh();
     } catch (error) {
-      console.error("Erro ao salvar responsável da run manual", error);
-      setResponsibleError(error instanceof Error ? error.message : "Não foi possível atualizar o responsável.");
+      console.error("Erro ao salvar responsÃ¡vel da run manual", error);
+      setResponsibleError(error instanceof Error ? error.message : "NÃ£o foi possÃ­vel atualizar o responsÃ¡vel.");
     } finally {
       setResponsibleSaving(false);
     }
@@ -206,7 +206,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
       ]);
       const releasePayload = (await releaseRes.json().catch(() => null)) as ManualReleaseDetailsResponse | null;
       const casesPayload = (await casesRes.json().catch(() => null)) as unknown;
-      if (!releaseRes.ok || !releasePayload) throw new Error("Não foi possível carregar a run.");
+      if (!releaseRes.ok || !releasePayload) throw new Error("NÃ£o foi possÃ­vel carregar a run.");
 
       const companySlug = releasePayload.clientSlug?.trim() || activeClientSlug || "";
       let applications: ApplicationOption[] = [];
@@ -231,8 +231,8 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
       setEditCases(Array.isArray(casesPayload) ? (casesPayload as ManualCaseItem[]) : []);
       setEditCasesDirty(false);
     } catch (error) {
-      console.error("Erro ao preparar edição da run", error);
-      setEditError(error instanceof Error ? error.message : "Não foi possível abrir a edição da run.");
+      console.error("Erro ao preparar ediÃ§Ã£o da run", error);
+      setEditError(error instanceof Error ? error.message : "NÃ£o foi possÃ­vel abrir a ediÃ§Ã£o da run.");
     } finally {
       setEditLoading(false);
     }
@@ -247,8 +247,8 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
     try {
       setEditPlans(await loadPlanOptions(editCompanySlug, value));
     } catch (error) {
-      console.error("Erro ao carregar planos da aplicação", error);
-      setEditError(error instanceof Error ? error.message : "Não foi possível carregar os planos da aplicação.");
+      console.error("Erro ao carregar planos da aplicaÃ§Ã£o", error);
+      setEditError(error instanceof Error ? error.message : "NÃ£o foi possÃ­vel carregar os planos da aplicaÃ§Ã£o.");
     } finally {
       setEditPlansLoading(false);
     }
@@ -261,12 +261,12 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
     try {
       const res = await fetchApi(`/api/test-plans?companySlug=${encodeURIComponent(editCompanySlug)}&applicationId=${encodeURIComponent(editApplicationId)}&planId=${encodeURIComponent(selectedEditPlan.id)}&source=${encodeURIComponent(selectedEditPlan.source)}`, { cache: "no-store" });
       const payload = await res.json().catch(() => null);
-      if (!res.ok || !payload?.plan) throw new Error((typeof payload?.error === "string" && payload.error) || "Não foi possível carregar o plano.");
+      if (!res.ok || !payload?.plan) throw new Error((typeof payload?.error === "string" && payload.error) || "NÃ£o foi possÃ­vel carregar o plano.");
       setEditCases(mergePlanCases(payload.plan as TestPlanItem, editCases));
       setEditCasesDirty(true);
     } catch (error) {
       console.error("Erro ao aplicar plano na run", error);
-      setEditError(error instanceof Error ? error.message : "Não foi possível aplicar o plano a run.");
+      setEditError(error instanceof Error ? error.message : "NÃ£o foi possÃ­vel aplicar o plano a run.");
     } finally {
       setEditPlanActionLoading(false);
     }
@@ -275,7 +275,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
   async function saveRunEdit() {
     const cleanedTitle = editTitle.trim();
     if (!cleanedTitle) {
-      setEditError("Informe um título para a run.");
+      setEditError("Informe um tÃ­tulo para a run.");
       return;
     }
     setEditSaving(true);
@@ -286,7 +286,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
       if (selectedEditPlan && !editCasesDirty && editPlanKey !== editInitialPlanKey) {
         const res = await fetchApi(`/api/test-plans?companySlug=${encodeURIComponent(editCompanySlug)}&applicationId=${encodeURIComponent(editApplicationId)}&planId=${encodeURIComponent(selectedEditPlan.id)}&source=${encodeURIComponent(selectedEditPlan.source)}`, { cache: "no-store" });
         const payload = await res.json().catch(() => null);
-        if (!res.ok || !payload?.plan) throw new Error((typeof payload?.error === "string" && payload.error) || "Não foi possível carregar o plano.");
+        if (!res.ok || !payload?.plan) throw new Error((typeof payload?.error === "string" && payload.error) || "NÃ£o foi possÃ­vel carregar o plano.");
         casesToPersist = mergePlanCases(payload.plan as TestPlanItem, editCases);
         shouldPersistCases = true;
       }
@@ -307,7 +307,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
         }),
       });
       const patchPayload = await patchRes.json().catch(() => null);
-      if (!patchRes.ok) throw new Error((typeof patchPayload?.message === "string" && patchPayload.message) || "Não foi possível salvar a run.");
+      if (!patchRes.ok) throw new Error((typeof patchPayload?.message === "string" && patchPayload.message) || "NÃ£o foi possÃ­vel salvar a run.");
 
       if (shouldPersistCases) {
         const casesRes = await fetchApi(`/api/releases-manual/${slug}/cases`, {
@@ -317,15 +317,15 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
           body: JSON.stringify(casesToPersist.map((item) => ({ id: item.id, title: item.title || `Caso ${item.id}`, link: item.link || undefined, status: item.status || "NAO_EXECUTADO", bug: item.bug ?? null, fromApi: false }))),
         });
         const casesPayload = await casesRes.json().catch(() => null);
-        if (!casesRes.ok) throw new Error((typeof casesPayload?.message === "string" && casesPayload.message) || "Não foi possível atualizar os casos da run.");
+        if (!casesRes.ok) throw new Error((typeof casesPayload?.message === "string" && casesPayload.message) || "NÃ£o foi possÃ­vel atualizar os casos da run.");
       }
 
       setEditOpen(false);
       setEditCasesDirty(false);
       router.refresh();
     } catch (error) {
-      console.error("Erro ao salvar a edição da run", error);
-      setEditError(error instanceof Error ? error.message : "Não foi possível salvar a run.");
+      console.error("Erro ao salvar a ediÃ§Ã£o da run", error);
+      setEditError(error instanceof Error ? error.message : "NÃ£o foi possÃ­vel salvar a run.");
     } finally {
       setEditSaving(false);
     }
@@ -339,14 +339,14 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
             {editLoading ? "Carregando..." : "Editar run"}
           </button>
           <button type="button" onClick={() => void openResponsibleEditor()} disabled={loading || responsibleLoading} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15 disabled:opacity-60">
-            {responsibleLoading ? "Carregando..." : "Editar responsável"}
+            {responsibleLoading ? "Carregando..." : "Editar responsÃ¡vel"}
           </button>
           {finalized ? (
             <button type="button" onClick={reopen} disabled={loading} className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-60">
               {loading ? "..." : "Reabrir"}
             </button>
           ) : (
-            <button type="button" onClick={finalize} disabled={loading || gateBlocked} aria-disabled={gateBlocked} data-testid="run-approve" className="rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60">
+            <button type="button" onClick={finalize} disabled={loading || gateBlocked} aria-disabled={gateBlocked} data-testid="run-approve" className="rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-60">
               {loading ? "..." : "Finalizar run"}
             </button>
           )}
@@ -354,31 +354,31 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
 
         {((gateBlocked && !finalized) || responsibleLabel || responsibleOpen) && (
           <div className="flex w-full max-w-90 flex-col gap-2">
-            {gateBlocked && !finalized ? <p className="text-xs text-rose-200" data-testid="quality-gate-blocked-message">Qualidade insuficiente para aprovação</p> : null}
-            {responsibleLabel && !responsibleOpen ? <p className="text-xs text-white/75">Responsável atual: {responsibleLabel}</p> : null}
+            {gateBlocked && !finalized ? <p className="text-xs text-rose-200" data-testid="quality-gate-blocked-message">Qualidade insuficiente para aprovaÃ§Ã£o</p> : null}
+            {responsibleLabel && !responsibleOpen ? <p className="text-xs text-white/75">ResponsÃ¡vel atual: {responsibleLabel}</p> : null}
             {responsibleOpen ? (
               <div className="w-full rounded-2xl border border-white/15 bg-[#081733]/90 p-4 shadow-[0_18px_45px_rgba(2,6,23,0.3)] backdrop-blur-sm">
                 <div className="mb-3 space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">Responsável</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">ResponsÃ¡vel</p>
                   <p className="text-sm font-semibold text-white">{responsibleLabel ? `Atual: ${responsibleLabel}` : "Defina quem responde por esta run."}</p>
-                  <p className="text-xs text-white/65">Podem ser escolhidos usuários da empresa ou usuários da Testing Company vinculados a ela.</p>
+                  <p className="text-xs text-white/65">Podem ser escolhidos usuÃ¡rios da empresa ou usuÃ¡rios da Testing Company vinculados a ela.</p>
                 </div>
                 {responsibleLoading ? (
-                  <p className="text-xs text-white/70">Carregando usuários vinculados...</p>
+                  <p className="text-xs text-white/70">Carregando usuÃ¡rios vinculados...</p>
                 ) : responsibleOptions.length > 0 ? (
                   <div className="space-y-3">
                     <Select value={responsibleDraft || undefined} onValueChange={setResponsibleDraft}>
-                      <SelectTrigger className="h-11 rounded-2xl border-white/15 bg-white/95 text-[#0b1a3c]"><SelectValue placeholder="Selecione o responsável" /></SelectTrigger>
+                      <SelectTrigger className="h-11 rounded-2xl border-white/15 bg-white/95 text-[#0b1a3c]"><SelectValue placeholder="Selecione o responsÃ¡vel" /></SelectTrigger>
                       <SelectContent>{responsibleOptions.map((option) => <SelectItem key={option.userId} value={option.userId}>{option.label}</SelectItem>)}</SelectContent>
                     </Select>
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       <button type="button" onClick={() => { setResponsibleOpen(false); setResponsibleError(null); setResponsibleDraft(responsibleSaved); }} className="rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/10">Cancelar</button>
-                      <button type="button" onClick={() => void saveResponsible()} disabled={responsibleSaving || !responsibleDraft || !responsibleChanged} className="rounded-xl bg-(--tc-accent,#ef0001) px-3 py-2 text-xs font-semibold text-white hover:brightness-110 disabled:opacity-60">
-                        {responsibleSaving ? "Salvando..." : "Salvar responsável"}
+                      <button type="button" onClick={() => void saveResponsible()} disabled={responsibleSaving || !responsibleDraft || !responsibleChanged} className="rounded-xl bg-[var(--tc-accent,#ef0001)] px-3 py-2 text-xs font-semibold text-white hover:brightness-110 disabled:opacity-60">
+                        {responsibleSaving ? "Salvando..." : "Salvar responsÃ¡vel"}
                       </button>
                     </div>
                   </div>
-                ) : <p className="text-xs text-white/70">Nenhum usuário vinculado foi encontrado para esta empresa.</p>}
+                ) : <p className="text-xs text-white/70">Nenhum usuÃ¡rio vinculado foi encontrado para esta empresa.</p>}
                 {responsibleError ? <p className="mt-3 text-xs text-rose-200">{responsibleError}</p> : null}
               </div>
             ) : null}
@@ -405,13 +405,13 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
                 <>
                   <div className="grid gap-4 lg:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Título</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">TÃ­tulo</span>
                       <input value={editTitle} onChange={(event) => setEditTitle(event.target.value)} className="w-full rounded-[20px] border border-white/12 bg-white/6 px-4 py-3 text-sm text-white outline-none transition focus:border-white/30" placeholder="Nome da run" />
                     </label>
                     <label className="space-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">Aplicação</span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.24em] text-white/55">AplicaÃ§Ã£o</span>
                       <Select value={editApplicationId || undefined} onValueChange={(value) => void handleEditApplicationChange(value)}>
-                        <SelectTrigger className="border-white/12 bg-white/6 text-white"><SelectValue placeholder="Selecione a aplicação" /></SelectTrigger>
+                        <SelectTrigger className="border-white/12 bg-white/6 text-white"><SelectValue placeholder="Selecione a aplicaÃ§Ã£o" /></SelectTrigger>
                         <SelectContent>{editApplications.map((application) => <SelectItem key={application.id} value={application.id}>{application.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </label>
@@ -430,7 +430,7 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
 
                     <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
                       <Select value={editPlanKey || undefined} onValueChange={setEditPlanKey}>
-                        <SelectTrigger className="border-white/12 bg-white/6 text-white"><SelectValue placeholder={editPlansLoading ? "Carregando planos..." : editPlans.length > 0 ? "Sem plano aplicado" : "Nenhum plano disponível"} /></SelectTrigger>
+                        <SelectTrigger className="border-white/12 bg-white/6 text-white"><SelectValue placeholder={editPlansLoading ? "Carregando planos..." : editPlans.length > 0 ? "Sem plano aplicado" : "Nenhum plano disponÃ­vel"} /></SelectTrigger>
                         <SelectContent>{editPlans.map((plan) => <SelectItem key={makePlanKey(plan.source, plan.id)} value={makePlanKey(plan.source, plan.id)}>{plan.title}</SelectItem>)}</SelectContent>
                       </Select>
                       <button type="button" onClick={() => void applySelectedPlanToRun()} disabled={!selectedEditPlan || editPlanActionLoading} className="rounded-2xl border border-white/12 bg-white/8 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/14 disabled:opacity-60">
@@ -444,9 +444,9 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
 
                   <div className="flex flex-wrap items-center justify-end gap-3">
                     <button type="button" onClick={() => setEditOpen(false)} disabled={editSaving} className="rounded-2xl border border-white/12 px-4 py-2.5 text-sm font-semibold text-white/82 transition hover:bg-white/10">Cancelar</button>
-                    <button type="button" onClick={() => void saveRunEdit()} disabled={editSaving || !editTitle.trim()} className="inline-flex items-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
+                    <button type="button" onClick={() => void saveRunEdit()} disabled={editSaving || !editTitle.trim()} className="inline-flex items-center gap-2 rounded-2xl bg-[var(--tc-accent,#ef0001)] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
                       <FiEdit3 className="h-4 w-4" />
-                      {editSaving ? "Salvando..." : "Salvar alterações"}
+                      {editSaving ? "Salvando..." : "Salvar alteraÃ§Ãµes"}
                     </button>
                   </div>
                 </>
@@ -458,3 +458,4 @@ export default function ManualReleaseActions({ slug, status, gateStatus }: Manua
     </>
   );
 }
+

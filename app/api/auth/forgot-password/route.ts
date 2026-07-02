@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+﻿import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
@@ -10,7 +10,7 @@ import { notifyPasswordResetRequest } from "@/lib/notificationService";
 import { rateLimit } from "@/lib/rateLimit";
 import { deriveProfileTypeFromAccount, normalizeRequestProfileType, resolveReviewQueue } from "@/lib/requestRouting";
 
-const GENERIC_MESSAGE = "Se o e-mail informado estiver cadastrado, enviaremos as instruções para redefinir sua senha.";
+const GENERIC_MESSAGE = "Se o e-mail informado estiver cadastrado, enviaremos as instruÃ§Ãµes para redefinir sua senha.";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const rawProfileType = typeof body?.profile_type === "string" ? body.profile_type : "";
 
   if (!email) {
-    return NextResponse.json({ error: "E-mail obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "E-mail obrigatÃ³rio" }, { status: 400 });
   }
 
   const limiter = await rateLimit(req, `forgot-password:${email}`, 8, 60 * 10);
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     await storePasswordResetToken(resetToken, user.id);
     await emailService.sendPasswordResetEmail(user.email ?? "", resetToken);
 
-    // Mantém registro de auditoria no requestsStore
+    // MantÃ©m registro de auditoria no requestsStore
     const requestRecord = await addRequest(
       {
         id: user.id,
@@ -98,3 +98,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true, message: GENERIC_MESSAGE });
 }
+

@@ -1,4 +1,4 @@
-import { test, expect } from "../../../../../support/fixtures/test";
+﻿import { test, expect } from "../../../../../support/fixtures/test";
 import { BASE_URL } from "../../../../../support/functions/api/autenticacao/autenticar-por-cookie";
 import {
   SENHA_USUARIO_NOVO,
@@ -14,7 +14,7 @@ import { validarMeuPerfilUsuarioCriado } from "../../../../../support/functions/
 
 test.setTimeout(180000);
 
-test.describe("Criar usuário - Usuário da empresa", () => {
+test.describe("Criar usuÃ¡rio - UsuÃ¡rio da empresa", () => {
   const createdUserIds: string[] = [];
 
   test.afterAll(async ({ request }) => {
@@ -23,10 +23,10 @@ test.describe("Criar usuário - Usuário da empresa", () => {
     }
   });
 
-  test("cria Usuário da empresa, lista o usuário, valida login, empresa e bloqueio administrativo", async ({ page }) => {
+  test("cria UsuÃ¡rio da empresa, lista o usuÃ¡rio, valida login, empresa e bloqueio administrativo", async ({ page }) => {
     const suffix = `${Date.now().toString().slice(-6)}-${Math.random().toString(36).slice(2, 5)}`;
     const email = `e2e-usuario-empresa-${suffix}@demo.test`;
-    const name = `Teste Usuário Empresa ${suffix}`;
+    const name = `Teste UsuÃ¡rio Empresa ${suffix}`;
 
     await autenticarAdminParaCriacaoUsuario(page);
 
@@ -52,3 +52,4 @@ test.describe("Criar usuário - Usuário da empresa", () => {
     await validarBloqueioAdminParaPerfilCriado(page, "company_user");
   });
 });
+

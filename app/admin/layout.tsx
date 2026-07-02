@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -48,3 +48,4 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return <>{children}</>;
 }
+

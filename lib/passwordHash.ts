@@ -1,4 +1,4 @@
-try {
+﻿try {
   // "server-only" exists in Next.js runtime; ignore when running scripts.
   require("server-only");
 } catch {
@@ -32,3 +32,4 @@ export function safeEqualHex(a: string, b: string): boolean {
     return false;
   }
 }
+

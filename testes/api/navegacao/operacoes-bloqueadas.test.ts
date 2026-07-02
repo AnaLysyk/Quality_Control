@@ -1,4 +1,4 @@
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import { NAV_CATALOG, type NavModuleDef } from "@/lib/navigation/navigationCatalog";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
 import { buildNavigationForUser } from "@/lib/navigation/navigationPermissions";
@@ -48,3 +48,4 @@ describe("bloqueio do modulo operacional", () => {
     }
   });
 });
+

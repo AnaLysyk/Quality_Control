@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 async function addLink(page: import("@playwright/test").Page, title: string, url: string) {
@@ -51,3 +51,4 @@ test("documentos - admin acessa outras empresas e company nao", async ({ page, c
     await expect(page.getByText("Acesso negado")).toBeVisible();
   }
 });
+

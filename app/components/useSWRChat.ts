@@ -1,4 +1,4 @@
-import useSWR from "swr";
+﻿import useSWR from "swr";
 
 const EMPTY_MESSAGES: unknown[] = [];
 
@@ -11,3 +11,4 @@ export function useSWRChat() {
   });
   return { messages: messages || EMPTY_MESSAGES, error, mutate, isLoading };
 }
+

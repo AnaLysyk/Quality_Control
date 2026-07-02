@@ -1,4 +1,4 @@
-import { authenticateRequest } from "@/lib/jwtAuth";
+﻿import { authenticateRequest } from "@/lib/jwtAuth";
 import { apiFail, apiOk } from "@/lib/apiResponse";
 import { resolveRunRole, getRunMockRole, canCreateRun } from "@/lib/rbac/runs";
 import { isCompanyUser } from "@/lib/rbac/companyAccess";
@@ -37,7 +37,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
   const { auth, effectiveAuth } = await resolveAuth(request);
   if (!effectiveAuth) {
-    return apiFail(request, "Não autorizado", { status: 401, code: "AUTH_REQUIRED", extra: { error: { message: "Não autorizado" } } });
+    return apiFail(request, "NÃ£o autorizado", { status: 401, code: "AUTH_REQUIRED", extra: { error: { message: "NÃ£o autorizado" } } });
   }
 
   const companySlug = auth?.companySlug ?? null;
@@ -82,7 +82,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const { auth, mockRole, effectiveAuth } = await resolveAuth(request);
   if (!effectiveAuth) {
-    return apiFail(request, "Não autorizado", { status: 401, code: "AUTH_REQUIRED", extra: { error: { message: "Não autorizado" } } });
+    return apiFail(request, "NÃ£o autorizado", { status: 401, code: "AUTH_REQUIRED", extra: { error: { message: "NÃ£o autorizado" } } });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
     return apiFail(request, "Acesso proibido", { status: 403, code: "FORBIDDEN", extra: { error: { message: "Acesso proibido" } } });
@@ -95,10 +95,10 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object" || !("title" in body)) {
-    return apiFail(request, "Body inválido: 'title' obrigatório", {
+    return apiFail(request, "Body invÃ¡lido: 'title' obrigatÃ³rio", {
       status: 400,
       code: "VALIDATION_ERROR",
-      extra: { error: { message: "Body inválido: 'title' obrigatório" } },
+      extra: { error: { message: "Body invÃ¡lido: 'title' obrigatÃ³rio" } },
     });
   }
 
@@ -121,3 +121,4 @@ export async function POST(request: Request, { params }: RouteParams) {
     return apiFail(request, "Erro interno", { status: 500, code: "INTERNAL_ERROR", extra: { error: { message: "Erro interno" } } });
   }
 }
+

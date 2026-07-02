@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { getLocalUserById, updateLocalUser } from "@/lib/auth/localStore";
@@ -35,12 +35,12 @@ export async function PATCH(req: Request) {
 
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const user = await getLocalUserById(access.userId);
   if (!user) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
   }
 
   const currentHash = hashPasswordSha256(currentPassword);
@@ -62,3 +62,4 @@ export async function PATCH(req: Request) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
+

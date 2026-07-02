@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, PieLabelRenderProps } from "recharts";
@@ -33,7 +33,7 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
   const data =
     hasValidData && chartEntries.length
       ? chartEntries
-      : [{ name: "Sem execuções", value: 1, color: "var(--tc-border,#94a3b8)" }];
+      : [{ name: "Sem execuÃ§Ãµes", value: 1, color: "var(--tc-border,#94a3b8)" }];
 
   const pct = (value: number) => (total > 0 ? Math.round((value / total) * 100) : 0);
   const passPct = total > 0 ? Math.round((stats.pass / total) * 100) : 0;
@@ -158,20 +158,20 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
           )}
         </div>
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="flex flex-col items-center justify-center rounded-full bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.18)] border border-(--tc-border,#e5e7eb) min-w-30 text-(--tc-chart-center,#0b1a3c)">
+          <div className="flex flex-col items-center justify-center rounded-full bg-white px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.18)] border border-[var(--tc-border,#e5e7eb)] min-w-30 text-[var(--tc-chart-center,#0b1a3c)]">
             <span className="text-3xl font-extrabold leading-none">
               {hasValidData ? `${passPct}%` : "-"}
             </span>
             <span className="text-[11px] uppercase tracking-[0.22em] text-[#475569] mt-1">
-              {hasValidData ? "Pass" : emptyLabel ?? "Sem execuções"}
+              {hasValidData ? "Pass" : emptyLabel ?? "Sem execuÃ§Ãµes"}
             </span>
-            <span className="text-xs text-(--tc-chart-subtext,#475569)">Total {hasValidData ? total : 0}</span>
+            <span className="text-xs text-[var(--tc-chart-subtext,#475569)]">Total {hasValidData ? total : 0}</span>
           </div>
         </div>
       </div>
 
       {showLegend && hasValidData && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm text-(--tc-text-inverse) w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm text-[var(--tc-text-inverse)] w-full">
           {[
             { name: "Pass", value: stats.pass, color: COLORS.pass },
             { name: "Fail", value: stats.fail, color: COLORS.fail },
@@ -180,7 +180,7 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
           ].map((item) => (
             <div
               key={item.name}
-              className="flex items-center gap-3 rounded-xl border border-(--tc-border)/20 bg-(--tc-surface-dark) px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.25)] justify-between"
+              className="flex items-center gap-3 rounded-xl border border-[var(--tc-border)]/20 bg-[var(--tc-surface-dark)] px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.25)] justify-between"
             >
               <div className="flex items-center gap-2">
                 <span
@@ -189,8 +189,8 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
                 <span className="font-semibold">{item.name}</span>
               </div>
               <div className="text-right leading-tight">
-                <div className="font-bold text-(--tc-text-inverse)">{item.value}</div>
-                <div className="text-[11px] text-(--tc-text-muted)">{pct(item.value)}%</div>
+                <div className="font-bold text-[var(--tc-text-inverse)]">{item.value}</div>
+                <div className="text-[11px] text-[var(--tc-text-muted)]">{pct(item.value)}%</div>
               </div>
             </div>
           ))}
@@ -199,3 +199,4 @@ export default function StatusChart({ stats, hasData, emptyLabel, showLegend = f
     </div>
   );
 }
+

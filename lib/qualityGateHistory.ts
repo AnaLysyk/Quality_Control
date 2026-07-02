@@ -140,3 +140,4 @@ export async function readQualityGateHistory(
 
   return filterQualityGateHistory(entries, companySlug, releaseSlug);
 }
+

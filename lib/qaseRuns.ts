@@ -1,4 +1,4 @@
-import { QaseError, createQaseClient } from "@/lib/qaseSdk";
+﻿import { QaseError, createQaseClient } from "@/lib/qaseSdk";
 
 type QaseRun = {
   id: number;
@@ -56,3 +56,4 @@ export async function listQaseRuns(projectCode: string, token: string): Promise<
     return { ok: false, data: [], warning };
   }
 }
+

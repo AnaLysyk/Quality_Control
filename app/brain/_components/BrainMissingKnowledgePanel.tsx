@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FiAlertTriangle } from "react-icons/fi";
 import type { BrainGraphSummary, BrainNode } from "../_types/brain.types";
@@ -32,3 +32,4 @@ export function BrainMissingKnowledgePanel({ summary, nodes }: BrainMissingKnowl
     </section>
   );
 }
+

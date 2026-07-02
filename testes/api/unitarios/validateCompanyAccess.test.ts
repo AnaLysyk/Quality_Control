@@ -1,4 +1,4 @@
-import { assertCompanyAccess, requireCompanyIdPresent } from "../../../lib/rbac/validateCompanyAccess";
+﻿import { assertCompanyAccess, requireCompanyIdPresent } from "../../../lib/rbac/validateCompanyAccess";
 import { SYSTEM_ROLES } from "../../../lib/auth/roles";
 import type { AuthUser } from "../../../lib/jwtAuth";
 import * as localStore from "../../../lib/auth/localStore";
@@ -7,19 +7,19 @@ jest.mock("../../../lib/auth/localStore", () => ({
   listLocalLinksForUser: jest.fn(),
 }));
 
-describe("validateCompanyAccess - Matriz Rígida de Isolamento Multitenant (Empresa)", () => {
+describe("validateCompanyAccess - Matriz RÃ­gida de Isolamento Multitenant (Empresa)", () => {
   afterEach(() => {
     jest.resetAllMocks();
   });
 
   describe("requireCompanyIdPresent", () => {
-    it("deve lançar MISSING_COMPANY_ID para lixos (null, undefined, string vazia)", () => {
+    it("deve lanÃ§ar MISSING_COMPANY_ID para lixos (null, undefined, string vazia)", () => {
       expect(() => requireCompanyIdPresent(null)).toThrow("MISSING_COMPANY_ID");
       expect(() => requireCompanyIdPresent(undefined)).toThrow("MISSING_COMPANY_ID");
       expect(() => requireCompanyIdPresent("")).toThrow("MISSING_COMPANY_ID");
     });
 
-    it("deve passar livremente se for string com conteúdo", () => {
+    it("deve passar livremente se for string com conteÃºdo", () => {
       expect(() => requireCompanyIdPresent("123")).not.toThrow();
     });
   });
@@ -27,13 +27,13 @@ describe("validateCompanyAccess - Matriz Rígida de Isolamento Multitenant (Empr
   describe("assertCompanyAccess", () => {
     const listLocalLinksForUserMock = localStore.listLocalLinksForUser as jest.Mock;
 
-    it("deve bloquear sumariamente user inválido e companyId inexistente", async () => {
+    it("deve bloquear sumariamente user invÃ¡lido e companyId inexistente", async () => {
       await expect(assertCompanyAccess(null, "123")).rejects.toThrow("MISSING_COMPANY_ID");
       await expect(assertCompanyAccess({ id: "user" } as AuthUser, null)).rejects.toThrow("MISSING_COMPANY_ID");
       await expect(assertCompanyAccess(undefined as any, undefined)).rejects.toThrow("MISSING_COMPANY_ID");
     });
 
-    it("deve BYPASS global admins (Leader TC, Support) pois acessam visões root e modules cross-company", async () => {
+    it("deve BYPASS global admins (Leader TC, Support) pois acessam visÃµes root e modules cross-company", async () => {
       const globals = ["leader_tc", "admin", "global_admin", "technical_support", "tech_support"];
 
       for (const rawRole of globals) {
@@ -82,7 +82,7 @@ describe("validateCompanyAccess - Matriz Rígida de Isolamento Multitenant (Empr
       expect(listLocalLinksForUserMock).toHaveBeenCalledWith("tc-u-id");
     });
 
-    it("deve REJEITAR testing_company_user tentar tenant externo se não houver Link Mapeado", async () => {
+    it("deve REJEITAR testing_company_user tentar tenant externo se nÃ£o houver Link Mapeado", async () => {
       listLocalLinksForUserMock.mockResolvedValue([
         { companyId: "tenant-allow-1" }
       ]);
@@ -93,3 +93,4 @@ describe("validateCompanyAccess - Matriz Rígida de Isolamento Multitenant (Empr
     });
   });
 });
+

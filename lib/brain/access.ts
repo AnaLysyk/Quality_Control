@@ -1,4 +1,4 @@
-import type { BrainEdge, BrainNode } from "@prisma/client";
+﻿import type { BrainEdge, BrainNode } from "@prisma/client";
 
 import { SYSTEM_MODULE_BY_ID } from "@/lib/navigation/module-map";
 import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
@@ -504,3 +504,4 @@ export async function assertBrainNodeAccess(nodeId: string, access: BrainAccessC
   }
   return { ok: true as const, node };
 }
+

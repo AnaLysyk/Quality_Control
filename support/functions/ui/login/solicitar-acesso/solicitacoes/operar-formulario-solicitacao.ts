@@ -60,3 +60,4 @@ export async function validarErroDuplicidadeSolicitacaoPublica(page: Page) {
     page.getByText(/Já existe uma solicitação de acesso aberta ou em análise/i),
   ).toBeVisible();
 }
+

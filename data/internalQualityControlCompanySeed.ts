@@ -1,4 +1,4 @@
-export type InternalQcProject = {
+﻿export type InternalQcProject = {
   id: string;
   name: string;
   slug: string;
@@ -107,3 +107,4 @@ export const playwrightQualityControlRules = [
   "Manter resultado, log e anexos importantes associados a execucao.",
   "Alimentar Brain e Central de Qualidade com os sinais gerados pelas runs.",
 ];
+

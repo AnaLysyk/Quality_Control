@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -38,10 +38,10 @@ type Props = {
 
 const ROLE_OPTIONS = [
   { value: "empresa", label: "Admin da empresa" },
-  { value: "company_user", label: "Usuário da empresa" },
-  { value: "testing_company_user", label: "Usuário TC" },
+  { value: "company_user", label: "UsuÃ¡rio da empresa" },
+  { value: "testing_company_user", label: "UsuÃ¡rio TC" },
   { value: "leader_tc", label: "Lider TC" },
-  { value: "technical_support", label: "Suporte Técnico" },
+  { value: "technical_support", label: "Suporte TÃ©cnico" },
 ] as const;
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 
@@ -208,19 +208,19 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
       initial.clientId &&
       (role === "company_user" || role === "empresa")
   );
-  const displayName = name.trim() || user?.name || "Usuário";
+  const displayName = name.trim() || user?.name || "UsuÃ¡rio";
   const displayLogin = login.trim() || user?.user || "sem-login";
   const displayEmail = email.trim() || user?.email || "Sem e-mail";
-  const displayJobTitle = jobTitle.trim() || "Cargo não informado";
-  const stateLabel = loading ? "Salvando alterações" : dirty ? "Alterações pendentes" : "Sincronizado";
+  const displayJobTitle = jobTitle.trim() || "Cargo nÃ£o informado";
+  const stateLabel = loading ? "Salvando alteraÃ§Ãµes" : dirty ? "AlteraÃ§Ãµes pendentes" : "Sincronizado";
   const stateToneClass = loading
     ? "border-sky-200 bg-sky-50 text-sky-700"
     : dirty
       ? "border-amber-200 bg-amber-50 text-amber-700"
       : "border-emerald-200 bg-emerald-50 text-emerald-700";
   const fieldClass =
-    "mt-2 w-full rounded-2xl border border-[#d8dfeb] bg-white px-4 py-3 text-sm font-medium text-[#081f4d] shadow-[0_8px_18px_rgba(15,23,42,0.04)] outline-none transition placeholder:text-[#7b8eb5] focus:border-(--tc-accent) focus:ring-4 focus:ring-[#ef0001]/10";
-  const sectionTitleClass = "text-[11px] font-extrabold uppercase tracking-[0.22em] text-(--tc-accent)";
+    "mt-2 w-full rounded-2xl border border-[#d8dfeb] bg-white px-4 py-3 text-sm font-medium text-[#081f4d] shadow-[0_8px_18px_rgba(15,23,42,0.04)] outline-none transition placeholder:text-[#7b8eb5] focus:border-[var(--tc-accent)] focus:ring-4 focus:ring-[#ef0001]/10";
+  const sectionTitleClass = "text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--tc-accent)]";
   const labelClass = "text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#ef0001]";
 
   useEffect(() => {
@@ -269,16 +269,16 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
       }
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        const msg = (json.error as string) || "Erro ao excluir usuário";
+        const msg = (json.error as string) || "Erro ao excluir usuÃ¡rio";
         setError(msg);
         toast.error(msg);
         setConfirmDelete(false);
         return;
       }
-      toast.success("Usuário excluido.");
+      toast.success("UsuÃ¡rio excluido.");
       await onDeleted?.();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao excluir usuário";
+      const msg = err instanceof Error ? err.message : "Erro ao excluir usuÃ¡rio";
       setError(msg);
       toast.error(msg);
       setConfirmDelete(false);
@@ -334,7 +334,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
       if (!res.ok) {
-        const msg = (json.error as string) || "Erro ao salvar usuário";
+        const msg = (json.error as string) || "Erro ao salvar usuÃ¡rio";
         setError(msg);
         toast.error(msg);
         return;
@@ -344,10 +344,10 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
         await refreshUser();
       }
 
-      toast.success("Usuário atualizado.");
+      toast.success("UsuÃ¡rio atualizado.");
       await onSaved?.();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao salvar usuário";
+      const msg = err instanceof Error ? err.message : "Erro ao salvar usuÃ¡rio";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -378,7 +378,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
               />
 
               <div className="min-w-0">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-(--tc-accent)">Painel do usuário</p>
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--tc-accent)]">Painel do usuÃ¡rio</p>
                 <h3 className="wrap-break-word text-[1.8rem] font-extrabold leading-tight text-[#081f4d]">{displayName}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-[#27457d]">
                   <span>@{displayLogin}</span>
@@ -386,7 +386,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                   <span className="break-all">{displayEmail}</span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="rounded-full border border-[#f3bcc5] bg-[#fff4f5] px-3 py-1 text-xs font-bold text-(--tc-accent)">
+                  <span className="rounded-full border border-[#f3bcc5] bg-[#fff4f5] px-3 py-1 text-xs font-bold text-[var(--tc-accent)]">
                     {roleLabel}
                   </span>
                   <span className="rounded-full border border-[#c9d7ef] bg-white px-3 py-1 text-xs font-bold text-[#081f4d]">
@@ -401,7 +401,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
 
             <button
               type="button"
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-[#d7e0ef] bg-white px-4 text-sm font-semibold text-[#5a6f97] shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:border-(--tc-accent) hover:text-(--tc-accent)"
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-[#d7e0ef] bg-white px-4 text-sm font-semibold text-[#5a6f97] shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:border-[var(--tc-accent)] hover:text-[var(--tc-accent)]"
               onClick={onClose}
             >
               Fechar
@@ -409,9 +409,9 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
           </div>
 
           <div className="mt-5 rounded-[22px] border border-[#ffd7de] bg-[linear-gradient(135deg,#fff6f8_0%,#fffafb_100%)] px-4 py-4">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-(--tc-accent)">Sincronizacao ativa</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--tc-accent)]">Sincronizacao ativa</p>
             <p className="mt-2 text-sm font-medium leading-6 text-[#27457d]">
-              Este painel administrativo edita os mesmos dados exibidos no perfil do usuário. O que for salvo aqui
+              Este painel administrativo edita os mesmos dados exibidos no perfil do usuÃ¡rio. O que for salvo aqui
               aparece no perfil, e o que for alterado no perfil aparece aqui.
             </p>
           </div>
@@ -428,7 +428,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 </label>
 
                 <label className="block text-sm">
-                  <span className={labelClass}>Usuário (login)</span>
+                  <span className={labelClass}>UsuÃ¡rio (login)</span>
                   <input
                     className={fieldClass}
                     value={login}
@@ -436,7 +436,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     placeholder="Se deixar em branco, gera automaticamente"
                   />
                   <span className="mt-2 block text-xs font-semibold text-[#5f77a2]">
-                    Único no sistema. Se ficar vazio, será gerado automaticamente.
+                    Ãšnico no sistema. Se ficar vazio, serÃ¡ gerado automaticamente.
                   </span>
                 </label>
 
@@ -467,7 +467,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     className={fieldClass}
                     value={linkedin}
                     onChange={(event) => setLinkedin(event.target.value)}
-                    placeholder="https://www.linkedin.com/in/usuário"
+                    placeholder="https://www.linkedin.com/in/usuÃ¡rio"
                   />
                 </label>
 
@@ -475,11 +475,11 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                   <span className={labelClass}>Cargo</span>
                   <div className="mt-2">
                     <Select value={jobTitle || EMPTY_JOB_TITLE} onValueChange={(value) => setJobTitle(value === EMPTY_JOB_TITLE ? "" : value)}>
-                      <SelectTrigger className="h-12.5 rounded-2xl border-[#d8dfeb] bg-white px-4 text-sm font-medium text-[#081f4d] shadow-[0_8px_18px_rgba(15,23,42,0.04)] focus-visible:border-(--tc-accent) focus-visible:ring-4 focus-visible:ring-[#ef0001]/10">
-                        <SelectValue placeholder="Selecione uma profissão" />
+                      <SelectTrigger className="h-12.5 rounded-2xl border-[#d8dfeb] bg-white px-4 text-sm font-medium text-[#081f4d] shadow-[0_8px_18px_rgba(15,23,42,0.04)] focus-visible:border-[var(--tc-accent)] focus-visible:ring-4 focus-visible:ring-[#ef0001]/10">
+                        <SelectValue placeholder="Selecione uma profissÃ£o" />
                       </SelectTrigger>
                       <SelectContent className="max-h-80">
-                        <SelectItem value={EMPTY_JOB_TITLE}>Não informado</SelectItem>
+                        <SelectItem value={EMPTY_JOB_TITLE}>NÃ£o informado</SelectItem>
                         {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
                           <SelectItem key={jobTitleOption} value={jobTitleOption}>
                             {jobTitleOption}
@@ -493,7 +493,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
             </section>
 
             <section className="rounded-3xl border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
-              <p className={sectionTitleClass}>Acesso e vínculo</p>
+              <p className={sectionTitleClass}>Acesso e vÃ­nculo</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <label className="block text-sm md:col-span-2">
                   <span className={labelClass}>Empresa vinculada</span>
@@ -501,7 +501,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                     className={fieldClass}
                     value={clientId ?? ""}
                     onChange={(event) => setClientId(event.target.value || null)}
-                    aria-label="Empresa vinculada ao usuário"
+                    aria-label="Empresa vinculada ao usuÃ¡rio"
                     disabled={lockCompanyLink}
                   >
                     <option value="">{requiresClient ? "Selecione" : "Sem empresa vinculada"}</option>
@@ -513,7 +513,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                   </select>
                   {lockCompanyLink ? (
                     <span className="mt-2 block text-xs font-semibold text-[#5f77a2]">
-                      Empresa travada após aceite/cadastro. Para trocar a empresa, crie uma nova solicitação/vínculo.
+                      Empresa travada apÃ³s aceite/cadastro. Para trocar a empresa, crie uma nova solicitaÃ§Ã£o/vÃ­nculo.
                     </span>
                   ) : null}
                 </label>
@@ -525,7 +525,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       className={fieldClass}
                       value={role}
                       onChange={(event) => setRole(event.target.value as RoleValue)}
-                      aria-label="Perfil do usuário"
+                      aria-label="Perfil do usuÃ¡rio"
                       title="Perfil"
                     >
                       {availableRoleOptions.map((option) => (
@@ -535,7 +535,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       ))}
                     </select>
                   ) : (
-                    <div className={`${fieldClass} flex items-center bg-[#f7faff] text-[#4f658d]`} title="Somente perfis técnicos privilegiados podem alterar este campo.">
+                    <div className={`${fieldClass} flex items-center bg-[#f7faff] text-[#4f658d]`} title="Somente perfis tÃ©cnicos privilegiados podem alterar este campo.">
                       {roleLabel}
                     </div>
                   )}
@@ -551,7 +551,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                       onChange={(event) => setActive(event.target.checked)}
                       className="h-4 w-4 accent-[#ef0001]"
                     />
-                    <span className="text-sm font-semibold text-[#081f4d]">{active ? "Usuário ativo" : "Usuário inativo"}</span>
+                    <span className="text-sm font-semibold text-[#081f4d]">{active ? "UsuÃ¡rio ativo" : "UsuÃ¡rio inativo"}</span>
                   </label>
                 </label>
               </div>
@@ -572,7 +572,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 />
                 <p className="mt-4 text-sm font-bold text-[#081f4d]">{displayJobTitle}</p>
                 <p className="mt-1 text-xs font-medium leading-5 text-[#5f77a2]">
-                  O avatar salvo aqui e o mesmo usado na capa e no perfil do usuário.
+                  O avatar salvo aqui e o mesmo usado na capa e no perfil do usuÃ¡rio.
                 </p>
               </div>
 
@@ -588,7 +588,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
             </section>
 
             <section className="rounded-3xl border border-[#d7e0ef] bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
-              <p className={sectionTitleClass}>Estado da edição</p>
+              <p className={sectionTitleClass}>Estado da ediÃ§Ã£o</p>
               <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-semibold ${stateToneClass}`}>
                 {stateLabel}
               </div>
@@ -611,7 +611,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
           <div className="px-6 pb-2">
             {requiresClient && !clientId ? (
               <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                Empresa e obrigatória.
+                Empresa e obrigatÃ³ria.
               </p>
             ) : null}
             {error ? (
@@ -626,7 +626,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
           <div className="flex items-center gap-3">
             {confirmDelete ? (
               <>
-                <span className="text-sm font-semibold text-rose-700">Confirmar exclusão?</span>
+                <span className="text-sm font-semibold text-rose-700">Confirmar exclusÃ£o?</span>
                 <button
                   type="button"
                   className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -637,7 +637,7 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 </button>
                 <button
                   type="button"
-                  className="rounded-2xl border border-[#d7e0ef] bg-white px-4 py-2 text-sm font-semibold text-[#4f658d] transition hover:border-(--tc-accent) hover:text-(--tc-accent)"
+                  className="rounded-2xl border border-[#d7e0ef] bg-white px-4 py-2 text-sm font-semibold text-[#4f658d] transition hover:border-[var(--tc-accent)] hover:text-[var(--tc-accent)]"
                   onClick={() => setConfirmDelete(false)}
                 >
                   Cancelar
@@ -649,25 +649,25 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
                 className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
                 onClick={() => setConfirmDelete(true)}
               >
-                Excluir usuário
+                Excluir usuÃ¡rio
               </button>
             )}
           </div>
           <div className="flex justify-end gap-3">
             <button
               type="button"
-              className="rounded-2xl border border-[#d7e0ef] bg-white px-5 py-2.5 text-sm font-semibold text-[#4f658d] transition hover:border-(--tc-accent) hover:text-(--tc-accent)"
+              className="rounded-2xl border border-[#d7e0ef] bg-white px-5 py-2.5 text-sm font-semibold text-[#4f658d] transition hover:border-[var(--tc-accent)] hover:text-[var(--tc-accent)]"
               onClick={onClose}
             >
               Cancelar
             </button>
             <button
               type="button"
-              className="rounded-2xl bg-[#0b1f52] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-(--tc-accent) disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-[#0b1f52] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--tc-accent)] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={!canSave || loading}
               onClick={save}
             >
-              {loading ? "Salvando..." : "Salvar alterações"}
+              {loading ? "Salvando..." : "Salvar alteraÃ§Ãµes"}
             </button>
           </div>
         </div>
@@ -675,3 +675,4 @@ export function UserDetailsModal({ open, user, clients, onClose, onSaved, onDele
     </div>
   );
 }
+

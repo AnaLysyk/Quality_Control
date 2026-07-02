@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { listAdminUserItems } from "@/lib/adminUsers";
@@ -51,11 +51,11 @@ function pickEditableCompanyPatch(body: Record<string, unknown>, privileged: boo
 
 export async function GET(req: Request, context: { params: Promise<{ companyId: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
 
   const { companyId } = await context.params;
   const company = await findLocalCompanyById(companyId);
-  if (!company) return NextResponse.json({ message: "Empresa não encontrada" }, { status: 404 });
+  if (!company) return NextResponse.json({ message: "Empresa nÃ£o encontrada" }, { status: 404 });
 
   const permissions = resolveCompanyProfilePermissions(authUser, company, "view");
   const hasScope =
@@ -65,7 +65,7 @@ export async function GET(req: Request, context: { params: Promise<{ companyId: 
     permissions.canDeactivate ||
     (authUser.companySlugs ?? []).some((slug) => (slug ?? "").trim().toLowerCase() === (company.slug ?? "").trim().toLowerCase());
   if (!hasScope) {
-    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const users = await listAdminUserItems({ companyId });
@@ -82,32 +82,32 @@ export async function GET(req: Request, context: { params: Promise<{ companyId: 
 
 export async function PATCH(req: Request, context: { params: Promise<{ companyId: string }> }) {
   const authUser = await authenticateRequest(req);
-  if (!authUser) return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+  if (!authUser) return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
 
   const access = await getAccessContext(req);
   const { companyId } = await context.params;
   const company = await findLocalCompanyById(companyId);
-  if (!company) return NextResponse.json({ message: "Empresa não encontrada" }, { status: 404 });
+  if (!company) return NextResponse.json({ message: "Empresa nÃ£o encontrada" }, { status: 404 });
 
   const permissions = resolveCompanyProfilePermissions(authUser, company, "edit");
-  if (!permissions.canEdit) return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
+  if (!permissions.canEdit) return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body) return NextResponse.json({ message: "Payload inválido" }, { status: 400 });
+  if (!body) return NextResponse.json({ message: "Payload invÃ¡lido" }, { status: 400 });
 
   const privileged = Boolean(access && (access.role === "leader_tc" || access.companyRole === "leader_tc" || access.isGlobalAdmin));
   const patch = pickEditableCompanyPatch(body, privileged);
 
   if (Object.keys(patch).length === 0) {
-    return NextResponse.json({ message: "Nenhum campo editável informado" }, { status: 400 });
+    return NextResponse.json({ message: "Nenhum campo editÃ¡vel informado" }, { status: 400 });
   }
 
   if (!privileged && ("status" in patch || "active" in patch || "qase_token" in patch || "jira_api_token" in patch)) {
-    return NextResponse.json({ message: "Sem permissão para alterar campos administrativos" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissÃ£o para alterar campos administrativos" }, { status: 403 });
   }
 
   const updated = await updateLocalCompany(companyId, patch as never);
-  if (!updated) return NextResponse.json({ message: "Empresa não encontrada" }, { status: 404 });
+  if (!updated) return NextResponse.json({ message: "Empresa nÃ£o encontrada" }, { status: 404 });
 
   addAuditLogSafe({
     actorUserId: authUser.id,
@@ -134,3 +134,4 @@ export async function PATCH(req: Request, context: { params: Promise<{ companyId
 
   return NextResponse.json({ item: updated, users, profileContext }, { status: 200 });
 }
+

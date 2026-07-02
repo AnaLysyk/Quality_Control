@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export function ClientSkeleton({ message }: { message?: string }) {
   return (
@@ -10,3 +10,4 @@ export function ClientSkeleton({ message }: { message?: string }) {
     </div>
   );
 }
+

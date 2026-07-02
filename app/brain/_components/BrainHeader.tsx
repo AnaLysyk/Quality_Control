@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { FiDatabase, FiRefreshCw, FiShield } from "react-icons/fi";
@@ -61,3 +61,4 @@ export function BrainHeader({ companyName, projectName, moduleName, source, load
     </header>
   );
 }
+

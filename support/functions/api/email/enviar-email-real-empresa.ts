@@ -39,3 +39,4 @@ main().catch((error) => {
   console.error("[EMAIL EMPRESA] ERRO:", error);
   process.exitCode = 1;
 });
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getCompanyQualitySummary, getCompanyDefectsExport } from "@/lib/companyQuality";
 
 function toCsvLine(values: Array<string | number | null | undefined>) {
@@ -36,3 +36,4 @@ export async function GET(_req: Request, context: { params: Promise<{ slug: stri
 
   return new NextResponse(csv, { headers });
 }
+

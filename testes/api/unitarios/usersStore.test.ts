@@ -1,11 +1,11 @@
-import { getUserById, updateUserEmail, updateUserCompany } from "../../../data/usersStore";
+﻿import { getUserById, updateUserEmail, updateUserCompany } from "../../../data/usersStore";
 
 describe("usersStore", () => {
   it("should get user by id", () => {
     const user = getUserById("usr_001");
     expect(user).not.toBeNull();
     expect(user?.id).toBe("usr_001");
-    expect(user?.name).toBe("Usuário");
+    expect(user?.name).toBe("UsuÃ¡rio");
   });
 
   it("should return null for non-existent user", () => {
@@ -31,3 +31,4 @@ describe("usersStore", () => {
     updateUserCompany("usr_001", "Testing Company");
   });
 });
+

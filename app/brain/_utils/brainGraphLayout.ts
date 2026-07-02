@@ -235,3 +235,4 @@ export function describeInformation(node: BrainNode | null, nodes: BrainNode[], 
 
   return `${node.label} forma informação ao se conectar com: ${related.slice(0, 5).join("; ")}.`;
 }
+

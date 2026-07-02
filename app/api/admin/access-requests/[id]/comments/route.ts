@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getAccessRequestById } from "@/data/accessRequestsStore";
@@ -261,3 +261,4 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
 
   return NextResponse.json({ item: record }, { status: 200 });
 }
+

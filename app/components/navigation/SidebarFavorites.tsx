@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { FiBookmark, FiX } from "react-icons/fi";
@@ -145,3 +145,4 @@ export default function SidebarFavorites({
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-type InputRecord = Record<string, unknown> | null | undefined;
+﻿type InputRecord = Record<string, unknown> | null | undefined;
 
 export type SyncedUserProfileFields = {
   fullName: string | null;
@@ -61,3 +61,4 @@ export function readSyncedUserProfileFields(input: unknown): SyncedUserProfileFi
     avatarUrl: sanitizeUserProfileText(readFirstString(record, ["avatar_url", "avatarUrl"]), 2048),
   };
 }
+

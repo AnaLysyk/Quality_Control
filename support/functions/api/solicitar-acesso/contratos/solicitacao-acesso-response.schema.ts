@@ -1,4 +1,4 @@
-const statusSolicitacaoSchema = {
+﻿const statusSolicitacaoSchema = {
   type: "string",
   enum: [
     "pending",
@@ -191,3 +191,4 @@ export const erroSolicitacaoAcessoResponseSchema = {
   },
   additionalProperties: true,
 } as const;
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from "@xyflow/react";
 import type { BrainEdge } from "../_types/brain.types";
@@ -47,3 +47,4 @@ export function BrainNeuralEdge(props: EdgeProps) {
     </>
   );
 }
+

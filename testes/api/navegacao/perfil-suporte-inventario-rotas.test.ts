@@ -1,4 +1,4 @@
-import fs from "fs";
+﻿import fs from "fs";
 import path from "path";
 
 import { SYSTEM_ROLES } from "@/lib/auth/roles";
@@ -123,3 +123,4 @@ describe("perfil suporte - inventario de rotas", () => {
     );
   });
 });
+

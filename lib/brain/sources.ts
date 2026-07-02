@@ -1,4 +1,4 @@
-import type { SystemPermission } from "@/lib/navigation/navigation.types";
+﻿import type { SystemPermission } from "@/lib/navigation/navigation.types";
 
 export type BrainGraphSourceStatus = "ok" | "empty" | "disabled" | "blocked_by_permission" | "error";
 
@@ -21,3 +21,4 @@ export type BrainGraphSource<TContext = unknown> = {
   buildEdges?: (context: TContext) => Promise<unknown[]>;
   healthCheck: (context: TContext) => Promise<BrainGraphSourceHealth>;
 };
+

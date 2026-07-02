@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import Image from "next/image";
@@ -254,7 +254,7 @@ function ChatRichText({ text }: { text: string }) {
         if (block.type === "h2") {
           return (
             <div key={`h2-${index}`} className="rounded-2xl border border-[rgba(239,0,1,0.18)] bg-[linear-gradient(135deg,rgba(1,24,72,0.08)_0%,rgba(239,0,1,0.08)_100%)] px-3 py-2.5 dark:border-[#ff8a8a44] dark:bg-[linear-gradient(135deg,rgba(35,85,196,0.22)_0%,rgba(239,0,1,0.2)_100%)]">
-              <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001) dark:text-[#ffb4b4]">Insight</p>
+              <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[var(--tc-accent,#ef0001)] dark:text-[#ffb4b4]">Insight</p>
               <p className="mt-1 text-[0.96rem] font-extrabold leading-6 tracking-[-0.015em] text-[#011848] dark:text-[#f2f7ff]">{block.value}</p>
             </div>
           );
@@ -262,7 +262,7 @@ function ChatRichText({ text }: { text: string }) {
 
         if (block.type === "h3") {
           return (
-            <p key={`h3-${index}`} className="mt-2 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-(--tc-primary,#011848) dark:text-[#d7e5ff]">
+            <p key={`h3-${index}`} className="mt-2 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-[var(--tc-primary,#011848)] dark:text-[#d7e5ff]">
               {block.value}
             </p>
           );
@@ -270,7 +270,7 @@ function ChatRichText({ text }: { text: string }) {
 
         if (block.type === "quote") {
           return (
-            <div key={`quote-${index}`} className="rounded-xl border-l-4 border-(--tc-accent,#ef0001) bg-[rgba(239,0,1,0.06)] px-3 py-2 text-[0.85rem] text-[#20304f] dark:bg-[rgba(239,0,1,0.14)] dark:text-[#f0f5ff]">
+            <div key={`quote-${index}`} className="rounded-xl border-l-4 border-[var(--tc-accent,#ef0001)] bg-[rgba(239,0,1,0.06)] px-3 py-2 text-[0.85rem] text-[#20304f] dark:bg-[rgba(239,0,1,0.14)] dark:text-[#f0f5ff]">
               {block.value}
             </div>
           );
@@ -280,7 +280,7 @@ function ChatRichText({ text }: { text: string }) {
           return (
             <ul key={`ul-${index}`} className="space-y-1 pl-4 text-[0.9rem] text-[#20304f] dark:text-[#e6efff]">
               {(block.items ?? []).map((item, itemIndex) => (
-                <li key={`ul-item-${itemIndex}`} className="list-disc marker:text-(--tc-accent,#ef0001)">{item}</li>
+                <li key={`ul-item-${itemIndex}`} className="list-disc marker:text-[var(--tc-accent,#ef0001)]">{item}</li>
               ))}
             </ul>
           );
@@ -290,7 +290,7 @@ function ChatRichText({ text }: { text: string }) {
           return (
             <ol key={`ol-${index}`} className="space-y-1 pl-4 text-[0.9rem] text-[#20304f] dark:text-[#e6efff]">
               {(block.items ?? []).map((item, itemIndex) => (
-                <li key={`ol-item-${itemIndex}`} className="list-decimal marker:font-semibold marker:text-(--tc-primary,#011848) dark:marker:text-[#c7dcff]">{item}</li>
+                <li key={`ol-item-${itemIndex}`} className="list-decimal marker:font-semibold marker:text-[var(--tc-primary,#011848)] dark:marker:text-[#c7dcff]">{item}</li>
               ))}
             </ol>
           );
@@ -300,14 +300,14 @@ function ChatRichText({ text }: { text: string }) {
           const rows = block.rows ?? [];
           const [header, ...body] = rows;
           return (
-            <div key={`table-${index}`} className="overflow-hidden rounded-2xl border border-(--tc-border,#d7dff1) bg-[#ffffff] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-[#36507f] dark:bg-[#0f192d]">
+            <div key={`table-${index}`} className="overflow-hidden rounded-2xl border border-[var(--tc-border,#d7dff1)] bg-[#ffffff] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-[#36507f] dark:bg-[#0f192d]">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-[0.82rem]">
                   {header ? (
                     <thead className="bg-[linear-gradient(180deg,#f6f9ff_0%,#edf3ff_100%)] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#122038_100%)]">
                       <tr>
                         {header.map((cell, cellIndex) => (
-                          <th key={`thead-${cellIndex}`} className="border-b border-(--tc-border,#d7dff1) px-3 py-2 font-bold text-(--tc-primary,#011848) dark:border-[#36507f] dark:text-[#d7e5ff]">
+                          <th key={`thead-${cellIndex}`} className="border-b border-[var(--tc-border,#d7dff1)] px-3 py-2 font-bold text-[var(--tc-primary,#011848)] dark:border-[#36507f] dark:text-[#d7e5ff]">
                             {cell}
                           </th>
                         ))}
@@ -318,7 +318,7 @@ function ChatRichText({ text }: { text: string }) {
                     {body.map((row, rowIndex) => (
                       <tr key={`row-${rowIndex}`} className="odd:bg-black/1.5 dark:odd:bg-white/3">
                         {row.map((cell, cellIndex) => (
-                          <td key={`cell-${rowIndex}-${cellIndex}`} className="border-b border-(--tc-border,#eef2fb) px-3 py-2 text-[#26334f] last:border-b-0 dark:border-[#263e66] dark:text-[#e6efff]">
+                          <td key={`cell-${rowIndex}-${cellIndex}`} className="border-b border-[var(--tc-border,#eef2fb)] px-3 py-2 text-[#26334f] last:border-b-0 dark:border-[#263e66] dark:text-[#e6efff]">
                             {cell}
                           </td>
                         ))}
@@ -468,12 +468,12 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
             route: pathname,
             module: "brain",
             screenLabel: "Brain",
-            screenSummary: "Brain é o cérebro visual da plataforma Quality Control e fornece contexto vivo para o chat global.",
+            screenSummary: "Brain Ã© o cÃ©rebro visual da plataforma Quality Control e fornece contexto vivo para o chat global.",
             suggestedPrompts: [
               "O que estou vendo?",
-              "Me explica esse nó",
-              "Mostra só pendências",
-              "Abre o núcleo de defeitos",
+              "Me explica esse nÃ³",
+              "Mostra sÃ³ pendÃªncias",
+              "Abre o nÃºcleo de defeitos",
             ],
             metadata: metadata as Record<string, unknown>,
           }),
@@ -636,7 +636,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     if (payload.message) setInput("");
 
-    // Usa endpoint unificado para garantir memória persistente de todas as conversas.
+    // Usa endpoint unificado para garantir memÃ³ria persistente de todas as conversas.
     const apiRoute = "/api/assistente/ask";
     const shouldSendBrainContext =
       pathname.startsWith("/brain") ||
@@ -672,7 +672,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
       const data = (await response.json().catch(() => ({}))) as AssistantReplyPayload & { error?: string };
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error("Sua sessão expirou. Faça login novamente para o brain acessar o Brain.");
+          throw new Error("Sua sessÃ£o expirou. FaÃ§a login novamente para o brain acessar o Brain.");
         }
         throw new Error(data?.error || response.statusText || `Erro ${response.status}`);
       }
@@ -742,7 +742,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     }
 
     if (/\b(abrir|abre|ir|vai|entrar|entra|mostrar|mostra)\b.*\b(solicitacoes|solicitacao|acessos?|acesso)\b/.test(normalized)) {
-      return go("/admin/access-requests", "Pronto, estou abrindo Solicitações de acesso.");
+      return go("/admin/access-requests", "Pronto, estou abrindo SolicitaÃ§Ãµes de acesso.");
     }
 
     if (/\b(abrir|abre|ir|vai|entrar|entra|mostrar|mostra)\b.*\b(perfil|meu perfil|configuracoes|configuracao)\b/.test(normalized)) {
@@ -750,7 +750,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     }
 
     if (/\b(trocar|alterar|mudar|atualizar)\b.*\b(senha)\b/.test(normalized)) {
-      return go("/settings/profile", "Pronto, abri seu perfil. Por segurança, a troca de senha precisa confirmar a senha atual e a nova senha na área do perfil.");
+      return go("/settings/profile", "Pronto, abri seu perfil. Por seguranÃ§a, a troca de senha precisa confirmar a senha atual e a nova senha na Ã¡rea do perfil.");
     }
 
     return null;
@@ -775,17 +775,17 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     if (/\b(mostra|mostrar|filtra|filtrar|exibe|exibir)\b.*\b(pendencias|pendentes|falta|faltando)\b/.test(normalized)) {
       dispatchBrainCommand("show_pending");
-      return "Pronto. Filtrei o Brain para destacar pendências e lacunas de conhecimento.";
+      return "Pronto. Filtrei o Brain para destacar pendÃªncias e lacunas de conhecimento.";
     }
 
     if (/\b(mostra|mostrar|filtra|filtrar|exibe|exibir)\b.*\b(orfaos|orfao|isolados|isolado)\b/.test(normalized)) {
       dispatchBrainCommand("show_orphans");
-      return "Pronto. Estou mostrando os conhecimentos órfãos ou isolados no mapa.";
+      return "Pronto. Estou mostrando os conhecimentos Ã³rfÃ£os ou isolados no mapa.";
     }
 
     if (/\b(volta|voltar|limpa|limpar|principal|geral|raiz|root)\b/.test(normalized)) {
       dispatchBrainCommand("clear_filters");
-      return "Voltei para a visão geral do Brain.";
+      return "Voltei para a visÃ£o geral do Brain.";
     }
 
     if (/\b(centraliza|centralizar|recentraliza|foca|focar)\b/.test(normalized)) {
@@ -795,26 +795,26 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     if (/\b(expande|expandir|detalhes|detalhar)\b/.test(normalized)) {
       dispatchBrainCommand("expand_node_details");
-      return "Expandi os detalhes do nó selecionado no overlay.";
+      return "Expandi os detalhes do nÃ³ selecionado no overlay.";
     }
 
     const moduleAliases: Array<[RegExp, string]> = [
       [/\b(defeitos|bugs?|qualidade)\b/, "Defeitos"],
       [/\b(logs?|auditoria|eventos?)\b/, "Logs"],
       [/\b(suporte|chamados?)\b/, "Suporte"],
-      [/\b(solicitacoes|solicitacao|acessos?|acesso)\b/, "Solicitações"],
+      [/\b(solicitacoes|solicitacao|acessos?|acesso)\b/, "SolicitaÃ§Ãµes"],
       [/\b(documentos?|evidencias?|anexos?)\b/, "Documentos"],
-      [/\b(automacao|automacoes|scripts?|execucoes?)\b/, "Automação"],
-      [/\b(repositorio|casos? de teste|testes?)\b/, "Repositório de Testes"],
+      [/\b(automacao|automacoes|scripts?|execucoes?)\b/, "AutomaÃ§Ã£o"],
+      [/\b(repositorio|casos? de teste|testes?)\b/, "RepositÃ³rio de Testes"],
       [/\b(planos? de teste|plano)\b/, "Plano de Teste"],
-      [/\b(usuarios?|permissoes?|perfis?)\b/, "Usuários / Permissões"],
+      [/\b(usuarios?|permissoes?|perfis?)\b/, "UsuÃ¡rios / PermissÃµes"],
     ];
 
     if (/\b(abre|abrir|mostra|mostrar|foca|focar|expande|expandir|filtra|filtrar)\b/.test(normalized)) {
       const moduleMatch = moduleAliases.find(([pattern]) => pattern.test(normalized));
       if (moduleMatch) {
         dispatchBrainCommand("select_module", moduleMatch[1]);
-        return `Abri o núcleo ${moduleMatch[1]} no Brain.`;
+        return `Abri o nÃºcleo ${moduleMatch[1]} no Brain.`;
       }
     }
 
@@ -835,7 +835,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
         {
           id: assistantMessageId,
           from: "assistant",
-          text: "Estou olhando o painel de solicitações e interpretando seu pedido...",
+          text: "Estou olhando o painel de solicitaÃ§Ãµes e interpretando seu pedido...",
           ts: now + 1,
           tool: "use_brain",
         },
@@ -1039,12 +1039,12 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
               onPointerDown={startSidePanelResize}
               className={`absolute inset-y-0 left-0 z-20 flex w-3 translate-x-0 cursor-ew-resize items-center justify-center bg-transparent text-transparent shadow-none transition ${resizingSidePanel ? "" : ""}`}
             >
-              ↔
+              â†”
             </button>
           ) : null}
 
           <div
-            className={`flex flex-col overflow-hidden border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 transition-[width,height,border-radius] duration-300 ease-in-out ${
+            className={`flex flex-col overflow-hidden border border-[var(--tc-border,#d7dff1)] bg-[linear-gradient(180deg,#ffffff_0%,#fff8fb_54%,#f7faff_100%)] shadow-[0_32px_80px_rgba(1,24,72,0.22)] ring-1 ring-[rgba(1,24,72,0.08)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0d1729_0%,#122038_54%,#0b1424_100%)] dark:ring-white/10 transition-[width,height,border-radius] duration-300 ease-in-out ${
               isExpandedMode
                 ? "h-[85vh] w-[min(68.75rem,90vw)] rounded-4xl"
                 : isSideMode
@@ -1073,7 +1073,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                           {brainOpenContext?.source === "brain" ? "Brain" : "Brain"}
                         </h3>
                         <p className={`max-w-[20rem] truncate ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>
-                          {brainOpenContext?.nodeLabel ? `${brainOpenContext.nodeLabel} — ${brainOpenContext.nodeType ?? "nó"}` : activeScreenLabel}
+                          {brainOpenContext?.nodeLabel ? `${brainOpenContext.nodeLabel} â€” ${brainOpenContext.nodeType ?? "nÃ³"}` : activeScreenLabel}
                         </p>
                       </div>
                       <div className={`pt-1 text-[0.72rem] leading-5 text-white/70 ${compactConversationChrome ? "hidden" : ""}`}>
@@ -1190,10 +1190,10 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                     {brainOpenContext?.nodeId ? (
                       <>
                         <p className="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-[#ef0001] dark:text-[#ff8a8a]">
-                          Contexto do Brain — {brainOpenContext.nodeType ?? "Nó"}
+                          Contexto do Brain â€” {brainOpenContext.nodeType ?? "NÃ³"}
                         </p>
                         <p className="mt-1 text-base font-bold text-[#011848] dark:text-[#f2f7ff]">
-                          {brainOpenContext.nodeLabel ?? "Nó selecionado"}
+                          {brainOpenContext.nodeLabel ?? "NÃ³ selecionado"}
                         </p>
                         <p className="mt-1 text-sm text-[#4a5568] dark:text-[#a0b4d0]">
                           Agente: {activeAgentMode ?? brainOpenContext.agentMode ?? "qa"} | escopo {brainOpenContext.companySlug ?? "global"}
@@ -1231,11 +1231,11 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                           className={`rounded-[1.35rem] border px-4 py-3 text-sm leading-6 shadow-[0_12px_28px_rgba(15,23,42,0.06)] ${
                             isUser
                               ? "border-[rgba(239,0,1,0.16)] bg-[linear-gradient(135deg,var(--tc-accent,#ef0001)_0%,#c90000_100%)] text-white"
-                              : "border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] text-[#011848] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:text-[#e6efff] [&_p]:text-base"
+                              : "border-[var(--tc-border,#dfe6f3)] bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] text-[#011848] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:text-[#e6efff] [&_p]:text-base"
                           }`}
                         >
                           {!isUser && message.tool ? (
-                            <div className="mb-2 inline-flex rounded-full border border-(--tc-border,#d7dff1) bg-[linear-gradient(180deg,#f7faff_0%,#fff7f8_100%)] px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-(--tc-primary,#011848) dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#241a2d_100%)] dark:text-[#d7e5ff]">
+                            <div className="mb-2 inline-flex rounded-full border border-[var(--tc-border,#d7dff1)] bg-[linear-gradient(180deg,#f7faff_0%,#fff7f8_100%)] px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-[0.24em] text-[var(--tc-primary,#011848)] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#1a2b48_0%,#241a2d_100%)] dark:text-[#d7e5ff]">
                               {formatToolLabel(message.tool)}
                             </div>
                           ) : null}
@@ -1258,7 +1258,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                                 className={`${styles.actionEnter} inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${
                                   action.kind === "tool"
                                     ? "border border-[rgba(1,24,72,0.12)] bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#173a88_100%)] text-white hover:bg-[linear-gradient(135deg,#132a63_0%,#214ca8_100%)]"
-                                    : "border border-(--tc-border,#d7dff1) bg-[#ffffff] text-(--tc-primary,#011848) hover:border-[rgba(239,0,1,0.2)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#13213a] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4]"
+                                    : "border border-[var(--tc-border,#d7dff1)] bg-[#ffffff] text-[var(--tc-primary,#011848)] hover:border-[rgba(239,0,1,0.2)] hover:text-[var(--tc-accent,#ef0001)] dark:border-[#36507f] dark:bg-[#13213a] dark:text-[#d7e5ff] dark:hover:border-[#ff8a8a] dark:hover:text-[#ffb4b4]"
                                 } disabled:opacity-60`}
                               >
                                 {action.kind === "tool" ? <FiZap size={12} /> : <FiChevronRight size={12} />}
@@ -1281,8 +1281,8 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                 <div ref={endRef} />
               </div>
 
-              <div className={`border-t border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0f192d_0%,#13213a_100%)] ${denseViewport ? "px-4 py-2.5" : hasConversation ? "px-4 py-3" : "px-5 py-4.5"}`}>
-                <div className={`rounded-3xl border border-(--tc-border,#dfe6f3) bg-[linear-gradient(180deg,#f8fbff_0%,#fff7fa_100%)] shadow-[0_14px_28px_rgba(15,23,42,0.05)] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.24)] ${denseViewport ? "p-2.5" : hasConversation ? "p-2.5" : "p-3.5"}`}>
+              <div className={`border-t border-[var(--tc-border,#dfe6f3)] bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] dark:border-[#31476f] dark:bg-[linear-gradient(180deg,#0f192d_0%,#13213a_100%)] ${denseViewport ? "px-4 py-2.5" : hasConversation ? "px-4 py-3" : "px-5 py-4.5"}`}>
+                <div className={`rounded-3xl border border-[var(--tc-border,#dfe6f3)] bg-[linear-gradient(180deg,#f8fbff_0%,#fff7fa_100%)] shadow-[0_14px_28px_rgba(15,23,42,0.05)] dark:border-[#36507f] dark:bg-[linear-gradient(180deg,#13213a_0%,#182742_100%)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.24)] ${denseViewport ? "p-2.5" : hasConversation ? "p-2.5" : "p-3.5"}`}>
                   <textarea
                     ref={inputRef}
                     value={input}
@@ -1293,14 +1293,14 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                         void sendMessage();
                       }
                     }}
-                    placeholder={`Escreva o que você precisa em ${assistantContext.screenLabel.toLowerCase()}...`}
-                    className={`w-full resize-none rounded-[1.1rem] border border-(--tc-border,#d7dff1) bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
+                    placeholder={`Escreva o que vocÃª precisa em ${assistantContext.screenLabel.toLowerCase()}...`}
+                    className={`w-full resize-none rounded-[1.1rem] border border-[var(--tc-border,#d7dff1)] bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-[var(--tc-accent,#ef0001)] dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
                   />
                   <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : hasConversation ? "mt-2" : "mt-3"}`}>
                     <button
                       type="button"
                       onClick={() => setConfirmState({ open: true, kind: "clearAll" })}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#dfe6f3) bg-white text-[#8b98b1] transition hover:border-[rgba(239,0,1,0.24)] hover:text-(--tc-accent,#ef0001) dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#94abd6] dark:hover:text-[#ff8a8a]"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tc-border,#dfe6f3)] bg-white text-[#8b98b1] transition hover:border-[rgba(239,0,1,0.24)] hover:text-[var(--tc-accent,#ef0001)] dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#94abd6] dark:hover:text-[#ff8a8a]"
                       aria-label="Limpar conversa"
                       title="Limpar conversa"
                     >
@@ -1336,7 +1336,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
               setOpen(true);
             }}
             aria-label="Abrir brain da plataforma"
-            title="Brain Testing Company — clique para abrir"
+            title="Brain Testing Company â€” clique para abrir"
             className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105"
           >
             {/* spinning logo with gradient background */}
@@ -1374,3 +1374,4 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     </div>
   );
 }
+

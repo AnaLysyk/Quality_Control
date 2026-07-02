@@ -1,4 +1,4 @@
-import path from "path";
+﻿import path from "path";
 
 const USE_E2E_STORAGE =
   process.env.PLAYWRIGHT_MOCK === "true" ||
@@ -13,3 +13,4 @@ const BASE_DIR = USE_E2E_STORAGE
 export function resolverCaminhoDados(fileName: string) {
   return path.join(BASE_DIR, fileName);
 }
+

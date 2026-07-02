@@ -1,4 +1,4 @@
-export const SYSTEM_ROLES = {
+﻿export const SYSTEM_ROLES = {
   EMPRESA: "empresa",
   COMPANY_USER: "company_user",
   TESTING_COMPANY_USER: "testing_company_user",
@@ -77,3 +77,4 @@ export function isLeaderRole(input?: string | null) {
 export function isCompanyRole(input?: string | null) {
   return normalizeLegacyRole(input) === SYSTEM_ROLES.EMPRESA;
 }
+

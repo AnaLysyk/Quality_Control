@@ -1,4 +1,4 @@
-import { BrainDashboard } from "./_components/BrainDashboard";
+﻿import { BrainDashboard } from "./_components/BrainDashboard";
 import { BrainUtilitiesPanel } from "./_components/BrainUtilitiesPanel";
 import { registerScreen } from "@/lib/brain/registry";
 
@@ -44,3 +44,4 @@ export default function BrainPage() {
     </div>
   );
 }
+

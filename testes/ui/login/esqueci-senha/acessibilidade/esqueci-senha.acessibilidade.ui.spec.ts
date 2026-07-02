@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/ui/login/esqueci-senha/acessibilidade/esqueci-senha.acessibilidade.ui.spec.ts --project=chromium
  */
@@ -30,3 +30,4 @@ test("tela usa o endpoint de esqueci a senha e atende acessibilidade", async ({ 
   await elementos.enviar.click();
   await chamada;
 });
+

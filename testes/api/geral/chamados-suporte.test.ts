@@ -1,25 +1,25 @@
-/**
- * Cenários de criação e edição de chamados (suporte) no banco PostgreSQL.
- * ✅ cleanup total em afterAll — nenhum dado permanece.
+﻿/**
+ * CenÃ¡rios de criaÃ§Ã£o e ediÃ§Ã£o de chamados (suporte) no banco PostgreSQL.
+ * âœ… cleanup total em afterAll â€” nenhum dado permanece.
  *
- * Criação (7 cenários):
- *  1. Chamado básico (título + descrição)
+ * CriaÃ§Ã£o (7 cenÃ¡rios):
+ *  1. Chamado bÃ¡sico (tÃ­tulo + descriÃ§Ã£o)
  *  2. Chamado tipo bug com prioridade high
  *  3. Chamado tipo melhoria com tags
  *  4. Chamado vinculado a empresa e assignee
- *  5. Rejeitar chamado sem título e sem descrição
- *  6. Código SP-XXXXXX gerado automaticamente
- *  7. Status padrão = backlog
+ *  5. Rejeitar chamado sem tÃ­tulo e sem descriÃ§Ã£o
+ *  6. CÃ³digo SP-XXXXXX gerado automaticamente
+ *  7. Status padrÃ£o = backlog
  *
- * Edição (8 cenários):
- *  8.  Editar título e descrição (pelo criador)
+ * EdiÃ§Ã£o (8 cenÃ¡rios):
+ *  8.  Editar tÃ­tulo e descriÃ§Ã£o (pelo criador)
  *  9.  Editar tipo e prioridade (admin)
  * 10.  Editar tags
  *  11. Atribuir assignee
- * 12.  Alterar status backlog → doing → review → done
+ * 12.  Alterar status backlog â†’ doing â†’ review â†’ done
  * 13.  Retornar null ao editar chamado inexistente
- * 14.  updateSuporteForUser ignora chamado de outro usuário
- * 15.  Listar chamados por usuário criador
+ * 14.  updateSuporteForUser ignora chamado de outro usuÃ¡rio
+ * 15.  Listar chamados por usuÃ¡rio criador
  */
 
 import { prisma } from "@/lib/prismaClient";
@@ -57,7 +57,7 @@ afterAll(async () => {
   for (const id of createdTicketIds) {
     await prisma.ticket.deleteMany({ where: { id } }).catch(() => null);
   }
-  // Remove memberships e usuários criados
+  // Remove memberships e usuÃ¡rios criados
   await prisma.membership.deleteMany({ where: { userId: { in: createdUserIds } } }).catch(() => null);
   await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } }).catch(() => null);
   // Remove empresas criadas
@@ -84,7 +84,7 @@ async function makeUser(tag: string, overrides: Record<string, unknown> = {}) {
 async function makeTicket(userId: string, overrides: Record<string, unknown> = {}) {
   const ticket = await createSuporte({
     title: `Chamado de teste ${UID}`,
-    description: "Descrição detalhada do problema relatado pelo usuário no sistema.",
+    description: "DescriÃ§Ã£o detalhada do problema relatado pelo usuÃ¡rio no sistema.",
     createdBy: userId,
     ...overrides,
   });
@@ -92,34 +92,34 @@ async function makeTicket(userId: string, overrides: Record<string, unknown> = {
   return ticket;
 }
 
-describePg("Chamados (suporte) — criação e edição", () => {
+describePg("Chamados (suporte) â€” criaÃ§Ã£o e ediÃ§Ã£o", () => {
 
-  // ── 1. Chamado básico ──────────────────────────────────────────────────────
-  it("cria chamado básico com título e descrição", async () => {
+  // â”€â”€ 1. Chamado bÃ¡sico â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("cria chamado bÃ¡sico com tÃ­tulo e descriÃ§Ã£o", async () => {
     const user = await makeUser("basico");
     const ticket = await makeTicket(user.id);
 
     expect(ticket).not.toBeNull();
     expect(ticket!.title).toContain(UID);
-    expect(ticket!.description).toBe("Descrição detalhada do problema relatado pelo usuário no sistema.");
+    expect(ticket!.description).toBe("DescriÃ§Ã£o detalhada do problema relatado pelo usuÃ¡rio no sistema.");
     expect(ticket!.createdBy).toBe(user.id);
 
     const row = await prisma.ticket.findUnique({ where: { id: ticket!.id } });
     expect(row).not.toBeNull();
-    console.log(`\n✅ Chamado básico criado: ${ticket!.code} — "${ticket!.title}"`);
+    console.log(`\nâœ… Chamado bÃ¡sico criado: ${ticket!.code} â€” "${ticket!.title}"`);
   });
 
-  // ── 2. Tipo bug + prioridade high ──────────────────────────────────────────
+  // â”€â”€ 2. Tipo bug + prioridade high â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("cria chamado do tipo bug com prioridade high", async () => {
     const user = await makeUser("bug");
     const ticket = await makeTicket(user.id, { type: "bug", priority: "high" });
 
     expect(ticket!.type).toBe("bug");
     expect(ticket!.priority).toBe("high");
-    console.log(`\n✅ Bug criado: ${ticket!.code} | tipo=${ticket!.type} | prioridade=${ticket!.priority}`);
+    console.log(`\nâœ… Bug criado: ${ticket!.code} | tipo=${ticket!.type} | prioridade=${ticket!.priority}`);
   });
 
-  // ── 3. Tipo melhoria com tags ──────────────────────────────────────────────
+  // â”€â”€ 3. Tipo melhoria com tags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("cria chamado do tipo melhoria com tags", async () => {
     const user = await makeUser("melhoria");
     const ticket = await makeTicket(user.id, {
@@ -132,10 +132,10 @@ describePg("Chamados (suporte) — criação e edição", () => {
     expect(ticket!.tags).toContain("ui");
     expect(ticket!.tags).toContain("performance");
     expect(ticket!.tags).toContain("ux");
-    console.log(`\n✅ Melhoria criada: ${ticket!.code} | tags=${ticket!.tags.join(", ")}`);
+    console.log(`\nâœ… Melhoria criada: ${ticket!.code} | tags=${ticket!.tags.join(", ")}`);
   });
 
-  // ── 4. Chamado vinculado a empresa e assignee ──────────────────────────────
+  // â”€â”€ 4. Chamado vinculado a empresa e assignee â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("cria chamado vinculado a empresa e com assignee", async () => {
     const company = await pgCreateLocalCompany({
       name: `Empresa Chamado ${UID}`,
@@ -162,11 +162,11 @@ describePg("Chamados (suporte) — criação e edição", () => {
     const row = await prisma.ticket.findUnique({ where: { id: ticket!.id } });
     expect(row!.companyId).toBe(company.id);
     expect(row!.assignedToUserId).toBe(assignee.id);
-    console.log(`\n✅ Chamado vinculado: empresa=${company.slug} | assignee=${assignee.email}`);
+    console.log(`\nâœ… Chamado vinculado: empresa=${company.slug} | assignee=${assignee.email}`);
   });
 
-  // ── 5. Rejeitar sem título e sem descrição ─────────────────────────────────
-  it("retorna null ao criar chamado sem título e sem descrição", async () => {
+  // â”€â”€ 5. Rejeitar sem tÃ­tulo e sem descriÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("retorna null ao criar chamado sem tÃ­tulo e sem descriÃ§Ã£o", async () => {
     const user = await makeUser("sem-titulo");
     const ticket = await createSuporte({
       title: "   ",
@@ -175,48 +175,48 @@ describePg("Chamados (suporte) — criação e edição", () => {
     });
 
     expect(ticket).toBeNull();
-    console.log(`\n✅ Chamado inválido rejeitado (sem título e descrição) → null`);
+    console.log(`\nâœ… Chamado invÃ¡lido rejeitado (sem tÃ­tulo e descriÃ§Ã£o) â†’ null`);
   });
 
-  // ── 6. Código SP-XXXXXX gerado automaticamente ────────────────────────────
-  it("gera código SP-XXXXXX automaticamente", async () => {
+  // â”€â”€ 6. CÃ³digo SP-XXXXXX gerado automaticamente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("gera cÃ³digo SP-XXXXXX automaticamente", async () => {
     const user = await makeUser("codigo");
     const ticket = await makeTicket(user.id);
 
     expect(ticket!.code).toMatch(/^SP-\d{6}$/);
-    console.log(`\n✅ Código gerado: ${ticket!.code}`);
+    console.log(`\nâœ… CÃ³digo gerado: ${ticket!.code}`);
   });
 
-  // ── 7. Status padrão = backlog ─────────────────────────────────────────────
-  it("status padrão do chamado criado é backlog", async () => {
+  // â”€â”€ 7. Status padrÃ£o = backlog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("status padrÃ£o do chamado criado Ã© backlog", async () => {
     const user = await makeUser("status-default");
     const ticket = await makeTicket(user.id);
 
     expect(ticket!.status).toBe("backlog");
-    console.log(`\n✅ Status padrão: ${ticket!.status}`);
+    console.log(`\nâœ… Status padrÃ£o: ${ticket!.status}`);
   });
 
-  // ── 8. Editar título e descrição (pelo criador) ────────────────────────────
-  it("criador edita título e descrição do próprio chamado", async () => {
+  // â”€â”€ 8. Editar tÃ­tulo e descriÃ§Ã£o (pelo criador) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("criador edita tÃ­tulo e descriÃ§Ã£o do prÃ³prio chamado", async () => {
     const user = await makeUser("edit-titulo");
     const ticket = await makeTicket(user.id);
 
     const updated = await updateSuporteForUser(user.id, ticket!.id, {
-      title: `Título Editado ${UID}`,
-      description: "Descrição atualizada com mais detalhes do problema encontrado.",
+      title: `TÃ­tulo Editado ${UID}`,
+      description: "DescriÃ§Ã£o atualizada com mais detalhes do problema encontrado.",
     });
 
     expect(updated).not.toBeNull();
-    expect(updated!.title).toBe(`Título Editado ${UID}`);
-    expect(updated!.description).toBe("Descrição atualizada com mais detalhes do problema encontrado.");
+    expect(updated!.title).toBe(`TÃ­tulo Editado ${UID}`);
+    expect(updated!.description).toBe("DescriÃ§Ã£o atualizada com mais detalhes do problema encontrado.");
     expect(updated!.updatedBy).toBe(user.id);
 
     const row = await prisma.ticket.findUnique({ where: { id: ticket!.id } });
-    expect(row!.title).toBe(`Título Editado ${UID}`);
-    console.log(`\n✅ Título editado: "${updated!.title}" | updatedBy=${updated!.updatedBy}`);
+    expect(row!.title).toBe(`TÃ­tulo Editado ${UID}`);
+    console.log(`\nâœ… TÃ­tulo editado: "${updated!.title}" | updatedBy=${updated!.updatedBy}`);
   });
 
-  // ── 9. Editar tipo e prioridade (admin) ────────────────────────────────────
+  // â”€â”€ 9. Editar tipo e prioridade (admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("admin edita tipo e prioridade do chamado", async () => {
     const criador = await makeUser("edit-tipo-criador");
     const admin = await makeUser("edit-tipo-admin", { role: "it_dev", is_global_admin: true });
@@ -231,10 +231,10 @@ describePg("Chamados (suporte) — criação e edição", () => {
     expect(updated!.type).toBe("bug");
     expect(updated!.priority).toBe("high");
     expect(updated!.updatedBy).toBe(admin.id);
-    console.log(`\n✅ Tipo e prioridade editados: tipo=${updated!.type} | prioridade=${updated!.priority}`);
+    console.log(`\nâœ… Tipo e prioridade editados: tipo=${updated!.type} | prioridade=${updated!.priority}`);
   });
 
-  // ── 10. Editar tags ────────────────────────────────────────────────────────
+  // â”€â”€ 10. Editar tags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("edita as tags do chamado", async () => {
     const user = await makeUser("edit-tags");
     const ticket = await makeTicket(user.id, { tags: ["inicial"] });
@@ -248,10 +248,10 @@ describePg("Chamados (suporte) — criação e edição", () => {
     expect(updated!.tags).toContain("auth");
     expect(updated!.tags).toContain("critico");
     expect(updated!.tags).not.toContain("inicial");
-    console.log(`\n✅ Tags editadas: [${updated!.tags.join(", ")}]`);
+    console.log(`\nâœ… Tags editadas: [${updated!.tags.join(", ")}]`);
   });
 
-  // ── 11. Atribuir assignee ──────────────────────────────────────────────────
+  // â”€â”€ 11. Atribuir assignee â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("atribui assignee ao chamado", async () => {
     const criador = await makeUser("assignee-criador");
     const assignee = await makeUser("assignee-dev", { role: "it_dev", is_global_admin: true });
@@ -267,11 +267,11 @@ describePg("Chamados (suporte) — criação e edição", () => {
     expect(updated!.assignedToUserId).toBe(assignee.id);
     const row = await prisma.ticket.findUnique({ where: { id: ticket!.id } });
     expect(row!.assignedToUserId).toBe(assignee.id);
-    console.log(`\n✅ Assignee atribuído: ${assignee.email}`);
+    console.log(`\nâœ… Assignee atribuÃ­do: ${assignee.email}`);
   });
 
-  // ── 12. Fluxo de status: backlog → doing → review → done ──────────────────
-  it("altera status do chamado: backlog → doing → review → done", async () => {
+  // â”€â”€ 12. Fluxo de status: backlog â†’ doing â†’ review â†’ done â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("altera status do chamado: backlog â†’ doing â†’ review â†’ done", async () => {
     const user = await makeUser("status-flow");
     const ticket = await makeTicket(user.id);
     expect(ticket!.status).toBe("backlog");
@@ -299,10 +299,10 @@ describePg("Chamados (suporte) — criação e edição", () => {
     expect((events[0].payload as { from: string; to: string }).to).toBe("doing");
     expect((events[2].payload as { from: string; to: string }).to).toBe("done");
 
-    console.log(`\n✅ Fluxo de status: backlog → doing → review → done | eventos=${events.length}`);
+    console.log(`\nâœ… Fluxo de status: backlog â†’ doing â†’ review â†’ done | eventos=${events.length}`);
   });
 
-  // ── 13. Retorna null para chamado inexistente ──────────────────────────────
+  // â”€â”€ 13. Retorna null para chamado inexistente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("retorna null ao editar chamado com id inexistente", async () => {
     const user = await makeUser("inexistente");
     const result = await updateSuporte("id-que-nao-existe-9999", {
@@ -310,35 +310,35 @@ describePg("Chamados (suporte) — criação e edição", () => {
       updatedBy: user.id,
     });
     expect(result).toBeNull();
-    console.log(`\n✅ Chamado inexistente → null`);
+    console.log(`\nâœ… Chamado inexistente â†’ null`);
   });
 
-  // ── 14. updateSuporteForUser ignora chamado de outro usuário ───────────────
-  it("updateSuporteForUser não permite editar chamado de outro usuário", async () => {
+  // â”€â”€ 14. updateSuporteForUser ignora chamado de outro usuÃ¡rio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("updateSuporteForUser nÃ£o permite editar chamado de outro usuÃ¡rio", async () => {
     const dono = await makeUser("dono");
     const outro = await makeUser("outro");
     const ticket = await makeTicket(dono.id);
 
     const result = await updateSuporteForUser(outro.id, ticket!.id, {
-      title: "Tentativa de edição indevida",
+      title: "Tentativa de ediÃ§Ã£o indevida",
     });
 
     expect(result).toBeNull();
 
-    // Garante que o ticket não foi alterado
+    // Garante que o ticket nÃ£o foi alterado
     const row = await prisma.ticket.findUnique({ where: { id: ticket!.id } });
     expect(row!.title).toBe(ticket!.title);
-    console.log(`\n✅ Edição por outro usuário bloqueada → null`);
+    console.log(`\nâœ… EdiÃ§Ã£o por outro usuÃ¡rio bloqueada â†’ null`);
   });
 
-  // ── 15. Listar chamados por usuário ───────────────────────────────────────
-  it("lista apenas os chamados do usuário criador", async () => {
+  // â”€â”€ 15. Listar chamados por usuÃ¡rio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("lista apenas os chamados do usuÃ¡rio criador", async () => {
     const userA = await makeUser("lista-a");
     const userB = await makeUser("lista-b");
 
-    const t1 = await makeTicket(userA.id, { title: `Lista A1 ${UID}`, description: "Primeiro chamado do usuário A listagem" });
-    const t2 = await makeTicket(userA.id, { title: `Lista A2 ${UID}`, description: "Segundo chamado do usuário A listagem" });
-    await makeTicket(userB.id, { title: `Lista B1 ${UID}`, description: "Chamado do usuário B não deve aparecer" });
+    const t1 = await makeTicket(userA.id, { title: `Lista A1 ${UID}`, description: "Primeiro chamado do usuÃ¡rio A listagem" });
+    const t2 = await makeTicket(userA.id, { title: `Lista A2 ${UID}`, description: "Segundo chamado do usuÃ¡rio A listagem" });
+    await makeTicket(userB.id, { title: `Lista B1 ${UID}`, description: "Chamado do usuÃ¡rio B nÃ£o deve aparecer" });
 
     const chamadosA = await listSuportesForUser(userA.id);
     const idsA = chamadosA.map((t) => t.id);
@@ -349,6 +349,7 @@ describePg("Chamados (suporte) — criação e edição", () => {
     const chamadosDeB = chamadosA.filter((t) => t.createdBy === userB.id);
     expect(chamadosDeB.length).toBe(0);
 
-    console.log(`\n✅ Listagem por usuário: userA tem ${chamadosA.filter(t => t.createdBy === userA.id).length} chamados`);
+    console.log(`\nâœ… Listagem por usuÃ¡rio: userA tem ${chamadosA.filter(t => t.createdBy === userA.id).length} chamados`);
   });
 });
+

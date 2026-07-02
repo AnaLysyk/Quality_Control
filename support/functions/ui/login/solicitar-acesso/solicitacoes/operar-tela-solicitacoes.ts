@@ -50,3 +50,4 @@ export async function validarRotaLegadaRedirecionaParaSolicitacoes(page: Page) {
     timeout: 60000,
   });
 }
+

@@ -1,4 +1,4 @@
-jest.mock("@/lib/jwtAuth", () => ({
+﻿jest.mock("@/lib/jwtAuth", () => ({
   authenticateRequest: jest.fn(),
 }));
 
@@ -82,3 +82,4 @@ describe("api/suportes/[id]/status notifications", () => {
     });
   });
 });
+

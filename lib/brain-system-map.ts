@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+﻿import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { connectNodes, upsertNode } from "@/lib/brain";
@@ -755,3 +755,4 @@ export async function syncSystemMapToBrain(rootRefId = "testing-company-root") {
 
   return { nodeCount, edgeCount };
 }
+

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { ReactNode } from "react";
 
 export type BreadcrumbItem = {
@@ -24,14 +24,14 @@ export default function Breadcrumb({ items, className }: Props) {
     const content = !isLast && item.href ? (
       <Link
         href={item.href}
-        className={`${baseClass} hover:underline hover:text-(--tc-accent,#ef0001)`}
+        className={`${baseClass} hover:underline hover:text-[var(--tc-accent,#ef0001)]`}
         title={item.title}
       >
         {item.label}
       </Link>
     ) : (
       <span
-        className={`${baseClass}${isLast ? " text-(--tc-text-secondary,#4b5563)" : ""}`}
+        className={`${baseClass}${isLast ? " text-[var(--tc-text-secondary,#4b5563)]" : ""}`}
         aria-current={isLast ? "page" : undefined}
         title={item.title}
       >
@@ -57,9 +57,10 @@ export default function Breadcrumb({ items, className }: Props) {
   return (
     <nav
       aria-label="Breadcrumb"
-      className={className ?? "text-xs sm:text-sm text-(--tc-text-muted,#6b7280)"}
+      className={className ?? "text-xs sm:text-sm text-[var(--tc-text-muted,#6b7280)]"}
     >
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">{breadcrumbElements}</ol>
     </nav>
   );
 }
+

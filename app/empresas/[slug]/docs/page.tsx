@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import DocsWikiClient from "../../../docs/DocsWikiClient";
 
@@ -10,3 +10,4 @@ export default async function CompanyDocsPage({ params }: { params: Promise<{ sl
     </div>
   );
 }
+

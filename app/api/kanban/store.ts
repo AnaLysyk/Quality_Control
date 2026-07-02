@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { prisma } from "@/lib/prismaClient";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
@@ -128,3 +128,4 @@ export async function deleteKanbanCard(id: number): Promise<boolean> {
   const result = await prisma.kanbanCard.deleteMany({ where: { id } });
   return result.count > 0;
 }
+

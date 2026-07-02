@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
@@ -91,3 +91,4 @@ export async function appendAssistantAuditEntry(input: Omit<AssistantAuditEntry,
   store.items = store.items.slice(0, 500);
   await writeStore(store);
 }
+

@@ -1,4 +1,4 @@
-import { prisma as p } from "@/lib/prismaClient";
+﻿import { prisma as p } from "@/lib/prismaClient";
 
 async function main() {
 const companies = await p.company.findMany({
@@ -35,3 +35,4 @@ await p.$disconnect();
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type BrainEvalStatus = "ready" | "draft" | "blocked";
 
@@ -291,3 +291,4 @@ export function getBrainQaSummary() {
     quickActions: brainQuickActions.length,
   };
 }
+

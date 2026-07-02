@@ -130,3 +130,4 @@ export function montarDadosEmpresaE2E(role: string) {
     requestedCompanySlug: EMPRESA_E2E.slug,
   };
 }
+

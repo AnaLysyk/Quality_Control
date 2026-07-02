@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 /**
- * Company Profile Form — Formulário de perfil de empresa
- * Renderiza campos baseado em COMPANY_PROFILE_FIELDS e permissões
+ * Company Profile Form â€” FormulÃ¡rio de perfil de empresa
+ * Renderiza campos baseado em COMPANY_PROFILE_FIELDS e permissÃµes
  */
 
 import { useState } from "react";
@@ -69,7 +69,7 @@ export function CompanyProfileForm({
   if (visibleFields.length === 0) {
     return (
       <div className="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-700">
-        Sem campos visíveis para este modo.
+        Sem campos visÃ­veis para este modo.
       </div>
     );
   }
@@ -132,3 +132,4 @@ export function CompanyProfileForm({
     </form>
   );
 }
+

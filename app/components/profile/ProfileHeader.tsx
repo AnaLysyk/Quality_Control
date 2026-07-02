@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 /**
- * Profile Header — mostra entidade + status
+ * Profile Header â€” mostra entidade + status
  */
 
 import { FiUser } from "react-icons/fi";
@@ -28,7 +28,7 @@ const modeLabels = {
   view: "Visualizando",
   edit: "Editando",
   create: "Novo",
-  "admin-edit": "Edição administrativa",
+  "admin-edit": "EdiÃ§Ã£o administrativa",
 };
 
 export function ProfileHeader({
@@ -41,7 +41,7 @@ export function ProfileHeader({
   return (
     <div className="flex items-start justify-between gap-6">
       <div className="flex items-start gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary,#011848) shadow-[0_14px_28px_rgba(1,24,72,0.12)]">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-[var(--tc-primary,#011848)] shadow-[0_14px_28px_rgba(1,24,72,0.12)]">
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt={title} className="h-full w-full object-cover" />
@@ -74,3 +74,4 @@ export function ProfileHeader({
     </div>
   );
 }
+

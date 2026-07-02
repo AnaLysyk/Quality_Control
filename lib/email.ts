@@ -528,7 +528,7 @@ Equipe Quality Control`;
                 </p>
 
                 <!-- CREDENTIALS SECTION -->
-                <div class="section-title">🔐 Suas Credenciais de Acesso</div>
+                <div class="section-title">?? Suas Credenciais de Acesso</div>
                 <div class="cred-box">
                   <div class="cred-row">
                     <span class="cred-label">Login</span>
@@ -542,7 +542,7 @@ Equipe Quality Control`;
 
                 <!-- CTA BUTTON -->
                 <div class="button-center">
-                  <a href="${loginUrl}" class="button" style="color:#ffffff !important;background:${colors.secondary};display:inline-block;padding:${spacing.md} ${spacing.xl};border-radius:8px;text-decoration:none;font-weight:${typography.fontWeight.semibold};">🚀 Acessar a Plataforma</a>
+                  <a href="${loginUrl}" class="button" style="color:#ffffff !important;background:${colors.secondary};display:inline-block;padding:${spacing.md} ${spacing.xl};border-radius:8px;text-decoration:none;font-weight:${typography.fontWeight.semibold};">?? Acessar a Plataforma</a>
                 </div>
                 <div class="link-direct">
                   Link: <code>${loginUrl}</code>
@@ -552,7 +552,7 @@ Equipe Quality Control`;
 
                 <!-- NEXT STEPS -->
                 <div class="steps">
-                  <p class="steps-title">📋 Seus Próximos Passos:</p>
+                  <p class="steps-title">?? Seus Próximos Passos:</p>
                   <div class="step">
                     <div class="step-number">1</div>
                     <div class="step-text">Acesse a plataforma com suas credenciais</div>
@@ -573,7 +573,7 @@ Equipe Quality Control`;
 
                 <!-- WARNING -->
                 <div class="warning-box">
-                  <strong>⚠️ Importante:</strong>
+                  <strong>?? Importante:</strong>
                   Esta senha é <strong>temporária</strong>. Troque-a imediatamente após seu primeiro acesso. 
                   Não compartilhe estas credenciais com outras pessoas.
                 </div>
@@ -1123,7 +1123,7 @@ Guarde este código para acompanhar o andamento da sua solicitação.`;
       </div>
 
       <div class="content">
-        <span class="badge">✓ ${contentByRole.badge}</span>
+        <span class="badge">? ${contentByRole.badge}</span>
 
         <h2>${approvedGreeting}</h2>
 
@@ -1152,7 +1152,7 @@ Guarde este código para acompanhar o andamento da sua solicitação.`;
         <div class="box">
           A senha deste acesso é a senha cadastrada no formulário de solicitação e será tratada como temporária.
           Após o primeiro acesso, é necessário alterar a senha em
-          <strong>Meu Perfil → Alterar Senha</strong>. A senha temporária ficará válida por 10 dias após a aprovação. Após esse prazo, utilize a opção <strong>“Esqueci minha senha”</strong> para recuperar o acesso.
+          <strong>Meu Perfil ? Alterar Senha</strong>. A senha temporária ficará válida por 10 dias após a aprovação. Após esse prazo, utilize a opção <strong>“Esqueci minha senha”</strong> para recuperar o acesso.
         </div>
 
         <div class="buttonWrap">
@@ -1206,7 +1206,7 @@ Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha t
     });
   }
 
-﻿  async sendAccessRejectedEmail(
+?  async sendAccessRejectedEmail(
     to: string,
     data: {
       name?: string | null;
@@ -1265,7 +1265,7 @@ Após o primeiro acesso, é necessário alterar a senha no seu perfil. A senha t
       </div>
 
       <div class="content">
-        <span class="badge">✕ Solicitação rejeitada</span>
+        <span class="badge">? Solicitação rejeitada</span>
 
         <h2>${greeting}</h2>
 
@@ -1446,3 +1446,4 @@ ${lookupUrl}`;
 }
 
 export const emailService = new EmailService();
+

@@ -1,4 +1,4 @@
-export type DashboardSignalType = "run" | "defect" | "automation" | "integration";
+﻿export type DashboardSignalType = "run" | "defect" | "automation" | "integration";
 
 export type DashboardSignalStatus =
   | "new"
@@ -569,3 +569,4 @@ export function getContextualStatusOptions(modules: DashboardModule[]): Dashboar
   if (selected.has("Integracoes")) return ["in_progress", "failed", "alert", "resolved"];
   return ["new", "analyzing", "in_progress", "blocked", "failed", "alert", "resolved"];
 }
+

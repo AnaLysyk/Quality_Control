@@ -1,4 +1,4 @@
-import {
+﻿import {
   canViewSupportBoard,
   canCreateSupportTickets,
   canCommentSupportTickets,
@@ -10,9 +10,9 @@ import {
   canManageSupportWorkflow,
 } from "../../../lib/supportAccess";
 
-describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", () => {
-  describe("Identidades Base e Papéis de Suporte", () => {
-    it("isTechnicalSupportUser: valida sinônimos de TI/Dev", () => {
+describe("supportAccess - Matriz RÃ­gida de PermissÃµes de Suporte/Chamados", () => {
+  describe("Identidades Base e PapÃ©is de Suporte", () => {
+    it("isTechnicalSupportUser: valida sinÃ´nimos de TI/Dev", () => {
       const devs = ["technical_support", "tech_support", "it_dev", "developer"];
       devs.forEach(role => {
         expect(isTechnicalSupportUser({ role })).toBe(true);
@@ -32,16 +32,16 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
       invalid.forEach(user => expect(isSupportAdminUser(user)).toBe(false));
     });
 
-    it("isSupportOperatorUser & isSupportDeveloperUser devem repassar para a base técnica (Technical Support)", () => {
+    it("isSupportOperatorUser & isSupportDeveloperUser devem repassar para a base tÃ©cnica (Technical Support)", () => {
       expect(isSupportOperatorUser({ role: "technical_support" })).toBe(true);
       expect(isSupportDeveloperUser({ role: "tech_support" })).toBe(true);
 
-      expect(isSupportOperatorUser({ role: "leader_tc" })).toBe(false); // Leader é Admin, não Operator Dev
+      expect(isSupportOperatorUser({ role: "leader_tc" })).toBe(false); // Leader Ã© Admin, nÃ£o Operator Dev
     });
   });
 
-  describe("Habilidades do Fluxo Básico do Ticket", () => {
-    it("canViewSupportBoard: exige permissão tickets.view OU support.view explícita ou via Defaults", () => {
+  describe("Habilidades do Fluxo BÃ¡sico do Ticket", () => {
+    it("canViewSupportBoard: exige permissÃ£o tickets.view OU support.view explÃ­cita ou via Defaults", () => {
       // Por explicit permission overrides
       expect(canViewSupportBoard({ permissions: { tickets: ["view"] } })).toBe(true);
       expect(canViewSupportBoard({ permissions: { support: ["view"] } })).toBe(true);
@@ -67,19 +67,19 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
     });
   });
 
-  describe("Fluxo Avançado do Operador Global (Workspace / Workflow)", () => {
-    it("canAccessGlobalSupportScope: proíbe acesso vertical se não for Support Operator (TI) OU se n tiver view_board", () => {
+  describe("Fluxo AvanÃ§ado do Operador Global (Workspace / Workflow)", () => {
+    it("canAccessGlobalSupportScope: proÃ­be acesso vertical se nÃ£o for Support Operator (TI) OU se n tiver view_board", () => {
       // Tech support COM view board
       expect(canAccessGlobalSupportScope({ role: "technical_support", permissions: { support: ["view"] } })).toBe(true);
       expect(canAccessGlobalSupportScope({ role: "it_dev" })).toBe(true); // Roles base technical_support ja tem view array em defaults se aplicavel
 
-      // Um company user mesmo forçado n pode acessar Global Space do suporte vertical
+      // Um company user mesmo forÃ§ado n pode acessar Global Space do suporte vertical
       expect(canAccessGlobalSupportScope({ role: "company_user", permissions: { support: ["view", "edit"] } })).toBe(false);
       expect(canAccessGlobalSupportScope({ role: "leader_tc" })).toBe(true);
     });
 
-    it("canManageSupportWorkflow: exige ser Operator E ter permissões para assign/status", () => {
-      // Fake operador técnico SEM overrides que adicionam assign (defaults costuma negar manipulação de forms pesados se desprovidos)
+    it("canManageSupportWorkflow: exige ser Operator E ter permissÃµes para assign/status", () => {
+      // Fake operador tÃ©cnico SEM overrides que adicionam assign (defaults costuma negar manipulaÃ§Ã£o de forms pesados se desprovidos)
       const opComWorkflow = { 
         role: "technical_support", 
         permissions: { support: ["assign", "status"] } 
@@ -99,3 +99,4 @@ describe("supportAccess - Matriz Rígida de Permissões de Suporte/Chamados", ()
     });
   });
 });
+

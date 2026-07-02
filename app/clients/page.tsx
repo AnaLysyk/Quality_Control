@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -126,10 +126,10 @@ function ClientsPage() {
                 : role === "client_admin" || role === "empresa"
                   ? "Admin"
                   : role === "it_dev" || role === "technical_support"
-                    ? "Suporte Técnico"
+                    ? "Suporte TÃ©cnico"
                     : role === "company_user"
-                      ? "Usuário da empresa"
-                      : "Usuário",
+                      ? "UsuÃ¡rio da empresa"
+                      : "UsuÃ¡rio",
             avatarUrl: typeof item.avatar_url === "string" ? item.avatar_url : null,
           };
         });
@@ -337,3 +337,4 @@ export default function ClientsPageWithGuard() {
     </RequireAuth>
   );
 }
+

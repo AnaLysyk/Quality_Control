@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { BIOMETRIC_FIXTURE_DEFINITIONS } from "@/data/biometricFixtures";
@@ -56,13 +56,13 @@ export async function GET(request: Request) {
   const user = await authenticateRequest(request);
 
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { access } = getAuthorizedContext(user);
 
   if (!access.canOpen) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const existingSlugs = new Set(resolveExistingLocalBiometricFixtures().map((fixture) => fixture.slug));
@@ -88,27 +88,27 @@ export async function POST(request: Request) {
   const user = await authenticateRequest(request);
 
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { access, allowedCompanySlugs } = getAuthorizedContext(user);
 
   if (!access.canOpen) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const parsedBody = await request.json().catch(() => null);
   const validation = RequestSchema.safeParse(parsedBody);
 
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues[0]?.message || "Payload inválido" }, { status: 400 });
+    return NextResponse.json({ error: validation.error.issues[0]?.message || "Payload invÃ¡lido" }, { status: 400 });
   }
 
   const payload = validation.data;
   const companySlug = payload.companySlug?.trim() || allowedCompanySlugs[0] || null;
 
   if (!access.hasGlobalCompanyVisibility && companySlug && !allowedCompanySlugs.includes(companySlug)) {
-    return NextResponse.json({ error: "Empresa fora do escopo da sessão" }, { status: 403 });
+    return NextResponse.json({ error: "Empresa fora do escopo da sessÃ£o" }, { status: 403 });
   }
 
   try {
@@ -149,7 +149,8 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Falha ao executar o fluxo biométrico.";
+    const message = error instanceof Error ? error.message : "Falha ao executar o fluxo biomÃ©trico.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

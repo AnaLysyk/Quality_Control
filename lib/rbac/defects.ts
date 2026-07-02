@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+﻿import { cookies } from "next/headers";
 import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
 import { SYSTEM_ROLES } from "@/lib/auth/roles";
 
@@ -45,3 +45,4 @@ export async function getMockRole(): Promise<Role | null> {
   if (raw === "leader_tc" || raw === "empresa" || raw === "testing_company_user") return raw as Role;
   return null;
 }
+

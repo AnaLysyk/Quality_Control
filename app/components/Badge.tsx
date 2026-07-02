@@ -1,15 +1,15 @@
-import clsx from "clsx";
+﻿import clsx from "clsx";
 
 const STATUS_MAP = {
   healthy: {
     className: "border border-emerald-200 bg-emerald-50 text-emerald-700",
     dotClassName: "bg-emerald-500",
-    label: "Saudável",
+    label: "SaudÃ¡vel",
   },
   attention: {
     className: "border border-amber-200 bg-amber-50 text-amber-700",
     dotClassName: "bg-amber-500",
-    label: "Atenção",
+    label: "AtenÃ§Ã£o",
   },
   risk: {
     className: "border border-rose-200 bg-rose-50 text-rose-700",
@@ -33,3 +33,4 @@ export default function Badge({ status, className }: BadgeProps) {
     </span>
   );
 }
+

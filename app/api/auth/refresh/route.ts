@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
 import { buildLocalSessionForUser } from "@/lib/auth/sessionBuilder";
@@ -118,3 +118,4 @@ export async function POST(req: Request) {
 
   return res;
 }
+

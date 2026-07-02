@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { readManualReleaseStore } from "@/data/manualData";
 import { findLocalCompanyBySlug, listLocalCompanies, listLocalLinksForCompany, listLocalUsers } from "@/lib/auth/localStore";
@@ -191,9 +191,9 @@ function resolveRunStatusMeta(
 function resolveDefectStatusMeta(value?: string | null): { label: string; tone: Tone } {
   const normalized = normalizeDefectStatus(value);
   if (normalized === "done") return { label: "Resolvido", tone: "positive" };
-  if (normalized === "in_progress") return { label: "Em análise", tone: "warning" };
+  if (normalized === "in_progress") return { label: "Em anÃ¡lise", tone: "warning" };
   if (normalized === "open") return { label: "Aberto", tone: "warning" };
-  return { label: "Em análise", tone: "neutral" };
+  return { label: "Em anÃ¡lise", tone: "neutral" };
 }
 
 function resolveCompanyStatus(company: CompanyProfileRecord): HomeStatusBadge {
@@ -217,34 +217,34 @@ function resolveIntegrationStatus(company: CompanyProfileRecord): HomeStatusBadg
   if (company.qase_is_active === true && company.qase_is_valid === true) {
     return {
       title: "Qase ativa",
-      detail: "Runs integradas podem aparecer junto das execuções manuais neste painel.",
+      detail: "Runs integradas podem aparecer junto das execuÃ§Ãµes manuais neste painel.",
       tone: "positive",
     };
   }
   if (company.jira_is_active === true && company.jira_is_valid === true) {
     return {
       title: "Jira ativa",
-      detail: "A empresa possui integração Jira ativa e pronta para sincronizacao.",
+      detail: "A empresa possui integraÃ§Ã£o Jira ativa e pronta para sincronizacao.",
       tone: "positive",
     };
   }
   if ((company.has_qase_token && (company.qase_project_codes?.length ?? 0) > 0) || company.qase_validation_status === "saved") {
     return {
       title: "Qase pendente",
-      detail: "Existe configuração salva, mas ela ainda não esta ativa para uso operacional.",
+      detail: "Existe configuraÃ§Ã£o salva, mas ela ainda nÃ£o esta ativa para uso operacional.",
       tone: "warning",
     };
   }
   if (company.has_jira_api_token || company.jira_validation_status === "saved") {
     return {
       title: "Jira pendente",
-      detail: "Existe configuração Jira salva, mas ela ainda não esta ativa.",
+      detail: "Existe configuraÃ§Ã£o Jira salva, mas ela ainda nÃ£o esta ativa.",
       tone: "warning",
     };
   }
 
   return {
-    title: "Sem integração",
+    title: "Sem integraÃ§Ã£o",
     detail: "A empresa ainda depende apenas de runs manuais neste contexto.",
     tone: "neutral",
   };
@@ -530,7 +530,7 @@ async function enrichIntegratedRunsWithQaseResponsibles(releases: ReleaseEntry[]
 function buildManualRunItem(run: Release, companySlug: string): HomeRunItem {
   const status = resolveRunStatusMeta(run.status, { closedAt: run.closedAt ?? null });
   const stats = computeStats(run.stats);
-  const applicationName = String(run.app ?? run.qaseProject ?? "Aplicação manual").trim() || "Aplicação manual";
+  const applicationName = String(run.app ?? run.qaseProject ?? "AplicaÃ§Ã£o manual").trim() || "AplicaÃ§Ã£o manual";
   const createdAt = toIso(run.createdAt);
   const updatedAt = toIso(run.updatedAt) ?? createdAt;
 
@@ -555,7 +555,7 @@ function buildManualRunItem(run: Release, companySlug: string): HomeRunItem {
     summary:
       typeof run.observations === "string" && run.observations.trim()
         ? run.observations.trim()
-        : `${stats.pass} aprovados, ${stats.fail} falhas, ${stats.blocked} bloqueados e ${stats.notRun} não executados.`,
+        : `${stats.pass} aprovados, ${stats.fail} falhas, ${stats.blocked} bloqueados e ${stats.notRun} nÃ£o executados.`,
     stats,
     releaseLabel: "Run manual",
     responsibleLabel: run.assignedToName ?? run.createdByName ?? null,
@@ -566,7 +566,7 @@ function buildIntegratedRunItem(release: ReleaseEntry, companySlug: string): Hom
   const status = resolveRunStatusMeta(release.status ?? null);
   const stats = extractReleaseStats(release);
   const applicationName =
-    String(release.app ?? release.project ?? release.qaseProject ?? "Integração").trim() || "Integração";
+    String(release.app ?? release.project ?? release.qaseProject ?? "IntegraÃ§Ã£o").trim() || "IntegraÃ§Ã£o";
   const createdAt = toIso(release.createdAt ?? release.created_at);
   const provider = inferIntegrationProvider(release);
   const responsibleLabel = resolveIntegratedReleaseResponsible(release).label;
@@ -602,7 +602,7 @@ function buildIntegratedRunItem(release: ReleaseEntry, companySlug: string): Hom
 }
 
 function buildDefectItem(defect: Release, companySlug: string): CompanyDefectItem {
-  const applicationName = String(defect.app ?? defect.qaseProject ?? defect.runName ?? "Aplicação").trim() || "Aplicação";
+  const applicationName = String(defect.app ?? defect.qaseProject ?? defect.runName ?? "AplicaÃ§Ã£o").trim() || "AplicaÃ§Ã£o";
   const status = resolveDefectStatusMeta(defect.status ?? null);
   return {
     id: defect.id || defect.slug,
@@ -805,3 +805,4 @@ async function loadCompanyMembers(companyRecord: { id: string }): Promise<Compan
     return [];
   }
 }
+

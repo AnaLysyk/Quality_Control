@@ -1,4 +1,4 @@
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import path from "node:path";
 
 function fail(message: string): never {
@@ -59,3 +59,4 @@ if (!hasKvRedis && !hasUpstashRedis) {
 }
 
 console.log("ENV_OK");
+

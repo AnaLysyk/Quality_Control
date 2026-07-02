@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -29,3 +29,4 @@ export default async function LegacyAdminRequestsPage({ searchParams }: PageProp
   const resolved = searchParams ? await searchParams : undefined;
   redirect(`/admin/access-requests${toQueryString(resolved)}`);
 }
+

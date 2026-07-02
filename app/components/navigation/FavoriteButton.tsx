@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { usePathname } from "next/navigation";
 import { FiBookmark } from "react-icons/fi";
@@ -57,3 +57,4 @@ export default function FavoriteButton({
     </button>
   );
 }
+

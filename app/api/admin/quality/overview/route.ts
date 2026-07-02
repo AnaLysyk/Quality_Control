@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 import { getAllReleases, type ReleaseEntry } from "@/release/data";
 import { getAllManualReleases } from "@/release/manualData";
 import type { Release as ManualRelease } from "@/types/release";
@@ -403,7 +403,7 @@ export async function GET(request: NextRequest) {
     const scopedByCompany = Boolean(filters.company || filters.gate || filters.query);
     const { admin, status } = await requireGlobalAdminWithStatus(request);
     if (!admin) {
-      const msg = status === 401 ? "Não autenticado" : "Sem permissão";
+      const msg = status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o";
       return apiFail(request, msg, { status, code: status === 401 ? "UNAUTHENTICATED" : "FORBIDDEN" });
     }
 
@@ -499,3 +499,4 @@ export async function GET(request: NextRequest) {
     return apiFail(request, msg, { status: 500, code: "INTERNAL", details: error, extra: { error: msg } });
   }
 }
+

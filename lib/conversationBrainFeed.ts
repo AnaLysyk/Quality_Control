@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 
@@ -49,7 +49,7 @@ const MEMORY_KEYWORDS = [
   "plano",
   "run",
   "automacao",
-  "automação",
+  "automaÃ§Ã£o",
   "reprovar",
   "aprovar",
 ];
@@ -227,3 +227,4 @@ export async function getConversationBrainFeedSummary() {
     projects: projects.size,
   };
 }
+

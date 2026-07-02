@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
 import type { AssistantScreenContext } from "../types";
@@ -20,10 +20,10 @@ function extractSearchText(message: string) {
   return message
     .replace(/\b(buscar|busca|procura|procurar|localiza|localizar|encontra|encontrar|listar|lista|mostrar|mostra)\b/gi, "")
     .replace(/\b(ticket|tickets|chamado|chamados|suporte|suportes)\b/gi, "")
-    .replace(/\b(sem|com)\s+(responsavel|responsável)\b/gi, "")
-    .replace(/\b(backlog|andamento|revisao|revisão|concluido|concluído)\b/gi, "")
-    .replace(/\b(alta|media|média|baixa|urgente)\b/gi, "")
-    .replace(/\b(status|prioridade|empresa|usuario|usuário|perfil)\b/gi, "")
+    .replace(/\b(sem|com)\s+(responsavel|responsÃ¡vel)\b/gi, "")
+    .replace(/\b(backlog|andamento|revisao|revisÃ£o|concluido|concluÃ­do)\b/gi, "")
+    .replace(/\b(alta|media|mÃ©dia|baixa|urgente)\b/gi, "")
+    .replace(/\b(status|prioridade|empresa|usuario|usuÃ¡rio|perfil)\b/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -32,16 +32,16 @@ function getPriorityEmoji(priority: string): string {
   switch (priority?.toLowerCase()) {
     case "high":
     case "alta":
-      return "🔴";
+      return "ðŸ”´";
     case "medium":
     case "media":
-    case "média":
-      return "🟠";
+    case "mÃ©dia":
+      return "ðŸŸ ";
     case "low":
     case "baixa":
-      return "🟢";
+      return "ðŸŸ¢";
     default:
-      return "⚪";
+      return "âšª";
   }
 }
 
@@ -49,19 +49,19 @@ function getStatusEmoji(status: string): string {
   switch (status?.toLowerCase()) {
     case "open":
     case "backlog":
-      return "📬";
+      return "ðŸ“¬";
     case "in_progress":
     case "andamento":
-      return "⚙️";
+      return "âš™ï¸";
     case "review":
     case "revisao":
-      return "👁️";
+      return "ðŸ‘ï¸";
     case "done":
     case "closed":
     case "concluido":
-      return "✅";
+      return "âœ…";
     default:
-      return "📋";
+      return "ðŸ“‹";
   }
 }
 
@@ -70,8 +70,8 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
   const normalized = normalizeSearch(message);
   const statusFilters = getStatusFilters(message);
   const priorityFilters = getPriorityFilters(message);
-  const wantsOnlyUnassigned = normalized.includes("sem responsavel") || normalized.includes("sem responsável");
-  const wantsOnlyAssigned = normalized.includes("com responsavel") || normalized.includes("com responsável");
+  const wantsOnlyUnassigned = normalized.includes("sem responsavel") || normalized.includes("sem responsÃ¡vel");
+  const wantsOnlyAssigned = normalized.includes("com responsavel") || normalized.includes("com responsÃ¡vel");
   const reference = extractTicketReference(message);
 
   let tickets = [...visibleTickets];
@@ -94,50 +94,50 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
       .map((i) => i.ticket);
   }
 
-  // ─── Busca sem filtros: mostrar overview ───
+  // â”€â”€â”€ Busca sem filtros: mostrar overview â”€â”€â”€
   if (!reference && !query && !hasExplicitFilters) {
     const latest = tickets.slice(0, MAX_RESULTS);
     
-    // Estatísticas rápidas
+    // EstatÃ­sticas rÃ¡pidas
     const highPriority = visibleTickets.filter((t) => t.priority === "high").length;
     const unassigned = visibleTickets.filter((t) => !t.assignedToUserId).length;
     const openCount = visibleTickets.filter((t) => t.status === "open" || t.status === "backlog").length;
 
-    const statsLine = `📊 **Visão geral:** ${visibleTickets.length} tickets | ${openCount} abertos | ${highPriority} alta prioridade | ${unassigned} sem responsável`;
+    const statsLine = `ðŸ“Š **VisÃ£o geral:** ${visibleTickets.length} tickets | ${openCount} abertos | ${highPriority} alta prioridade | ${unassigned} sem responsÃ¡vel`;
 
     return {
       tool: "search_internal_records",
       success: true,
-      summary: latest.length ? `${latest.length} chamados recentes` : "nenhum chamado visível",
+      summary: latest.length ? `${latest.length} chamados recentes` : "nenhum chamado visÃ­vel",
       actions: [
-        { kind: "prompt", label: "🔍 Buscar por ID", prompt: "Buscar o chamado SP-000001" },
-        { kind: "prompt", label: "🔴 Alta prioridade", prompt: "Buscar tickets com prioridade alta" },
-        { kind: "prompt", label: "⚠️ Sem responsável", prompt: "Buscar tickets sem responsável" },
-        { kind: "prompt", label: "✏️ Criar chamado", prompt: "Transformar este texto em chamado" },
+        { kind: "prompt", label: "ðŸ” Buscar por ID", prompt: "Buscar o chamado SP-000001" },
+        { kind: "prompt", label: "ðŸ”´ Alta prioridade", prompt: "Buscar tickets com prioridade alta" },
+        { kind: "prompt", label: "âš ï¸ Sem responsÃ¡vel", prompt: "Buscar tickets sem responsÃ¡vel" },
+        { kind: "prompt", label: "âœï¸ Criar chamado", prompt: "Transformar este texto em chamado" },
       ],
       reply: latest.length
         ? [
-            "## 🔍 Busca de Registros",
+            "## ðŸ” Busca de Registros",
             "",
             statsLine,
             "",
             "### Chamados Recentes:",
             "",
-            "| Código | Título | Status | Prioridade |",
+            "| CÃ³digo | TÃ­tulo | Status | Prioridade |",
             "|--------|--------|--------|------------|",
             ...latest.map((t) => `| **${t.code}** | ${t.title.slice(0, 40)}${t.title.length > 40 ? "..." : ""} | ${getStatusEmoji(t.status)} ${t.status} | ${getPriorityEmoji(t.priority)} ${t.priority} |`),
             "",
             "---",
-            "💡 Refine por **ID**, **status**, **prioridade** ou **responsável**",
+            "ðŸ’¡ Refine por **ID**, **status**, **prioridade** ou **responsÃ¡vel**",
           ].join("\n")
-        : "Não encontrei chamados visíveis neste escopo. Informe um **ID** como `SP-000027` ou um filtro mais específico.",
+        : "NÃ£o encontrei chamados visÃ­veis neste escopo. Informe um **ID** como `SP-000027` ou um filtro mais especÃ­fico.",
     };
   }
 
   const [visibleUsers, visibleCompanies] = await Promise.all([getVisibleUsers(user), getVisibleCompanies(user)]);
 
   const users =
-    /usuario|usuário|perfil|responsavel|responsável|login|email/.test(normalized)
+    /usuario|usuÃ¡rio|perfil|responsavel|responsÃ¡vel|login|email/.test(normalized)
       ? visibleUsers.users
           .filter((item) => {
             if (!query) return true;
@@ -158,15 +158,15 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
           .slice(0, MAX_RESULTS)
       : [];
 
-  const sections: string[] = ["## 🔍 Resultados da Busca", ""];
+  const sections: string[] = ["## ðŸ” Resultados da Busca", ""];
 
-  // ─── Tickets encontrados ───
+  // â”€â”€â”€ Tickets encontrados â”€â”€â”€
   if (tickets.length) {
     const ticketList = tickets.slice(0, MAX_RESULTS);
     sections.push(
-      `### 🎫 Chamados (${ticketList.length}${tickets.length > MAX_RESULTS ? `/${tickets.length}` : ""})`,
+      `### ðŸŽ« Chamados (${ticketList.length}${tickets.length > MAX_RESULTS ? `/${tickets.length}` : ""})`,
       "",
-      "| Código | Título | Status | Prioridade |",
+      "| CÃ³digo | TÃ­tulo | Status | Prioridade |",
       "|--------|--------|--------|------------|",
       ...ticketList.map((t) => 
         `| **${t.code}** | ${t.title.slice(0, 35)}${t.title.length > 35 ? "..." : ""} | ${getStatusEmoji(t.status)} ${t.status} | ${getPriorityEmoji(t.priority)} ${t.priority} |`
@@ -174,11 +174,11 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
     );
   }
 
-  // ─── Usuários encontrados ───
+  // â”€â”€â”€ UsuÃ¡rios encontrados â”€â”€â”€
   if (users.length) {
     sections.push(
       "",
-      `### 👤 Usuários (${users.length})`,
+      `### ðŸ‘¤ UsuÃ¡rios (${users.length})`,
       "",
       "| Nome | Login | Email |",
       "|------|-------|-------|",
@@ -186,11 +186,11 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
     );
   }
 
-  // ─── Empresas encontradas ───
+  // â”€â”€â”€ Empresas encontradas â”€â”€â”€
   if (companies.length) {
     sections.push(
       "",
-      `### 🏢 Empresas (${companies.length})`,
+      `### ðŸ¢ Empresas (${companies.length})`,
       "",
       "| Nome | Slug |",
       "|------|------|",
@@ -204,38 +204,39 @@ export async function toolSearchInternalRecords(user: AuthUser, context: Assista
       success: true,
       summary: "nenhum registro encontrado",
       actions: [
-        { kind: "prompt", label: "🔐 Explicar meu escopo", prompt: "Explicar meu escopo de acesso" },
-        { kind: "prompt", label: "📍 Resumir esta tela", prompt: "Resumir esta tela" },
-        { kind: "prompt", label: "✏️ Criar chamado", prompt: "Criar chamado a partir de texto" },
+        { kind: "prompt", label: "ðŸ” Explicar meu escopo", prompt: "Explicar meu escopo de acesso" },
+        { kind: "prompt", label: "ðŸ“ Resumir esta tela", prompt: "Resumir esta tela" },
+        { kind: "prompt", label: "âœï¸ Criar chamado", prompt: "Criar chamado a partir de texto" },
       ],
       reply: [
-        "## 🔍 Nenhum resultado encontrado",
+        "## ðŸ” Nenhum resultado encontrado",
         "",
-        "Não encontrei registros para esse critério no seu escopo.",
+        "NÃ£o encontrei registros para esse critÃ©rio no seu escopo.",
         "",
         "**Tente:**",
         "- Buscar por ID do chamado (ex: `SP-000027`)",
-        "- Filtrar por status: `abertos`, `em andamento`, `concluídos`",
-        "- Filtrar por prioridade: `alta`, `média`, `baixa`",
-        "- Buscar por empresa ou usuário específico",
+        "- Filtrar por status: `abertos`, `em andamento`, `concluÃ­dos`",
+        "- Filtrar por prioridade: `alta`, `mÃ©dia`, `baixa`",
+        "- Buscar por empresa ou usuÃ¡rio especÃ­fico",
       ].join("\n"),
     };
   }
 
-  // ─── Ações sugeridas ───
+  // â”€â”€â”€ AÃ§Ãµes sugeridas â”€â”€â”€
   const suggestedActions = tickets[0]
     ? [
-        { kind: "prompt" as const, label: `📋 Resumir ${tickets[0].code}`, prompt: `Resumir o chamado ${tickets[0].code}` },
-        { kind: "prompt" as const, label: "🧪 Gerar caso de teste", prompt: `Gerar caso de teste para ${tickets[0].code}` },
-        { kind: "prompt" as const, label: "💬 Montar comentário", prompt: `Montar comentário para ${tickets[0].code}` },
+        { kind: "prompt" as const, label: `ðŸ“‹ Resumir ${tickets[0].code}`, prompt: `Resumir o chamado ${tickets[0].code}` },
+        { kind: "prompt" as const, label: "ðŸ§ª Gerar caso de teste", prompt: `Gerar caso de teste para ${tickets[0].code}` },
+        { kind: "prompt" as const, label: "ðŸ’¬ Montar comentÃ¡rio", prompt: `Montar comentÃ¡rio para ${tickets[0].code}` },
       ]
     : buildPromptActions(context);
 
   return {
     tool: "search_internal_records",
     success: true,
-    summary: `🎫 ${tickets.length} | 👤 ${users.length} | 🏢 ${companies.length}`,
+    summary: `ðŸŽ« ${tickets.length} | ðŸ‘¤ ${users.length} | ðŸ¢ ${companies.length}`,
     actions: suggestedActions,
     reply: sections.join("\n"),
   };
 }
+

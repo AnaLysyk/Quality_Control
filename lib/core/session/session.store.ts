@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 import jwt from "jsonwebtoken";
 
 import { getRedis } from "@/lib/redis";
@@ -256,3 +256,4 @@ export async function getAccessContext(req: Request): Promise<AccessContext | nu
     companySlugs,
   };
 }
+

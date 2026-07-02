@@ -1,4 +1,4 @@
-import type { SystemPermission } from "@/lib/navigation/navigation.types";
+﻿import type { SystemPermission } from "@/lib/navigation/navigation.types";
 import type { BrainNavigationTarget, BrainNodeActionId } from "@/lib/brain/actions";
 
 export type BrainEntitySourceType =
@@ -320,3 +320,4 @@ export function getBrainEntityRegistryEntry(id: string | null | undefined) {
 export function listBrainEntityRegistry() {
   return brainEntityRegistry;
 }
+

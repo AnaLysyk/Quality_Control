@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { env } from "node:process";
 
 const email = env.PLAYWRIGHT_EMAIL || "";
@@ -18,3 +18,4 @@ test.describe("Prod smoke", () => {
     await expect(page.locator("text=Modo mock")).toHaveCount(0);
   });
 });
+

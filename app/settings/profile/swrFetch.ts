@@ -1,4 +1,4 @@
-export const profileSwrOptions = {
+﻿export const profileSwrOptions = {
   revalidateOnFocus: false,
   revalidateOnReconnect: false,
   revalidateIfStale: false,
@@ -23,3 +23,4 @@ export async function swrProfileFetcher(input: string | readonly [string, string
 
   return payload;
 }
+

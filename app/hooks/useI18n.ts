@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback } from "react";
 import { useAppSettings } from "@/context/AppSettingsContext";
@@ -13,3 +13,4 @@ export function useI18n() {
 
   return { t, language };
 }
+

@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 const LoginIdentifierSchema = z.string().trim().min(1).max(255);
 
@@ -110,3 +110,4 @@ export const AuthMeResponseSchema = z
   .strip();
 
 export type AuthMeResponse = z.infer<typeof AuthMeResponseSchema>;
+

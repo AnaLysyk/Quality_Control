@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+﻿import dotenv from "dotenv";
 import { IntegrationType } from "@prisma/client";
 import { prisma } from "@/lib/prismaClient";
 
@@ -65,3 +65,4 @@ main().catch((err) => {
   console.error("Migration failed:", err);
   prisma.$disconnect().finally(() => process.exit(1));
 });
+

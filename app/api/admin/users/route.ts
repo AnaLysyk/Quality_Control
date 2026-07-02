@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
 import { hashPasswordSha256 } from "@/lib/passwordHash";
@@ -51,7 +51,7 @@ function slugifyLoginSeed(value?: string | null) {
     .replace(/^\.+|\.+$/g, "")
     .replace(/\.{2,}/g, ".");
 
-  return normalized || "usuário";
+  return normalized || "usuÃ¡rio";
 }
 
 function buildUniqueLogin(
@@ -88,7 +88,7 @@ function canManageInstitutionalProfiles(
 export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
 
   const resolvedRole = normalizeLegacyRole(access.role);
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Sem empresa vinculada" }, { status: 403 });
     }
     if (!canManageOwnCompanyUsers) {
-      return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
     }
     const items = await listAdminUserItems({ companyId: access.companyId });
     return NextResponse.json({ items }, { status: 200 });
@@ -127,12 +127,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
   const access = await getAccessContext(req);
   const userAccess = await validarAcessoUsuariosNoServidor(access);
   if (!userAccess.canCreateUsers) {
-    return NextResponse.json({ error: "Sem permissão para criar usuários" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para criar usuÃ¡rios" }, { status: 403 });
   }
   const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
 
@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
     clientId = testingCompany?.id ?? null;
     if (!clientId) {
       return NextResponse.json(
-        { error: "Testing Company não encontrada para vínculo automático" },
+        { error: "Testing Company nÃ£o encontrada para vÃ­nculo automÃ¡tico" },
         { status: 409 },
       );
     }
@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Nome e e-mail sao obrigatorios" }, { status: 400 });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: "E-mail inválido" }, { status: 400 });
+    return NextResponse.json({ error: "E-mail invÃ¡lido" }, { status: 400 });
   }
   if (wantsGlobalAdmin && !canManageProfiles) {
     return NextResponse.json({ error: "Somente Lider TC pode criar perfis privilegiados" }, { status: 403 });
@@ -188,25 +188,25 @@ export async function POST(req: NextRequest) {
   if (clientId) {
     const selectedCompany = await findLocalCompanyById(clientId);
     if (!selectedCompany) {
-      return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Empresa nÃ£o encontrada" }, { status: 404 });
     }
   }
   if (editableProfileNeedsCompany(profileRole) && !clientId) {
-    return NextResponse.json({ error: "Empresa obrigatória para este perfil" }, { status: 400 });
+    return NextResponse.json({ error: "Empresa obrigatÃ³ria para este perfil" }, { status: 400 });
   }
 
   const users = await listLocalUsers();
   const login = buildUniqueLogin(
     users,
     rawLogin,
-    fullName || name || email.split("@")[0] || "usuário",
+    fullName || name || email.split("@")[0] || "usuÃ¡rio",
   );
 
   if (users.some((user) => normalizeLogin(user.email) === email)) {
-    return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
   }
   if (users.some((user) => normalizeLogin(user.user ?? user.email) === login)) {
-    return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
   }
 
   // Generate a readable temporary password for new users
@@ -234,10 +234,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
     }
     throw err;
   }
@@ -284,19 +284,19 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
   const access = await getAccessContext(req);
   const userAccess = await validarAcessoUsuariosNoServidor(access);
   if (!userAccess.canEditUsers) {
-    return NextResponse.json({ error: "Sem permissão para editar usuários" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para editar usuÃ¡rios" }, { status: 403 });
   }
   const canManageProfiles = canManageInstitutionalProfiles(access, userAccess);
 
   const body = await req.json().catch(() => null);
   const userId = typeof body?.id === "string" ? body.id : "";
   if (!userId) {
-    return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "id obrigatÃ³rio" }, { status: 400 });
   }
 
   const name = typeof body?.name === "string" ? body.name.trim() : null;
@@ -336,21 +336,21 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Somente Lider TC pode promover perfis privilegiados" }, { status: 403 });
   }
   if (clientId && !selectedCompany) {
-    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa nÃ£o encontrada" }, { status: 404 });
   }
 
   const existingLinks = rawRole ? await listLocalLinksForUser(userId) : [];
   if (rawRole && editableProfileNeedsCompany(profileRole) && !clientId && existingLinks.length === 0) {
-    return NextResponse.json({ error: "Empresa obrigatória para este perfil" }, { status: 400 });
+    return NextResponse.json({ error: "Empresa obrigatÃ³ria para este perfil" }, { status: 400 });
   }
 
   if (email || login) {
     const users = await listLocalUsers();
     if (email && users.some((user) => user.id !== userId && normalizeLogin(user.email) === email)) {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
     }
     if (login && users.some((user) => user.id !== userId && normalizeLogin(user.user ?? user.email) === login)) {
-      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
     }
   }
   let updated = null;
@@ -380,16 +380,16 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
     }
     throw err;
   }
 
   if (!updated) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
   }
 
   if (rawRole && !editableProfileNeedsCompany(profileRole) && existingLinks.length > 0) {
@@ -419,3 +419,4 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
+

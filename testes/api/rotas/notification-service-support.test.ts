@@ -150,3 +150,4 @@ describe("notificationService support recipients", () => {
     expect(recipients).not.toContain("tc-linked-1");
   });
 });
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AutomationCaseDefinition, AutomationCaseStatus } from "@/data/automationCases";
 import type { Release } from "@/types/release";
@@ -342,3 +342,4 @@ export async function buildManualAutomationIndex(companySlug: string): Promise<M
     executions,
   };
 }
+

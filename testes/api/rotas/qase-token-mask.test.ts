@@ -1,4 +1,4 @@
-import { maskQaseToken } from "@/lib/qaseTokenMask";
+﻿import { maskQaseToken } from "@/lib/qaseTokenMask";
 
 describe("maskQaseToken", () => {
   it("returns null when token is empty", () => {
@@ -10,3 +10,4 @@ describe("maskQaseToken", () => {
     expect(maskQaseToken("abcdefghijkl")).toBe("********ijkl");
   });
 });
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ReactNode, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -73,3 +73,4 @@ export function RequireGlobalSupportOperator({ children, fallback }: RequireGlob
 
   return <>{children}</>;
 }
+

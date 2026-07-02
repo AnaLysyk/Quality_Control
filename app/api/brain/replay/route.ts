@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getSubgraph } from "@/lib/brain";
 import { assertBrainNodeAccess, filterBrainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
@@ -106,3 +106,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Erro ao montar replay do Brain" }, { status: 500 });
   }
 }
+

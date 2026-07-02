@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/lib/jwtAuth";
+﻿import type { AuthUser } from "@/lib/jwtAuth";
 
 export type McpCapabilityProfile = {
   id: string;
@@ -24,7 +24,7 @@ export type McpServerPolicy = {
 export const MCP_CAPABILITY_PROFILES: McpCapabilityProfile[] = [
   {
     id: "playwright-exploration",
-    name: "Exploração simples",
+    name: "ExploraÃ§Ã£o simples",
     purpose: "exploration",
     caps: ["core", "testing"],
     allowedRoles: ["leader_tc", "technical_support", "testing_company_user", "company_user", "empresa"],
@@ -32,7 +32,7 @@ export const MCP_CAPABILITY_PROFILES: McpCapabilityProfile[] = [
   },
   {
     id: "playwright-login-session",
-    name: "Login/Sessão",
+    name: "Login/SessÃ£o",
     purpose: "testing",
     caps: ["core", "storage", "testing"],
     allowedRoles: ["leader_tc", "technical_support", "testing_company_user"],
@@ -157,3 +157,4 @@ export function resolveMcpPoliciesForUser(user: AuthUser) {
 
   return { servers, profiles, roles };
 }
+

@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+﻿import { createHash } from "crypto";
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import { dirname, resolve } from "path";
 
@@ -111,3 +111,4 @@ export async function hasPasswordResetToken(token: string) {
   const userId = (await redis.get<string>(hashedResetTokenKey(token))) ?? (await redis.get<string>(legacyResetTokenKey(token)));
   return Boolean(userId);
 }
+

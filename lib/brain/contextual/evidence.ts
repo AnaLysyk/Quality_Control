@@ -1,11 +1,11 @@
-import type { BrianEvidence, BrianEvidenceSourceType, BrianImpulseEnvelope } from "./types";
+﻿import type { BrianEvidence, BrianEvidenceSourceType, BrianImpulseEnvelope } from "./types";
 import { normalizeText, stableId } from "./normalizer";
 
 function compactExcerpt(value: unknown, max = 240) {
   if (typeof value !== "string") return undefined;
   const compacted = value.replace(/\s+/g, " ").trim();
   if (!compacted) return undefined;
-  return compacted.length > max ? `${compacted.slice(0, max - 1)}…` : compacted;
+  return compacted.length > max ? `${compacted.slice(0, max - 1)}â€¦` : compacted;
 }
 
 export function createEvidence(input: {
@@ -98,3 +98,4 @@ export function dedupeEvidence(evidences: BrianEvidence[]) {
   }
   return [...byId.values()];
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
 import { getCompanyDefects, type CompanyDefectRecord } from "@/lib/companyDefects";
@@ -50,3 +50,4 @@ export function pickDefectNotificationShape(defect: CompanyDefectRecord) {
     assignedToUserId: defect.assignedToUserId,
   };
 }
+

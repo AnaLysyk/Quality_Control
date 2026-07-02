@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/lib/jwtAuth";
+﻿import type { AuthUser } from "@/lib/jwtAuth";
 import {
   canAccessGlobalSupportScope,
   canCommentSupportTickets,
@@ -26,3 +26,4 @@ export function canViewSuporte(user: AuthUser | null, suporte: SuporteRecord) {
 export function canCommentSuporte(user: AuthUser | null, suporte: SuporteRecord) {
   return canViewSuporte(user, suporte) && canCommentSupportTickets(user);
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBrainGraph, useBrainStats, useBrainNodeContext, useBrainMemories, useBrainTimeline } from "@/hooks/useBrain";
@@ -6,7 +6,7 @@ import type { BrainNode, BrainEdge, BrainMemory, BrainTimelineEvent } from "@/ho
 import { useTranslation } from "@/context/LanguageContext";
 import styles from "./Brain.module.css";
 
-/* ─── Hook to detect theme ─── */
+/* â”€â”€â”€ Hook to detect theme â”€â”€â”€ */
 function useTheme() {
   const [isDark, setIsDark] = useState(true);
 
@@ -27,11 +27,11 @@ function useTheme() {
   return { isDark };
 }
 
-/* ─── Testing Company Colors ─── */
+/* â”€â”€â”€ Testing Company Colors â”€â”€â”€ */
 const TC_PRIMARY = "#011848";  // Dark blue
 const TC_ACCENT = "#ef0001";   // Red
 
-/* ─── Enhanced Color mapping per node type (dark mode) ─── */
+/* â”€â”€â”€ Enhanced Color mapping per node type (dark mode) â”€â”€â”€ */
 const NODE_COLORS_DARK: Record<string, string> = {
   Company: TC_ACCENT,          // Testing Company red
   Application: "#9c27b0",
@@ -46,7 +46,7 @@ const NODE_COLORS_DARK: Record<string, string> = {
   Note: "#ffc107",
 };
 
-/* ─── Enhanced Color mapping per node type (light mode) ─── */
+/* â”€â”€â”€ Enhanced Color mapping per node type (light mode) â”€â”€â”€ */
 const NODE_COLORS_LIGHT: Record<string, string> = {
   Company: TC_PRIMARY,         // Testing Company blue
   Application: "#7b1fa2",
@@ -79,19 +79,19 @@ const MEMORY_TYPE_COLORS_LIGHT: Record<string, string> = {
   TECHNICAL_NOTE: "#ffa000",
 };
 
-/* ─── Node type icons (emoji) ─── */
+/* â”€â”€â”€ Node type icons (emoji) â”€â”€â”€ */
 const NODE_ICONS: Record<string, string> = {
-  Company: "🏢",
-  Application: "📱",
-  Module: "📦",
-  Ticket: "🎫",
-  Defect: "🐛",
-  User: "👤",
-  Screen: "🖥️",
-  TestRun: "🧪",
-  Release: "🚀",
-  Integration: "🔗",
-  Note: "📝",
+  Company: "ðŸ¢",
+  Application: "ðŸ“±",
+  Module: "ðŸ“¦",
+  Ticket: "ðŸŽ«",
+  Defect: "ðŸ›",
+  User: "ðŸ‘¤",
+  Screen: "ðŸ–¥ï¸",
+  TestRun: "ðŸ§ª",
+  Release: "ðŸš€",
+  Integration: "ðŸ”—",
+  Note: "ðŸ“",
 };
 
 function lightenColor(hex: string, percent: number): string {
@@ -121,7 +121,7 @@ function getMemoryTypeColor(memoryType: string, isDark: boolean) {
 }
 
 function getNodeIcon(type: string) {
-  return NODE_ICONS[type] ?? "●";
+  return NODE_ICONS[type] ?? "â—";
 }
 
 function getNodeRadius(type: string, isRoot: boolean) {
@@ -131,7 +131,7 @@ function getNodeRadius(type: string, isRoot: boolean) {
   return 20;
 }
 
-/* ─── Force simulation types ─── */
+/* â”€â”€â”€ Force simulation types â”€â”€â”€ */
 type SimNode = BrainNode & { x: number; y: number; vx: number; vy: number; fx?: number | null; fy?: number | null };
 
 function initSimulation(nodes: BrainNode[], edges: BrainEdge[], width: number, height: number) {
@@ -205,7 +205,7 @@ function tickSimulation(simNodes: SimNode[], edges: BrainEdge[], width: number, 
   }
 }
 
-/* ─── Main component ─── */
+/* â”€â”€â”€ Main component â”€â”€â”€ */
 export default function BrainGraphView() {
   const { t, locale } = useTranslation();
   const { isDark } = useTheme();
@@ -384,7 +384,7 @@ export default function BrainGraphView() {
         }
       }
 
-      // Draw nodes (sorted só selected is on top)
+      // Draw nodes (sorted sÃ³ selected is on top)
       const sortedNodes = [...simNodes].sort((a, b) => {
         if (a.id === selectedNodeId) return 1;
         if (b.id === selectedNodeId) return -1;
@@ -458,7 +458,7 @@ export default function BrainGraphView() {
         ctx.fillText(icon, node.x, node.y);
 
         // Label with rounded background
-        const label = node.label.length > 22 ? node.label.slice(0, 20) + "…" : node.label;
+        const label = node.label.length > 22 ? node.label.slice(0, 20) + "â€¦" : node.label;
         ctx.font = `${isSelected ? "bold " : ""}${radius > 26 ? 14 : 12}px Inter, system-ui, sans-serif`;
         const labelWidth = ctx.measureText(label).width;
         const labelY = node.y + radius + 14;
@@ -633,7 +633,7 @@ export default function BrainGraphView() {
       <div className={styles.topBar}>
         <div className={styles.title}>
           <span className={styles.pulseOrb} />
-          {t.brain.title} — {t.brain.subtitle}
+          {t.brain.title} â€” {t.brain.subtitle}
         </div>
 
         <input
@@ -663,22 +663,22 @@ export default function BrainGraphView() {
             className={styles.filterBtn}
             onClick={() => { setRootNodeId(null); panRef.current = { x: 0, y: 0, scale: 1, dragging: false, lastX: 0, lastY: 0 }; }}
           >
-            ✕ Reset
+            âœ• Reset
           </button>
         )}
 
         {/* Stats */}
         <div className={styles.statsBar}>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.nodes ?? "—"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.nodes ?? "â€”"}</span>
             <span className={styles.statLabel}>{t.brain.stats.nodes}</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.edges ?? "—"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.edges ?? "â€”"}</span>
             <span className={styles.statLabel}>{t.brain.stats.edges}</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.memories ?? "—"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.memories ?? "â€”"}</span>
             <span className={styles.statLabel}>{t.brain.stats.memories}</span>
           </div>
         </div>
@@ -695,7 +695,7 @@ export default function BrainGraphView() {
             </div>
           ) : filteredNodes.length === 0 ? (
             <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>🧠</div>
+              <div className={styles.emptyIcon}>ðŸ§ </div>
               <span>{t.brain.empty.title}</span>
               <span className={styles.emptyDescription}>{t.brain.empty.description}</span>
             </div>
@@ -720,13 +720,13 @@ export default function BrainGraphView() {
               <div>
                 <h2 className={styles.panelTitle}>{selectedNode.label}</h2>
                 <p className={styles.panelSubtitle}>
-                  {selectedNode.type} {selectedNode.refId ? `• ${selectedNode.refId.slice(0, 8)}` : ""}
+                  {selectedNode.type} {selectedNode.refId ? `â€¢ ${selectedNode.refId.slice(0, 8)}` : ""}
                 </p>
               </div>
 
               {selectedNode.description && (
                 <div className={styles.panelSection}>
-                  <p className={styles.panelSectionTitle}>{locale === "pt" ? "Descrição" : "Description"}</p>
+                  <p className={styles.panelSectionTitle}>{locale === "pt" ? "DescriÃ§Ã£o" : "Description"}</p>
                   <p className={styles.memorySummary}>{selectedNode.description}</p>
                 </div>
               )}
@@ -747,7 +747,7 @@ export default function BrainGraphView() {
               {nodeNeighbors.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>
-                    {t.brain.panel.connections} ({nodeOutgoing.length} {locale === "pt" ? "saída" : "out"}, {nodeIncoming.length} {locale === "pt" ? "entrada" : "in"})
+                    {t.brain.panel.connections} ({nodeOutgoing.length} {locale === "pt" ? "saÃ­da" : "out"}, {nodeIncoming.length} {locale === "pt" ? "entrada" : "in"})
                   </p>
                   {nodeNeighbors.slice(0, 20).map((neighbor: BrainNode & { id: string; label: string; type: string }) => {
                     const outEdge = nodeOutgoing.find((e: { toId: string; type: string }) => e.toId === neighbor.id);
@@ -787,7 +787,7 @@ export default function BrainGraphView() {
                           }
                         }}
                       >
-                        {m.memoryType} • ★{m.importance}
+                        {m.memoryType} â€¢ â˜…{m.importance}
                       </span>
                     </div>
                   ))}
@@ -798,7 +798,7 @@ export default function BrainGraphView() {
               {nodeContext?.impact?.impactedNodes?.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>
-                    {locale === "pt" ? "Impacto" : "Impact"} ({nodeContext.impact.impactedNodes.length} {locale === "pt" ? "nós afetados" : "affected nodes"})
+                    {locale === "pt" ? "Impacto" : "Impact"} ({nodeContext.impact.impactedNodes.length} {locale === "pt" ? "nÃ³s afetados" : "affected nodes"})
                   </p>
                   {nodeContext.impact.paths.slice(0, 10).map((p: { nodeId: string; edgeType: string; distance: number }, i: number) => {
                     const impactNode = nodeContext.impact.impactedNodes.find((n: BrainNode) => n.id === p.nodeId);
@@ -830,14 +830,14 @@ export default function BrainGraphView() {
                               nodeLabel: selectedNode.label,
                               nodeType: selectedNode.type,
                               agentMode: "qa",
-                              initialMessage: `Analise o nó "${selectedNode.label}" (${selectedNode.type}): resumo, conexões, impacto e próximos passos.`,
+                              initialMessage: `Analise o nÃ³ "${selectedNode.label}" (${selectedNode.type}): resumo, conexÃµes, impacto e prÃ³ximos passos.`,
                             },
                           }),
                         );
                       }
                     }}
                   >
-                    🧠 Perguntar para IA sobre este nó
+                    ðŸ§  Perguntar para IA sobre este nÃ³
                   </button>
                 </div>
               )}
@@ -846,7 +846,7 @@ export default function BrainGraphView() {
               {timeline.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>
-                    {locale === "pt" ? "Histórico" : "History"} ({timeline.length})
+                    {locale === "pt" ? "HistÃ³rico" : "History"} ({timeline.length})
                   </p>
                   <div className={styles.timelineList}>
                     {timeline.slice(0, 15).map((entry) => (
@@ -879,11 +879,12 @@ export default function BrainGraphView() {
         ))}
         <div className={styles.legendHint}>
           {locale === "pt"
-            ? "Clique = selecionar • Duplo clique = explorar • Scroll = zoom • Arrastar = mover"
-            : "Click = select • Double click = explore • Scroll = zoom • Drag = move"
+            ? "Clique = selecionar â€¢ Duplo clique = explorar â€¢ Scroll = zoom â€¢ Arrastar = mover"
+            : "Click = select â€¢ Double click = explore â€¢ Scroll = zoom â€¢ Drag = move"
           }
         </div>
       </div>
     </div>
   );
 }
+

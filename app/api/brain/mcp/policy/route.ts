@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
 import { resolveMcpPoliciesForUser } from "@/lib/brain/mcpPolicy";
@@ -11,3 +11,4 @@ export async function GET(req: Request) {
 
   return NextResponse.json(resolveMcpPoliciesForUser(accessResult.context.user));
 }
+

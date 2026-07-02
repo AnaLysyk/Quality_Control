@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+﻿import type { Page } from "@playwright/test";
 
 import { expect, test } from "../../../support/fixtures/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
@@ -45,14 +45,14 @@ async function assertCanonicalCasesLink(link: ReturnType<Page["locator"]>) {
   await expect(link).not.toHaveAttribute("href", /\/automacoes\/casos(?:[/?#]|$)/);
 }
 
-test.describe("Navegação central de casos", () => {
-  test("@case=TC-NAV-001 Sidebar Casos navega para rota canônica", async ({ context, page }) => {
+test.describe("NavegaÃ§Ã£o central de casos", () => {
+  test("@case=TC-NAV-001 Sidebar Casos navega para rota canÃ´nica", async ({ context, page }) => {
     await authenticateAutomationAccess(context);
     const { sidebarCasosLink } = await openAutomationAreaWithSidebar(page);
     await assertCanonicalCasesLink(sidebarCasosLink);
   });
 
-  test("@case=TC-NAV-002 Atalho Casos do UI Studio navega para rota canônica", async ({ context, page }) => {
+  test("@case=TC-NAV-002 Atalho Casos do UI Studio navega para rota canÃ´nica", async ({ context, page }) => {
     await authenticateAutomationAccess(context);
     const { shortcutCasosLink } = await openUiStudioWithShortcuts(page);
     await assertCanonicalCasesLink(shortcutCasosLink);
@@ -61,3 +61,4 @@ test.describe("Navegação central de casos", () => {
     await expect(page).not.toHaveURL(LEGACY_CASES_URL_REGEX);
   });
 });
+

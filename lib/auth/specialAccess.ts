@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 type UserIdentity = {
   id?: string | null;
@@ -54,3 +54,4 @@ export function hasForcedGlobalAccessForUser(identity: UserIdentity) {
 
   return normalizedCandidates.some((candidate) => FORCED_GLOBAL_ACCESS_KEYS.has(candidate));
 }
+

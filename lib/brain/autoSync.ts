@@ -1,14 +1,14 @@
-import "server-only";
+﻿import "server-only";
 
 import { upsertNode, connectNodes, addMemory } from "@/lib/brain";
 import { prisma } from "@/lib/prismaClient";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 
 /**
- * Auto-sync helpers — chamados após operações de negócio para
+ * Auto-sync helpers â€” chamados apÃ³s operaÃ§Ãµes de negÃ³cio para
  * manter o Brain atualizado automaticamente.
  *
- * Todas as funções são fire-and-forget (não lançam erros ao caller).
+ * Todas as funÃ§Ãµes sÃ£o fire-and-forget (nÃ£o lanÃ§am erros ao caller).
  */
 
 export async function brainOnTicketCreated(ticket: {
@@ -37,7 +37,7 @@ export async function brainOnTicketCreated(ticket: {
       },
     });
 
-    // Conectar ao nó da empresa
+    // Conectar ao nÃ³ da empresa
     const companyRef = ticket.companyId ?? ticket.companySlug;
     if (companyRef) {
       const companyNode = await prisma.brainNode.findFirst({
@@ -136,11 +136,11 @@ export async function brainOnDefectCreated(defect: {
       }
     }
 
-    // Adicionar memória se defeito crítico
+    // Adicionar memÃ³ria se defeito crÃ­tico
     if (defect.severity === "CRITICAL" || defect.severity === "critical") {
       await addMemory({
-        title: `Defeito Crítico: ${defect.title}`,
-        summary: `Defeito crítico encontrado: ${defect.description?.slice(0, 200) ?? defect.title}. Requer atenção imediata.`,
+        title: `Defeito CrÃ­tico: ${defect.title}`,
+        summary: `Defeito crÃ­tico encontrado: ${defect.description?.slice(0, 200) ?? defect.title}. Requer atenÃ§Ã£o imediata.`,
         memoryType: "EXCEPTION",
         importance: 5,
         relatedNodeIds: [node.id],
@@ -233,3 +233,4 @@ export async function brainOnReleaseCreated(release: {
     console.error("[brainSync] Erro ao sincronizar release:", error);
   }
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -66,3 +66,4 @@ export function usePermissionAccess() {
     usersScope: getUsersViewScope(permissions),
   };
 }
+

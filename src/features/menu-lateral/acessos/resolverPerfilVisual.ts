@@ -1,4 +1,4 @@
-import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type PerfilVisualInput = {
   companyRole?: string | null;
@@ -66,3 +66,4 @@ export function resolverPerfilVisual(input?: PerfilVisualInput | null): PerfilVi
 }
 
 export const resolvePerfilVisual = resolverPerfilVisual;
+

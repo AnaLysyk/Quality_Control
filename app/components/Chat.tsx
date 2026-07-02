@@ -267,7 +267,7 @@ function attachmentTone(attachment: ChatAttachment) {
   if (attachment.kind === "system") return "border-sky-400/20 bg-sky-400/10 text-sky-100";
   if (attachment.kind === "link") return "border-emerald-400/20 bg-emerald-400/10 text-emerald-100";
   if (attachment.kind === "note") return "border-violet-400/20 bg-violet-400/10 text-violet-100";
-  return "border-black/10 bg-(--tc-surface-alt) text-(--tc-text-primary) dark:border-white/12 dark:bg-white/8 dark:text-white";
+  return "border-black/10 bg-[var(--tc-surface-alt)] text-[var(--tc-text-primary)] dark:border-white/12 dark:bg-white/8 dark:text-white";
 }
 
 function ContactRow({
@@ -287,8 +287,8 @@ function ContactRow({
       onClick={() => onSelect(contact.id)}
       className={`group flex w-full items-start gap-3 rounded-[20px] border px-3 py-3 text-left transition ${
         active
-          ? "border-black/16 bg-(--tc-surface) text-(--tc-text-primary) shadow-[0_12px_26px_rgba(1,24,72,0.10)] dark:border-white/16 dark:bg-white/10 dark:text-white dark:shadow-[0_12px_26px_rgba(1,24,72,0.24)]"
-          : "border-transparent bg-transparent text-(--tc-text-primary) hover:border-black/10 hover:bg-black/2 dark:text-white/82 dark:hover:border-white/10 dark:hover:bg-white/6 dark:hover:text-white"
+          ? "border-black/16 bg-[var(--tc-surface)] text-[var(--tc-text-primary)] shadow-[0_12px_26px_rgba(1,24,72,0.10)] dark:border-white/16 dark:bg-white/10 dark:text-white dark:shadow-[0_12px_26px_rgba(1,24,72,0.24)]"
+          : "border-transparent bg-transparent text-[var(--tc-text-primary)] hover:border-black/10 hover:bg-black/2 dark:text-white/82 dark:hover:border-white/10 dark:hover:bg-white/6 dark:hover:text-white"
       }`}
     >
       <UserAvatar
@@ -306,18 +306,18 @@ function ContactRow({
             <div className="truncate text-xs leading-5 opacity-65">{getContactSubtitle(contact)}</div>
           </div>
           {recent ? (
-            <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/68">
+            <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/68">
               Recente
             </span>
           ) : null}
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/72">
+          <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/72">
             {getContactRoleLabel(contact)}
           </span>
           {getCompanySummary(contact) ? (
-            <span className="inline-flex max-w-full rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/72">
+            <span className="inline-flex max-w-full rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/72">
               <span className="truncate">{getCompanySummary(contact)}</span>
             </span>
           ) : null}
@@ -325,7 +325,7 @@ function ContactRow({
       </div>
 
       <FiChevronRight
-        className="mt-1 shrink-0 text-(--tc-text-muted) transition group-hover:text-(--tc-text-primary) dark:text-white/38 dark:group-hover:text-white"
+        className="mt-1 shrink-0 text-[var(--tc-text-muted)] transition group-hover:text-[var(--tc-text-primary)] dark:text-white/38 dark:group-hover:text-white"
         size={16}
       />
     </button>
@@ -353,8 +353,8 @@ function ThreadRow({
       onClick={() => onSelect(summary.peerId)}
       className={`group flex w-full items-start gap-3 rounded-[20px] border px-3 py-3 text-left transition ${
         active
-          ? "border-black/16 bg-(--tc-surface) text-(--tc-text-primary) shadow-[0_12px_26px_rgba(1,24,72,0.10)] dark:border-white/16 dark:bg-white/10 dark:text-white dark:shadow-[0_12px_26px_rgba(1,24,72,0.24)]"
-          : "border-transparent bg-transparent text-(--tc-text-primary) hover:border-black/10 hover:bg-black/2 dark:text-white/82 dark:hover:border-white/10 dark:hover:bg-white/6 dark:hover:text-white"
+          ? "border-black/16 bg-[var(--tc-surface)] text-[var(--tc-text-primary)] shadow-[0_12px_26px_rgba(1,24,72,0.10)] dark:border-white/16 dark:bg-white/10 dark:text-white dark:shadow-[0_12px_26px_rgba(1,24,72,0.24)]"
+          : "border-transparent bg-transparent text-[var(--tc-text-primary)] hover:border-black/10 hover:bg-black/2 dark:text-white/82 dark:hover:border-white/10 dark:hover:bg-white/6 dark:hover:text-white"
       }`}
     >
       <UserAvatar
@@ -373,13 +373,13 @@ function ThreadRow({
               {summary.messageCount} mensagem{summary.messageCount === 1 ? "" : "s"}
             </div>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-black/4 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/68">
+          <span className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-black/4 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/68">
             <FiClock size={10} />
             {formatRelative(summary.lastMessageAt)}
           </span>
         </div>
         <div className="mt-2 truncate text-xs leading-5 opacity-72">
-          <span className="font-semibold text-(--tc-text-primary) dark:text-white/88">{label}:</span> {summary.lastMessage}
+          <span className="font-semibold text-[var(--tc-text-primary)] dark:text-white/88">{label}:</span> {summary.lastMessage}
         </div>
       </div>
     </button>
@@ -864,9 +864,9 @@ export default function Chat() {
   if (loading && !user) {
     return (
       <div className="min-h-[calc(100vh-var(--topbar-h)-1rem)]">
-        <div className="h-full overflow-hidden rounded-[28px] border border-black/10 bg-(--tc-surface) px-5 py-6 text-(--tc-text-primary) shadow-[0_26px_80px_rgba(1,24,72,0.14)] dark:border-white/10 dark:bg-[#07111f] dark:text-white dark:shadow-[0_26px_80px_rgba(1,24,72,0.28)]">
+        <div className="h-full overflow-hidden rounded-[28px] border border-black/10 bg-[var(--tc-surface)] px-5 py-6 text-[var(--tc-text-primary)] shadow-[0_26px_80px_rgba(1,24,72,0.14)] dark:border-white/10 dark:bg-[#07111f] dark:text-white dark:shadow-[0_26px_80px_rgba(1,24,72,0.28)]">
           <div className="grid h-full gap-5 lg:grid-cols-[22rem_minmax(0,1fr)]">
-            <div className="rounded-3xl border border-black/10 bg-(--tc-surface-alt) p-4 dark:border-white/10 dark:bg-white/6">
+            <div className="rounded-3xl border border-black/10 bg-[var(--tc-surface-alt)] p-4 dark:border-white/10 dark:bg-white/6">
               <div className="h-10 w-48 animate-pulse rounded-full bg-black/6 dark:bg-white/10" />
               <div className="mt-4 h-11 animate-pulse rounded-2xl bg-black/6 dark:bg-white/10" />
               <div className="mt-6 space-y-3">
@@ -875,7 +875,7 @@ export default function Chat() {
                 ))}
               </div>
             </div>
-            <div className="rounded-3xl border border-black/10 bg-(--tc-surface-alt) p-4 dark:border-white/10 dark:bg-white/4">
+            <div className="rounded-3xl border border-black/10 bg-[var(--tc-surface-alt)] p-4 dark:border-white/10 dark:bg-white/4">
               <div className="h-14 w-72 animate-pulse rounded-[20px] bg-black/6 dark:bg-white/10" />
               <div className="mt-6 space-y-4">
                 {Array.from({ length: 5 }).map((_, index) => (
@@ -892,9 +892,9 @@ export default function Chat() {
   if (!user) return null;
 
   return (
-    <div className="min-h-[calc(100vh-var(--topbar-h)-1rem)] bg-(--tc-surface) text-(--page-text) lg:h-[calc(100vh-var(--topbar-h)-1rem)]">
-      <div className="flex h-full min-h-[calc(100vh-var(--topbar-h)-1rem)] flex-col overflow-hidden bg-(--tc-surface) text-(--tc-text-primary) dark:bg-[#07111f] dark:text-white lg:flex-row">
-        <aside className="flex w-full shrink-0 flex-col border-b border-black/8 bg-(--tc-surface-alt) dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,18,34,0.98)_0%,rgba(8,17,31,0.96)_100%)] lg:w-88 lg:border-b-0 lg:border-r lg:border-black/8 lg:dark:border-white/8">
+    <div className="min-h-[calc(100vh-var(--topbar-h)-1rem)] bg-[var(--tc-surface)] text-(--page-text) lg:h-[calc(100vh-var(--topbar-h)-1rem)]">
+      <div className="flex h-full min-h-[calc(100vh-var(--topbar-h)-1rem)] flex-col overflow-hidden bg-[var(--tc-surface)] text-[var(--tc-text-primary)] dark:bg-[#07111f] dark:text-white lg:flex-row">
+        <aside className="flex w-full shrink-0 flex-col border-b border-black/8 bg-[var(--tc-surface-alt)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,18,34,0.98)_0%,rgba(8,17,31,0.96)_100%)] lg:w-88 lg:border-b-0 lg:border-r lg:border-black/8 lg:dark:border-white/8">
           <div className="border-b border-black/8 px-4 py-4 sm:px-5 dark:border-white/8">
             <div className="flex items-center gap-3">
               <UserAvatar
@@ -905,18 +905,18 @@ export default function Chat() {
                 frameClassName="border border-black/10 dark:border-white/12"
               />
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-(--tc-text-primary) dark:text-white">
+                <div className="truncate text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">
                   {activeIdentity.displayName}
                 </div>
-                <div className="truncate text-xs text-(--tc-text-muted) dark:text-white/56">
+                <div className="truncate text-xs text-[var(--tc-text-muted)] dark:text-white/56">
                   {activeIdentity.kind === "company" ? "Conta institucional" : activeIdentity.companyTagLabel ?? "Conta autenticada"}
                 </div>
               </div>
             </div>
 
             <div className="mt-4">
-              <label className="flex items-center gap-3 rounded-[20px] border border-black/10 bg-(--tc-surface) px-4 py-3 text-sm text-(--tc-text-primary) focus-within:border-black/18 focus-within:bg-(--tc-surface) dark:border-white/10 dark:bg-white/6 dark:text-white/78 dark:focus-within:border-white/18 dark:focus-within:bg-white/8">
-                <FiSearch className="shrink-0 text-(--tc-text-muted) dark:text-white/42" />
+              <label className="flex items-center gap-3 rounded-[20px] border border-black/10 bg-[var(--tc-surface)] px-4 py-3 text-sm text-[var(--tc-text-primary)] focus-within:border-black/18 focus-within:bg-[var(--tc-surface)] dark:border-white/10 dark:bg-white/6 dark:text-white/78 dark:focus-within:border-white/18 dark:focus-within:bg-white/8">
+                <FiSearch className="shrink-0 text-[var(--tc-text-muted)] dark:text-white/42" />
                 <input
                                     data-testid="chat-search-input"
                   ref={searchInputRef}
@@ -930,13 +930,13 @@ export default function Chat() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/76">
+              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/76">
                 Chatcode
               </span>
-              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/76">
+              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/76">
                 {accessLabel}
               </span>
-              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/72">
+              <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/72">
                 {contacts.length} contatos
               </span>
               <button
@@ -953,13 +953,13 @@ export default function Chat() {
                     }));
                   }
                 }}
-                className="inline-flex items-center gap-1 rounded-full border border-black/12 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-(--tc-text-muted) transition hover:border-black/20 dark:border-white/12 dark:bg-white/8 dark:text-white/72 dark:hover:border-white/20"
+                className="inline-flex items-center gap-1 rounded-full border border-black/12 bg-black/4 px-2.5 py-1 text-[10px] font-semibold text-[var(--tc-text-muted)] transition hover:border-black/20 dark:border-white/12 dark:bg-white/8 dark:text-white/72 dark:hover:border-white/20"
               >
-                🧠 IA
+                ?? IA
               </button>
             </div>
 
-            <p className="mt-3 text-xs leading-5 text-(--tc-text-muted) dark:text-white/54">{accessNote}</p>
+            <p className="mt-3 text-xs leading-5 text-[var(--tc-text-muted)] dark:text-white/54">{accessNote}</p>
 
             {error ? (
               <div className="mt-3 rounded-[18px] border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">
@@ -969,7 +969,7 @@ export default function Chat() {
 
             {search.trim() ? (
               <div className="mt-4 space-y-2">
-                <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted) dark:text-white/52">
+                <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:text-white/52">
                   <span>Atalhos da busca</span>
                   <span>Enter abre o primeiro</span>
                 </div>
@@ -980,7 +980,7 @@ export default function Chat() {
                         key={contact.id}
                         type="button"
                         onClick={() => openConversation(contact.id)}
-                        className="flex w-full items-center gap-3 rounded-[18px] border border-black/10 bg-(--tc-surface) px-3 py-2.5 text-left transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/6 dark:hover:border-white/16 dark:hover:bg-white/9"
+                        className="flex w-full items-center gap-3 rounded-[18px] border border-black/10 bg-[var(--tc-surface)] px-3 py-2.5 text-left transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/6 dark:hover:border-white/16 dark:hover:bg-white/9"
                       >
                         <UserAvatar
                           src={contact.avatar_url}
@@ -990,14 +990,14 @@ export default function Chat() {
                           frameClassName="border border-black/10 dark:border-white/10"
                         />
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-semibold text-(--tc-text-primary) dark:text-white">{contact.name}</div>
-                          <div className="truncate text-xs text-(--tc-text-muted) dark:text-white/58">{contact.user ? `@${contact.user}` : contact.email}</div>
+                          <div className="truncate text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">{contact.name}</div>
+                          <div className="truncate text-xs text-[var(--tc-text-muted)] dark:text-white/58">{contact.user ? `@${contact.user}` : contact.email}</div>
                         </div>
-                        <FiChevronRight size={14} className="shrink-0 text-(--tc-text-muted) dark:text-white/38" />
+                        <FiChevronRight size={14} className="shrink-0 text-[var(--tc-text-muted)] dark:text-white/38" />
                       </button>
                     ))
                   ) : (
-                    <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-3 text-sm text-(--tc-text-muted) dark:border-white/12 dark:bg-white/4 dark:text-white/58">
+                    <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-3 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/58">
                       Nenhum resultado direto. Tente outro nome.
                     </div>
                   )}
@@ -1009,14 +1009,14 @@ export default function Chat() {
           <div className="chat-scroll min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
             <section>
               <div className="mb-3 flex items-center justify-between gap-3 px-1">
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted) dark:text-white/52">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)] dark:text-white/52">
                   <FiInbox size={13} />
                   Recentes
                 </div>
                 <button
                   type="button"
                   onClick={() => void loadThreads()}
-                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-(--tc-surface) px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-primary) transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/6 dark:text-white/72 dark:hover:border-white/16 dark:hover:bg-white/10 dark:hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/6 dark:text-white/72 dark:hover:border-white/16 dark:hover:bg-white/10 dark:hover:text-white"
                 >
                   <FiRefreshCw size={11} />
                   Atualizar
@@ -1025,7 +1025,7 @@ export default function Chat() {
 
               <div className="space-y-1.5">
                 {threadsLoading ? (
-                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-(--tc-text-muted) dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
                     Carregando conversas...
                   </div>
                 ) : recentThreads.length > 0 ? (
@@ -1040,7 +1040,7 @@ export default function Chat() {
                     />
                   ))
                 ) : (
-                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-(--tc-text-muted) dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
                     Ainda nao ha conversas recentes.
                   </div>
                 )}
@@ -1051,18 +1051,18 @@ export default function Chat() {
 
             <section>
               <div className="mb-3 flex items-center justify-between gap-3 px-1">
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-(--tc-text-muted) dark:text-white/52">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)] dark:text-white/52">
                   <FiUsers size={13} />
                   Usuarios visiveis
                 </div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--tc-text-muted) dark:text-white/42">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-muted)] dark:text-white/42">
                   {filteredContacts.length}
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 {contactsLoading ? (
-                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-(--tc-text-muted) dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
                     Carregando contatos...
                   </div>
                 ) : filteredContacts.length > 0 ? (
@@ -1076,11 +1076,11 @@ export default function Chat() {
                     />
                   ))
                 ) : search.trim() ? (
-                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-(--tc-text-muted) dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
                     Nenhum usuário encontrado para &quot;{search.trim()}&quot;.
                   </div>
                 ) : (
-                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-(--tc-text-muted) dark:border-white/12 dark:bg-white/4 dark:text-white/56">
+                  <div className="rounded-[18px] border border-dashed border-black/12 bg-black/2 px-3 py-4 text-sm text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/4 dark:text-white/56">
                     Digite um nome para iniciar uma conversa.
                   </div>
                 )}
@@ -1090,7 +1090,7 @@ export default function Chat() {
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="border-b border-black/8 bg-(--tc-surface-alt) px-4 py-4 backdrop-blur dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,16,30,0.92)_0%,rgba(8,16,30,0.68)_100%)] xl:px-8">
+          <header className="border-b border-black/8 bg-[var(--tc-surface-alt)] px-4 py-4 backdrop-blur dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,16,30,0.92)_0%,rgba(8,16,30,0.68)_100%)] xl:px-8">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0">
                 <div className="flex min-w-0 items-center gap-4">
@@ -1103,19 +1103,19 @@ export default function Chat() {
                   />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h1 className="truncate text-2xl font-semibold tracking-tight text-(--tc-text-primary) dark:text-white">
+                      <h1 className="truncate text-2xl font-semibold tracking-tight text-[var(--tc-text-primary)] dark:text-white">
                         {selectedPeerId ? activePeerName : "Conversas"}
                       </h1>
-                      <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted) dark:border-white/10 dark:bg-white/8 dark:text-white/74">
+                      <span className="inline-flex rounded-full border border-black/10 bg-black/4 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:border-white/10 dark:bg-white/8 dark:text-white/74">
                         {selectedPeerId ? "Thread ativa" : "Pronto para iniciar"}
                       </span>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-(--tc-text-muted) dark:text-white/62">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--tc-text-muted)] dark:text-white/62">
                       {activePeerHandle ? <span>{activePeerHandle}</span> : null}
                       {activePeerCompany ? <span>{activePeerCompany}</span> : null}
                       {selectedThreadSummary ? <span>{selectedThreadSummary.messageCount} mensagens</span> : null}
                     </div>
-                    <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-muted) dark:text-white/54">
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--tc-text-muted)] dark:text-white/54">
                       {selectedPeerId
                         ? selectedThreadPreview || "Conversa pronta para receber a primeira mensagem."
                         : "Busque um usuário, arraste referências do sistema, adicione anexos e trabalhe a conversa em um fluxo contínuo."}
@@ -1129,7 +1129,7 @@ export default function Chat() {
                   type="button"
                   onClick={exportConversation}
                   disabled={!selectedPeerId}
-                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary) transition hover:border-black/16 hover:bg-black/2 disabled:cursor-not-allowed disabled:opacity-45 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 disabled:cursor-not-allowed disabled:opacity-45 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
                 >
                   <FiDownload size={14} />
                   Exportar
@@ -1138,7 +1138,7 @@ export default function Chat() {
                   type="button"
                   onClick={() => void loadMessages(selectedPeerId)}
                   disabled={!selectedPeerId}
-                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary) transition hover:border-black/16 hover:bg-black/2 disabled:cursor-not-allowed disabled:opacity-45 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 disabled:cursor-not-allowed disabled:opacity-45 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
                 >
                   <FiRefreshCw size={14} />
                   Atualizar
@@ -1146,7 +1146,7 @@ export default function Chat() {
                 <button
                   type="button"
                   onClick={clearConversation}
-                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary) transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/8 dark:text-white/76 dark:hover:border-white/16 dark:hover:bg-white/12 dark:hover:text-white"
                 >
                   <FiX size={14} />
                   Trocar usuário
@@ -1182,7 +1182,7 @@ export default function Chat() {
                       return (
                         <div key={entry.key} className="flex items-center gap-3 py-2">
                           <div className="h-px flex-1 bg-black/10 dark:bg-white/8" />
-                          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted) dark:text-white/40">
+                          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)] dark:text-white/40">
                             {entry.label}
                           </div>
                           <div className="h-px flex-1 bg-black/10 dark:bg-white/8" />
@@ -1208,9 +1208,9 @@ export default function Chat() {
                           frameClassName="border border-black/10 dark:border-white/10"
                         />
 
-                        <div className="min-w-0 flex-1 text-(--tc-text-primary) dark:text-white">
-                          <div className="flex flex-wrap items-baseline gap-2 text-xs text-(--tc-text-muted) dark:text-white/56">
-                            <span className="text-sm font-semibold text-(--tc-text-primary) dark:text-white">
+                        <div className="min-w-0 flex-1 text-[var(--tc-text-primary)] dark:text-white">
+                          <div className="flex flex-wrap items-baseline gap-2 text-xs text-[var(--tc-text-muted)] dark:text-white/56">
+                            <span className="text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">
                               {isMine ? "Voce" : item.senderName}
                             </span>
                             <span>{formatClock(item.createdAt)}</span>
@@ -1234,12 +1234,12 @@ export default function Chat() {
                 ) : (
                   <div className="flex min-h-96 flex-col items-center justify-center rounded-3xl border border-dashed border-black/12 bg-black/2 px-6 text-center dark:border-white/10 dark:bg-white/4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-black/10 bg-black/4 dark:border-white/10 dark:bg-white/8">
-                      <FiMessageSquare size={22} className="text-(--tc-text-muted) dark:text-white/72" />
+                      <FiMessageSquare size={22} className="text-[var(--tc-text-muted)] dark:text-white/72" />
                     </div>
-                    <h2 className="mt-4 text-xl font-semibold text-(--tc-text-primary) dark:text-white">
+                    <h2 className="mt-4 text-xl font-semibold text-[var(--tc-text-primary)] dark:text-white">
                       Primeira mensagem pronta para sair
                     </h2>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-(--tc-text-muted) dark:text-white/56">
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--tc-text-muted)] dark:text-white/56">
                       Escreva, arraste um link ou anexe uma referencia. Essa thread foi limpa para funcionar como uma conversa continua, sem capas e sem blocos pesados.
                     </p>
                   </div>
@@ -1249,12 +1249,12 @@ export default function Chat() {
             ) : (
               <div className="flex min-h-full w-full flex-col items-center justify-center rounded-3xl border border-dashed border-black/12 bg-black/2 px-6 text-center dark:border-white/10 dark:bg-white/4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-[22px] border border-black/10 bg-black/4 dark:border-white/10 dark:bg-white/8">
-                  <FiUsers size={24} className="text-(--tc-text-muted) dark:text-white/72" />
+                  <FiUsers size={24} className="text-[var(--tc-text-muted)] dark:text-white/72" />
                 </div>
-                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-(--tc-text-primary) dark:text-white">
+                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--tc-text-primary)] dark:text-white">
                   Digite o nome de um usuário
                 </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-(--tc-text-muted) dark:text-white/56">
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--tc-text-muted)] dark:text-white/56">
                   A conversa abre na hora com foto, escopo de acesso e histórico. Se quiser acelerar ainda mais, arraste uma tela do sistema para o composer e comece pelo contexto.
                 </p>
                 {filteredContacts.length > 0 ? (
@@ -1264,7 +1264,7 @@ export default function Chat() {
                         key={contact.id}
                         type="button"
                         onClick={() => openConversation(contact.id)}
-                        className="inline-flex items-center gap-3 rounded-full border border-black/10 bg-(--tc-surface) px-4 py-2 text-sm font-semibold text-(--tc-text-primary) transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/8 dark:text-white dark:hover:border-white/16 dark:hover:bg-white/12"
+                        className="inline-flex items-center gap-3 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/2 dark:border-white/10 dark:bg-white/8 dark:text-white dark:hover:border-white/16 dark:hover:bg-white/12"
                       >
                         <UserAvatar
                           src={contact.avatar_url}
@@ -1282,7 +1282,7 @@ export default function Chat() {
             )}
           </div>
 
-          <div className="border-t border-black/8 bg-(--tc-surface-alt) px-4 py-4 backdrop-blur dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,16,30,0.86)_0%,rgba(6,12,24,0.98)_100%)] xl:px-8">
+          <div className="border-t border-black/8 bg-[var(--tc-surface-alt)] px-4 py-4 backdrop-blur dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,16,30,0.86)_0%,rgba(6,12,24,0.98)_100%)] xl:px-8">
             <div className="w-full">
               {draftAttachments.length > 0 ? (
                 <div className="mb-3 grid gap-2 sm:grid-cols-2">
@@ -1315,13 +1315,13 @@ export default function Chat() {
                   }
                 }}
                 onDrop={handleComposerDrop}
-                className="relative overflow-hidden rounded-xl border border-black/10 bg-(--tc-surface) px-3 py-3 shadow-[0_10px_28px_rgba(1,24,72,0.08)] dark:border-white/10 dark:bg-white/5 dark:shadow-none"
+                className="relative overflow-hidden rounded-xl border border-black/10 bg-[var(--tc-surface)] px-3 py-3 shadow-[0_10px_28px_rgba(1,24,72,0.08)] dark:border-white/10 dark:bg-white/5 dark:shadow-none"
               >
                 {draggingComposer ? (
                   <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-black/18 bg-[rgba(255,255,255,0.78)] text-center backdrop-blur dark:border-white/28 dark:bg-[#07111f]/84">
                     <div>
-                      <div className="text-sm font-semibold text-(--tc-text-primary) dark:text-white">Solte aqui para anexar</div>
-                      <div className="mt-2 text-xs text-(--tc-text-muted) dark:text-white/60">
+                      <div className="text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">Solte aqui para anexar</div>
+                      <div className="mt-2 text-xs text-[var(--tc-text-muted)] dark:text-white/60">
                         Arquivos, links e referências do sistema entram na conversa como contexto.
                       </div>
                     </div>
@@ -1329,13 +1329,13 @@ export default function Chat() {
                 ) : null}
 
                 <div className="flex flex-col gap-3">
-                  <div className="flex flex-col gap-3 rounded-xl border border-dashed border-black/12 bg-black/2.5 px-3 py-3 text-(--tc-text-muted) dark:border-white/12 dark:bg-white/[0.035] sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-3 rounded-xl border border-dashed border-black/12 bg-black/2.5 px-3 py-3 text-[var(--tc-text-muted)] dark:border-white/12 dark:bg-white/[0.035] sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
-                      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-(--tc-surface) text-(--tc-text-primary) dark:border-white/10 dark:bg-white/8 dark:text-white">
+                      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-[var(--tc-surface)] text-[var(--tc-text-primary)] dark:border-white/10 dark:bg-white/8 dark:text-white">
                         <FiPaperclip size={16} />
                       </span>
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold text-(--tc-text-primary) dark:text-white">
+                        <div className="text-sm font-semibold text-[var(--tc-text-primary)] dark:text-white">
                           Anexos e contexto da plataforma
                         </div>
                         <div className="mt-0.5 text-xs leading-5">
@@ -1347,7 +1347,7 @@ export default function Chat() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={!selectedPeerId || sending}
-                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-black/10 bg-(--tc-surface) px-4 py-2.5 text-sm font-semibold text-(--tc-text-primary) transition hover:border-black/16 hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/8 dark:text-white dark:hover:border-white/16 dark:hover:bg-white/12"
+                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-black/10 bg-[var(--tc-surface)] px-4 py-2.5 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-black/16 hover:bg-black/3 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/8 dark:text-white dark:hover:border-white/16 dark:hover:bg-white/12"
                     >
                       <FiPaperclip size={14} />
                       Anexar
@@ -1370,23 +1370,23 @@ export default function Chat() {
                     }
                     rows={3}
                     disabled={!selectedPeerId || sending}
-                    className="w-full resize-none rounded-lg border-0 bg-transparent px-2 py-2 text-sm leading-6 text-(--tc-text-primary) outline-none placeholder:text-[color-mix(in_srgb,var(--tc-text-muted)_70%,transparent)] disabled:cursor-not-allowed disabled:opacity-70 dark:text-white dark:placeholder:text-white/34"
+                    className="w-full resize-none rounded-lg border-0 bg-transparent px-2 py-2 text-sm leading-6 text-[var(--tc-text-primary)] outline-none placeholder:text-[color-mix(in_srgb,var(--tc-text-muted)_70%,transparent)] disabled:cursor-not-allowed disabled:opacity-70 dark:text-white dark:placeholder:text-white/34"
                   />
 
                   <div className="flex flex-col gap-3 border-t border-black/8 pt-3 dark:border-white/8 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="text-xs leading-5 text-(--tc-text-muted) dark:text-white/54">
+                    <div className="text-xs leading-5 text-[var(--tc-text-muted)] dark:text-white/54">
                       Enter envia, Shift+Enter quebra linha. Arraste qualquer contexto da plataforma para dentro desta área.
                     </div>
                     <div className="flex items-center gap-3">
                       {sending ? (
-                        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted) dark:text-white/48">
+                        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)] dark:text-white/48">
                           Enviando...
                         </span>
                       ) : null}
                       <button
                         type="submit"
                         disabled={!selectedPeerId || (!message.trim() && draftAttachments.length === 0) || sending}
-                        className="inline-flex items-center gap-2 rounded-full bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-full bg-[var(--tc-accent,#ef0001)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <FiSend size={14} />
                         Enviar mensagem
@@ -1412,3 +1412,4 @@ export default function Chat() {
     </div>
   );
 }
+

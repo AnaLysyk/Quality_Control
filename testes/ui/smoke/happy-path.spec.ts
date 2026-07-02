@@ -1,8 +1,8 @@
-import { expect, test } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("happy path mocks", () => {
-  test("admin Ã© redirecionado para /admin", async ({ page, context }) => {
+  test("admin ÃƒÂ© redirecionado para /admin", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "admin",
     });
@@ -36,3 +36,4 @@ test.describe("happy path mocks", () => {
     }
   });
 });
+

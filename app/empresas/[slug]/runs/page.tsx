@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -91,10 +91,10 @@ type UnifiedRun = {
 
 const PROFILE_LABEL: Record<string, string> = {
   empresa: "Empresa",
-  technical_support: "Suporte Técnico",
-  leader_tc: "Líder TC",
-  testing_company_user: "Usuário TC",
-  company_user: "Usuário da Empresa",
+  technical_support: "Suporte TÃ©cnico",
+  leader_tc: "LÃ­der TC",
+  testing_company_user: "UsuÃ¡rio TC",
+  company_user: "UsuÃ¡rio da Empresa",
 };
 
 function normalizeKey(value: unknown) {
@@ -361,7 +361,7 @@ function passRateColor(rate: number | null) {
 
 function statusColor(label: string) {
   const l = label.toLowerCase();
-  if (["concluída", "completed"].some((s) => l.includes(s))) return "bg-emerald-500/20 text-emerald-800 border-emerald-500/40";
+  if (["concluÃ­da", "completed"].some((s) => l.includes(s))) return "bg-emerald-500/20 text-emerald-800 border-emerald-500/40";
   if (["andamento", "progress"].some((s) => l.includes(s))) return "bg-blue-500/20 text-blue-800 border-blue-500/40";
   if (["risco", "risk", "falha", "fail"].some((s) => l.includes(s))) return "bg-rose-500/20 text-rose-800 border-rose-500/40";
   if (["bloqueada", "blocked"].some((s) => l.includes(s))) return "bg-amber-500/20 text-amber-800 border-amber-500/40";
@@ -414,7 +414,7 @@ export default function CompanyRunsPage() {
           if (toTs > 0) timeParams += `&to_start_time=${encodeURIComponent(String(toTs))}`;
         }
 
-        // Fetch scoped sources in parallel first — fallbacks are lazy
+        // Fetch scoped sources in parallel first â€” fallbacks are lazy
         const [manualScopedResult, integratedScopedResult, applicationsResult, releasesAllResult] = await Promise.allSettled([
           fetchApi(`/api/releases-manual?clientSlug=${encodeURIComponent(currentCompanySlug)}&kind=run`)
             .then((r) => {
@@ -618,7 +618,7 @@ export default function CompanyRunsPage() {
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 py-2 text-center text-sm font-bold text-[#011848] shadow-[0_2px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-[#f0f4ff] sm:justify-start"
         >
           <FiBookOpen className="h-4 w-4 shrink-0" />
-          Abrir documentação do código
+          Abrir documentaÃ§Ã£o do cÃ³digo
         </Link>
         <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
           <FiShield className="h-4 w-4 shrink-0" />
@@ -644,14 +644,14 @@ export default function CompanyRunsPage() {
 
   return (
     <div className="w-full space-y-4 py-4 sm:py-6" data-testid="test-run-repository">
-        {/* â”€â”€ Header â”€â”€ */}
-        <header className="rounded-[28px] border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-5 shadow-sm sm:p-6">
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Header Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        <header className="rounded-[28px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">{t("runsPage.kicker")}</p>
-              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-(--tc-text,#0b1a3c)">{t("runsPage.title")}</h1>
-              <p className="mt-1 max-w-xl text-sm text-(--tc-text-muted,#6b7280)">{t("runsPage.subtitle")}</p>
-              <p data-testid="test-run-context-chip" className="mt-2 inline-flex rounded-full border border-(--tc-border,#e5e7eb) bg-white px-3 py-1 text-xs font-bold">
+              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[var(--tc-accent,#ef0001)]">{t("runsPage.kicker")}</p>
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[var(--tc-text,#0b1a3c)]">{t("runsPage.title")}</h1>
+              <p className="mt-1 max-w-xl text-sm text-[var(--tc-text-muted,#6b7280)]">{t("runsPage.subtitle")}</p>
+              <p data-testid="test-run-context-chip" className="mt-2 inline-flex rounded-full border border-[var(--tc-border,#e5e7eb)] bg-white px-3 py-1 text-xs font-bold">
                 {roleLabel}
                 {companySlug ? ` - ${companySlug}` : ""}
               </p>
@@ -662,10 +662,10 @@ export default function CompanyRunsPage() {
                 { label: t("runsPage.manualLabel"), value: totals.manual, icon: <FiLayers className="h-3 w-3" /> },
                 { label: t("runsPage.integratedLabel"), value: totals.integrated, icon: <FiActivity className="h-3 w-3" /> },
               ].map((m) => (
-                <div key={m.label} className="flex items-center gap-2 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-(--tc-text,#0b1a3c)">
+                <div key={m.label} className="flex items-center gap-2 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[var(--tc-text,#0b1a3c)]">
                   {m.icon}
                   <span>{m.value}</span>
-                  <span className="font-semibold text-(--tc-text-muted,#6b7280)">{m.label}</span>
+                  <span className="font-semibold text-[var(--tc-text-muted,#6b7280)]">{m.label}</span>
                 </div>
               ))}
               <CreateManualReleaseButton companySlug={companySlug} manualOnly onCreated={() => setReloadToken((c) => c + 1)} />
@@ -677,8 +677,8 @@ export default function CompanyRunsPage() {
           ) : null}
 
         </header>
-        {/* â”€â”€ Runs list â”€â”€ */}
-        <div className="rounded-3xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm sm:p-5" data-testid="test-run-list">
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Runs list Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm sm:p-5" data-testid="test-run-list">
           {/* Filters */}
           <div className="flex flex-col gap-3 pb-3 md:flex-row md:items-center">
             <div className="relative flex-1">
@@ -690,16 +690,16 @@ export default function CompanyRunsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("runsPage.searchPlaceholder")}
-                className="w-full rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) py-2.5 pr-4 pl-10 text-sm font-medium text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001) focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
+                className="w-full rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] py-2.5 pr-4 pl-10 text-sm font-medium text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)] focus:ring-2 focus:ring-(--tc-accent,#ef0001)/20"
               />
             </div>
             <div className="flex flex-1 flex-wrap items-center gap-2">
               <select
                 id="runs-application-filter"
-                aria-label="Filtrar por aplicação"
+                aria-label="Filtrar por aplicaÃ§Ã£o"
                 value={applicationFilter}
                 onChange={(e) => setApplicationFilter(e.target.value)}
-                className="flex-1 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-2.5 text-sm font-medium text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="flex-1 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] px-4 py-2.5 text-sm font-medium text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               >
                 <option value="all">{t("runsPage.allApplications")}</option>
                 {applicationOptions.map((application) => (
@@ -710,22 +710,22 @@ export default function CompanyRunsPage() {
               </select>
               <input
                 id="runs-date-from"
-                aria-label="Data início"
+                aria-label="Data inÃ­cio"
                 title="De"
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-2.5 text-sm font-medium text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] px-4 py-2.5 text-sm font-medium text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               />
-              <span className="text-sm font-semibold text-(--tc-text-muted,#6b7280)">{t("runsPage.dateRangeTo")}</span>
+              <span className="text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">{t("runsPage.dateRangeTo")}</span>
               <input
                 id="runs-date-to"
                 aria-label="Data fim"
-                title="Até"
+                title="AtÃ©"
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-2.5 text-sm font-medium text-(--tc-text,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] px-4 py-2.5 text-sm font-medium text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               />
               {(applicationFilter !== "all" || dateFrom || dateTo) ? (
                 <button
@@ -735,7 +735,7 @@ export default function CompanyRunsPage() {
                     setDateFrom("");
                     setDateTo("");
                   }}
-                  className="rounded-full border border-(--tc-border,#e5e7eb) px-4 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-(--tc-text-muted,#6b7280) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-text,#0b1a3c)"
+                  className="rounded-full border border-[var(--tc-border,#e5e7eb)] px-4 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-[var(--tc-text-muted,#6b7280)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-text,#0b1a3c)]"
                 >
                   {t("runsPage.clearFilters")}
                 </button>
@@ -745,7 +745,7 @@ export default function CompanyRunsPage() {
                 aria-label={t("runsPage.pageSizeAria")}
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value) || 10)}
-                className="ml-auto rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) px-4 py-2 text-sm font-medium outline-none"
+                className="ml-auto rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] px-4 py-2 text-sm font-medium outline-none"
               >
                 <option value={10}>10</option>
                 <option value={20}>20</option>
@@ -755,7 +755,7 @@ export default function CompanyRunsPage() {
           </div>
 
           {/* Runs */}
-          <div className="space-y-2 border-t border-(--tc-border,#e5e7eb) pt-3">
+          <div className="space-y-2 border-t border-[var(--tc-border,#e5e7eb)] pt-3">
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-(--tc-accent,#ef0001)" />
@@ -765,7 +765,7 @@ export default function CompanyRunsPage() {
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
                   <FiLayers className="h-7 w-7 text-slate-400" />
                 </div>
-                <p className="mt-4 text-sm font-medium text-(--tc-text-muted,#6b7280)">{t("runsPage.empty")}</p>
+                <p className="mt-4 text-sm font-medium text-[var(--tc-text-muted,#6b7280)]">{t("runsPage.empty")}</p>
               </div>
             ) : (
               pagedRuns.map((run) => {
@@ -782,7 +782,7 @@ export default function CompanyRunsPage() {
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); router.push(runHref); } }}
-                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) p-5 shadow-sm transition hover:border-(--tc-accent,#ef0001)/30 hover:shadow-md"
+                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] p-5 shadow-sm transition hover:border-[var(--tc-accent,#ef0001)]/30 hover:shadow-md"
                   >
                     {/* Pass rate left accent */}
                     <div className={`absolute left-0 top-0 h-full w-1 ${prColor.bg} transition-all group-hover:w-1.5`} />
@@ -797,7 +797,7 @@ export default function CompanyRunsPage() {
                           <Link
                             href={runHref}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-lg font-bold text-(--tc-text,#0b1a3c) transition group-hover:text-(--tc-accent,#ef0001)"
+                            className="text-lg font-bold text-[var(--tc-text,#0b1a3c)] transition group-hover:text-[var(--tc-accent,#ef0001)]"
                           >
                             {run.name}
                           </Link>
@@ -823,15 +823,15 @@ export default function CompanyRunsPage() {
                           ) : null}
                         </div>
 
-                        <div className="mt-2.5 flex flex-wrap items-center gap-3 text-sm text-(--tc-text-muted,#6b7280)">
-                          <span className="font-semibold text-(--tc-text,#0b1a3c)">{run.applicationLabel}</span>
+                        <div className="mt-2.5 flex flex-wrap items-center gap-3 text-sm text-[var(--tc-text-muted,#6b7280)]">
+                          <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationLabel}</span>
                           {run.testPlanName ? (
                             <span className="flex items-center gap-1 rounded-full border border-indigo-600/30 bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-800">
                               {run.testPlanName}
                             </span>
                           ) : null}
                           {run.responsibleLabel ? (
-                            <span>· {run.responsibleLabel}</span>
+                            <span>Â· {run.responsibleLabel}</span>
                           ) : null}
                           <span className="flex items-center gap-1">
                             <FiCalendar className="h-3.5 w-3.5" />
@@ -851,7 +851,7 @@ export default function CompanyRunsPage() {
                           ]).map((s) => (
                             <div key={s.label} className="min-w-14">
                               <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
-                              <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-(--tc-text-muted,#6b7280)">{s.label}</div>
+                              <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--tc-text-muted,#6b7280)]">{s.label}</div>
                             </div>
                           ))}
                         </div>
@@ -874,10 +874,10 @@ export default function CompanyRunsPage() {
                               />
                             </svg>
                             <span className={`absolute text-sm font-black ${prColor.text}`}>
-                              {run.passRate !== null ? `${run.passRate}%` : "—"}
+                              {run.passRate !== null ? `${run.passRate}%` : "â€”"}
                             </span>
                           </div>
-                          <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-(--tc-text-muted,#6b7280)">
+                          <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--tc-text-muted,#6b7280)]">
                             {t("runsPage.statsPassRate")}
                           </span>
                         </div>
@@ -897,11 +897,11 @@ export default function CompanyRunsPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 aria-label={t("runsPage.prevPage")}
                 title={t("runsPage.prevPage")}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) text-sm transition hover:border-(--tc-accent,#ef0001) disabled:opacity-40"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] text-sm transition hover:border-[var(--tc-accent,#ef0001)] disabled:opacity-40"
               >
                 <FiChevronLeft className="h-4 w-4" />
               </button>
-              <span className="min-w-24 text-center text-sm font-medium text-(--tc-text-muted,#6b7280)">
+              <span className="min-w-24 text-center text-sm font-medium text-[var(--tc-text-muted,#6b7280)]">
                 {t("runsPage.pageLabel", { page, totalPages })}
               </span>
               <button
@@ -909,7 +909,7 @@ export default function CompanyRunsPage() {
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 aria-label={t("runsPage.nextPage")}
                 title={t("runsPage.nextPage")}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#f9fafb) text-sm transition hover:border-(--tc-accent,#ef0001) disabled:opacity-40"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] text-sm transition hover:border-[var(--tc-accent,#ef0001)] disabled:opacity-40"
               >
                 <FiChevronRight className="h-4 w-4" />
               </button>
@@ -920,3 +920,5 @@ export default function CompanyRunsPage() {
     </div>
   );
 }
+
+

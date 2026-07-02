@@ -1,4 +1,4 @@
-import { AUTOMATION_DOMAINS } from "../../../data/automationCatalog";
+﻿import { AUTOMATION_DOMAINS } from "../../../data/automationCatalog";
 
 describe("automationCatalog", () => {
   it("should have valid catalog", () => {
@@ -6,3 +6,4 @@ describe("automationCatalog", () => {
     expect(AUTOMATION_DOMAINS).toBeDefined();
   });
 });
+

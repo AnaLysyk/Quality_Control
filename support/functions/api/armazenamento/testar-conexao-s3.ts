@@ -1,4 +1,4 @@
-import { S3Client, ListBucketsCommand } from "@aws-sdk/client-s3";
+﻿import { S3Client, ListBucketsCommand } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({
   region: process.env.S3_REGION,
@@ -13,10 +13,11 @@ const s3 = new S3Client({
 async function testS3Connection() {
   try {
     const result = await s3.send(new ListBucketsCommand({}));
-    console.log("Conexão S3 bem-sucedida! Buckets:", result.Buckets);
+    console.log("ConexÃ£o S3 bem-sucedida! Buckets:", result.Buckets);
   } catch (err) {
     console.error("Erro ao conectar no S3:", err);
   }
 }
 
 testS3Connection();
+

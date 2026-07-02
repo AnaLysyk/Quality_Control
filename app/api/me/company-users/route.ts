@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { listAdminUserItems } from "@/lib/adminUsers";
@@ -52,10 +52,10 @@ export async function GET(req: NextRequest) {
   const access = await getAccessContext(req);
   const { company, status } = await resolveCurrentCompanyFromAccess(access);
   if (!access) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
   if (!company) {
-    const message = status === 403 ? "Sem empresa vinculada" : "Empresa não encontrada";
+    const message = status === 403 ? "Sem empresa vinculada" : "Empresa nÃ£o encontrada";
     return NextResponse.json({ error: message }, { status });
   }
 
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     hasPermissionAccess(permissionAccess.permissions, "users", "view_all") ||
     hasPermissionAccess(permissionAccess.permissions, "users", "create");
   if ((!canViewUsers || !canViewCompanyUsersByScope(scopePolicy)) && !institutionalManager) {
-    return NextResponse.json({ error: "Sem permissão para visualizar usuários da empresa" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para visualizar usuÃ¡rios da empresa" }, { status: 403 });
   }
 
   const items = await listAdminUserItems({ companyId: company.id });
@@ -101,14 +101,14 @@ export async function POST(req: NextRequest) {
   const access = await getAccessContext(req);
   const { company, status } = await resolveCurrentCompanyFromAccess(access);
   if (!access) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
   if (!company || !access.companySlug) {
-    const message = status === 403 ? "Sem empresa ativa" : "Empresa não encontrada";
+    const message = status === 403 ? "Sem empresa ativa" : "Empresa nÃ£o encontrada";
     return NextResponse.json({ error: message }, { status });
   }
   if (!canManageCompanyUsers(access)) {
-    return NextResponse.json({ error: "Sem permissão para criar usuários da empresa" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para criar usuÃ¡rios da empresa" }, { status: 403 });
   }
 
   const permissionAccess = await resolvePermissionAccessForUser(access.userId);
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
     ) &&
     !institutionalManager
   ) {
-    return NextResponse.json({ error: "Sem permissão para criar usuários da empresa" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para criar usuÃ¡rios da empresa" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => null);
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Nome e e-mail sao obrigatorios" }, { status: 400 });
   }
   if (password.length < 8) {
-    return NextResponse.json({ error: "Senha obrigatória com pelo menos 8 caracteres" }, { status: 400 });
+    return NextResponse.json({ error: "Senha obrigatÃ³ria com pelo menos 8 caracteres" }, { status: 400 });
   }
 
   try {
@@ -219,10 +219,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     const code = error && typeof error === "object" ? (error as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
     }
     if (isUserScopeLockedError(error)) {
       return NextResponse.json({ error: error.message }, { status: 409 });
@@ -231,7 +231,8 @@ export async function POST(req: NextRequest) {
     const message =
       error instanceof Error && error.message.trim()
         ? error.message.trim()
-        : "Não foi possível criar o usuário da empresa";
+        : "NÃ£o foi possÃ­vel criar o usuÃ¡rio da empresa";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

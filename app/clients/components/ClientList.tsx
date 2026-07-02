@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 type ClientItem = {
   id: string;
@@ -40,3 +40,4 @@ export function ClientList({ items, selectedId, onSelect }: Props) {
     </div>
   );
 }
+

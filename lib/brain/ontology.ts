@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+﻿import type { Prisma } from "@prisma/client";
 
 export const OFFICIAL_BRAIN_NODE_TYPES = [
   "Company",
@@ -173,3 +173,4 @@ export function normalizeEdgeContract(input: {
     } as Prisma.InputJsonValue,
   };
 }
+

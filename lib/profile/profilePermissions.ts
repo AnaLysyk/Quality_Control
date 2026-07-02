@@ -1,4 +1,4 @@
-import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "@/lib/adminUserDeleteAccess";
+﻿import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "@/lib/adminUserDeleteAccess";
 import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import type { LocalAuthCompany, LocalAuthUser } from "@/lib/auth/localStore";
 import type { AuthUser } from "@/lib/jwtAuth";
@@ -105,3 +105,4 @@ export function buildProfileContext(params: {
     permissions: params.permissions,
   };
 }
+

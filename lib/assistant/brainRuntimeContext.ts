@@ -45,3 +45,4 @@ export function brainGreetingReply() {
     "Posso explicar o nó selecionado, mostrar conexões, abrir um núcleo, filtrar pendências, mostrar órfãos ou sugerir o próximo caminho."
   ].join("\n");
 }
+

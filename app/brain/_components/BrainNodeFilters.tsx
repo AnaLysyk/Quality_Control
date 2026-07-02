@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { BrainGraphFilter } from "../_types/brain.types";
 
@@ -40,3 +40,4 @@ export function BrainNodeFilters({ value, onChange }: BrainNodeFiltersProps) {
     </div>
   );
 }
+

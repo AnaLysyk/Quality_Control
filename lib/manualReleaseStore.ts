@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { Release } from "@/types/release";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
@@ -396,3 +396,4 @@ export async function writeManualReleaseCases(storeValue: Record<string, ManualC
   store.data = clone(next);
   store.initialized = true;
 }
+

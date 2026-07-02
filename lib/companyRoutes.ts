@@ -1,4 +1,4 @@
-import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
+﻿import type { FixedProfileKind } from "@/lib/fixedProfilePresentation";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 type CompanyRouteAccessInput = {
@@ -108,7 +108,7 @@ const COMPANY_SECTION_ROOTS = new Set([
   "dashboard",
   "metrics",
   "aplicacoes",
-  "aplicações",
+  "aplicaÃ§Ãµes",
   "planos-de-teste",
   "runs",
   "defeitos",
@@ -393,3 +393,4 @@ export function canonicalizeCompanyPathnameForAccess(
   if (!parsed || parsed.kind !== "internal") return null;
   return buildCompanyPathForAccess(parsed.targetSlug, parsed.route, input);
 }
+

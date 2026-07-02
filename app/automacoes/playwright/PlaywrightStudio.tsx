@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -29,10 +29,10 @@ import {
 } from "react-icons/fi";
 import { useProjectContext } from "@/lib/core/project/ProjectContext";
 
-// Monaco Editor is large — load dynamically to avoid SSR issues
+// Monaco Editor is large â€” load dynamically to avoid SSR issues
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
-// ── DB helpers ────────────────────────────────────────────────────────────────
+// â”€â”€ DB helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type DbScript = {
   id: string;
@@ -97,7 +97,7 @@ function buildTreeFromDbScripts(scripts: DbScript[]): ProjectTree | null {
   };
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type WorkflowStatus = "not_started" | "draft" | "published";
 
@@ -214,7 +214,7 @@ const RUN_STATUS_FILTER_STORAGE_KEY = "pwStudio.runStatusFilter";
 const RUN_SEARCH_QUERY_STORAGE_KEY = "pwStudio.runSearchQuery";
 const RUN_COMPARE_TO_STORAGE_KEY = "pwStudio.runCompareTo";
 
-// ── Default templates ────────────────────────────────────────────────────────
+// â”€â”€ Default templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const BASE_PAGE_TEMPLATE = `import { Page } from '@playwright/test';
 
@@ -364,7 +364,7 @@ export class ${name} extends BasePage {
 }
 `;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -504,10 +504,10 @@ function toggleFolderInTree(tree: ProjectTree, folderId: string): ProjectTree {
   return { ...tree, folders: walkFolders(tree.folders) };
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+// â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const STATUS_LABELS: Record<WorkflowStatus, string> = {
-  not_started: "Não iniciado",
+  not_started: "NÃ£o iniciado",
   draft: "Rascunho",
   published: "Publicado",
 };
@@ -531,7 +531,7 @@ function StatusBadge({ status }: { status: WorkflowStatus }) {
   );
 }
 
-// ── Terminal line colors ──────────────────────────────────────────────────────
+// â”€â”€ Terminal line colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const TERM_COLORS: Record<TerminalLine["type"], string> = {
   system: "text-blue-400",
@@ -541,7 +541,7 @@ const TERM_COLORS: Record<TerminalLine["type"], string> = {
   warn: "text-amber-400",
 };
 
-// ── Main component ────────────────────────────────────────────────────────────
+// â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Props = {
   activeCompanySlug: string | null;
@@ -588,7 +588,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   const [dbLoading, setDbLoading] = useState(false);
   const [isDark, setIsDark] = useState(true);
 
-  // ── Runs + Agents state ──────────────────────────────────────────────────
+  // â”€â”€ Runs + Agents state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [compareToRunId, setCompareToRunId] = useState<string>(() => {
     if (typeof window === "undefined") return "";
@@ -626,7 +626,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   const [testPlans, setTestPlans] = useState<TestPlanOption[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [flowCaseTitle, setFlowCaseTitle] = useState("Caso E2E Playwright - Quality Control");
-  const [flowCaseDescription, setFlowCaseDescription] = useState("Validar fluxo crítico do sistema em produção controlada.");
+  const [flowCaseDescription, setFlowCaseDescription] = useState("Validar fluxo crÃ­tico do sistema em produÃ§Ã£o controlada.");
   const [flowRepository, setFlowRepository] = useState("TestingCompany/quality-control-e2e");
   const [flowBranch, setFlowBranch] = useState("main");
   const [flowBusy, setFlowBusy] = useState(false);
@@ -639,7 +639,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
   const terminalRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
 
-  // ── Detect app theme for Monaco ──────────────────────────────────────────
+  // â”€â”€ Detect app theme for Monaco â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     const check = () =>
@@ -653,7 +653,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     return () => obs.disconnect();
   }, []);
 
-  // ── DB: load scripts on company change ────────────────────────────────────
+  // â”€â”€ DB: load scripts on company change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   useEffect(() => {
     if (!selectedCompany) return;
@@ -819,7 +819,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     [testProjects, selectedTestProjectId],
   );
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const addTerminalLine = useCallback(
     (type: TerminalLine["type"], text: string) => {
@@ -885,7 +885,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     );
     addTerminalLine(
       "success",
-      `Publicado: ${activeFile?.name} → visível para a empresa`,
+      `Publicado: ${activeFile?.name} â†’ visÃ­vel para a empresa`,
     );
     if (activeFile && selectedCompany) {
       void fetch("/api/automations/scripts", {
@@ -916,7 +916,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         : null;
     if (effectiveMode === "failed" && !sourceRunId) {
       setRightTab("runs");
-      addTerminalLine("warn", "Nenhuma execução com falha encontrada para reexecutar.");
+      addTerminalLine("warn", "Nenhuma execuÃ§Ã£o com falha encontrada para reexecutar.");
       return;
     }
 
@@ -934,7 +934,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     }
 
     try {
-      // 1. Start the run — get back a runId
+      // 1. Start the run â€” get back a runId
       const startRes = await fetch("/api/playwright/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -942,7 +942,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           companySlug: selectedCompany,
           projectId: activeProjectId ?? undefined,
           planId: selectedPlanId || undefined,
-          title: `${effectiveMode === "changed" ? "Execução changed specs" : effectiveMode === "failed" ? "Rerun failed" : "Execução manual"} — ${new Date().toLocaleString("pt-BR")}`,
+          title: `${effectiveMode === "changed" ? "ExecuÃ§Ã£o changed specs" : effectiveMode === "failed" ? "Rerun failed" : "ExecuÃ§Ã£o manual"} â€” ${new Date().toLocaleString("pt-BR")}`,
           runMode: effectiveMode,
           sourceRunId: sourceRunId ?? undefined,
           scripts,
@@ -970,7 +970,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
 
       const { runId, selectedSpecs } = (await startRes.json()) as { runId: string; selectedSpecs?: string[] };
       setActiveRunId(runId);
-      addTerminalLine("system", `► Run iniciada — ID: ${runId}`);
+      addTerminalLine("system", `â–º Run iniciada â€” ID: ${runId}`);
       if (Array.isArray(selectedSpecs)) {
         addTerminalLine("system", `Escopo: ${selectedSpecs.length} spec(s).`);
       }
@@ -986,8 +986,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           if (raw.startsWith("[system]")) type = "system";
           else if (raw.startsWith("[error]")) type = "error";
           else if (raw.startsWith("[stderr]")) type = "warn";
-          else if (raw.includes("passed") || raw.includes("✓")) type = "success";
-          else if (raw.includes("failed") || raw.includes("✘")) type = "error";
+          else if (raw.includes("passed") || raw.includes("âœ“")) type = "success";
+          else if (raw.includes("failed") || raw.includes("âœ˜")) type = "error";
           const text = raw.replace(/^\[(system|stdout|stderr|error)\]\s?/, "");
           addTerminalLine(type, text);
         } else if (data.type === "done") {
@@ -1018,7 +1018,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           source: "playwright-studio",
           agentMode: "playwright",
           panelMode: "side",
-          initialMessage: "Ajude a automatizar o projeto Quality Control em produção controlada, com foco em estabilidade e cobertura crítica.",
+          initialMessage: "Ajude a automatizar o projeto Quality Control em produÃ§Ã£o controlada, com foco em estabilidade e cobertura crÃ­tica.",
         },
       }),
     );
@@ -1071,7 +1071,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       return;
     }
     if (!flowCaseTitle.trim()) {
-      addTerminalLine("warn", "Informe o título do caso de teste.");
+      addTerminalLine("warn", "Informe o tÃ­tulo do caso de teste.");
       setRightTab("config");
       return;
     }
@@ -1097,8 +1097,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           steps: [
             {
               order: 1,
-              action: "Executar cenário crítico no ambiente de produção controlada",
-              expectedResult: "Fluxo concluído sem falhas críticas e com evidências de execução",
+              action: "Executar cenÃ¡rio crÃ­tico no ambiente de produÃ§Ã£o controlada",
+              expectedResult: "Fluxo concluÃ­do sem falhas crÃ­ticas e com evidÃªncias de execuÃ§Ã£o",
             },
           ],
         }),
@@ -1128,8 +1128,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             projectId: activeProjectId ?? undefined,
             projectCode: selectedTestProject.code ?? undefined,
             source: "manual",
-            title: `Plano Playwright ${selectedTestProject.name} — ${new Date().toLocaleDateString("pt-BR")}`,
-            description: "Plano criado automaticamente via Playwright Studio para execução em produção controlada.",
+            title: `Plano Playwright ${selectedTestProject.name} â€” ${new Date().toLocaleDateString("pt-BR")}`,
+            description: "Plano criado automaticamente via Playwright Studio para execuÃ§Ã£o em produÃ§Ã£o controlada.",
             testCaseIds: [createdCaseId],
           }),
         });
@@ -1161,7 +1161,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       }
 
       const currentSpecFile = specFiles[0]?.path ?? "tests/generated.spec.ts";
-      addTerminalLine("system", "Salvando vínculo de automação com repositório...");
+      addTerminalLine("system", "Salvando vÃ­nculo de automaÃ§Ã£o com repositÃ³rio...");
       const repoRes = await fetch(`/api/test-cases/${encodeURIComponent(createdCaseId)}/automation`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1178,10 +1178,10 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         }),
       });
       if (!repoRes.ok) {
-        const err = (await repoRes.json().catch(() => ({ message: "Falha ao salvar envio ao repositório" }))) as { message?: string };
-        addTerminalLine("warn", err.message ?? "Falha ao salvar envio ao repositório");
+        const err = (await repoRes.json().catch(() => ({ message: "Falha ao salvar envio ao repositÃ³rio" }))) as { message?: string };
+        addTerminalLine("warn", err.message ?? "Falha ao salvar envio ao repositÃ³rio");
       } else {
-        addTerminalLine("success", `Envio ao repositório registrado (${flowRepository || "repositório padrão"}).`);
+        addTerminalLine("success", `Envio ao repositÃ³rio registrado (${flowRepository || "repositÃ³rio padrÃ£o"}).`);
       }
 
       await loadPlans();
@@ -1216,7 +1216,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     if (flowCaseTitle === "Caso E2E Playwright - Quality Control") {
       setFlowCaseTitle(selectedRepositoryCase.title);
     }
-    if (flowCaseDescription === "Validar fluxo crítico do sistema em produção controlada.") {
+    if (flowCaseDescription === "Validar fluxo crÃ­tico do sistema em produÃ§Ã£o controlada.") {
       setFlowCaseDescription(selectedRepositoryCase.description ?? flowCaseDescription);
     }
   }, [selectedRepositoryCase, flowCaseTitle, flowCaseDescription]);
@@ -1367,7 +1367,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     setAddingName("");
   }, [addingName, addingIn, tree.folders]);
 
-  // ── Render: File Tree Node ─────────────────────────────────────────────────
+  // â”€â”€ Render: File Tree Node â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const DEPTH_PL = ["pl-2", "pl-5", "pl-8", "pl-11", "pl-14"] as const;
   function depthPl(depth: number) {
@@ -1484,14 +1484,14 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     );
   }
 
-  // ── Render: Config Panel ───────────────────────────────────────────────────
+  // â”€â”€ Render: Config Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function renderConfig() {
     return (
       <div className="space-y-4 overflow-auto p-4 text-[13px]">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500">
-            Prontidão
+            ProntidÃ£o
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
             <div className="rounded bg-white px-2 py-1 dark:bg-zinc-900">
@@ -1529,13 +1529,13 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               }
               className="rounded bg-white px-2 py-1 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
             >
-              Preset: Produção (abre navegador)
+              Preset: ProduÃ§Ã£o (abre navegador)
             </button>
             <button
               type="button"
               onClick={openFloatingAssistant}
               className="rounded bg-white px-2 py-1 text-[11px] font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
-              title="Abrir assistente flutuante para automação"
+              title="Abrir assistente flutuante para automaÃ§Ã£o"
             >
               Assistente flutuante
             </button>
@@ -1543,7 +1543,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         </div>
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500">
-            Fluxo Produção Quality Control
+            Fluxo ProduÃ§Ã£o Quality Control
           </p>
           <div className="mt-2 space-y-2">
             <label className="block">
@@ -1563,7 +1563,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               </select>
             </label>
             <label className="block">
-              <span className="text-slate-600 dark:text-zinc-400">Plano vinculado na execução</span>
+              <span className="text-slate-600 dark:text-zinc-400">Plano vinculado na execuÃ§Ã£o</span>
               <select
                 aria-label="Plano de teste"
                 value={selectedPlanId}
@@ -1579,7 +1579,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               </select>
             </label>
             <label className="block">
-              <span className="text-slate-600 dark:text-zinc-400">Título do caso</span>
+              <span className="text-slate-600 dark:text-zinc-400">TÃ­tulo do caso</span>
               <input
                 value={flowCaseTitle}
                 onChange={(e) => setFlowCaseTitle(e.target.value)}
@@ -1587,7 +1587,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               />
             </label>
             <label className="block">
-              <span className="text-slate-600 dark:text-zinc-400">Descrição do caso</span>
+              <span className="text-slate-600 dark:text-zinc-400">DescriÃ§Ã£o do caso</span>
               <textarea
                 value={flowCaseDescription}
                 onChange={(e) => setFlowCaseDescription(e.target.value)}
@@ -1597,7 +1597,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             </label>
             <div className="grid grid-cols-2 gap-2">
               <label className="block">
-                <span className="text-slate-600 dark:text-zinc-400">Repositório</span>
+                <span className="text-slate-600 dark:text-zinc-400">RepositÃ³rio</span>
                 <input
                   value={flowRepository}
                   onChange={(e) => setFlowRepository(e.target.value)}
@@ -1618,15 +1618,15 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               onClick={() => void handleCreateCasePlanAndRepository()}
               disabled={flowBusy || !selectedCompany || !selectedTestProject}
               className="w-full rounded-lg bg-[#ef0001] py-2 text-[12px] font-semibold text-white hover:opacity-90 disabled:opacity-50"
-              title="Criar caso, vincular a plano e registrar envio ao repositório"
+              title="Criar caso, vincular a plano e registrar envio ao repositÃ³rio"
             >
-              {flowBusy ? "Processando..." : "Criar caso + vincular plano + enviar ao repositório"}
+              {flowBusy ? "Processando..." : "Criar caso + vincular plano + enviar ao repositÃ³rio"}
             </button>
           </div>
         </div>
         <div>
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-zinc-500">
-            Configuração de Execução
+            ConfiguraÃ§Ã£o de ExecuÃ§Ã£o
           </p>
           <div className="space-y-3">
             <label className="block">
@@ -1765,11 +1765,11 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
               >
                 <option value="off">Off</option>
                 <option value="on">On</option>
-                <option value="only-on-failure">Só na falha</option>
+                <option value="only-on-failure">SÃ³ na falha</option>
               </select>
             </label>
             <label className="block">
-              <span className="text-slate-600 dark:text-zinc-400">Vídeo</span>
+              <span className="text-slate-600 dark:text-zinc-400">VÃ­deo</span>
               <select
                 value={config.videoOn}
                 onChange={(e) =>
@@ -1820,7 +1820,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     );
   }
 
-  // ── Render: Terminal ──────────────────────────────────────────────────────
+  // â”€â”€ Render: Terminal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function renderTerminal() {
     return (
@@ -1858,7 +1858,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         ))}
         {isRunning && (
           <div className="flex items-center gap-2 text-zinc-500">
-            <span className="animate-pulse">▊</span>
+            <span className="animate-pulse">â–Š</span>
           </div>
         )}
         </div>
@@ -1866,7 +1866,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     );
   }
 
-  // ── Render: Runs history ──────────────────────────────────────────────────
+  // â”€â”€ Render: Runs history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const RUN_STATUS_COLORS: Record<string, string> = {
     queued:  "text-zinc-400",
@@ -1907,7 +1907,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-zinc-800">
           <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-zinc-500">
-            Histórico
+            HistÃ³rico
           </span>
           <button
             type="button"
@@ -1920,14 +1920,14 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         </div>
         <div className="grid grid-cols-1 gap-2 border-b border-slate-200 px-3 py-2 dark:border-zinc-800">
           <input
-            aria-label="Buscar execução"
-            placeholder="Buscar por execução ou teste"
+            aria-label="Buscar execuÃ§Ã£o"
+            placeholder="Buscar por execuÃ§Ã£o ou teste"
             value={runSearchQuery}
             onChange={(e) => setRunSearchQuery(e.target.value)}
             className="h-8 rounded border border-slate-200 bg-white px-2 text-[11px] text-slate-700 outline-none ring-[#ef0001] focus:ring-1 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
           />
           <select
-            aria-label="Filtrar status da execução"
+            aria-label="Filtrar status da execuÃ§Ã£o"
             value={runStatusFilter}
             onChange={(e) =>
               setRunStatusFilter(
@@ -1944,7 +1944,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             <option value="error">Erro</option>
           </select>
           <select
-            aria-label="Comparar com execução"
+            aria-label="Comparar com execuÃ§Ã£o"
             value={compareToRunId}
             onChange={(e) => {
               setCompareToRunId(e.target.value);
@@ -1958,7 +1958,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             }}
             className="h-8 rounded border border-slate-200 bg-white px-2 text-[11px] text-slate-700 outline-none ring-[#ef0001] focus:ring-1 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
           >
-            <option value="">Sem comparação</option>
+            <option value="">Sem comparaÃ§Ã£o</option>
             {runHistory.map((run) => (
               <option key={run.id} value={run.id}>
                 {new Date(run.created_at).toLocaleString("pt-BR")} - {run.title}
@@ -1969,10 +1969,10 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         {activeRunId && runComparisons[activeRunId] && (
           <div className="border-b border-slate-200 px-3 py-2 dark:border-zinc-800">
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px] dark:border-zinc-700 dark:bg-zinc-900">
-              <p className="mb-1 font-semibold text-slate-600 dark:text-zinc-300">Impacto da regressão</p>
+              <p className="mb-1 font-semibold text-slate-600 dark:text-zinc-300">Impacto da regressÃ£o</p>
               <div className="flex flex-wrap gap-2">
                 <span className="rounded bg-red-50 px-2 py-0.5 text-red-700 dark:bg-red-900/30 dark:text-red-300">
-                  {runComparisons[activeRunId]?.regressions ?? 0} regressões
+                  {runComparisons[activeRunId]?.regressions ?? 0} regressÃµes
                 </span>
                 <span className="rounded bg-emerald-50 px-2 py-0.5 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
                   {runComparisons[activeRunId]?.improvements ?? 0} melhorias
@@ -1989,16 +1989,16 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         )}
         <div className="flex-1 overflow-auto p-2 text-[12px]">
           {runsLoading && (
-            <p className="p-3 text-zinc-500 dark:text-zinc-600">Carregando…</p>
+            <p className="p-3 text-zinc-500 dark:text-zinc-600">Carregandoâ€¦</p>
           )}
           {!runsLoading && runHistory.length === 0 && (
             <p className="p-3 text-zinc-500 dark:text-zinc-600">
-              Nenhuma execução registrada.
+              Nenhuma execuÃ§Ã£o registrada.
             </p>
           )}
           {!runsLoading && runHistory.length > 0 && filteredRuns.length === 0 && (
             <p className="p-3 text-zinc-500 dark:text-zinc-600">
-              Nenhuma execução encontrada para os filtros aplicados.
+              Nenhuma execuÃ§Ã£o encontrada para os filtros aplicados.
             </p>
           )}
           {filteredRuns.map((run) => (
@@ -2013,7 +2013,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="min-w-0 truncate font-medium text-slate-700 dark:text-zinc-300">
-                  {run.title || "Execução"}
+                  {run.title || "ExecuÃ§Ã£o"}
                 </span>
                 <span className={`shrink-0 font-semibold ${RUN_STATUS_COLORS[run.status] ?? "text-zinc-400"}`}>
                   {RUN_STATUS_LABELS[run.status] ?? run.status}
@@ -2058,8 +2058,8 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                         <div className="max-h-28 overflow-auto space-y-1">
                           {comparison && (
                             <div className="mb-1 flex flex-wrap items-center gap-2 text-[10px] font-semibold">
-                              <span className="text-slate-500 dark:text-zinc-400">Comparação:</span>
-                              <span className="text-red-600 dark:text-red-400">{comparison.regressions} regressões</span>
+                              <span className="text-slate-500 dark:text-zinc-400">ComparaÃ§Ã£o:</span>
+                              <span className="text-red-600 dark:text-red-400">{comparison.regressions} regressÃµes</span>
                               <span className="text-emerald-600 dark:text-emerald-400">{comparison.improvements} melhorias</span>
                               <span className="text-zinc-500 dark:text-zinc-400">{comparison.unchanged} iguais</span>
                             </div>
@@ -2092,7 +2092,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     );
   }
 
-  // ── Render: Agents panel ──────────────────────────────────────────────────
+  // â”€â”€ Render: Agents panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async function callAgentPlanner() {
     if (!selectedCompany || !plannerInput.trim()) return;
@@ -2157,7 +2157,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           ),
         }));
         setActiveFileId(newFile.id);
-        setAgentResult(`✓ Arquivo gerado: ${generatorTargetFile}`);
+        setAgentResult(`âœ“ Arquivo gerado: ${generatorTargetFile}`);
         // Persist to DB
         if (selectedCompany) {
           void fetch("/api/automations/scripts", {
@@ -2193,7 +2193,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
       const data = (await res.json()) as { fixedCode?: string; diff?: string; error?: string };
       if (data.fixedCode && activeFileId) {
         setTree((prev) => updateFileInTree(prev, activeFileId, (f) => ({ ...f, content: data.fixedCode!, updatedAt: now() })));
-        setAgentResult(`✓ Arquivo curado. Diff:\n${data.diff ?? "(sem diff)"}`);
+        setAgentResult(`âœ“ Arquivo curado. Diff:\n${data.diff ?? "(sem diff)"}`);
         if (selectedCompany && activeFile) {
           void fetch("/api/automations/scripts", {
             method: "POST",
@@ -2239,16 +2239,16 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         <div className="flex flex-1 flex-col gap-3 overflow-auto p-3">
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-zinc-700 dark:bg-zinc-800/50">
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-zinc-400">
-              Caso do Repositório de Testes
+              Caso do RepositÃ³rio de Testes
             </p>
             <div className="flex gap-2">
               <label htmlFor="repository-case-select" className="sr-only">
-                Selecionar caso do repositório de testes
+                Selecionar caso do repositÃ³rio de testes
               </label>
               <select
                 id="repository-case-select"
-                aria-label="Selecionar caso do repositório de testes"
-                title="Selecionar caso do repositório de testes"
+                aria-label="Selecionar caso do repositÃ³rio de testes"
+                title="Selecionar caso do repositÃ³rio de testes"
                 value={selectedRepositoryCaseId}
                 onChange={(e) => setSelectedRepositoryCaseId(e.target.value)}
                 className="min-w-0 flex-1 rounded bg-white px-2 py-1 text-[11px] text-slate-700 ring-1 ring-slate-200 outline-none focus:ring-blue-500 dark:bg-zinc-900 dark:text-zinc-200 dark:ring-zinc-700"
@@ -2279,13 +2279,13 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           {agentTab === "planner" && (
             <>
               <p className="text-[11px] text-slate-500 dark:text-zinc-500">
-                Descreva o caso de teste e o agente gera um plano detalhado de automação.
+                Descreva o caso de teste e o agente gera um plano detalhado de automaÃ§Ã£o.
               </p>
               <textarea
                 value={plannerInput}
                 onChange={(e) => setPlannerInput(e.target.value)}
                 rows={4}
-                placeholder="Ex: Testar login com email inválido deve exibir mensagem de erro..."
+                placeholder="Ex: Testar login com email invÃ¡lido deve exibir mensagem de erro..."
                 className="w-full resize-none rounded-lg bg-slate-50 px-3 py-2 text-slate-900 outline-none ring-1 ring-slate-300 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
               />
               <button
@@ -2303,7 +2303,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
           {agentTab === "generator" && (
             <>
               <p className="text-[11px] text-slate-500 dark:text-zinc-500">
-                Descreva o teste e o agente gera o código Playwright completo.
+                Descreva o teste e o agente gera o cÃ³digo Playwright completo.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -2335,7 +2335,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 value={generatorInput}
                 onChange={(e) => setGeneratorInput(e.target.value)}
                 rows={3}
-                placeholder="Ex: Login com credenciais válidas deve redirecionar para o dashboard..."
+                placeholder="Ex: Login com credenciais vÃ¡lidas deve redirecionar para o dashboard..."
                 className="w-full resize-none rounded-lg bg-slate-50 px-3 py-2 text-slate-900 outline-none ring-1 ring-slate-300 focus:ring-blue-500 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
               />
               <input
@@ -2351,7 +2351,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 className="flex items-center justify-center gap-1.5 rounded-lg bg-[#ef0001] py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
               >
                 {agentLoading ? <FiRefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FiZap className="h-3.5 w-3.5" />}
-                {generatorTargetType === "api" ? "Gerar fluxo API" : "Gerar código E2E"}
+                {generatorTargetType === "api" ? "Gerar fluxo API" : "Gerar cÃ³digo E2E"}
               </button>
             </>
           )}
@@ -2396,7 +2396,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     );
   }
 
-  // ── Main render ───────────────────────────────────────────────────────────
+  // â”€â”€ Main render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
     <div className="flex h-full min-h-0 bg-[#f3f6fb] text-slate-900 dark:bg-zinc-900 dark:text-zinc-100">
@@ -2429,7 +2429,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 setContextMenu(null);
               }}
             >
-              <FiCopy className="h-3.5 w-3.5" /> Copiar conteúdo
+              <FiCopy className="h-3.5 w-3.5" /> Copiar conteÃºdo
             </button>
             <div className="my-1 border-t border-slate-200 dark:border-zinc-700" />
             <button
@@ -2443,7 +2443,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         </>
       )}
 
-      {/* ── Panel 1: File Explorer ── */}
+      {/* â”€â”€ Panel 1: File Explorer â”€â”€ */}
       <aside className="flex w-56 shrink-0 flex-col border-r border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2.5 dark:border-zinc-800">
           <div className="min-w-0">
@@ -2495,7 +2495,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         <div className="flex-1 overflow-auto py-1">
           {dbLoading && (
             <div className="flex items-center gap-2 px-3 py-4 text-[11px] text-slate-400 dark:text-zinc-500">
-              <span className="animate-pulse">▊</span> Carregando scripts...
+              <span className="animate-pulse">â–Š</span> Carregando scripts...
             </div>
           )}
           {renderFile(tree.configFile, 0)}
@@ -2503,7 +2503,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         </div>
       </aside>
 
-      {/* ── Panel 2: Editor ── */}
+      {/* â”€â”€ Panel 2: Editor â”€â”€ */}
       <div className="flex min-w-0 flex-1 flex-col bg-white dark:bg-zinc-950">
         {/* Tabs bar */}
         <div className="flex min-h-9 items-end gap-0 overflow-x-auto border-b border-slate-200 bg-slate-50 scrollbar-none dark:border-zinc-800 dark:bg-zinc-900">
@@ -2560,7 +2560,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 onClick={() => void handleRun()}
                 disabled={isRunning || !hasRunnableSpecs}
                 className="flex items-center gap-1.5 rounded-lg bg-[#ef0001] px-3 py-1 text-[12px] font-semibold text-white hover:opacity-90 disabled:opacity-50"
-                title={!hasRunnableSpecs ? "Crie um arquivo tests/*.spec.ts para habilitar a execução" : undefined}
+                title={!hasRunnableSpecs ? "Crie um arquivo tests/*.spec.ts para habilitar a execuÃ§Ã£o" : undefined}
               >
                 <FiPlay className="h-3.5 w-3.5" />
                 {isRunning ? "Executando..." : "Executar"}
@@ -2569,7 +2569,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 value={runMode}
                 onChange={(e) => setRunMode(e.target.value as "all" | "changed" | "failed")}
                 className="h-7 rounded-lg bg-slate-100 px-2 text-[12px] text-slate-700 outline-none ring-1 ring-slate-200 focus:ring-[#ef0001] dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700"
-                title="Modo de execução"
+                title="Modo de execuÃ§Ã£o"
               >
                 <option value="all">Modo: all specs</option>
                 <option value="changed">Modo: changed specs</option>
@@ -2589,12 +2589,12 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
                 onClick={() => void handleRun("failed")}
                 disabled={isRunning}
                 className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1 text-[12px] font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-50 dark:bg-amber-900/20 dark:text-amber-300"
-                title="Reexecutar apenas specs falhos da última run"
+                title="Reexecutar apenas specs falhos da Ãºltima run"
               >
                 <FiRefreshCw className="h-3.5 w-3.5" /> Rerun failed
               </button>
               {activeProject && (
-                <span className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-600 dark:bg-zinc-800 dark:text-zinc-300" title="Projeto ativo para esta execução">
+                <span className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-600 dark:bg-zinc-800 dark:text-zinc-300" title="Projeto ativo para esta execuÃ§Ã£o">
                   Projeto ativo: {activeProject.name}
                 </span>
               )}
@@ -2639,7 +2639,7 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
         )}
       </div>
 
-      {/* ── Panel 3: Config + Terminal + Runs + Agents ── */}
+      {/* â”€â”€ Panel 3: Config + Terminal + Runs + Agents â”€â”€ */}
       <aside className="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         {/* Tabs */}
         <div className="flex border-b border-slate-200 dark:border-zinc-800">
@@ -2683,3 +2683,4 @@ export default function PlaywrightStudio({ activeCompanySlug, companies }: Props
     </div>
   );
 }
+

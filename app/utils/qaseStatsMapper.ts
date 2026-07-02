@@ -1,4 +1,4 @@
-type RawStats = Record<string, unknown> | null | undefined;
+﻿type RawStats = Record<string, unknown> | null | undefined;
 
 const toNumber = (value: unknown) => {
   const n = Number(value ?? 0);
@@ -14,3 +14,4 @@ export function mapStats(stats: RawStats) {
     notRun: toNumber((source as Record<string, unknown>).untested ?? (source as Record<string, unknown>).notRun),
   };
 }
+

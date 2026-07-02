@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { hasGlobalCompanyVisibility } from "@/lib/companyDefectsAccess";
 import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
@@ -49,15 +49,15 @@ function normalizeSource(value: unknown) {
 function resolveCaseError(error: unknown) {
   const status = error instanceof QaseError ? error.status : 500;
   if (status === 401 || status === 403) {
-    return "Qase recusou a autenticação deste projeto.";
+    return "Qase recusou a autenticaÃ§Ã£o deste projeto.";
   }
   if (status === 404) {
-    return "Caso de teste não encontrado no Qase.";
+    return "Caso de teste nÃ£o encontrado no Qase.";
   }
   if (status === 422) {
     return "Qase recusou a consulta do caso informado.";
   }
-  return "Não foi possível consultar o caso de teste no Qase.";
+  return "NÃ£o foi possÃ­vel consultar o caso de teste no Qase.";
 }
 
 export async function GET(request: Request) {
@@ -148,3 +148,4 @@ export async function GET(request: Request) {
     );
   }
 }
+

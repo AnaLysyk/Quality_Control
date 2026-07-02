@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type NotificationOperationalMetadataInput = {
   type: string;
@@ -106,3 +106,4 @@ export function buildNotificationOperationalMetadata(input: NotificationOperatio
     descriptionPreview: compact(input.description, 180),
   };
 }
+

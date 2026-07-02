@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+﻿import { NextResponse, type NextRequest } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { canEditCompanyWiki } from "@/lib/companyWikiAccess";
 import { notifyCompanyWikiDocPublished } from "@/lib/notificationService";
@@ -40,3 +40,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ com
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

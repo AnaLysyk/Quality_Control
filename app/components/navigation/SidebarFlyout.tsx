@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { createElement, useCallback, useEffect, useRef, useState } from "react";
@@ -86,12 +86,12 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
 
       {open && (
         <div
-          className="absolute left-19 top-0 z-50 ml-1 min-w-56 max-w-72 overflow-hidden rounded-xl border border-(--shell-menu-border) bg-(--tc-surface) text-(--tc-text-primary) shadow-2xl"
+          className="absolute left-19 top-0 z-50 ml-1 min-w-56 max-w-72 overflow-hidden rounded-xl border border-(--shell-menu-border) bg-[var(--tc-surface)] text-[var(--tc-text-primary)] shadow-2xl"
           onMouseEnter={clearClose}
           onMouseLeave={scheduleClose}
         >
-          <div className="border-b border-(--tc-border) px-4 py-2.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-(--tc-text-muted)">{mod.label}</p>
+          <div className="border-b border-[var(--tc-border)] px-4 py-2.5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--tc-text-muted)]">{mod.label}</p>
           </div>
           <nav className="p-2">
             {visibleItems.map((item) => {
@@ -115,7 +115,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
               );
             })}
             {visibleItems.length === 0 && (
-              <p className="px-3 py-2 text-xs text-(--tc-text-muted)">Nenhum item disponível</p>
+              <p className="px-3 py-2 text-xs text-[var(--tc-text-muted)]">Nenhum item disponÃ­vel</p>
             )}
           </nav>
         </div>
@@ -123,3 +123,4 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
     </div>
   );
 }
+

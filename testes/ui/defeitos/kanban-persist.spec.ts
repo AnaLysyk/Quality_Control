@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
-test.describe("kanban - persistÃªncia local", () => {
-  test("status persiste apÃ³s reload", async ({ page, context }) => {
+test.describe("kanban - persistÃƒÂªncia local", () => {
+  test("status persiste apÃƒÂ³s reload", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "admin",
       companies: ["DEMO"],
@@ -21,3 +21,4 @@ test.describe("kanban - persistÃªncia local", () => {
     await expect(page.getByTestId("kanban-column-pass")).toContainText("Erro no login");
   });
 });
+

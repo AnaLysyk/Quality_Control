@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { Redis } from "@upstash/redis";
 import { Prisma } from "@prisma/client";
@@ -295,3 +295,4 @@ export function assertRedisConfigured(feature = "This feature") {
     );
   }
 }
+

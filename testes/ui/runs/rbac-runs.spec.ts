@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import {
   autenticarPerfilRuns,
   rotaRunsEmpresa,
@@ -38,3 +38,4 @@ test.describe("rbac - runs UI", () => {
     await expect(page.getByTestId("test-run-list")).toBeVisible();
   });
 });
+

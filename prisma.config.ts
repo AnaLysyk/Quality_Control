@@ -1,4 +1,4 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
 
 function resolveDatabaseUrl() {
@@ -19,3 +19,4 @@ export default defineConfig({
     url: resolveDatabaseUrl(),
   },
 });
+

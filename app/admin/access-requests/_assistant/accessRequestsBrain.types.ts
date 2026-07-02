@@ -1,4 +1,4 @@
-export type AccessRequestsBrainStatusFilter = "all" | "open" | "in_progress" | "closed" | "rejected";
+﻿export type AccessRequestsBrainStatusFilter = "all" | "open" | "in_progress" | "closed" | "rejected";
 export type AccessRequestsBrainDateFilter = "all" | "today" | "week" | "month" | "two_hours";
 export type AccessRequestsBrainActionType =
   | "view"
@@ -51,3 +51,4 @@ export type AccessRequestsBrainResult = {
   reply?: string;
   pendingAction?: AccessRequestsBrainPendingAction | null;
 };
+

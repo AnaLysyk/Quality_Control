@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -381,3 +381,4 @@ export async function deleteManualTestPlan(companySlug: string, id: string) {
   await prisma.manualTestPlan.delete({ where: { id } });
   return true;
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import {
   canonicalizeCompanyPathnameForAccess,
   COMPANY_ROUTE_MODE_COOKIE,
@@ -257,3 +257,4 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
+

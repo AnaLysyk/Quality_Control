@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { hashRefreshToken } from "@/lib/auth/refreshToken";
 import { getRedis } from "@/lib/redis";
 import { shouldUseSecureCookies } from "@/lib/auth/cookies";
@@ -59,3 +59,4 @@ export async function POST(req: Request) {
 
   return res;
 }
+

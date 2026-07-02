@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export function getAiApiKey() {
   const key =
@@ -17,4 +17,5 @@ export function requireAiApiKey() {
   }
   return key;
 }
+
 

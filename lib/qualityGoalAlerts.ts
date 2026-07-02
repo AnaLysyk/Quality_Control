@@ -121,3 +121,4 @@ export async function readGoalAlerts(companySlug?: string): Promise<GoalAlert[]>
   if (companySlug) arr = arr.filter((a) => a.company_slug === companySlug);
   return arr.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 }
+

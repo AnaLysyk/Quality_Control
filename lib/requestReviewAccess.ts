@@ -1,4 +1,4 @@
-import type { RequestRecord } from "@/data/requestsStore";
+﻿import type { RequestRecord } from "@/data/requestsStore";
 import { parseAccessRequestMessage } from "@/lib/accessRequestMessage";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
@@ -44,3 +44,4 @@ export function resolveGenericRequestQueue(request: Pick<RequestRecord, "payload
   const profileType = normalizeRequestProfileType(typeof payload.profileType === "string" ? payload.profileType : "");
   return resolveReviewQueue(profileType ?? "testing_company_user");
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { canAccessBrainModule, resolveBrainAccess } from "@/lib/brain/access";
 import { prisma } from "@/lib/prismaClient";
 
@@ -86,3 +86,4 @@ export async function GET(req: Request) {
     source: "database",
   });
 }
+

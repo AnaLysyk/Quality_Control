@@ -1,4 +1,4 @@
-import {
+﻿import {
   formatTicketStatusLabel,
   getTicketStatusLabel,
   KANBAN_STATUS_OPTIONS,
@@ -31,3 +31,4 @@ export {
   normalizeKanbanStatus,
   TICKET_STATUS_OPTIONS,
 };
+

@@ -1,5 +1,5 @@
-/**
- * Ticket 1 — Automatizar criação de usuários por perfil via Suporte Técnico e Líder TC
+﻿/**
+ * Ticket 1 â€” Automatizar criaÃ§Ã£o de usuÃ¡rios por perfil via Suporte TÃ©cnico e LÃ­der TC
  */
 
 import { test, expect } from "../../../support/fixtures/test";
@@ -90,7 +90,7 @@ async function autenticarAnaSuporteTecnicoComAcessoCompleto(page: import("@playw
   return ana;
 }
 
-test.describe("Suporte Técnico — criação de perfis", () => {
+test.describe("Suporte TÃ©cnico â€” criaÃ§Ã£o de perfis", () => {
   const createdUserIds: string[] = [];
 
   test.afterAll(async ({ request }) => {
@@ -141,7 +141,7 @@ test.describe("Suporte Técnico — criação de perfis", () => {
             "Quality Control",
             "Login",
             "Senha",
-            "temporária",
+            "temporÃ¡ria",
             "Meu Perfil",
             "Alterar Senha",
           ],
@@ -199,7 +199,7 @@ test.describe("Suporte Técnico — criação de perfis", () => {
   }
 });
 
-test.describe("Líder TC — criação de perfis", () => {
+test.describe("LÃ­der TC â€” criaÃ§Ã£o de perfis", () => {
   const createdUserIds: string[] = [];
 
   test.afterAll(async ({ request }) => {
@@ -209,7 +209,7 @@ test.describe("Líder TC — criação de perfis", () => {
   });
 
   for (const profile of perfisCriadosPorLider) {
-    test(`Líder TC cria perfil: ${profile.label}`, async ({ page }) => {
+    test(`LÃ­der TC cria perfil: ${profile.label}`, async ({ page }) => {
       const suffix = `${Date.now().toString().slice(-6)}-${Math.random().toString(36).slice(2, 5)}`;
       const email = `e2e-ldr-${profile.role}-${suffix}@demo.test`;
       const name = `Teste LTC ${profile.label} ${suffix}`;
@@ -262,7 +262,7 @@ test.describe("Líder TC — criação de perfis", () => {
   }
 });
 
-test("Usuário TC não acessa /admin e não vê empresas de outros clientes", async ({ page }) => {
+test("UsuÃ¡rio TC nÃ£o acessa /admin e nÃ£o vÃª empresas de outros clientes", async ({ page }) => {
   await autenticarAdminParaCriacaoUsuario(page);
 
   const suffix = Date.now().toString().slice(-6);
@@ -323,3 +323,4 @@ test("Usuário TC não acessa /admin e não vê empresas de outros clientes", as
     }
   }
 });
+

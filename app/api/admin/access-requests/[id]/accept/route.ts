@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { createAccessRequestComment } from "@/data/accessRequestCommentsStore";
 import { getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
@@ -73,7 +73,7 @@ function buildUniqueUsername(source: string, takenValues: string[], preferred?: 
     return preferredCandidate;
   }
 
-  const base = slugifyUsernamePart(source) || "usuário";
+  const base = slugifyUsernamePart(source) || "usuÃ¡rio";
   if (!taken.has(base)) return base;
 
   let counter = 2;
@@ -106,7 +106,7 @@ async function prepareAcceptanceMessage(
   const accessType = normalizeAccessType(body.access_type) ?? parsed.accessType ?? toInternalAccessType(profileType);
 
   if (!parsed.passwordHash) {
-    const error = new Error("Solicitação sem senha informada pelo solicitante") as Error & { code?: string };
+    const error = new Error("SolicitaÃ§Ã£o sem senha informada pelo solicitante") as Error & { code?: string };
     error.code = "MISSING_PASSWORD";
     throw error;
   }
@@ -126,7 +126,7 @@ async function prepareAcceptanceMessage(
   let company =
     (typeof body.company === "string" ? body.company.trim() : "") ||
     parsed.company ||
-    "(não informado)";
+    "(nÃ£o informado)";
 
   if (profileType === "testing_company_user" && !clientId) {
     clientId = await resolveTestingCompanyId();
@@ -134,22 +134,22 @@ async function prepareAcceptanceMessage(
 
   if (profileType === "testing_company_user" || profileType === "company_user") {
     if (!clientId) {
-      const error = new Error("Empresa obrigatória para Usuário") as Error & { code?: string };
+      const error = new Error("Empresa obrigatÃ³ria para UsuÃ¡rio") as Error & { code?: string };
       error.code = "MISSING_COMPANY";
       throw error;
     }
     const selectedCompany = await findLocalCompanyById(clientId);
     if (!selectedCompany) {
-      const error = new Error("Empresa selecionada não encontrada") as Error & { code?: string };
+      const error = new Error("Empresa selecionada nÃ£o encontrada") as Error & { code?: string };
       error.code = "MISSING_COMPANY";
       throw error;
     }
     company = (selectedCompany.name ?? selectedCompany.company_name ?? "").trim() || company;
   } else if (profileType === "empresa") {
-    company = parsed.companyProfile?.companyName?.trim() || company || "(não informado)";
+    company = parsed.companyProfile?.companyName?.trim() || company || "(nÃ£o informado)";
   } else {
     clientId = null;
-    company = "(não informado)";
+    company = "(nÃ£o informado)";
   }
 
   const users = await listLocalUsers();
@@ -203,7 +203,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
   }
 
   if (!parsed.passwordHash) {
-    const error = new Error("Solicitação sem senha informada pelo solicitante") as Error & { code?: string };
+    const error = new Error("SolicitaÃ§Ã£o sem senha informada pelo solicitante") as Error & { code?: string };
     error.code = "MISSING_PASSWORD";
     throw error;
   }
@@ -283,7 +283,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
 
     const companyName = parsed.companyProfile?.companyName?.trim() || parsed.company?.trim() || "";
     if (!companyName) {
-      const error = new Error("Nome da empresa obrigatório") as Error & { code?: string };
+      const error = new Error("Nome da empresa obrigatÃ³rio") as Error & { code?: string };
       error.code = "MISSING_COMPANY_NAME";
       throw error;
     }
@@ -320,7 +320,7 @@ async function resolveRequestedUser(message: string, fallbackEmail: string) {
   }
 
   if (!companyId) {
-    const error = new Error("Empresa obrigatória para Usuário") as Error & { code?: string };
+    const error = new Error("Empresa obrigatÃ³ria para UsuÃ¡rio") as Error & { code?: string };
     error.code = "MISSING_COMPANY";
     throw error;
   }
@@ -373,22 +373,22 @@ async function ensureLocalUser(message: string, fallbackEmail: string) {
 
 function toCreateUserError(error: unknown) {
   const code = error && typeof error === "object" ? (error as { code?: string }).code : null;
-  if (code === "MISSING_COMPANY") return { status: 400, error: "Empresa obrigatória para este perfil" };
-  if (code === "MISSING_COMPANY_NAME") return { status: 400, error: "Nome da empresa obrigatório para este perfil" };
-  if (code === "MISSING_PASSWORD") return { status: 400, error: "A solicitação precisa ter uma senha definida para ser aprovada" };
-  if (code === "DUPLICATE_EMAIL") return { status: 409, error: "E-mail já cadastrado" };
-  if (code === "DUPLICATE_USER") return { status: 409, error: "Usuário já cadastrado" };
-  if (code === "USER_SCOPE_LOCKED") return { status: 409, error: "Usuário com escopo fechado não pode ser vinculado a outra empresa." };
-  if (code === "DUPLICATE_COMPANY_NAME") return { status: 409, error: "Empresa já cadastrada com esse nome" };
-  if (code === "DUPLICATE_COMPANY_TAX_ID") return { status: 409, error: "CNPJ já cadastrado para outra empresa" };
+  if (code === "MISSING_COMPANY") return { status: 400, error: "Empresa obrigatÃ³ria para este perfil" };
+  if (code === "MISSING_COMPANY_NAME") return { status: 400, error: "Nome da empresa obrigatÃ³rio para este perfil" };
+  if (code === "MISSING_PASSWORD") return { status: 400, error: "A solicitaÃ§Ã£o precisa ter uma senha definida para ser aprovada" };
+  if (code === "DUPLICATE_EMAIL") return { status: 409, error: "E-mail jÃ¡ cadastrado" };
+  if (code === "DUPLICATE_USER") return { status: 409, error: "UsuÃ¡rio jÃ¡ cadastrado" };
+  if (code === "USER_SCOPE_LOCKED") return { status: 409, error: "UsuÃ¡rio com escopo fechado nÃ£o pode ser vinculado a outra empresa." };
+  if (code === "DUPLICATE_COMPANY_NAME") return { status: 409, error: "Empresa jÃ¡ cadastrada com esse nome" };
+  if (code === "DUPLICATE_COMPANY_TAX_ID") return { status: 409, error: "CNPJ jÃ¡ cadastrado para outra empresa" };
   return null;
 }
 
 function buildApprovalComment(generatedUsername: string, adminComment: string) {
   const lines = [
-    "Solicitação aceita.",
-    `Seu usuário e ${generatedUsername}.`,
-    "Use a senha que você criou ao solicitar acesso para entrar na plataforma.",
+    "SolicitaÃ§Ã£o aceita.",
+    `Seu usuÃ¡rio e ${generatedUsername}.`,
+    "Use a senha que vocÃª criou ao solicitar acesso para entrar na plataforma.",
   ];
   if (adminComment) {
     lines.push(`Observacao do aprovador: ${adminComment}`);
@@ -400,7 +400,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   try {
     const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+      return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
     }
 
     const body = (await req.json().catch(() => null)) as AcceptBody | null;
@@ -487,10 +487,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     if (shouldUseJsonStore()) {
       const existing = await getAccessRequestById(id);
       if (!existing) {
-        return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+        return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
       }
       if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-        return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
       }
 
       const prepared = await prepareAcceptanceMessage(existing.message, existing.email, body ?? {});
@@ -543,10 +543,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     try {
       const existing = await prisma.supportRequest.findUnique({ where: { id } });
       if (!existing) {
-        return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+        return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
       }
       if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-        return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
       }
 
       const prepared = await prepareAcceptanceMessage(existing.message, existing.email, body ?? {});
@@ -602,10 +602,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       console.error("[ACCESS-REQUESTS][ACCEPT][PRISMA_FALLBACK]", error);
       const existing = await getAccessRequestById(id);
       if (!existing) {
-        return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+        return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
       }
       if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-        return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
       }
 
       const prepared = await prepareAcceptanceMessage(existing.message, existing.email, body ?? {});
@@ -664,3 +664,4 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     return NextResponse.json({ error: "Internal Server Error", details: message }, { status: 500 });
   }
 }
+

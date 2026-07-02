@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -50,14 +50,14 @@ export default function AutomationModuleSidebar() {
   }, [prefetchHref]);
 
   return (
-    <nav className="w-full rounded-[22px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-3 shadow-sm 2xl:sticky 2xl:top-6">
+    <nav className="w-full rounded-[22px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-3 shadow-sm 2xl:sticky 2xl:top-6">
       <div className="flex flex-wrap items-center justify-between gap-3 2xl:block">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">QA IDE</p>
-          <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Troca rápida entre módulos sem sair do workspace.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">QA IDE</p>
+          <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Troca rÃ¡pida entre mÃ³dulos sem sair do workspace.</p>
         </div>
-        <span className="inline-flex min-h-9 items-center rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-          {NAV_ITEMS.length} áreas
+        <span className="inline-flex min-h-9 items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+          {NAV_ITEMS.length} Ã¡reas
         </span>
       </div>
 
@@ -75,8 +75,8 @@ export default function AutomationModuleSidebar() {
               onFocus={() => prefetchHref(item.href)}
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition ${
                 isActive
-                  ? "border-(--tc-accent,#ef0001) bg-[#fff5f5] text-(--tc-accent,#ef0001)"
-                  : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text,#0b1a3c) hover:border-(--tc-accent,#ef0001)"
+                  ? "border-[var(--tc-accent,#ef0001)] bg-[#fff5f5] text-[var(--tc-accent,#ef0001)]"
+                  : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text,#0b1a3c)] hover:border-[var(--tc-accent,#ef0001)]"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -88,3 +88,4 @@ export default function AutomationModuleSidebar() {
     </nav>
   );
 }
+

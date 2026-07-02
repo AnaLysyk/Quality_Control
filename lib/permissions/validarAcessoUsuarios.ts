@@ -1,4 +1,4 @@
-import { resolveEffectivePermissionMatrix, hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
+﻿import { resolveEffectivePermissionMatrix, hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 
 export type UsuarioComAcesso = {
   permissions?: PermissionMatrix | null;
@@ -58,3 +58,4 @@ export function resolverAcessoUsuarios(user: UsuarioComAcesso | null | undefined
     canManagePrivilegedProfiles: canEditUsers && canEditPermissions,
   };
 }
+

@@ -244,7 +244,7 @@ function salvarRelatorioHtml(
 </head>
 <body>
   <h1>Dados Alterados - Formulário assistido</h1>
-  <p>Validação do formulário real: tela → PATCH capturado → persistência na API.</p>
+  <p>Validação do formulário real: tela ? PATCH capturado ? persistência na API.</p>
 
   <div class="grid">
     <div class="card">
@@ -485,5 +485,6 @@ test.describe("Dados Alterados - formulário assistido", () => {
     }
   });
 });
+
 
 

@@ -1,6 +1,6 @@
-/**
- * Profile Engine — tipos centrais
- * Define contexto, permissões e estrutura da tela unificada de empresa/usuário
+﻿/**
+ * Profile Engine â€” tipos centrais
+ * Define contexto, permissÃµes e estrutura da tela unificada de empresa/usuÃ¡rio
  */
 
 export type EntityType = "company" | "user";
@@ -21,7 +21,7 @@ export type EntityStatus =
   | "pending";
 
 /**
- * Decisões que a engine precisa tomar sobre a interface
+ * DecisÃµes que a engine precisa tomar sobre a interface
  */
 export type ProfilePermissions = {
   canView: boolean;
@@ -62,7 +62,7 @@ export type ProfileRuntimeContext = {
   entityId: string;
   mode: ProfileMode;
 
-  // Quem está olhando
+  // Quem estÃ¡ olhando
   viewer: {
     id: string;
     role: UserRole;
@@ -79,7 +79,7 @@ export type ProfileRuntimeContext = {
     status?: EntityStatus;
   };
 
-  // Decisões
+  // DecisÃµes
   permissions: ProfilePermissions;
   scope: ProfileScope;
 
@@ -117,7 +117,7 @@ export type ProfileFieldPermission = {
 };
 
 /**
- * User-Company link (muitos-para-muitos explícito)
+ * User-Company link (muitos-para-muitos explÃ­cito)
  */
 export type UserCompanyLink = {
   id: string;
@@ -135,7 +135,7 @@ export type UserCompanyLink = {
 };
 
 /**
- * Ação auditável
+ * AÃ§Ã£o auditÃ¡vel
  */
 export type ProfileAuditEntry = {
   id: string;
@@ -157,7 +157,7 @@ export type ProfileAuditEntry = {
 };
 
 /**
- * Impacto de alteração
+ * Impacto de alteraÃ§Ã£o
  */
 export type ChangeImpact = {
   title: string;
@@ -166,3 +166,4 @@ export type ChangeImpact = {
   severity: "low" | "medium" | "high" | "critical";
   requiresConfirmation: boolean;
 };
+

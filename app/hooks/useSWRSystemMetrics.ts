@@ -1,4 +1,4 @@
-import useSWR from "swr";
+﻿import useSWR from "swr";
 
 export function useSWRSystemMetrics() {
   const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then((res) => res.json());
@@ -13,3 +13,4 @@ export function useSWRSystemMetrics() {
     refetch: mutate,
   };
 }
+

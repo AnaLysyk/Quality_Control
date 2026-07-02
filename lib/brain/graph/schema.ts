@@ -1,4 +1,4 @@
-export type BrainProductId = "assistant" | "graph";
+﻿export type BrainProductId = "assistant" | "graph";
 
 export type BrainGraphNodeGroup =
   | "business"
@@ -115,3 +115,4 @@ export function getBrainGraphNodeColor(type: string) {
 export function listBrainGraphFilterOptions() {
   return BRAIN_GRAPH_NODE_TYPES.map(({ type, label, group, color }) => ({ type, label, group, color }));
 }
+

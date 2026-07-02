@@ -1,4 +1,4 @@
-export type BrainSafeAction =
+﻿export type BrainSafeAction =
   | "read_only"
   | "suggestion"
   | "draft"
@@ -13,3 +13,4 @@ export function actionRequiresConfirmation(action: BrainSafeAction) {
 export function actionRequiresHumanInLoop(action: BrainSafeAction) {
   return action === "write" || action === "destructive" || action === "external_publish";
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { canDeleteUserByProfile, canManageInstitutionalProfiles } from "@/lib/adminUserDeleteAccess";
@@ -53,7 +53,7 @@ function membershipRoleFromPermissionRole(role: PermissionRole) {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(_req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
 
   const { id } = await params;
@@ -67,12 +67,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
   const access = await getAccessContext(req);
   const userAccess = await validarAcessoUsuariosNoServidor(access);
   if (!userAccess.canEditUsers) {
-    return NextResponse.json({ error: "Sem permissão para editar usuários" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para editar usuÃ¡rios" }, { status: 403 });
   }
   const canManageProfiles = canManageInstitutionalProfiles(access);
 
@@ -127,7 +127,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const selectedCompany = clientId ? await findLocalCompanyById(clientId) : null;
   if (clientId && !selectedCompany) {
-    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa nÃ£o encontrada" }, { status: 404 });
   }
 
   const existingLinks = effectiveProfileRole ? await listLocalLinksForUser(id) : [];
@@ -151,10 +151,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (email || login) {
     const users = await listLocalUsers();
     if (email && users.some((user) => user.id !== id && normalizeLogin(user.email) === email)) {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
     }
     if (login && users.some((user) => user.id !== id && normalizeLogin(user.user ?? user.email) === login)) {
-      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
     }
   }
 
@@ -184,10 +184,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
     }
     throw err;
   }
@@ -258,7 +258,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
 
   const access = await getAccessContext(req);
@@ -266,11 +266,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const target = await getAdminUserItem(id);
 
   if (!target) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
   }
 
   if (!canDeleteUserByProfile(access, target.permission_role)) {
-    return NextResponse.json({ error: "Sem permissão para excluir este perfil" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para excluir este perfil" }, { status: 403 });
   }
 
   const updated = await updateLocalUser(id, {
@@ -279,7 +279,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   });
 
   if (!updated) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
   }
 
   await addAuditLogSafe({
@@ -298,3 +298,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const item = await getAdminUserItem(id);
   return NextResponse.json({ ok: true, item: item ?? null }, { status: 200 });
 }
+

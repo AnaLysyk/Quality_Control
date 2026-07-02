@@ -1,4 +1,4 @@
-import type { SystemRole } from "@/lib/auth/roles";
+﻿import type { SystemRole } from "@/lib/auth/roles";
 import type { PermissionMatrix } from "@/lib/permissionMatrix";
 import { NAV_CATALOG, type NavItemDef, type NavModuleDef } from "../catalogo/menuLateral.catalog";
 import {
@@ -30,3 +30,4 @@ export function podeVerItemDoMenu(
 }
 
 export { buildNavigationForUser, filterNavModule };
+

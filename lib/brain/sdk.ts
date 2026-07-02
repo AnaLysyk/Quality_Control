@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prismaClient";
@@ -39,3 +39,4 @@ export async function emitBrainEvent(input: BrainEmitEventInput) {
 export const brainSdk = {
   emit: emitBrainEvent,
 };
+

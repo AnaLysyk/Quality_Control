@@ -1,4 +1,4 @@
-import type { BrianProcessingResult } from "./types";
+﻿import type { BrianProcessingResult } from "./types";
 
 export function buildBrianContextSummary(result: BrianProcessingResult) {
   const topNeurons = [...result.activations]
@@ -6,7 +6,7 @@ export function buildBrianContextSummary(result: BrianProcessingResult) {
     .slice(0, 6)
     .map((activation) => {
       const neuron = result.neurons.find((item) => item.id === activation.neuronId);
-      return neuron ? `- ${neuron.label} (${neuron.kind}) · score ${activation.activationScore.toFixed(2)}` : null;
+      return neuron ? `- ${neuron.label} (${neuron.kind}) Â· score ${activation.activationScore.toFixed(2)}` : null;
     })
     .filter(Boolean);
 
@@ -19,13 +19,14 @@ export function buildBrianContextSummary(result: BrianProcessingResult) {
     "## Contexto Brian",
     result.narrative,
     "",
-    topNeurons.length ? "Neurônios ativados:" : "",
+    topNeurons.length ? "NeurÃ´nios ativados:" : "",
     ...topNeurons,
     "",
-    evidenceLines.length ? "Evidências:" : "",
+    evidenceLines.length ? "EvidÃªncias:" : "",
     ...evidenceLines,
     "",
     result.warnings.length ? "Avisos:" : "",
     ...result.warnings.map((warning) => `- ${warning}`),
   ].filter((line) => line !== "").join("\n");
 }
+

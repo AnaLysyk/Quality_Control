@@ -1,4 +1,4 @@
-export type UserRecord = {
+﻿export type UserRecord = {
   id: string;
   name: string;
   email: string;
@@ -11,7 +11,7 @@ export type UserRecord = {
 const USERS: Record<string, UserRecord> = {
   usr_001: {
     id: "usr_001",
-    name: "Usuário",
+    name: "UsuÃ¡rio",
     email: "user@example.com",
     role: "user",
     companyId: "cmp_001",
@@ -44,3 +44,4 @@ export function updateUserCompany(id: string, companyName: string) {
     USERS[id].companyName = companyName;
   }
 }
+

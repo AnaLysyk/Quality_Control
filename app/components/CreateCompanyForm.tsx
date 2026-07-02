@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
@@ -101,7 +101,7 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
       <h2 className="text-lg font-bold mb-2">Criar nova empresa</h2>
       <input
         className="form-control-user border rounded px-2 py-1 w-full"
-        placeholder="CNPJ (opcional para preenchimento automático)"
+        placeholder="CNPJ (opcional para preenchimento automÃ¡tico)"
         value={cnpj}
         onChange={(e) => setCnpj(normalizeCnpj(e.target.value))}
         onBlur={handleCnpjBlur}
@@ -117,7 +117,7 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
       />
       <input
         className="form-control-user border rounded px-2 py-1 w-full"
-        placeholder="Slug (identificador único)"
+        placeholder="Slug (identificador Ãºnico)"
         value={slug}
         onChange={(e) => setSlug(e.target.value)}
         required
@@ -134,3 +134,4 @@ export default function CreateCompanyForm({ onCreated }: { onCreated?: () => voi
     </form>
   );
 }
+

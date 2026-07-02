@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getNodeMemories, getNodeWithContext, getSubgraph, traceImpact } from "@/lib/brain";
 import { assertBrainNodeAccess, filterBrainGraphByAccess, isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
@@ -97,3 +97,4 @@ export async function GET(
     return NextResponse.json({ error: "Erro ao buscar no" }, { status: 500 });
   }
 }
+

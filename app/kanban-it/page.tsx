@@ -672,11 +672,11 @@ export default function KanbanItPage() {
   }
 
   if (loading) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
+    return <div className="p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">Carregando...</div>;
   }
 
   if (!canAccessGlobalKanban) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
+    return <div className="p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">Acesso restrito.</div>;
   }
 
   return (
@@ -1233,3 +1233,4 @@ export default function KanbanItPage() {
     </div>
   );
 }
+

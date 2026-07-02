@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 /**
- * Profile Actions — botões de ação contextuais
+ * Profile Actions â€” botÃµes de aÃ§Ã£o contextuais
  */
 
 import { useProfileAction, useDangerZone, useProfileMode } from "@/lib/profile/useProfileContext";
@@ -101,3 +101,4 @@ export function ProfileActions({
     </div>
   );
 }
+

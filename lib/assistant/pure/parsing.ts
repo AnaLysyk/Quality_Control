@@ -1,4 +1,4 @@
-export type AssistantTicketReference =
+﻿export type AssistantTicketReference =
   | { type: "code"; code: string; numeric: number }
   | { type: "id"; id: string }
   | { type: "numeric"; numeric: number; code: string };
@@ -35,3 +35,4 @@ export function extractTicketReference(text: string): AssistantTicketReference |
 
   return null;
 }
+

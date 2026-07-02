@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -20,16 +20,17 @@ export default function AdminChamadosPage() {
   }, [loading, user, canOpenSupport, canAccessGlobalKanban, router]);
 
   if (loading) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Carregando...</div>;
+    return <div className="p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">Carregando...</div>;
   }
 
   if (!user) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
+    return <div className="p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">Acesso restrito.</div>;
   }
 
   if (!canOpenSupport) {
-    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Acesso restrito.</div>;
+    return <div className="p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">Acesso restrito.</div>;
   }
 
-  return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">Redirecionando...</div>;
+  return <div className="p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">Redirecionando...</div>;
 }
+

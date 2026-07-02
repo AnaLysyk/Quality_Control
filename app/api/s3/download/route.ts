@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -27,3 +27,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: "not found" }, { status: 404 });
   }
 }
+

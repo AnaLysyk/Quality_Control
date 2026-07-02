@@ -1,4 +1,4 @@
-import type { BrainNode } from "@prisma/client";
+﻿import type { BrainNode } from "@prisma/client";
 
 import type { BrainAccessContext } from "@/lib/brain/access";
 import { recordBrainAuditEvent } from "@/lib/brain/audit";
@@ -336,3 +336,4 @@ export async function resolveBrainAction(input: {
       : `Voce tem acesso para ${action.label}.`,
   };
 }
+

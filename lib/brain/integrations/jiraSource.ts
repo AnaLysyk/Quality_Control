@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { BrainAccessContext } from "@/lib/brain/access";
 import type { BrainGraphSource } from "@/lib/brain/sources";
@@ -84,3 +84,4 @@ export const jiraBrainSource: BrainGraphSource<JiraSourceContext> = {
     return { id: "jira", label: "Jira", status: "ok", nodes: 1, edges: 0 };
   },
 };
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
 import { syncBrain } from "@/lib/brain-sync";
@@ -37,3 +37,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro ao reindexar grafo do Brain" }, { status: 500 });
   }
 }
+

@@ -1,6 +1,6 @@
-/**
- * Profile Engine — construtor do contexto
- * Decide quais abas, campos, ações aparecem
+﻿/**
+ * Profile Engine â€” construtor do contexto
+ * Decide quais abas, campos, aÃ§Ãµes aparecem
  */
 
 import type { AuthUser } from "@/lib/jwtAuth";
@@ -17,7 +17,7 @@ import type {
 } from "./types";
 
 /**
- * Resolve permissões do viewer sobre o target
+ * Resolve permissÃµes do viewer sobre o target
  */
 function resolvePermissions(input: {
   viewer: AuthUser;
@@ -35,7 +35,7 @@ function resolvePermissions(input: {
   const isCompanyUser = input.viewer.role === "company_user";
   const isTCUser = input.viewer.role === "testing_company_user";
 
-  // Base: permissão por modo
+  // Base: permissÃ£o por modo
   if (input.mode === "self") {
     return {
       canView: true,
@@ -86,7 +86,7 @@ function resolvePermissions(input: {
     };
   }
 
-  // admin-edit e edit: modos de edição
+  // admin-edit e edit: modos de ediÃ§Ã£o
   const canEditProfile =
     isAdmin || (isLeader && input.isSameCompany && input.targetStatus !== "blocked") || (isSupport && input.isSameCompany);
 
@@ -246,3 +246,4 @@ export function buildProfileRuntimeContext(input: {
     canCompare: input.mode === "admin-edit" && permissions.canEdit,
   };
 }
+

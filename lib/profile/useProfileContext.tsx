@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * Hooks para usar Profile Engine no lado client
@@ -37,7 +37,7 @@ export function useProfileContext(): ProfileRuntimeContext {
 }
 
 /**
- * Hook para verificar se ação é permitida
+ * Hook para verificar se aÃ§Ã£o Ã© permitida
  */
 export function useProfileAction(
   action:
@@ -94,7 +94,7 @@ export function useProfileAction(
 }
 
 /**
- * Hook para filtrar abas visíveis
+ * Hook para filtrar abas visÃ­veis
  */
 export function useProfileTabs() {
   const context = useProfileContext();
@@ -116,3 +116,4 @@ export function useProfileMode() {
   const context = useProfileContext();
   return context.mode;
 }
+

@@ -1,4 +1,4 @@
-export type DefectStatus = "open" | "in_progress" | "done";
+﻿export type DefectStatus = "open" | "in_progress" | "done";
 
 function asString(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value.trim();
@@ -54,3 +54,4 @@ export function resolveClosedAt(status: DefectStatus, closedAt?: unknown, fallba
   }
   return null;
 }
+

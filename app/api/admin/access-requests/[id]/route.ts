@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { deleteAccessRequest, getAccessRequestById, updateAccessRequest } from "@/data/accessRequestsStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
@@ -41,7 +41,7 @@ type AccessRequestBody = {
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
 
   const body = (await req.json().catch(() => null)) as AccessRequestBody | null;
@@ -108,13 +108,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
     }
     if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
-      return NextResponse.json({ error: "Somente Global pode encaminhar solicitações tecnicas" }, { status: 403 });
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitaÃ§Ãµes tecnicas" }, { status: 403 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -127,7 +127,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       phone: phone || parsed.phone,
       passwordHash: passwordHash ?? parsed.passwordHash,
       role: role || parsed.jobRole,
-      company: company || parsed.company || "(não informado)",
+      company: company || parsed.company || "(nÃ£o informado)",
       clientId: clientId ?? parsed.clientId,
       accessType,
       profileType,
@@ -150,7 +150,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     });
 
     if (!updated) {
-      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -167,13 +167,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   try {
     const existing = await prisma.supportRequest.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
     }
     if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
-      return NextResponse.json({ error: "Somente Global pode encaminhar solicitações tecnicas" }, { status: 403 });
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitaÃ§Ãµes tecnicas" }, { status: 403 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -186,7 +186,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       phone: phone || parsed.phone,
       passwordHash: passwordHash ?? parsed.passwordHash,
       role: role || parsed.jobRole,
-      company: company || parsed.company || "(não informado)",
+      company: company || parsed.company || "(nÃ£o informado)",
       clientId: clientId ?? parsed.clientId,
       accessType,
       profileType,
@@ -224,13 +224,13 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     console.error("[ACCESS-REQUESTS][PATCH][PRISMA_FALLBACK]", error);
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
     }
     if (!isGlobalReviewer(admin) && resolveReviewQueue(profileType) === "global_only") {
-      return NextResponse.json({ error: "Somente Global pode encaminhar solicitações tecnicas" }, { status: 403 });
+      return NextResponse.json({ error: "Somente Global pode encaminhar solicitaÃ§Ãµes tecnicas" }, { status: 403 });
     }
 
     const parsed = parseAccessRequestMessage(existing.message, existing.email);
@@ -242,7 +242,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       phone: phone || parsed.phone,
       passwordHash: passwordHash ?? parsed.passwordHash,
       role: role || parsed.jobRole,
-      company: company || parsed.company || "(não informado)",
+      company: company || parsed.company || "(nÃ£o informado)",
       clientId: clientId ?? parsed.clientId,
       accessType,
       profileType,
@@ -279,7 +279,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
   }
 
   const { id } = await context.params;
@@ -332,7 +332,7 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
     }
 
     await appendAccessRequestRemovalHistory({
@@ -364,7 +364,7 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
 
   const existing = await prisma.supportRequest.findUnique({ where: { id } });
   if (!existing) {
-    return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
   }
 
   await appendAccessRequestRemovalHistory({
@@ -393,3 +393,4 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
   const removed = await prisma.supportRequest.deleteMany({ where: { id } });
   return NextResponse.json({ ok: removed.count > 0 });
 }
+

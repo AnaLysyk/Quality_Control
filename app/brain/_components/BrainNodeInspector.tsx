@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FiArrowRight, FiBox, FiExternalLink, FiGitBranch, FiInfo } from "react-icons/fi";
 import type { BrainEdge, BrainNode } from "../_types/brain.types";
@@ -155,3 +155,4 @@ export function BrainNodeInspector({ node, nodes, edges, onOpenRelatedModule }: 
     </aside>
   );
 }
+

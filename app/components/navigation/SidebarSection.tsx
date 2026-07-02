@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { createElement, Fragment } from "react";
@@ -102,3 +102,4 @@ export default function SidebarSection({
     </div>
   );
 }
+

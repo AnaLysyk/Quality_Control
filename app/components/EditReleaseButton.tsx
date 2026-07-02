@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -19,7 +19,7 @@ export function EditReleaseButton({ slug, currentTitle, currentRunId }: EditRele
   if (authLoading || !canEdit) return null;
 
   const handleEdit = async () => {
-    const nextTitle = prompt("Novo título da run:", currentTitle ?? "");
+    const nextTitle = prompt("Novo tÃ­tulo da run:", currentTitle ?? "");
     const nextRun = prompt("Novo runId (Qase):", currentRunId ? String(currentRunId) : "");
     if (!nextTitle && !nextRun) return;
     setLoading(true);
@@ -50,3 +50,4 @@ export function EditReleaseButton({ slug, currentTitle, currentRunId }: EditRele
     </button>
   );
 }
+

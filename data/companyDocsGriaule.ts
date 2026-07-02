@@ -1,4 +1,4 @@
-export const COMPANY_DOCS_GRIAULE = {
+﻿export const COMPANY_DOCS_GRIAULE = {
   categories: [
     {
       id: "cat-griaule-smart-operador",
@@ -28,3 +28,4 @@ export const COMPANY_DOCS_GRIAULE = {
     },
   ],
 } as const;
+

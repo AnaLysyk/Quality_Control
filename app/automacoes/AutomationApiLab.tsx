@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
@@ -200,8 +200,8 @@ function authLabel(auth: AutomationRequestAuth) {
   if (auth.type === "bearer") return "Bearer";
   if (auth.type === "basic") return "Basic";
   if (auth.type === "api-key") return "API Key";
-  if (auth.type === "session") return "Sessão atual";
-  return "Sem autenticação";
+  if (auth.type === "session") return "SessÃ£o atual";
+  return "Sem autenticaÃ§Ã£o";
 }
 
 export default function AutomationApiLab({ activeCompanySlug, companies }: Props) {
@@ -406,7 +406,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
     persistSavedRequests([snapshot, ...savedRequests]);
     setSelectedPresetId(snapshot.id);
-    setCopyFeedback("Request salvo com auth, params e variáveis");
+    setCopyFeedback("Request salvo com auth, params e variÃ¡veis");
     window.setTimeout(() => setCopyFeedback(null), 1400);
   }
 
@@ -424,7 +424,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
     try {
       if (missingVariableKeys.length > 0) {
-        throw new Error(`Defina as variáveis: ${missingVariableKeys.join(", ")}.`);
+        throw new Error(`Defina as variÃ¡veis: ${missingVariableKeys.join(", ")}.`);
       }
 
       const headers = sanitizeKeyValueRows(headerRows).reduce<Record<string, string>>((accumulator, row) => {
@@ -444,7 +444,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         const username = resolveTemplate(auth.username ?? "", resolvedVariables);
         const password = resolveTemplate(auth.password ?? "", resolvedVariables);
         if (!username && !password) {
-          throw new Error("Informe usuário e senha para Basic Auth.");
+          throw new Error("Informe usuÃ¡rio e senha para Basic Auth.");
         }
         headers.Authorization = encodeBasicAuth(username, password);
       }
@@ -473,7 +473,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
       const payload = await execution.json();
 
       if (!execution.ok || !payload?.response) {
-        throw new Error(payload?.error || "NÃ£o foi possÃ­vel executar a chamada.");
+        throw new Error(payload?.error || "NÃƒÂ£o foi possÃƒÂ­vel executar a chamada.");
       }
 
       setResponse(payload.response as HttpResponseState);
@@ -498,19 +498,19 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
   }
 
   return (
-    <section className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 shadow-sm sm:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
-        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-          <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
-            <FiServer className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+    <section className="space-y-4 rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 shadow-sm sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
+            <FiServer className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
             API Lab
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
-            <FiGlobe className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
+            <FiGlobe className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
             {currentEnvironment?.title}
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)">
-            <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
+            <FiShield className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
             {authLabel(auth)}
           </span>
         </div>
@@ -518,7 +518,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           <button
             type="button"
             onClick={saveCurrentRequest}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
           >
             <FiSave className="h-4 w-4" />
             Salvar
@@ -527,7 +527,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             type="button"
             onClick={executeRequest}
             disabled={loading}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             <FiPlay className="h-4 w-4" />
             {loading ? "Executando" : "Executar"}
@@ -536,10 +536,10 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-12">
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
+        <aside className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">ColeÃ§Ã£o</p>
-            <span className="inline-flex rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">ColeÃƒÂ§ÃƒÂ£o</p>
+            <span className="inline-flex rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
               {visiblePresets.length}
             </span>
           </div>
@@ -548,24 +548,24 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               const active = selectedPresetId === preset.id;
               const isSaved = "source" in preset && preset.source === "saved";
               return (
-                <div key={preset.id} className={`rounded-xl border ${active ? "border-(--tc-accent,#ef0001) bg-white" : "border-(--tc-border,#d7deea) bg-white/70"}`}>
+                <div key={preset.id} className={`rounded-xl border ${active ? "border-[var(--tc-accent,#ef0001)] bg-white" : "border-[var(--tc-border,#d7deea)] bg-white/70"}`}>
                   <button type="button" onClick={() => applyPreset(preset)} className="w-full px-3 py-3 text-left">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-(--tc-text,#0b1a3c)">{preset.title}</p>
-                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-                          {preset.method} {preset.tags.join(" â€¢ ")}
+                        <p className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{preset.title}</p>
+                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+                          {preset.method} {preset.tags.join(" Ã¢â‚¬Â¢ ")}
                         </p>
                       </div>
-                      {isSaved ? <FiDatabase className="mt-0.5 h-4 w-4 shrink-0 text-(--tc-accent,#ef0001)" /> : null}
+                      {isSaved ? <FiDatabase className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tc-accent,#ef0001)]" /> : null}
                     </div>
                   </button>
                   {isSaved ? (
-                    <div className="border-t border-(--tc-border,#d7deea) px-3 py-2">
+                    <div className="border-t border-[var(--tc-border,#d7deea)] px-3 py-2">
                       <button
                         type="button"
                         onClick={() => removeSavedRequest(preset.id)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-(--tc-text-muted,#6b7280)"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]"
                       >
                         <FiTrash2 className="h-3.5 w-3.5" />
                         Remover
@@ -578,22 +578,22 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           </div>
         </aside>
 
-        <article className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-4 xl:col-span-8 2xl:col-span-5">
+        <article className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4 xl:col-span-8 2xl:col-span-5">
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_110px_180px] 2xl:grid-cols-[minmax(0,1fr)_110px_180px_auto]">
-            <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+            <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
               Request
               <input
                 value={requestName}
                 onChange={(event) => setRequestName(event.target.value)}
-                className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none"
+                className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-              MÃ©todo
+            <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
+              MÃƒÂ©todo
               <select
                 value={method}
                 onChange={(event) => setMethod(event.target.value as AutomationHttpMethod)}
-                className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none"
+                className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
               >
                 {AUTOMATION_IDE_METHODS.map((item) => (
                   <option key={item} value={item}>
@@ -602,12 +602,12 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 ))}
               </select>
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+            <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
               Ambiente
               <select
                 value={selectedEnvironmentId}
                 onChange={(event) => setSelectedEnvironmentId(event.target.value)}
-                className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none"
+                className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
               >
                 {AUTOMATION_ENVIRONMENTS.map((environment) => (
                   <option key={environment.id} value={environment.id}>
@@ -617,37 +617,37 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               </select>
             </label>
             <div className="flex items-end xl:col-span-3 2xl:col-span-1">
-              <div className="inline-flex min-h-11 items-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-xs font-semibold text-(--tc-text-muted,#6b7280)">
+              <div className="inline-flex min-h-11 items-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]">
                 {currentEnvironment?.baseUrl}
               </div>
             </div>
           </div>
 
-          <label className="mt-4 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+          <label className="mt-4 grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
             Path / URL
             <input
               value={path}
               onChange={(event) => setPath(event.target.value)}
-              className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 text-sm outline-none"
+              className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 text-sm outline-none"
             />
           </label>
 
-          <div className="mt-3 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3">
+          <div className="mt-3 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[#081227] px-4 py-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">URL resolvida</p>
             <p className="mt-1 break-all font-mono text-xs leading-6 text-white">{resolvedUrlPreview}</p>
           </div>
 
           {missingVariableKeys.length > 0 ? (
             <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-700">
-              VariÃ¡veis pendentes: {missingVariableKeys.join(", ")}
+              VariÃƒÂ¡veis pendentes: {missingVariableKeys.join(", ")}
             </div>
           ) : null}
 
-          <div className="mt-4 flex flex-wrap gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2">
+          <div className="mt-4 flex flex-wrap gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-2">
             {[
               { id: "params" as const, label: "Params", icon: FiSliders },
               { id: "auth" as const, label: "Auth", icon: FiLock },
-              { id: "variables" as const, label: "VariÃ¡veis", icon: FiDatabase },
+              { id: "variables" as const, label: "VariÃƒÂ¡veis", icon: FiDatabase },
               { id: "headers" as const, label: "Headers", icon: FiKey },
               { id: "body" as const, label: "Body", icon: FiServer },
             ].map((tab) => {
@@ -660,8 +660,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                   onClick={() => setActivePanel(tab.id)}
                   className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition ${
                     active
-                      ? "border-(--tc-accent,#ef0001) bg-white text-(--tc-accent,#ef0001)"
-                      : "border-transparent bg-transparent text-(--tc-text,#0b1a3c) hover:border-(--tc-border,#d7deea) hover:bg-white"
+                      ? "border-[var(--tc-accent,#ef0001)] bg-white text-[var(--tc-accent,#ef0001)]"
+                      : "border-transparent bg-transparent text-[var(--tc-text,#0b1a3c)] hover:border-[var(--tc-border,#d7deea)] hover:bg-white"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -672,18 +672,18 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           </div>
 
           {activePanel === "params" ? (
-            <section className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+            <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Query params</p>
-                  <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Monte a query string sem editar a URL inteira.</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Query params</p>
+                  <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Monte a query string sem editar a URL inteira.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => appendKeyValueRow(setQueryRows)}
                   aria-label="Adicionar query param"
                   title="Adicionar query param"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                 >
                   <FiPlus className="h-4 w-4" />
                 </button>
@@ -695,20 +695,20 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       value={row.key}
                       onChange={(event) => updateKeyValueRow(setQueryRows, row.id, "key", event.target.value)}
                       placeholder="param"
-                      className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none"
+                      className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
                     />
                     <input
                       value={row.value}
                       onChange={(event) => updateKeyValueRow(setQueryRows, row.id, "value", event.target.value)}
                       placeholder="valor ou {{variavel}}"
-                      className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none"
+                      className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => removeKeyValueRow(setQueryRows, row.id)}
                       aria-label="Remover query param"
                       title="Remover query param"
-                      className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)"
+                      className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
                     >
                       <FiTrash2 className="h-4 w-4" />
                     </button>
@@ -719,10 +719,10 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           ) : null}
 
           {activePanel === "auth" ? (
-            <section className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+            <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                  Tipo de autenticaÃ§Ã£o
+                <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
+                  Tipo de autenticaÃƒÂ§ÃƒÂ£o
                   <select
                     value={auth.type}
                     onChange={(event) =>
@@ -732,59 +732,59 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                         addTo: event.target.value === "api-key" ? current.addTo ?? "header" : current.addTo,
                       }))
                     }
-                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                   >
                     <option value="none">None</option>
                     <option value="bearer">Bearer</option>
                     <option value="basic">Basic</option>
                     <option value="api-key">API Key</option>
-                    <option value="session">SessÃ£o atual</option>
+                    <option value="session">SessÃƒÂ£o atual</option>
                   </select>
                 </label>
 
-                <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                   {auth.type === "session"
-                    ? "Reaproveita os cookies da sessÃ£o atual para chamadas internas do prÃ³prio painel."
+                    ? "Reaproveita os cookies da sessÃƒÂ£o atual para chamadas internas do prÃƒÂ³prio painel."
                     : auth.type === "api-key"
                       ? "A chave pode entrar em header ou query string."
                       : auth.type === "basic"
                         ? "Monta automaticamente o header Authorization Basic."
                         : auth.type === "bearer"
                           ? "Monta automaticamente o header Authorization Bearer."
-                          : "A request segue sem autenticaÃ§Ã£o adicional."}
+                          : "A request segue sem autenticaÃƒÂ§ÃƒÂ£o adicional."}
                 </div>
               </div>
 
               {auth.type === "bearer" ? (
-                <label className="mt-3 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                <label className="mt-3 grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                   Token Bearer
                   <input
                     value={auth.value ?? ""}
                     onChange={(event) => setAuth((current) => ({ ...current, value: event.target.value }))}
                     placeholder="token ou {{token}}"
-                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                   />
                 </label>
               ) : null}
 
               {auth.type === "basic" ? (
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
-                    UsuÃ¡rio
+                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
+                    UsuÃƒÂ¡rio
                     <input
                       value={auth.username ?? ""}
                       onChange={(event) => setAuth((current) => ({ ...current, username: event.target.value }))}
                       placeholder="user ou {{user}}"
-                      className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                     />
                   </label>
-                  <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                     Senha
                     <input
                       value={auth.password ?? ""}
                       onChange={(event) => setAuth((current) => ({ ...current, password: event.target.value }))}
                       placeholder="senha ou {{password}}"
-                      className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                     />
                   </label>
                 </div>
@@ -792,30 +792,30 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
               {auth.type === "api-key" ? (
                 <div className="mt-3 grid gap-3 md:grid-cols-3">
-                  <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                     Nome
                     <input
                       value={auth.key ?? ""}
                       onChange={(event) => setAuth((current) => ({ ...current, key: event.target.value }))}
                       placeholder="x-api-key"
-                      className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                     />
                   </label>
-                  <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                     Valor
                     <input
                       value={auth.value ?? ""}
                       onChange={(event) => setAuth((current) => ({ ...current, value: event.target.value }))}
                       placeholder="valor ou {{apiKey}}"
-                      className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                     />
                   </label>
-                  <label className="grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+                  <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                     Inserir em
                     <select
                       value={auth.addTo ?? "header"}
                       onChange={(event) => setAuth((current) => ({ ...current, addTo: event.target.value as "header" | "query" }))}
-                      className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
+                      className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                     >
                       <option value="header">Header</option>
                       <option value="query">Query</option>
@@ -828,18 +828,18 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
           {activePanel === "variables" ? (
             <section className="mt-4 grid gap-4 xl:grid-cols-2">
-              <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+              <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis do ambiente</p>
-                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Persistidas por empresa + ambiente selecionado.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">VariÃƒÂ¡veis do ambiente</p>
+                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Persistidas por empresa + ambiente selecionado.</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => appendKeyValueRow(setEnvironmentVariableRows)}
-                    aria-label="Adicionar variável de ambiente"
-                    title="Adicionar variável de ambiente"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
+                    aria-label="Adicionar variÃ¡vel de ambiente"
+                    title="Adicionar variÃ¡vel de ambiente"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                   >
                     <FiPlus className="h-4 w-4" />
                   </button>
@@ -851,20 +851,20 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                         value={row.key}
                         onChange={(event) => updateKeyValueRow(setEnvironmentVariableRows, row.id, "key", event.target.value)}
                         placeholder="apiKey"
-                        className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none"
+                        className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
                       />
                       <input
                         value={row.value}
                         onChange={(event) => updateKeyValueRow(setEnvironmentVariableRows, row.id, "value", event.target.value)}
                         placeholder="valor"
-                        className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none"
+                        className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => removeKeyValueRow(setEnvironmentVariableRows, row.id)}
-                        aria-label="Remover variável de ambiente"
-                        title="Remover variável de ambiente"
-                        className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)"
+                        aria-label="Remover variÃ¡vel de ambiente"
+                        title="Remover variÃ¡vel de ambiente"
+                        className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
                       >
                         <FiTrash2 className="h-4 w-4" />
                       </button>
@@ -873,18 +873,18 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 </div>
               </article>
 
-              <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+              <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis do request</p>
-                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">Sobrescrevem o ambiente sÃ³ nessa request.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">VariÃƒÂ¡veis do request</p>
+                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Sobrescrevem o ambiente sÃƒÂ³ nessa request.</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => appendKeyValueRow(setLocalVariableRows)}
-                    aria-label="Adicionar variável da request"
-                    title="Adicionar variável da request"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
+                    aria-label="Adicionar variÃ¡vel da request"
+                    title="Adicionar variÃ¡vel da request"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                   >
                     <FiPlus className="h-4 w-4" />
                   </button>
@@ -896,20 +896,20 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                         value={row.key}
                         onChange={(event) => updateKeyValueRow(setLocalVariableRows, row.id, "key", event.target.value)}
                         placeholder="cpf"
-                        className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none"
+                        className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
                       />
                       <input
                         value={row.value}
                         onChange={(event) => updateKeyValueRow(setLocalVariableRows, row.id, "value", event.target.value)}
                         placeholder="12345678900"
-                        className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none"
+                        className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => removeKeyValueRow(setLocalVariableRows, row.id)}
-                        aria-label="Remover variável da request"
-                        title="Remover variável da request"
-                        className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)"
+                        aria-label="Remover variÃ¡vel da request"
+                        title="Remover variÃ¡vel da request"
+                        className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
                       >
                         <FiTrash2 className="h-4 w-4" />
                       </button>
@@ -918,13 +918,13 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 </div>
               </article>
 
-              <article className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3 xl:col-span-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">VariÃ¡veis de sistema</p>
+              <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 xl:col-span-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">VariÃƒÂ¡veis de sistema</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {systemVariables.map((item) => (
                     <span
                       key={item.key}
-                      className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-xs font-semibold text-(--tc-text,#0b1a3c)"
+                      className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]"
                     >
                       {`{{${item.key}}}`} = {item.value || "--"}
                     </span>
@@ -935,18 +935,18 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           ) : null}
 
           {activePanel === "headers" ? (
-            <section className="mt-4 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+            <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Headers</p>
-                  <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{"Pode usar placeholders como `{{token}}`."}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Headers</p>
+                  <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">{"Pode usar placeholders como `{{token}}`."}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => appendKeyValueRow(setHeaderRows)}
                   aria-label="Adicionar header"
                   title="Adicionar header"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                 >
                   <FiPlus className="h-4 w-4" />
                 </button>
@@ -958,20 +958,20 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       value={row.key}
                       onChange={(event) => updateKeyValueRow(setHeaderRows, row.id, "key", event.target.value)}
                       placeholder="Header"
-                      className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none"
+                      className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
                     />
                     <input
                       value={row.value}
                       onChange={(event) => updateKeyValueRow(setHeaderRows, row.id, "value", event.target.value)}
                       placeholder="Valor"
-                      className="min-h-10 rounded-lg border border-(--tc-border,#d7deea) bg-white px-3 text-sm outline-none"
+                      className="min-h-10 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => removeKeyValueRow(setHeaderRows, row.id)}
                       aria-label="Remover header"
                       title="Remover header"
-                      className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)"
+                      className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
                     >
                       <FiTrash2 className="h-4 w-4" />
                     </button>
@@ -982,22 +982,22 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           ) : null}
 
           {activePanel === "body" ? (
-            <label className="mt-4 grid gap-2 text-sm font-semibold text-(--tc-text,#0b1a3c)">
+            <label className="mt-4 grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
               Body
               <textarea
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 rows={14}
                 placeholder='{"cpf":"{{cpf}}"}'
-                className="rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
+                className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[#081227] px-4 py-3 font-mono text-sm leading-7 text-white outline-none"
               />
             </label>
           ) : null}
         </article>
 
-        <aside className="rounded-[18px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3 xl:col-span-12 2xl:col-span-4">
+        <aside className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3 xl:col-span-12 2xl:col-span-4">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Response</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Response</p>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -1005,7 +1005,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 disabled={!response}
                 aria-label="Copiar resposta"
                 title="Copiar resposta"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c) disabled:opacity-40"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)] disabled:opacity-40"
               >
                 <FiCopy className="h-4 w-4" />
               </button>
@@ -1013,17 +1013,17 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
           </div>
 
           <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
-            <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Status</p>
-              <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{response ? `${response.status} ${response.statusText}` : "--"}</p>
+            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Status</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{response ? `${response.status} ${response.statusText}` : "--"}</p>
             </div>
-            <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">DuraÃ§Ã£o</p>
-              <p className="mt-1 text-sm font-semibold text-(--tc-text,#0b1a3c)">{response ? `${response.durationMs} ms` : "--"}</p>
+            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">DuraÃƒÂ§ÃƒÂ£o</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{response ? `${response.durationMs} ms` : "--"}</p>
             </div>
-            <div className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">URL</p>
-              <p className="mt-1 truncate text-sm font-semibold text-(--tc-text,#0b1a3c)">{response?.url ?? resolvedUrlPreview}</p>
+            <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">URL</p>
+              <p className="mt-1 truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{response?.url ?? resolvedUrlPreview}</p>
             </div>
           </div>
 
@@ -1034,7 +1034,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">{copyFeedback}</div>
           ) : null}
 
-          <div className="mt-4 inline-flex rounded-xl border border-(--tc-border,#d7deea) bg-white p-1">
+          <div className="mt-4 inline-flex rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-1">
             {[
               { id: "json", label: "JSON" },
               { id: "raw", label: "Raw" },
@@ -1044,14 +1044,14 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                 key={tab.id}
                 type="button"
                 onClick={() => setResponseTab(tab.id as typeof responseTab)}
-                className={`min-h-9 rounded-lg px-3 text-sm font-semibold ${responseTab === tab.id ? "bg-(--tc-surface-2,#f8fafc) text-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280)"}`}
+                className={`min-h-9 rounded-lg px-3 text-sm font-semibold ${responseTab === tab.id ? "bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)]"}`}
               >
                 {tab.label}
               </button>
             ))}
           </div>
 
-          <div className="mt-3 min-h-105 rounded-2xl border border-(--tc-border,#d7deea) bg-[#081227] p-4">
+          <div className="mt-3 min-h-105 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[#081227] p-4">
             <pre className="overflow-auto whitespace-pre-wrap font-mono text-xs leading-6 text-white">
               {responseTab === "headers"
                 ? JSON.stringify(response?.headers ?? {}, null, 2)
@@ -1061,12 +1061,13 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             </pre>
           </div>
 
-          <div className="mt-3 flex items-center gap-2 text-xs text-(--tc-text-muted,#6b7280)">
+          <div className="mt-3 flex items-center gap-2 text-xs text-[var(--tc-text-muted,#6b7280)]">
             <FiClock className="h-4 w-4" />
-            BFF interno para request com auth, params e variÃ¡veis sem abrir Postman.
+            BFF interno para request com auth, params e variÃƒÂ¡veis sem abrir Postman.
           </div>
         </aside>
       </div>
     </section>
   );
 }
+

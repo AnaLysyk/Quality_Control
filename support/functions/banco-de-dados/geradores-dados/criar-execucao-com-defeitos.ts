@@ -84,3 +84,4 @@ export async function criarExecucaoComDefeitos() {
   ];
   await fs.promises.writeFile(casesFile, JSON.stringify(cases, null, 2), "utf8");
 }
+

@@ -1,4 +1,4 @@
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 
 export type FixedProfileKind =
   | "empresa"
@@ -134,3 +134,4 @@ export function getFixedProfilePresentation(input?: {
     toneClass: getFixedProfileTone(kind),
   };
 }
+

@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 import useSWR from "swr";
 
@@ -15,3 +15,4 @@ export function useSWRSupports() {
     refetch: mutate,
   };
 }
+

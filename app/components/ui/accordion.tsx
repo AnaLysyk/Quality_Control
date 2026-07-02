@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
@@ -14,7 +14,7 @@ const AccordionItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AccordionPrimitive.Item
     ref={ref}
-    className={cn("rounded-[26px] border border-(--tc-border) bg-(--tc-surface)", className)}
+    className={cn("rounded-[26px] border border-[var(--tc-border)] bg-[var(--tc-surface)]", className)}
     {...props}
   />
 ));
@@ -28,14 +28,14 @@ const AccordionTrigger = React.forwardRef<
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "group flex flex-1 items-center justify-between gap-4 px-5 py-4 text-left text-(--tc-text-primary) outline-none transition",
+        "group flex flex-1 items-center justify-between gap-4 px-5 py-4 text-left text-[var(--tc-text-primary)] outline-none transition",
         "focus-visible:ring-2 focus-visible:ring-[rgba(239,0,1,0.18)]",
         className,
       )}
       {...props}
     >
       {children}
-      <FiChevronDown className="h-4 w-4 shrink-0 text-(--tc-text-muted) transition group-data-[state=open]:rotate-180" />
+      <FiChevronDown className="h-4 w-4 shrink-0 text-[var(--tc-text-muted)] transition group-data-[state=open]:rotate-180" />
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ));
@@ -56,3 +56,4 @@ const AccordionContent = React.forwardRef<
 AccordionContent.displayName = AccordionPrimitive.Content.displayName;
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };
+

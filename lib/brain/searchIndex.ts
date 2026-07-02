@@ -1,4 +1,4 @@
-import type { BrainEdge, BrainNode } from "@prisma/client";
+﻿import type { BrainEdge, BrainNode } from "@prisma/client";
 
 export const BRAIN_SEARCH_SYNONYMS: Record<string, string[]> = {
   brain: ["brian", "cerebro", "memoria", "no", "node", "bolha", "grafo"],
@@ -230,3 +230,4 @@ export function searchBrainIndex(
     .sort((left, right) => right.score - left.score || left.label.localeCompare(right.label, "pt-BR"))
     .slice(0, limit);
 }
+

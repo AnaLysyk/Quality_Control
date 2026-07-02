@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -35,10 +35,10 @@ const COPY = {
   "pt-BR": {
     forbiddenKicker: "Documentos",
     forbiddenTitle: "Acesso negado",
-    forbiddenDesc: "Você não tem permissão para consultar os documentos desta empresa.",
+    forbiddenDesc: "VocÃª nÃ£o tem permissÃ£o para consultar os documentos desta empresa.",
     breadcrumbDocs: "Documentos",
-    headerKicker: "Documentação da empresa",
-    headerDesc: "Repositório de arquivos, links e materiais de apoio da operação desta empresa.",
+    headerKicker: "DocumentaÃ§Ã£o da empresa",
+    headerDesc: "RepositÃ³rio de arquivos, links e materiais de apoio da operaÃ§Ã£o desta empresa.",
     heroRepoLabel: "Repositorio",
     heroFilesLabel: "Arquivos",
     heroLinksLabel: "Links",
@@ -48,42 +48,42 @@ const COPY = {
     heroAccessManageNote: "Pode adicionar, editar e excluir documentos.",
     heroAccessViewNote: "Leitura liberada conforme o vinculo do usuario.",
     backToCompany: "Voltar para a empresa",
-    openWiki: "Abrir repositório da empresa",
-    viewWikis: "Ver repositórios das empresas",
+    openWiki: "Abrir repositÃ³rio da empresa",
+    viewWikis: "Ver repositÃ³rios das empresas",
     itemsRegistered: (n: number) => `${n} itens cadastrados`,
     filesCount: (n: number) => `${n} arquivos`,
     linksCount: (n: number) => `${n} links`,
     addFile: "Adicionar arquivo",
     addLink: "Adicionar link",
     linkCopied: "Link copiado.",
-    copyFailed: "Não foi possível copiar o link.",
+    copyFailed: "NÃ£o foi possÃ­vel copiar o link.",
     fileKicker: "Arquivo da empresa",
     fileTitle: "Adicionar arquivo",
-    fileDesc: "Envie um arquivo para manter materiais de apoio e referencias desta empresa em um único lugar.",
+    fileDesc: "Envie um arquivo para manter materiais de apoio e referencias desta empresa em um Ãºnico lugar.",
     close: "Fechar",
-    labelTitle: "Título",
+    labelTitle: "TÃ­tulo",
     labelFile: "Arquivo",
-    labelDescription: "Descrição",
+    labelDescription: "DescriÃ§Ã£o",
     placeholderFileTitle: "Ex.: Plano de testes da empresa",
-    placeholderFileDesc: "Descreva o conteúdo ou a finalidade deste documento.",
+    placeholderFileDesc: "Descreva o conteÃºdo ou a finalidade deste documento.",
     cancel: "Cancelar",
     submittingFile: "Enviando...",
     saveFile: "Salvar arquivo",
     linkKicker: "Link da empresa",
     linkTitle: "Adicionar link",
-    linkDesc: "Cadastre links de referencia, páginas internas, materiais de apoio e documentação util para esta empresa.",
+    linkDesc: "Cadastre links de referencia, pÃ¡ginas internas, materiais de apoio e documentaÃ§Ã£o util para esta empresa.",
     labelUrl: "URL",
-    placeholderLinkTitle: "Ex.: Guia de operação no Qase",
+    placeholderLinkTitle: "Ex.: Guia de operaÃ§Ã£o no Qase",
     placeholderLinkDesc: "Explique o contexto deste link e quando ele deve ser utilizado.",
     submittingLink: "Salvando...",
     saveLink: "Salvar link",
-    repoKicker: "Repositório da empresa",
+    repoKicker: "RepositÃ³rio da empresa",
     repoTitle: "Documentos cadastrados",
-    repoDesc: "Arquivos, links e referencias disponíveis para os usuários vinculados a esta empresa.",
+    repoDesc: "Arquivos, links e referencias disponÃ­veis para os usuÃ¡rios vinculados a esta empresa.",
     itemsLabel: (n: number) => `${n} itens`,
     fileLabel: "Arquivo",
     linkLabel: "Link",
-    noDescDoc: "Sem descrição complementar.",
+    noDescDoc: "Sem descriÃ§Ã£o complementar.",
     addedAt: "Adicionado em",
     addedBy: "Adicionado por",
     systemUser: "Sistema",
@@ -96,20 +96,20 @@ const COPY = {
     deleteBtn: "Excluir",
     emptyTitle: "Nenhum documento cadastrado",
     emptyDescManage: "Adicione arquivos ou links para montar a base de referencia desta empresa.",
-    emptyDescView: "Ainda não existem documentos disponíveis para esta empresa.",
+    emptyDescView: "Ainda nÃ£o existem documentos disponÃ­veis para esta empresa.",
     confirmDelete: "Deseja excluir este documento da empresa?",
     deletedMsg: "Documento excluido.",
     fileAdded: "Arquivo adicionado com sucesso.",
     linkAdded: "Link adicionado com sucesso.",
     errAccessDenied: "Acesso negado",
-    errLoadDocs: "Não foi possível carregar os documentos desta empresa.",
+    errLoadDocs: "NÃ£o foi possÃ­vel carregar os documentos desta empresa.",
     errSelectFile: "Selecione um arquivo para continuar.",
-    errSendFile: "Não foi possível enviar o arquivo.",
+    errSendFile: "NÃ£o foi possÃ­vel enviar o arquivo.",
     errLinkUrl: "Informe a URL do link.",
-    errSaveLink: "Não foi possível salvar o link.",
-    errDeleteDoc: "Não foi possível excluir o documento.",
+    errSaveLink: "NÃ£o foi possÃ­vel salvar o link.",
+    errDeleteDoc: "NÃ£o foi possÃ­vel excluir o documento.",
     deleteModalTitle: "Excluir documento",
-    deleteModalDesc: "Esta ação é permanente e não pode ser desfeita. Deseja continuar?",
+    deleteModalDesc: "Esta aÃ§Ã£o Ã© permanente e nÃ£o pode ser desfeita. Deseja continuar?",
     deleteModalConfirm: "Excluir permanentemente",
     deleteModalCancel: "Cancelar",
     defaultCompany: "Empresa",
@@ -117,35 +117,35 @@ const COPY = {
     editBtn: "Editar",
     editKicker: "Editar documento",
     editTitle: "Editar",
-    saveEdit: "Salvar alterações",
+    saveEdit: "Salvar alteraÃ§Ãµes",
     savingEdit: "Salvando...",
     editSuccess: "Documento atualizado.",
-    errEditDoc: "Não foi possível atualizar o documento.",
+    errEditDoc: "NÃ£o foi possÃ­vel atualizar o documento.",
     previewLink: "Testar link",
-    searchPlaceholder: "Buscar por título, descrição, link, arquivo ou autor",
+    searchPlaceholder: "Buscar por tÃ­tulo, descriÃ§Ã£o, link, arquivo ou autor",
     searchResults: (shown: number, total: number) => shown === total ? `${total} itens na lista` : `${shown} de ${total} itens exibidos`,
     searchClear: "Limpar busca",
     resetFilters: "Limpar filtros",
     searchEmptyTitle: "Nenhum item encontrado",
-    searchEmptyDesc: "Tente outro termo para localizar arquivos ou links deste repositório.",
+    searchEmptyDesc: "Tente outro termo para localizar arquivos ou links deste repositÃ³rio.",
     expandHint: "Clique para expandir os detalhes",
-    identificationLabel: "Identificação",
+    identificationLabel: "IdentificaÃ§Ã£o",
     detailTitle: "Detalhes do item",
-    detailDesc: "Consulte todos os campos e execute ações rápidas neste documento.",
+    detailDesc: "Consulte todos os campos e execute aÃ§Ãµes rÃ¡pidas neste documento.",
     detailFieldsTitle: "Campos do item",
     brandLabel: "Testing Company",
-    brandDesc: "Central de documentos e acessos rápidos.",
+    brandDesc: "Central de documentos e acessos rÃ¡pidos.",
     originColumn: "Origem",
-    titleColumn: "Título",
-    createdColumn: "Criação",
-    updatedColumn: "Última modificação",
-    actionsColumn: "Ações",
+    titleColumn: "TÃ­tulo",
+    createdColumn: "CriaÃ§Ã£o",
+    updatedColumn: "Ãšltima modificaÃ§Ã£o",
+    actionsColumn: "AÃ§Ãµes",
     originLocal: "Upload local",
     originExternal: "Link externo",
-    sortNone: "Sem ordenação",
+    sortNone: "Sem ordenaÃ§Ã£o",
     sortOrigin: "Origem",
-    sortCreated: "Criação",
-    sortUpdated: "Última modificação",
+    sortCreated: "CriaÃ§Ã£o",
+    sortUpdated: "Ãšltima modificaÃ§Ã£o",
     typeFilterLabel: "Tipo",
     typeFilterAll: "Todos",
     typeFilterFile: "Arquivos",
@@ -154,13 +154,13 @@ const COPY = {
     authorFilterAll: "Todos os autores",
     dateFilterLabel: "Data",
     dateFilterAll: "Qualquer data",
-    dateFilter7d: "Últimos 7 dias",
-    dateFilter30d: "Últimos 30 dias",
-    dateFilter90d: "Últimos 90 dias",
+    dateFilter7d: "Ãšltimos 7 dias",
+    dateFilter30d: "Ãšltimos 30 dias",
+    dateFilter90d: "Ãšltimos 90 dias",
     sortLabel: "Ordenar",
     sortRecent: "Mais recentes",
     sortOldest: "Mais antigos",
-    sortTitle: "Título (A-Z)",
+    sortTitle: "TÃ­tulo (A-Z)",
     sortAuthor: "Autor (A-Z)",
     createModalTitle: "Cadastrar item",
   },
@@ -821,10 +821,10 @@ export default function CompanyDocumentsPage() {
     return (
       <div className="min-h-screen bg-(--page-bg,#ffffff) px-6 py-10 text-(--page-text,#0b1a3c)">
         <div className="mx-auto flex min-h-[60vh] max-w-md items-center justify-center">
-          <div className="w-full rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-8 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">{copy.forbiddenKicker}</p>
-            <h1 className="mt-3 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{copy.forbiddenTitle}</h1>
-            <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+          <div className="w-full rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-8 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[var(--tc-text-muted,#6b7280)]">{copy.forbiddenKicker}</p>
+            <h1 className="mt-3 text-2xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">{copy.forbiddenTitle}</h1>
+            <p className="mt-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
               {copy.forbiddenDesc}
             </p>
           </div>
@@ -849,18 +849,18 @@ export default function CompanyDocumentsPage() {
           ) : null}
 
           <section className="tc-panel sm:p-6">
-            <div className="tc-panel-header border-b border-(--tc-border,#d7deea) pb-5">
+            <div className="tc-panel-header border-b border-[var(--tc-border,#d7deea)] pb-5">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0 flex-1">
                   <p className="tc-panel-kicker">{copy.repoKicker}</p>
-                  <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.repoTitle}</h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                  <h2 className="mt-2 text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">{copy.repoTitle}</h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                     {copy.repoDesc}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
                       href={wikiHref}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                     >
                       <FiBookOpen className="h-4 w-4" /> {wikiButtonLabel}
                     </Link>
@@ -876,8 +876,8 @@ export default function CompanyDocumentsPage() {
                         }}
                         className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
                           composer === "file"
-                            ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) text-white"
-                            : "border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-primary,#0b1a3c) hover:border-(--tc-accent,#ef0001)"
+                            ? "border-[var(--tc-accent,#ef0001)] bg-[var(--tc-accent,#ef0001)] text-white"
+                            : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] text-[var(--tc-text-primary,#0b1a3c)] hover:border-[var(--tc-accent,#ef0001)]"
                         }`}
                       >
                         <FiUploadCloud className="h-4 w-4" /> {copy.addFile}
@@ -895,8 +895,8 @@ export default function CompanyDocumentsPage() {
                         }}
                         className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition ${
                           composer === "link"
-                            ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) text-white"
-                            : "border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-primary,#0b1a3c) hover:border-(--tc-accent,#ef0001)"
+                            ? "border-[var(--tc-accent,#ef0001)] bg-[var(--tc-accent,#ef0001)] text-white"
+                            : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] text-[var(--tc-text-primary,#0b1a3c)] hover:border-[var(--tc-accent,#ef0001)]"
                         }`}
                       >
                         <FiPlus className="h-4 w-4" /> {copy.addLink}
@@ -907,25 +907,25 @@ export default function CompanyDocumentsPage() {
 
                 <div className="grid w-full gap-3 sm:grid-cols-3 xl:max-w-2xl">
                   <div className="tc-panel-muted">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
                       {copy.heroRepoLabel}
                     </p>
-                    <p className="mt-2 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{documents.length}</p>
-                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{copy.itemsRegistered(documents.length)}</p>
+                    <p className="mt-2 text-2xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">{documents.length}</p>
+                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">{copy.itemsRegistered(documents.length)}</p>
                   </div>
                   <div className="tc-panel-muted">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
                       {copy.heroFilesLabel}
                     </p>
-                    <p className="mt-2 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{fileCount}</p>
-                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{copy.filesCount(fileCount)}</p>
+                    <p className="mt-2 text-2xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">{fileCount}</p>
+                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">{copy.filesCount(fileCount)}</p>
                   </div>
                   <div className="tc-panel-muted">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
                       {copy.heroLinksLabel}
                     </p>
-                    <p className="mt-2 text-2xl font-extrabold text-(--tc-text-primary,#0b1a3c)">{linkCount}</p>
-                    <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">{copy.linksCount(linkCount)}</p>
+                    <p className="mt-2 text-2xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">{linkCount}</p>
+                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">{copy.linksCount(linkCount)}</p>
                   </div>
                 </div>
               </div>
@@ -934,7 +934,7 @@ export default function CompanyDocumentsPage() {
           {loading ? (
             <div className="space-y-3 pt-6">
               {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
+                <div key={index} className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-5">
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex min-w-0 flex-1 items-start gap-4">
                       <div className="h-12 w-12 animate-pulse rounded-2xl bg-slate-200" />
@@ -961,12 +961,12 @@ export default function CompanyDocumentsPage() {
             </div>
           ) : documents.length === 0 ? (
             <div className="flex min-h-65 flex-col items-center justify-center gap-4 py-10 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) text-(--tc-text-muted,#6b7280)">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] text-[var(--tc-text-muted,#6b7280)]">
                 <FiFileText className="h-7 w-7" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.emptyTitle}</h3>
-                <p className="max-w-xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">{copy.emptyTitle}</h3>
+                <p className="max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                   {canManage
                     ? copy.emptyDescManage
                     : copy.emptyDescView}
@@ -975,17 +975,17 @@ export default function CompanyDocumentsPage() {
             </div>
           ) : (
             <div className="pt-6 space-y-4">
-              <div className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-4">
+              <div className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <label className="relative flex-1">
-                      <FiSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+                      <FiSearch className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
                       <input
                         type="search"
                         value={searchQuery}
                         onChange={(event) => setSearchQuery(event.target.value)}
                         placeholder={copy.searchPlaceholder}
-                        className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white py-3 pr-4 pl-11 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                        className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white py-3 pr-4 pl-11 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                       />
                     </label>
                     <div className="flex flex-wrap items-center gap-2">
@@ -993,7 +993,7 @@ export default function CompanyDocumentsPage() {
                         <button
                           type="button"
                           onClick={() => setSearchQuery("")}
-                          className="inline-flex items-center rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                          className="inline-flex items-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                         >
                           {copy.searchClear}
                         </button>
@@ -1002,12 +1002,12 @@ export default function CompanyDocumentsPage() {
                         <button
                           type="button"
                           onClick={resetListFilters}
-                          className="inline-flex items-center rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                          className="inline-flex items-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                         >
                           {copy.resetFilters}
                         </button>
                       ) : null}
-                      <span className="inline-flex min-h-10 items-center rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+                      <span className="inline-flex min-h-10 items-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
                         {copy.searchResults(filteredDocuments.length, documents.length)}
                       </span>
                     </div>
@@ -1026,8 +1026,8 @@ export default function CompanyDocumentsPage() {
                           onClick={() => setTypeFilter(option.key)}
                           className={`inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold transition ${
                             typeFilter === option.key
-                              ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) text-white"
-                              : "border-(--tc-border,#d7deea) bg-white text-(--tc-text-primary,#0b1a3c) hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                              ? "border-[var(--tc-accent,#ef0001)] bg-[var(--tc-accent,#ef0001)] text-white"
+                              : "border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-primary,#0b1a3c)] hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                           }`}
                         >
                           {option.label}
@@ -1037,11 +1037,11 @@ export default function CompanyDocumentsPage() {
 
                     <div className="grid gap-3 sm:grid-cols-3 xl:min-w-176">
                       <label className="space-y-2">
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.authorFilterLabel}</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.authorFilterLabel}</span>
                         <select
                           value={authorFilter}
                           onChange={(event) => setAuthorFilter(event.target.value)}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         >
                           <option value="all">{copy.authorFilterAll}</option>
                           {authorOptions.map((author) => (
@@ -1051,11 +1051,11 @@ export default function CompanyDocumentsPage() {
                       </label>
 
                       <label className="space-y-2">
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.dateFilterLabel}</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.dateFilterLabel}</span>
                         <select
                           value={dateFilter}
                           onChange={(event) => setDateFilter(event.target.value as DocumentDateFilter)}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         >
                           <option value="all">{copy.dateFilterAll}</option>
                           <option value="7d">{copy.dateFilter7d}</option>
@@ -1065,11 +1065,11 @@ export default function CompanyDocumentsPage() {
                       </label>
 
                       <label className="space-y-2 xl:hidden">
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.sortLabel}</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.sortLabel}</span>
                         <select
                           value={sortOrder}
                           onChange={(event) => setSortOrder(event.target.value as DocumentSortKey)}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         >
                           <option value="none">{copy.sortNone}</option>
                           <option value="origin">{copy.sortOrigin}</option>
@@ -1084,23 +1084,23 @@ export default function CompanyDocumentsPage() {
               </div>
 
               {filteredDocuments.length === 0 ? (
-                <div className="flex min-h-55 flex-col items-center justify-center gap-4 rounded-[28px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 py-10 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)">
+                <div className="flex min-h-55 flex-col items-center justify-center gap-4 rounded-[28px] border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 py-10 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]">
                     <FiSearch className="h-6 w-6" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.searchEmptyTitle}</h3>
-                    <p className="max-w-xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{copy.searchEmptyDesc}</p>
+                    <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">{copy.searchEmptyTitle}</h3>
+                    <p className="max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{copy.searchEmptyDesc}</p>
                   </div>
                 </div>
               ) : (
-                <div data-testid="document-list" className="max-h-[70vh] overflow-auto rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)">
-                  <div className="sticky top-0 z-10 hidden border-b border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-2.5 shadow-[0_1px_0_rgba(15,23,42,0.05)] xl:grid xl:grid-cols-[16rem_minmax(0,1fr)_9.5rem_9.5rem_10rem] xl:items-center xl:gap-4">
+                <div data-testid="document-list" className="max-h-[70vh] overflow-auto rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)]">
+                  <div className="sticky top-0 z-10 hidden border-b border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-2.5 shadow-[0_1px_0_rgba(15,23,42,0.05)] xl:grid xl:grid-cols-[16rem_minmax(0,1fr)_9.5rem_9.5rem_10rem] xl:items-center xl:gap-4">
                     <button
                       type="button"
                       onClick={() => handleHeaderSort("origin")}
                       onDoubleClick={() => clearHeaderSort("origin")}
-                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.28em] transition ${sortOrder === "origin" ? "text-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text-primary,#0b1a3c)"}`}
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.28em] transition ${sortOrder === "origin" ? "text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)] hover:text-[var(--tc-text-primary,#0b1a3c)]"}`}
                     >
                       {copy.originColumn}
                       {sortOrder === "origin" ? <FiArrowUp className="h-3 w-3" /> : null}
@@ -1109,7 +1109,7 @@ export default function CompanyDocumentsPage() {
                       type="button"
                       onClick={() => handleHeaderSort("title")}
                       onDoubleClick={() => clearHeaderSort("title")}
-                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.28em] transition ${sortOrder === "title" ? "text-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text-primary,#0b1a3c)"}`}
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.28em] transition ${sortOrder === "title" ? "text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)] hover:text-[var(--tc-text-primary,#0b1a3c)]"}`}
                     >
                       {copy.titleColumn}
                       {sortOrder === "title" ? <FiArrowUp className="h-3 w-3" /> : null}
@@ -1118,7 +1118,7 @@ export default function CompanyDocumentsPage() {
                       type="button"
                       onClick={() => handleHeaderSort("createdAt")}
                       onDoubleClick={() => clearHeaderSort("createdAt")}
-                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.28em] transition ${sortOrder === "createdAt" ? "text-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text-primary,#0b1a3c)"}`}
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.28em] transition ${sortOrder === "createdAt" ? "text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)] hover:text-[var(--tc-text-primary,#0b1a3c)]"}`}
                     >
                       {copy.createdColumn}
                       {sortOrder === "createdAt" ? <FiArrowUp className="h-3 w-3" /> : null}
@@ -1127,12 +1127,12 @@ export default function CompanyDocumentsPage() {
                       type="button"
                       onClick={() => handleHeaderSort("updatedAt")}
                       onDoubleClick={() => clearHeaderSort("updatedAt")}
-                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.28em] transition ${sortOrder === "updatedAt" ? "text-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text-primary,#0b1a3c)"}`}
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.28em] transition ${sortOrder === "updatedAt" ? "text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)] hover:text-[var(--tc-text-primary,#0b1a3c)]"}`}
                     >
                       {copy.updatedColumn}
                       {sortOrder === "updatedAt" ? <FiArrowUp className="h-3 w-3" /> : null}
                     </button>
-                    <div className="text-right text-[10px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted,#6b7280)">{copy.actionsColumn}</div>
+                    <div className="text-right text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">{copy.actionsColumn}</div>
                   </div>
                   <div className="divide-y divide-(--tc-border,#d7deea)">
                     {filteredDocuments.map((item) => {
@@ -1149,7 +1149,7 @@ export default function CompanyDocumentsPage() {
                           onClick={() => openItemDetails(item)}
                           title={copy.expandHint}
                           aria-label={`${item.title}. ${copy.expandHint}`}
-                          className="group w-full cursor-pointer px-4 py-2.5 text-left transition hover:bg-(--tc-surface-alt,#f8fafc)"
+                          className="group w-full cursor-pointer px-4 py-2.5 text-left transition hover:bg-[var(--tc-surface-alt,#f8fafc)]"
                         >
                           <div className="grid gap-2.5 xl:grid-cols-[16rem_minmax(0,1fr)_9.5rem_9.5rem_10rem] xl:items-center xl:gap-4">
                             <div className="min-w-0">
@@ -1162,31 +1162,31 @@ export default function CompanyDocumentsPage() {
                                   {item.kind === "file" ? <FiPaperclip className="h-3 w-3" /> : <FiLink2 className="h-3 w-3" />}
                                   {originLabel}
                                 </span>
-                                <span className="inline-flex items-center rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                                <span className="inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                                   {identifier}
                                 </span>
                               </div>
-                              <p className="mt-1.5 truncate text-[11px] font-medium text-(--tc-text-secondary,#4b5563)">{copy.addedBy}: {authorLabel}</p>
+                              <p className="mt-1.5 truncate text-[11px] font-medium text-[var(--tc-text-secondary,#4b5563)]">{copy.addedBy}: {authorLabel}</p>
                             </div>
 
                             <div className="min-w-0">
-                              <h3 className="truncate text-sm font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{item.title}</h3>
-                              <p className="mt-0.5 truncate text-[11px] leading-4 text-(--tc-text-secondary,#4b5563)">{item.description || copy.noDescDoc}</p>
-                              <p className="mt-0.5 truncate text-[11px] leading-4 text-(--tc-text-muted,#6b7280)">{summaryLabel}</p>
-                              <div className="mt-1.5 grid gap-1 text-[11px] text-(--tc-text-muted,#6b7280) xl:hidden">
+                              <h3 className="truncate text-sm font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{item.title}</h3>
+                              <p className="mt-0.5 truncate text-[11px] leading-4 text-[var(--tc-text-secondary,#4b5563)]">{item.description || copy.noDescDoc}</p>
+                              <p className="mt-0.5 truncate text-[11px] leading-4 text-[var(--tc-text-muted,#6b7280)]">{summaryLabel}</p>
+                              <div className="mt-1.5 grid gap-1 text-[11px] text-[var(--tc-text-muted,#6b7280)] xl:hidden">
                                 <span>{copy.createdColumn}: {formatDate(item.createdAt)}</span>
                                 <span>{copy.updatedColumn}: {formatDate(updatedAt)}</span>
                               </div>
                             </div>
 
                             <div className="hidden xl:block">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.createdColumn}</p>
-                              <p className="mt-1 text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{formatDate(item.createdAt)}</p>
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.createdColumn}</p>
+                              <p className="mt-1 text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{formatDate(item.createdAt)}</p>
                             </div>
 
                             <div className="hidden xl:block">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.updatedColumn}</p>
-                              <p className="mt-1 text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{formatDate(updatedAt)}</p>
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.updatedColumn}</p>
+                              <p className="mt-1 text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{formatDate(updatedAt)}</p>
                             </div>
 
                             <div className="flex items-center justify-start gap-1 pt-1 xl:justify-end xl:pt-0">
@@ -1198,7 +1198,7 @@ export default function CompanyDocumentsPage() {
                                   event.stopPropagation();
                                   handleQuickOpen(item);
                                 }}
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                               >
                                 <FiExternalLink className="h-3.5 w-3.5" />
                               </button>
@@ -1211,7 +1211,7 @@ export default function CompanyDocumentsPage() {
                                     event.stopPropagation();
                                     void handleCopyLink(item.url || "");
                                   }}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                                 >
                                   <FiCopy className="h-3.5 w-3.5" />
                                 </button>
@@ -1225,7 +1225,7 @@ export default function CompanyDocumentsPage() {
                                     event.stopPropagation();
                                     startEditingItem(item);
                                   }}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                                 >
                                   <FiEdit2 className="h-3.5 w-3.5" />
                                 </button>
@@ -1244,7 +1244,7 @@ export default function CompanyDocumentsPage() {
                                   <FiTrash2 className="h-3.5 w-3.5" />
                                 </button>
                               ) : null}
-                              <span className="hidden items-center gap-1.5 pl-1 text-(--tc-accent,#ef0001) xl:inline-flex" aria-hidden="true">
+                              <span className="hidden items-center gap-1.5 pl-1 text-[var(--tc-accent,#ef0001)] xl:inline-flex" aria-hidden="true">
                                 <span className="h-1.5 w-1.5 rounded-full bg-current opacity-0 transition duration-200 group-hover:animate-pulse group-hover:opacity-100" />
                                 <FiChevronRight className="h-3.5 w-3.5 opacity-35 transition duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
                               </span>
@@ -1270,7 +1270,7 @@ export default function CompanyDocumentsPage() {
             >
               <div className="pointer-events-none flex min-h-full items-start justify-center">
                 <div
-                  className="pointer-events-auto my-2 w-full max-w-4xl overflow-hidden rounded-4xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-[0_24px_80px_rgba(15,23,42,0.28)]"
+                  className="pointer-events-auto my-2 w-full max-w-4xl overflow-hidden rounded-4xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-[0_24px_80px_rgba(15,23,42,0.28)]"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <div className="bg-[linear-gradient(135deg,#071e53_0%,#142b63_42%,#ef0001_100%)] px-4 py-4 sm:px-5">
@@ -1303,7 +1303,7 @@ export default function CompanyDocumentsPage() {
                               </span>
                             </div>
                             <h2 id="document-detail-title" className="mt-3 truncate text-2xl font-bold text-white">
-                              {editing?.id === detailItem.id ? `${copy.editTitle} — ${detailItem.title}` : detailItem.title}
+                              {editing?.id === detailItem.id ? `${copy.editTitle} â€” ${detailItem.title}` : detailItem.title}
                             </h2>
                             <p className="mt-1 text-sm leading-6 text-white/78">
                               {editing?.id === detailItem.id ? copy.editKicker : copy.brandDesc}
@@ -1326,29 +1326,29 @@ export default function CompanyDocumentsPage() {
                   {editing?.id === detailItem.id ? (
                     <div className="grid gap-4 lg:grid-cols-2">
                       <label className={`space-y-2${detailItem.kind === "file" ? " lg:col-span-2" : ""}`}>
-                        <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelTitle}</span>
+                        <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelTitle}</span>
                         <input
                           value={editTitle}
                           onChange={(event) => setEditTitle(event.target.value)}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         />
                       </label>
 
                       {detailItem.kind === "link" ? (
                         <div className="space-y-2">
-                          <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelUrl}</span>
+                          <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelUrl}</span>
                           <input
                             aria-label={copy.labelUrl}
                             value={editUrl}
                             onChange={(event) => setEditUrl(event.target.value)}
-                            className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                            className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                           />
                           {editUrl.trim() ? (
                             <a
                               href={safeHref(editUrl.trim())}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
                             >
                               <FiExternalLink className="h-3 w-3" /> {copy.previewLink}
                             </a>
@@ -1357,83 +1357,83 @@ export default function CompanyDocumentsPage() {
                       ) : null}
 
                       <label className="space-y-2 lg:col-span-2">
-                        <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelDescription}</span>
+                        <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelDescription}</span>
                         <textarea
                           value={editDesc}
                           onChange={(event) => setEditDesc(event.target.value)}
                           rows={5}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         />
                       </label>
                     </div>
                   ) : (
                     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
                       <div className="space-y-3">
-                        <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">{copy.detailTitle}</p>
-                          <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{detailItem.description || copy.noDescDoc}</p>
-                          <p className="mt-2 text-[11px] leading-5 text-(--tc-text-muted,#6b7280)">{getDocumentSummaryLabel(detailItem, copy)}</p>
+                        <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--tc-text-muted,#6b7280)]">{copy.detailTitle}</p>
+                          <p className="mt-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{detailItem.description || copy.noDescDoc}</p>
+                          <p className="mt-2 text-[11px] leading-5 text-[var(--tc-text-muted,#6b7280)]">{getDocumentSummaryLabel(detailItem, copy)}</p>
                           {detailItem.kind === "link" && detailItem.url ? (
                             <a
                               href={safeHref(detailItem.url)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="mt-3 inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                              className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                             >
                               <FiExternalLink className="h-4 w-4" /> {copy.previewLink}
                             </a>
                           ) : null}
                         </div>
 
-                        <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">{copy.detailFieldsTitle}</p>
+                        <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--tc-text-muted,#6b7280)]">{copy.detailFieldsTitle}</p>
                           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.addedAt}</p>
-                              <p className="mt-1.5 text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{formatDate(detailItem.createdAt)}</p>
+                            <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.addedAt}</p>
+                              <p className="mt-1.5 text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{formatDate(detailItem.createdAt)}</p>
                             </div>
-                            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.updatedColumn}</p>
-                              <p className="mt-1.5 text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{formatDate(getDocumentUpdatedAt(detailItem))}</p>
+                            <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.updatedColumn}</p>
+                              <p className="mt-1.5 text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{formatDate(getDocumentUpdatedAt(detailItem))}</p>
                             </div>
-                            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.addedBy}</p>
-                              <p className="mt-1.5 wrap-break-word text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{detailItem.createdByName || copy.systemUser}</p>
+                            <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.addedBy}</p>
+                              <p className="mt-1.5 wrap-break-word text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{detailItem.createdByName || copy.systemUser}</p>
                             </div>
-                            <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3 sm:col-span-2 lg:col-span-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.identificationLabel}</p>
-                              <p className="mt-1.5 text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{buildDocumentIdentifier(detailItem)}</p>
+                            <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 sm:col-span-2 lg:col-span-3">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.identificationLabel}</p>
+                              <p className="mt-1.5 text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{buildDocumentIdentifier(detailItem)}</p>
                             </div>
                             {detailItem.kind === "file" ? (
                               <>
-                                <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3 sm:col-span-2 lg:col-span-2">
-                                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.fileField}</p>
-                                  <p className="mt-1.5 wrap-break-word text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{detailItem.fileName || copy.fileLabel}</p>
+                                <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 sm:col-span-2 lg:col-span-2">
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.fileField}</p>
+                                  <p className="mt-1.5 wrap-break-word text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{detailItem.fileName || copy.fileLabel}</p>
                                 </div>
-                                <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3">
-                                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.sizeField}</p>
-                                  <p className="mt-1.5 text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{formatBytes(detailItem.sizeBytes)}</p>
+                                <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3">
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.sizeField}</p>
+                                  <p className="mt-1.5 text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{formatBytes(detailItem.sizeBytes)}</p>
                                 </div>
                               </>
                             ) : (
-                              <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-white p-3 sm:col-span-2 lg:col-span-3">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">{copy.destinationField}</p>
-                                <p className="mt-1.5 wrap-break-word text-[13px] font-semibold leading-5 text-(--tc-text-primary,#0b1a3c)">{detailItem.url || "-"}</p>
+                              <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 sm:col-span-2 lg:col-span-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">{copy.destinationField}</p>
+                                <p className="mt-1.5 wrap-break-word text-[13px] font-semibold leading-5 text-[var(--tc-text-primary,#0b1a3c)]">{detailItem.url || "-"}</p>
                               </div>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-4 xl:self-start">
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">{copy.heroAccessLabel}</p>
+                      <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-4 xl:self-start">
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--tc-text-muted,#6b7280)]">{copy.heroAccessLabel}</p>
                         <div className="mt-3 space-y-2.5">
                           {detailItem.kind === "link" ? (
                             <a
                               href={safeHref(detailItem.url || "")}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2.5 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                             >
                               <FiExternalLink className="h-4 w-4" /> {copy.openLink}
                             </a>
@@ -1444,7 +1444,7 @@ export default function CompanyDocumentsPage() {
                                 setViewerItem(detailItem);
                                 setViewerOpen(true);
                               }}
-                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2.5 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                             >
                               <FiExternalLink className="h-4 w-4" /> {copy.openFile}
                             </button>
@@ -1454,7 +1454,7 @@ export default function CompanyDocumentsPage() {
                             <button
                               type="button"
                               onClick={() => void handleCopyLink(detailItem.url || "")}
-                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2.5 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                             >
                               <FiCopy className="h-4 w-4" /> {copy.copyLink}
                             </button>
@@ -1464,7 +1464,7 @@ export default function CompanyDocumentsPage() {
                             <button
                               type="button"
                               onClick={() => startEditingItem(detailItem)}
-                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-2.5 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                             >
                               <FiEdit2 className="h-4 w-4" /> {copy.editBtn}
                             </button>
@@ -1486,11 +1486,11 @@ export default function CompanyDocumentsPage() {
                 </div>
 
                 {editing?.id === detailItem.id ? (
-                  <div className="flex flex-col-reverse gap-3 border-t border-(--tc-border,#d7deea) px-5 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-6">
+                  <div className="flex flex-col-reverse gap-3 border-t border-[var(--tc-border,#d7deea)] px-5 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-6">
                     <button
                       type="button"
                       onClick={() => setEditing(null)}
-                      className="w-full rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001) sm:w-auto"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] sm:w-auto"
                     >
                       {copy.cancel}
                     </button>
@@ -1517,21 +1517,21 @@ export default function CompanyDocumentsPage() {
               className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm"
               onClick={(event) => { if (event.target === event.currentTarget) setComposer(null); }}
             >
-              <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-4xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
-                <div className="flex items-start justify-between gap-4 border-b border-(--tc-border,#d7deea) px-5 py-5 sm:px-6">
+              <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-4xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+                <div className="flex items-start justify-between gap-4 border-b border-[var(--tc-border,#d7deea)] px-5 py-5 sm:px-6">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">{copy.createModalTitle}</p>
-                    <h2 id="composer-modal-title" className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">
+                    <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[var(--tc-text-muted,#6b7280)]">{copy.createModalTitle}</p>
+                    <h2 id="composer-modal-title" className="mt-2 text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">
                       {composer === "file" ? copy.fileTitle : copy.linkTitle}
                     </h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                       {composer === "file" ? copy.fileDesc : copy.linkDesc}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setComposer(null)}
-                    className="inline-flex items-center rounded-xl border border-(--tc-border,#d7deea) px-3 py-2 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                    className="inline-flex items-center rounded-xl border border-[var(--tc-border,#d7deea)] px-3 py-2 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                   >
                     {copy.close}
                   </button>
@@ -1541,88 +1541,88 @@ export default function CompanyDocumentsPage() {
                   {composer === "file" ? (
                     <div className="grid gap-4 lg:grid-cols-2">
                       <label className="space-y-2">
-                        <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelTitle}</span>
+                        <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelTitle}</span>
                         <input
                           data-testid="doc-file-title"
                           value={fileTitle}
                           onChange={(event) => setFileTitle(event.target.value)}
                           placeholder={copy.placeholderFileTitle}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         />
                       </label>
                       <label className="space-y-2">
-                        <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelFile}</span>
+                        <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelFile}</span>
                         <input
                           data-testid="doc-file-input"
                           type="file"
                           onChange={(event) => setUploadFile(event.currentTarget.files?.[0] ?? null)}
-                          className="w-full rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-[0.9rem] text-sm text-(--tc-text-secondary,#4b5563) outline-none transition file:mr-3 file:rounded-xl file:border-0 file:bg-(--tc-accent,#ef0001) file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-[0.9rem] text-sm text-[var(--tc-text-secondary,#4b5563)] outline-none transition file:mr-3 file:rounded-xl file:border-0 file:bg-[var(--tc-accent,#ef0001)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white focus:border-[var(--tc-accent,#ef0001)]"
                         />
                       </label>
                       <label className="space-y-2 lg:col-span-2">
-                        <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelDescription}</span>
+                        <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelDescription}</span>
                         <textarea
                           data-testid="doc-file-description"
                           value={fileDescription}
                           onChange={(event) => setFileDescription(event.target.value)}
                           rows={5}
                           placeholder={copy.placeholderFileDesc}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         />
                       </label>
                     </div>
                   ) : (
                     <div className="grid gap-4 lg:grid-cols-2">
                       <label className="space-y-2">
-                        <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelTitle}</span>
+                        <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelTitle}</span>
                         <input
                           data-testid="doc-link-title"
                           value={linkTitle}
                           onChange={(event) => setLinkTitle(event.target.value)}
                           placeholder={copy.placeholderLinkTitle}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         />
                       </label>
                       <div className="space-y-2">
-                        <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelUrl}</span>
+                        <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelUrl}</span>
                         <input
                           data-testid="doc-link-url"
                           value={linkUrl}
                           onChange={(event) => setLinkUrl(event.target.value)}
                           placeholder="https://..."
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         />
                         {linkUrl.trim() ? (
                           <a
                             href={safeHref(linkUrl.trim())}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-(--tc-accent,#ef0001) hover:underline"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--tc-accent,#ef0001)] hover:underline"
                           >
                             <FiExternalLink className="h-3 w-3" /> {copy.previewLink}
                           </a>
                         ) : null}
                       </div>
                       <label className="space-y-2 lg:col-span-2">
-                        <span className="text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.labelDescription}</span>
+                        <span className="text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.labelDescription}</span>
                         <textarea
                           data-testid="doc-link-description"
                           value={linkDescription}
                           onChange={(event) => setLinkDescription(event.target.value)}
                           rows={5}
                           placeholder={copy.placeholderLinkDesc}
-                          className="w-full rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-(--tc-accent,#ef0001)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
                         />
                       </label>
                     </div>
                   )}
                 </div>
 
-                <div className="flex flex-col-reverse gap-3 border-t border-(--tc-border,#d7deea) px-5 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-6">
+                <div className="flex flex-col-reverse gap-3 border-t border-[var(--tc-border,#d7deea)] px-5 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-6">
                   <button
                     type="button"
                     onClick={() => setComposer(null)}
-                    className="w-full rounded-2xl border border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001) sm:w-auto"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)] sm:w-auto"
                   >
                     {copy.cancel}
                   </button>
@@ -1668,17 +1668,17 @@ export default function CompanyDocumentsPage() {
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
               onClick={(e) => { if (e.target === e.currentTarget) setDeletingId(null); }}
             >
-              <div className="w-full max-w-sm rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+              <div className="w-full max-w-sm rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-red-100 bg-red-50 text-red-600">
                   <FiTrash2 className="h-5 w-5" />
                 </div>
-                <h2 id="delete-modal-title" className="mt-4 text-xl font-bold text-(--tc-text-primary,#0b1a3c)">{copy.deleteModalTitle}</h2>
-                <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{copy.deleteModalDesc}</p>
+                <h2 id="delete-modal-title" className="mt-4 text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">{copy.deleteModalTitle}</h2>
+                <p className="mt-2 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{copy.deleteModalDesc}</p>
                 <div className="mt-6 flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setDeletingId(null)}
-                    className="rounded-2xl border border-(--tc-border,#d7deea) px-4 py-2.5 text-sm font-semibold text-(--tc-text-secondary,#4b5563) transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                    className="rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-2.5 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                   >
                     {copy.deleteModalCancel}
                   </button>
@@ -1703,3 +1703,5 @@ function currentCompanyHref(slug: string) {
   const normalized = slug.trim();
   return normalized ? "../home" : "/admin/clients";
 }
+
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -244,7 +244,7 @@ function toneClass(tone: "critical" | "warning" | "positive" | "neutral") {
   if (tone === "critical") return "border-[rgba(239,0,1,0.20)] bg-[rgba(239,0,1,0.07)] text-[#a80001]";
   if (tone === "warning") return "border-[rgba(245,158,11,0.24)] bg-[rgba(245,158,11,0.09)] text-[#a15c07]";
   if (tone === "positive") return "border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.08)] text-[#047857]";
-  return "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text,#0b1a3c)";
+  return "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text,#0b1a3c)]";
 }
 
 function fillLevelClass(
@@ -342,9 +342,9 @@ function EmptyState({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-[linear-gradient(180deg,var(--tc-surface,#fff)_0%,var(--tc-surface-2,#f8fafc)_100%)] p-6">
-      <p className="text-base font-bold text-(--tc-text,#0b1a3c)">{title}</p>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-(--tc-text-muted,#6b7280)">{detail}</p>
+    <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[linear-gradient(180deg,var(--tc-surface,#fff)_0%,var(--tc-surface-2,#f8fafc)_100%)] p-6">
+      <p className="text-base font-bold text-[var(--tc-text,#0b1a3c)]">{title}</p>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--tc-text-muted,#6b7280)]">{detail}</p>
       {actions ? <div className="mt-4 flex flex-wrap gap-2">{actions}</div> : null}
     </div>
   );
@@ -354,7 +354,7 @@ function SkeletonDashboard() {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="h-44 animate-pulse rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4">
+        <div key={index} className="h-44 animate-pulse rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-4">
           <div className="h-3 w-24 rounded-full bg-slate-200" />
           <div className="mt-5 h-7 w-32 rounded-full bg-slate-200" />
           <div className="mt-8 h-16 rounded-xl bg-slate-100" />
@@ -420,12 +420,12 @@ function WidgetShell({
   action?: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4 shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-4 shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[0.68rem] font-black uppercase tracking-[0.2em] text-(--tc-accent,#ef0001)">{widget.question}</p>
-          <h3 className="mt-1 text-lg font-black tracking-[-0.03em] text-(--tc-text,#0b1a3c)">{widget.title}</h3>
-          <p className="mt-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{widget.reason}</p>
+          <p className="text-[0.68rem] font-black uppercase tracking-[0.2em] text-[var(--tc-accent,#ef0001)]">{widget.question}</p>
+          <h3 className="mt-1 text-lg font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{widget.title}</h3>
+          <p className="mt-1 text-xs leading-5 text-[var(--tc-text-muted,#6b7280)]">{widget.reason}</p>
         </div>
         {action}
       </div>
@@ -447,7 +447,7 @@ function BucketBars({
 }) {
   const visible = buckets.slice(0, maxItems);
   const max = Math.max(1, ...visible.map((bucket) => bucket.count));
-  if (!visible.length) return <p className="text-sm text-(--tc-text-muted,#6b7280)">{emptyLabel}</p>;
+  if (!visible.length) return <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">{emptyLabel}</p>;
   return (
     <div className="space-y-3">
       {visible.map((bucket) => (
@@ -458,17 +458,17 @@ function BucketBars({
           className="group grid w-full grid-cols-[minmax(0,1fr)_3.75rem] items-center gap-3 text-left"
         >
           <div className="min-w-0">
-            <div className="mb-1 flex items-center justify-between gap-2 text-xs font-bold text-(--tc-text,#0b1a3c)">
+            <div className="mb-1 flex items-center justify-between gap-2 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
               <span className="truncate">{bucket.label}</span>
-              {bucket.riskCount > 0 ? <span className="text-(--tc-accent,#ef0001)">{bucket.riskCount} risco</span> : null}
+              {bucket.riskCount > 0 ? <span className="text-[var(--tc-accent,#ef0001)]">{bucket.riskCount} risco</span> : null}
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-(--tc-surface-2,#f8fafc)">
+            <div className="h-2.5 overflow-hidden rounded-full bg-[var(--tc-surface-2,#f8fafc)]">
               <div
                 className={`h-full rounded-full bg-[linear-gradient(90deg,#011848_0%,#ef0001_100%)] transition-all duration-500 group-hover:brightness-110 ${fillLevelClass(bucket.count, max, BAR_FILL_WIDTH_CLASSES)}`}
               />
             </div>
           </div>
-          <div className="text-right text-lg font-black text-(--tc-text,#0b1a3c)">{bucket.count}</div>
+          <div className="text-right text-lg font-black text-[var(--tc-text,#0b1a3c)]">{bucket.count}</div>
         </button>
       ))}
     </div>
@@ -477,9 +477,9 @@ function BucketBars({
 
 function TimelineBars({ buckets }: { buckets: DashboardBucket[] }) {
   const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
-  if (buckets.length <= 1) return <p className="text-sm text-(--tc-text-muted,#6b7280)">Sem serie temporal suficiente para este recorte.</p>;
+  if (buckets.length <= 1) return <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Sem serie temporal suficiente para este recorte.</p>;
   return (
-    <div className="flex h-48 items-end gap-2 overflow-x-auto rounded-2xl border border-(--tc-border,#d7deea) bg-[linear-gradient(180deg,#f9fbff_0%,#fff_100%)] p-4">
+    <div className="flex h-48 items-end gap-2 overflow-x-auto rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[linear-gradient(180deg,#f9fbff_0%,#fff_100%)] p-4">
       {buckets.map((bucket) => (
         <div key={bucket.key} className="flex min-w-10 flex-1 flex-col items-center gap-2">
           <div className="flex h-32 w-full items-end">
@@ -488,7 +488,7 @@ function TimelineBars({ buckets }: { buckets: DashboardBucket[] }) {
               title={`${bucket.label}: ${bucket.count}`}
             />
           </div>
-          <span className="whitespace-nowrap text-[0.68rem] font-semibold text-(--tc-text-muted,#6b7280)">{bucket.label}</span>
+          <span className="whitespace-nowrap text-[0.68rem] font-semibold text-[var(--tc-text-muted,#6b7280)]">{bucket.label}</span>
         </div>
       ))}
     </div>
@@ -506,19 +506,19 @@ function Heatmap({
 }) {
   const modules = MODULE_OPTIONS;
   const rows = companies.slice(0, 8);
-  if (rows.length < 2) return <p className="text-sm text-(--tc-text-muted,#6b7280)">O mapa de calor aparece quando ha mais de uma empresa no recorte.</p>;
+  if (rows.length < 2) return <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">O mapa de calor aparece quando ha mais de uma empresa no recorte.</p>;
 
   return (
     <div className="overflow-x-auto">
       <div className="min-w-176">
-        <div className="grid grid-cols-[12rem_repeat(4,minmax(7rem,1fr))] gap-2 text-xs font-black uppercase tracking-[0.14em] text-(--tc-text-muted,#6b7280)">
+        <div className="grid grid-cols-[12rem_repeat(4,minmax(7rem,1fr))] gap-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">
           <span>Empresa</span>
           {modules.map((moduleName) => <span key={moduleName}>{moduleLabel(moduleName)}</span>)}
         </div>
         <div className="mt-2 space-y-2">
           {rows.map((company) => (
             <div key={company.key} className="grid grid-cols-[12rem_repeat(4,minmax(7rem,1fr))] gap-2">
-              <div className="truncate rounded-xl bg-(--tc-surface-2,#f8fafc) px-3 py-2 text-sm font-bold text-(--tc-text,#0b1a3c)">{company.label}</div>
+              <div className="truncate rounded-xl bg-[var(--tc-surface-2,#f8fafc)] px-3 py-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{company.label}</div>
               {modules.map((moduleName) => {
                 const moduleSignals = signals.filter((signal) => signal.companySlug === company.key && resolveSignalModule(signal) === moduleName);
                 const risk = moduleSignals.filter((signal) => isRiskSignal(signal)).length;
@@ -553,27 +553,27 @@ function SignalList({
   limit?: number;
 }) {
   const visible = items.slice(0, limit);
-  if (!visible.length) return <p className="text-sm text-(--tc-text-muted,#6b7280)">Sem itens para listar neste bloco.</p>;
+  if (!visible.length) return <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Sem itens para listar neste bloco.</p>;
   return (
-    <div className="divide-y divide-(--tc-border,#e5e7eb) overflow-hidden rounded-2xl border border-(--tc-border,#d7deea)">
+    <div className="divide-y divide-(--tc-border,#e5e7eb) overflow-hidden rounded-2xl border border-[var(--tc-border,#d7deea)]">
       {visible.map((item) => (
         <button
           key={item.id}
           type="button"
           onClick={() => onOpen(item)}
-          className="grid w-full gap-2 bg-(--tc-surface,#fff) px-4 py-3 text-left transition hover:bg-(--tc-surface-2,#f8fafc) md:grid-cols-[minmax(0,1.4fr)_9rem_8rem_8rem]"
+          className="grid w-full gap-2 bg-[var(--tc-surface,#fff)] px-4 py-3 text-left transition hover:bg-[var(--tc-surface-2,#f8fafc)] md:grid-cols-[minmax(0,1.4fr)_9rem_8rem_8rem]"
         >
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-(--tc-text,#0b1a3c)">{item.title}</p>
-            <p className="mt-1 truncate text-xs text-(--tc-text-muted,#6b7280)">
+            <p className="truncate text-sm font-black text-[var(--tc-text,#0b1a3c)]">{item.title}</p>
+            <p className="mt-1 truncate text-xs text-[var(--tc-text-muted,#6b7280)]">
               {item.companyName} | {item.application} | {moduleLabel(resolveSignalModule(item))}
             </p>
           </div>
           <span className={`h-fit w-fit rounded-full border px-2.5 py-1 text-xs font-bold ${toneClass(statusTone(item.status))}`}>
             {STATUS_LABELS[item.status] ?? item.status}
           </span>
-          <span className="truncate text-sm font-semibold text-(--tc-text,#0b1a3c)">{item.owner || "Sem responsavel"}</span>
-          <span className="text-sm text-(--tc-text-muted,#6b7280)">{formatAgo(item.updatedAtIso)}</span>
+          <span className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{item.owner || "Sem responsavel"}</span>
+          <span className="text-sm text-[var(--tc-text-muted,#6b7280)]">{formatAgo(item.updatedAtIso)}</span>
         </button>
       ))}
     </div>
@@ -585,19 +585,19 @@ function DashboardDrawer({ drawer, onClose }: { drawer: DrawerState; onClose: ()
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-sm" onClick={onClose}>
       <aside
-        className="h-full w-full max-w-2xl overflow-y-auto bg-(--tc-surface,#fff) p-5 shadow-[-20px_0_50px_rgba(15,23,42,0.18)]"
+        className="h-full w-full max-w-2xl overflow-y-auto bg-[var(--tc-surface,#fff)] p-5 shadow-[-20px_0_50px_rgba(15,23,42,0.18)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001)">Drill-down</p>
-            <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-(--tc-text,#0b1a3c)">{drawer.title}</h2>
-            <p className="mt-2 text-sm text-(--tc-text-muted,#6b7280)">{drawer.subtitle}</p>
+            <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[var(--tc-accent,#ef0001)]">Drill-down</p>
+            <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)]">{drawer.title}</h2>
+            <p className="mt-2 text-sm text-[var(--tc-text-muted,#6b7280)]">{drawer.subtitle}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-2 text-(--tc-text,#0b1a3c)"
+            className="rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-2 text-[var(--tc-text,#0b1a3c)]"
             aria-label="Fechar detalhes"
           >
             <FiX />
@@ -605,32 +605,32 @@ function DashboardDrawer({ drawer, onClose }: { drawer: DrawerState; onClose: ()
         </div>
         <div className="mt-5 space-y-3">
           {drawer.items.map((item) => (
-            <div key={item.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+            <div key={item.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${toneClass(statusTone(item.status))}`}>
                   {STATUS_LABELS[item.status] ?? item.status}
                 </span>
-                <span className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) px-2.5 py-1 text-xs font-bold text-(--tc-text,#0b1a3c)">
+                <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] px-2.5 py-1 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
                   {SEVERITY_LABELS[item.severity] ?? item.severity}
                 </span>
-                <span className="text-xs font-semibold text-(--tc-text-muted,#6b7280)">{formatDateTime(item.updatedAtIso)}</span>
+                <span className="text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]">{formatDateTime(item.updatedAtIso)}</span>
               </div>
-              <h3 className="mt-3 text-base font-black text-(--tc-text,#0b1a3c)">{item.title}</h3>
-              <p className="mt-1 text-sm text-(--tc-text-muted,#6b7280)">
+              <h3 className="mt-3 text-base font-black text-[var(--tc-text,#0b1a3c)]">{item.title}</h3>
+              <p className="mt-1 text-sm text-[var(--tc-text-muted,#6b7280)]">
                 {item.companyName} | {item.application} | {moduleLabel(resolveSignalModule(item))} | {item.owner || "Sem responsavel"}
               </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                <div className="rounded-xl bg-(--tc-surface,#fff) px-3 py-2 text-xs">
-                  <span className="font-bold text-(--tc-text-muted,#6b7280)">Run</span>
-                  <p className="mt-1 font-black text-(--tc-text,#0b1a3c)">{item.runCode || "-"}</p>
+                <div className="rounded-xl bg-[var(--tc-surface,#fff)] px-3 py-2 text-xs">
+                  <span className="font-bold text-[var(--tc-text-muted,#6b7280)]">Run</span>
+                  <p className="mt-1 font-black text-[var(--tc-text,#0b1a3c)]">{item.runCode || "-"}</p>
                 </div>
-                <div className="rounded-xl bg-(--tc-surface,#fff) px-3 py-2 text-xs">
-                  <span className="font-bold text-(--tc-text-muted,#6b7280)">Defeito</span>
-                  <p className="mt-1 font-black text-(--tc-text,#0b1a3c)">{item.defectCode || "-"}</p>
+                <div className="rounded-xl bg-[var(--tc-surface,#fff)] px-3 py-2 text-xs">
+                  <span className="font-bold text-[var(--tc-text-muted,#6b7280)]">Defeito</span>
+                  <p className="mt-1 font-black text-[var(--tc-text,#0b1a3c)]">{item.defectCode || "-"}</p>
                 </div>
-                <div className="rounded-xl bg-(--tc-surface,#fff) px-3 py-2 text-xs">
-                  <span className="font-bold text-(--tc-text-muted,#6b7280)">Prioridade</span>
-                  <p className="mt-1 font-black text-(--tc-text,#0b1a3c)">{item.priority}</p>
+                <div className="rounded-xl bg-[var(--tc-surface,#fff)] px-3 py-2 text-xs">
+                  <span className="font-bold text-[var(--tc-text-muted,#6b7280)]">Prioridade</span>
+                  <p className="mt-1 font-black text-[var(--tc-text,#0b1a3c)]">{item.priority}</p>
                 </div>
               </div>
             </div>
@@ -1036,19 +1036,19 @@ export default function ContextualDashboardClient() {
   const companyUsersLocked = dashboardScope.companySelectorMode === "locked";
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.07),transparent_28%),linear-gradient(180deg,#f7f8fb_0%,#ffffff_46%,#f5f7fb_100%)] px-4 py-6 text-(--tc-text,#0b1a3c) sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.07),transparent_28%),linear-gradient(180deg,#f7f8fb_0%,#ffffff_46%,#f5f7fb_100%)] px-4 py-6 text-[var(--tc-text,#0b1a3c)] sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-384 flex-col gap-5">
-        <header className="rounded-2xl border border-(--tc-border,#d7deea) bg-white/90 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.06)] backdrop-blur lg:p-6">
+        <header className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white/90 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.06)] backdrop-blur lg:p-6">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="max-w-4xl">
-              <p className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.24em] text-(--tc-accent,#ef0001)">
+              <p className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.24em] text-[var(--tc-accent,#ef0001)]">
                 <FiCompass className="h-4 w-4" />
                 Testing Company
               </p>
-              <h1 className="mt-2 text-3xl font-black tracking-[-0.05em] text-(--tc-text,#0b1a3c) sm:text-4xl">Dashboard</h1>
-              <p className="mt-2 text-base leading-7 text-(--tc-text-muted,#6b7280)">{subtitle}</p>
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-(--tc-text,#0b1a3c)">
-                <span className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1.5">{contextSummary}</span>
+              <h1 className="mt-2 text-3xl font-black tracking-[-0.05em] text-[var(--tc-text,#0b1a3c)] sm:text-4xl">Dashboard</h1>
+              <p className="mt-2 text-base leading-7 text-[var(--tc-text-muted,#6b7280)]">{subtitle}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
+                <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5">{contextSummary}</span>
                 <span className={`rounded-full border px-3 py-1.5 ${autoRefresh ? toneClass("positive") : toneClass("neutral")}`}>
                   Auto atualizacao {autoRefresh ? "ativa" : "pausada"}
                 </span>
@@ -1058,7 +1058,7 @@ export default function ContextualDashboardClient() {
               <button
                 type="button"
                 onClick={() => setAutoRefresh((current) => !current)}
-                className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-bold text-(--tc-text,#0b1a3c) transition hover:border-[rgba(239,0,1,0.24)]"
+                className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)] transition hover:border-[rgba(239,0,1,0.24)]"
               >
                 <FiClock className="h-4 w-4" />
                 {autoRefresh ? "Pausar auto" : "Ativar auto"}
@@ -1066,7 +1066,7 @@ export default function ContextualDashboardClient() {
               <button
                 type="button"
                 onClick={() => setRefreshNonce((current) => current + 1)}
-                className="inline-flex items-center gap-2 rounded-xl bg-(--tc-primary,#011848) px-3 py-2 text-sm font-bold text-white shadow-[0_14px_28px_rgba(1,24,72,0.18)] transition hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded-xl bg-[var(--tc-primary,#011848)] px-3 py-2 text-sm font-bold text-white shadow-[0_14px_28px_rgba(1,24,72,0.18)] transition hover:-translate-y-0.5"
               >
                 <FiRefreshCw className={`h-4 w-4 ${loadingData ? "animate-spin" : ""}`} />
                 Atualizar agora
@@ -1074,7 +1074,7 @@ export default function ContextualDashboardClient() {
               <button
                 type="button"
                 onClick={() => askAssistant("Resuma o dashboard atual e priorize as acoes mais importantes.")}
-                className="inline-flex items-center gap-2 rounded-xl border border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.07)] px-3 py-2 text-sm font-bold text-(--tc-accent,#ef0001) transition hover:bg-[rgba(239,0,1,0.11)]"
+                className="inline-flex items-center gap-2 rounded-xl border border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.07)] px-3 py-2 text-sm font-bold text-[var(--tc-accent,#ef0001)] transition hover:bg-[rgba(239,0,1,0.11)]"
               >
                 <FiZap className="h-4 w-4" />
                 Perguntar ao assistente
@@ -1083,15 +1083,15 @@ export default function ContextualDashboardClient() {
           </div>
         </header>
 
-        <section className="rounded-2xl border border-(--tc-border,#d7deea) bg-white/95 p-4 shadow-[0_14px_32px_rgba(15,23,42,0.05)]">
+        <section className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white/95 p-4 shadow-[0_14px_32px_rgba(15,23,42,0.05)]">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.22em] text-(--tc-accent,#ef0001)">
+                <p className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.22em] text-[var(--tc-accent,#ef0001)]">
                   <FiSliders className="h-4 w-4" />
                   Control center
                 </p>
-                <h2 className="mt-1 text-xl font-black tracking-[-0.04em] text-(--tc-text,#0b1a3c)">Filtros inteligentes</h2>
+                <h2 className="mt-1 text-xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)]">Filtros inteligentes</h2>
               </div>
               <div className="flex flex-wrap gap-2">
                 {savedViews.length > 0 ? (
@@ -1101,7 +1101,7 @@ export default function ContextualDashboardClient() {
                       if (event.target.value) loadSavedView(event.target.value);
                       event.currentTarget.value = "";
                     }}
-                    className="min-h-10 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 text-sm font-semibold text-(--tc-text,#0b1a3c)"
+                    className="min-h-10 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
                     aria-label="Carregar visao salva"
                   >
                     <option value="">Minhas visoes</option>
@@ -1110,14 +1110,14 @@ export default function ContextualDashboardClient() {
                     ))}
                   </select>
                 ) : null}
-                <button type="button" onClick={saveCurrentView} className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-bold">
+                <button type="button" onClick={saveCurrentView} className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-bold">
                   <FiSave className="h-4 w-4" />
                   Salvar visao
                 </button>
-                <button type="button" onClick={clearFilters} className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm font-bold">
+                <button type="button" onClick={clearFilters} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm font-bold">
                   Limpar
                 </button>
-                <button type="button" onClick={() => applyFilters()} className="inline-flex items-center gap-2 rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-black text-white shadow-[0_12px_24px_rgba(239,0,1,0.18)]">
+                <button type="button" onClick={() => applyFilters()} className="inline-flex items-center gap-2 rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-black text-white shadow-[0_12px_24px_rgba(239,0,1,0.18)]">
                   <FiFilter className="h-4 w-4" />
                   Aplicar filtros
                 </button>
@@ -1132,8 +1132,8 @@ export default function ContextualDashboardClient() {
                   onClick={() => setDraft((current) => applyViewModeDefaults(current, mode.id))}
                   className={`shrink-0 rounded-full border px-3 py-2 text-xs font-black uppercase tracking-[0.14em] transition ${
                     draft.viewMode === mode.id
-                      ? "border-[rgba(239,0,1,0.24)] bg-(--tc-accent,#ef0001) text-white"
-                      : "border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text,#0b1a3c)"
+                      ? "border-[rgba(239,0,1,0.24)] bg-[var(--tc-accent,#ef0001)] text-white"
+                      : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text,#0b1a3c)]"
                   }`}
                 >
                   {mode.label}
@@ -1142,11 +1142,11 @@ export default function ContextualDashboardClient() {
             </div>
 
             <div className="grid gap-4 xl:grid-cols-[minmax(17rem,1.1fr)_minmax(0,2fr)]">
-              <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+              <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <span className="text-xs font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Empresas</span>
+                  <span className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Empresas</span>
                   {privileged || dashboardScope.canSelectMultipleCompanies ? (
-                    <button type="button" onClick={setAllCompanies} className="text-xs font-black text-(--tc-accent,#ef0001)">
+                    <button type="button" onClick={setAllCompanies} className="text-xs font-black text-[var(--tc-accent,#ef0001)]">
                       Todas
                     </button>
                   ) : null}
@@ -1162,8 +1162,8 @@ export default function ContextualDashboardClient() {
                         disabled={companyUsersLocked}
                         className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm font-bold transition disabled:cursor-not-allowed ${
                           active
-                            ? "border-[rgba(239,0,1,0.22)] bg-white text-(--tc-accent,#ef0001)"
-                            : "border-transparent bg-transparent text-(--tc-text,#0b1a3c) hover:bg-white"
+                            ? "border-[rgba(239,0,1,0.22)] bg-white text-[var(--tc-accent,#ef0001)]"
+                            : "border-transparent bg-transparent text-[var(--tc-text,#0b1a3c)] hover:bg-white"
                         }`}
                       >
                         <span className="truncate">{company.name}</span>
@@ -1172,18 +1172,18 @@ export default function ContextualDashboardClient() {
                     );
                   })}
                   {!companiesForUi.length ? (
-                    <p className="px-2 py-3 text-sm text-(--tc-text-muted,#6b7280)">Nenhuma empresa disponivel para este perfil.</p>
+                    <p className="px-2 py-3 text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma empresa disponivel para este perfil.</p>
                   ) : null}
                 </div>
               </div>
 
               <div className="grid gap-3 lg:grid-cols-4">
                 <label className="grid gap-1 text-sm lg:col-span-2">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Aplicacao</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Aplicacao</span>
                   <select
                     value={draft.application}
                     onChange={(event) => mutateDraft({ application: event.target.value, modules: [], status: "all" })}
-                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 font-semibold"
+                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 font-semibold"
                   >
                     <option value="all">Todas as aplicacoes compativeis</option>
                     {applicationOptions.map((application) => (
@@ -1193,11 +1193,11 @@ export default function ContextualDashboardClient() {
                 </label>
 
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Periodo</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Periodo</span>
                   <select
                     value={draft.periodPreset}
                     onChange={(event) => mutateDraft({ periodPreset: event.target.value as DashboardPeriodPreset })}
-                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 font-semibold"
+                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 font-semibold"
                   >
                     {PERIOD_OPTIONS.map((period) => (
                       <option key={period.id} value={period.id}>{period.label}</option>
@@ -1206,11 +1206,11 @@ export default function ContextualDashboardClient() {
                 </label>
 
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Status</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Status</span>
                   <select
                     value={draft.status}
                     onChange={(event) => mutateDraft({ status: event.target.value as ContextualDashboardFilters["status"] })}
-                    className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 font-semibold"
+                    className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 font-semibold"
                   >
                     <option value="all">Todos</option>
                     {statusOptions.map((status) => (
@@ -1220,7 +1220,7 @@ export default function ContextualDashboardClient() {
                 </label>
 
                 <div className="lg:col-span-4">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Modulos</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Modulos</span>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {moduleOptions.map((moduleName) => (
                       <button
@@ -1229,8 +1229,8 @@ export default function ContextualDashboardClient() {
                         onClick={() => toggleModule(moduleName)}
                         className={`rounded-full border px-3 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
                           draft.modules.includes(moduleName)
-                            ? "border-[rgba(1,24,72,0.18)] bg-(--tc-primary,#011848) text-white"
-                            : "border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
+                            ? "border-[rgba(1,24,72,0.18)] bg-[var(--tc-primary,#011848)] text-white"
+                            : "border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                         }`}
                       >
                         {moduleLabel(moduleName)}
@@ -1242,45 +1242,45 @@ export default function ContextualDashboardClient() {
                 {draft.periodPreset === "custom" ? (
                   <>
                     <label className="grid gap-1 text-sm">
-                      <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Data inicial</span>
-                      <input type="date" value={draft.dateFrom} onChange={(event) => mutateDraft({ dateFrom: event.target.value })} className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 font-semibold" />
+                      <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Data inicial</span>
+                      <input type="date" value={draft.dateFrom} onChange={(event) => mutateDraft({ dateFrom: event.target.value })} className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 font-semibold" />
                     </label>
                     <label className="grid gap-1 text-sm">
-                      <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Data final</span>
-                      <input type="date" value={draft.dateTo} onChange={(event) => mutateDraft({ dateTo: event.target.value })} className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 font-semibold" />
+                      <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Data final</span>
+                      <input type="date" value={draft.dateTo} onChange={(event) => mutateDraft({ dateTo: event.target.value })} className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 font-semibold" />
                     </label>
                   </>
                 ) : null}
 
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Responsavel</span>
-                  <select value={draft.owner} onChange={(event) => mutateDraft({ owner: event.target.value })} className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 font-semibold">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Responsavel</span>
+                  <select value={draft.owner} onChange={(event) => mutateDraft({ owner: event.target.value })} className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 font-semibold">
                     <option value="all">Todos</option>
                     {ownerOptions.map((owner) => <option key={owner} value={owner}>{owner}</option>)}
                   </select>
                 </label>
 
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Severidade</span>
-                  <select value={draft.severity} onChange={(event) => mutateDraft({ severity: event.target.value as ContextualDashboardFilters["severity"] })} className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 font-semibold">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Severidade</span>
+                  <select value={draft.severity} onChange={(event) => mutateDraft({ severity: event.target.value as ContextualDashboardFilters["severity"] })} className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 font-semibold">
                     <option value="all">Todas</option>
                     {(Object.keys(SEVERITY_LABELS) as DashboardSignalSeverity[]).map((severity) => <option key={severity} value={severity}>{SEVERITY_LABELS[severity]}</option>)}
                   </select>
                 </label>
 
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Prioridade</span>
-                  <select value={draft.priority} onChange={(event) => mutateDraft({ priority: event.target.value as ContextualDashboardFilters["priority"] })} className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 font-semibold">
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Prioridade</span>
+                  <select value={draft.priority} onChange={(event) => mutateDraft({ priority: event.target.value as ContextualDashboardFilters["priority"] })} className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 font-semibold">
                     <option value="all">Todas</option>
                     {(Object.keys(PRIORITY_LABELS) as DashboardSignalPriority[]).map((priority) => <option key={priority} value={priority}>{PRIORITY_LABELS[priority]}</option>)}
                   </select>
                 </label>
 
                 <label className="grid gap-1 text-sm lg:col-span-2">
-                  <span className="text-xs font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Busca contextual</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Busca contextual</span>
                   <span className="relative">
-                    <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
-                    <input value={draft.search} onChange={(event) => mutateDraft({ search: event.target.value })} className="min-h-11 w-full rounded-xl border border-(--tc-border,#d7deea) bg-white pl-9 pr-3 font-semibold" placeholder="Empresa, run, defeito, responsavel" />
+                    <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
+                    <input value={draft.search} onChange={(event) => mutateDraft({ search: event.target.value })} className="min-h-11 w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-white pl-9 pr-3 font-semibold" placeholder="Empresa, run, defeito, responsavel" />
                   </span>
                 </label>
 
@@ -1300,7 +1300,7 @@ export default function ContextualDashboardClient() {
                         type="button"
                         onClick={() => mutateDraft({ [key]: !active } as Partial<ContextualDashboardFilters>)}
                         className={`rounded-full border px-3 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
-                          active ? "border-[rgba(239,0,1,0.24)] bg-[rgba(239,0,1,0.09)] text-(--tc-accent,#ef0001)" : "border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"
+                          active ? "border-[rgba(239,0,1,0.24)] bg-[rgba(239,0,1,0.09)] text-[var(--tc-accent,#ef0001)]" : "border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                         }`}
                       >
                         {label}
@@ -1313,7 +1313,7 @@ export default function ContextualDashboardClient() {
 
             <div className="flex flex-wrap gap-2">
               {filterChips.map((chip) => (
-                <span key={chip} className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1.5 text-xs font-bold text-(--tc-text,#0b1a3c)">
+                <span key={chip} className="rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1.5 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
                   {chip}
                 </span>
               ))}
@@ -1333,7 +1333,7 @@ export default function ContextualDashboardClient() {
           <EmptyState
             title="Nao foi possivel carregar o dashboard."
             detail={error}
-            actions={<button type="button" onClick={() => setRefreshNonce((current) => current + 1)} className="rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-bold text-white">Tentar novamente</button>}
+            actions={<button type="button" onClick={() => setRefreshNonce((current) => current + 1)} className="rounded-xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-bold text-white">Tentar novamente</button>}
           />
         ) : !hasData ? (
           <EmptyState
@@ -1341,9 +1341,9 @@ export default function ContextualDashboardClient() {
             detail="Ajuste periodo, empresa, modulo ou filtros muito restritivos. Nenhum bloco vazio foi renderizado."
             actions={
               <>
-                <button type="button" onClick={clearFilters} className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-bold">Limpar filtros</button>
-                <button type="button" onClick={() => mutateDraft({ periodPreset: "30d" })} className="rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-bold text-white">Usar 30 dias</button>
-                <button type="button" onClick={() => askAssistant("Nao encontrei dados neste dashboard. Quais filtros devo ajustar?")} className="rounded-xl border border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.07)] px-4 py-2 text-sm font-bold text-(--tc-accent,#ef0001)">Perguntar ao assistente</button>
+                <button type="button" onClick={clearFilters} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-bold">Limpar filtros</button>
+                <button type="button" onClick={() => mutateDraft({ periodPreset: "30d" })} className="rounded-xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-bold text-white">Usar 30 dias</button>
+                <button type="button" onClick={() => askAssistant("Nao encontrei dados neste dashboard. Quais filtros devo ajustar?")} className="rounded-xl border border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.07)] px-4 py-2 text-sm font-bold text-[var(--tc-accent,#ef0001)]">Perguntar ao assistente</button>
               </>
             }
           />
@@ -1412,7 +1412,7 @@ export default function ContextualDashboardClient() {
             {activeWidgets.has("risk_ranking") ? (
               <WidgetShell
                 widget={{ title: "Ranking de risco", question: "Onde agir primeiro?", reason: "Aparece porque ha falhas, bloqueios, criticos ou itens sem responsavel." }}
-                action={<button type="button" onClick={() => askAssistant("Quais acoes devo priorizar neste ranking de risco?")} className="rounded-xl border border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.07)] px-3 py-2 text-xs font-black text-(--tc-accent,#ef0001)">Priorizar com assistente</button>}
+                action={<button type="button" onClick={() => askAssistant("Quais acoes devo priorizar neste ranking de risco?")} className="rounded-xl border border-[rgba(239,0,1,0.22)] bg-[rgba(239,0,1,0.07)] px-3 py-2 text-xs font-black text-[var(--tc-accent,#ef0001)]">Priorizar com assistente</button>}
               >
                 <SignalList items={criticalItems} onOpen={openSignal} />
               </WidgetShell>
@@ -1447,7 +1447,7 @@ export default function ContextualDashboardClient() {
             {activeWidgets.has("details") ? (
               <WidgetShell
                 widget={{ title: "Eventos recentes", question: "O que aconteceu por ultimo?", reason: "Camada de detalhe sempre acompanha o dashboard montado." }}
-                action={<button type="button" onClick={() => askAssistant("Gere um resumo para enviar no grupo com base nos eventos recentes deste dashboard.")} className="rounded-xl bg-(--tc-primary,#011848) px-3 py-2 text-xs font-black text-white">Gerar resumo</button>}
+                action={<button type="button" onClick={() => askAssistant("Gere um resumo para enviar no grupo com base nos eventos recentes deste dashboard.")} className="rounded-xl bg-[var(--tc-primary,#011848)] px-3 py-2 text-xs font-black text-white">Gerar resumo</button>}
               >
                 <SignalList items={aggregate.recent} onOpen={openSignal} limit={10} />
               </WidgetShell>
@@ -1460,3 +1460,4 @@ export default function ContextualDashboardClient() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/lib/jwtAuth";
+﻿import type { AuthUser } from "@/lib/jwtAuth";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import type { TestCaseRecord } from "./types";
 
@@ -49,3 +49,4 @@ export function canAccessTestCaseRecord(user: AuthUser, record: TestCaseRecord) 
   if (!companySlug) return false;
   return resolveAllowedTestCaseCompanies(user).includes(companySlug);
 }
+

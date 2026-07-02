@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { createQaseClient, QaseError } from "@/lib/qaseSdk";
@@ -26,14 +26,14 @@ async function resolveQaseCredentials(input: Awaited<ReturnType<typeof parseVali
 
 function validationErrorResponse(err: unknown) {
   const statusCode = err instanceof QaseError ? err.status : 500;
-  if (statusCode === 404) return NextResponse.json({ valid: false, error: "Projeto não encontrado" }, { status: 404 });
+  if (statusCode === 404) return NextResponse.json({ valid: false, error: "Projeto nÃ£o encontrado" }, { status: 404 });
   if (statusCode === 401 || statusCode === 403) return NextResponse.json({ valid: false, error: "Token invalido ou sem acesso" }, { status: statusCode });
   return NextResponse.json({ valid: false, error: "Erro ao validar projeto" }, { status: statusCode });
 }
 
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return NextResponse.json({ error: "Sem permissão" }, { status });
+  if (!admin) return NextResponse.json({ error: "Sem permissÃ£o" }, { status });
 
   const request = await parseValidationRequest(req);
   if (!request.projectCode) return NextResponse.json({ error: "Informe o codigo do projeto a validar." }, { status: 400 });
@@ -53,3 +53,4 @@ export async function POST(req: NextRequest) {
     return validationErrorResponse(err);
   }
 }
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getClientQaseSettings } from "@/lib/qaseConfig";
 import { createQaseClient, QaseError } from "@/lib/qaseSdk";
@@ -14,7 +14,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: "Sem permissão" }, { status });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status });
   }
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
@@ -117,7 +117,8 @@ export async function POST(req: NextRequest) {
     const message =
       statusCode === 401 || statusCode === 403
         ? "Token da Qase invalido ou sem acesso aos projetos."
-        : "Não foi possível consultar os projetos na Qase.";
+        : "NÃ£o foi possÃ­vel consultar os projetos na Qase.";
     return NextResponse.json({ error: message }, { status: statusCode });
   }
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import {
   listLocalCompanies,
@@ -353,3 +353,4 @@ export async function getAdminUserItem(userId: string) {
   const items = await listAdminUserItems();
   return items.find((item) => item.id === userId) ?? null;
 }
+

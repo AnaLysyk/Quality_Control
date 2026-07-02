@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type JiraCloudValidationResult =
   | {
@@ -99,3 +99,4 @@ export async function validateJiraCloudCredentials(input: {
     };
   }
 }
+

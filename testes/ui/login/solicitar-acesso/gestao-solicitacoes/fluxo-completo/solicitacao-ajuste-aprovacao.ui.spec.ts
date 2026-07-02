@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/gestao-solicitacoes/fluxo-completo/solicitacao-ajuste-aprovacao.ui.spec.ts --headed --workers=1 --reporter=list
  */
@@ -47,7 +47,7 @@ async function aguardarStatusPublico(request: APIRequestContext, accessKey: stri
 
 async function abrirSolicitacaoNaTela(page: Page, email: string) {
   await page.goto("/admin/access-requests", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: "Solicitações de acesso" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "SolicitaÃ§Ãµes de acesso" })).toBeVisible({
     timeout: 60000,
   });
 
@@ -63,17 +63,17 @@ async function abrirSolicitacaoNaTela(page: Page, email: string) {
       await page.getByRole("button", { name: /Atualizar/i }).click().catch(() => undefined);
       await page.waitForTimeout(1500);
       await page.reload({ waitUntil: "domcontentloaded" });
-      await expect(page.getByRole("heading", { name: "Solicitações de acesso" })).toBeVisible({
+      await expect(page.getByRole("heading", { name: "SolicitaÃ§Ãµes de acesso" })).toBeVisible({
         timeout: 60000,
       });
     }
   }
 }
 
-test.describe("Solicitação de acesso - fluxo completo pela UI interna", () => {
+test.describe("SolicitaÃ§Ã£o de acesso - fluxo completo pela UI interna", () => {
   test.setTimeout(360000);
 
-  test("deve solicitar ajuste, corrigir pela consulta pública e aprovar pela tela", async ({ browser }) => {
+  test("deve solicitar ajuste, corrigir pela consulta pÃºblica e aprovar pela tela", async ({ browser }) => {
     const adminContext = await browser.newContext();
     const approvedContext = await browser.newContext();
     const page = await adminContext.newPage();
@@ -91,11 +91,11 @@ test.describe("Solicitação de acesso - fluxo completo pela UI interna", () => 
       await abrirSolicitacaoNaTela(page, email);
 
       const conversa = page.getByPlaceholder(/Descreva o ajuste/i);
-      await conversa.fill("Favor corrigir o telefone antes da aprovação final.");
+      await conversa.fill("Favor corrigir o telefone antes da aprovaÃ§Ã£o final.");
       await page.getByRole("button", { name: "Telefone" }).click();
       await page
         .getByTestId("access-request-adjustment-comment-phone")
-        .fill("Telefone precisa conter DDD e número atualizado.");
+        .fill("Telefone precisa conter DDD e nÃºmero atualizado.");
 
       await page.getByRole("button", { name: /Solicitar ajuste/i }).click();
       await aguardarStatusPublico(adminContext.request, created.accessKey, "needs_more_info");
@@ -109,18 +109,18 @@ test.describe("Solicitação de acesso - fluxo completo pela UI interna", () => 
       await expect(page.getByTestId("access-request-status-label")).toContainText(/Ajuste|Corre/i);
       await page.getByTestId("access-request-adjust-phone").fill("+55 51 98888-5555");
       await page.getByTestId("access-request-adjust-submit").click();
-      await expect(page.getByTestId("access-request-status-label")).toContainText(/análise|analise|Aguardando/i, {
+      await expect(page.getByTestId("access-request-status-label")).toContainText(/anÃ¡lise|analise|Aguardando/i, {
         timeout: 30000,
       });
 
       await abrirSolicitacaoNaTela(page, email);
 
-      await expect(page.getByText("Correcao reenviada").or(page.getByText("Correção reenviada")).first()).toBeVisible({
+      await expect(page.getByText("Correcao reenviada").or(page.getByText("CorreÃ§Ã£o reenviada")).first()).toBeVisible({
         timeout: 30000,
       });
-      await page.getByLabel("Tipo de perfil").selectOption({ label: "Suporte Técnico" });
+      await page.getByLabel("Tipo de perfil").selectOption({ label: "Suporte TÃ©cnico" });
       await page.getByPlaceholder(/Descreva o ajuste/i).fill("Dados corrigidos e aprovados pela UI.");
-      await page.getByRole("button", { name: /Aprovar solicitação/i }).click();
+      await page.getByRole("button", { name: /Aprovar solicitaÃ§Ã£o/i }).click();
       await aguardarStatusPublico(adminContext.request, created.accessKey, "approved");
 
       await page.goto(`/login/access-request/status?key=${encodeURIComponent(created.accessKey)}`, {
@@ -142,3 +142,4 @@ test.describe("Solicitação de acesso - fluxo completo pela UI interna", () => 
     }
   });
 });
+

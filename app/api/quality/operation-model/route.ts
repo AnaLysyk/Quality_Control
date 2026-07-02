@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getQaOperationModel } from "@/data/qaOperationModel";
 
@@ -12,3 +12,4 @@ export async function GET() {
     return NextResponse.json({ error: "Erro ao carregar modelo operacional de QA" }, { status: 500 });
   }
 }
+

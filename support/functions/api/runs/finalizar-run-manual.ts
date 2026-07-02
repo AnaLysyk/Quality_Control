@@ -1,4 +1,4 @@
-import type { APIRequestContext } from "@playwright/test";
+﻿import type { APIRequestContext } from "@playwright/test";
 
 export async function finalizarRunManualPorApi(
   request: APIRequestContext,
@@ -9,3 +9,4 @@ export async function finalizarRunManualPorApi(
     data: { status },
   });
 }
+

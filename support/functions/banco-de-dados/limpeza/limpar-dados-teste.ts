@@ -1,8 +1,8 @@
-/**
+﻿/**
  * cleanup-test-data.ts
  *
- * Remove do banco todos os artefatos deixados pelos testes de integração.
- * Identifica dados de teste pelos padrões de e-mail e slug usados nos arquivos
+ * Remove do banco todos os artefatos deixados pelos testes de integraÃ§Ã£o.
+ * Identifica dados de teste pelos padrÃµes de e-mail e slug usados nos arquivos
  * tests/user-creation-profiles.test.ts e tests/user-delete-profiles.test.ts.
  *
  * Uso:
@@ -12,7 +12,7 @@
 
 import { prisma } from "@/lib/prismaClient";
 
-/** Domínios de e-mail usados exclusivamente pelos testes */
+/** DomÃ­nios de e-mail usados exclusivamente pelos testes */
 const TEST_EMAIL_DOMAINS = ["@test-profile.local", "@test-del.local"];
 
 /** Prefixos de slug de empresa criados pelos testes */
@@ -32,13 +32,13 @@ const TEST_COMPANY_NAME_PREFIXES = [
   "Empresa CompAdmin Del ",
   "Empresa Teste Viewer ",
   "Empresa Teste CompAdmin ",
-  "Instituição Teste ",
+  "InstituiÃ§Ã£o Teste ",
 ];
 
 async function main() {
-  console.log("🧹 Iniciando limpeza de dados de teste...\n");
+  console.log("ðŸ§¹ Iniciando limpeza de dados de teste...\n");
 
-  // ── 1. Usuários de teste ───────────────────────────────────────────────────
+  // â”€â”€ 1. UsuÃ¡rios de teste â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const testUsers = await prisma.user.findMany({
     where: {
       OR: TEST_EMAIL_DOMAINS.map((domain) => ({
@@ -49,7 +49,7 @@ async function main() {
   });
 
   if (testUsers.length === 0) {
-    console.log("✅ Nenhum usuário de teste encontrado.");
+    console.log("âœ… Nenhum usuÃ¡rio de teste encontrado.");
   } else {
     const userIds = testUsers.map((u) => u.id);
 
@@ -61,11 +61,11 @@ async function main() {
     const delUsers = await prisma.user.deleteMany({
       where: { id: { in: userIds } },
     });
-    console.log(`   usuários removidos    : ${delUsers.count}`);
+    console.log(`   usuÃ¡rios removidos    : ${delUsers.count}`);
     testUsers.forEach((u) => console.log(`     - ${u.email}`));
   }
 
-  // ── 2. Empresas de teste ───────────────────────────────────────────────────
+  // â”€â”€ 2. Empresas de teste â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const testCompanies = await prisma.company.findMany({
     where: {
       OR: [
@@ -81,7 +81,7 @@ async function main() {
   });
 
   if (testCompanies.length === 0) {
-    console.log("✅ Nenhuma empresa de teste encontrada.");
+    console.log("âœ… Nenhuma empresa de teste encontrada.");
   } else {
     const companyIds = testCompanies.map((c) => c.id);
 
@@ -97,12 +97,13 @@ async function main() {
     testCompanies.forEach((c) => console.log(`     - ${c.name} (${c.slug})`));
   }
 
-  console.log("\n✅ Limpeza concluída.");
+  console.log("\nâœ… Limpeza concluÃ­da.");
 }
 
 main()
   .catch((err) => {
-    console.error("❌ Erro durante a limpeza:", err);
+    console.error("âŒ Erro durante a limpeza:", err);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());
+

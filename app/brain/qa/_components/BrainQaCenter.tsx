@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import useSWR from "swr";
@@ -101,7 +101,7 @@ function buildPromptText(item: BrainPromptTemplate) {
 
 function renderCopyButton(label: string, onClick: () => void) {
   return (
-    <button type="button" onClick={onClick} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-xs font-bold text-(--tc-text,#0b1a3c)">
+    <button type="button" onClick={onClick} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
       <FiCopy className="h-3.5 w-3.5" /> {label}
     </button>
   );
@@ -119,7 +119,7 @@ export function BrainQaCenter() {
     { label: "Evals prontos", value: data?.summary.readyEvals ?? 0, icon: FiCheckCircle },
     { label: "Prompts", value: data?.summary.prompts ?? 0, icon: FiFileText },
     { label: "Prompts ativos", value: data?.summary.activePrompts ?? 0, icon: FiDatabase },
-    { label: "Ações", value: data?.summary.quickActions ?? 0, icon: FiZap },
+    { label: "AÃ§Ãµes", value: data?.summary.quickActions ?? 0, icon: FiZap },
   ];
 
   const activeItems = useMemo(() => {
@@ -130,13 +130,13 @@ export function BrainQaCenter() {
   }, [data, tab]);
 
   return (
-    <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4 shadow-sm sm:p-5">
+    <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-4 shadow-sm sm:p-5">
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
           <FiShield className="h-4 w-4" /> Brain QA Command Center
         </span>
-        <h1 className="mt-3 text-2xl font-black text-(--tc-text,#0b1a3c)">Validações, prompts e ações rápidas do Brain</h1>
-        <p className="mt-1 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+        <h1 className="mt-3 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">ValidaÃ§Ãµes, prompts e aÃ§Ãµes rÃ¡pidas do Brain</h1>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
           Central para transformar o chat em ferramenta operacional de QA: valida fluxo, gera ticket, cria caso Qase, controla prompt e mede se a resposta do Brain presta.
         </p>
       </div>
@@ -147,12 +147,12 @@ export function BrainQaCenter() {
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-4 py-3">
+            <div key={card.label} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{card.label}</p>
-                <Icon className="h-4 w-4 text-(--tc-accent,#ef0001)" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">{card.label}</p>
+                <Icon className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
               </div>
-              <p className="mt-1 text-2xl font-black text-(--tc-text,#0b1a3c)">{isLoading ? "..." : card.value}</p>
+              <p className="mt-1 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">{isLoading ? "..." : card.value}</p>
             </div>
           );
         })}
@@ -160,7 +160,7 @@ export function BrainQaCenter() {
 
       <div className="mt-5 flex flex-wrap gap-2">
         {[
-          { id: "actions" as const, label: "Ações rápidas" },
+          { id: "actions" as const, label: "AÃ§Ãµes rÃ¡pidas" },
           { id: "evals" as const, label: "Eval Center" },
           { id: "prompts" as const, label: "Prompt Registry" },
         ].map((item) => (
@@ -168,7 +168,7 @@ export function BrainQaCenter() {
             key={item.id}
             type="button"
             onClick={() => setTab(item.id)}
-            className={`rounded-xl border px-4 py-2 text-sm font-bold ${tab === item.id ? "border-(--tc-accent,#ef0001) bg-(--tc-accent,#ef0001) text-white" : "border-(--tc-border,#d7deea) bg-white text-(--tc-text,#0b1a3c)"}`}
+            className={`rounded-xl border px-4 py-2 text-sm font-bold ${tab === item.id ? "border-[var(--tc-accent,#ef0001)] bg-[var(--tc-accent,#ef0001)] text-white" : "border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"}`}
           >
             {item.label}
           </button>
@@ -180,18 +180,18 @@ export function BrainQaCenter() {
           if (tab === "actions") {
             const action = item as BrainQuickAction;
             return (
-              <article key={action.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <article key={action.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-base font-extrabold text-(--tc-text,#0b1a3c)">{action.label}</h2>
-                    <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{action.description}</p>
+                    <h2 className="text-base font-extrabold text-[var(--tc-text,#0b1a3c)]">{action.label}</h2>
+                    <p className="mt-1 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{action.description}</p>
                   </div>
-                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-(--tc-text-muted,#6b7280)">{action.outputType}</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">{action.outputType}</span>
                 </div>
-                <div className="mt-3 rounded-xl border border-(--tc-border,#d7deea) bg-white p-3 font-mono text-xs leading-5 text-(--tc-text,#0b1a3c)">{action.prompt}</div>
+                <div className="mt-3 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-3 font-mono text-xs leading-5 text-[var(--tc-text,#0b1a3c)]">{action.prompt}</div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {action.requiredEvidence.map((evidence) => (
-                    <span key={evidence} className="rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[11px] font-semibold text-(--tc-text-muted,#6b7280)">{evidence}</span>
+                    <span key={evidence} className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[11px] font-semibold text-[var(--tc-text-muted,#6b7280)]">{evidence}</span>
                   ))}
                 </div>
                 {renderCopyButton("Copiar prompt", () => copyToClipboard(action.prompt))}
@@ -202,23 +202,23 @@ export function BrainQaCenter() {
           if (tab === "evals") {
             const evalCase = item as BrainEvalCase;
             return (
-              <article key={evalCase.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <article key={evalCase.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{evalCase.suite}</p>
-                    <h2 className="mt-1 text-base font-extrabold text-(--tc-text,#0b1a3c)">{evalCase.title}</h2>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">{evalCase.suite}</p>
+                    <h2 className="mt-1 text-base font-extrabold text-[var(--tc-text,#0b1a3c)]">{evalCase.title}</h2>
                   </div>
-                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-(--tc-text-muted,#6b7280)">{evalCase.status}</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">{evalCase.status}</span>
                 </div>
-                <p className="mt-3 rounded-xl border border-(--tc-border,#d7deea) bg-white p-3 text-sm font-semibold text-(--tc-text,#0b1a3c)">{evalCase.userInput}</p>
+                <p className="mt-3 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{evalCase.userInput}</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs font-extrabold text-(--tc-text,#0b1a3c)">Esperado</p>
-                    <ul className="mt-2 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{evalCase.expectedBehavior.map((line) => <li key={line}>• {line}</li>)}</ul>
+                    <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">Esperado</p>
+                    <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{evalCase.expectedBehavior.map((line) => <li key={line}>â€¢ {line}</li>)}</ul>
                   </div>
                   <div>
-                    <p className="text-xs font-extrabold text-(--tc-text,#0b1a3c)">Evidência</p>
-                    <ul className="mt-2 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{evalCase.evidenceRequired.map((line) => <li key={line}>• {line}</li>)}</ul>
+                    <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">EvidÃªncia</p>
+                    <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{evalCase.evidenceRequired.map((line) => <li key={line}>â€¢ {line}</li>)}</ul>
                   </div>
                 </div>
                 {renderCopyButton("Copiar eval", () => copyToClipboard(buildEvalText(evalCase)))}
@@ -228,26 +228,26 @@ export function BrainQaCenter() {
 
           const prompt = item as BrainPromptTemplate;
           return (
-            <article key={prompt.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+            <article key={prompt.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-mono text-xs font-bold text-(--tc-accent,#ef0001)">{prompt.id}</p>
-                  <h2 className="mt-1 text-base font-extrabold text-(--tc-text,#0b1a3c)">{prompt.name}</h2>
+                  <p className="font-mono text-xs font-bold text-[var(--tc-accent,#ef0001)]">{prompt.id}</p>
+                  <h2 className="mt-1 text-base font-extrabold text-[var(--tc-text,#0b1a3c)]">{prompt.name}</h2>
                 </div>
-                <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-(--tc-text-muted,#6b7280)">v{prompt.version}</span>
+                <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">v{prompt.version}</span>
               </div>
-              <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{prompt.purpose}</p>
+              <p className="mt-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{prompt.purpose}</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs font-extrabold text-(--tc-text,#0b1a3c)">Guardrails</p>
-                  <ul className="mt-2 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{prompt.guardrails.map((line) => <li key={line}>• {line}</li>)}</ul>
+                  <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">Guardrails</p>
+                  <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{prompt.guardrails.map((line) => <li key={line}>â€¢ {line}</li>)}</ul>
                 </div>
                 <div>
-                  <p className="text-xs font-extrabold text-(--tc-text,#0b1a3c)">Saída esperada</p>
-                  <ul className="mt-2 space-y-1 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{prompt.expectedOutput.map((line) => <li key={line}>• {line}</li>)}</ul>
+                  <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">SaÃ­da esperada</p>
+                  <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{prompt.expectedOutput.map((line) => <li key={line}>â€¢ {line}</li>)}</ul>
                 </div>
               </div>
-              {renderCopyButton("Copiar definição", () => copyToClipboard(buildPromptText(prompt)))}
+              {renderCopyButton("Copiar definiÃ§Ã£o", () => copyToClipboard(buildPromptText(prompt)))}
             </article>
           );
         })}
@@ -255,3 +255,4 @@ export function BrainQaCenter() {
     </section>
   );
 }
+

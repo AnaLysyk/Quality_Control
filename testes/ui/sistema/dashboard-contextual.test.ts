@@ -1,4 +1,4 @@
-import {
+﻿import {
   DEFAULT_CONTEXTUAL_DASHBOARD_FILTERS,
   buildDashboardAggregate,
   buildDashboardInsights,
@@ -88,3 +88,4 @@ describe("contextual dashboard composer", () => {
     expect(insights.some((insight) => insight.id === "without-owner")).toBe(true);
   });
 });
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 const failedImageSrcs = new Set<string>();
 
@@ -19,3 +19,4 @@ export function markFailedImageSrc(src?: string | null) {
   failedImageSrcs.add(normalized);
   return !existed;
 }
+

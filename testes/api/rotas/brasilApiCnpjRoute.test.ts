@@ -1,4 +1,4 @@
-/** @jest-environment node */
+﻿/** @jest-environment node */
 
 import { NextRequest } from "next/server";
 
@@ -48,3 +48,4 @@ describe("GET /api/brasilapi/cnpj/[cnpj]", () => {
     await expect(response.json()).resolves.toMatchObject({ error: "CNPJ invalido" });
   });
 });
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { BrainNode } from "@prisma/client";
 
@@ -39,7 +39,7 @@ function wantsNavigation(message: string) {
 
 function resolveContextualQuery(message: string, current: BrainConversationContext | null | undefined) {
   if (!current?.lastNodeId) return message;
-  if (/\b(ele|ela|dele|dela|desse|dessa|esse|essa|isso|no atual|n[oó] atual)\b/i.test(message)) {
+  if (/\b(ele|ela|dele|dela|desse|dessa|esse|essa|isso|no atual|n[oÃ³] atual)\b/i.test(message)) {
     return `${message} ${current.lastNodeId} ${current.lastNodeType ?? ""}`;
   }
   return message;
@@ -167,3 +167,4 @@ export async function answerBrainChatQuestion(input: {
     currentBrainContext,
   };
 }
+

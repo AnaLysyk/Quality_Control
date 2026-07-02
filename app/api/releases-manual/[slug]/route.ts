@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { slugifyRelease } from "@/lib/slugifyRelease";
 import { resolveNormalizedCompanySlugs } from "@/lib/auth/normalizeAuthenticatedUser";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
@@ -65,14 +65,14 @@ export async function GET(_req: Request, context: { params: Promise<{ slug: stri
     authUser ??
     (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
   const targetSlug = slugifyRelease(slug);
   const releases = await readManualReleases();
   const release = releases.find((r) => r.slug === targetSlug) ?? null;
-  if (!release) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
+  if (!release) return NextResponse.json({ message: "NÃ£o encontrado" }, { status: 404 });
 
   if (!effectiveAuthUser.isGlobalAdmin) {
     const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
@@ -95,14 +95,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
     authUser ??
     (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
   const targetSlug = slugifyRelease(slug);
   const releases = await readManualReleases();
   const index = releases.findIndex((r) => r.slug === targetSlug);
-  if (index < 0) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
+  if (index < 0) return NextResponse.json({ message: "NÃ£o encontrado" }, { status: 404 });
 
   const current = releases[index];
   if (!effectiveAuthUser.isGlobalAdmin) {
@@ -136,7 +136,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
           ? null
           : "__invalid__";
   if (requestedAssignedToUserId === "__invalid__") {
-    return NextResponse.json({ message: "Responsável invalido" }, { status: 400 });
+    return NextResponse.json({ message: "ResponsÃ¡vel invalido" }, { status: 400 });
   }
   const fallbackAssignedToUserId = current.assignedToUserId ?? creatorUserId ?? null;
   const resolvedAssignedToUserId =
@@ -144,7 +144,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
       ? fallbackAssignedToUserId
       : requestedAssignedToUserId || creatorUserId || null;
   if (resolvedAssignedToUserId && !availableResponsiblesById.has(resolvedAssignedToUserId)) {
-    return NextResponse.json({ message: "Responsável precisa estar vinculado a empresa." }, { status: 400 });
+    return NextResponse.json({ message: "ResponsÃ¡vel precisa estar vinculado a empresa." }, { status: 400 });
   }
   const resolvedAssignedToName = resolvedAssignedToUserId
     ? availableResponsiblesById.get(resolvedAssignedToUserId)?.name ?? current.assignedToName ?? creatorName
@@ -176,7 +176,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
   const nextName =
     typeof body.name === "string" ? body.name : typeof body.title === "string" ? body.title : current.name;
   const nextRunSlug = typeof body.runSlug === "string" ? body.runSlug : current.runSlug;
-  const nextApp = typeof body.app === "string" ? body.app.trim() || "Aplicação manual" : current.app;
+  const nextApp = typeof body.app === "string" ? body.app.trim() || "AplicaÃ§Ã£o manual" : current.app;
 
   const updated: Release = {
     ...current,
@@ -305,7 +305,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ slug: str
         });
       }
     } catch (err) {
-      console.warn("Falha ao registrar histórico do defeito:", err);
+      console.warn("Falha ao registrar histÃ³rico do defeito:", err);
     }
   }
   return NextResponse.json({
@@ -322,14 +322,14 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
     authUser ??
     (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
   const targetSlug = slugifyRelease(slug);
   const releases = await readManualReleases();
   const target = releases.find((r) => r.slug === targetSlug) ?? null;
-  if (!target) return NextResponse.json({ message: "Não encontrado" }, { status: 404 });
+  if (!target) return NextResponse.json({ message: "NÃ£o encontrado" }, { status: 404 });
 
   if (!effectiveAuthUser.isGlobalAdmin) {
     const allowed = resolveAllowedSlugs(effectiveAuthUser as AuthUser);
@@ -358,8 +358,9 @@ export async function DELETE(req: Request, context: { params: Promise<{ slug: st
         note: target.name ?? null,
       });
     } catch (err) {
-      console.warn("Falha ao registrar histórico do defeito:", err);
+      console.warn("Falha ao registrar histÃ³rico do defeito:", err);
     }
   }
   return NextResponse.json({ ok: true });
 }
+

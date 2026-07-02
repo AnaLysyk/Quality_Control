@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
-test.describe("kanban - visualizaÃ§Ã£o", () => {
-  test("user vÃª colunas do kanban", async ({ page, context }) => {
+test.describe("kanban - visualizaÃƒÂ§ÃƒÂ£o", () => {
+  test("user vÃƒÂª colunas do kanban", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "user",
       companies: ["DEMO"],
@@ -17,3 +17,4 @@ test.describe("kanban - visualizaÃ§Ã£o", () => {
     await expect(page.getByTestId("kanban-column-fail")).toBeVisible();
   });
 });
+

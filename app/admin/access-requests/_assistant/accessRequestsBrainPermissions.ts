@@ -1,4 +1,4 @@
-import { hasPermissionAccess, resolveEffectivePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
+﻿import { hasPermissionAccess, resolveEffectivePermissionMatrix, type PermissionMatrix } from "@/lib/permissionMatrix";
 import type { AccessRequestsBrainActionType } from "./accessRequestsBrain.types";
 
 type Viewer = {
@@ -36,6 +36,7 @@ export function hasAccessRequestPermission(viewer: Viewer, permission: string) {
 }
 
 export function accessRequestsPermissionDeniedReply() {
-  return "Eu encontrei a solicitação, mas não vou executar essa ação porque seu perfil não tem permissão para isso nesta tela.";
+  return "Eu encontrei a solicitaÃ§Ã£o, mas nÃ£o vou executar essa aÃ§Ã£o porque seu perfil nÃ£o tem permissÃ£o para isso nesta tela.";
 }
+
 

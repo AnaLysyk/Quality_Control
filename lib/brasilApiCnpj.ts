@@ -1,4 +1,4 @@
-export type BrasilApiCnpjLookup = {
+﻿export type BrasilApiCnpjLookup = {
   cnpj?: string | null;
   nome_fantasia?: string | null;
   razao_social?: string | null;
@@ -33,19 +33,19 @@ export function normalizeCnpj(value: string) {
 
 /**
  * Valida CNPJ usando algoritmo de checksum
- * @param cnpj - CNPJ normalizado (14 dígitos) ou formatado
- * @returns true se CNPJ é válido, false caso contrário
+ * @param cnpj - CNPJ normalizado (14 dÃ­gitos) ou formatado
+ * @returns true se CNPJ Ã© vÃ¡lido, false caso contrÃ¡rio
  */
 export function isCnpjValid(cnpj: string): boolean {
   const normalized = normalizeCnpj(cnpj);
   
-  // Deve ter 14 dígitos
+  // Deve ter 14 dÃ­gitos
   if (normalized.length !== 14) return false;
   
-  // Não pode ser todos os dígitos iguais (ex: 11111111111111)
+  // NÃ£o pode ser todos os dÃ­gitos iguais (ex: 11111111111111)
   if (/^(\d)\1{13}$/.test(normalized)) return false;
   
-  // Validar primeiro dígito verificador (usa os 12 primeiros dígitos)
+  // Validar primeiro dÃ­gito verificador (usa os 12 primeiros dÃ­gitos)
   let sum = 0;
   let multiplier = 5;
   for (let i = 0; i < 12; i++) {
@@ -58,7 +58,7 @@ export function isCnpjValid(cnpj: string): boolean {
   
   if (parseInt(normalized[12], 10) !== digit1) return false;
   
-  // Validar segundo dígito verificador (usa os 13 primeiros dígitos)
+  // Validar segundo dÃ­gito verificador (usa os 13 primeiros dÃ­gitos)
   sum = 0;
   multiplier = 6;
   for (let i = 0; i < 13; i++) {
@@ -105,3 +105,4 @@ export async function lookupCnpjCompany(cnpj: string, signal?: AbortSignal) {
 
   return data;
 }
+

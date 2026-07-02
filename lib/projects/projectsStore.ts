@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
 import { canUsePersistentJsonStore, readPersistentJson, writePersistentJson } from "@/lib/persistentJsonStore";
@@ -126,3 +126,4 @@ export const ProjectsStore = {
     return changed;
   },
 };
+

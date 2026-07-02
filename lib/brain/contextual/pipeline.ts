@@ -1,4 +1,4 @@
-import { buildNeuralActivationFromImpulse } from "./activation";
+﻿import { buildNeuralActivationFromImpulse } from "./activation";
 import { sanitizeBrianImpulse, validateBrianImpulseContract } from "./governance";
 import { normalizeContextCarrier, normalizeImpulseType, stableId } from "./normalizer";
 import { generateImpulseNarrative, generateWhySeeingThis } from "./narrative";
@@ -58,7 +58,7 @@ function buildProjections(result: ReturnType<typeof buildNeuralActivationFromImp
       neuronId: neuron.id,
       impulseId: result.impulse.id,
       title: neuron.label,
-      subtitle: `${neuron.kind} · ativado por ${result.impulse.actor.name}`,
+      subtitle: `${neuron.kind} Â· ativado por ${result.impulse.actor.name}`,
       summary: neuron.context.summary ?? generateImpulseNarrative(result.impulse),
       explanation: `${neuron.narrative.whyThisExists} ${generateWhySeeingThis({ neuron, synapses: related, impulse: result.impulse })}`,
       nodeType: nodeTypeForImpulse(result.impulse.type),
@@ -109,7 +109,7 @@ export function buildBrianImpulseEnvelope(input: {
     time: input.time ?? new Date().toISOString(),
     actor: {
       id: input.actor.id ?? "anonymous",
-      name: input.actor.name ?? "Usuário",
+      name: input.actor.name ?? "UsuÃ¡rio",
       role: input.actor.role ?? context.role,
     },
     context,
@@ -123,7 +123,7 @@ export function buildBrianImpulseEnvelope(input: {
       time: input.time ?? new Date().toISOString(),
       actor: {
         id: input.actor.id ?? "anonymous",
-        name: input.actor.name ?? "UsuÃ¡rio",
+        name: input.actor.name ?? "UsuÃƒÂ¡rio",
         role: input.actor.role ?? context.role,
       },
       context,
@@ -173,7 +173,7 @@ export function processBrianImpulse(
     warnings: [
       ...activation.warnings,
       ...(contract.allowed ? [] : [`Contrato em modo permissivo: ${contract.reason}`]),
-      ...sanitized.report.promptInjectionSignals.map((field) => `Prompt firewall sinalizou conteúdo externo em ${field}.`),
+      ...sanitized.report.promptInjectionSignals.map((field) => `Prompt firewall sinalizou conteÃºdo externo em ${field}.`),
     ],
     redactions: sanitized.report,
   };
@@ -183,3 +183,4 @@ export function processBrianImpulse(
     : applyBrianQualityGates(result, options?.minQualityScore);
   return options?.applyRbac === false ? qualityResult : filterBrianProcessingResultByRBAC(qualityResult);
 }
+

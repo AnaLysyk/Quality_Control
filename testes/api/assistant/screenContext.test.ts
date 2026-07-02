@@ -1,4 +1,4 @@
-import { normalizeSearch } from "@/lib/assistant/helpers";
+﻿import { normalizeSearch } from "@/lib/assistant/helpers";
 import { resolveAssistantScreenContext } from "@/lib/assistant/screenContext";
 
 describe("resolveAssistantScreenContext", () => {
@@ -103,3 +103,4 @@ describe("resolveAssistantScreenContext", () => {
     expect(ctx.suggestedPrompts.length).toBeGreaterThanOrEqual(3);
   });
 });
+

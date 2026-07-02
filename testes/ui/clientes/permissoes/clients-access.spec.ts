@@ -1,4 +1,4 @@
-import { test, expect } from "../../../../support/fixtures/test";
+﻿import { test, expect } from "../../../../support/fixtures/test";
 import { autenticarUsuario, configurarUsuarioSimulado } from "../../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
 test("admin global sees clients list", async ({ page }) => {
@@ -18,3 +18,4 @@ test("user cannot access /admin/clients", async ({ page }) => {
   await expect(page).not.toHaveURL(/\/admin\/clients/);
   await expect(page.getByRole("heading", { name: /Demo|Dashboard|Home/i }).first()).toBeVisible();
 });
+

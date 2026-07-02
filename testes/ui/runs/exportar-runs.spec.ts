@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { criarRunManualPorApi } from "../../../support/functions/api/runs/criar-run-manual";
 import { exportarPdfRunManualPorApi } from "../../../support/functions/api/runs/exportar-run-manual";
 import { autenticarPerfilRuns } from "../../../support/functions/ui/runs/rotas-runs";
@@ -21,3 +21,4 @@ test("admin consegue exportar run", async ({ page, context }) => {
   expect(response.headers()["content-type"]).toContain("application/pdf");
   expect((await response.body()).length).toBeGreaterThan(1000);
 });
+

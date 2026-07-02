@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 import { createNotificationEvent, type NotificationEventSourceType } from "@/lib/notificationEventsStore";
@@ -409,3 +409,4 @@ export async function closeNotificationsByTicketId(userId: string, ticketId: str
   if (changed) await writeStore(store);
   return changed;
 }
+

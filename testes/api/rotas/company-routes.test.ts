@@ -1,4 +1,4 @@
-import {
+﻿import {
   LONG_COMPANY_ROUTE_MODE,
   SHORT_COMPANY_ROUTE_MODE,
   buildCompanyPathForAccess,
@@ -62,3 +62,4 @@ describe("companyRoutes", () => {
     expect(rewriteShortCompanyPathname("/automacoes")).toBeNull();
   });
 });
+

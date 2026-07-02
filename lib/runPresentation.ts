@@ -1,4 +1,4 @@
-export function replaceReleaseTerms(value?: string | null) {
+﻿export function replaceReleaseTerms(value?: string | null) {
   if (typeof value !== "string") return "";
 
   return value
@@ -22,3 +22,4 @@ export function formatRunText(value?: string | null, fallback = "") {
   const normalized = replaceReleaseTerms(value ?? "").trim();
   return normalized || fallback;
 }
+

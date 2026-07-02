@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 import CompanyRunsHomeClient from "../home/CompanyRunsHomeClient";
 import { loadCompanyDashboardData } from "../dashboard/companyDashboardData";
 
@@ -30,3 +30,4 @@ export default async function CompanyMetricsPage({ params }: PageProps) {
     />
   );
 }
+

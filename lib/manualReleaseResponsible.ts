@@ -1,4 +1,4 @@
-import type { LocalAuthUser } from "@/lib/auth/localStore";
+﻿import type { LocalAuthUser } from "@/lib/auth/localStore";
 import {
   findLocalCompanyBySlug,
   listLocalLinksForCompany,
@@ -27,7 +27,7 @@ export function resolveLocalUserDisplayName(
 function buildResponsibleOption(user: LocalAuthUser): ManualReleaseResponsibleOption {
   const name = resolveLocalUserDisplayName(user) ?? user.id;
   const email = typeof user.email === "string" && user.email.trim() ? user.email.trim().toLowerCase() : null;
-  const label = email && name.toLowerCase() !== email ? `${name} · ${email}` : name;
+  const label = email && name.toLowerCase() !== email ? `${name} Â· ${email}` : name;
   return {
     userId: user.id,
     label,
@@ -101,3 +101,4 @@ export async function listManualReleaseResponsibleOptions(
 
   return options.sort(compareResponsibleOptions);
 }
+

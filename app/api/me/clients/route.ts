@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { getAccessContext } from "@/lib/auth/session";
 import { listLocalCompanies, listLocalLinksForUser, normalizeLocalRole } from "@/lib/auth/localStore";
@@ -9,7 +9,7 @@ export const revalidate = 0;
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
   }
 
   const [links, companies] = await Promise.all([
@@ -62,3 +62,4 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ items });
 }
+

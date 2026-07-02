@@ -31,9 +31,9 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
   }
 
   return (
-    <div data-testid="test-run-detail" className="w-full py-6 sm:py-8 text-(--tc-text,#0b1a3c)">
+    <div data-testid="test-run-detail" className="w-full py-6 sm:py-8 text-[var(--tc-text,#0b1a3c)]">
       <div className="w-full space-y-5">
-        {/* ── Main card — hero + stats ── */}
+        {/* -- Main card — hero + stats -- */}
         <div className="overflow-hidden rounded-3xl shadow-[0_20px_50px_rgba(15,23,42,0.16)]">
           <div className="bg-[linear-gradient(135deg,#031843_0%,#0b2d72_55%,#57153f_80%,#b01a33_100%)] p-6 text-white sm:p-8">
             <RunHero vm={vm} />
@@ -41,7 +41,7 @@ export async function ReleasePageContent({ slug, companySlug }: ReleasePageConte
           </div>
         </div>
 
-        {/* ── Case list — expandable ── */}
+        {/* -- Case list — expandable -- */}
         <RunCaseListSection vm={vm} />
       </div>
     </div>
@@ -109,3 +109,4 @@ export default function ReleaseTemplate({ appName, finalTitle, stats, total }: R
     </div>
   );
 }
+

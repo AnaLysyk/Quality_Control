@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { resolveDashboardContext, type DashboardUserLike } from "@/lib/dashboard/context";
@@ -18,3 +18,4 @@ export function useDashboardContext(options: UseDashboardContextOptions) {
     [options],
   );
 }
+

@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { removeReaction } from "@/lib/ticketReactionsStore";
 
 export async function DELETE(req: Request, context: { params: Promise<{ commentId: string; type: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { commentId, type } = await context.params;
@@ -21,3 +21,4 @@ export async function DELETE(req: Request, context: { params: Promise<{ commentI
 
   return NextResponse.json({ ok: removed }, { status: 200 });
 }
+

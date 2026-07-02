@@ -1,4 +1,4 @@
-import {
+﻿import {
   BRIAN_ENTITY_ALIASES,
   BRIAN_IMPULSE_ALIASES,
   isBrianImpulseType,
@@ -120,3 +120,4 @@ export function normalizeContextCarrier(input: Partial<BrianContextCarrier>): Br
     permissions: Array.isArray(input.permissions) ? input.permissions.filter((item) => typeof item === "string") : [],
   };
 }
+

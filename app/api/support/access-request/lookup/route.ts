@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 import { shouldUseJsonStore } from "@/lib/storeMode";
 import { listAccessRequests } from "@/data/accessRequestsStore";
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     {
       ok: true,
       message:
-        "Se os dados conferirem com uma solicitação, o código será reenviado para o e-mail informado.",
+        "Se os dados conferirem com uma solicitaÃ§Ã£o, o cÃ³digo serÃ¡ reenviado para o e-mail informado.",
     },
     { headers: NO_STORE_HEADERS },
   );
@@ -128,7 +128,7 @@ export async function GET(req: Request) {
   });
 
   if (!match) {
-    return NextResponse.json({ error: "Solicitação não encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
+    return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
   }
 
   const parsed = parseAccessRequestMessage(String(match.message ?? ""), String(match.email ?? ""));
@@ -168,3 +168,4 @@ export async function GET(req: Request) {
     { status: 200, headers: NO_STORE_HEADERS },
   );
 }
+

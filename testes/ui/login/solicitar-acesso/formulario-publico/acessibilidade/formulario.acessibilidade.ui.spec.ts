@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Rodar:
  * npx playwright test testes/ui/login/solicitar-acesso/acessibilidade/formulario.acessibilidade.ui.spec.ts --project=chromium
  */
@@ -15,3 +15,4 @@ test("formulario publico nao possui violacoes graves de acessibilidade", async (
   await expect(elementos.formulario).toBeVisible();
   await verificarAcessibilidadeDaPagina(page);
 });
+

@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const companySchema = z.object({
   name: z.string().min(2),
@@ -44,3 +44,4 @@ export const assistantTestCaseSchema = z.object({
   reproductionBase: z.string().trim().min(12).max(500),
   expectedResult: z.string().trim().min(12).max(600),
 });
+

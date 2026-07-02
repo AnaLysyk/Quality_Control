@@ -1,9 +1,9 @@
-import { randomUUID } from "crypto";
+﻿import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prismaClient";
 import { pgCreateLocalCompany, pgFindLocalCompanyBySlug } from "@/lib/core/auth/pgStore";
 
 const uid = randomUUID().slice(0, 8);
-const COMPANY_NAME = `Empresa Integrações Teste ${uid}`;
+const COMPANY_NAME = `Empresa IntegraÃ§Ãµes Teste ${uid}`;
 const COMPANY_SLUG = `empresa-integracoes-teste-${uid}`;
 const compareText = (left: string, right: string) => left.localeCompare(right);
 
@@ -47,3 +47,4 @@ describe("Company integrations persistence", () => {
     expect((j?.config as any).baseUrl).toBe("https://jira.example.com");
   });
 });
+

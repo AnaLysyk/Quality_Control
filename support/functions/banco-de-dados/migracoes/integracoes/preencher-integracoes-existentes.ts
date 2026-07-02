@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prismaClient";
+﻿import { prisma } from "@/lib/prismaClient";
 
 async function run() {
   console.log("Starting backfill: company integrations");
@@ -45,3 +45,4 @@ run()
     console.error(err);
     process.exit(1);
   });
+

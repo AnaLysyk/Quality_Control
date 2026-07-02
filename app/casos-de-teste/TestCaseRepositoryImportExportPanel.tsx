@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useRef, useState } from "react";
 import {
@@ -122,26 +122,26 @@ const TEMPLATE_COLUMNS = [
 ] as const;
 
 const FIELD_GUIDE = [
-  { name: "title", label: "Título", required: true, note: "Nome do caso, equivalente ao título no Qase." },
-  { name: "description", label: "Descrição", required: false, note: "Resumo funcional do cenário." },
+  { name: "title", label: "TÃ­tulo", required: true, note: "Nome do caso, equivalente ao tÃ­tulo no Qase." },
+  { name: "description", label: "DescriÃ§Ã£o", required: false, note: "Resumo funcional do cenÃ¡rio." },
   { name: "objective", label: "Objetivo", required: false, note: "O que o caso comprova." },
-  { name: "preconditions", label: "Pré-condições", required: false, note: "Estado necessário antes da execução." },
-  { name: "postconditions", label: "Pós-condições", required: false, note: "Estado esperado após a execução." },
+  { name: "preconditions", label: "PrÃ©-condiÃ§Ãµes", required: false, note: "Estado necessÃ¡rio antes da execuÃ§Ã£o." },
+  { name: "postconditions", label: "PÃ³s-condiÃ§Ãµes", required: false, note: "Estado esperado apÃ³s a execuÃ§Ã£o." },
   { name: "priority", label: "Prioridade", required: false, note: "low, medium, high ou critical." },
   { name: "status", label: "Status", required: false, note: "draft, active, review, obsolete ou archived." },
   { name: "type", label: "Tipo", required: false, note: "manual, automated ou hybrid." },
-  { name: "testProjectCode", label: "Projeto Qase", required: false, note: "Código do projeto, ex.: SFQ." },
+  { name: "testProjectCode", label: "Projeto Qase", required: false, note: "CÃ³digo do projeto, ex.: SFQ." },
   { name: "suiteName", label: "Suite/Pasta", required: false, note: "Agrupamento do caso." },
-  { name: "tags", label: "Tags", required: false, note: "Separadas por vírgula ou ponto e vírgula." },
+  { name: "tags", label: "Tags", required: false, note: "Separadas por vÃ­rgula ou ponto e vÃ­rgula." },
   { name: "steps", label: "Passos", required: false, note: "JSON ou use stepAction/stepExpectedResult." },
 ];
 
 const SAMPLE_ROWS = [
   {
-    title: "Validar login com credenciais válidas",
-    description: "Usuário acessa o sistema com login e senha corretos.",
+    title: "Validar login com credenciais vÃ¡lidas",
+    description: "UsuÃ¡rio acessa o sistema com login e senha corretos.",
     objective: "Garantir acesso autenticado.",
-    preconditions: "Usuário ativo e cadastrado.",
+    preconditions: "UsuÃ¡rio ativo e cadastrado.",
     postconditions: "Dashboard exibido.",
     source: "import",
     type: "manual",
@@ -155,13 +155,13 @@ const SAMPLE_ROWS = [
     testProjectCode: "SFQ",
     testProjectName: "Quality Control",
     suiteId: "auth",
-    suiteName: "Autenticação",
+    suiteName: "AutenticaÃ§Ã£o",
     featureId: "login",
     tags: "login, regressao, smoke",
-    stepAction: "Informar login e senha válidos; clicar em Entrar",
+    stepAction: "Informar login e senha vÃ¡lidos; clicar em Entrar",
     stepExpectedResult: "Sistema deve autenticar e abrir o dashboard",
     stepData: "usuario=qa@teste.com",
-    stepNotes: "Modelo compatível com importação manual",
+    stepNotes: "Modelo compatÃ­vel com importaÃ§Ã£o manual",
     steps: "",
   },
 ];
@@ -206,8 +206,8 @@ function parseSteps(row: Record<string, unknown>): TestCaseStep[] {
       return rawSteps
         .split(/\n+/)
         .map((line) => {
-          const [action, expectedResult] = line.split(/=>|→|\|/).map((part) => part?.trim());
-          return { action: action || line.trim(), expectedResult: expectedResult || "Resultado esperado não informado" };
+          const [action, expectedResult] = line.split(/=>|â†’|\|/).map((part) => part?.trim());
+          return { action: action || line.trim(), expectedResult: expectedResult || "Resultado esperado nÃ£o informado" };
         })
         .filter((step) => step.action);
     }
@@ -218,8 +218,8 @@ function parseSteps(row: Record<string, unknown>): TestCaseStep[] {
   if (!action && !expectedResult) return [];
   return [
     {
-      action: action || "Ação não informada",
-      expectedResult: expectedResult || "Resultado esperado não informado",
+      action: action || "AÃ§Ã£o nÃ£o informada",
+      expectedResult: expectedResult || "Resultado esperado nÃ£o informado",
       data: normalizeText(row.stepData ?? row.data) || undefined,
       notes: normalizeText(row.stepNotes ?? row.notes) || undefined,
     },
@@ -229,14 +229,14 @@ function parseSteps(row: Record<string, unknown>): TestCaseStep[] {
 function normalizeImportRows(rows: Array<Record<string, unknown>>, context: { companySlug: string | null; projectId: string | null; projectCode: string | null; projectName: string | null }) {
   return rows
     .map((row) => {
-      const title = normalizeText(row.title ?? row.Título ?? row.titulo ?? row.name ?? row.Nome);
+      const title = normalizeText(row.title ?? row.TÃ­tulo ?? row.titulo ?? row.name ?? row.Nome);
       const companySlug = normalizeText(row.companySlug ?? row.companyId ?? row.Empresa) || context.companySlug || null;
       return {
         title,
-        description: normalizeText(row.description ?? row.Descrição ?? row.descricao),
+        description: normalizeText(row.description ?? row.DescriÃ§Ã£o ?? row.descricao),
         objective: normalizeText(row.objective ?? row.Objetivo),
-        preconditions: normalizeText(row.preconditions ?? row["Pré-condições"] ?? row.preCondicoes),
-        postconditions: normalizeText(row.postconditions ?? row["Pós-condições"] ?? row.posCondicoes),
+        preconditions: normalizeText(row.preconditions ?? row["PrÃ©-condiÃ§Ãµes"] ?? row.preCondicoes),
+        postconditions: normalizeText(row.postconditions ?? row["PÃ³s-condiÃ§Ãµes"] ?? row.posCondicoes),
         source: normalizeText(row.source ?? row.Origem) || "import",
         type: normalizeText(row.type ?? row.Tipo) || "manual",
         status: normalizeText(row.status ?? row.Status) || "active",
@@ -246,8 +246,8 @@ function normalizeImportRows(rows: Array<Record<string, unknown>>, context: { co
         companySlug,
         companyId: companySlug,
         projectId: normalizeText(row.projectId) || context.projectId || undefined,
-        applicationId: normalizeText(row.applicationId ?? row.application ?? row.aplicacao ?? row.Aplicação) || undefined,
-        moduleId: normalizeText(row.moduleId ?? row.module ?? row.modulo ?? row.Módulo) || undefined,
+        applicationId: normalizeText(row.applicationId ?? row.application ?? row.aplicacao ?? row.AplicaÃ§Ã£o) || undefined,
+        moduleId: normalizeText(row.moduleId ?? row.module ?? row.modulo ?? row.MÃ³dulo) || undefined,
         testProjectCode: normalizeText(row.testProjectCode ?? row.projectCode ?? row.qaseProject ?? row.Projeto) || context.projectCode || undefined,
         testProjectName: normalizeText(row.testProjectName ?? row.projectName ?? row.NomeProjeto) || context.projectName || undefined,
         suiteId: normalizeText(row.suiteId ?? row.folderId) || undefined,
@@ -347,7 +347,7 @@ export default function TestCaseRepositoryImportExportPanel() {
     if (context.projectCode) params.set("projectCode", context.projectCode);
 
     const response = await fetchApi(`/api/test-cases?${params.toString()}`, { cache: "no-store" });
-    if (!response.ok) throw new Error("Não foi possível carregar os casos para exportação.");
+    if (!response.ok) throw new Error("NÃ£o foi possÃ­vel carregar os casos para exportaÃ§Ã£o.");
     const payload = (await response.json()) as { items?: TestCaseRecord[] };
     return payload.items ?? [];
   }
@@ -387,7 +387,7 @@ export default function TestCaseRepositoryImportExportPanel() {
         let y = 52;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text("Repositório de Casos de Teste", margin, y);
+        doc.text("RepositÃ³rio de Casos de Teste", margin, y);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
         y += 20;
@@ -407,7 +407,7 @@ export default function TestCaseRepositoryImportExportPanel() {
           doc.setFontSize(9);
           doc.text(`Status: ${testCase.status ?? "-"} | Prioridade: ${testCase.priority ?? "-"} | Projeto: ${testCase.testProjectCode ?? "-"} | Suite: ${testCase.suiteName ?? "-"}`, margin, y, { maxWidth: pageWidth - margin * 2 });
           y += 14;
-          const description = testCase.description || testCase.objective || "Sem descrição.";
+          const description = testCase.description || testCase.objective || "Sem descriÃ§Ã£o.";
           const lines = doc.splitTextToSize(description, pageWidth - margin * 2) as string[];
           doc.text(lines.slice(0, 3), margin, y);
           y += Math.min(lines.length, 3) * 11 + 10;
@@ -436,7 +436,7 @@ export default function TestCaseRepositoryImportExportPanel() {
       XLSX.utils.book_append_sheet(workbook, guide, "Campos");
       const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
       downloadBlob(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), "modelo-importacao-casos-qase-opcional.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      setMessage("Modelo Excel baixado com os campos disponíveis no sistema.");
+      setMessage("Modelo Excel baixado com os campos disponÃ­veis no sistema.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao gerar modelo.");
     } finally {
@@ -467,7 +467,7 @@ export default function TestCaseRepositoryImportExportPanel() {
       return XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: "" });
     }
 
-    throw new Error("Formato não suportado. Use JSON, CSV ou Excel (.xlsx/.xls). ");
+    throw new Error("Formato nÃ£o suportado. Use JSON, CSV ou Excel (.xlsx/.xls). ");
   }
 
   async function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
@@ -481,7 +481,7 @@ export default function TestCaseRepositoryImportExportPanel() {
     try {
       const rawRows = await parseImportFile(file);
       const cases = normalizeImportRows(rawRows, context);
-      if (!cases.length) throw new Error("Nenhum caso válido encontrado. O campo title/título é obrigatório.");
+      if (!cases.length) throw new Error("Nenhum caso vÃ¡lido encontrado. O campo title/tÃ­tulo Ã© obrigatÃ³rio.");
       const response = await fetchApi("/api/test-cases/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -499,14 +499,14 @@ export default function TestCaseRepositoryImportExportPanel() {
   }
 
   return (
-    <section className="mb-5 overflow-hidden rounded-[32px] border border-(--tc-border,#d7deea) bg-white shadow-[0_18px_50px_rgba(15,23,42,0.07)]">
+    <section className="mb-5 overflow-hidden rounded-[32px] border border-[var(--tc-border,#d7deea)] bg-white shadow-[0_18px_50px_rgba(15,23,42,0.07)]">
       <div className="bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18)_0%,transparent_30%),linear-gradient(135deg,#011848_0%,#123170_54%,#ef0001_135%)] px-5 py-5 text-white sm:px-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] font-black uppercase tracking-[0.26em] text-white/62">Importação e exportação</p>
-            <h2 className="mt-2 text-2xl font-black tracking-[-0.04em] sm:text-3xl">Casos no padrão do sistema, com referência Qase opcional</h2>
+            <p className="text-[11px] font-black uppercase tracking-[0.26em] text-white/62">ImportaÃ§Ã£o e exportaÃ§Ã£o</p>
+            <h2 className="mt-2 text-2xl font-black tracking-[-0.04em] sm:text-3xl">Casos no padrÃ£o do sistema, com referÃªncia Qase opcional</h2>
             <p className="mt-2 text-sm leading-6 text-white/78">
-              Importe casos para o banco do Quality Control ou exporte o repositório em PDF, CSV, JSON e Excel. O código do projeto Qase é opcional e serve apenas como vínculo de rastreabilidade.
+              Importe casos para o banco do Quality Control ou exporte o repositÃ³rio em PDF, CSV, JSON e Excel. O cÃ³digo do projeto Qase Ã© opcional e serve apenas como vÃ­nculo de rastreabilidade.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -523,17 +523,17 @@ export default function TestCaseRepositoryImportExportPanel() {
       <input ref={fileInputRef} type="file" accept=".json,.csv,.xlsx,.xls" className="hidden" onChange={(event) => void handleFileSelected(event)} />
 
       <div className="grid gap-4 p-5 lg:grid-cols-[1.1fr_0.9fr] sm:p-6">
-        <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+        <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-(--tc-primary,#011848) shadow-sm">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--tc-primary,#011848)] shadow-sm">
               <FiDatabase className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-(--tc-text,#0b1a3c)">Escopo da operação</h3>
-              <p className="mt-1 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                Empresa: <strong>{context.companySlug ?? "sem empresa selecionada"}</strong> · Projeto: <strong>{context.projectName ?? context.projectCode ?? "todos"}</strong>
+              <h3 className="text-base font-black text-[var(--tc-text,#0b1a3c)]">Escopo da operaÃ§Ã£o</h3>
+              <p className="mt-1 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
+                Empresa: <strong>{context.companySlug ?? "sem empresa selecionada"}</strong> Â· Projeto: <strong>{context.projectName ?? context.projectCode ?? "todos"}</strong>
               </p>
-              <p className="mt-1 text-xs font-semibold text-(--tc-text-muted,#64748b)">
+              <p className="mt-1 text-xs font-semibold text-[var(--tc-text-muted,#64748b)]">
                 Para importar direto no projeto certo, selecione a empresa e o projeto antes de importar.
               </p>
             </div>
@@ -551,9 +551,9 @@ export default function TestCaseRepositoryImportExportPanel() {
                 type="button"
                 onClick={() => void handleExport(format)}
                 disabled={busy}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-white px-3 text-xs font-black uppercase tracking-[0.1em] text-(--tc-text,#0b1a3c) transition hover:border-(--tc-primary,#011848) hover:shadow-sm disabled:opacity-60"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-3 text-xs font-black uppercase tracking-[0.1em] text-[var(--tc-text,#0b1a3c)] transition hover:border-[var(--tc-primary,#011848)] hover:shadow-sm disabled:opacity-60"
               >
-                <Icon className="h-4 w-4 text-(--tc-accent,#ef0001)" /> {label}
+                <Icon className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> {label}
               </button>
             ))}
           </div>
@@ -570,16 +570,16 @@ export default function TestCaseRepositoryImportExportPanel() {
           ) : null}
         </div>
 
-        <div className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4">
+        <div className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4">
           <div className="flex items-center gap-2">
-            <FiInfo className="h-4 w-4 text-(--tc-accent,#ef0001)" />
-            <h3 className="text-sm font-black uppercase tracking-[0.14em] text-(--tc-text,#0b1a3c)">Campos disponíveis</h3>
+            <FiInfo className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
+            <h3 className="text-sm font-black uppercase tracking-[0.14em] text-[var(--tc-text,#0b1a3c)]">Campos disponÃ­veis</h3>
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {FIELD_GUIDE.slice(0, 8).map((field) => (
-              <div key={field.name} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2">
-                <div className="text-xs font-black text-(--tc-text,#0b1a3c)">{field.label}{field.required ? " *" : ""}</div>
-                <div className="mt-0.5 text-[11px] leading-4 text-(--tc-text-muted,#64748b)">{field.note}</div>
+              <div key={field.name} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-2">
+                <div className="text-xs font-black text-[var(--tc-text,#0b1a3c)]">{field.label}{field.required ? " *" : ""}</div>
+                <div className="mt-0.5 text-[11px] leading-4 text-[var(--tc-text-muted,#64748b)]">{field.note}</div>
               </div>
             ))}
           </div>
@@ -588,3 +588,4 @@ export default function TestCaseRepositoryImportExportPanel() {
     </section>
   );
 }
+

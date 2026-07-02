@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -38,7 +38,7 @@ const SkeletonGrid = () => (
   <div className="w-full bg-(--page-bg,#f3f6fb) px-4 pt-4 pb-6 sm:px-6 lg:px-10 xl:px-12 2xl:px-14">
     <div className="grid w-full auto-rows-fr grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-[26px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-5">
+        <div key={i} className="rounded-[26px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-5">
           <div className="h-3 w-20 animate-pulse rounded-full bg-slate-200" />
           <div className="mt-5 h-6 w-2/3 animate-pulse rounded-full bg-slate-200" />
           <div className="mt-3 h-4 w-24 animate-pulse rounded-full bg-slate-200" />
@@ -68,7 +68,7 @@ export default function DocsOverviewClient() {
   // wiki summaries keyed by company slug
   const [summaries, setSummaries] = useState<Record<string, WikiSummary>>({});
   const [summariesLoading, setSummariesLoading] = useState(false);
-  // platform (internal) wiki summary — only shown to leader/support
+  // platform (internal) wiki summary â€” only shown to leader/support
   const [platformSummary, setPlatformSummary] = useState<WikiSummary>(null);
 
   useEffect(() => {
@@ -170,7 +170,7 @@ export default function DocsOverviewClient() {
         {loading ? (
           <div className="grid w-full auto-rows-fr grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-[26px] border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-5">
+              <div key={i} className="rounded-[26px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-5">
                 <div className="h-3 w-20 animate-pulse rounded-full bg-slate-200" />
                 <div className="mt-5 h-6 w-2/3 animate-pulse rounded-full bg-slate-200" />
                 <div className="mt-3 h-4 w-24 animate-pulse rounded-full bg-slate-200" />
@@ -181,9 +181,9 @@ export default function DocsOverviewClient() {
         ) : (
           <div className="grid w-full auto-rows-fr grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
 
-            {/* ── Platform wiki card (only leader/support) ──────────────── */}
+            {/* â”€â”€ Platform wiki card (only leader/support) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {showPlatformWiki && (
-              <article className="relative flex min-w-0 flex-col rounded-[26px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <article className="relative flex min-w-0 flex-col rounded-[26px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
                 <div className="h-1.5 w-full rounded-t-[26px] bg-[linear-gradient(90deg,#011848_0%,#6366f1_100%)]" />
                 <div className="flex flex-1 flex-col gap-5 p-5">
                   <div className="flex flex-col items-start gap-3">
@@ -192,8 +192,8 @@ export default function DocsOverviewClient() {
                         <FiBookOpen className="h-5 w-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Plataforma</p>
-                        <h3 className="text-lg leading-7 font-extrabold text-(--tc-text,#0b1a3c)">Repositório da Testing Company</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Plataforma</p>
+                        <h3 className="text-lg leading-7 font-extrabold text-[var(--tc-text,#0b1a3c)]">RepositÃ³rio da Testing Company</h3>
                       </div>
                     </div>
                     <span className="inline-flex min-h-8 w-fit items-center rounded-full border border-[#c7d2fe] bg-[#eef2ff] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#6366f1]">
@@ -201,9 +201,9 @@ export default function DocsOverviewClient() {
                     </span>
                   </div>
                   <div className="grid grid-cols-1 gap-3">
-                    <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Conteúdo</p>
-                      <p className="mt-1.5 text-sm font-bold text-(--tc-text,#0b1a3c)">
+                    <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">ConteÃºdo</p>
+                      <p className="mt-1.5 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
                         {platformSummary === null
                           ? "Carregando..."
                           : platformSummary.docCount === 0
@@ -212,8 +212,8 @@ export default function DocsOverviewClient() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-auto flex flex-col gap-3 border-t border-(--tc-border,#e5e7eb) pt-4">
-                    <div className="flex min-w-0 items-center gap-1.5 text-xs text-(--tc-text-muted,#6b7280)">
+                  <div className="mt-auto flex flex-col gap-3 border-t border-[var(--tc-border,#e5e7eb)] pt-4">
+                    <div className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--tc-text-muted,#6b7280)]">
                       <FiUsers className="h-3.5 w-3.5" /><span>/docs/platform</span>
                     </div>
                     <Link
@@ -221,8 +221,8 @@ export default function DocsOverviewClient() {
                       className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(90deg,#011848,#6366f1)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                     >
                       {platformSummary?.docCount === 0 && platformSummary?.canEdit
-                        ? <><FiEdit3 className="h-4 w-4" /> Criar documentação</>
-                        : <><FiBookOpen className="h-4 w-4" /> Acessar repositório</>
+                        ? <><FiEdit3 className="h-4 w-4" /> Criar documentaÃ§Ã£o</>
+                        : <><FiBookOpen className="h-4 w-4" /> Acessar repositÃ³rio</>
                       }
                       <FiArrowRight className="h-4 w-4" />
                     </Link>
@@ -231,36 +231,36 @@ export default function DocsOverviewClient() {
               </article>
             )}
 
-            {/* ── Empty state ──────────────────────────────────────────── */}
+            {/* â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {clients.length === 0 && (
-              <div className="col-span-full mt-0 flex min-h-60 flex-col items-center justify-center gap-4 rounded-[26px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-6 py-10 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)">
+              <div className="col-span-full mt-0 flex min-h-60 flex-col items-center justify-center gap-4 rounded-[26px] border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-6 py-10 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]">
                   <FiFolder className="h-7 w-7" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhuma empresa vinculada</h3>
-                  <p className="max-w-xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                    Quando houver vínculos ativos, os repositórios das empresas aparecerão aqui.
+                  <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhuma empresa vinculada</h3>
+                  <p className="max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
+                    Quando houver vÃ­nculos ativos, os repositÃ³rios das empresas aparecerÃ£o aqui.
                   </p>
                 </div>
               </div>
             )}
 
             {clients.length > 0 && profile !== "company" && !summariesLoading && visibleCompanies.length === 0 && (
-              <div className="col-span-full mt-0 flex min-h-60 flex-col items-center justify-center gap-4 rounded-[26px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-6 py-10 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-white text-(--tc-text-muted,#6b7280)">
+              <div className="col-span-full mt-0 flex min-h-60 flex-col items-center justify-center gap-4 rounded-[26px] border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-6 py-10 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]">
                   <FiFolder className="h-7 w-7" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum repositório com conteúdo</h3>
-                  <p className="max-w-xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                    Quando alguma empresa vinculada publicar conteúdo no repositório, ela aparecerá aqui automaticamente.
+                  <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum repositÃ³rio com conteÃºdo</h3>
+                  <p className="max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
+                    Quando alguma empresa vinculada publicar conteÃºdo no repositÃ³rio, ela aparecerÃ¡ aqui automaticamente.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* ── Company wiki cards ───────────────────────────────────── */}
+            {/* â”€â”€ Company wiki cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             {visibleCompanies.map((company) => {
               const summary = summaries[company.slug] ?? null;
               const docCount = summary?.docCount ?? null;
@@ -272,7 +272,7 @@ export default function DocsOverviewClient() {
               return (
                 <article
                   key={company.slug}
-                  className="relative flex min-w-0 flex-col rounded-[26px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)]"
+                  className="relative flex min-w-0 flex-col rounded-[26px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)]"
                 >
                   <div className="h-1.5 w-full rounded-t-[26px] bg-[linear-gradient(90deg,#011848_0%,#ef0001_100%)]" />
                   <div className="flex flex-1 flex-col gap-5 p-5">
@@ -291,18 +291,18 @@ export default function DocsOverviewClient() {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Empresa</p>
-                          <h3 className="wrap-break-word text-lg leading-7 font-extrabold text-(--tc-text,#0b1a3c)">{company.name}</h3>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Empresa</p>
+                          <h3 className="wrap-break-word text-lg leading-7 font-extrabold text-[var(--tc-text,#0b1a3c)]">{company.name}</h3>
                         </div>
                       </div>
-                      <span className="inline-flex min-h-8 w-fit items-center rounded-full border border-(--tc-border,#d7deea) px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
-                        Repositório
+                      <span className="inline-flex min-h-8 w-fit items-center rounded-full border border-[var(--tc-border,#d7deea)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
+                        RepositÃ³rio
                       </span>
                     </div>
                     <div className="grid grid-cols-1 gap-3">
-                      <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">Conteúdo</p>
-                        <p className="mt-1.5 text-sm font-bold text-(--tc-text,#0b1a3c)">
+                      <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">ConteÃºdo</p>
+                        <p className="mt-1.5 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
                           {docCount === null
                             ? "Carregando..."
                             : docCount === 0
@@ -311,16 +311,16 @@ export default function DocsOverviewClient() {
                         </p>
                       </div>
                     </div>
-                    <div className="mt-auto flex flex-col gap-3 border-t border-(--tc-border,#e5e7eb) pt-4">
-                      <div className="flex min-w-0 items-center gap-1.5 text-xs text-(--tc-text-muted,#6b7280)">
+                    <div className="mt-auto flex flex-col gap-3 border-t border-[var(--tc-border,#e5e7eb)] pt-4">
+                      <div className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--tc-text-muted,#6b7280)]">
                         <FiUsers className="h-3.5 w-3.5" />
                         <span className="break-all">/{company.slug}/docs</span>
                       </div>
                       <Link
                         href={href}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-(--tc-primary,#0b1a3c) px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--tc-primary,#0b1a3c)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                       >
-                        {docCount === 0 && canEdit ? <><FiEdit3 className="h-4 w-4" /> Criar documentação</> : <><FiBookOpen className="h-4 w-4" /> Acessar repositório</>}
+                        {docCount === 0 && canEdit ? <><FiEdit3 className="h-4 w-4" /> Criar documentaÃ§Ã£o</> : <><FiBookOpen className="h-4 w-4" /> Acessar repositÃ³rio</>}
                         <FiArrowRight className="h-4 w-4" />
                       </Link>
                     </div>
@@ -334,3 +334,4 @@ export default function DocsOverviewClient() {
     </RequireAuth>
   );
 }
+

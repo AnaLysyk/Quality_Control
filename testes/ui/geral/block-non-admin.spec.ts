@@ -1,7 +1,7 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
-test("user nÃ£o acessa /admin", async ({ page, context }) => {
+test("user nÃƒÂ£o acessa /admin", async ({ page, context }) => {
   await simularAutenticacao(context, {
     role: "user",
     companies: ["DEMO"],
@@ -11,3 +11,4 @@ test("user nÃ£o acessa /admin", async ({ page, context }) => {
 
   await expect(page).toHaveURL(/\/user\/home|\/empresas/);
 });
+

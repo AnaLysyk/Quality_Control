@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { resolveBrainAccess } from "@/lib/brain/access";
 import { BrainModuleEvents, isAllowedBrainEvent } from "@/lib/brain/contracts";
 
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     source: "contract",
-    message: "Evento aceito pelo contrato central do Brain. Para persistir no grafo como nó, conexão ou memória, envie node/edge/memory para /api/brain/graph/ingest.",
+    message: "Evento aceito pelo contrato central do Brain. Para persistir no grafo como nÃ³, conexÃ£o ou memÃ³ria, envie node/edge/memory para /api/brain/graph/ingest.",
     event: {
       id: `ingest:${Date.now()}`,
       eventType,
@@ -64,3 +64,4 @@ export async function POST(req: Request) {
     requiresConfirmation: false,
   });
 }
+

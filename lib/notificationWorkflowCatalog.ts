@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getNotificationOperationModel, type NotificationWorkflow } from "@/data/notificationOperationModel";
 import { notificationWorkflowExtensions } from "@/data/notificationWorkflowExtensions";
@@ -35,3 +35,4 @@ export function getExtendedNotificationOperationModel() {
     },
   };
 }
+

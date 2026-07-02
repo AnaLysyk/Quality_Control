@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -22,7 +22,7 @@ import {
 
 import { useAutomationModuleContext } from "../_components/AutomationModuleContext";
 
-// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Types Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 type AssetKind = "image" | "video" | "document" | "other";
 
@@ -57,7 +57,7 @@ type HistoryEntry = {
   base64_data?: string;
 };
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 function detectKind(name: string): AssetKind {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
@@ -107,7 +107,7 @@ async function urlToDataURL(url: string): Promise<string> {
   });
 }
 
-// â”€â”€ TruncatedCode: expandable base64 block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ TruncatedCode: expandable base64 block Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 function TruncatedCode({ code, copiedId, id, onCopy }: {
   code: string;
@@ -116,13 +116,13 @@ function TruncatedCode({ code, copiedId, id, onCopy }: {
   onCopy: (id: string, code: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const displayCode = expanded ? code : `${code.slice(0, 120)}â€¦`;
+  const displayCode = expanded ? code : `${code.slice(0, 120)}Ã¢â‚¬Â¦`;
 
   return (
     <div className="rounded-xl border border-zinc-700 bg-zinc-950">
       <div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
         <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-          Base64 · {formatBytes(Math.round(code.length * 0.75))}
+          Base64 Â· {formatBytes(Math.round(code.length * 0.75))}
         </span>
         <div className="flex items-center gap-2">
           <button
@@ -134,7 +134,7 @@ function TruncatedCode({ code, copiedId, id, onCopy }: {
           </button>
           <button
             type="button"
-            aria-label="Copiar código base64"
+            aria-label="Copiar cÃ³digo base64"
             onClick={() => onCopy(id, code)}
             className="flex h-6 w-6 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
           >
@@ -149,7 +149,7 @@ function TruncatedCode({ code, copiedId, id, onCopy }: {
   );
 }
 
-// â”€â”€ HistoryRow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ HistoryRow Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 function HistoryRow({
   entry,
@@ -277,7 +277,7 @@ export default function Base64Studio() {
   // Output textarea ref (for auto-select on copy)
   const outputRef = useRef<HTMLTextAreaElement>(null);
 
-  // â”€â”€ Load library assets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Load library assets Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   const loadLibrary = useCallback(() => {
     if (!companySlug) {
@@ -295,7 +295,7 @@ export default function Base64Studio() {
       .finally(() => setLibraryLoading(false));
   }, [companySlug]);
 
-  // â”€â”€ Load history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Load history Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   const loadHistory = useCallback(() => {
     if (!companySlug) {
@@ -432,7 +432,7 @@ export default function Base64Studio() {
     librarySearch.trim() === "" || a.name.toLowerCase().includes(librarySearch.toLowerCase())
   );
 
-  // â”€â”€ Progress bar for large base64 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Progress bar for large base64 Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
   const statsRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -444,21 +444,21 @@ export default function Base64Studio() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-(--page-bg,#f3f6fb) overflow-hidden">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-6 py-4">
+      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-6 py-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
-            Base64 · {companyLabel}
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
+            Base64 Â· {companyLabel}
           </p>
-          <h1 className="mt-0.5 text-xl font-black tracking-tight text-(--tc-text,#0b1a3c)">
+          <h1 className="mt-0.5 text-xl font-black tracking-tight text-[var(--tc-text,#0b1a3c)]">
             Conversor Base64
           </h1>
         </div>
         <button
           type="button"
-          aria-label="Atualizar histórico"
+          aria-label="Atualizar histÃ³rico"
           onClick={loadHistory}
           disabled={historyLoading}
-          className="flex h-9 w-9 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280) hover:border-(--tc-accent,#ef0001) disabled:opacity-40 transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text-muted,#6b7280)] hover:border-[var(--tc-accent,#ef0001)] disabled:opacity-40 transition-colors"
         >
           <FiRefreshCw className={`h-4 w-4 ${historyLoading ? "animate-spin" : ""}`} />
         </button>
@@ -467,11 +467,11 @@ export default function Base64Studio() {
       {/* Body */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
 
-        {/* â”€â”€ Left: Source picker â”€â”€ */}
-        <div className="flex w-80 shrink-0 flex-col border-r border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)">
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Left: Source picker Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        <div className="flex w-80 shrink-0 flex-col border-r border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)]">
 
           {/* Tabs */}
-          <div className="flex shrink-0 border-b border-(--tc-border,#d7deea)">
+          <div className="flex shrink-0 border-b border-[var(--tc-border,#d7deea)]">
             {(["upload", "library"] as const).map((t) => (
               <button
                 key={t}
@@ -479,8 +479,8 @@ export default function Base64Studio() {
                 onClick={() => setTab(t)}
                 className={`flex flex-1 items-center justify-center gap-2 py-3 text-xs font-semibold transition-colors ${
                   tab === t
-                    ? "border-b-2 border-(--tc-accent,#ef0001) text-(--tc-accent,#ef0001)"
-                    : "text-(--tc-text-muted,#6b7280) hover:text-(--tc-text,#0b1a3c)"
+                    ? "border-b-2 border-[var(--tc-accent,#ef0001)] text-[var(--tc-accent,#ef0001)]"
+                    : "text-[var(--tc-text-muted,#6b7280)] hover:text-[var(--tc-text,#0b1a3c)]"
                 }`}
               >
                 {t === "upload" ? <FiUploadCloud className="h-3.5 w-3.5" /> : <FiFolder className="h-3.5 w-3.5" />}
@@ -495,19 +495,19 @@ export default function Base64Studio() {
               <div
                 className={`flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-colors cursor-pointer ${
                   isDragging
-                    ? "border-(--tc-accent,#ef0001) bg-[#fff5f5]"
-                    : "border-(--tc-border,#d7deea) hover:border-(--tc-accent,#ef0001)/50 hover:bg-(--tc-surface-2,#f8fafc)"
+                    ? "border-[var(--tc-accent,#ef0001)] bg-[#fff5f5]"
+                    : "border-[var(--tc-border,#d7deea)] hover:border-[var(--tc-accent,#ef0001)]/50 hover:bg-[var(--tc-surface-2,#f8fafc)]"
                 }`}
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFiles(e.dataTransfer.files); }}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <FiUploadCloud className={`h-10 w-10 mb-3 transition-colors ${isDragging ? "text-(--tc-accent,#ef0001)" : "text-(--tc-text-muted,#6b7280) opacity-40"}`} />
-                <p className="text-sm font-semibold text-(--tc-text-muted,#6b7280)">
+                <FiUploadCloud className={`h-10 w-10 mb-3 transition-colors ${isDragging ? "text-[var(--tc-accent,#ef0001)]" : "text-[var(--tc-text-muted,#6b7280)] opacity-40"}`} />
+                <p className="text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">
                   {converting ? "Convertendo..." : "Arraste ou clique"}
                 </p>
-                <p className="mt-1 text-[11px] text-(--tc-text-muted,#6b7280) opacity-60">
+                <p className="mt-1 text-[11px] text-[var(--tc-text-muted,#6b7280)] opacity-60">
                   Imagens, PDFs, v?deos e mais
                 </p>
                 <input
@@ -520,7 +520,7 @@ export default function Base64Studio() {
               </div>
 
               {converting && (
-                <div className="flex items-center justify-center gap-2 text-sm text-(--tc-text-muted,#6b7280)">
+                <div className="flex items-center justify-center gap-2 text-sm text-[var(--tc-text-muted,#6b7280)]">
                   <FiLoader className="h-4 w-4 animate-spin" />
                   Convertendo...
                 </div>
@@ -537,19 +537,19 @@ export default function Base64Studio() {
                   onChange={(e) => setLibrarySearch(e.target.value)}
                   placeholder="Buscar arquivo..."
                   aria-label="Buscar arquivo na biblioteca"
-                  className="w-full rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-2 text-sm text-(--tc-text,#0b1a3c) outline-none focus:border-(--tc-accent,#ef0001)"
+                  className="w-full rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-2 text-sm text-[var(--tc-text,#0b1a3c)] outline-none focus:border-[var(--tc-accent,#ef0001)]"
                 />
               </div>
               <div className="flex-1 overflow-auto">
                 {libraryLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-8 text-sm text-(--tc-text-muted,#6b7280)">
+                  <div className="flex items-center justify-center gap-2 py-8 text-sm text-[var(--tc-text-muted,#6b7280)]">
                     <FiLoader className="h-4 w-4 animate-spin" />
                     Carregando...
                   </div>
                 ) : filteredLibrary.length === 0 ? (
                   <div className="py-8 text-center">
-                    <FiFolder className="mx-auto h-8 w-8 text-(--tc-text-muted,#6b7280) opacity-30" />
-                    <p className="mt-2 text-xs text-(--tc-text-muted,#6b7280)">
+                    <FiFolder className="mx-auto h-8 w-8 text-[var(--tc-text-muted,#6b7280)] opacity-30" />
+                    <p className="mt-2 text-xs text-[var(--tc-text-muted,#6b7280)]">
                       {librarySearch ? "Nenhum arquivo encontrado" : "Biblioteca vazia"}
                     </p>
                   </div>
@@ -561,26 +561,26 @@ export default function Base64Studio() {
                         type="button"
                         onClick={() => void handleLibrarySelect(asset)}
                         disabled={converting}
-                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-50 transition-colors group"
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-50 transition-colors group"
                       >
                         {asset.kind === "image" ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={asset.url}
                             alt={asset.name}
-                            className="h-8 w-8 rounded-lg object-cover border border-(--tc-border,#d7deea) shrink-0"
+                            className="h-8 w-8 rounded-lg object-cover border border-[var(--tc-border,#d7deea)] shrink-0"
                             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                           />
                         ) : (
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--tc-surface-2,#f8fafc) border border-(--tc-border,#d7deea)">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--tc-surface-2,#f8fafc)] border border-[var(--tc-border,#d7deea)]">
                             <KindIcon kind={asset.kind} className="h-4 w-4" />
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-semibold text-(--tc-text,#0b1a3c)">{asset.name}</p>
-                          <p className="text-[10px] text-(--tc-text-muted,#6b7280)">{formatBytes(asset.size_bytes)}</p>
+                          <p className="truncate text-[12px] font-semibold text-[var(--tc-text,#0b1a3c)]">{asset.name}</p>
+                          <p className="text-[10px] text-[var(--tc-text-muted,#6b7280)]">{formatBytes(asset.size_bytes)}</p>
                         </div>
-                        {converting && <FiLoader className="h-3.5 w-3.5 shrink-0 animate-spin text-(--tc-text-muted,#6b7280)" />}
+                        {converting && <FiLoader className="h-3.5 w-3.5 shrink-0 animate-spin text-[var(--tc-text-muted,#6b7280)]" />}
                       </button>
                     ))}
                   </div>
@@ -590,18 +590,18 @@ export default function Base64Studio() {
           )}
         </div>
 
-        {/* â”€â”€ Center: Output â”€â”€ */}
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Center: Output Ã¢â€â‚¬Ã¢â€â‚¬ */}
         <div className="flex flex-1 min-w-0 flex-col min-h-0">
 
           {/* Current result */}
-          <div className="flex shrink-0 flex-col border-b border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 gap-4">
+          <div className="flex shrink-0 flex-col border-b border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 gap-4">
             {!result && !converting && (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-(--tc-surface-2,#f8fafc) border border-(--tc-border,#d7deea)">
-                  <span className="text-2xl font-black text-(--tc-text-muted,#6b7280) opacity-30">B64</span>
+                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--tc-surface-2,#f8fafc)] border border-[var(--tc-border,#d7deea)]">
+                  <span className="text-2xl font-black text-[var(--tc-text-muted,#6b7280)] opacity-30">B64</span>
                 </div>
-                <p className="text-sm font-semibold text-(--tc-text-muted,#6b7280)">Nenhum arquivo convertido</p>
-                <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280) opacity-60">
+                <p className="text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Nenhum arquivo convertido</p>
+                <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)] opacity-60">
                   Selecione um arquivo na esquerda para converter
                 </p>
               </div>
@@ -609,8 +609,8 @@ export default function Base64Studio() {
 
             {converting && (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <FiLoader className="h-8 w-8 animate-spin text-(--tc-accent,#ef0001)" />
-                <p className="text-sm font-semibold text-(--tc-text-muted,#6b7280)">Convertendo para Base64...</p>
+                <FiLoader className="h-8 w-8 animate-spin text-[var(--tc-accent,#ef0001)]" />
+                <p className="text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Convertendo para Base64...</p>
               </div>
             )}
 
@@ -623,28 +623,28 @@ export default function Base64Studio() {
                     <img
                       src={result.previewUrl}
                       alt={result.name}
-                      className="h-14 w-14 rounded-2xl object-cover border border-(--tc-border,#d7deea) shrink-0"
+                      className="h-14 w-14 rounded-2xl object-cover border border-[var(--tc-border,#d7deea)] shrink-0"
                     />
                   ) : (
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-(--tc-surface-2,#f8fafc) border border-(--tc-border,#d7deea)">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--tc-surface-2,#f8fafc)] border border-[var(--tc-border,#d7deea)]">
                       <KindIcon kind={result.kind} className="h-6 w-6" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-(--tc-text,#0b1a3c)">{result.name}</p>
-                    <p className="text-xs text-(--tc-text-muted,#6b7280)">
-                      {formatBytes(result.sizeBytes)} · {result.kind} · {result.source === "library" ? "Biblioteca" : "Upload direto"}
+                    <p className="truncate text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{result.name}</p>
+                    <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">
+                      {formatBytes(result.sizeBytes)} Â· {result.kind} Â· {result.source === "library" ? "Biblioteca" : "Upload direto"}
                     </p>
                     <p className="mt-0.5 text-[11px] text-emerald-600 font-semibold">
-                      Base64: {formatBytes(Math.round(result.base64.length * 0.75))} · {result.base64.length.toLocaleString()} caracteres
+                      Base64: {formatBytes(Math.round(result.base64.length * 0.75))} Â· {result.base64.length.toLocaleString()} caracteres
                     </p>
                   </div>
                   <button
                     type="button"
-                    aria-label="Salvar código base64 no histórico"
+                    aria-label="Salvar cÃ³digo base64 no histÃ³rico"
                     onClick={() => void handleSaveCurrent()}
                     disabled={savingCurrent}
-                    className="shrink-0 flex items-center gap-1.5 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-2 text-xs font-semibold text-(--tc-text,#0b1a3c) hover:border-(--tc-accent,#ef0001) transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                    className="shrink-0 flex items-center gap-1.5 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2 text-xs font-semibold text-[var(--tc-text,#0b1a3c)] hover:border-[var(--tc-accent,#ef0001)] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {savingCurrent ? (
                       <><FiLoader className="h-3.5 w-3.5 animate-spin" /> Salvando...</>
@@ -656,23 +656,23 @@ export default function Base64Studio() {
                     type="button"
                     aria-label="Limpar resultado atual"
                     onClick={() => setResult(null)}
-                    className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) text-(--tc-text-muted,#6b7280) hover:border-rose-300 hover:text-rose-500 transition-colors"
+                    className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] text-[var(--tc-text-muted,#6b7280)] hover:border-rose-300 hover:text-rose-500 transition-colors"
                   >
                     <FiX className="h-4 w-4" />
                   </button>
                 </div>
 
                 {/* Base64 output */}
-                <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) overflow-hidden">
-                  <div className="flex items-center justify-between border-b border-(--tc-border,#d7deea) px-4 py-2.5">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--tc-text-muted,#6b7280)">
-                      Código Base64
+                <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-[var(--tc-border,#d7deea)] px-4 py-2.5">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--tc-text-muted,#6b7280)]">
+                      CÃ³digo Base64
                     </span>
                     <button
                       type="button"
-                      aria-label="Copiar código base64"
+                      aria-label="Copiar cÃ³digo base64"
                       onClick={() => handleCopy("current", result.base64)}
-                      className="flex items-center gap-1.5 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 py-1.5 text-xs font-semibold text-(--tc-text,#0b1a3c) hover:border-(--tc-accent,#ef0001) transition-colors"
+                      className="flex items-center gap-1.5 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)] hover:border-[var(--tc-accent,#ef0001)] transition-colors"
                     >
                       {copiedId === "current" ? (
                         <><FiCheck className="h-3.5 w-3.5 text-emerald-500" /> Copiado!</>
@@ -685,9 +685,9 @@ export default function Base64Studio() {
                     ref={outputRef}
                     readOnly
                     value={result.base64}
-                    aria-label="Código base64 gerado"
+                    aria-label="CÃ³digo base64 gerado"
                     rows={5}
-                    className="w-full resize-none bg-transparent px-4 py-3 font-mono text-[11px] text-(--tc-text,#0b1a3c) leading-5 outline-none"
+                    className="w-full resize-none bg-transparent px-4 py-3 font-mono text-[11px] text-[var(--tc-text,#0b1a3c)] leading-5 outline-none"
                     onClick={(e) => (e.target as HTMLTextAreaElement).select()}
                   />
                 </div>
@@ -695,26 +695,26 @@ export default function Base64Studio() {
             )}
           </div>
 
-          {/* â”€â”€ History â”€â”€ */}
+          {/* Ã¢â€â‚¬Ã¢â€â‚¬ History Ã¢â€â‚¬Ã¢â€â‚¬ */}
           <div className="flex flex-1 min-h-0 flex-col bg-(--page-bg,#f3f6fb)">
             <div className="flex shrink-0 items-center justify-between px-5 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--tc-text-muted,#6b7280)">
-                Histórico de conversões
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
+                HistÃ³rico de conversÃµes
               </p>
-              <span className="text-[10px] text-(--tc-text-muted,#6b7280)">{history.length} registros</span>
+              <span className="text-[10px] text-[var(--tc-text-muted,#6b7280)]">{history.length} registros</span>
             </div>
 
-            <div className="flex-1 overflow-auto rounded-2xl mx-4 mb-4 border border-(--tc-border,#d7deea) bg-zinc-900 divide-y divide-zinc-800">
+            <div className="flex-1 overflow-auto rounded-2xl mx-4 mb-4 border border-[var(--tc-border,#d7deea)] bg-zinc-900 divide-y divide-zinc-800">
               {historyLoading ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-zinc-500">
                   <FiLoader className="h-4 w-4 animate-spin" />
-                  Carregando histórico...
+                  Carregando histÃ³rico...
                 </div>
               ) : history.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <span className="mb-2 text-3xl opacity-20">◻</span>
-                  <p className="text-xs text-zinc-500">Nenhuma conversão ainda.</p>
-                  <p className="mt-1 text-[10px] text-zinc-600">As conversões salvas aparecem aqui.</p>
+                  <span className="mb-2 text-3xl opacity-20">â—»</span>
+                  <p className="text-xs text-zinc-500">Nenhuma conversÃ£o ainda.</p>
+                  <p className="mt-1 text-[10px] text-zinc-600">As conversÃµes salvas aparecem aqui.</p>
                 </div>
               ) : (
                 history.map((entry) => (
@@ -736,4 +736,5 @@ export default function Base64Studio() {
     </div>
   );
 }
+
 

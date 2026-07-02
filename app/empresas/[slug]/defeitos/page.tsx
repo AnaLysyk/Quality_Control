@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -233,19 +233,19 @@ const EMPTY_FILTERS: FilterState = {
 const DEFECT_STATUS_OPTIONS = [
   { value: "open", label: "Aberto" },
   { value: "in_progress", label: "Em andamento" },
-  { value: "done", label: "Concluído" },
+  { value: "done", label: "ConcluÃ­do" },
 ] as const;
 
 const DEFECT_SEVERITY_OPTIONS = [
-  { value: "critical", label: "Crítica" },
+  { value: "critical", label: "CrÃ­tica" },
   { value: "high", label: "Alta" },
-  { value: "medium", label: "Média" },
+  { value: "medium", label: "MÃ©dia" },
   { value: "low", label: "Baixa" },
 ] as const;
 
 const DEFECT_PRIORITY_OPTIONS = [
   { value: "high", label: "Alta" },
-  { value: "medium", label: "Média" },
+  { value: "medium", label: "MÃ©dia" },
   { value: "low", label: "Baixa" },
 ] as const;
 
@@ -258,25 +258,25 @@ const DEFECTS_COPY = {
       company: "Empresa",
       emptyValue: "--",
       system: "Sistema",
-      integration: "Integração",
+      integration: "IntegraÃ§Ã£o",
     },
     hero: {
       kicker: "Painel {company}",
       title: "Defeitos",
-      subtitle: "Base unificada para triagem, leitura e acompanhamento dos defeitos visíveis no contexto atual.",
+      subtitle: "Base unificada para triagem, leitura e acompanhamento dos defeitos visÃ­veis no contexto atual.",
       qaseConnected: "Qase conectado",
-      integrationStatus: "Status da integração: {value}",
+      integrationStatus: "Status da integraÃ§Ã£o: {value}",
       newDefect: "Novo defeito",
     },
     metrics: {
       openTitle: "Defeitos abertos",
-      openDescription: "Itens fora de concluído no recorte atual.",
+      openDescription: "Itens fora de concluÃ­do no recorte atual.",
       qaseTitle: "Qase integrados",
-      qaseDescription: "Total trazido da integração com o Qase.",
+      qaseDescription: "Total trazido da integraÃ§Ã£o com o Qase.",
       manualTitle: "Manuais",
       manualDescription: "Itens internos criados na plataforma.",
-      mttrTitle: "MTTR médio",
-      mttrDescription: "Tempo médio de resolução dos itens concluídos.",
+      mttrTitle: "MTTR mÃ©dio",
+      mttrDescription: "Tempo mÃ©dio de resoluÃ§Ã£o dos itens concluÃ­dos.",
     },
     source: {
       manual: "Manual",
@@ -292,15 +292,15 @@ const DEFECTS_COPY = {
     status: {
       open: "Aberto",
       inProgress: "Em andamento",
-      done: "Concluído",
+      done: "ConcluÃ­do",
       label: "Status",
       filterAll: "Status: todos",
       prefix: "Status: {value}",
     },
     severity: {
-      critical: "Crítica",
+      critical: "CrÃ­tica",
       high: "Alta",
-      medium: "Média",
+      medium: "MÃ©dia",
       low: "Baixa",
       none: "Sem severidade",
       label: "Severidade",
@@ -308,109 +308,109 @@ const DEFECTS_COPY = {
     },
     priority: {
       high: "Alta",
-      medium: "Média",
+      medium: "MÃ©dia",
       low: "Baixa",
       none: "Sem prioridade",
       label: "Prioridade",
       prefix: "Prioridade: {value}",
     },
     blocked: {
-      badge: "Projetos Qase indisponíveis",
-      title: "Alguns projetos não puderam ser consultados agora",
+      badge: "Projetos Qase indisponÃ­veis",
+      title: "Alguns projetos nÃ£o puderam ser consultados agora",
       description:
-        "Esses projetos foram removidos dos filtros, da vinculação manual e do catálogo de aplicações até a integração voltar a responder com segurança.",
+        "Esses projetos foram removidos dos filtros, da vinculaÃ§Ã£o manual e do catÃ¡logo de aplicaÃ§Ãµes atÃ© a integraÃ§Ã£o voltar a responder com seguranÃ§a.",
       blockedProjects: "Projetos bloqueados",
-      blockedProjectsDescription: "Não entram nos seletores enquanto o acesso não for normalizado.",
-      unauthorized: "Sem autorização",
-      unauthorizedDescription: "Token sem permissão suficiente para ler o projeto no Qase.",
-      technicalFailure: "Falha técnica",
-      technicalFailureDescription: "Projeto inválido, rota incorreta ou erro de integração retornado pela API.",
-      unauthorizedPill: "Sem autorização",
-      integrationFailurePill: "Falha de integração",
-      whyUnavailable: "Por que ficou indisponível",
+      blockedProjectsDescription: "NÃ£o entram nos seletores enquanto o acesso nÃ£o for normalizado.",
+      unauthorized: "Sem autorizaÃ§Ã£o",
+      unauthorizedDescription: "Token sem permissÃ£o suficiente para ler o projeto no Qase.",
+      technicalFailure: "Falha tÃ©cnica",
+      technicalFailureDescription: "Projeto invÃ¡lido, rota incorreta ou erro de integraÃ§Ã£o retornado pela API.",
+      unauthorizedPill: "Sem autorizaÃ§Ã£o",
+      integrationFailurePill: "Falha de integraÃ§Ã£o",
+      whyUnavailable: "Por que ficou indisponÃ­vel",
       returnedDetail: "Detalhe retornado",
       howToFix: "Como corrigir",
-      noTechnicalDetail: "Nenhum detalhe técnico foi retornado pela integração.",
-      unauthorizedReason: "Sem autorização para consultar os defeitos desse projeto no Qase.",
-      genericReason: "A integração não conseguiu consultar esse projeto no Qase.",
+      noTechnicalDetail: "Nenhum detalhe tÃ©cnico foi retornado pela integraÃ§Ã£o.",
+      unauthorizedReason: "Sem autorizaÃ§Ã£o para consultar os defeitos desse projeto no Qase.",
+      genericReason: "A integraÃ§Ã£o nÃ£o conseguiu consultar esse projeto no Qase.",
       unauthorizedAction:
         "Revise o token salvo e confirme se ele possui acesso de leitura a esse projeto dentro do Qase.",
       duplicatedBaseUrlAction:
-        "A URL base da integração está duplicando /v1. Corrija a configuração da empresa para usar apenas o domínio base da API do Qase.",
+        "A URL base da integraÃ§Ã£o estÃ¡ duplicando /v1. Corrija a configuraÃ§Ã£o da empresa para usar apenas o domÃ­nio base da API do Qase.",
       notFoundAction:
-        "Valide se o código do projeto está correto no cadastro da empresa e se ele realmente existe no workspace do Qase.",
+        "Valide se o cÃ³digo do projeto estÃ¡ correto no cadastro da empresa e se ele realmente existe no workspace do Qase.",
       genericAction:
-        "Valide a configuração do projeto e a conectividade da integração antes de liberar esse item novamente na plataforma.",
+        "Valide a configuraÃ§Ã£o do projeto e a conectividade da integraÃ§Ã£o antes de liberar esse item novamente na plataforma.",
     },
     filters: {
       kicker: "Filtros operacionais",
       title: "Controle do painel",
-      subtitle: "Ajuste o recorte por origem, aplicação, status e responsável.",
+      subtitle: "Ajuste o recorte por origem, aplicaÃ§Ã£o, status e responsÃ¡vel.",
       clear: "Limpar filtros",
-      searchPlaceholder: "Buscar por título, descrição e run...",
+      searchPlaceholder: "Buscar por tÃ­tulo, descriÃ§Ã£o e run...",
       searchAria: "Buscar defeitos",
-      applicationAll: "Aplicação: todas",
-      startDateAria: "Filtrar defeitos pela data inicial de criação",
-      endDateAria: "Filtrar defeitos pela data final de criação",
+      applicationAll: "AplicaÃ§Ã£o: todas",
+      startDateAria: "Filtrar defeitos pela data inicial de criaÃ§Ã£o",
+      endDateAria: "Filtrar defeitos pela data final de criaÃ§Ã£o",
       projectAll: "Projeto: todos",
-      responsibleAll: "Responsável: todos",
-      responsibleAria: "Filtrar defeitos por responsável",
-      applicationAria: "Filtrar defeitos por aplicação",
+      responsibleAll: "ResponsÃ¡vel: todos",
+      responsibleAria: "Filtrar defeitos por responsÃ¡vel",
+      applicationAria: "Filtrar defeitos por aplicaÃ§Ã£o",
       projectAria: "Filtrar defeitos por projeto",
       sourceAria: "Filtrar defeitos por origem",
       statusAria: "Filtrar defeitos por status",
-      unassigned: "Sem responsável",
+      unassigned: "Sem responsÃ¡vel",
       chipRun: "Run {value}",
-      chipApplication: "Aplicação {value}",
+      chipApplication: "AplicaÃ§Ã£o {value}",
       chipDateFrom: "De {value}",
-      chipDateTo: "Até {value}",
-      chipDateRange: "Período {from} - {to}",
+      chipDateTo: "AtÃ© {value}",
+      chipDateRange: "PerÃ­odo {from} - {to}",
       chipProject: "Projeto {value}",
       chipStatus: "Status {value}",
-      chipResponsible: "Responsável {value}",
+      chipResponsible: "ResponsÃ¡vel {value}",
       chipSearch: 'Busca "{value}"',
     },
     list: {
       kicker: "Base operacional",
-      title: "Defeitos visíveis",
-      subtitle: "Cards com leitura rápida, detalhe, comentários e responsável.",
+      title: "Defeitos visÃ­veis",
+      subtitle: "Cards com leitura rÃ¡pida, detalhe, comentÃ¡rios e responsÃ¡vel.",
       cardsCount: "{count} cards",
       reload: "Recarregar dados",
       loading: "Carregando defeitos...",
       emptyTitle: "Nenhum defeito encontrado.",
       emptyDescription:
-        "Recarregue os dados da integração, revise a base vinculada da empresa ou crie um defeito manual para iniciar o painel.",
+        "Recarregue os dados da integraÃ§Ã£o, revise a base vinculada da empresa ou crie um defeito manual para iniciar o painel.",
       filteredEmptyTitle: "Nenhum defeito encontrado com os filtros atuais.",
       filteredEmptyDescription: "Revise os filtros aplicados ou recarregue os dados para atualizar a base exibida.",
       createManual: "Criar defeito manual",
       viewDetails: "Ver detalhe",
       openInQase: "Abrir no Qase",
-      commentsCount: "{count} comentário(s)",
-      application: "Aplicação",
+      commentsCount: "{count} comentÃ¡rio(s)",
+      application: "AplicaÃ§Ã£o",
       project: "Projeto",
-      responsible: "Responsável",
+      responsible: "ResponsÃ¡vel",
       severity: "Severidade",
       priority: "Prioridade",
-      notDefined: "Não definido",
+      notDefined: "NÃ£o definido",
       createdAt: "Criado em",
       run: "Run",
       createdBy: "Criado por",
-      lastComment: "Último comentário",
+      lastComment: "Ãšltimo comentÃ¡rio",
       mttr: "MTTR",
     },
     create: {
       kicker: "Novo defeito manual",
       title: "Registrar defeito",
       subtitle: "Cadastre um defeito interno sem tirar o foco da base operacional.",
-      closeAria: "Fechar criação de defeito",
+      closeAria: "Fechar criaÃ§Ã£o de defeito",
       closeTitle: "Fechar",
-      titlePlaceholder: "Título do defeito",
-      selectApplication: "Selecionar aplicação",
-      otherApplication: "Outra aplicação",
-      customApplicationPlaceholder: "Aplicação",
-      selectProject: "Projeto / código Qase",
-      customProjectPlaceholder: "Projeto / código Qase",
-      selectApplicationAria: "Selecionar aplicação do defeito",
+      titlePlaceholder: "TÃ­tulo do defeito",
+      selectApplication: "Selecionar aplicaÃ§Ã£o",
+      otherApplication: "Outra aplicaÃ§Ã£o",
+      customApplicationPlaceholder: "AplicaÃ§Ã£o",
+      selectProject: "Projeto / cÃ³digo Qase",
+      customProjectPlaceholder: "Projeto / cÃ³digo Qase",
+      selectApplicationAria: "Selecionar aplicaÃ§Ã£o do defeito",
       selectProjectAria: "Selecionar projeto Qase do defeito",
       selectStatusAria: "Selecionar status do defeito manual",
       selectSeverityAria: "Selecionar severidade do defeito manual",
@@ -419,71 +419,71 @@ const DEFECTS_COPY = {
       runSearchPlaceholder: "Buscar run da aplica??o",
       runEmpty: "Nenhuma run encontrada para a aplica??o selecionada.",
       runClear: "Sem run vinculada",
-      descriptionPlaceholder: "Descrição do defeito",
-      environmentsPlaceholder: "Ambientes (separados por vírgula)",
+      descriptionPlaceholder: "DescriÃ§Ã£o do defeito",
+      environmentsPlaceholder: "Ambientes (separados por vÃ­rgula)",
       cancel: "Cancelar",
       creating: "Criando...",
       submit: "Criar defeito",
-      manualApplicationFallback: "Aplicação manual",
+      manualApplicationFallback: "AplicaÃ§Ã£o manual",
     },
     detail: {
       kicker: "Defeitos",
       summary: "Resumo executivo",
-      manualDescription: "Defeito manual com edição operacional, comentários internos e acompanhamento completo.",
-      qaseDescription: "Defeito sincronizado do Qase com colaboração interna e responsável local.",
+      manualDescription: "Defeito manual com ediÃ§Ã£o operacional, comentÃ¡rios internos e acompanhamento completo.",
+      qaseDescription: "Defeito sincronizado do Qase com colaboraÃ§Ã£o interna e responsÃ¡vel local.",
       closeAria: "Fechar detalhes do defeito",
       closeTitle: "Fechar",
       openOriginal: "Abrir item original no Qase",
       operationalFields: "Campos operacionais",
-      titlePlaceholder: "Título",
-      descriptionPlaceholder: "Descrição",
-      applicationPlaceholder: "Aplicação",
-      projectPlaceholder: "Projeto / código Qase",
+      titlePlaceholder: "TÃ­tulo",
+      descriptionPlaceholder: "DescriÃ§Ã£o",
+      applicationPlaceholder: "AplicaÃ§Ã£o",
+      projectPlaceholder: "Projeto / cÃ³digo Qase",
       runPlaceholder: "Run vinculada",
       environmentsPlaceholder: "Ambientes",
       statusAria: "Status do defeito",
       severityAria: "Severidade do defeito",
       priorityAria: "Prioridade do defeito",
-      responsibleAria: "Responsável do defeito",
+      responsibleAria: "ResponsÃ¡vel do defeito",
       runSelectAria: "Selecionar run vinculada ao defeito",
       runSearchPlaceholder: "Buscar run da aplica??o",
       runEmpty: "Nenhuma run encontrada para a aplica??o selecionada.",
       runClear: "Sem run vinculada",
       remove: "Remover defeito",
-      saveChanges: "Salvar alterações",
-      saveAssignee: "Salvar responsável interno",
+      saveChanges: "Salvar alteraÃ§Ãµes",
+      saveAssignee: "Salvar responsÃ¡vel interno",
     },
     comments: {
-      title: "Comentários internos",
-      subtitle: "Conversa operacional do defeito. O mesmo padrão usado no atendimento agora vale aqui.",
+      title: "ComentÃ¡rios internos",
+      subtitle: "Conversa operacional do defeito. O mesmo padrÃ£o usado no atendimento agora vale aqui.",
       refresh: "Atualizar",
       loading: "Carregando conversa...",
-      empty: "Nenhum comentário interno registrado.",
-      you: "Você",
+      empty: "Nenhum comentÃ¡rio interno registrado.",
+      you: "VocÃª",
       team: "Equipe",
-      internalComment: "comentário interno",
+      internalComment: "comentÃ¡rio interno",
       internalCollaborator: "colaborador interno",
-      inputPlaceholder: "Escreva uma atualização ou orientação interna para este defeito",
-      visibilityNote: "Os comentários ficam visíveis para quem tem acesso ao defeito.",
+      inputPlaceholder: "Escreva uma atualizaÃ§Ã£o ou orientaÃ§Ã£o interna para este defeito",
+      visibilityNote: "Os comentÃ¡rios ficam visÃ­veis para quem tem acesso ao defeito.",
       characters: "{count}/{max} caracteres",
       sending: "Enviando...",
-      publish: "Publicar comentário",
+      publish: "Publicar comentÃ¡rio",
     },
     evidence: {
-      attach: "Anexar evidência",
-      change: "Trocar evidência",
-      remove: "Remover evidência",
-      uploadError: "Não foi possível anexar a evidência.",
-      oneAttached: "1 evidência",
-      manyAttached: "{count} evidências",
+      attach: "Anexar evidÃªncia",
+      change: "Trocar evidÃªncia",
+      remove: "Remover evidÃªncia",
+      uploadError: "NÃ£o foi possÃ­vel anexar a evidÃªncia.",
+      oneAttached: "1 evidÃªncia",
+      manyAttached: "{count} evidÃªncias",
     },
     timeline: {
-      kicker: "Histórico de mudanças",
+      kicker: "HistÃ³rico de mudanÃ§as",
       title: "Linha do tempo operacional",
       notice:
-        "O Qase não expõe um histórico detalhado de comentários e mudanças nessa API. A linha do tempo mescla os marcos disponíveis do Qase com os eventos internos da plataforma.",
-      loading: "Carregando histórico...",
-      empty: "Nenhuma mudança registrada.",
+        "O Qase nÃ£o expÃµe um histÃ³rico detalhado de comentÃ¡rios e mudanÃ§as nessa API. A linha do tempo mescla os marcos disponÃ­veis do Qase com os eventos internos da plataforma.",
+      loading: "Carregando histÃ³rico...",
+      empty: "Nenhuma mudanÃ§a registrada.",
       qase: "Qase",
       platform: "Plataforma",
       created: "Defeito criado",
@@ -494,40 +494,40 @@ const DEFECTS_COPY = {
       runRemoved: "Run desvinculada",
       runRemovedWithValue: "Run removida: {value}",
       updated: "Campos do defeito atualizados",
-      assigneeRemoved: "Responsável interno removido",
-      assigneeWithValue: "Responsável interno: {value}",
-      commentAdded: "Comentário interno registrado",
+      assigneeRemoved: "ResponsÃ¡vel interno removido",
+      assigneeWithValue: "ResponsÃ¡vel interno: {value}",
+      commentAdded: "ComentÃ¡rio interno registrado",
       deleted: "Defeito removido",
       deletedWithNote: "Defeito removido: {note}",
-      updatedFallback: "Atualização registrada",
+      updatedFallback: "AtualizaÃ§Ã£o registrada",
     },
     api: {
-      unauthorized: "Não autorizado",
-      companyMissing: "Empresa não informada",
+      unauthorized: "NÃ£o autorizado",
+      companyMissing: "Empresa nÃ£o informada",
       forbidden: "Acesso proibido",
-      defectNotFound: "Defeito não encontrado",
-      requiredComment: "Comentário obrigatório",
-      saveCommentFailed: "Não foi possível salvar o comentário",
-      nameRequired: "Nome obrigatório",
-      invalidJson: "JSON inválido",
-      notFound: "Não encontrado",
-      invalidResponsible: "Responsável inválido",
-      responsibleMustBelongCompany: "Responsável precisa estar vinculado à empresa.",
+      defectNotFound: "Defeito nÃ£o encontrado",
+      requiredComment: "ComentÃ¡rio obrigatÃ³rio",
+      saveCommentFailed: "NÃ£o foi possÃ­vel salvar o comentÃ¡rio",
+      nameRequired: "Nome obrigatÃ³rio",
+      invalidJson: "JSON invÃ¡lido",
+      notFound: "NÃ£o encontrado",
+      invalidResponsible: "ResponsÃ¡vel invÃ¡lido",
+      responsibleMustBelongCompany: "ResponsÃ¡vel precisa estar vinculado Ã  empresa.",
       qualityGateBlocked: "Quality gate bloqueado",
-      noAssignPermission: "Sem permissão para atribuir responsável",
-      integratedAssignOnly: "A atribuição local só é usada para defeitos integrados",
-      saveAssigneeFailed: "Não foi possível salvar o responsável",
+      noAssignPermission: "Sem permissÃ£o para atribuir responsÃ¡vel",
+      integratedAssignOnly: "A atribuiÃ§Ã£o local sÃ³ Ã© usada para defeitos integrados",
+      saveAssigneeFailed: "NÃ£o foi possÃ­vel salvar o responsÃ¡vel",
       forbiddenEn: "Forbidden",
     },
     fallbackErrors: {
-      network: "Não foi possível conectar a API.",
-      loadHistory: "Não foi possível carregar o histórico do defeito.",
-      loadDefects: "Não foi possível carregar os defeitos da empresa.",
-      createManual: "Não foi possível criar o defeito manual.",
-      saveManual: "Não foi possível salvar o defeito manual.",
-      saveInternalAssignee: "Não foi possível salvar o responsável interno.",
-      removeManual: "Não foi possível remover o defeito manual.",
-      publishComment: "Não foi possível publicar o comentário.",
+      network: "NÃ£o foi possÃ­vel conectar a API.",
+      loadHistory: "NÃ£o foi possÃ­vel carregar o histÃ³rico do defeito.",
+      loadDefects: "NÃ£o foi possÃ­vel carregar os defeitos da empresa.",
+      createManual: "NÃ£o foi possÃ­vel criar o defeito manual.",
+      saveManual: "NÃ£o foi possÃ­vel salvar o defeito manual.",
+      saveInternalAssignee: "NÃ£o foi possÃ­vel salvar o responsÃ¡vel interno.",
+      removeManual: "NÃ£o foi possÃ­vel remover o defeito manual.",
+      publishComment: "NÃ£o foi possÃ­vel publicar o comentÃ¡rio.",
     },
   },
   "en-US": {
@@ -890,11 +890,11 @@ function buildEvidenceMarkdown(name: string, url: string) {
 }
 
 function isDefectEvidenceLabel(label: string) {
-  return /^evid[eê]ncia:/i.test(label.trim());
+  return /^evid[eÃª]ncia:/i.test(label.trim());
 }
 
 function getDefectEvidenceDisplayLabel(label: string) {
-  return label.replace(/^evid[eê]ncia:\s*/i, "").trim() || label.trim();
+  return label.replace(/^evid[eÃª]ncia:\s*/i, "").trim() || label.trim();
 }
 
 function parseDefectDescription(body?: string | null): { text: string; evidence: DefectEvidenceLink[] } {
@@ -1123,24 +1123,24 @@ function RunSelectorField({
           setOpen((current) => !current);
           setSearch("");
         }}
-        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-left text-sm text-(--tc-text-primary,#0b1a3c) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-left text-sm text-[var(--tc-text-primary,#0b1a3c)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
       >
-        <span className={`truncate ${selectedOption || value ? "" : "text-(--tc-text-muted,#64748b)"}`}>{triggerLabel}</span>
+        <span className={`truncate ${selectedOption || value ? "" : "text-[var(--tc-text-muted,#64748b)]"}`}>{triggerLabel}</span>
         <FiChevronDown className={`shrink-0 transition ${open ? "rotate-180" : ""}`} size={16} />
       </button>
 
-      {/* Campo de busca fora do listbox para padrão ARIA */}
+      {/* Campo de busca fora do listbox para padrÃ£o ARIA */}
       {open && !disabled && (
-        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-30 w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-3 shadow-[0_18px_40px_rgba(15,23,42,0.24)]">
+        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-30 w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] p-3 shadow-[0_18px_40px_rgba(15,23,42,0.24)]">
           <div className="relative mb-3">
-            <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#64748b)" size={15} />
+            <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted,#64748b)]" size={15} />
             <input
               autoFocus
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
-              className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) py-2.5 pl-10 pr-4 text-sm text-(--tc-text-primary,#0b1a3c) placeholder:text-(--tc-text-muted,#64748b)"
+              className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] py-2.5 pl-10 pr-4 text-sm text-[var(--tc-text-primary,#0b1a3c)] placeholder:text-[var(--tc-text-muted,#64748b)]"
             />
           </div>
 
@@ -1161,10 +1161,10 @@ function RunSelectorField({
                   setSearch("");
                 }
               }}
-              className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) cursor-pointer"
+              className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] cursor-pointer"
             >
               <span>{clearLabel}</span>
-              {!value ? <span className="text-xs text-(--tc-text-muted,#64748b)">✓</span> : null}
+              {!value ? <span className="text-xs text-[var(--tc-text-muted,#64748b)]">âœ“</span> : null}
             </div>
 
             {visibleOptions.length > 0 ? (
@@ -1189,22 +1189,22 @@ function RunSelectorField({
                       }
                     }}
                     className={`mt-1 flex w-full items-start justify-between gap-3 rounded-2xl px-3 py-2 text-left transition cursor-pointer ${
-                      selected ? "bg-(--tc-surface-2,#f8fafc)" : "hover:bg-(--tc-surface-2,#f8fafc)"
+                      selected ? "bg-[var(--tc-surface-2,#f8fafc)]" : "hover:bg-[var(--tc-surface-2,#f8fafc)]"
                     }`}
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">{option.name}</p>
-                      <p className="truncate text-xs text-(--tc-text-muted,#64748b)">
+                      <p className="truncate text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{option.name}</p>
+                      <p className="truncate text-xs text-[var(--tc-text-muted,#64748b)]">
                         {option.slug}
-                        {option.projectCode ? ` · ${option.projectCode}` : ""}
+                        {option.projectCode ? ` Â· ${option.projectCode}` : ""}
                       </p>
                     </div>
-                    {selected ? <span className="text-xs font-semibold text-sky-600">✓</span> : null}
+                    {selected ? <span className="text-xs font-semibold text-sky-600">âœ“</span> : null}
                   </div>
                 );
               })
             ) : (
-              <p className="px-3 py-4 text-sm text-(--tc-text-muted,#64748b)">{emptyLabel}</p>
+              <p className="px-3 py-4 text-sm text-[var(--tc-text-muted,#64748b)]">{emptyLabel}</p>
             )}
           </div>
         </div>
@@ -2631,24 +2631,24 @@ export default function CompanyDefectsPage() {
 
         <div className="space-y-6">
           <div className="space-y-6">
-            <section className="rounded-4xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-6 text-(--tc-text-primary,#0b1a3c) shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] p-6 text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#64748b)">{copy.filters.kicker}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted,#64748b)]">{copy.filters.kicker}</p>
                   <h2 className="mt-2 text-xl font-bold">{copy.filters.title}</h2>
-                  <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">{copy.filters.subtitle}</p>
+                  <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{copy.filters.subtitle}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={clearAllFilters}
-                    className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-(--tc-text-primary,#0b1a3c) shadow-sm"
+                    className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[var(--tc-text-primary,#0b1a3c)] shadow-sm"
                   >
                     {copy.filters.clear}
                   </button>
                 </div>
               </div>
-              <div className="mt-5 rounded-3xl bg-(--tc-surface-2,#f8fafc) p-4">
+              <div className="mt-5 rounded-3xl bg-[var(--tc-surface-2,#f8fafc)] p-4">
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(280px,1.7fr)_repeat(6,minmax(0,1fr))]">
                   <input
                     value={filters.search}
@@ -2656,14 +2656,14 @@ export default function CompanyDefectsPage() {
                     placeholder={copy.filters.searchPlaceholder}
                     aria-label={copy.filters.searchAria}
                     title={copy.filters.searchAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm placeholder:text-(--tc-text-muted,#64748b) md:col-span-2 xl:col-span-1"
+                    className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] shadow-sm placeholder:text-[var(--tc-text-muted,#64748b)] md:col-span-2 xl:col-span-1"
                   />
                   <select
                     value={filters.source}
                     onChange={(event) => setFilters((current) => ({ ...current, source: event.target.value as FilterState["source"] }))}
                     aria-label={copy.filters.sourceAria}
                     title={copy.filters.sourceAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm"
+                    className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] shadow-sm"
                   >
                     <option value="all">{copy.source.filterAll}</option>
                     <option value="manual">{copy.source.manual}</option>
@@ -2674,7 +2674,7 @@ export default function CompanyDefectsPage() {
                     onChange={(event) => setFilters((current) => ({ ...current, application: event.target.value }))}
                     aria-label={copy.filters.applicationAria}
                     title={copy.filters.applicationAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm"
+                    className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] shadow-sm"
                   >
                     <option value="">{copy.filters.applicationAll}</option>
                     {applicationOptions.map((option) => (
@@ -2690,7 +2690,7 @@ export default function CompanyDefectsPage() {
                     onChange={(event) => setFilters((current) => ({ ...current, startDate: event.target.value }))}
                     aria-label={copy.filters.startDateAria}
                     title={copy.filters.startDateAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm scheme-dark"
+                    className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] shadow-sm scheme-dark"
                   />
                   <input
                     type="date"
@@ -2699,14 +2699,14 @@ export default function CompanyDefectsPage() {
                     onChange={(event) => setFilters((current) => ({ ...current, endDate: event.target.value }))}
                     aria-label={copy.filters.endDateAria}
                     title={copy.filters.endDateAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm scheme-dark"
+                    className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] shadow-sm scheme-dark"
                   />
                   <select
                     value={filters.status}
                     onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value as FilterState["status"] }))}
                     aria-label={copy.filters.statusAria}
                     title={copy.filters.statusAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm"
+                    className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] shadow-sm"
                   >
                     <option value="all">{copy.status.filterAll}</option>
                     <option value="open">{copy.status.open}</option>
@@ -2718,7 +2718,7 @@ export default function CompanyDefectsPage() {
                     onChange={(event) => setFilters((current) => ({ ...current, responsible: event.target.value }))}
                     aria-label={copy.filters.responsibleAria}
                     title={copy.filters.responsibleAria}
-                    className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) shadow-sm"
+                    className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] shadow-sm"
                   >
                     <option value="">{copy.filters.responsibleAll}</option>
                     <option value="__unassigned__">{copy.filters.unassigned}</option>
@@ -2735,7 +2735,7 @@ export default function CompanyDefectsPage() {
                     {activeFilterChips.map((chip) => (
                       <span
                         key={chip}
-                        className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-3 py-1 text-xs font-semibold text-(--tc-text-secondary,#4b5563) shadow-sm"
+                        className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-3 py-1 text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)] shadow-sm"
                       >
                         {chip}
                       </span>
@@ -2744,38 +2744,38 @@ export default function CompanyDefectsPage() {
                 )}
               </div>
 
-              <div className="mt-6 flex items-center justify-between gap-3 border-t border-(--tc-border,#e5e7eb) pt-5" data-testid="defects-list">
+              <div className="mt-6 flex items-center justify-between gap-3 border-t border-[var(--tc-border,#e5e7eb)] pt-5" data-testid="defects-list">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#64748b)">{copy.list.kicker}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted,#64748b)]">{copy.list.kicker}</p>
                   <h2 className="mt-1 text-xl font-bold">{copy.list.title}</h2>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-text-secondary,#4b5563)">
+                  <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-secondary,#4b5563)]">
                     {interpolate(copy.list.cardsCount, { count: filteredDefects.length })}
                   </span>
                   <button
                     type="button"
                     onClick={() => loadOverview({ preserveActiveSlug: activeDefect?.slug ?? null, forceRefresh: true })}
-                    className="rounded-full border border-(--tc-border,#e5e7eb) px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                    className="rounded-full border border-[var(--tc-border,#e5e7eb)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em]"
                   >
                     {copy.list.reload}
                   </button>
                 </div>
               </div>
 
-          {loading && <p className="mt-5 text-sm text-(--tc-text-muted)">{copy.list.loading}</p>}
+          {loading && <p className="mt-5 text-sm text-[var(--tc-text-muted)]">{copy.list.loading}</p>}
           {!loading && defects.length === 0 && (
-            <div className="mt-5 rounded-4xl border border-dashed border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-8 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-(--tc-text-primary,#0b1a3c) text-xl font-black text-(--tc-surface,#fff)">0</div>
-              <p className="mt-5 text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.list.emptyTitle}</p>
-              <p className="mx-auto mt-2 max-w-3xl text-sm text-(--tc-text-secondary,#4b5563)">
+            <div className="mt-5 rounded-4xl border border-dashed border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-8 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--tc-text-primary,#0b1a3c)] text-xl font-black text-[var(--tc-surface,#fff)]">0</div>
+              <p className="mt-5 text-lg font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.list.emptyTitle}</p>
+              <p className="mx-auto mt-2 max-w-3xl text-sm text-[var(--tc-text-secondary,#4b5563)]">
                 {copy.list.emptyDescription}
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => loadOverview({ preserveActiveSlug: activeDefect?.slug ?? null, forceRefresh: true })}
-                  className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-primary,#0b1a3c)"
+                  className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-primary,#0b1a3c)]"
                 >
                   {copy.list.reload}
                 </button>
@@ -2783,7 +2783,7 @@ export default function CompanyDefectsPage() {
                   <button
                     type="button"
                     onClick={openCreateModal}
-                    className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-primary,#0b1a3c)"
+                    className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-primary,#0b1a3c)]"
                   >
                     {copy.list.createManual}
                   </button>
@@ -2791,7 +2791,7 @@ export default function CompanyDefectsPage() {
                 <button
                   type="button"
                   onClick={clearAllFilters}
-                  className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-primary,#0b1a3c)"
+                  className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-primary,#0b1a3c)]"
                 >
                   {copy.filters.clear}
                 </button>
@@ -2799,24 +2799,24 @@ export default function CompanyDefectsPage() {
             </div>
           )}
           {!loading && defects.length > 0 && filteredDefects.length === 0 && (
-            <div className="mt-5 rounded-4xl border border-dashed border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-8 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-(--tc-text-primary,#0b1a3c) text-xl font-black text-(--tc-surface,#fff)">0</div>
-              <p className="mt-5 text-lg font-semibold text-(--tc-text-primary,#0b1a3c)">{copy.list.filteredEmptyTitle}</p>
-              <p className="mx-auto mt-2 max-w-3xl text-sm text-(--tc-text-secondary,#4b5563)">
+            <div className="mt-5 rounded-4xl border border-dashed border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-8 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--tc-text-primary,#0b1a3c)] text-xl font-black text-[var(--tc-surface,#fff)]">0</div>
+              <p className="mt-5 text-lg font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{copy.list.filteredEmptyTitle}</p>
+              <p className="mx-auto mt-2 max-w-3xl text-sm text-[var(--tc-text-secondary,#4b5563)]">
                 {copy.list.filteredEmptyDescription}
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 <button
                   type="button"
                   onClick={clearAllFilters}
-                  className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-primary,#0b1a3c)"
+                  className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-primary,#0b1a3c)]"
                 >
                   {copy.filters.clear}
                 </button>
                 <button
                   type="button"
                   onClick={() => loadOverview({ preserveActiveSlug: activeDefect?.slug ?? null, forceRefresh: true })}
-                  className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-primary,#0b1a3c)"
+                  className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-primary,#0b1a3c)]"
                 >
                   {copy.list.reload}
                 </button>
@@ -2824,7 +2824,7 @@ export default function CompanyDefectsPage() {
                   <button
                     type="button"
                     onClick={openCreateModal}
-                    className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-(--tc-text-primary,#0b1a3c)"
+                    className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-primary,#0b1a3c)]"
                   >
                     {copy.list.createManual}
                   </button>
@@ -2846,7 +2846,7 @@ export default function CompanyDefectsPage() {
                 <article
                   key={defect.slug}
                   data-testid={testId}
-                  className="group relative overflow-hidden rounded-[1.75rem] border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-5 text-(--tc-text-primary,#0b1a3c) shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition-transform duration-200 hover:-translate-y-0.5"
+                  className="group relative overflow-hidden rounded-[1.75rem] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] p-5 text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition-transform duration-200 hover:-translate-y-0.5"
                 >
                   <div
                     className={`absolute inset-x-0 top-0 h-1.5 ${
@@ -2861,7 +2861,7 @@ export default function CompanyDefectsPage() {
                             {copy.source.qase}
                           </span>
                         )}
-                        <span className="rounded-full bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-secondary,#4b5563)">
+                        <span className="rounded-full bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-secondary,#4b5563)]">
                           {formatDefectStatus(defect.status, copy)}
                         </span>
                         {defect.commentsCount > 0 && (
@@ -2873,15 +2873,15 @@ export default function CompanyDefectsPage() {
                       <button
                         type="button"
                         onClick={() => openDefect(defect)}
-                        className="text-left text-xl font-bold text-(--tc-text-primary,#0b1a3c) transition-colors group-hover:text-(--tc-accent,#ef0001)"
+                        className="text-left text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)] transition-colors group-hover:text-[var(--tc-accent,#ef0001)]"
                       >
                         {defect.title || defect.name}
                       </button>
                       {parsedDescription.text && (
-                        <p className="max-w-3xl text-sm text-(--tc-text-secondary,#4b5563)">{parsedDescription.text}</p>
+                        <p className="max-w-3xl text-sm text-[var(--tc-text-secondary,#4b5563)]">{parsedDescription.text}</p>
                       )}
                       {parsedDescription.evidence.length > 0 && (
-                        <span className="inline-flex rounded-full bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-(--tc-text-secondary,#4b5563)">
+                        <span className="inline-flex rounded-full bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-secondary,#4b5563)]">
                           {parsedDescription.evidence.length === 1
                             ? copy.evidence.oneAttached
                             : interpolate(copy.evidence.manyAttached, { count: parsedDescription.evidence.length })}
@@ -2895,7 +2895,7 @@ export default function CompanyDefectsPage() {
                         onClick={() => openDefect(defect)}
                         aria-label={copy.list.viewDetails}
                         title={copy.list.viewDetails}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-primary,#0b1a3c)"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text-primary,#0b1a3c)]"
                       >
                         <FiMaximize2 size={16} />
                       </button>
@@ -2914,28 +2914,28 @@ export default function CompanyDefectsPage() {
 
                   <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.application}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.application}</p>
                       <p className="mt-2 text-sm font-semibold">{defect.applicationName || copy.common.emptyValue}</p>
                     </div>
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.project}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.project}</p>
                       <p className="mt-2 text-sm font-semibold">{defect.projectCode || copy.common.emptyValue}</p>
                     </div>
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.responsible}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.responsible}</p>
                       <p className="mt-2 text-sm font-semibold">{defect.assignedToName || copy.list.notDefined}</p>
                     </div>
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.severity}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.severity}</p>
                       <p className="mt-2 text-sm font-semibold">{formatDefectSeverity(defect.severity, copy)}</p>
                     </div>
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.priority}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.priority}</p>
                       <p className="mt-2 text-sm font-semibold">{formatDefectPriority(defect.priority, copy)}</p>
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-3 text-xs text-(--tc-text-muted)">
+                  <div className="mt-4 flex flex-wrap gap-3 text-xs text-[var(--tc-text-muted)]">
                     <span>{copy.list.createdAt}: {formatDateTime(defect.createdAt, locale, copy.common.emptyValue)}</span>
                     <span>{copy.list.run}: {defect.runName || defect.runSlug || copy.common.emptyValue}</span>
                     <span>{copy.list.createdBy}: {defect.createdByName || copy.common.integration}</span>
@@ -3132,7 +3132,7 @@ export default function CompanyDefectsPage() {
                   type="file"
                   className="hidden"
                   onChange={(event) => setCreateEvidenceFile(event.target.files?.[0] ?? null)}
-                  title="Anexar evidência"
+                  title="Anexar evidÃªncia"
                 />
                 <div className="flex flex-wrap items-center gap-3 md:col-span-2">
                   <button
@@ -3198,7 +3198,7 @@ export default function CompanyDefectsPage() {
                   data-testid="defect-create"
                   onClick={handleCreate}
                   disabled={saving || !createDraft.title.trim()}
-                  className="rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                  className="rounded-2xl bg-[var(--tc-accent,#ef0001)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
                 >
                   {saving ? copy.create.creating : copy.create.submit}
                 </button>
@@ -3216,7 +3216,7 @@ export default function CompanyDefectsPage() {
           onClick={closeDrawer}
         >
           <div
-            className="defect-detail-modal h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-hidden rounded-4xl bg-(--tc-surface,#fff) text-(--tc-text-primary,#0b1a3c) shadow-[0_28px_90px_rgba(15,23,42,0.28)]"
+            className="defect-detail-modal h-[calc(100dvh-2rem)] w-full max-w-6xl overflow-hidden rounded-4xl bg-[var(--tc-surface,#fff)] text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_28px_90px_rgba(15,23,42,0.28)]"
             data-testid="defect-modal"
             onClick={(event) => event.stopPropagation()}
           >
@@ -3271,41 +3271,41 @@ export default function CompanyDefectsPage() {
                 )}
 
                 <div className="mt-6 grid items-start gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-                  <div className="h-full rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-5 text-(--tc-text-primary,#0b1a3c)">
-                    <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">{copy.detail.summary}</p>
+                  <div className="h-full rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-5 text-[var(--tc-text-primary,#0b1a3c)]">
+                    <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">{copy.detail.summary}</p>
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.application}</p>
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.application}</p>
                     <p className="mt-2 text-sm font-semibold">{detailSummaryValues.applicationName || copy.common.emptyValue}</p>
                   </div>
                   {!hideDuplicatedProjectSummary && (
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.project}</p>
+                      <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.project}</p>
                       <p className="mt-2 text-sm font-semibold">{detailSummaryValues.projectCode || copy.common.emptyValue}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.run}</p>
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.run}</p>
                     <p className="mt-2 text-sm font-semibold">{detailSummaryValues.runValue || copy.common.emptyValue}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.source.label}</p>
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.source.label}</p>
                     <p className="mt-2 text-sm font-semibold">{formatRelativeOrigin(activeDefect.sourceType, copy)}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.createdBy}</p>
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.createdBy}</p>
                     <p className="mt-2 text-sm font-semibold">{activeDefect.createdByName || copy.common.integration}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.responsible}</p>
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.responsible}</p>
                     <p className="mt-2 text-sm font-semibold">{detailSummaryValues.responsibleLabel || copy.list.notDefined}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.severity}</p>
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.severity}</p>
                     <p className="mt-2 text-sm font-semibold">{formatDefectSeverity(detailSummaryValues.severityValue, copy)}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-(--tc-text-muted)">{copy.list.priority}</p>
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--tc-text-muted)]">{copy.list.priority}</p>
                     <p className="mt-2 text-sm font-semibold">{formatDefectPriority(detailSummaryValues.priorityValue, copy)}</p>
                   </div>
                     </div>
@@ -3314,21 +3314,21 @@ export default function CompanyDefectsPage() {
                         href={activeDefect.externalUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-4 inline-flex rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-text-primary,#0b1a3c)"
+                        className="mt-4 inline-flex rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-primary,#0b1a3c)]"
                       >
                         {copy.detail.openOriginal}
                       </a>
                     )}
                   </div>
 
-                  <div className="h-full rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-5 text-(--tc-text-primary,#0b1a3c)">
-                    <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">{copy.detail.operationalFields}</p>
+                  <div className="h-full rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] p-5 text-[var(--tc-text-primary,#0b1a3c)]">
+                    <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">{copy.detail.operationalFields}</p>
                     <div className="mt-4 space-y-3">
                   <input
                     value={editDraft.title}
                     onChange={(event) => setEditDraft((current) => ({ ...current, title: event.target.value }))}
                     disabled={activeDefect.sourceType !== "manual" || !activeDefect.canEdit}
-                    className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) placeholder:text-(--tc-text-muted,#64748b) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                    className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] placeholder:text-[var(--tc-text-muted,#64748b)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                     placeholder={copy.detail.titlePlaceholder}
                   />
                   <input
@@ -3336,13 +3336,13 @@ export default function CompanyDefectsPage() {
                     type="file"
                     className="hidden"
                     onChange={(event) => setEditEvidenceFile(event.target.files?.[0] ?? null)}
-                    title="Trocar evidência"
+                    title="Trocar evidÃªncia"
                   />
                   <textarea
                     value={editDraft.description}
                     onChange={(event) => setEditDraft((current) => ({ ...current, description: event.target.value }))}
                     disabled={activeDefect.sourceType !== "manual" || !activeDefect.canEdit}
-                    className="min-h-28 w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) placeholder:text-(--tc-text-muted,#64748b) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                    className="min-h-28 w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] placeholder:text-[var(--tc-text-muted,#64748b)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                     placeholder={copy.detail.descriptionPlaceholder}
                   />
                   {(editEvidenceLinks.length > 0 || editEvidenceFile || (activeDefect.sourceType === "manual" && activeDefect.canEdit)) && (
@@ -3351,7 +3351,7 @@ export default function CompanyDefectsPage() {
                         <button
                           type="button"
                           onClick={() => editEvidenceInputRef.current?.click()}
-                          className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-(--tc-text-primary,#0b1a3c)"
+                          className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-primary,#0b1a3c)]"
                         >
                           <FiPaperclip size={14} />
                           {editEvidenceFile ? copy.evidence.change : copy.evidence.attach}
@@ -3360,7 +3360,7 @@ export default function CompanyDefectsPage() {
                       {editEvidenceLinks.map((item) => (
                         <div
                           key={item.href}
-                          className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-3 py-2 text-sm text-(--tc-text-primary,#0b1a3c)"
+                          className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-3 py-2 text-sm text-[var(--tc-text-primary,#0b1a3c)]"
                         >
                           <a
                             href={item.href}
@@ -3377,7 +3377,7 @@ export default function CompanyDefectsPage() {
                               onClick={() => setEditEvidenceLinks((current) => current.filter((entry) => entry.href !== item.href))}
                               aria-label={copy.evidence.remove}
                               title={copy.evidence.remove}
-                              className="rounded-full p-1 text-(--tc-text-muted,#64748b) transition hover:bg-(--tc-surface-2,#f8fafc) hover:text-(--tc-text-primary,#0b1a3c)"
+                              className="rounded-full p-1 text-[var(--tc-text-muted,#64748b)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] hover:text-[var(--tc-text-primary,#0b1a3c)]"
                             >
                               <FiX size={14} />
                             </button>
@@ -3385,7 +3385,7 @@ export default function CompanyDefectsPage() {
                         </div>
                       ))}
                       {editEvidenceFile ? (
-                        <div className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-3 py-2 text-sm text-(--tc-text-primary,#0b1a3c)">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-3 py-2 text-sm text-[var(--tc-text-primary,#0b1a3c)]">
                           <span className="max-w-[18rem] truncate" title={editEvidenceFile.name}>
                             {editEvidenceFile.name}
                           </span>
@@ -3397,7 +3397,7 @@ export default function CompanyDefectsPage() {
                             }}
                             aria-label={copy.evidence.remove}
                             title={copy.evidence.remove}
-                            className="rounded-full p-1 text-(--tc-text-muted,#64748b) transition hover:bg-(--tc-surface-2,#f8fafc) hover:text-(--tc-text-primary,#0b1a3c)"
+                            className="rounded-full p-1 text-[var(--tc-text-muted,#64748b)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] hover:text-[var(--tc-text-primary,#0b1a3c)]"
                           >
                             <FiX size={14} />
                           </button>
@@ -3432,7 +3432,7 @@ export default function CompanyDefectsPage() {
                       disabled={activeDefect.sourceType !== "manual" || !activeDefect.canEdit}
                       aria-label={copy.create.selectApplicationAria}
                       title={copy.create.selectApplicationAria}
-                      className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                     >
                       <option value="">{copy.create.selectApplication}</option>
                       {editApplicationOptions.map((option) => (
@@ -3447,7 +3447,7 @@ export default function CompanyDefectsPage() {
                         value={editDraft.projectCode}
                         onChange={(event) => setEditDraft((current) => ({ ...current, projectCode: event.target.value, runSlug: "" }))}
                         disabled={activeDefect.sourceType !== "manual" || !activeDefect.canEdit}
-                        className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) placeholder:text-(--tc-text-muted,#64748b) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                        className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] placeholder:text-[var(--tc-text-muted,#64748b)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                         placeholder={copy.detail.projectPlaceholder}
                       />
                     )}
@@ -3458,7 +3458,7 @@ export default function CompanyDefectsPage() {
                       disabled={activeDefect.sourceType !== "manual" || !activeDefect.canEdit}
                       aria-label={copy.detail.statusAria}
                       title={copy.detail.statusAria}
-                      className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                     >
                       {DEFECT_STATUS_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -3472,7 +3472,7 @@ export default function CompanyDefectsPage() {
                       disabled={activeDefect.sourceType !== "manual" || !activeDefect.canEdit}
                       aria-label={copy.detail.severityAria}
                       title={copy.detail.severityAria}
-                      className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                     >
                       <option value="">{copy.severity.none}</option>
                       {DEFECT_SEVERITY_OPTIONS.map((option) => (
@@ -3487,7 +3487,7 @@ export default function CompanyDefectsPage() {
                       disabled={activeDefect.sourceType !== "manual" || !activeDefect.canEdit}
                       aria-label={copy.detail.priorityAria}
                       title={copy.detail.priorityAria}
-                      className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                     >
                       <option value="">{copy.priority.none}</option>
                       {DEFECT_PRIORITY_OPTIONS.map((option) => (
@@ -3502,7 +3502,7 @@ export default function CompanyDefectsPage() {
                       disabled={activeDefect.sourceType === "manual" ? !activeDefect.canEdit : !activeDefect.canAssign}
                       aria-label={copy.detail.responsibleAria}
                       title={copy.detail.responsibleAria}
-                      className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                      className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                     >
                       <option value="">{copy.filters.unassigned}</option>
                       {responsibleOptions.map((option) => (
@@ -3529,7 +3529,7 @@ export default function CompanyDefectsPage() {
                           value={editDraft.environments}
                           onChange={(event) => setEditDraft((current) => ({ ...current, environments: event.target.value }))}
                           disabled={!activeDefect.canEdit}
-                          className="w-full rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-input-bg,#fff) px-4 py-3 text-sm text-(--tc-text-primary,#0b1a3c) placeholder:text-(--tc-text-muted,#64748b) disabled:bg-(--tc-surface-2,#f8fafc) disabled:text-(--tc-text-muted,#64748b)"
+                          className="w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#fff)] px-4 py-3 text-sm text-[var(--tc-text-primary,#0b1a3c)] placeholder:text-[var(--tc-text-muted,#64748b)] disabled:bg-[var(--tc-surface-2,#f8fafc)] disabled:text-[var(--tc-text-muted,#64748b)]"
                           placeholder={copy.detail.environmentsPlaceholder}
                           title={copy.detail.environmentsPlaceholder}
                         />
@@ -3553,7 +3553,7 @@ export default function CompanyDefectsPage() {
                       data-testid="defect-save"
                       onClick={handleSaveManualDefect}
                       disabled={saving}
-                      className="rounded-2xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                      className="rounded-2xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                     >
                       {copy.detail.saveChanges}
                     </button>
@@ -3573,7 +3573,7 @@ export default function CompanyDefectsPage() {
                 </div>
 
                 <div className="mt-6 grid items-stretch gap-4 xl:grid-cols-2">
-                  <section className="flex h-full min-h-120 flex-col rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-5 text-(--tc-text-primary,#0b1a3c)">
+                  <section className="flex h-full min-h-120 flex-col rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] p-5 text-[var(--tc-text-primary,#0b1a3c)]">
                     <div className="ticket-detail-chat-header">
                       <div className="ticket-detail-chat-icon">
                         <FiMessageSquare size={18} />
@@ -3587,7 +3587,7 @@ export default function CompanyDefectsPage() {
                       <button
                         type="button"
                         onClick={() => activeDefect && loadActivity(activeDefect.slug)}
-                        className="rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-(--tc-text-primary,#0b1a3c)"
+                        className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-primary,#0b1a3c)]"
                       >
                         {copy.comments.refresh}
                       </button>
@@ -3634,7 +3634,7 @@ export default function CompanyDefectsPage() {
                               type="file"
                               className="hidden"
                               onChange={(event) => setCommentEvidenceFile(event.target.files?.[0] ?? null)}
-                              title="Anexar evidência ao comentário"
+                              title="Anexar evidÃªncia ao comentÃ¡rio"
                             />
                             <textarea
                               value={commentBody}
@@ -3650,12 +3650,12 @@ export default function CompanyDefectsPage() {
                                 onClick={() => commentEvidenceInputRef.current?.click()}
                                 aria-label={commentEvidenceFile ? copy.evidence.change : copy.evidence.attach}
                                 title={commentEvidenceFile ? copy.evidence.change : copy.evidence.attach}
-                                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) text-(--tc-text-primary,#0b1a3c)"
+                                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text-primary,#0b1a3c)]"
                               >
                                 <FiPaperclip size={16} />
                               </button>
                               {commentEvidenceFile ? (
-                                <div className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) px-3 py-2 text-sm text-(--tc-text-primary,#0b1a3c)">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] px-3 py-2 text-sm text-[var(--tc-text-primary,#0b1a3c)]">
                                   <span className="max-w-[16rem] truncate" title={commentEvidenceFile.name}>
                                     {commentEvidenceFile.name}
                                   </span>
@@ -3667,7 +3667,7 @@ export default function CompanyDefectsPage() {
                                     }}
                                     aria-label={copy.evidence.remove}
                                     title={copy.evidence.remove}
-                                    className="rounded-full p-1 text-(--tc-text-muted,#64748b) transition hover:bg-(--tc-surface-2,#f8fafc) hover:text-(--tc-text-primary,#0b1a3c)"
+                                    className="rounded-full p-1 text-[var(--tc-text-muted,#64748b)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] hover:text-[var(--tc-text-primary,#0b1a3c)]"
                                   >
                                     <FiX size={14} />
                                   </button>
@@ -3712,8 +3712,8 @@ export default function CompanyDefectsPage() {
                     </div>
                   </section>
 
-                  <section className="flex h-full min-h-120 flex-col rounded-3xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#fff) p-5 text-(--tc-text-primary,#0b1a3c)">
-                    <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted)">{copy.timeline.kicker}</p>
+                  <section className="flex h-full min-h-120 flex-col rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] p-5 text-[var(--tc-text-primary,#0b1a3c)]">
+                    <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">{copy.timeline.kicker}</p>
                     <h3 className="mt-2 text-lg font-bold">{copy.timeline.title}</h3>
                     {detailTimelineNotice ? (
                       <p className="mt-2 rounded-2xl border border-sky-200/70 bg-sky-50/80 px-3 py-2 text-sm leading-6 text-sky-900 dark:border-sky-400/25 dark:bg-sky-500/10 dark:text-sky-100">
@@ -3726,19 +3726,19 @@ export default function CompanyDefectsPage() {
                       </p>
                     ) : null}
                     <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
-                      {detailLoading && <p className="text-sm text-(--tc-text-muted)">{copy.timeline.loading}</p>}
+                      {detailLoading && <p className="text-sm text-[var(--tc-text-muted)]">{copy.timeline.loading}</p>}
                       {!detailLoading && !detailTimelineError && visibleHistory.length === 0 && (
-                        <p className="text-sm text-(--tc-text-muted)">{copy.timeline.empty}</p>
+                        <p className="text-sm text-[var(--tc-text-muted)]">{copy.timeline.empty}</p>
                       )}
                       {visibleHistory.map((event) => (
-                        <div key={event.id} className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-(--tc-surface-2,#f8fafc) p-4">
+                        <div key={event.id} className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-600">
                               {event.source === "qase" ? copy.timeline.qase : copy.timeline.platform}
                             </span>
                           </div>
                           <p className="text-sm font-semibold">{formatHistoryLabel(event, copy)}</p>
-                          <p className="mt-2 text-xs text-(--tc-text-muted)">
+                          <p className="mt-2 text-xs text-[var(--tc-text-muted)]">
                             {event.actorName || copy.common.system} - {formatDateTime(event.createdAt, locale, copy.common.emptyValue)}
                           </p>
                         </div>
@@ -3756,3 +3756,5 @@ export default function CompanyDefectsPage() {
     </div>
   );
 }
+
+

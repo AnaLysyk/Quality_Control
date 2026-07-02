@@ -1,4 +1,4 @@
-import { authenticateRequest } from "@/lib/jwtAuth";
+﻿import { authenticateRequest } from "@/lib/jwtAuth";
 import { getRunEmitter } from "@/lib/playwright/executionService";
 import { automationPool, ensureAutomationTables } from "@/lib/automationPool";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
@@ -12,12 +12,12 @@ export async function GET(
 ) {
   const user = await authenticateRequest(request);
   if (!user) {
-    return new Response("Não autorizado", { status: 401 });
+    return new Response("NÃ£o autorizado", { status: 401 });
   }
 
   const { runId } = await params;
   if (!runId || !/^[a-f0-9\-]{32,36}$/.test(runId)) {
-    return new Response("runId inválido", { status: 400 });
+    return new Response("runId invÃ¡lido", { status: 400 });
   }
 
   // Load run from DB to validate ownership
@@ -26,13 +26,13 @@ export async function GET(
     `SELECT company_slug, status FROM playwright_runs WHERE id=$1`,
     [runId],
   );
-  if (!rows.length) return new Response("Run não encontrada", { status: 404 });
+  if (!rows.length) return new Response("Run nÃ£o encontrada", { status: 404 });
 
   const { company_slug: companySlug, status } = rows[0];
   const allowed = resolveAutomationAllowedCompanySlugs(user);
   const access = resolveAutomationAccess(user, allowed.length);
   if (!access.canOpen || (!access.hasGlobalCompanyVisibility && !allowed.includes(companySlug))) {
-    return new Response("Sem permissão", { status: 403 });
+    return new Response("Sem permissÃ£o", { status: 403 });
   }
 
   // If run already finished (from a previous page load), send synthetic done event
@@ -72,7 +72,7 @@ export async function GET(
 
       if (!emitter) {
         // Run not in memory (process restarted?), close gracefully
-        sendLine("[system] Run em execução em outro processo ou já concluída.");
+        sendLine("[system] Run em execuÃ§Ã£o em outro processo ou jÃ¡ concluÃ­da.");
         sendDone();
         return;
       }
@@ -105,3 +105,4 @@ export async function GET(
     },
   });
 }
+

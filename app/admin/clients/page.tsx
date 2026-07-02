@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -364,7 +364,7 @@ function CompanyLogo({ logoUrl, slug, website, name, className }: {
       <span
         role="img"
         aria-label={alt}
-        className={`inline-flex h-full w-full items-center justify-center rounded bg-(--tc-surface-2,#f3f4f6) text-xs font-semibold uppercase text-(--tc-text-muted,#6b7280) ${normalizedClass}`.trim()}
+        className={`inline-flex h-full w-full items-center justify-center rounded bg-[var(--tc-surface-2,#f3f4f6)] text-xs font-semibold uppercase text-[var(--tc-text-muted,#6b7280)] ${normalizedClass}`.trim()}
       >
         {initials}
       </span>
@@ -411,7 +411,7 @@ function UserAvatar({ user, size = "md" }: { user: UserItem; size?: "md" | "lg" 
   }
 
   return (
-    <div className={`flex aspect-square items-center justify-center rounded-full bg-slate-100 font-bold text-(--tc-text-primary,#0b1a3c) ${sizeClassName}`}>
+    <div className={`flex aspect-square items-center justify-center rounded-full bg-slate-100 font-bold text-[var(--tc-text-primary,#0b1a3c)] ${sizeClassName}`}>
       {getInitials(user.name, "US")}
     </div>
   );
@@ -419,9 +419,9 @@ function UserAvatar({ user, size = "md" }: { user: UserItem; size?: "md" | "lg" 
 
 function UserInlineField({ label, value, valueClassName = "" }: { label: string; value: string; valueClassName?: string }) {
   return (
-    <p className="text-[15px] leading-7 text-(--tc-text-secondary,#4b5563) sm:text-base">
-      <span className="font-medium text-(--tc-text-secondary,#4b5563)">{label}: </span>
-      <span className={`font-semibold text-(--tc-text-primary,#0b1a3c) ${valueClassName}`} title={value}>
+    <p className="text-[15px] leading-7 text-[var(--tc-text-secondary,#4b5563)] sm:text-base">
+      <span className="font-medium text-[var(--tc-text-secondary,#4b5563)]">{label}: </span>
+      <span className={`font-semibold text-[var(--tc-text-primary,#0b1a3c)] ${valueClassName}`} title={value}>
         {value}
       </span>
     </p>
@@ -443,19 +443,19 @@ function UserCard({
     <button
       type="button"
       onClick={() => onSelect(user)}
-      className="group w-full rounded-[22px] border border-(--tc-border,#d7deea) bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:border-(--tc-accent,#ef0001)/22 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5"
+      className="group w-full rounded-[22px] border border-[var(--tc-border,#d7deea)] bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:border-[var(--tc-accent,#ef0001)]/22 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5"
     >
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-5">
         <div className="flex min-w-0 items-start gap-3 sm:gap-4">
           <UserAvatar user={user} size="lg" />
           <div className="min-w-0">
-            <p className="truncate text-[1.9rem] font-semibold leading-none tracking-tight text-(--tc-text-primary,#0b1a3c) sm:text-[2rem]">
+            <p className="truncate text-[1.9rem] font-semibold leading-none tracking-tight text-[var(--tc-text-primary,#0b1a3c)] sm:text-[2rem]">
               {user.name}
             </p>
             <div className="mt-3 space-y-1">
-              <UserInlineField label="Usuário" value={getUserHandle(user)} valueClassName="break-all" />
+              <UserInlineField label="UsuÃ¡rio" value={getUserHandle(user)} valueClassName="break-all" />
               <UserInlineField label="E-mail" value={user.email} valueClassName="break-all" />
-              <UserInlineField label="Cargo" value={user.job_title || "Não informado"} valueClassName="break-words" />
+              <UserInlineField label="Cargo" value={user.job_title || "NÃ£o informado"} valueClassName="break-words" />
               {showCompanyField && companyLabel ? <UserInlineField label="Empresa" value={companyLabel} valueClassName="break-words" /> : null}
             </div>
           </div>
@@ -489,16 +489,16 @@ function UserStatusSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 sm:p-5">
-      <div className="flex items-center justify-between border-b border-(--tc-border,#d7deea) pb-4">
-        <h3 className="text-lg font-bold text-(--tc-text-primary,#0b1a3c)">{title}</h3>
-        <span className="rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-3 py-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+    <section className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4 sm:p-5">
+      <div className="flex items-center justify-between border-b border-[var(--tc-border,#d7deea)] pb-4">
+        <h3 className="text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">{title}</h3>
+        <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-3 py-1 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
           {count}
         </span>
       </div>
 
       {count === 0 ? (
-        <div className="mt-4 rounded-[18px] border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-6 text-sm text-(--tc-text-secondary,#4b5563)">
+        <div className="mt-4 rounded-[18px] border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-6 text-sm text-[var(--tc-text-secondary,#4b5563)]">
           {emptyMessage}
         </div>
       ) : (
@@ -520,15 +520,15 @@ function CompanyUsersSection({
   onSelect: (user: UserItem) => void;
 }) {
   return (
-    <section className="rounded-[20px] border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-3.5 sm:p-4">
-      <div className="flex flex-col gap-2 border-b border-(--tc-border,#d7deea) pb-4 sm:flex-row sm:items-end sm:justify-between">
+    <section className="rounded-[20px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-3.5 sm:p-4">
+      <div className="flex flex-col gap-2 border-b border-[var(--tc-border,#d7deea)] pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h4 className="truncate text-lg font-bold text-(--tc-text-primary,#0b1a3c)">{company.name}</h4>
-          <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+          <h4 className="truncate text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">{company.name}</h4>
+          <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
             {company.users.length} perfil{company.users.length === 1 ? "" : "is"} vinculado{company.users.length === 1 ? "" : "s"}
           </p>
         </div>
-        <span className="inline-flex w-fit rounded-full border border-(--tc-border,#d7deea) bg-white px-3 py-1 text-sm font-semibold text-(--tc-text-primary,#0b1a3c)">
+        <span className="inline-flex w-fit rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
           {company.users.length} usuario{company.users.length === 1 ? "" : "s"}
         </span>
       </div>
@@ -703,12 +703,12 @@ function CompanyManagementQueueExperience({
   ];
 
   return (
-    <section className="tc-queue-shell overflow-hidden rounded-[24px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) shadow-[0_18px_54px_rgba(15,23,42,0.09)]">
-      <div className="border-b border-(--tc-border,#d7deea) bg-[linear-gradient(135deg,var(--tc-surface,#ffffff)_0%,var(--tc-surface-2,#f8fafc)_58%,rgba(14,165,233,0.08)_100%)] p-3 sm:p-4">
+    <section className="tc-queue-shell overflow-hidden rounded-[24px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_18px_54px_rgba(15,23,42,0.09)]">
+      <div className="border-b border-[var(--tc-border,#d7deea)] bg-[linear-gradient(135deg,var(--tc-surface,#ffffff)_0%,var(--tc-surface-2,#f8fafc)_58%,rgba(14,165,233,0.08)_100%)] p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-(--tc-text-muted,#6b7280)">Fila de empresas</p>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Fila de empresas</p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
               Use a busca e os filtros para encontrar empresas, abrir detalhes e manter o cadastro institucional.
             </p>
           </div>
@@ -729,29 +729,29 @@ function CompanyManagementQueueExperience({
               type="button"
               onClick={onRefresh}
               disabled={loading}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-secondary,#4b5563) shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-[rgba(239,0,1,0.28)] hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-60"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-secondary,#4b5563)] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-[rgba(239,0,1,0.28)] hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-60"
               aria-label="Atualizar empresas"
               title="Atualizar"
             >
               <FiRefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
 
-            <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3.5 text-(--tc-text-primary,#0b1a3c) shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
-              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">Total</span>
-              <span className="text-base font-black leading-none text-(--tc-primary,#011848)">{companies.length}</span>
+            <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3.5 text-[var(--tc-text-primary,#0b1a3c)] shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">Total</span>
+              <span className="text-base font-black leading-none text-[var(--tc-primary,#011848)]">{companies.length}</span>
             </div>
           </div>
         </div>
 
         <div className="mt-3 grid gap-2 xl:grid-cols-[minmax(260px,1fr)_170px_190px_210px]">
           <label className="relative">
-            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted,#6b7280)" />
+            <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
             <input
               ref={searchInputRef}
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Buscar por nome, slug, CNPJ, site ou telefone"
-              className="h-12 w-full rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) pl-11 pr-4 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) outline-none transition placeholder:text-(--tc-text-muted,#94a3b8) focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+              className="h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] pl-11 pr-4 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] outline-none transition placeholder:text-[var(--tc-text-muted,#94a3b8)] focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
               data-testid="company-search-input"
             />
           </label>
@@ -761,7 +761,7 @@ function CompanyManagementQueueExperience({
             title="Filtrar empresas por status"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as CompanyStatusFilter)}
-            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+            className="h-12 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -775,7 +775,7 @@ function CompanyManagementQueueExperience({
             title="Ordenar empresas"
             value={sortMode}
             onChange={(event) => setSortMode(event.target.value as CompanySortMode)}
-            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+            className="h-12 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
           >
             <option value="name_asc">Nome A-Z</option>
             <option value="name_desc">Nome Z-A</option>
@@ -785,15 +785,15 @@ function CompanyManagementQueueExperience({
           </select>
 
           <select
-            aria-label="Filtrar empresas por integração"
-            title="Filtrar empresas por integração"
+            aria-label="Filtrar empresas por integraÃ§Ã£o"
+            title="Filtrar empresas por integraÃ§Ã£o"
             value={integrationFilter}
             onChange={(event) => setIntegrationFilter(event.target.value as CompanyIntegrationFilter)}
-            className="h-12 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-4 text-sm font-black text-(--tc-text-primary,#0b1a3c) outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
+            className="h-12 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
           >
-            <option value="all">Todas integrações</option>
-            <option value="integrated">Com integração</option>
-            <option value="manual">Manual / sem integração</option>
+            <option value="all">Todas integraÃ§Ãµes</option>
+            <option value="integrated">Com integraÃ§Ã£o</option>
+            <option value="manual">Manual / sem integraÃ§Ã£o</option>
           </select>
         </div>
 
@@ -806,7 +806,7 @@ function CompanyManagementQueueExperience({
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
                 statusFilter === option.value
                   ? "border-sky-600 bg-sky-700 text-white shadow-[0_12px_24px_rgba(14,116,144,0.18)]"
-                  : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-secondary,#4b5563) hover:border-sky-300 hover:text-(--tc-text-primary,#0b1a3c)"
+                  : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-secondary,#4b5563)] hover:border-sky-300 hover:text-[var(--tc-text-primary,#0b1a3c)]"
               }`}
             >
               <FiCircle className={`h-2 w-2 ${statusFilter === option.value ? "text-white" : companyStatusDotClass(option.value)}`} />
@@ -818,17 +818,17 @@ function CompanyManagementQueueExperience({
       </div>
 
       {loading ? (
-        <div className="p-8 text-sm font-semibold text-(--tc-text-muted,#6b7280)">Carregando empresas...</div>
+        <div className="p-8 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Carregando empresas...</div>
       ) : filteredCompanies.length === 0 ? (
         <div className="flex min-h-90 items-center justify-center p-8 text-center">
           <div className="max-w-md">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-(--tc-surface-2,#f8fafc) text-(--tc-text-muted,#6b7280)">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text-muted,#6b7280)]">
               <FiSearch className="h-7 w-7" />
             </div>
-            <h3 className="mt-5 text-xl font-black text-(--tc-text-primary,#0b1a3c)">
+            <h3 className="mt-5 text-xl font-black text-[var(--tc-text-primary,#0b1a3c)]">
               {companies.length === 0 ? "Nenhuma empresa cadastrada" : "Nenhuma empresa encontrada"}
             </h3>
-            <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+            <p className="mt-2 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
               {companies.length === 0 ? "Cadastre a primeira empresa para iniciar a base da plataforma." : "Ajuste os filtros ou busque por outra empresa."}
             </p>
             {canCreate && companies.length === 0 ? (
@@ -847,10 +847,10 @@ function CompanyManagementQueueExperience({
         <>
           <div className="hidden max-h-[calc(100vh-332px)] overflow-auto lg:block">
             <table className="w-full min-w-230 border-separate border-spacing-0">
-              <thead className="sticky top-0 z-10 bg-(--tc-surface,#ffffff) shadow-[0_1px_0_var(--tc-border,#d7deea)]">
+              <thead className="sticky top-0 z-10 bg-[var(--tc-surface,#ffffff)] shadow-[0_1px_0_var(--tc-border,#d7deea)]">
                 <tr>
-                  {["Empresa", "CNPJ", "Contato", "Integração", "Status", "Ação"].map((column) => (
-                    <th key={column} className="whitespace-nowrap border-b border-(--tc-border,#d7deea) px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+                  {["Empresa", "CNPJ", "Contato", "IntegraÃ§Ã£o", "Status", "AÃ§Ã£o"].map((column) => (
+                    <th key={column} className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                       {column}
                     </th>
                   ))}
@@ -876,27 +876,27 @@ function CompanyManagementQueueExperience({
                     className={`group cursor-pointer transition ${
                       active
                         ? "bg-sky-50/90 shadow-[inset_4px_0_0_#0284c7] dark:bg-sky-950/35"
-                        : "odd:bg-(--tc-surface,#ffffff) even:bg-(--tc-surface-2,#f8fafc) hover:bg-sky-50/65 dark:hover:bg-sky-950/25"
+                        : "odd:bg-[var(--tc-surface,#ffffff)] even:bg-[var(--tc-surface-2,#f8fafc)] hover:bg-sky-50/65 dark:hover:bg-sky-950/25"
                     }`}
                   >
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 align-middle">
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc)">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)]">
                           <CompanyLogo logoUrl={company.logoUrl} slug={company.slug} website={company.website} name={company.name} className="h-full w-full object-cover" />
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-(--tc-text-primary,#0b1a3c)">{company.name}</p>
-                          <p className="mt-0.5 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{company.slug ? `@${company.slug}` : "Sem slug"}</p>
+                          <p className="truncate text-sm font-black text-[var(--tc-text-primary,#0b1a3c)]">{company.name}</p>
+                          <p className="mt-0.5 truncate text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">{company.slug ? `@${company.slug}` : "Sem slug"}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
-                      {company.taxId || "Não informado"}
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] align-middle">
+                      {company.taxId || "NÃ£o informado"}
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-sm font-semibold text-(--tc-text-secondary,#4b5563) align-middle">
-                      <div className="max-w-60 truncate">{company.website || company.phone || "Não informado"}</div>
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] align-middle">
+                      <div className="max-w-60 truncate">{company.website || company.phone || "NÃ£o informado"}</div>
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 align-middle">
                       <div className="flex max-w-72 flex-wrap gap-1.5">
                         {integrationBadges.map((badge) => (
                           <span key={badge.key} className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-black ${companyIntegrationBadgeClass(badge.tone)}`}>
@@ -905,12 +905,12 @@ function CompanyManagementQueueExperience({
                         ))}
                       </div>
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 align-middle">
                       <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ${company.active ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                         {company.active ? "Ativa" : "Inativa"}
                       </span>
                     </td>
-                    <td className="border-b border-(--tc-border,#d7deea) px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-(--tc-accent,#ef0001) align-middle">
+                    <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-[var(--tc-accent,#ef0001)] align-middle">
                       {active ? "Selecionada" : "Ver detalhes"}
                     </td>
                   </tr>
@@ -933,22 +933,22 @@ function CompanyManagementQueueExperience({
                 className={`w-full rounded-[24px] border p-4 text-left shadow-[0_12px_28px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 ${
                   active
                     ? "border-sky-300 bg-sky-50 shadow-[inset_4px_0_0_#0284c7] dark:border-sky-700/60 dark:bg-sky-950/35"
-                    : "border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)"
+                    : "border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)]"
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc)">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)]">
                     <CompanyLogo logoUrl={company.logoUrl} slug={company.slug} website={company.website} name={company.name} className="h-full w-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-black text-(--tc-text-primary,#0b1a3c)">{company.name}</p>
+                      <p className="truncate text-sm font-black text-[var(--tc-text-primary,#0b1a3c)]">{company.name}</p>
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${company.active ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                         {company.active ? "Ativa" : "Inativa"}
                       </span>
                     </div>
-                    <p className="mt-1 truncate text-xs font-semibold text-(--tc-text-secondary,#4b5563)">{company.slug ? `@${company.slug}` : company.taxId || "Sem slug"}</p>
-                    <p className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">{company.website || company.phone || "Contato não informado"}</p>
+                    <p className="mt-1 truncate text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">{company.slug ? `@${company.slug}` : company.taxId || "Sem slug"}</p>
+                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{company.website || company.phone || "Contato nÃ£o informado"}</p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {integrationBadges.map((badge) => (
                         <span key={`mobile-${company.id}-${badge.key}`} className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black ${companyIntegrationBadgeClass(badge.tone)}`}>
@@ -963,25 +963,25 @@ function CompanyManagementQueueExperience({
             })}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-5 py-4">
-            <p className="text-sm font-semibold text-(--tc-text-secondary,#4b5563)">
-              Página {pageIndex + 1} de {pageCount} · {filteredCompanies.length} resultado(s) · {companySortLabel(sortMode)}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-5 py-4">
+            <p className="text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)]">
+              PÃ¡gina {pageIndex + 1} de {pageCount} Â· {filteredCompanies.length} resultado(s) Â· {companySortLabel(sortMode)}
             </p>
 
             <div className="flex items-center gap-2">
               <select
-                aria-label="Quantidade de empresas por página"
-                title="Quantidade de empresas por página"
+                aria-label="Quantidade de empresas por pÃ¡gina"
+                title="Quantidade de empresas por pÃ¡gina"
                 value={pageSize}
                 onChange={(event) => {
                   setPageSize(Number(event.target.value));
                   setPageIndex(0);
                 }}
-                className="h-10 rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) px-3 text-sm font-bold text-(--tc-text-primary,#0b1a3c)"
+                className="h-10 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 text-sm font-bold text-[var(--tc-text-primary,#0b1a3c)]"
               >
                 {[10, 12, 20, 50].map((size) => (
                   <option key={size} value={size}>
-                    {size}/página
+                    {size}/pÃ¡gina
                   </option>
                 ))}
               </select>
@@ -990,8 +990,8 @@ function CompanyManagementQueueExperience({
                 type="button"
                 onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
                 disabled={pageIndex === 0}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-40"
-                aria-label="Página anterior"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-40"
+                aria-label="PÃ¡gina anterior"
               >
                 <FiChevronLeft />
               </button>
@@ -1000,8 +1000,8 @@ function CompanyManagementQueueExperience({
                 type="button"
                 onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
                 disabled={pageIndex >= pageCount - 1}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) text-(--tc-text-primary,#0b1a3c) transition hover:bg-(--tc-surface-2,#f8fafc) disabled:opacity-40"
-                aria-label="Próxima página"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-40"
+                aria-label="PrÃ³xima pÃ¡gina"
               >
                 <FiChevronRight />
               </button>
@@ -1072,7 +1072,7 @@ export default function AdminConsolidatedPage() {
     try {
       const res = await fetchApi("/api/clients");
       if (res.status === 401) {
-        setCompaniesMessage("Sessão expirada. Faça login novamente.");
+        setCompaniesMessage("SessÃ£o expirada. FaÃ§a login novamente.");
         router.replace("/login");
         setCompanies([]);
         return;
@@ -1132,17 +1132,17 @@ export default function AdminConsolidatedPage() {
     });
 
     if (res.status === 409) {
-      toast.error("Empresa criada, mas já existe usuário com esse e-mail/login.");
+      toast.error("Empresa criada, mas jÃ¡ existe usuÃ¡rio com esse e-mail/login.");
       return;
     }
 
     if (!res.ok) {
-      const err = await readApiError(res, "Empresa criada, mas não foi possível criar o usuário institucional.");
+      const err = await readApiError(res, "Empresa criada, mas nÃ£o foi possÃ­vel criar o usuÃ¡rio institucional.");
       toast.error(err.displayMessage);
       return;
     }
 
-    toast.success("Usuário institucional da empresa criado e convite enviado.");
+    toast.success("UsuÃ¡rio institucional da empresa criado e convite enviado.");
   }
 
   const handleUpdateCompany = useCallback(
@@ -1179,7 +1179,7 @@ export default function AdminConsolidatedPage() {
           body: JSON.stringify(payload),
         });
         if (res.status === 401) {
-          toast.error("Sessão expirada. Faça login novamente.");
+          toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
           router.replace("/login");
           return;
         }
@@ -1214,7 +1214,7 @@ export default function AdminConsolidatedPage() {
       const [usersRes, companiesRes] = await Promise.all([fetchApi("/api/admin/users"), fetchApi("/api/companies")]);
 
       if (usersRes.status === 401 || companiesRes.status === 401) {
-        toast.error("Sessão expirada. Faça login novamente.");
+        toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
         router.replace("/login");
         return;
       }
@@ -1223,7 +1223,7 @@ export default function AdminConsolidatedPage() {
       const companiesJson = (await companiesRes.json().catch(() => ([]))) as CompanyOption[] | { error?: string };
 
       if (!usersRes.ok) {
-        setUsersError(usersJson.error || "Não foi possível carregar os usuários.");
+        setUsersError(usersJson.error || "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
         setUsers([]);
       } else {
         const items = Array.isArray(usersJson.items) ? usersJson.items : [];
@@ -1238,7 +1238,7 @@ export default function AdminConsolidatedPage() {
     } catch (err) {
       setUsers([]);
       setUsersCompanies([]);
-      setUsersError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
+      setUsersError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
     } finally {
       setUsersLoading(false);
     }
@@ -1247,7 +1247,7 @@ export default function AdminConsolidatedPage() {
   const loadCurrentTab = useCallback(() => {
     const loader = mainTab === "companies" ? loadCompanies : loadUsers;
     loader().catch((error) => {
-      const message = error instanceof Error ? error.message : "Não foi possível carregar os dados.";
+      const message = error instanceof Error ? error.message : "NÃ£o foi possÃ­vel carregar os dados.";
       if (mainTab === "companies") {
         setCompaniesMessage(message);
       } else {
@@ -1419,9 +1419,9 @@ export default function AdminConsolidatedPage() {
   const createModalConfig = useMemo<CreateModalConfig>(() => {
     if (activeUserTab === "company") {
       return {
-        title: "Criar usuário da empresa",
-        subtitle: "Selecione a empresa e cadastre o responsável já no contexto dela.",
-        submitLabel: "Criar usuário da empresa",
+        title: "Criar usuÃ¡rio da empresa",
+        subtitle: "Selecione a empresa e cadastre o responsÃ¡vel jÃ¡ no contexto dela.",
+        submitLabel: "Criar usuÃ¡rio da empresa",
         initialRole: "company_user",
         lockRole: true,
         showCompanyField: true,
@@ -1445,9 +1445,9 @@ export default function AdminConsolidatedPage() {
 
     if (activeUserTab === "support") {
       return {
-        title: "Criar Suporte Técnico",
+        title: "Criar Suporte TÃ©cnico",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte Técnico",
+        submitLabel: "Criar Suporte TÃ©cnico",
         initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
@@ -1457,9 +1457,9 @@ export default function AdminConsolidatedPage() {
     }
 
     return {
-      title: "Criar usuário TC",
-      subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessário.",
-      submitLabel: "Criar usuário TC",
+      title: "Criar usuÃ¡rio TC",
+      subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessÃ¡rio.",
+      submitLabel: "Criar usuÃ¡rio TC",
       initialRole: "testing_company_user",
       lockRole: true,
       showCompanyField: true,
@@ -1501,7 +1501,7 @@ export default function AdminConsolidatedPage() {
         <Breadcrumb
           items={[
             { label: "Admin", href: "/admin/dashboard" },
-            { label: "Gestão de empresas" },
+            { label: "GestÃ£o de empresas" },
           ]}
         />
 
@@ -1509,7 +1509,7 @@ export default function AdminConsolidatedPage() {
         <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
           <div className="flex flex-col gap-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestão de empresas</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">GestÃ£o de empresas</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Empresas</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
                 Gerencie o cadastro, listagem e identidade institucional das empresas.
@@ -1565,9 +1565,9 @@ export default function AdminConsolidatedPage() {
             <section className="hidden">
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:items-end">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.35em] text-(--tc-text-muted,#6b7280)">Carteira de empresas</p>
-                  <h2 className="mt-2 text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Lista de empresas</h2>
-                  <p className="mt-1 text-sm text-(--tc-text-secondary,#4b5563)">
+                  <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[var(--tc-text-muted,#6b7280)]">Carteira de empresas</p>
+                  <h2 className="mt-2 text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Lista de empresas</h2>
+                  <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                     Total: {companies.length} | Ativas: {activeCompaniesCount} | Inativas: {inactiveCompaniesCount}
                   </p>
                 </div>
@@ -1581,7 +1581,7 @@ export default function AdminConsolidatedPage() {
                         setOpenCompanyDetail(false);
                         setOpenCreateCompany(true);
                       }}
-                      className="inline-flex h-9 items-center gap-2 rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-3.5 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001)/30 hover:bg-white"
+                      className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-3.5 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)]/30 hover:bg-white"
                     >
                       <FiPlus className="h-4 w-4" /> Cadastrar
                     </button>
@@ -1589,7 +1589,7 @@ export default function AdminConsolidatedPage() {
                   <button
                     type="button"
                     onClick={loadCompanies}
-                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-3.5 text-sm font-semibold text-(--tc-text-primary,#0b1a3c) transition hover:border-(--tc-accent,#ef0001)/30 hover:bg-white disabled:opacity-60"
+                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-3.5 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)]/30 hover:bg-white disabled:opacity-60"
                     disabled={companiesLoading}
                   >
                     <FiRefreshCw className={`h-4 w-4 ${companiesLoading ? "animate-spin" : ""}`} /> Atualizar
@@ -1597,20 +1597,20 @@ export default function AdminConsolidatedPage() {
                 </div>
               </div>
 
-              <label className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
-                <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
+              <label className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                <FiSearch className="h-4 w-4 text-[var(--tc-text-muted,#6b7280)]" />
                 <input
                   value={companiesSearch}
                   onChange={(event) => setCompaniesSearch(event.target.value)}
                   placeholder="Buscar por nome, slug, CNPJ, site ou telefone"
-                  className="w-full bg-transparent outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
+                  className="w-full bg-transparent outline-none placeholder:text-[var(--tc-text-muted,#94a3b8)]"
                 />
               </label>
 
               {companiesLoading ? (
                 <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                   {Array.from({ length: 6 }).map((_, index) => (
-                    <div key={index} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
+                    <div key={index} className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-5">
                       <div className="h-4 w-28 animate-pulse rounded-full bg-slate-200" />
                       <div className="mt-4 flex items-start gap-3">
                         <div className="h-12 w-12 animate-pulse rounded-xl bg-slate-200" />
@@ -1633,11 +1633,11 @@ export default function AdminConsolidatedPage() {
                         setSelectedCompanyId(client.id);
                         setOpenCompanyDetail(true);
                       }}
-                      className="flex h-full w-full flex-col overflow-hidden rounded-3xl border border-(--tc-border,#d7deea) bg-white p-4 text-left transition hover:border-(--tc-accent,#ef0001)/35 hover:shadow-[0_14px_32px_rgba(15,23,42,0.06)] cursor-pointer"
+                      className="flex h-full w-full flex-col overflow-hidden rounded-3xl border border-[var(--tc-border,#d7deea)] bg-white p-4 text-left transition hover:border-[var(--tc-accent,#ef0001)]/35 hover:shadow-[0_14px_32px_rgba(15,23,42,0.06)] cursor-pointer"
                     >
                       <div className="flex h-full flex-col gap-4">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc)">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)]">
                             <CompanyLogo
                               logoUrl={client.logoUrl}
                               slug={client.slug}
@@ -1662,21 +1662,21 @@ export default function AdminConsolidatedPage() {
                             {client.active ? "Ativa" : "Inativa"}
                           </span>
                         </div>
-                        <div className="mt-auto flex items-center justify-end border-t border-(--tc-border,#eef2f7) pt-3 text-xs">
-                          <span className="font-semibold text-(--tc-accent,#ef0001)">Ver detalhes</span>
+                        <div className="mt-auto flex items-center justify-end border-t border-[var(--tc-border,#eef2f7)] pt-3 text-xs">
+                          <span className="font-semibold text-[var(--tc-accent,#ef0001)]">Ver detalhes</span>
                         </div>
                       </div>
                     </button>
                   ))}
 
                   {filteredCompanies.length === 0 && (
-                    <div className="col-span-full text-sm text-(--tc-text-muted,#6b7280)">
+                    <div className="col-span-full text-sm text-[var(--tc-text-muted,#6b7280)]">
                       {canUseAdminClientTools ? (
-                        <div className="mt-2 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-8 text-center">
-                          <p className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">
+                        <div className="mt-2 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-8 text-center">
+                          <p className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">
                             {companies.length === 0 ? "Nenhuma empresa cadastrada" : "Nenhuma empresa encontrada"}
                           </p>
-                          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                             {companies.length === 0
                               ? "Cadastre a primeira empresa para iniciar a base da plataforma."
                               : "Ajuste a busca para encontrar outra empresa."}
@@ -1706,36 +1706,36 @@ export default function AdminConsolidatedPage() {
 
         {/* USERS TAB CONTENT */}
         {mainTab === "users" && (
-          <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+          <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
             <Tabs value={activeUserTab} onValueChange={(value) => setActiveUserTab(value as UserTab)}>
-              <div className="border-b border-(--tc-border,#d7deea) pb-5">
-                <h2 className="text-2xl font-bold text-(--tc-text-primary,#0b1a3c)">Gestão por contexto</h2>
+              <div className="border-b border-[var(--tc-border,#d7deea)] pb-5">
+                <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">GestÃ£o por contexto</h2>
                 <div className="mt-4">
-                  <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-(--tc-surface-alt,#f8fafc) p-1.5 sm:grid-cols-2 xl:grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-[var(--tc-surface-alt,#f8fafc)] p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                     <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                       Empresa
                     </TabsTrigger>
                     <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                      Usuários TC
+                      UsuÃ¡rios TC
                     </TabsTrigger>
                     <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                      Líder TC
+                      LÃ­der TC
                     </TabsTrigger>
                     <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                      Suporte Técnico
+                      Suporte TÃ©cnico
                     </TabsTrigger>
                   </TabsList>
                 </div>
               </div>
               <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center">
-                <label className="flex flex-1 items-center gap-3 rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm text-(--tc-text-secondary,#4b5563)">
-                  <FiSearch className="h-4 w-4 text-(--tc-text-muted,#6b7280)" />
+                <label className="flex flex-1 items-center gap-3 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
+                  <FiSearch className="h-4 w-4 text-[var(--tc-text-muted,#6b7280)]" />
                   <input
                     ref={usersSearchInputRef}
                     value={usersSearch}
                     onChange={(event) => setUsersSearch(event.target.value)}
-                    placeholder="Buscar por nome, usuário, e-mail ou empresa"
-                    className="w-full bg-transparent outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
+                    placeholder="Buscar por nome, usuÃ¡rio, e-mail ou empresa"
+                    className="w-full bg-transparent outline-none placeholder:text-[var(--tc-text-muted,#94a3b8)]"
                     data-testid="users-search-input"
                   />
                 </label>
@@ -1747,7 +1747,7 @@ export default function AdminConsolidatedPage() {
                     setOpenUserDetail(false);
                     setOpenCreateUser(true);
                   }}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--tc-accent,#ef0001) px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-70"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--tc-accent,#ef0001)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 lg:min-w-70"
                 >
                   <FiUserPlus className="h-4 w-4" /> {createModalConfig.submitLabel}
                 </button>
@@ -1758,7 +1758,7 @@ export default function AdminConsolidatedPage() {
               {usersLoading ? (
                 <div className="mt-6 grid gap-5 xl:grid-cols-2">
                   {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="rounded-3xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) p-5">
+                    <div key={index} className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-5">
                       <div className="h-4 w-28 animate-pulse rounded-full bg-slate-200" />
                       <div className="mt-4 space-y-3">
                         {Array.from({ length: 3 }).map((__, rowIndex) => (
@@ -1771,25 +1771,25 @@ export default function AdminConsolidatedPage() {
               ) : (
                 <div className="mt-6 space-y-4">
                   {userHasSearch ? (
-                    <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm font-medium text-(--tc-text-secondary,#4b5563)">
+                    <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3 text-sm font-medium text-[var(--tc-text-secondary,#4b5563)]">
                       {currentUserTabTotal} resultado{currentUserTabTotal === 1 ? "" : "s"} encontrado{currentUserTabTotal === 1 ? "" : "s"}
                     </div>
                   ) : null}
 
                   <TabsContent value="company" className="mt-0">
                     {companySections.length === 0 && companyAccountSections.length === 0 ? (
-                      <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
-                        <FiUsers className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
+                      <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
+                        <FiUsers className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum perfil encontrado</h3>
-                          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Nenhuma empresa ou usuários da empresa encontrados.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum perfil encontrado</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhuma empresa ou usuÃ¡rios da empresa encontrados.</p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {companyAccountSections.length > 0 && (
                           <div>
-                            <h3 className="mb-3 text-lg font-bold text-(--tc-text-primary,#0b1a3c)">Empresas Institucionais</h3>
+                            <h3 className="mb-3 text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">Empresas Institucionais</h3>
                             <div className="space-y-3">
                               {companyAccountSections.map((company) => (
                                 <CompanyUsersSection key={`account-${company.id}`} company={company} onSelect={handleOpenUserDetail} />
@@ -1799,7 +1799,7 @@ export default function AdminConsolidatedPage() {
                         )}
                         {companySections.length > 0 && (
                           <div>
-                            <h3 className="mb-3 text-lg font-bold text-(--tc-text-primary,#0b1a3c)">Usuários da Empresa</h3>
+                            <h3 className="mb-3 text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">UsuÃ¡rios da Empresa</h3>
                             <div className="space-y-3">
                               {companySections.map((company) => (
                                 <CompanyUsersSection key={`company-${company.id}`} company={company} onSelect={handleOpenUserDetail} />
@@ -1813,17 +1813,17 @@ export default function AdminConsolidatedPage() {
 
                   <TabsContent value="testing" className="mt-0">
                     {testingCompanyUsers.length === 0 ? (
-                      <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
-                        <FiUser className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
+                      <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
+                        <FiUser className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum usuário TC</h3>
-                          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Não há usuários TC com os filtros atuais.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuÃ¡rio TC</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">NÃ£o hÃ¡ usuÃ¡rios TC com os filtros atuais.</p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {testingActiveUsers.length > 0 && (
-                          <UserStatusSection title="Ativos" count={testingActiveUsers.length} emptyMessage="Nenhum usuário ativo.">
+                          <UserStatusSection title="Ativos" count={testingActiveUsers.length} emptyMessage="Nenhum usuÃ¡rio ativo.">
                             <UserCardGrid>
                               {testingActiveUsers.map((user) => (
                                 <UserCard key={user.id} user={user} onSelect={handleOpenUserDetail} companyLabel={user.company_names?.[0] || "Testing Company"} />
@@ -1832,7 +1832,7 @@ export default function AdminConsolidatedPage() {
                           </UserStatusSection>
                         )}
                         {testingInactiveUsers.length > 0 && (
-                          <UserStatusSection title="Inativos" count={testingInactiveUsers.length} emptyMessage="Nenhum usuário inativo.">
+                          <UserStatusSection title="Inativos" count={testingInactiveUsers.length} emptyMessage="Nenhum usuÃ¡rio inativo.">
                             <UserCardGrid>
                               {testingInactiveUsers.map((user) => (
                                 <UserCard key={user.id} user={user} onSelect={handleOpenUserDetail} companyLabel={user.company_names?.[0] || "Testing Company"} />
@@ -1846,17 +1846,17 @@ export default function AdminConsolidatedPage() {
 
                   <TabsContent value="admin" className="mt-0">
                     {adminUsers.length === 0 ? (
-                      <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
-                        <FiShield className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
+                      <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
+                        <FiShield className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum Líder TC encontrado</h3>
-                          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Nenhum Líder TC com os filtros atuais.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum LÃ­der TC encontrado</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum LÃ­der TC com os filtros atuais.</p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {adminActiveUsers.length > 0 && (
-                          <UserStatusSection title="Ativos" count={adminActiveUsers.length} emptyMessage="Nenhum Líder ativo.">
+                          <UserStatusSection title="Ativos" count={adminActiveUsers.length} emptyMessage="Nenhum LÃ­der ativo.">
                             <UserCardGrid>
                               {adminActiveUsers.map((user) => (
                                 <UserCard key={user.id} user={user} onSelect={handleOpenUserDetail} companyLabel={null} />
@@ -1865,7 +1865,7 @@ export default function AdminConsolidatedPage() {
                           </UserStatusSection>
                         )}
                         {adminInactiveUsers.length > 0 && (
-                          <UserStatusSection title="Inativos" count={adminInactiveUsers.length} emptyMessage="Nenhum Líder inativo.">
+                          <UserStatusSection title="Inativos" count={adminInactiveUsers.length} emptyMessage="Nenhum LÃ­der inativo.">
                             <UserCardGrid>
                               {adminInactiveUsers.map((user) => (
                                 <UserCard key={user.id} user={user} onSelect={handleOpenUserDetail} companyLabel={null} />
@@ -1879,11 +1879,11 @@ export default function AdminConsolidatedPage() {
 
                   <TabsContent value="support" className="mt-0">
                     {supportUsers.length === 0 ? (
-                      <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-6 text-center">
-                        <FiTool className="h-8 w-8 text-(--tc-text-muted,#6b7280)" />
+                      <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
+                        <FiTool className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-(--tc-text-primary,#0b1a3c)">Nenhum suporte técnico encontrado</h3>
-                          <p className="mt-2 text-sm text-(--tc-text-secondary,#4b5563)">Nenhum suporte técnico com os filtros atuais.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte tÃ©cnico encontrado</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum suporte tÃ©cnico com os filtros atuais.</p>
                         </div>
                       </div>
                     ) : (
@@ -1969,7 +1969,7 @@ export default function AdminConsolidatedPage() {
               body: JSON.stringify(payload),
             });
             if (res.status === 401) {
-              toast.error("Sessão expirada. Faça login novamente.");
+              toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
               router.replace("/login");
               return null;
             }
@@ -2045,3 +2045,4 @@ export default function AdminConsolidatedPage() {
     </div>
   );
 }
+

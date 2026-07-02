@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -58,16 +58,16 @@ async function fetcher(path: string) {
 
 function StatCard({ label, value, note }: { label: string; value: string | number; note: string }) {
   return (
-    <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">{label}</p>
-      <p className="mt-1 text-2xl font-black text-(--tc-text,#0b1a3c)">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{note}</p>
+    <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">{label}</p>
+      <p className="mt-1 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-[var(--tc-text-muted,#6b7280)]">{note}</p>
     </div>
   );
 }
 
 function Badge({ children }: { children: ReactNode }) {
-  return <span className="rounded-full border border-(--tc-border,#d7deea) bg-white px-2.5 py-1 text-[11px] font-bold text-(--tc-text-muted,#6b7280)">{children}</span>;
+  return <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[11px] font-bold text-[var(--tc-text-muted,#6b7280)]">{children}</span>;
 }
 
 export function UnifiedConversationsHub() {
@@ -78,23 +78,23 @@ export function UnifiedConversationsHub() {
 
   return (
     <main className="space-y-5">
-      <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
+      <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-              <FiMessageCircle className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Conversas unificadas
+            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+              <FiMessageCircle className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Conversas unificadas
             </span>
-            <h1 className="mt-3 text-2xl font-black text-(--tc-text,#0b1a3c)">Um lugar único para empresa, projeto, perfil e Brain</h1>
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-              Todas as conversas continuam acontecendo no mesmo chat, mas agora cada mensagem pode carregar contexto de empresa, projeto e perfil para alimentar memória, métricas e ações do Brian.
+            <h1 className="mt-3 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">Um lugar Ãºnico para empresa, projeto, perfil e Brain</h1>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
+              Todas as conversas continuam acontecendo no mesmo chat, mas agora cada mensagem pode carregar contexto de empresa, projeto e perfil para alimentar memÃ³ria, mÃ©tricas e aÃ§Ãµes do Brian.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Link href="/chat" className="inline-flex items-center gap-2 rounded-xl bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-black text-white">
-              <FiMessageCircle className="h-4 w-4" /> Abrir chat único
+            <Link href="/chat" className="inline-flex items-center gap-2 rounded-xl bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-black text-white">
+              <FiMessageCircle className="h-4 w-4" /> Abrir chat Ãºnico
             </Link>
-            <button type="button" onClick={() => void mutate()} className="inline-flex items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-bold text-(--tc-text,#0b1a3c)">
+            <button type="button" onClick={() => void mutate()} className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
               <FiRefreshCw className="h-4 w-4" /> Atualizar
             </button>
           </div>
@@ -107,29 +107,29 @@ export function UnifiedConversationsHub() {
           <StatCard label="Candidatos" value={isLoading ? "..." : data?.summary.candidates ?? 0} note="Para o Brain lembrar" />
           <StatCard label="Empresas" value={isLoading ? "..." : data?.summary.companies ?? 0} note="Com contexto capturado" />
           <StatCard label="Projetos" value={isLoading ? "..." : data?.summary.projects ?? 0} note="Com projeto informado" />
-          <StatCard label="Regras" value={isLoading ? "..." : data?.model.summary.requiredRules ?? 0} note="Obrigatórias" />
-          <StatCard label="Ações Brian" value={isLoading ? "..." : data?.model.summary.brianActions ?? 0} note="Conversacionais" />
+          <StatCard label="Regras" value={isLoading ? "..." : data?.model.summary.requiredRules ?? 0} note="ObrigatÃ³rias" />
+          <StatCard label="AÃ§Ãµes Brian" value={isLoading ? "..." : data?.model.summary.brianActions ?? 0} note="Conversacionais" />
         </div>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="space-y-4 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-            <FiCpu className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Feed para memória do Brain
+        <div className="space-y-4 rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+            <FiCpu className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Feed para memÃ³ria do Brain
           </div>
 
           {data?.signals.length ? (
             data.signals.map((signal) => (
-              <article key={signal.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+              <article key={signal.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-sm font-black text-(--tc-text,#0b1a3c)">{signal.actorName} → {signal.peerName}</h2>
-                    <p className="mt-1 text-xs leading-5 text-(--tc-text-muted,#6b7280)">{new Date(signal.createdAt).toLocaleString("pt-BR")}</p>
+                    <h2 className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">{signal.actorName} â†’ {signal.peerName}</h2>
+                    <p className="mt-1 text-xs leading-5 text-[var(--tc-text-muted,#6b7280)]">{new Date(signal.createdAt).toLocaleString("pt-BR")}</p>
                   </div>
                   <Badge>{signal.status}</Badge>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-(--tc-text-secondary,#4b5563)">{signal.summary}</p>
-                <p className="mt-2 text-xs font-semibold text-(--tc-text-muted,#6b7280)">{signal.reason}</p>
+                <p className="mt-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">{signal.summary}</p>
+                <p className="mt-2 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]">{signal.reason}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {signal.companyName ? <Badge>{signal.companyName}</Badge> : null}
                   {signal.companySlug ? <Badge>{signal.companySlug}</Badge> : null}
@@ -139,55 +139,55 @@ export function UnifiedConversationsHub() {
               </article>
             ))
           ) : (
-            <div className="rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-5 text-sm font-semibold text-(--tc-text-muted,#6b7280)">
-              Ainda não há mensagens candidatas para memória. Envie no chat algo com regra, decisão, bug, plano, run, automação ou peça para “lembrar”.
+            <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-5 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">
+              Ainda nÃ£o hÃ¡ mensagens candidatas para memÃ³ria. Envie no chat algo com regra, decisÃ£o, bug, plano, run, automaÃ§Ã£o ou peÃ§a para â€œlembrarâ€.
             </div>
           )}
         </div>
 
         <div className="space-y-4">
-          <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-              <FiShield className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Regras de funcionamento
+          <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+              <FiShield className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> Regras de funcionamento
             </div>
             <div className="mt-4 space-y-3">
               {data?.model.rules.map((rule) => (
-                <article key={rule.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
+                <article key={rule.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <h2 className="text-sm font-black text-(--tc-text,#0b1a3c)">{rule.title}</h2>
-                    {rule.required ? <Badge>Obrigatório</Badge> : null}
+                    <h2 className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">{rule.title}</h2>
+                    {rule.required ? <Badge>ObrigatÃ³rio</Badge> : null}
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{rule.description}</p>
+                  <p className="mt-2 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{rule.description}</p>
                 </article>
               ))}
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-              <FiUsers className="h-4 w-4 text-(--tc-accent,#ef0001)" /> O que o Brian pode fazer
+          <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+              <FiUsers className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> O que o Brian pode fazer
             </div>
             <div className="mt-4 space-y-3">
               {data?.model.brianActions.map((action) => (
-                <article key={action.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
-                  <h2 className="text-sm font-black text-(--tc-text,#0b1a3c)">{action.label}</h2>
-                  <p className="mt-2 rounded-xl border border-(--tc-border,#d7deea) bg-white p-3 text-xs font-bold text-(--tc-text,#0b1a3c)">“{action.userCommand}”</p>
+                <article key={action.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+                  <h2 className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">{action.label}</h2>
+                  <p className="mt-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white p-3 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">â€œ{action.userCommand}â€</p>
                   <div className="mt-3 flex flex-wrap gap-2">{action.requiredContext.map((item) => <Badge key={item}>{item}</Badge>)}</div>
                 </article>
               ))}
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
-              <FiBarChart2 className="h-4 w-4 text-(--tc-accent,#ef0001)" /> Métricas futuras
+          <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
+              <FiBarChart2 className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" /> MÃ©tricas futuras
             </div>
             <div className="mt-4 space-y-3">
               {data?.model.metrics.map((metric) => (
-                <article key={metric.id} className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-4">
-                  <h2 className="text-sm font-black text-(--tc-text,#0b1a3c)">{metric.label}</h2>
-                  <p className="mt-2 text-xs leading-5 text-(--tc-text-secondary,#4b5563)">{metric.description}</p>
-                  <p className="mt-2 font-mono text-[11px] text-(--tc-text-muted,#6b7280)">{metric.formula}</p>
+                <article key={metric.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
+                  <h2 className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">{metric.label}</h2>
+                  <p className="mt-2 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{metric.description}</p>
+                  <p className="mt-2 font-mono text-[11px] text-[var(--tc-text-muted,#6b7280)]">{metric.formula}</p>
                 </article>
               ))}
             </div>
@@ -197,3 +197,4 @@ export function UnifiedConversationsHub() {
     </main>
   );
 }
+

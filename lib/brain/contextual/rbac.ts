@@ -1,4 +1,4 @@
-import type { BrianContextCarrier, BrianNeuron, BrianProcessingResult, BrianSynapse } from "./types";
+﻿import type { BrianContextCarrier, BrianNeuron, BrianProcessingResult, BrianSynapse } from "./types";
 
 const BROAD_ROLES = new Set(["admin", "global_admin", "leader_tc", "technical_support"]);
 
@@ -59,3 +59,4 @@ export function filterBrianProcessingResultByRBAC(result: BrianProcessingResult)
     },
   };
 }
+

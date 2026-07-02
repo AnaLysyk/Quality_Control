@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext } from "@/lib/auth/session";
@@ -17,14 +17,14 @@ export async function POST(req: NextRequest) {
     const { company, status } = await resolveCurrentCompanyFromAccess(access);
 
     if (!access) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
     }
     if (!company) {
-      const message = status === 403 ? "Sem empresa vinculada" : "Empresa não encontrada";
+      const message = status === 403 ? "Sem empresa vinculada" : "Empresa nÃ£o encontrada";
       return NextResponse.json({ error: message }, { status });
     }
     if (!canManageInstitutionalCompanyAccess(access)) {
-      return NextResponse.json({ error: "Sem permissão para alterar o logo da empresa" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissÃ£o para alterar o logo da empresa" }, { status: 403 });
     }
 
     const form = await req.formData().catch(() => null);
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     const file = form.get("file");
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Arquivo obrigatório" }, { status: 400 });
+      return NextResponse.json({ error: "Arquivo obrigatÃ³rio" }, { status: 400 });
     }
 
     const { logoUrl } = await uploadAndPersistCompanyLogo(company.id, file);
@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
     const message =
       error instanceof Error && error.message.trim()
         ? error.message.trim()
-        : "Não foi possível enviar o logo";
+        : "NÃ£o foi possÃ­vel enviar o logo";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -53,50 +53,50 @@ type CompanyOption = { id: string; name: string };
 
 const STATUS = {
   pending: {
-    label: "Aguardando análise",
-    text: "Sua solicitação foi recebida e aguarda análise. As atualizações serão enviadas por e-mail.",
+    label: "Aguardando anÃ¡lise",
+    text: "Sua solicitaÃ§Ã£o foi recebida e aguarda anÃ¡lise. As atualizaÃ§Ãµes serÃ£o enviadas por e-mail.",
     tone: "border-amber-300 bg-amber-50/95 text-amber-950",
     accent: "bg-amber-500",
     iconTone: "border-amber-300 bg-amber-100",
   },
   under_review: {
-    label: "Em análise",
-    text: "Sua correção foi recebida e voltou para análise. As atualizações serão enviadas por e-mail.",
+    label: "Em anÃ¡lise",
+    text: "Sua correÃ§Ã£o foi recebida e voltou para anÃ¡lise. As atualizaÃ§Ãµes serÃ£o enviadas por e-mail.",
     tone: "border-blue-300 bg-blue-50/95 text-blue-950",
     accent: "bg-blue-600",
     iconTone: "border-blue-300 bg-blue-100",
   },
   needs_more_info: {
-    label: "Ajuste necessário",
-    text: "Corrija somente os campos destacados e reenvie para análise.",
+    label: "Ajuste necessÃ¡rio",
+    text: "Corrija somente os campos destacados e reenvie para anÃ¡lise.",
     tone: "border-orange-300 bg-orange-50/95 text-orange-950",
     accent: "bg-orange-600",
     iconTone: "border-orange-300 bg-orange-100",
   },
   approved: {
     label: "Aprovado",
-    text: "Sua solicitação foi aprovada. As instruções de acesso foram enviadas por e-mail.",
+    text: "Sua solicitaÃ§Ã£o foi aprovada. As instruÃ§Ãµes de acesso foram enviadas por e-mail.",
     tone: "border-emerald-300 bg-emerald-50/95 text-emerald-950",
     accent: "bg-emerald-600",
     iconTone: "border-emerald-300 bg-emerald-100",
   },
   rejected: {
     label: "Rejeitado",
-    text: "Sua solicitação foi rejeitada. Consulte o motivo informado pela equipe.",
+    text: "Sua solicitaÃ§Ã£o foi rejeitada. Consulte o motivo informado pela equipe.",
     tone: "border-red-300 bg-red-50/95 text-red-950",
     accent: "bg-red-600",
     iconTone: "border-red-300 bg-red-100",
   },
   cancelled: {
     label: "Cancelado",
-    text: "Esta solicitação foi cancelada.",
+    text: "Esta solicitaÃ§Ã£o foi cancelada.",
     tone: "border-slate-300 bg-slate-100/95 text-slate-900",
     accent: "bg-slate-600",
     iconTone: "border-slate-300 bg-slate-200",
   },
   expired: {
     label: "Expirado",
-    text: "Esta solicitação expirou.",
+    text: "Esta solicitaÃ§Ã£o expirou.",
     tone: "border-slate-300 bg-slate-100/95 text-slate-900",
     accent: "bg-slate-600",
     iconTone: "border-slate-300 bg-slate-200",
@@ -106,23 +106,23 @@ const STATUS = {
 const FIELD_LABELS: Record<string, string> = {
   profileType: "Tipo de perfil",
   company: "Empresa",
-  companyName: "Razão social",
+  companyName: "RazÃ£o social",
   companyTaxId: "CNPJ",
   companyZip: "CEP",
-  companyAddress: "Endereço",
+  companyAddress: "EndereÃ§o",
   companyPhone: "Telefone da empresa",
   companyWebsite: "Website",
   companyLinkedin: "LinkedIn",
-  companyDescription: "Descrição da empresa",
-  companyNotes: "Observações da empresa",
+  companyDescription: "DescriÃ§Ã£o da empresa",
+  companyNotes: "ObservaÃ§Ãµes da empresa",
   fullName: "Nome completo",
-  username: "Usuário/login",
+  username: "UsuÃ¡rio/login",
   email: "E-mail",
   phone: "Telefone",
   jobRole: "Cargo",
-  title: "Título",
-  description: "Descrição",
-  notes: "Observações",
+  title: "TÃ­tulo",
+  description: "DescriÃ§Ã£o",
+  notes: "ObservaÃ§Ãµes",
   password: "Nova senha",
 };
 
@@ -141,11 +141,11 @@ const DANGER_BUTTON_CLASS =
 function profileLabel(role?: string, companyName?: string) {
   if (role === "empresa") return "Empresa";
   if (role === "company_user") {
-    return companyName ? `Acesso vinculado à ${companyName}` : "Acesso vinculado à empresa";
+    return companyName ? `Acesso vinculado Ã  ${companyName}` : "Acesso vinculado Ã  empresa";
   }
-  if (role === "testing_company_user") return "Usuário Testing Company";
-  if (role === "leader_tc") return "Líder TC";
-  if (role === "technical_support") return "Suporte técnico";
+  if (role === "testing_company_user") return "UsuÃ¡rio Testing Company";
+  if (role === "leader_tc") return "LÃ­der TC";
+  if (role === "technical_support") return "Suporte tÃ©cnico";
   return role || "Perfil solicitado";
 }
 
@@ -229,7 +229,7 @@ function FloatingNotice({
           </span>
           <div className="min-w-0 pt-0.5">
             <p className={`text-sm font-black ${isError ? "text-red-900" : "text-emerald-900"}`}>
-              {isError ? "Atenção" : "Tudo certo"}
+              {isError ? "AtenÃ§Ã£o" : "Tudo certo"}
             </p>
             <p className="mt-1 wrap-break-word text-sm font-semibold leading-5 text-slate-700">{message}</p>
           </div>
@@ -281,7 +281,7 @@ function StatusContent() {
 
   const load = async () => {
     if (!accessKey) {
-      setError("Chave de acesso não informada.");
+      setError("Chave de acesso nÃ£o informada.");
       setLoading(false);
       return;
     }
@@ -292,12 +292,12 @@ function StatusContent() {
       });
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.item) {
-        throw new Error(body?.message || "Solicitação não encontrada.");
+        throw new Error(body?.message || "SolicitaÃ§Ã£o nÃ£o encontrada.");
       }
       setItem(body.item);
       setComments(Array.isArray(body.comments) ? body.comments : []);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Falha ao consultar solicitação.");
+      setError(caught instanceof Error ? caught.message : "Falha ao consultar solicitaÃ§Ã£o.");
     } finally {
       setLoading(false);
     }
@@ -398,11 +398,11 @@ function StatusContent() {
       ["E-mail", item?.requesterEmail],
       [isCompanyUser ? "Tipo de acesso" : "Perfil", profileLabel(item?.requestedRole, companyName)],
       [isCompanyUser ? "Empresa vinculada" : "Empresa", companyName],
-      ["Usuário/login", item?.details?.username],
+      ["UsuÃ¡rio/login", item?.details?.username],
       ["Telefone", item?.details?.phone],
       ["Cargo", item?.details?.jobRole],
-      ["Título", item?.details?.title],
-      ["Descrição", item?.details?.description ?? item?.reason],
+      ["TÃ­tulo", item?.details?.title],
+      ["DescriÃ§Ã£o", item?.details?.description ?? item?.reason],
       ] as Array<[string, string | undefined]>;
     },
     [item],
@@ -420,11 +420,11 @@ function StatusContent() {
         body: JSON.stringify(draft),
       });
       const body = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(body?.message || "Não foi possível reenviar a correção.");
-      setFeedback("Correção reenviada. A solicitação voltou para análise.");
+      if (!response.ok) throw new Error(body?.message || "NÃ£o foi possÃ­vel reenviar a correÃ§Ã£o.");
+      setFeedback("CorreÃ§Ã£o reenviada. A solicitaÃ§Ã£o voltou para anÃ¡lise.");
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Falha ao reenviar correção.");
+      setError(caught instanceof Error ? caught.message : "Falha ao reenviar correÃ§Ã£o.");
     } finally {
       setBusy(false);
     }
@@ -447,12 +447,12 @@ function StatusContent() {
         }),
       });
       const body = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(body?.error || "Não foi possível enviar o comentário.");
+      if (!response.ok) throw new Error(body?.error || "NÃ£o foi possÃ­vel enviar o comentÃ¡rio.");
       setReply("");
-      setFeedback("Comentário enviado para a equipe.");
+      setFeedback("ComentÃ¡rio enviado para a equipe.");
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Falha ao enviar comentário.");
+      setError(caught instanceof Error ? caught.message : "Falha ao enviar comentÃ¡rio.");
     } finally {
       setBusy(false);
     }
@@ -468,9 +468,9 @@ function StatusContent() {
         { method: "POST" },
       );
       const body = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(body?.message || "Não foi possível cancelar.");
+      if (!response.ok) throw new Error(body?.message || "NÃ£o foi possÃ­vel cancelar.");
       setCancelOpen(false);
-      setFeedback("Solicitação cancelada.");
+      setFeedback("SolicitaÃ§Ã£o cancelada.");
       await load();
     } catch (caught) {
       setCancelOpen(false);
@@ -488,7 +488,7 @@ function StatusContent() {
         <AnimatedBackground />
         <p className="relative z-10 inline-flex items-center gap-3 rounded-2xl border border-[#011848]/10 bg-white px-5 py-3 font-bold text-[#011848] shadow-xl">
           <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#ef0001] motion-reduce:animate-none" aria-hidden="true" />
-          Carregando solicitação...
+          Carregando solicitaÃ§Ã£o...
         </p>
       </main>
     );
@@ -516,8 +516,8 @@ function StatusContent() {
         <header className="text-center">
           <Logo />
           <p className="text-[10px] font-black uppercase tracking-[0.42em] text-[#ef0001]">Quality Control</p>
-          <h1 className="mt-2 text-2xl font-black text-[#011848] sm:text-3xl">Acompanhamento da solicitação</h1>
-          <p className="mx-auto mt-2 max-w-lg text-sm font-medium text-[#64748b]">Consulte os dados, acompanhe a análise e fale com a equipe responsável.</p>
+          <h1 className="mt-2 text-2xl font-black text-[#011848] sm:text-3xl">Acompanhamento da solicitaÃ§Ã£o</h1>
+          <p className="mx-auto mt-2 max-w-lg text-sm font-medium text-[#64748b]">Consulte os dados, acompanhe a anÃ¡lise e fale com a equipe responsÃ¡vel.</p>
         </header>
 
         <section
@@ -554,7 +554,7 @@ function StatusContent() {
             <span className="h-7 w-1.5 rounded-full bg-linear-to-b from-[#011848] to-[#ef0001]" />
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">Cadastro</p>
-              <h2 className="text-lg font-black text-[#011848]">Dados da solicitação</h2>
+              <h2 className="text-lg font-black text-[#011848]">Dados da solicitaÃ§Ã£o</h2>
             </div>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -580,7 +580,7 @@ function StatusContent() {
 
         {item.reviewComment && (
           <section className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5" data-testid="access-request-review-comment">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">Comentário da equipe</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-red-700">ComentÃ¡rio da equipe</p>
             <p className="mt-3 whitespace-pre-wrap text-sm font-semibold text-[#011848]">{item.reviewComment}</p>
             <p className="mt-3 text-xs text-red-700">{dateTime(item.updatedAt)}</p>
           </section>
@@ -590,8 +590,8 @@ function StatusContent() {
           <section className="mt-5 overflow-hidden rounded-2xl border border-red-200 bg-white shadow-[0_12px_32px_rgba(239,0,1,0.08)]" data-testid="access-request-status-form">
             <div className="h-1.5 bg-linear-to-r from-[#011848] to-[#ef0001]" />
             <div className="p-5">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">Ação necessária</p>
-            <h2 className="mt-1 text-lg font-black text-[#011848]">Correção solicitada</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">AÃ§Ã£o necessÃ¡ria</p>
+            <h2 className="mt-1 text-lg font-black text-[#011848]">CorreÃ§Ã£o solicitada</h2>
             <p className="mt-1 text-sm font-medium text-[#64748b]">Atualize somente os campos indicados pela equipe.</p>
             <div className="mt-3 flex flex-wrap gap-2" data-testid="access-request-adjustment-fields">
               {item.adjustmentFields.map((field) => (
@@ -618,10 +618,10 @@ function StatusContent() {
                   ) : field === "profileType" ? (
                     <select className={ADJUSTMENT_CONTROL_CLASS} value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`}>
                       <option value="empresa">Empresa</option>
-                      <option value="company_user">Acesso vinculado à empresa</option>
-                      <option value="testing_company_user">Usuário TC</option>
-                      <option value="leader_tc">Líder TC</option>
-                      <option value="technical_support">Suporte técnico</option>
+                      <option value="company_user">Acesso vinculado Ã  empresa</option>
+                      <option value="testing_company_user">UsuÃ¡rio TC</option>
+                      <option value="leader_tc">LÃ­der TC</option>
+                      <option value="technical_support">Suporte tÃ©cnico</option>
                     </select>
                   ) : field === "description" || field === "notes" || field.includes("Description") || field.includes("Notes") ? (
                     <textarea className={`${ADJUSTMENT_CONTROL_CLASS} min-h-28 resize-y`} value={draft[field] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, [field]: event.target.value }))} data-testid={`access-request-adjust-${field}`} />
@@ -633,7 +633,7 @@ function StatusContent() {
               ))}
             </div>
             <button type="button" disabled={busy} onClick={submitAdjustment} className={`${PRIMARY_BUTTON_CLASS} mt-5 w-full`} data-testid="access-request-adjust-submit">
-              {busy ? "Enviando..." : "Reenviar correção"}
+              {busy ? "Enviando..." : "Reenviar correÃ§Ã£o"}
             </button>
             </div>
           </section>
@@ -641,7 +641,7 @@ function StatusContent() {
 
         {comments.length > 0 && (
           <section className="mt-5 rounded-2xl border border-[#011848]/10 bg-white p-5">
-            <h2 className="text-lg font-black text-[#011848]">Histórico de mensagens</h2>
+            <h2 className="text-lg font-black text-[#011848]">HistÃ³rico de mensagens</h2>
             <div className="mt-4 space-y-3">
               {comments.map((comment) => (
                 <div key={comment.id} className="rounded-xl bg-[#f8fafc] p-4">
@@ -670,27 +670,27 @@ function StatusContent() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">Canal da solicitação</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#ef0001]">Canal da solicitaÃ§Ã£o</p>
                   <h2 className="mt-1 text-lg font-black text-[#011848]">Fale com a equipe</h2>
-                  <p className="mt-1 text-sm font-medium text-[#64748b]">Envie informações complementares sobre esta solicitação.</p>
+                  <p className="mt-1 text-sm font-medium text-[#64748b]">Envie informaÃ§Ãµes complementares sobre esta solicitaÃ§Ã£o.</p>
                 </div>
               </div>
 
               <label htmlFor="access-request-reply" className="mt-5 block text-sm font-black text-[#011848]">
-                Comentário
+                ComentÃ¡rio
                 <textarea
                   id="access-request-reply"
                   value={reply}
                   onChange={(event) => setReply(event.target.value)}
                   rows={4}
-                  placeholder="Escreva uma observação para a equipe..."
+                  placeholder="Escreva uma observaÃ§Ã£o para a equipe..."
                   className={`${FORM_CONTROL_CLASS} min-h-32 resize-y`}
                 />
               </label>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <button type="button" disabled={busy || !reply.trim()} onClick={submitReply} className={PRIMARY_BUTTON_CLASS}>Enviar comentário</button>
-                <button type="button" disabled={busy} onClick={() => setCancelOpen(true)} className={DANGER_BUTTON_CLASS} data-testid="access-request-cancel-open">Cancelar solicitação</button>
+                <button type="button" disabled={busy || !reply.trim()} onClick={submitReply} className={PRIMARY_BUTTON_CLASS}>Enviar comentÃ¡rio</button>
+                <button type="button" disabled={busy} onClick={() => setCancelOpen(true)} className={DANGER_BUTTON_CLASS} data-testid="access-request-cancel-open">Cancelar solicitaÃ§Ã£o</button>
               </div>
             </div>
           </section>
@@ -744,18 +744,18 @@ function StatusContent() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#ef0001]">Confirmação</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#ef0001]">ConfirmaÃ§Ã£o</p>
                   <h2 id="access-request-cancel-title" className="mt-1 text-xl font-black text-[#011848]">
-                    Cancelar solicitação?
+                    Cancelar solicitaÃ§Ã£o?
                   </h2>
                   <p id="access-request-cancel-description" className="mt-2 text-sm font-medium leading-6 text-[#64748b]">
-                    Esta ação encerra o acompanhamento desta solicitação. Confirme somente se não deseja mais continuar com o pedido.
+                    Esta aÃ§Ã£o encerra o acompanhamento desta solicitaÃ§Ã£o. Confirme somente se nÃ£o deseja mais continuar com o pedido.
                   </p>
                 </div>
               </div>
 
               <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-800">
-                A equipe não continuará a análise depois do cancelamento.
+                A equipe nÃ£o continuarÃ¡ a anÃ¡lise depois do cancelamento.
               </div>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -767,7 +767,7 @@ function StatusContent() {
                   className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#011848]/15 bg-[#f8fafc] px-5 py-3 text-sm font-black text-[#011848] transition hover:border-[#011848]/30 hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#011848]/10 disabled:cursor-not-allowed disabled:opacity-50"
                   data-testid="access-request-cancel-keep"
                 >
-                  Manter solicitação
+                  Manter solicitaÃ§Ã£o
                 </button>
                 <button
                   type="button"
@@ -794,3 +794,4 @@ export default function AccessRequestStatusPage() {
     </Suspense>
   );
 }
+

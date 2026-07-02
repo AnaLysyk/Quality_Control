@@ -1,4 +1,4 @@
-import { resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
+﻿import { resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 
 describe("resolveEffectivePermissionMatrix", () => {
   it("falls back to role defaults when the matrix is empty", () => {
@@ -34,3 +34,4 @@ describe("resolveEffectivePermissionMatrix", () => {
     expect(matrix.audit).toContain("export");
   });
 });
+

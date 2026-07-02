@@ -56,3 +56,4 @@ export async function selecionarCargoAnalista(page: Page) {
   await page.getByRole("combobox").filter({ hasText: /selecione uma profissão/i }).click();
   await page.getByRole("option", { name: /analista/i }).first().click();
 }
+

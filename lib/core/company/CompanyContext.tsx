@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
@@ -309,3 +309,4 @@ export function useClientContext() {
   if (!ctx) throw new Error("useClientContext deve ser usado dentro de ClientProvider");
   return ctx;
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { appendDefectHistory } from "@/lib/manualDefectHistoryStore";
 import { buildDefectComments } from "@/lib/defectActivity";
@@ -20,7 +20,7 @@ function normalizeString(value: unknown) {
 export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(request);
   if (!user) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
@@ -29,18 +29,18 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
   const commentBody = normalizeString(body?.body);
 
   if (!companySlug) {
-    return NextResponse.json({ message: "Empresa não informada" }, { status: 400 });
+    return NextResponse.json({ message: "Empresa nÃ£o informada" }, { status: 400 });
   }
   if (!canAccessCompanyDefects(user, companySlug)) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
   }
   if (!commentBody) {
-    return NextResponse.json({ message: "Comentário obrigatório" }, { status: 400 });
+    return NextResponse.json({ message: "ComentÃ¡rio obrigatÃ³rio" }, { status: 400 });
   }
 
   const defect = await resolveAccessibleCompanyDefect(companySlug, slug);
   if (!defect) {
-    return NextResponse.json({ message: "Defeito não encontrado" }, { status: 404 });
+    return NextResponse.json({ message: "Defeito nÃ£o encontrado" }, { status: 404 });
   }
 
   const actor = await resolveDefectActor(user);
@@ -51,7 +51,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
     note: commentBody,
   });
   if (!event) {
-    return NextResponse.json({ message: "Não foi possível salvar o comentário" }, { status: 500 });
+    return NextResponse.json({ message: "NÃ£o foi possÃ­vel salvar o comentÃ¡rio" }, { status: 500 });
   }
 
   invalidateCompanyDefectsDataset(companySlug);
@@ -69,3 +69,4 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
     item: buildDefectComments([event])[0] ?? null,
   });
 }
+

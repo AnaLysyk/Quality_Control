@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("defeitos - listagem por empresa ativa", () => {
-  test("user vÃª pÃ¡gina e lista de defeitos na empresa ativa", async ({ page, context }) => {
+  test("user vÃƒÂª pÃƒÂ¡gina e lista de defeitos na empresa ativa", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "user",
       companies: ["DEMO"],
@@ -15,3 +15,4 @@ test.describe("defeitos - listagem por empresa ativa", () => {
     await expect(page.getByTestId("defects-list")).toBeVisible();
   });
 });
+

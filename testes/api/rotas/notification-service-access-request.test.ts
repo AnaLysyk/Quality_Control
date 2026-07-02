@@ -1,4 +1,4 @@
-jest.mock("@/lib/userNotificationsStore", () => ({
+﻿jest.mock("@/lib/userNotificationsStore", () => ({
   closeNotificationsByDedupeKey: jest.fn().mockResolvedValue(false),
   createNotificationsForUsers: jest.fn().mockResolvedValue([]),
 }));
@@ -147,3 +147,4 @@ describe("notificationService access request recipients", () => {
     expect(recipients).not.toContain("tc-linked-1");
   });
 });
+

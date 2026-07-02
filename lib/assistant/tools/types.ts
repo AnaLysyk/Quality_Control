@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Shared type for all tool executor results.
  */
 import type { AssistantAction, AssistantToolName } from "../types";
@@ -10,3 +10,4 @@ export type AssistantExecutorResult = {
   success: boolean;
   summary: string | null;
 };
+

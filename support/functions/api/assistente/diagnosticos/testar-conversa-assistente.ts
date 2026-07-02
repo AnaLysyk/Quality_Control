@@ -1,4 +1,4 @@
-import { InternalBrainEngine } from "@/lib/brain/internalEngine";
+﻿import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 
 type Case = {
   name: string;
@@ -11,20 +11,20 @@ const cases: Case[] = [
   {
     name: "greeting",
     message: "oi",
-    expects: ["O que você quer resolver agora", "Tudo certo"],
-    rejects: ["###", "Defeitos", "Memórias"],
+    expects: ["O que vocÃª quer resolver agora", "Tudo certo"],
+    rejects: ["###", "Defeitos", "MemÃ³rias"],
   },
   {
     name: "thanks",
     message: "valeu",
-    expects: ["Disponha", "próximo passo"],
-    rejects: ["###", "Diagnóstico"],
+    expects: ["Disponha", "prÃ³ximo passo"],
+    rejects: ["###", "DiagnÃ³stico"],
   },
   {
     name: "help",
     message: "me ajuda",
     expects: ["Claro", "uma frase"],
-    rejects: ["###", "Análise"],
+    rejects: ["###", "AnÃ¡lise"],
   },
 ];
 
@@ -78,3 +78,4 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+

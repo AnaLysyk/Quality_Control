@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { autenticarPerfilRuns, rotaDetalheRunEmpresa } from "../../../support/functions/ui/runs/rotas-runs";
 
 test("timeline de quality gate aparece na run", async ({ page, context }) => {
@@ -14,3 +14,4 @@ test("timeline de quality gate aparece na run", async ({ page, context }) => {
   const count = await items.count();
   expect(count).toBeGreaterThan(1);
 });
+

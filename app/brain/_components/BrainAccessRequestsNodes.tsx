@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import type { BuiltBrainGraph } from "../_types/brain.types";
@@ -71,3 +71,4 @@ export function BrainAccessRequestsNodes({ graph }: BrainAccessRequestsNodesProp
     </section>
   );
 }
+

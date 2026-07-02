@@ -1,4 +1,4 @@
-import {
+﻿import {
   assertUserCanLinkToCompany,
   buildCompanyScopedUserState,
   getUserScopeLockedMessage,
@@ -49,3 +49,4 @@ describe("company user scope", () => {
     ).not.toThrow();
   });
 });
+

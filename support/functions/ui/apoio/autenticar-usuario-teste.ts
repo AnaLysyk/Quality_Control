@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+﻿import type { Page } from "@playwright/test";
 import { simularAutenticacao } from "./simular-autenticacao";
 
 const rawBaseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3100";
@@ -187,3 +187,4 @@ export async function autenticarUsuario(page: Page, email: string, password: str
     ? lastNavigationError
     : new Error("falha ao navegar apos autenticacao");
 }
+

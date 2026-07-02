@@ -1,4 +1,4 @@
-const config = {
+﻿const config = {
   darkMode: "class",
   content: ["./app/**/*.{ts,tsx}", "./pages/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   theme: {
@@ -25,3 +25,4 @@ const config = {
 };
 
 export default config;
+

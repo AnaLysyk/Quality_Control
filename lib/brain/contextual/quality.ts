@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   BrianActivation,
   BrianNeuron,
   BrianNeuronQualityScore,
@@ -75,8 +75,8 @@ export function buildBrianQualityGateReport(result: BrianProcessingResult, minSc
     .map((item) => item.neuronId);
   const rejectedNeuronIds = scores.filter((item) => item.score < minScore).map((item) => item.neuronId);
   const warnings = [
-    ...rejectedNeuronIds.map((id) => `Neurônio bloqueado pelo quality gate: ${id}`),
-    ...reviewNeuronIds.map((id) => `Neurônio aceito com revisão recomendada: ${id}`),
+    ...rejectedNeuronIds.map((id) => `NeurÃ´nio bloqueado pelo quality gate: ${id}`),
+    ...reviewNeuronIds.map((id) => `NeurÃ´nio aceito com revisÃ£o recomendada: ${id}`),
   ];
 
   return {
@@ -118,16 +118,17 @@ export function applyBrianQualityGates(result: BrianProcessingResult, minScore =
 
 export function explainQualityScore(score: BrianNeuronQualityScore) {
   const missing = [
-    !score.hasTitle ? "título" : null,
+    !score.hasTitle ? "tÃ­tulo" : null,
     !score.hasContext ? "contexto" : null,
-    !score.hasEvidence ? "evidência" : null,
+    !score.hasEvidence ? "evidÃªncia" : null,
     !score.hasNarrative ? "narrativa" : null,
-    !score.hasRelations ? "relações" : null,
-    !score.hasPermissionRule ? "regra de permissão" : null,
-    !score.hasRecentActivation ? "ativação recente" : null,
+    !score.hasRelations ? "relaÃ§Ãµes" : null,
+    !score.hasPermissionRule ? "regra de permissÃ£o" : null,
+    !score.hasRecentActivation ? "ativaÃ§Ã£o recente" : null,
   ].filter(Boolean);
 
   return missing.length
     ? `Score ${score.score}. Faltam: ${missing.join(", ")}.`
-    : `Score ${score.score}. Neurônio pronto para projeção confiável.`;
+    : `Score ${score.score}. NeurÃ´nio pronto para projeÃ§Ã£o confiÃ¡vel.`;
 }
+

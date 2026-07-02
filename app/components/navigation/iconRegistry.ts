@@ -1,4 +1,4 @@
-import {
+﻿import {
   FiActivity,
   FiAlertCircle,
   FiBarChart2,
@@ -109,3 +109,4 @@ const registry: Record<string, React.ComponentType<{ size?: number; className?: 
 export function getIcon(key: string): React.ComponentType<{ size?: number; className?: string }> {
   return registry[key] ?? FiBox;
 }
+

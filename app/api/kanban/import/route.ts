@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import Papa from "papaparse";
 
 import { getNextId, readKanbanStore, writeKanbanStore } from "../store";
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
   const requestedSlug = asSlug(searchParams.get("slug"));
 
   const user = await authenticateRequest(request);
-  if (!user) return jsonError("Não autorizado", 401);
+  if (!user) return jsonError("NÃ£o autorizado", 401);
 
   const preferredCompanySlug = resolvePrimaryCompanySlug(user);
   let effectiveSlug: string | null = null;
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     effectiveSlug = requestedSlug ?? preferredCompanySlug ?? allowed[0] ?? null;
   }
 
-  if (!effectiveSlug) return jsonError("slug e obrigatório", 400);
+  if (!effectiveSlug) return jsonError("slug e obrigatÃ³rio", 400);
 
   const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
   let project: string | null = queryProject;
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     return jsonError("project e runId sao obrigatorios", 400);
   }
   if (!items.length) {
-    return jsonError("Nenhum item válido para importar (verifique title/status)", 400);
+    return jsonError("Nenhum item vÃ¡lido para importar (verifique title/status)", 400);
   }
 
   const store = await readKanbanStore();
@@ -213,3 +213,4 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ inserted: items.length, mode: "json" }, { status: 201 });
 }
+

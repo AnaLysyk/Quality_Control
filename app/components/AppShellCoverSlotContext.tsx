@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
@@ -34,3 +34,4 @@ export function useAppShellCoverSlot(content: ReactNode | null) {
     return () => setCoverSlot(null);
   }, [content, setCoverSlot]);
 }
+

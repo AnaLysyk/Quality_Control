@@ -1,4 +1,4 @@
-import { getClientAuthToken } from "@/lib/session/token";
+﻿import { getClientAuthToken } from "@/lib/session/token";
 
 const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 const API_BASE = RAW_API_BASE.endsWith("/")
@@ -46,7 +46,7 @@ async function getServerAccessToken() {
   }
 }
 
-// fetch helper que adiciona Authorization: Bearer <jwt> quando disponível
+// fetch helper que adiciona Authorization: Bearer <jwt> quando disponÃ­vel
 export async function fetchApi(path: string, init: RequestInit = {}) {
   const url = apiUrl(path);
   const buildHeaders = async () => {
@@ -86,3 +86,4 @@ export async function fetchApi(path: string, init: RequestInit = {}) {
 
   return res;
 }
+

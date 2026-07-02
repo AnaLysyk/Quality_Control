@@ -1,4 +1,4 @@
-import { normalizeAuthenticatedUser, resolveCompanyAccess } from "@/lib/auth/normalizeAuthenticatedUser";
+﻿import { normalizeAuthenticatedUser, resolveCompanyAccess } from "@/lib/auth/normalizeAuthenticatedUser";
 import { SYSTEM_ROLES } from "@/lib/auth/roles";
 import { resolveCompanyRouteAccessInput } from "@/lib/companyRoutes";
 
@@ -290,3 +290,4 @@ describe("resolveCompanyAccess", () => {
     expect(access.fallbackSlug).toBe("griaule");
   });
 });
+

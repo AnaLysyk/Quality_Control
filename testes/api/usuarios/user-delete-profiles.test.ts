@@ -1,18 +1,18 @@
-/**
- * Teste de integração: criar 2 usuários por perfil e deletar (soft-delete) um deles.
+﻿/**
+ * Teste de integraÃ§Ã£o: criar 2 usuÃ¡rios por perfil e deletar (soft-delete) um deles.
  *
- * Requer conexão com PostgreSQL (DATABASE_URL configurado).
+ * Requer conexÃ£o com PostgreSQL (DATABASE_URL configurado).
  * "Deletar" no sistema = soft-delete: active=false, status="blocked".
- * Todos os dados criados são removidos ao final via afterAll.
+ * Todos os dados criados sÃ£o removidos ao final via afterAll.
  *
- * Cenários cobertos:
- *  1. Usuário Regular               — criar 2, deletar 1
- *  2. IT Developer (Global)         — criar 2, deletar 1
- *  3. Admin Global                  — criar 2, deletar 1
- *  4. Viewer (vinculado a empresa)  — criar 2, deletar 1
- *  5. Administrador de Empresa      — criar 2, deletar 1
- *  6. Convidado (status=invited)    — criar 2, deletar 1
- *  7. Empresa Instituição           — criar empresa, criar 2 usuários vinculados, deletar 1
+ * CenÃ¡rios cobertos:
+ *  1. UsuÃ¡rio Regular               â€” criar 2, deletar 1
+ *  2. IT Developer (Global)         â€” criar 2, deletar 1
+ *  3. Admin Global                  â€” criar 2, deletar 1
+ *  4. Viewer (vinculado a empresa)  â€” criar 2, deletar 1
+ *  5. Administrador de Empresa      â€” criar 2, deletar 1
+ *  6. Convidado (status=invited)    â€” criar 2, deletar 1
+ *  7. Empresa InstituiÃ§Ã£o           â€” criar empresa, criar 2 usuÃ¡rios vinculados, deletar 1
  */
 
 import { randomUUID } from "crypto";
@@ -45,7 +45,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function email(label: string, seq: number) {
   return `del-${label}-${seq}-${uid}@test-del.local`;
@@ -76,12 +76,12 @@ async function assertActive(id: string) {
   expect(row!.status).not.toBe("blocked");
 }
 
-// ─── Cenários ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ CenÃ¡rios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persistência", () => {
+describePg("Criar 2 usuÃ¡rios e deletar 1 por perfil â€” verificaÃ§Ã£o de persistÃªncia", () => {
 
-  // ── 1. Usuário Regular ────────────────────────────────────────────────────
-  describe("Perfil: Usuário Regular", () => {
+  // â”€â”€ 1. UsuÃ¡rio Regular â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  describe("Perfil: UsuÃ¡rio Regular", () => {
     it("cria 2, deleta o primeiro, verifica que o segundo permanece ativo", async () => {
       const userA = await createUser({ name: "Regular A", email: email("regular", 1), role: "user", is_global_admin: false });
       const userB = await createUser({ name: "Regular B", email: email("regular", 2), role: "user", is_global_admin: false });
@@ -96,7 +96,7 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
     });
   });
 
-  // ── 2. IT Developer (Global) ──────────────────────────────────────────────
+  // â”€â”€ 2. IT Developer (Global) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: IT Developer (Desenvolvedor Global)", () => {
     it("cria 2, deleta o primeiro, verifica que o segundo permanece ativo", async () => {
       const userA = await createUser({
@@ -116,14 +116,14 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
 
       const deleted = await softDelete(userA.id);
       expect(deleted!.active).toBe(false);
-      expect(deleted!.is_global_admin).toBe(true); // perfil preservado após soft-delete
+      expect(deleted!.is_global_admin).toBe(true); // perfil preservado apÃ³s soft-delete
 
       await assertDeleted(userA.id);
       await assertActive(userB.id);
     });
   });
 
-  // ── 3. Admin Global ───────────────────────────────────────────────────────
+  // â”€â”€ 3. Admin Global â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Admin Global", () => {
     it("cria 2, deleta o primeiro, verifica que o segundo permanece ativo", async () => {
       const userA = await createUser({
@@ -149,7 +149,7 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
     });
   });
 
-  // ── 4. Viewer (vinculado a empresa) ──────────────────────────────────────
+  // â”€â”€ 4. Viewer (vinculado a empresa) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Viewer (vinculado a empresa)", () => {
     let companyId: string;
 
@@ -181,7 +181,7 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
     });
   });
 
-  // ── 5. Administrador de Empresa (company_admin) ───────────────────────────
+  // â”€â”€ 5. Administrador de Empresa (company_admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Administrador de Empresa", () => {
     let companyId: string;
 
@@ -211,7 +211,7 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
     });
   });
 
-  // ── 6. Convidado (status=invited) ─────────────────────────────────────────
+  // â”€â”€ 6. Convidado (status=invited) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Convidado (status=invited)", () => {
     it("cria 2 convidados, deleta o primeiro, verifica que o segundo permanece invited", async () => {
       const userA = await createUser({ name: "Invited Del A", email: email("invited", 1), role: "user", status: "invited", active: false });
@@ -219,7 +219,7 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
 
       await softDelete(userA.id);
 
-      // Ambos têm active=false mas por razões distintas
+      // Ambos tÃªm active=false mas por razÃµes distintas
       const rowA = await prisma.user.findUnique({ where: { id: userA.id } });
       const rowB = await prisma.user.findUnique({ where: { id: userB.id } });
 
@@ -231,33 +231,33 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
     });
   });
 
-  // ── 7. Empresa Instituição ────────────────────────────────────────────────
-  describe("Empresa Instituição", () => {
+  // â”€â”€ 7. Empresa InstituiÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  describe("Empresa InstituiÃ§Ã£o", () => {
     let instituicaoId: string;
 
     beforeAll(async () => {
-      // "Instituição" = empresa de natureza institucional (ex.: hospital, universidade)
+      // "InstituiÃ§Ã£o" = empresa de natureza institucional (ex.: hospital, universidade)
       // Representada por uma company com notas indicando o tipo
       const instituicao = await pgCreateLocalCompany({
-        name: `Instituição Teste ${uid}`,
+        name: `InstituiÃ§Ã£o Teste ${uid}`,
         slug: `instituicao-teste-${uid}`,
-        notes: "Tipo: instituição publica de ensino",
+        notes: "Tipo: instituiÃ§Ã£o publica de ensino",
         status: "active",
       });
       instituicaoId = instituicao.id;
       createdCompanyIds.push(instituicaoId);
     });
 
-    it("verifica que a instituição foi criada e persiste no banco", async () => {
+    it("verifica que a instituiÃ§Ã£o foi criada e persiste no banco", async () => {
       const row = await prisma.company.findUnique({ where: { id: instituicaoId } });
       expect(row).not.toBeNull();
-      expect(row!.name).toContain("Instituição Teste");
+      expect(row!.name).toContain("InstituiÃ§Ã£o Teste");
       expect(row!.status).toBe("active");
     });
 
-    it("cria 2 usuários vinculados como viewer, deleta o primeiro, o segundo permanece ativo", async () => {
-      const userA = await createUser({ name: "Instituição Viewer A", email: email("inst-viewer", 1), role: "user" });
-      const userB = await createUser({ name: "Instituição Viewer B", email: email("inst-viewer", 2), role: "user" });
+    it("cria 2 usuÃ¡rios vinculados como viewer, deleta o primeiro, o segundo permanece ativo", async () => {
+      const userA = await createUser({ name: "InstituiÃ§Ã£o Viewer A", email: email("inst-viewer", 1), role: "user" });
+      const userB = await createUser({ name: "InstituiÃ§Ã£o Viewer B", email: email("inst-viewer", 2), role: "user" });
 
       await pgUpsertLocalLink({ userId: userA.id, companyId: instituicaoId, role: "viewer" });
       await pgUpsertLocalLink({ userId: userB.id, companyId: instituicaoId, role: "viewer" });
@@ -271,9 +271,9 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
       expect(memberB).not.toBeNull();
     });
 
-    it("cria 2 admins da instituição, deleta o primeiro, o segundo permanece como company_admin", async () => {
-      const adminA = await createUser({ name: "Instituição Admin A", email: email("inst-admin", 1), role: "user" });
-      const adminB = await createUser({ name: "Instituição Admin B", email: email("inst-admin", 2), role: "user" });
+    it("cria 2 admins da instituiÃ§Ã£o, deleta o primeiro, o segundo permanece como company_admin", async () => {
+      const adminA = await createUser({ name: "InstituiÃ§Ã£o Admin A", email: email("inst-admin", 1), role: "user" });
+      const adminB = await createUser({ name: "InstituiÃ§Ã£o Admin B", email: email("inst-admin", 2), role: "user" });
 
       await pgUpsertLocalLink({ userId: adminA.id, companyId: instituicaoId, role: "company_admin" });
       await pgUpsertLocalLink({ userId: adminB.id, companyId: instituicaoId, role: "company_admin" });
@@ -287,7 +287,7 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
       expect(memberB!.role).toBe("company_admin");
     });
 
-    it("usuário deletado da instituição não aparece como ativo (simulação de listagem)", async () => {
+    it("usuÃ¡rio deletado da instituiÃ§Ã£o nÃ£o aparece como ativo (simulaÃ§Ã£o de listagem)", async () => {
       const userA = await createUser({ name: "Inst Active", email: email("inst-actv", 1), role: "user" });
       const userC = await createUser({ name: "Inst Deleted", email: email("inst-del", 2), role: "user" });
 
@@ -296,7 +296,7 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
 
       await softDelete(userC.id);
 
-      // Listagem de usuários ativos vinculados à instituição
+      // Listagem de usuÃ¡rios ativos vinculados Ã  instituiÃ§Ã£o
       const activeMemberships = await prisma.membership.findMany({
         where: { companyId: instituicaoId },
         include: { user: true },
@@ -310,3 +310,4 @@ describePg("Criar 2 usuários e deletar 1 por perfil — verificação de persis
     });
   });
 });
+

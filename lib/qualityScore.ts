@@ -1,4 +1,4 @@
-export type QualityScoreInput = {
+﻿export type QualityScoreInput = {
   gate_status?: "approved" | "warning" | "failed" | string | null;
   mttr_hours?: number | null;
   open_defects?: number | null;
@@ -57,3 +57,4 @@ export function calculateQualityScore(input: QualityScoreInput): number {
 
   return Math.round(clamp(total, 0, 100));
 }
+

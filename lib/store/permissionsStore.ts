@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import { dirname, resolve } from "path";
@@ -65,7 +65,7 @@ function normalizeStoredOverride(input: unknown): UserPermissionsOverride | null
   };
 }
 
-// ── Postgres helpers ───────────────────────────────────────────────────────
+// â”€â”€ Postgres helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function pgGetOverride(userId: string): Promise<UserPermissionsOverride | null> {
   const prisma = await getPrisma();
@@ -119,7 +119,7 @@ async function pgListOverrides(): Promise<UserPermissionsOverride[]> {
   }));
 }
 
-// ── Memory helpers (fallback) ──────────────────────────────────────────────
+// â”€â”€ Memory helpers (fallback) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function readOverridesFile(): Promise<PermissionsOverrideFile> {
   if (LOCAL_PERMISSIONS_FILE) {
@@ -154,7 +154,7 @@ async function writeOverridesFile(store: PermissionsOverrideFile) {
   await rename(temporaryFile, LOCAL_PERMISSIONS_FILE);
 }
 
-// ── Public API ─────────────────────────────────────────────────────────────
+// â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function getUserOverride(userId: string): Promise<UserPermissionsOverride | null> {
   if (USE_POSTGRES) return pgGetOverride(userId);
@@ -208,12 +208,12 @@ export async function deleteUserOverride(userId: string) {
   await writeOverridesFile({ items: nextItems });
 }
 
-/** Lista todos os overrides (para painel de administração). */
+/** Lista todos os overrides (para painel de administraÃ§Ã£o). */
 export async function listUserOverrides(): Promise<UserPermissionsOverride[]> {
   if (USE_POSTGRES) return pgListOverrides();
 
   if (isRedisConfigured()) {
-    // Redis não tem scan simplificado aqui — retorna vazio para evitar complexidade
+    // Redis nÃ£o tem scan simplificado aqui â€” retorna vazio para evitar complexidade
     return [];
   }
 
@@ -238,3 +238,4 @@ export function effectivePermissions(role: string, override?: UserPermissionsOve
 
   return effective; // Record<module, Set<action>>
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { FiBriefcase, FiChevronDown, FiFolder, FiPlus } from "react-icons/fi";
@@ -213,3 +213,4 @@ export default function ProjectSelector({ collapsed = false, showCompanySelector
     </div>
   );
 }
+

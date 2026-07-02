@@ -1,4 +1,4 @@
-import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
+﻿import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { ROLE_DEFAULTS } from "@/lib/permissions/roleDefaults";
 import { canReviewAccessRequests, canReviewerAccessQueue } from "@/lib/requestReviewAccess";
 
@@ -69,3 +69,4 @@ describe("system role contract", () => {
     expect(normalizeLegacyRole(legacy)).toBe(canonical);
   });
 });
+

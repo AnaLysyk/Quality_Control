@@ -1,4 +1,4 @@
-import { getAccessContext } from "@/lib/auth/session";
+﻿import { getAccessContext } from "@/lib/auth/session";
 
 export type AuthContext = { userId: string; companySlugs: string[] };
 
@@ -14,3 +14,4 @@ export async function getAuthContext(req: Request): Promise<AuthContext | null> 
 export function canAccessCompany(auth: AuthContext, companySlug: string) {
   return auth.companySlugs.includes(companySlug);
 }
+

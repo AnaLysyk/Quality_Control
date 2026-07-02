@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { hashPasswordSha256 } from "@/lib/passwordHash";
 import { updateLocalUser } from "@/lib/auth/localStore";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
@@ -31,3 +31,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true });
 }
+

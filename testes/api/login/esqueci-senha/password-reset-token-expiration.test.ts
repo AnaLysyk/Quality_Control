@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "fs/promises";
+﻿import { mkdtemp, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -58,3 +58,4 @@ describe("codigo de redefinicao enviado por e-mail", () => {
     await expect(consumePasswordResetToken(token)).resolves.toBeNull();
   });
 });
+

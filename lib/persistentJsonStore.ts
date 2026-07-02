@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
@@ -63,3 +63,4 @@ export async function writePersistentJson<T>(key: string, value: T): Promise<boo
     return false;
   }
 }
+

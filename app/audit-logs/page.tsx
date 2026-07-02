@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -12,3 +12,4 @@ export default function AuditLogsRedirectPage({ searchParams }: Props) {
   const qs = source ? `?source=${encodeURIComponent(source)}` : "";
   redirect(`/admin/audit-logs${qs}`);
 }
+

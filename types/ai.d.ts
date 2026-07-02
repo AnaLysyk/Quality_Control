@@ -1,1 +1,2 @@
-declare module 'ai';
+﻿declare module 'ai';
+

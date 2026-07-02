@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { emitBrainEvent } from "@/lib/brain/events";
 
@@ -29,7 +29,7 @@ async function getPrisma() {
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const url = new URL(req.url);
   const companyId = url.searchParams.get("companyId") ?? url.searchParams.get("companySlug");
@@ -66,15 +66,15 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body) return NextResponse.json({ message: "Body inválido" }, { status: 400 });
+  if (!body) return NextResponse.json({ message: "Body invÃ¡lido" }, { status: 400 });
 
   const companyId = String(body.companyId ?? body.companySlug ?? "").trim() || null;
   const projectId = String(body.projectId ?? "").trim() || null;
   const planId = String(body.planId ?? "").trim() || null;
-  const title = String(body.title ?? "Execução manual").trim();
+  const title = String(body.title ?? "ExecuÃ§Ã£o manual").trim();
   const source = String(body.source ?? "manual").trim();
   const status = normalizeRunStatus(body.status) ?? "pending";
 
@@ -110,14 +110,14 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body || !body.id) return NextResponse.json({ message: "id obrigatório" }, { status: 400 });
+  if (!body || !body.id) return NextResponse.json({ message: "id obrigatÃ³rio" }, { status: 400 });
 
   const prisma = await getPrisma();
   const existing = await prisma.testRun.findUnique({ where: { id: String(body.id) } });
-  if (!existing) return NextResponse.json({ message: "Run não encontrada" }, { status: 404 });
+  if (!existing) return NextResponse.json({ message: "Run nÃ£o encontrada" }, { status: 404 });
 
   const status = normalizeRunStatus(body.status);
 
@@ -159,3 +159,4 @@ export async function PATCH(req: Request) {
     durationSeconds: durationSeconds(run.startedAt, run.finishedAt),
   });
 }
+

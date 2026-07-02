@@ -1,4 +1,4 @@
-import { test, expect } from "../../../../../support/fixtures/test";
+﻿import { test, expect } from "../../../../../support/fixtures/test";
 import { autenticarUsuario, configurarUsuarioSimulado } from "../../../../../support/functions/ui/apoio/autenticar-usuario-teste";
 
 test("perfil suporte tecnico autentica via mock e acessa area global", async ({ page }) => {
@@ -18,3 +18,4 @@ test("perfil suporte tecnico autentica via mock e acessa area global", async ({ 
 
   await expect(page.getByRole("heading", { name: /Lista de empresas/i })).toBeVisible();
 });
+

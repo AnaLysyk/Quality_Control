@@ -1,4 +1,4 @@
-import {
+﻿import {
   canCreateCompanyUsersByScope,
   canViewCompanyUsersByScope,
   normalizeScopeRoleKey,
@@ -74,3 +74,4 @@ describe("user scope policy", () => {
     expect(policy.canLinkAcrossCompanies).toBe(true);
   });
 });
+

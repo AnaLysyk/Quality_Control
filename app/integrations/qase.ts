@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { mapQaseToKanban, type RawQaseEntity } from "@/utils/qaseMapper";
 import { KanbanData } from "@/types/kanban";
@@ -390,3 +390,4 @@ export async function getQaseRunKanban(project: string, runId: number, slug?: st
 export async function getRunDetails(project: string, runId: number, slug?: string) {
   return getQaseRunStats(project, runId, slug);
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AccessContext } from "@/core/session/session.store";
 import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios";
@@ -17,3 +17,4 @@ export async function validarAcessoUsuariosNoServidor(access: AccessContext | nu
     isGlobalAdmin: access.isGlobalAdmin,
   });
 }
+

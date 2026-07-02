@@ -1,4 +1,4 @@
-import { sanitizeBrianImpulse } from "./governance";
+﻿import { sanitizeBrianImpulse } from "./governance";
 import { stableId } from "./normalizer";
 import type { BrianDeadLetterImpulse, BrianImpulseEnvelope, BrianOutboxRecord } from "./types";
 
@@ -49,7 +49,7 @@ export function createBrianDeadLetterImpulse(input: {
 
 export const BRIAN_PRODUCTION_DDL = String.raw`
 -- Brian production hardening DDL.
--- Intencionalmente mantido fora de prisma/migrations até validação do rollout.
+-- Intencionalmente mantido fora de prisma/migrations atÃ© validaÃ§Ã£o do rollout.
 
 CREATE TABLE IF NOT EXISTS brian_outbox (
   id TEXT PRIMARY KEY,
@@ -124,3 +124,4 @@ CREATE TABLE IF NOT EXISTS brian_answer_traces (
 CREATE INDEX IF NOT EXISTS brian_answer_traces_user_idx ON brian_answer_traces(user_id);
 CREATE INDEX IF NOT EXISTS brian_answer_traces_snapshot_idx ON brian_answer_traces(context_snapshot_id);
 `;
+

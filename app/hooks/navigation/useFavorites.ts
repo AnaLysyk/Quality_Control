@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import type { CreateFavoriteInput, FavoriteItem } from "@/lib/navigation/favoritesTypes";
@@ -134,3 +134,4 @@ export function useFavorites() {
 
   return { favorites, loading, addFavorite, removeFavorite, isFavorite, getFavoriteByHref };
 }
+

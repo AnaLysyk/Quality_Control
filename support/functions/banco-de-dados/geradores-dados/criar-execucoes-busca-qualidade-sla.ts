@@ -139,3 +139,4 @@ export async function criarDefeitosForaSla() {
   alerts.push(newAlert);
   await fs.promises.writeFile(file, JSON.stringify(alerts, null, 2), "utf8");
 }
+

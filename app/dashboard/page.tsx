@@ -1,1 +1,2 @@
-export { default } from "../admin/dashboard/page";
+﻿export { default } from "../admin/dashboard/page";
+

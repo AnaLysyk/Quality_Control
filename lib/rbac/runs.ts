@@ -1,4 +1,4 @@
-import { getMockRole, resolveDefectRole, type Role } from "@/lib/rbac/defects";
+﻿import { getMockRole, resolveDefectRole, type Role } from "@/lib/rbac/defects";
 
 type AuthUser = {
   id: string;
@@ -18,3 +18,4 @@ export const canEditRun = (role: Role) => role === "leader_tc" || role === "empr
 export const canDeleteRun = (role: Role) => role === "leader_tc";
 export const canLinkDefect = (role: Role) => role === "leader_tc" || role === "empresa";
 export const getRunMockRole = getMockRole;
+

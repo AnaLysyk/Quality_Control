@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export const dynamic = "force-dynamic";
 
@@ -48,9 +48,9 @@ export default function AdminAlertsPage() {
         {loading && <div>Carregando...</div>}
         {error && <div className="text-red-600">{error}</div>}
         {!loading && !error && (
-          <div className="rounded-2xl border border-(--tc-border,#e5e7eb) bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm">
             {alerts.length === 0 ? (
-              <div className="text-sm text-(--tc-text-muted,#6b7280)">Nenhum alerta registrado.</div>
+              <div className="text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhum alerta registrado.</div>
             ) : (
               <ul className="space-y-3">
                 {alerts
@@ -60,7 +60,7 @@ export default function AdminAlertsPage() {
                     <li
                       key={`${alert.companySlug}-${alert.type}-${alert.timestamp}-${idx}`}
                       data-testid="quality-alert"
-                      className="rounded-lg border border-(--tc-border,#e5e7eb) bg-(--tc-surface,#ffffff) p-3 text-sm"
+                      className="rounded-lg border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-3 text-sm"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="font-semibold">{alert.message}</div>
@@ -74,8 +74,8 @@ export default function AdminAlertsPage() {
                           {alert.severity.toUpperCase()}
                         </span>
                       </div>
-                      <div className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">
-                        {alert.companySlug} • {alert.type} • {new Date(alert.timestamp).toLocaleString()}
+                      <div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">
+                        {alert.companySlug} â€¢ {alert.type} â€¢ {new Date(alert.timestamp).toLocaleString()}
                       </div>
                     </li>
                   ))}
@@ -87,3 +87,4 @@ export default function AdminAlertsPage() {
     </div>
   );
 }
+

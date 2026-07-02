@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import AutomationApiLab from "../AutomationApiLab";
 import { useAutomationModuleContext } from "../_components/AutomationModuleContext";
@@ -13,4 +13,5 @@ export default function AutomacoesApiLabPage() {
     />
   );
 }
+
 

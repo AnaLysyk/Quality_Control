@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getCompanyDefects } from "@/lib/companyDefects";
 
@@ -66,3 +66,4 @@ export async function getCompanyDefectsExport(slug: string, _period: string = "3
     externalUrl: defect.externalUrl || "",
   }));
 }
+

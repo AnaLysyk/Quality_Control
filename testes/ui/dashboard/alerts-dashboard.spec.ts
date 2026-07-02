@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
@@ -16,3 +16,4 @@ test("dashboard mostra leitura executiva e alertas quando existem", async ({ pag
   await validarDashboardAtualPronto(page);
   await expect(page.getByText(/Leitura executiva|Insights|Alertas recentes/i).first()).toBeVisible();
 });
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { listLocalCompanies } from "@/lib/auth/localStore";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 
@@ -17,3 +17,4 @@ export async function GET() {
   }));
   return NextResponse.json({ items }, { status: 200, headers: NO_STORE_HEADERS });
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 type Props = {
   value: string;
@@ -18,3 +18,4 @@ export function ClientSearchBar({ value, onChange }: Props) {
     </div>
   );
 }
+

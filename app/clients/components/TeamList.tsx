@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 type Member = {
   id: string;
@@ -34,7 +34,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
 
 export function TeamList({ members }: Props) {
   if (!members.length) {
-    return <p className="text-sm text-gray-600">Nenhum usuário vinculado.</p>;
+    return <p className="text-sm text-gray-600">Nenhum usuÃ¡rio vinculado.</p>;
   }
 
   return (
@@ -51,3 +51,4 @@ export function TeamList({ members }: Props) {
     </div>
   );
 }
+

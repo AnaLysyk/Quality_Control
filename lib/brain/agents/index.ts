@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { qaAgentConfig } from "./qaAgent";
 import { debugAgentConfig } from "./debugAgent";
@@ -26,7 +26,7 @@ export const AGENT_REGISTRY: Record<AgentMode, AgentConfig> = {
 
 /**
  * Detecta automaticamente o agente mais adequado para uma pergunta.
- * Prioridade: playwright > debug > memory > qa (qa é o padrão mais abrangente).
+ * Prioridade: playwright > debug > memory > qa (qa Ã© o padrÃ£o mais abrangente).
  */
 export function detectAgentMode(message: string): AgentMode {
   const lower = message.toLowerCase();
@@ -41,16 +41,16 @@ export function detectAgentMode(message: string): AgentMode {
   const debugTerms = [
     "erro", "bug", "falha", "error", "exception", "crash", "causa raiz",
     "porque falhou", "por que falhou", "log", "stack trace", "debug",
-    "não funciona", "nao funciona", "quebrou", "quebrando", "regressão", "regressao",
+    "nÃ£o funciona", "nao funciona", "quebrou", "quebrando", "regressÃ£o", "regressao",
     "incidente", "postmortem", "rastrear", "rastreamento", "investigar",
-    "o que mudou", "quando parou", "por que está errado",
+    "o que mudou", "quando parou", "por que estÃ¡ errado",
   ];
 
   const memoryTerms = [
-    "decisão", "decisao", "memória", "memoria", "histórico", "historico",
-    "regra", "padrão", "padrao", "por que foi feito", "arquitetura",
-    "contexto", "documentar", "registrar decisão", "o que foi decidido",
-    "por que existe", "origem", "motivação", "motivacao", "knowledge",
+    "decisÃ£o", "decisao", "memÃ³ria", "memoria", "histÃ³rico", "historico",
+    "regra", "padrÃ£o", "padrao", "por que foi feito", "arquitetura",
+    "contexto", "documentar", "registrar decisÃ£o", "o que foi decidido",
+    "por que existe", "origem", "motivaÃ§Ã£o", "motivacao", "knowledge",
     "base de conhecimento", "o que sabemos", "o que aprendi",
   ];
 
@@ -59,3 +59,4 @@ export function detectAgentMode(message: string): AgentMode {
   if (memoryTerms.some((t) => lower.includes(t))) return "memory";
   return "qa";
 }
+

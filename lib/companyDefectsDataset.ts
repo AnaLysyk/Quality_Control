@@ -1,4 +1,4 @@
-import { listApplications, syncCompanyApplications } from "@/lib/applicationsStore";
+﻿import { listApplications, syncCompanyApplications } from "@/lib/applicationsStore";
 import { findLocalCompanyBySlug } from "@/lib/auth/localStore";
 import { mapCompanyRecord } from "@/lib/companyRecord";
 import { getCompanyDefects, type IntegratedProjectAccessStatus } from "@/lib/companyDefects";
@@ -307,3 +307,4 @@ export async function getCompanyDefectsDataset(
 
   return value;
 }
+

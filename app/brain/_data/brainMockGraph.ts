@@ -1,4 +1,4 @@
-import type { BrainEdge, BrainGraphSummary, BrainNode, BuiltBrainGraph } from "../_types/brain.types";
+﻿import type { BrainEdge, BrainGraphSummary, BrainNode, BuiltBrainGraph } from "../_types/brain.types";
 
 export const brainMockNodes: BrainNode[] = [
   {
@@ -39,11 +39,11 @@ export const brainMockNodes: BrainNode[] = [
     companyName: "Testing Company",
     projectId: "project_qc",
     projectName: "Quality Control",
-    label: "Solicitações",
+    label: "SolicitaÃ§Ãµes",
     description: "Pedidos de acesso, revisao, decisao, e-mails e logs administrativos.",
     status: "ok",
     size: "lg",
-    information: "Solicitações conectam pessoas, perfis, status, decisões e evidências de auditoria.",
+    information: "SolicitaÃ§Ãµes conectam pessoas, perfis, status, decisÃµes e evidÃªncias de auditoria.",
     actions: ["Abrir modulo relacionado", "Mostrar nos de solicitacoes"],
   },
   {
@@ -54,7 +54,7 @@ export const brainMockNodes: BrainNode[] = [
     companyName: "Testing Company",
     projectId: "project_qc",
     projectName: "Quality Control",
-    label: "Solicitação Barbara",
+    label: "SolicitaÃ§Ã£o Barbara",
     description: "Pedido de acesso para suporte tecnico recusado apos revisao.",
     status: "warning",
     size: "md",
@@ -172,7 +172,7 @@ export const brainMockNodes: BrainNode[] = [
     companyName: "Testing Company",
     projectId: "project_qc",
     projectName: "Quality Control",
-    label: "Comentário inicial",
+    label: "ComentÃ¡rio inicial",
     description: "Relato inicial do problema com contexto da validacao.",
     status: "ok",
     size: "sm",
@@ -198,7 +198,7 @@ export const brainMockNodes: BrainNode[] = [
     companyName: "Testing Company",
     projectId: "project_qc",
     projectName: "Quality Control",
-    label: "Automação",
+    label: "AutomaÃ§Ã£o",
     description: "Casos automatizados, scripts, execucoes, resultados e falhas.",
     status: "pending",
     size: "lg",
@@ -310,7 +310,7 @@ export const brainMockNodes: BrainNode[] = [
     companyName: "Testing Company",
     projectId: "project_qc",
     projectName: "Quality Control",
-    label: "Permissões",
+    label: "PermissÃµes",
     description: "Matriz efetiva de acesso por modulo, perfil e empresa.",
     status: "pending",
     size: "lg",
@@ -410,3 +410,4 @@ export function buildMockBrainGraph(): BuiltBrainGraph {
     auditLogs: [],
   };
 }
+

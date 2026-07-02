@@ -1,4 +1,4 @@
-import { PrismaPg } from "@prisma/adapter-pg";
+﻿import { PrismaPg } from "@prisma/adapter-pg";
 
 let adapter: PrismaPg | undefined;
 const DEPRECATED_SSL_MODES = new Set(["prefer", "require", "verify-ca"]);
@@ -78,3 +78,4 @@ export function getPrismaClientOptions(
     adapter: getPrismaAdapter(),
   };
 }
+

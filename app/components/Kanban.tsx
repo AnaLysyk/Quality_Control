@@ -24,8 +24,8 @@ const columns: {
   {
     key: "fail",
     label: "Fail",
-    bgClass: "bg-(--tc-accent-soft,rgba(239,0,1,0.12))",
-    borderClass: "border-(--tc-accent,#ef0001)",
+    bgClass: "bg-[var(--tc-accent-soft,rgba(239,0,1,0.12)])",
+    borderClass: "border-[var(--tc-accent,#ef0001)]",
     accentClass: "bg-rose-500",
   },
   {
@@ -39,7 +39,7 @@ const columns: {
     key: "notRun",
     label: "Not Run",
     bgClass: "bg-[rgba(15,22,38,0.08)]",
-    borderClass: "border-(--tc-surface-muted,#0f1626)",
+    borderClass: "border-[var(--tc-surface-muted,#0f1626)]",
     accentClass: "bg-slate-500",
   },
 ];
@@ -582,7 +582,7 @@ export default function Kanban({
           >
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-(--tc-text-muted,#6b7280)">Novo caso</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted,#6b7280)]">Novo caso</p>
                 <h3 className="text-lg font-semibold text-(--page-text,#0b1a3c)">Adicionar caso manual</h3>
               </div>
               <button
@@ -665,7 +665,7 @@ export default function Kanban({
                 type="button"
                 onClick={submitAdd}
                 disabled={savingAdd}
-                className="rounded-full bg-(--tc-accent,#ef0001) px-4 py-2 text-sm font-semibold text-white hover:bg-(--tc-accent-hover,#c80001) disabled:opacity-60"
+                className="rounded-full bg-[var(--tc-accent,#ef0001)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--tc-accent-hover,#c80001)] disabled:opacity-60"
               >
                 {savingAdd ? "Salvando..." : "Adicionar"}
               </button>
@@ -702,7 +702,7 @@ export default function Kanban({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por ID, título, link ou bug"
-              className="w-64 max-w-full rounded-full border border-(--tc-border,#e5e7eb) bg-white px-4 py-1.5 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-(--tc-accent,#ef0001)"
+              className="w-64 max-w-full rounded-full border border-[var(--tc-border,#e5e7eb)] bg-white px-4 py-1.5 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-(--tc-accent,#ef0001)"
             />
             {searchTerm && (
               <button
@@ -723,8 +723,8 @@ export default function Kanban({
             onClick={() => setStatusFilter("all")}
             className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] transition ${
               statusFilter === "all"
-                ? "bg-(--tc-accent,#ef0001) text-white shadow-sm"
-                : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) hover:border-slate-400"
+                ? "bg-[var(--tc-accent,#ef0001)] text-white shadow-sm"
+                : "border border-[var(--tc-border,#e5e7eb)] text-[var(--tc-text-muted,#6b7280)] hover:border-slate-400"
             }`}
           >
             Todos ({totalCount})
@@ -736,8 +736,8 @@ export default function Kanban({
               onClick={() => setStatusFilter(statusFilter === column.key ? "all" : column.key)}
               className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] transition ${
                 statusFilter === column.key
-                  ? "bg-(--tc-primary-dark,#000f2e) text-white shadow-sm"
-                  : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) hover:border-slate-400"
+                  ? "bg-[var(--tc-primary-dark,#000f2e)] text-white shadow-sm"
+                  : "border border-[var(--tc-border,#e5e7eb)] text-[var(--tc-text-muted,#6b7280)] hover:border-slate-400"
               }`}
             >
               {column.label} ({totals[column.key]})
@@ -749,7 +749,7 @@ export default function Kanban({
             className={`rounded-full px-3 py-1 text-xs font-semibold tracking-[0.15em] transition ${
               showOnlyMissingEvidence
                 ? "bg-amber-500 text-white shadow-sm"
-                : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) hover:border-amber-400 hover:text-amber-600"
+                : "border border-[var(--tc-border,#e5e7eb)] text-[var(--tc-text-muted,#6b7280)] hover:border-amber-400 hover:text-amber-600"
             }`}
           >
             Sem evidência
@@ -760,7 +760,7 @@ export default function Kanban({
             className={`rounded-full px-3 py-1 text-xs font-semibold tracking-[0.15em] transition ${
               showOnlyMissingBug
                 ? "bg-rose-500 text-white shadow-sm"
-                : "border border-(--tc-border,#e5e7eb) text-(--tc-text-muted,#6b7280) hover:border-rose-400 hover:text-rose-600"
+                : "border border-[var(--tc-border,#e5e7eb)] text-[var(--tc-text-muted,#6b7280)] hover:border-rose-400 hover:text-rose-600"
             }`}
           >
             Sem bug
@@ -782,7 +782,7 @@ export default function Kanban({
         </div>
       )}
       {hasItems && !hasFilteredItems && (
-        <div className="col-span-full text-sm text-(--tc-text-muted,#6b7280) bg-[#f8fafc] border border-(--surface-border,#e5e7eb) rounded-xl px-3 py-2">
+        <div className="col-span-full text-sm text-[var(--tc-text-muted,#6b7280)] bg-[#f8fafc] border border-(--surface-border,#e5e7eb) rounded-xl px-3 py-2">
           Nenhum caso encontrado com os filtros atuais.
         </div>
       )}
@@ -792,7 +792,7 @@ export default function Kanban({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="text-xs text-white bg-(--tc-primary-dark,#000f2e) px-3 py-2 rounded hover:bg-(--tc-primary,#011848) transition"
+              className="text-xs text-white bg-[var(--tc-primary-dark,#000f2e)] px-3 py-2 rounded hover:bg-[var(--tc-primary,#011848)] transition"
             >
               Importar CSV
             </button>
@@ -812,7 +812,7 @@ export default function Kanban({
             <button
               type="button"
               onClick={() => handleAdd("notRun")}
-              className="text-xs text-white bg-(--tc-accent,#ef0001) px-3 py-2 rounded hover:bg-(--tc-accent-hover,#c80001) transition"
+              className="text-xs text-white bg-[var(--tc-accent,#ef0001)] px-3 py-2 rounded hover:bg-[var(--tc-accent-hover,#c80001)] transition"
             >
               + Adicionar Caso
             </button>
@@ -824,17 +824,17 @@ export default function Kanban({
           data-testid="export-csv"
           disabled={exporting}
           aria-disabled={exporting}
-          className="text-xs text-white bg-(--tc-primary-dark,#000f2e) px-3 py-2 rounded hover:bg-(--tc-primary,#011848) transition disabled:opacity-60"
+          className="text-xs text-white bg-[var(--tc-primary-dark,#000f2e)] px-3 py-2 rounded hover:bg-[var(--tc-primary,#011848)] transition disabled:opacity-60"
         >
           Exportar CSV
         </button>
         {exporting && (
-          <span data-testid="export-loading" className="text-xs text-(--tc-text-muted)">
+          <span data-testid="export-loading" className="text-xs text-[var(--tc-text-muted)]">
             Exportando...
           </span>
         )}
         {!exporting && exported && (
-          <span data-testid="export-success" className="text-xs text-(--tc-text-muted)">
+          <span data-testid="export-success" className="text-xs text-[var(--tc-text-muted)]">
             Exportado
           </span>
         )}
@@ -856,7 +856,7 @@ export default function Kanban({
             data-drop-target={column.key}
           >
             <h2 className="font-extrabold text-xl mb-4 text-(--page-text,#0b1a3c) tracking-wide">
-              {column.label} <span className="opacity-70 text-(--tc-text-secondary,#4b5563)">({countLabel})</span>
+              {column.label} <span className="opacity-70 text-[var(--tc-text-secondary,#4b5563)]">({countLabel})</span>
             </h2>
             {column.key === "pass" && editable && allowStatusChange && (
               <span className="sr-only">Erro no login</span>
@@ -864,7 +864,7 @@ export default function Kanban({
 
             <div className="space-y-4 max-h-90 overflow-y-auto pr-2 custom-scroll">
               {filteredList.length === 0 && (
-                <p className="text-(--tc-text-muted,#6b7280) text-sm italic">Nenhum caso</p>
+                <p className="text-[var(--tc-text-muted,#6b7280)] text-sm italic">Nenhum caso</p>
               )}
 
               {filteredList.map((item, index) => {
@@ -902,7 +902,7 @@ export default function Kanban({
                         type="button"
                         data-hide-on-export="true"
                         onClick={(e) => { e.stopPropagation(); onCardClick(item, column.key); }}
-                        className={`absolute top-3 text-slate-400 hover:text-(--tc-accent,#ef0001) transition ${editable && !item.fromApi ? "right-9" : "right-3"}`}
+                        className={`absolute top-3 text-slate-400 hover:text-[var(--tc-accent,#ef0001)] transition ${editable && !item.fromApi ? "right-9" : "right-3"}`}
                         aria-label="Ver detalhes do caso"
                         title="Ver detalhes"
                       >
@@ -954,7 +954,7 @@ export default function Kanban({
                           href={qaseCaseLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-(--tc-accent,#ef0001)"
+                          className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-[var(--tc-accent,#ef0001)]"
                         >
                           <FiExternalLink size={14} />
                           Qase
@@ -968,7 +968,7 @@ export default function Kanban({
                           href={evidenceLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-(--tc-accent,#ef0001)"
+                          className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-[var(--tc-accent,#ef0001)]"
                           title="Abrir evidência"
                         >
                           <FiExternalLink size={14} />
@@ -984,7 +984,7 @@ export default function Kanban({
                             href={bugLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-(--tc-accent,#ef0001)"
+                            className="inline-flex items-center gap-1 font-semibold text-slate-700 hover:text-[var(--tc-accent,#ef0001)]"
                             title="Abrir bug"
                           >
                             <FiExternalLink size={14} />
@@ -1003,7 +1003,7 @@ export default function Kanban({
                         <button
                           type="button"
                           onClick={() => handleEditClick(column.key, item)}
-                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                         >
                           Editar
                         </button>
@@ -1016,7 +1016,7 @@ export default function Kanban({
                             setEditingLinkId(itemKey);
                             setEditingLinkValue(item.link ?? "");
                           }}
-                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                         >
                           Evidência
                         </button>
@@ -1029,7 +1029,7 @@ export default function Kanban({
                             setEditingBugId(itemKey);
                             setEditingBugValue(item.bug ?? "");
                           }}
-                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                         >
                           Bug
                         </button>
@@ -1041,7 +1041,7 @@ export default function Kanban({
                           data-testid="move-to-pass"
                           data-card-move-testid="card-move-to-pass"
                           onClick={() => moveItem(column.key, item, "pass")}
-                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600 transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
                         >
                           Mover p/ Pass
                         </button>
@@ -1161,6 +1161,7 @@ export default function Kanban({
     </div>
   );
 }
+
 
 
 

@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+﻿import type { Page } from "@playwright/test";
 
 export function localizarElementosEsqueciSenha(page: Page) {
   return {
@@ -8,3 +8,4 @@ export function localizarElementosEsqueciSenha(page: Page) {
     voltarAoLogin: page.getByRole("link", { name: /voltar|login/i }),
   };
 }
+

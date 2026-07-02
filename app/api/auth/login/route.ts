@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
@@ -44,12 +44,12 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => null);
     const login = typeof body?.login === "string" ? body.login.trim() : "";
     const userInput = typeof body?.user === "string" ? body.user.trim() : "";
-    const usuarioInput = typeof body?.usuário === "string" ? body.usuário.trim() : "";
+    const usuarioInput = typeof body?.usuÃ¡rio === "string" ? body.usuÃ¡rio.trim() : "";
     const password = typeof body?.password === "string" ? body.password : "";
     const identifier = userInput || usuarioInput || login;
 
     if (!identifier || !password) {
-      return NextResponse.json({ error: "Usuário e senha obrigatorios" }, { status: 400 });
+      return NextResponse.json({ error: "UsuÃ¡rio e senha obrigatorios" }, { status: 400 });
     }
 
     const user = await findLocalUserByEmailOrId(identifier);
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
       },
     });
     setCookie(res, "session_id", sessionId, refreshToken ? accessTtlSeconds : SESSION_TTL_SECONDS, secureCookies);
-    // Sempre expõe um token para manter compatibilidade no middleware.
+    // Sempre expÃµe um token para manter compatibilidade no middleware.
     setCookie(res, "access_token", tokenToExpose, accessTtlSeconds, secureCookies);
     setCookie(res, "auth_token", tokenToExpose, accessTtlSeconds, secureCookies);
     if (refreshToken) {
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
         secureCookies,
       );
     } else {
-      // Limpa o contexto salvo quando o login não especifica empresa.
+      // Limpa o contexto salvo quando o login nÃ£o especifica empresa.
       res.cookies.set("active_company_slug", "", {
         httpOnly: true,
         sameSite: "lax",
@@ -183,3 +183,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erro interno: " + message }, { status: 500 });
   }
 }
+

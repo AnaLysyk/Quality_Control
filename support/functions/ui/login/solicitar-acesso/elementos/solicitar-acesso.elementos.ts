@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+﻿import type { Page } from "@playwright/test";
 
 export const elementosSolicitarAcesso = {
   botaoAbrirFormulario: "open-request-access-form-button",
@@ -26,3 +26,4 @@ export function localizarElementosSolicitarAcesso(page: Page) {
     ]),
   ) as Record<keyof typeof elementosSolicitarAcesso, ReturnType<Page["getByTestId"]>>;
 }
+

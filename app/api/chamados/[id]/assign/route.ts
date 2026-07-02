@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { addAuditLogSafe } from "@/data/auditLogRepository";
 import { getTicketById, updateTicket } from "@/lib/ticketsStore";
@@ -10,7 +10,7 @@ import { attachAssigneeToTicket } from "@/lib/ticketsPresenter";
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
@@ -20,14 +20,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
   const current = await getTicketById(id);
   if (!current) {
-    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado nÃ£o encontrado" }, { status: 404 });
   }
   if (!canAssignTicket(user, current)) {
-    return NextResponse.json({ error: "Sem permissão para atribuir" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o para atribuir" }, { status: 403 });
   }
 
   if (body?.assignedToUserId === undefined) {
-    return NextResponse.json({ error: "Responsável não informado" }, { status: 400 });
+    return NextResponse.json({ error: "ResponsÃ¡vel nÃ£o informado" }, { status: 400 });
   }
 
   const updated = await updateTicket(id, {
@@ -36,7 +36,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   });
 
   if (!updated) {
-    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado nÃ£o encontrado" }, { status: 404 });
   }
 
   appendTicketEvent({
@@ -73,3 +73,4 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
   const enriched = await attachAssigneeToTicket(updated);
   return NextResponse.json({ item: enriched }, { status: 200 });
 }
+

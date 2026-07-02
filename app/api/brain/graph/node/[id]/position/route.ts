@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { updateNodeMetadata } from "@/lib/brain";
 import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
@@ -53,3 +53,4 @@ export async function PATCH(
     return NextResponse.json({ error: "Erro ao atualizar posicao do no" }, { status: 500 });
   }
 }
+

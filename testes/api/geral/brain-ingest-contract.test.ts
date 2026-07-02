@@ -1,4 +1,4 @@
-jest.mock("@/lib/brain/access", () => ({
+﻿jest.mock("@/lib/brain/access", () => ({
   resolveBrainAccess: jest.fn(),
 }));
 
@@ -95,3 +95,4 @@ describe("brain ingest contract", () => {
     expect(addMemory).toHaveBeenCalledTimes(1);
   });
 });
+

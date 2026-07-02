@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
@@ -13,7 +13,7 @@ import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 const cards = [
   {
     title: "Empresa ativa",
-    description: "Entenda onde você está trabalhando agora e acesse o hub da empresa.",
+    description: "Entenda onde vocÃª estÃ¡ trabalhando agora e acesse o hub da empresa.",
     href: "/empresas",
     badge: "Empresa",
   },
@@ -93,7 +93,7 @@ export default function HomeContent() {
 
   if (authLoading || clientsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl text-(--tc-text-muted,#6b7280)">
+      <div className="min-h-screen flex items-center justify-center text-xl text-[var(--tc-text-muted,#6b7280)]">
         Carregando...
       </div>
     );
@@ -103,24 +103,24 @@ export default function HomeContent() {
     <div className="min-h-screen bg-linear-to-b from-(--page-bg,#f8f8fb) to-(--page-bg,#f0f4ff)">
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-10">
         <header className="rounded-[28px] bg-white/80 p-8 shadow-xl text-center">
-          <div className="text-sm uppercase tracking-[0.6em] text-(--tc-accent,#ef0001) flex items-center justify-center gap-2">
+          <div className="text-sm uppercase tracking-[0.6em] text-[var(--tc-accent,#ef0001)] flex items-center justify-center gap-2">
             <span>Testing Company</span>
           </div>
           <h1 className="mt-4 text-4xl font-extrabold text-(--page-text,#0b1a3c)">Quality Control</h1>
-          <p className="mt-3 text-sm text-(--tc-text-secondary,#4b5563) max-w-3xl mx-auto">
-            Esta tela não administra o sistema. Ela mostra quem você é, onde está e no que está trabalhando agora.
+          <p className="mt-3 text-sm text-[var(--tc-text-secondary,#4b5563)] max-w-3xl mx-auto">
+            Esta tela nÃ£o administra o sistema. Ela mostra quem vocÃª Ã©, onde estÃ¡ e no que estÃ¡ trabalhando agora.
           </p>
           {isLoggedOut && (
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center rounded-xl bg-(--tc-accent,#ef0001) px-6 py-3 text-xs font-semibold uppercase tracking-[0.32em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.25)] transition hover:-translate-y-0.5 hover:bg-(--tc-accent-hover,#c80001)"
+                className="inline-flex items-center justify-center rounded-xl bg-[var(--tc-accent,#ef0001)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.32em] text-white shadow-[0_14px_30px_rgba(239,0,1,0.25)] transition hover:-translate-y-0.5 hover:bg-[var(--tc-accent-hover,#c80001)]"
               >
                 Entrar
               </Link>
               <Link
                 href="/login/access-request"
-                className="inline-flex items-center justify-center rounded-xl border border-(--tc-border,#e5e7eb) bg-white px-6 py-3 text-xs font-semibold uppercase tracking-[0.32em] text-(--page-text,#0b1a3c) shadow-sm transition hover:-translate-y-0.5 hover:border-(--tc-accent,#ef0001) hover:text-(--tc-accent,#ef0001)"
+                className="inline-flex items-center justify-center rounded-xl border border-[var(--tc-border,#e5e7eb)] bg-white px-6 py-3 text-xs font-semibold uppercase tracking-[0.32em] text-(--page-text,#0b1a3c) shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]"
               >
                 Solicitar acesso
               </Link>
@@ -131,7 +131,7 @@ export default function HomeContent() {
         {isLoggedOut ? (
           <section className="rounded-[28px] bg-white/90 p-8 shadow-xl text-center">
             <h2 className="text-2xl font-semibold text-(--page-text,#0b1a3c)">Acesse sua conta</h2>
-            <p className="mt-3 text-sm text-(--tc-text-secondary,#4b5563)">
+            <p className="mt-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
               Faca login para ver empresas, dashboards e acompanhar as entregas em tempo real.
             </p>
           </section>
@@ -140,7 +140,7 @@ export default function HomeContent() {
             <section className="rounded-[28px] bg-white/90 p-8 shadow-xl">
               <CompanySelector
                 title="Empresas vinculadas"
-                description="Selecione a empresa para ver dashboards, relatórios e executar ações específicas."
+                description="Selecione a empresa para ver dashboards, relatÃ³rios e executar aÃ§Ãµes especÃ­ficas."
                 buildHref={(company) =>
                   buildCompanyPathForAccess(company.clientSlug, "home", {
                     isGlobalAdmin: user?.isGlobalAdmin === true,
@@ -164,12 +164,12 @@ export default function HomeContent() {
                 <Link
                   key={card.title}
                   href={card.href}
-                  className="group flex flex-col gap-4 rounded-3xl border border-(--tc-border) bg-white/90 p-6 shadow-xl transition hover:-translate-y-1 hover:shadow-[0_30px_60px_rgba(15,23,42,0.25)]"
+                  className="group flex flex-col gap-4 rounded-3xl border border-[var(--tc-border)] bg-white/90 p-6 shadow-xl transition hover:-translate-y-1 hover:shadow-[0_30px_60px_rgba(15,23,42,0.25)]"
                 >
-                  <span className="text-xs uppercase tracking-[0.4em] text-(--tc-text-muted,#6b7280)">{card.badge}</span>
+                  <span className="text-xs uppercase tracking-[0.4em] text-[var(--tc-text-muted,#6b7280)]">{card.badge}</span>
                   <h2 className="text-xl font-semibold text-(--page-text,#0b1a3c)">{card.title}</h2>
-                  <p className="text-sm text-(--tc-text-secondary,#4b5563)">{card.description}</p>
-                  <span className="mt-auto inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.4em] text-(--tc-accent,#ef0001)">
+                  <p className="text-sm text-[var(--tc-text-secondary,#4b5563)]">{card.description}</p>
+                  <span className="mt-auto inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.4em] text-[var(--tc-accent,#ef0001)]">
                     Ir para
                     <FiArrowRight size={14} />
                   </span>
@@ -182,3 +182,4 @@ export default function HomeContent() {
     </div>
   );
 }
+

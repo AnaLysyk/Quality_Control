@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import { resolveBrainAccess } from "@/lib/brain/access";
 import {
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
   const action = body.action;
   if (!action) {
-    return NextResponse.json({ error: "action é obrigatório" }, { status: 400 });
+    return NextResponse.json({ error: "action Ã© obrigatÃ³rio" }, { status: 400 });
   }
 
   try {
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     if (action === "createEvent") {
       if (!accessResult.context.canManage) {
-        return NextResponse.json({ error: "Sem permissão para createEvent" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissÃ£o para createEvent" }, { status: 403 });
       }
       const result = await brainCreateEvent({
         eventType: String(body.eventType ?? "custom.event"),
@@ -63,9 +63,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ result }, { status: 201 });
     }
 
-    return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
+    return NextResponse.json({ error: "AÃ§Ã£o invÃ¡lida" }, { status: 400 });
   } catch (error) {
     console.error("[brain/internal] POST error:", error);
     return NextResponse.json({ error: "Erro ao executar API interna do Brain" }, { status: 500 });
   }
 }
+

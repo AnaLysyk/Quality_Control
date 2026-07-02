@@ -39,3 +39,4 @@ main().catch((error) => {
   console.error("[LOOKUP TEST] ERRO:", error);
   process.exitCode = 1;
 });
+

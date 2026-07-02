@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import { dirname, resolve } from "path";
@@ -159,3 +159,4 @@ export function resolvePermissionsFromDefaults(
 ) {
   return applyPermissionOverride(defaults, override);
 }
+

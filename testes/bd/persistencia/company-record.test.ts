@@ -1,4 +1,4 @@
-import { buildCompanyUpdatePatch, mapCompanyRecord } from "@/lib/companyRecord";
+﻿import { buildCompanyUpdatePatch, mapCompanyRecord } from "@/lib/companyRecord";
 
 describe("companyRecord persistence helpers", () => {
   it("preserves saved integrations from the integrations array when saving unrelated company details", () => {
@@ -164,3 +164,4 @@ describe("companyRecord persistence helpers", () => {
     expect(mapped.notifications_fanout_enabled).toBe(true);
   });
 });
+

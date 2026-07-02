@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { NextResponse } from "next/server";
 
@@ -110,3 +110,4 @@ export function apiFail(
   res.headers.set("x-request-id", requestId);
   return res;
 }
+

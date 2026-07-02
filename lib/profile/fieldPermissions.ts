@@ -1,6 +1,6 @@
-/**
- * Profile Engine — helpers de permissão
- * Verifica se campo/ação é permitido
+﻿/**
+ * Profile Engine â€” helpers de permissÃ£o
+ * Verifica se campo/aÃ§Ã£o Ã© permitido
  */
 
 import type {
@@ -11,7 +11,7 @@ import type {
 } from "./types";
 
 /**
- * Define quais campos são editáveis por modo
+ * Define quais campos sÃ£o editÃ¡veis por modo
  */
 export const COMPANY_PROFILE_FIELDS: ProfileFieldPermission[] = [
   {
@@ -30,7 +30,7 @@ export const COMPANY_PROFILE_FIELDS: ProfileFieldPermission[] = [
   },
   {
     field: "address",
-    label: "Endereço",
+    label: "EndereÃ§o",
     visibleIn: ["self", "view", "edit", "admin-edit"],
     editableIn: ["edit", "admin-edit"],
     required: false,
@@ -107,7 +107,7 @@ export const USER_PROFILE_FIELDS: ProfileFieldPermission[] = [
 ];
 
 /**
- * Verifica se campo é visível
+ * Verifica se campo Ã© visÃ­vel
  */
 export function isFieldVisible(
   field: string,
@@ -120,7 +120,7 @@ export function isFieldVisible(
 }
 
 /**
- * Verifica se campo é editável
+ * Verifica se campo Ã© editÃ¡vel
  */
 export function isFieldEditable(
   field: string,
@@ -132,7 +132,7 @@ export function isFieldEditable(
   if (!fieldDef) return false;
   if (!fieldDef.editableIn.includes(mode)) return false;
 
-  // Se requer permissão específica
+  // Se requer permissÃ£o especÃ­fica
   if (fieldDef.requiresPermission && permissions) {
     const key = fieldDef.requiresPermission as keyof ProfilePermissions;
     if (typeof permissions[key] === "boolean" && !permissions[key]) {
@@ -144,7 +144,7 @@ export function isFieldEditable(
 }
 
 /**
- * Verifica se ação é permitida
+ * Verifica se aÃ§Ã£o Ã© permitida
  */
 export function canPerformAction(
   action:
@@ -201,7 +201,7 @@ export function canPerformAction(
 }
 
 /**
- * Verifica se há qualquer permissão de edição
+ * Verifica se hÃ¡ qualquer permissÃ£o de ediÃ§Ã£o
  */
 export function hasAnyEditPermission(context: ProfileRuntimeContext): boolean {
   return (
@@ -214,8 +214,9 @@ export function hasAnyEditPermission(context: ProfileRuntimeContext): boolean {
 }
 
 /**
- * Verifica se modo permite edição
+ * Verifica se modo permite ediÃ§Ã£o
  */
 export function isModeEditable(mode: ProfileMode): boolean {
   return mode === "edit" || mode === "admin-edit" || mode === "create";
 }
+

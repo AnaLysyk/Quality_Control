@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { buildManualAutomationIndex } from "@/lib/automations/manualLinks";
@@ -205,3 +205,4 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ ok: Boolean(updatedPlan) });
 }
+

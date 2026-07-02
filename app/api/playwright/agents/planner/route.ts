@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
@@ -22,7 +22,7 @@ const PlannerSchema = z.object({
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = PlannerSchema.safeParse(body);
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   const allowed = resolveAutomationAllowedCompanySlugs(user);
   const access = resolveAutomationAccess(user, allowed.length);
   if (!access.canOpen || (!access.hasGlobalCompanyVisibility && !allowed.includes(companySlug)))
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
 
   const apiKey = requireAiApiKey();
   const openai = createOpenAI({ apiKey });
@@ -94,3 +94,4 @@ async function failTask(taskId: string, error: string) {
     [error, taskId],
   );
 }
+

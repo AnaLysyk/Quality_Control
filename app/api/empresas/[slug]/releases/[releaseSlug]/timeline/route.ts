@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getReleaseTimeline } from "@/lib/releaseTimeline";
 
 export async function GET(_req: Request, context: { params: Promise<{ slug: string; releaseSlug: string }> }) {
@@ -6,3 +6,4 @@ export async function GET(_req: Request, context: { params: Promise<{ slug: stri
   const timeline = await getReleaseTimeline(slug, releaseSlug);
   return NextResponse.json(timeline);
 }
+

@@ -1,4 +1,4 @@
-import type { ClientCreateRequest } from "@/contracts/client";
+﻿import type { ClientCreateRequest } from "@/contracts/client";
 import type { LocalAuthCompany } from "@/lib/auth/localStore";
 import { maskQaseToken, maskStoredSecret } from "@/lib/qaseTokenMask";
 
@@ -341,3 +341,4 @@ export function buildCompanyUpdatePatch(
     nextJiraApiToken,
   };
 }
+

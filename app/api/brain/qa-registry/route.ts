@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 import {
   getBrainQaSummary,
@@ -31,3 +31,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Erro ao carregar registry QA do Brain" }, { status: 500 });
   }
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -272,3 +272,4 @@ function getMimeExtension(mimeType: string | null): string {
 
   return mimeMap[mimeType] || "bin";
 }
+

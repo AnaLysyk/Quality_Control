@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomUUID } from "crypto";
 import { mkdir, readFile, appendFile } from "fs/promises";
@@ -6,16 +6,16 @@ import { dirname, join } from "path";
 
 const STORE_PATH = process.env.BRAIN_EMAIL_FLOW_FILE || join(process.cwd(), "data", "brain-email-flow.jsonl");
 const ACCESS_REQUEST_SUBJECT_HINTS = [
-  "solicitação de acesso",
+  "solicitaÃ§Ã£o de acesso",
   "solicitacao de acesso",
   "acesso empresarial",
-  "usuário da empresa",
+  "usuÃ¡rio da empresa",
   "usuario da empresa",
-  "usuário tc",
+  "usuÃ¡rio tc",
   "usuario tc",
-  "líder tc",
+  "lÃ­der tc",
   "lider tc",
-  "suporte técnico",
+  "suporte tÃ©cnico",
   "suporte tecnico",
 ];
 
@@ -99,7 +99,7 @@ function extractAccessKey(html: string, text?: string | null) {
   }
 
   const content = `${html}\n${text ?? ""}`;
-  const explicitCode = content.match(/Código de consulta[^\w]{1,80}([a-f0-9]{16,80})/i)?.[1];
+  const explicitCode = content.match(/CÃ³digo de consulta[^\w]{1,80}([a-f0-9]{16,80})/i)?.[1];
   if (explicitCode) return explicitCode;
   return content.match(/\b[a-f0-9]{32,80}\b/i)?.[0] ?? null;
 }
@@ -199,3 +199,4 @@ export async function listBrainEmailFlow(limit = 200) {
 export function isAccessRequestEmail(entry: BrainEmailFlowEntry) {
   return entry.kind.startsWith("access_request.");
 }
+

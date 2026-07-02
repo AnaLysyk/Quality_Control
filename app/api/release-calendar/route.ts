@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import {
   getReleaseCalendarModel,
@@ -234,3 +234,4 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ event, notification }, { status: 200, headers: NO_STORE_HEADERS });
 }
+

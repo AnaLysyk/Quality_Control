@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ticket-specific parsing, inference and template logic shared across
  * createTicket and draftTestCase tools.
  */
@@ -8,7 +8,7 @@ import type { AssistantScreenContext } from "../types";
 import { compactMultiline, normalizeSearch } from "../helpers";
 import { TICKET_TEMPLATE_LINES } from "../messages";
 
-/* ──────────────────── Structured draft ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Structured draft â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export type StructuredTicketDraft = {
   hasNamedFields: boolean;
@@ -40,8 +40,8 @@ export function parseStructuredTicketDraft(message: string): StructuredTicketDra
     }
 
     const matchers: Array<[keyof typeof buckets, RegExp]> = [
-      ["title", /^(titulo|título)\s*:\s*(.*)$/i],
-      ["description", /^(descricao|descrição)\s*:\s*(.*)$/i],
+      ["title", /^(titulo|tÃ­tulo)\s*:\s*(.*)$/i],
+      ["description", /^(descricao|descriÃ§Ã£o)\s*:\s*(.*)$/i],
       ["impact", /^(impacto)\s*:\s*(.*)$/i],
       ["expectedBehavior", /^(comportamento esperado|resultado esperado)\s*:\s*(.*)$/i],
       ["currentBehavior", /^(comportamento atual|resultado atual)\s*:\s*(.*)$/i],
@@ -85,7 +85,7 @@ export function parseStructuredTicketDraft(message: string): StructuredTicketDra
   const parsedPriority: TicketPriority | null =
     (priorityRaw.includes("urgente") || priorityRaw.includes("alta") || priorityRaw.includes("high")) ? "high"
     : (priorityRaw.includes("baixa") || priorityRaw.includes("low")) ? "low"
-    : (priorityRaw.includes("media") || priorityRaw.includes("média") || priorityRaw.includes("medium")) ? "medium"
+    : (priorityRaw.includes("media") || priorityRaw.includes("mÃ©dia") || priorityRaw.includes("medium")) ? "medium"
     : null;
 
   if (!hasNamedFields && !title && !description && !impact && !expectedBehavior && !currentBehavior && !parsedType && !parsedPriority) {
@@ -95,7 +95,7 @@ export function parseStructuredTicketDraft(message: string): StructuredTicketDra
   return { hasNamedFields, title, description, impact, expectedBehavior, currentBehavior, type: parsedType, priority: parsedPriority };
 }
 
-/* ──────────────────── Infer type / priority ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Infer type / priority â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function inferTicketType(message: string, context: AssistantScreenContext): TicketType {
   const n = normalizeSearch(message);
@@ -107,12 +107,12 @@ export function inferTicketType(message: string, context: AssistantScreenContext
 
 export function inferTicketPriority(message: string): TicketPriority {
   const n = normalizeSearch(message);
-  if (n.includes("urgente") || n.includes("critico") || n.includes("crítico") || n.includes("bloqueia") || n.includes("nao abre") || n.includes("não abre")) return "high";
+  if (n.includes("urgente") || n.includes("critico") || n.includes("crÃ­tico") || n.includes("bloqueia") || n.includes("nao abre") || n.includes("nÃ£o abre")) return "high";
   if (n.includes("baixa") || n.includes("simples")) return "low";
   return "medium";
 }
 
-/* ──────────────────── Title / description builders ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Title / description builders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function buildTicketTitle(message: string, context: AssistantScreenContext) {
   const cleaned = message
@@ -131,7 +131,7 @@ export function buildTicketDescription(message: string, context: AssistantScreen
     `Tela atual: ${context.screenLabel}`,
     `Rota: ${context.route}`,
     "",
-    "Descrição:",
+    "DescriÃ§Ã£o:",
     message.trim(),
   ].join("\n")).slice(0, 1900);
 }
@@ -143,8 +143,8 @@ export function buildStructuredTicketDescription(draft: StructuredTicketDraft, c
     `Tela atual: ${context.screenLabel}`,
     `Rota: ${context.route}`,
     "",
-    "Descrição:",
-    draft.description || "Não informado.",
+    "DescriÃ§Ã£o:",
+    draft.description || "NÃ£o informado.",
     draft.impact ? `\nImpacto:\n${draft.impact}` : "",
     draft.currentBehavior ? `\nComportamento atual:\n${draft.currentBehavior}` : "",
     draft.expectedBehavior ? `\nComportamento esperado:\n${draft.expectedBehavior}` : "",
@@ -155,13 +155,13 @@ export function buildStructuredTicketTemplate() {
   return compactMultiline(TICKET_TEMPLATE_LINES.join("\n"));
 }
 
-/* ──────────────────── Payload extractors ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Payload extractors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function extractNarrativePayload(message: string) {
   const directPayloadPatterns = [
     /(?:converter|transformar)\s+(?:esta|essa|a)?\s*nota\s+(.+?)\s+em\s+(?:chamado|ticket)\b/i,
-    /(?:criar|montar|abrir)\s+(?:um\s+)?(?:chamado|ticket)\s+com\s+base\s+(?:neste|nesse|nesta|nessa)\s+(?:relato|texto|conteudo|conteúdo)\s*:\s*(.+)$/i,
-    /(?:converter|transformar)\s+(?:este|esse|esta|essa)\s+(?:texto|relato|conteudo|conteúdo)\s+em\s+(?:chamado|ticket)\s*:\s*(.+)$/i,
+    /(?:criar|montar|abrir)\s+(?:um\s+)?(?:chamado|ticket)\s+com\s+base\s+(?:neste|nesse|nesta|nessa)\s+(?:relato|texto|conteudo|conteÃºdo)\s*:\s*(.+)$/i,
+    /(?:converter|transformar)\s+(?:este|esse|esta|essa)\s+(?:texto|relato|conteudo|conteÃºdo)\s+em\s+(?:chamado|ticket)\s*:\s*(.+)$/i,
   ];
 
   for (const pattern of directPayloadPatterns) {
@@ -169,7 +169,7 @@ export function extractNarrativePayload(message: string) {
     if (match?.[1]) return compactMultiline(match[1]).trim();
   }
 
-  const colonMatch = message.match(/(?:nota|relato|texto|conteudo|conteúdo)\s*:\s*(.+)$/i);
+  const colonMatch = message.match(/(?:nota|relato|texto|conteudo|conteÃºdo)\s*:\s*(.+)$/i);
   if (colonMatch?.[1]) return compactMultiline(colonMatch[1]).trim();
 
   return "";
@@ -184,7 +184,7 @@ export function extractTicketNarrativeSource(message: string) {
     .trim();
 }
 
-/* ──────────────────── Prompt detectors ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Prompt detectors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function isTicketTemplateRequest(message: string) {
   const n = normalizeSearch(message);
@@ -208,3 +208,4 @@ export function isGenericTicketPrompt(message: string) {
     n === "transformar relato em chamado"
   );
 }
+

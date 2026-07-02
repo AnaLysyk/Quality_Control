@@ -1,4 +1,4 @@
-import {
+﻿import {
   filtrarMenuPorPerfil,
   NAV_CATALOG,
   resolverPerfilVisual,
@@ -53,3 +53,4 @@ describe("estrutura organizada do menu lateral", () => {
     expect(leaderItems).toContain("management-users");
   });
 });
+

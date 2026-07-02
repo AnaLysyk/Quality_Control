@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest, type AuthUser } from "@/lib/jwtAuth";
 import { getLocalUserById } from "@/lib/auth/localStore";
 import { listDefectHistory } from "@/lib/manualDefectHistoryStore";
@@ -40,13 +40,13 @@ function resolveCompanySlug(url: URL, user: AuthUser) {
 export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
   const user = await authenticateRequest(request);
   if (!user) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const url = new URL(request.url);
   const companySlug = resolveCompanySlug(url, user);
   if (!companySlug) {
-    return NextResponse.json({ message: "Empresa não informada" }, { status: 400 });
+    return NextResponse.json({ message: "Empresa nÃ£o informada" }, { status: 400 });
   }
   if (!canAccessCompanyDefects(user, companySlug)) {
     return NextResponse.json({ message: "Acesso proibido" }, { status: 403 });
@@ -55,7 +55,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
   const { slug } = await context.params;
   const defect = await resolveAccessibleCompanyDefect(companySlug, slug);
   if (!defect) {
-    return NextResponse.json({ message: "Defeito não encontrado" }, { status: 404 });
+    return NextResponse.json({ message: "Defeito nÃ£o encontrado" }, { status: 404 });
   }
 
   const internalHistory = await enrichActorNames(await listDefectHistory(defect.slug));
@@ -89,3 +89,4 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
     },
   });
 }
+

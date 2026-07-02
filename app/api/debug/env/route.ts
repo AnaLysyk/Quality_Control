@@ -1,4 +1,4 @@
-// app/api/debug/env/route.ts
+﻿// app/api/debug/env/route.ts
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -9,3 +9,4 @@ export async function GET() {
     ENV_KEYS: Object.keys(process.env).filter(k => k.toLowerCase().includes('postgres') || k.toLowerCase().includes('database'))
   });
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getRedis } from "@/lib/redis";
 
@@ -22,3 +22,4 @@ export async function deleteKey(key: string) {
   await getRedis().del(key);
   return true;
 }
+

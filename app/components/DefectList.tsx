@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useCallback, useEffect, useState } from "react";
 import { TcButton, TcCard, TcInput, TcTextarea } from "@/components/theme/TcPrimitives";
 
@@ -64,14 +64,14 @@ export default function DefectList({ companyId, releaseManualId }: { companyId: 
       <form onSubmit={handleSubmit} className="mb-6 space-y-2">
         <TcInput
           className="w-full"
-          placeholder="Título"
+          placeholder="TÃ­tulo"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
         <TcTextarea
           className="w-full"
-          placeholder="Descrição"
+          placeholder="DescriÃ§Ã£o"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -88,7 +88,7 @@ export default function DefectList({ companyId, releaseManualId }: { companyId: 
         {defects.map((d) => (
           <li key={d.id} className="list-none">
             <TcCard className="rounded-xl p-3">
-              <div className="font-semibold">{d.title ?? "Sem título"}</div>
+              <div className="font-semibold">{d.title ?? "Sem tÃ­tulo"}</div>
               <div className="text-sm text-muted">{d.description ?? ""}</div>
               <div className="text-xs text-muted">
                 Status: {d.status ?? "N/A"} | Criado em: {d.createdAt ? new Date(d.createdAt).toLocaleString() : "-"}
@@ -100,3 +100,4 @@ export default function DefectList({ companyId, releaseManualId }: { companyId: 
     </div>
   );
 }
+

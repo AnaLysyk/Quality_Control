@@ -1,4 +1,4 @@
-export type Tone = "positive" | "warning" | "critical" | "neutral";
+﻿export type Tone = "positive" | "warning" | "critical" | "neutral";
 
 export type HomeStatusBadge = {
   title: string;
@@ -54,3 +54,4 @@ export type CompanyRunsHeroStats = {
   openDefects: number;
   applications: number;
 };
+

@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { registerScreen } from "@/lib/brain/registry";
 import { BrainDashboard } from "../../brain/_components/BrainDashboard";
@@ -30,9 +30,10 @@ registerScreen({
 });
 
 export const metadata = {
-  title: "Brain — Cérebro do QA",
+  title: "Brain â€” CÃ©rebro do QA",
 };
 
 export default function BrainPage() {
   return <BrainDashboard />;
 }
+

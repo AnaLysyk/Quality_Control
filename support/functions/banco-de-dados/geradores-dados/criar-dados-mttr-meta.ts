@@ -89,3 +89,4 @@ export async function criarStatusMetaQualidade() {
   }
   await fs.promises.writeFile(file, JSON.stringify(metas, null, 2), "utf8");
 }
+

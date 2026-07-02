@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { getTicketById, updateTicket } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
@@ -12,16 +12,16 @@ export const revalidate = 0;
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const item = await getTicketById(id);
   if (!item) {
-    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado nÃ£o encontrado" }, { status: 404 });
   }
   if (!canViewTicket(user, item)) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const enriched = await attachAssigneeToTicket(item);
@@ -31,17 +31,17 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
 export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
   }
 
   const { id } = await context.params;
   const body = await req.json().catch(() => ({}));
   const item = await getTicketById(id);
   if (!item) {
-    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado nÃ£o encontrado" }, { status: 404 });
   }
   if (!canEditTicketContent(user, item)) {
-    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
   }
 
   const wantsUpdate =
@@ -52,7 +52,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     body?.tags !== undefined;
 
   if (!wantsUpdate) {
-    return NextResponse.json({ error: "Nenhuma alteração informada" }, { status: 400 });
+    return NextResponse.json({ error: "Nenhuma alteraÃ§Ã£o informada" }, { status: 400 });
   }
 
   const tags =
@@ -68,7 +68,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
   });
 
   if (!updated) {
-    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado nÃ£o encontrado" }, { status: 404 });
   }
 
   appendTicketEvent({
@@ -81,7 +81,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       priority: updated.priority,
       tags: updated.tags,
     },
-  }).catch((err) => console.error("Falha ao registrar atualização:", err));
+  }).catch((err) => console.error("Falha ao registrar atualizaÃ§Ã£o:", err));
 
   const changedFields: string[] = [];
   if (body?.title !== undefined && body.title !== item.title) changedFields.push("titulo");
@@ -109,3 +109,4 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
 
   return NextResponse.json({ item: enriched }, { status: 200 });
 }
+

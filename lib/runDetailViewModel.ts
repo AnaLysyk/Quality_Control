@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getReleaseBySlug, type ReleaseEntry } from "@/release/data";
 import { readManualReleaseStore } from "@/release/manualData";
@@ -49,7 +49,7 @@ function buildQaseFallbackRelease(slug: string, normalizedSlug: string): Release
   return {
     slug: normalizedSlug,
     title: `Run ${parsed.runId}`,
-    summary: "Execução integrada via Qase.",
+    summary: "ExecuÃ§Ã£o integrada via Qase.",
     runId: parsed.runId,
     project: parsed.projectCode.toLowerCase(),
     app: parsed.projectCode.toLowerCase(),
@@ -255,3 +255,4 @@ export async function getRunDetailViewModel(
     pdfExportUrl: `/api/empresas/${encodedCompany}/releases/${encodedSlug}/export?format=pdf`,
   };
 }
+

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
@@ -15,3 +15,4 @@ test("release com risco aparece na leitura executiva", async ({ page, context })
   await page.waitForTimeout(500);
   await expect(page.getByTestId("release-quality-risk")).toBeVisible({ timeout: 20000 });
 });
+

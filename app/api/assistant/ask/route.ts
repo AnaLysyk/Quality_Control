@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
@@ -104,7 +104,7 @@ async function persistConversationMemory(args: {
       });
     }
   } catch {
-    // aprendizado não pode quebrar o chat
+    // aprendizado nÃ£o pode quebrar o chat
   }
 }
 
@@ -147,7 +147,7 @@ function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?
 }
 
 function shouldAnswerFromBrain(message: string) {
-  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cç][aã]o|defeito|bug|usuario|usu[aá]rio|qase|kase|jira|operacional|brain|brian|n[oó]|dashboard|painel)\b/i.test(message);
+  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cÃ§][aÃ£]o|defeito|bug|usuario|usu[aÃ¡]rio|qase|kase|jira|operacional|brain|brian|n[oÃ³]|dashboard|painel)\b/i.test(message);
 }
 
 function shouldUseBrainFirstContext(brainContext: AssistantOpenEventDetail | null) {
@@ -181,7 +181,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sem permissao para usar o assistente" }, { status: 403 });
   }
   if (!authUser) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
 
   try {
@@ -289,12 +289,12 @@ export async function POST(req: Request) {
 
     const lastUserContent = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
     if (!lastUserContent.trim()) {
-      return NextResponse.json({ error: "Mensagem obrigatória" }, { status: 400 });
+      return NextResponse.json({ error: "Mensagem obrigatÃ³ria" }, { status: 400 });
     }
 
     const companySlug = resolveCompanySlug(body, authUser);
     const agentMode: AgentMode = (brainContext?.agentMode as AgentMode | undefined) ?? detectAgentMode(lastUserContent);
-    const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "🧠", label: "Agente Brain", color: "#5b92ff" };
+    const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "ðŸ§ ", label: "Agente Brain", color: "#5b92ff" };
     const startedAt = Date.now();
 
     const engine = new InternalBrainEngine();
@@ -331,7 +331,7 @@ export async function POST(req: Request) {
       success,
     });
 
-    const finalReply = replyText || (success ? "Análise concluída." : "Não foi possível processar sua pergunta.");
+    const finalReply = replyText || (success ? "AnÃ¡lise concluÃ­da." : "NÃ£o foi possÃ­vel processar sua pergunta.");
 
     await persistConversationMemory({ body, authUser, reply: finalReply, tool: lastToolName ?? agentMode, agentMode, brainContext });
 
@@ -357,3 +357,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

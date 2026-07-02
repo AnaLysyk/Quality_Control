@@ -1,4 +1,4 @@
-import { getJson, setJson } from "../store/redisClient";
+﻿import { getJson, setJson } from "../store/redisClient";
 import { PERMISSION_MODULES } from "@/lib/permissionCatalog";
 
 const MODULES_KEY = "qc:modules_catalog";
@@ -18,3 +18,4 @@ export async function seedModulesIfMissing() {
     await setJson(MODULES_KEY, DEFAULT_MODULES);
   }
 }
+

@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import crypto from "node:crypto";
 import { shouldUsePostgresPersistence } from "@/lib/persistenceMode";
@@ -207,3 +207,4 @@ export async function appendDefectHistory(
   await writeStore(store);
   return event;
 }
+

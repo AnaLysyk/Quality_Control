@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+﻿import { expect } from "@playwright/test";
 import Ajv, {
   type AnySchema,
   type ErrorObject,
@@ -69,3 +69,4 @@ export function validarContratoApi(
     `Falha no contrato "${nomeContrato}":\n${detalhes}`,
   ).toBeTruthy();
 }
+

@@ -1,4 +1,4 @@
-describe("local auth user uniqueness", () => {
+﻿describe("local auth user uniqueness", () => {
   const uid = Math.random().toString(36).slice(2, 10);
   const password_hash = "hash-for-uniqueness-test";
 
@@ -70,3 +70,4 @@ describe("local auth user uniqueness", () => {
     ).rejects.toMatchObject({ code: "DUPLICATE_USER" });
   });
 });
+

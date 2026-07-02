@@ -295,3 +295,4 @@ export async function validarPaginaPerfilUsuarioCriado(
   await expect(page.getByTestId("profile-phone-input")).toHaveValue(expected.phone);
   await expect(page.getByTestId("profile-job-title-input")).toHaveValue(expected.jobTitle);
 }
+

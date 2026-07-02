@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import clsx from "clsx";
 
 type ModuleHeaderProps = {
@@ -17,7 +17,7 @@ type ModuleHeaderProps = {
  * Usage:
  * ```tsx
  * <ModuleHeader
- *   title="Repositório de Casos"
+ *   title="RepositÃ³rio de Casos"
  *   subtitle="Gerencie casos de teste"
  *   actions={<button>Novo caso</button>}
  * />
@@ -28,11 +28,11 @@ export function ModuleHeader({ title, subtitle, breadcrumb, actions, className }
     <header className={clsx("flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between mb-5", className)}>
       <div className="flex flex-col gap-0.5">
         {breadcrumb && (
-          <div className="text-xs text-(--tc-text-muted) flex items-center gap-1">{breadcrumb}</div>
+          <div className="text-xs text-[var(--tc-text-muted)] flex items-center gap-1">{breadcrumb}</div>
         )}
-        <h1 className="text-xl font-bold tracking-tight text-(--tc-text)">{title}</h1>
+        <h1 className="text-xl font-bold tracking-tight text-[var(--tc-text)]">{title}</h1>
         {subtitle && (
-          <p className="text-sm text-(--tc-text-muted)">{subtitle}</p>
+          <p className="text-sm text-[var(--tc-text-muted)]">{subtitle}</p>
         )}
       </div>
       {actions && (
@@ -41,3 +41,4 @@ export function ModuleHeader({ title, subtitle, breadcrumb, actions, className }
     </header>
   );
 }
+

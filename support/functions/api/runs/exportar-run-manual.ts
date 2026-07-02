@@ -1,4 +1,4 @@
-import type { APIRequestContext } from "@playwright/test";
+﻿import type { APIRequestContext } from "@playwright/test";
 
 import { EMPRESA_CLIENTE_E2E } from "../../ui/runs/rotas-runs";
 
@@ -9,3 +9,4 @@ export async function exportarPdfRunManualPorApi(
 ) {
   return request.get(`/api/empresas/${companySlug}/releases/${runSlug}/export?format=pdf`);
 }
+

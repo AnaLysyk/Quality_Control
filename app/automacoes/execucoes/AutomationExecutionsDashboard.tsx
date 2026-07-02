@@ -486,7 +486,7 @@ export default function AutomationExecutionsDashboard() {
 
         {loading && (
           <div className="flex items-center gap-2 px-4 py-3 text-sm text-[#38507a] dark:text-zinc-500">
-            <span className="animate-pulse">▍</span>
+            <span className="animate-pulse">?</span>
             Carregando execuções...
           </div>
         )}
@@ -782,6 +782,7 @@ export default function AutomationExecutionsDashboard() {
     </div>
   );
 }
+
 
 
 

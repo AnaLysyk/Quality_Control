@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRef, useState, useEffect } from "react";
 import { fetchApi } from "@/lib/api";
@@ -458,3 +458,4 @@ function getQuickPrompts(mode: AgentMode): string[] {
   };
   return prompts[mode];
 }
+

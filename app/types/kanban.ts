@@ -1,4 +1,4 @@
-// app/types/kanban.ts
+﻿// app/types/kanban.ts
 
 export interface KanbanItem {
   id: number | string;
@@ -15,3 +15,4 @@ export interface KanbanData {
   blocked: KanbanItem[];
   notRun: KanbanItem[];
 }
+

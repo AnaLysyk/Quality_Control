@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Input validation for assistant-generated tickets, comments, and test cases.
  * Relies on Zod schemas from lib/validation and local heuristics.
  */
@@ -7,7 +7,7 @@ import { assistantTestCaseSchema, ticketCommentSchema, ticketDraftSchema } from 
 import { normalizeSearch, normalizeText, compactMultiline } from "./helpers";
 import type { TicketPriority, TicketType } from "@/lib/ticketsStore";
 
-/* ──────────────────── Result types ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Result types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export type AssistantTicketValidationResult = {
   ok: boolean;
@@ -33,7 +33,7 @@ export type AssistantTestCaseValidationResult = {
   issues: string[];
 };
 
-/* ──────────────────── Normalizers ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Normalizers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function normalizeTicketTypeInput(value: string): TicketType | null {
   if (!value) return null;
@@ -45,11 +45,11 @@ export function normalizeTicketPriorityInput(value: string): TicketPriority | nu
   if (!value) return null;
   if (value === "high" || value === "alta" || value === "urgente") return "high";
   if (value === "low" || value === "baixa") return "low";
-  if (value === "medium" || value === "media" || value === "média") return "medium";
+  if (value === "medium" || value === "media" || value === "mÃ©dia") return "medium";
   return null;
 }
 
-/* ──────────────────── "Instruction only" detector ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ "Instruction only" detector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const INSTRUCTION_ONLY_EXACT = new Set([
   "mostrar acoes disponiveis",
@@ -84,7 +84,7 @@ export function looksLikeInstructionOnly(value: string) {
   return false;
 }
 
-/* ──────────────────── Validators ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Validators â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function validateAssistantTicketDraft(input: {
   title?: unknown;
@@ -108,24 +108,24 @@ export function validateAssistantTicketDraft(input: {
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
     if (fieldErrors.title?.length) {
-      issues.push("Título do chamado obrigatório, com pelo menos 3 caracteres.");
+      issues.push("TÃ­tulo do chamado obrigatÃ³rio, com pelo menos 3 caracteres.");
     }
     if (fieldErrors.description?.length) {
-      issues.push("Descrição do chamado obrigatória, com pelo menos 8 caracteres.");
+      issues.push("DescriÃ§Ã£o do chamado obrigatÃ³ria, com pelo menos 8 caracteres.");
     }
   }
 
   if (typeValue && !normalizeTicketTypeInput(typeValue)) {
-    issues.push("Tipo do chamado inválido. Use bug, tarefa ou melhoria.");
+    issues.push("Tipo do chamado invÃ¡lido. Use bug, tarefa ou melhoria.");
   }
   if (priorityValue && !normalizeTicketPriorityInput(priorityValue)) {
-    issues.push("Prioridade inválida. Use baixa, média ou alta.");
+    issues.push("Prioridade invÃ¡lida. Use baixa, mÃ©dia ou alta.");
   }
   if (looksLikeInstructionOnly(title)) {
-    issues.push("O título ainda está como instrução. Informe o título real do chamado.");
+    issues.push("O tÃ­tulo ainda estÃ¡ como instruÃ§Ã£o. Informe o tÃ­tulo real do chamado.");
   }
   if (looksLikeInstructionOnly(description)) {
-    issues.push("A descrição ainda não traz o relato real. Cole o problema, a nota ou o comportamento observado.");
+    issues.push("A descriÃ§Ã£o ainda nÃ£o traz o relato real. Cole o problema, a nota ou o comportamento observado.");
   }
 
   return {
@@ -144,10 +144,10 @@ export function validateAssistantCommentBody(bodyInput: unknown): AssistantComme
   const parsed = ticketCommentSchema.safeParse({ body });
 
   if (!parsed.success) {
-    issues.push("Comentário obrigatório, com pelo menos 3 caracteres.");
+    issues.push("ComentÃ¡rio obrigatÃ³rio, com pelo menos 3 caracteres.");
   }
   if (looksLikeInstructionOnly(body)) {
-    issues.push("O texto do comentário ainda está como instrução. Informe o comentário real antes de publicar.");
+    issues.push("O texto do comentÃ¡rio ainda estÃ¡ como instruÃ§Ã£o. Informe o comentÃ¡rio real antes de publicar.");
   }
 
   return { ok: issues.length === 0, body, issues };
@@ -168,15 +168,16 @@ export function validateAssistantTestCaseDraft(input: {
 
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
-    if (fieldErrors.sourceTitle?.length) issues.push("Título/base do caso de teste obrigatório.");
-    if (fieldErrors.objective?.length) issues.push("Objetivo do caso de teste obrigatório e precisa ser mais específico.");
+    if (fieldErrors.sourceTitle?.length) issues.push("TÃ­tulo/base do caso de teste obrigatÃ³rio.");
+    if (fieldErrors.objective?.length) issues.push("Objetivo do caso de teste obrigatÃ³rio e precisa ser mais especÃ­fico.");
     if (fieldErrors.reproductionBase?.length) issues.push("Preciso do fluxo, bug ou relato base para montar os passos do teste.");
-    if (fieldErrors.expectedResult?.length) issues.push("Resultado esperado obrigatório para validar o comportamento.");
+    if (fieldErrors.expectedResult?.length) issues.push("Resultado esperado obrigatÃ³rio para validar o comportamento.");
   }
 
   if (looksLikeInstructionOnly(sourceTitle) || looksLikeInstructionOnly(reproductionBase)) {
-    issues.push("Ainda não tenho contexto funcional suficiente. Envie o bug, relato ou ticket base antes de gerar o caso de teste.");
+    issues.push("Ainda nÃ£o tenho contexto funcional suficiente. Envie o bug, relato ou ticket base antes de gerar o caso de teste.");
   }
 
   return { ok: issues.length === 0, sourceTitle, objective, reproductionBase, expectedResult, issues };
 }
+

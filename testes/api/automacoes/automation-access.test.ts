@@ -1,7 +1,7 @@
-import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
+﻿import { resolveAutomationAccess, resolveAutomationAllowedCompanySlugs } from "@/lib/automations/access";
 
 describe("resolveAutomationAccess", () => {
-  it("libera configuração para líder TC", () => {
+  it("libera configuraÃ§Ã£o para lÃ­der TC", () => {
     const access = resolveAutomationAccess({ role: "leader_tc", companySlugs: ["griaule", "acme"] }, 2);
 
     expect(access.canOpen).toBe(true);
@@ -12,7 +12,7 @@ describe("resolveAutomationAccess", () => {
     expect(access.scopeLabel).toBe("Todas as empresas");
   });
 
-  it("mantém usuário TC na mesma tela, porém sem configuração global", () => {
+  it("mantÃ©m usuÃ¡rio TC na mesma tela, porÃ©m sem configuraÃ§Ã£o global", () => {
     const access = resolveAutomationAccess({ role: "user", companySlugs: ["griaule"] }, 1);
 
     expect(access.canOpen).toBe(true);
@@ -23,7 +23,7 @@ describe("resolveAutomationAccess", () => {
     expect(access.scopeLabel).toContain("1 empresa vinculada");
   });
 
-  it("libera empresa apenas no próprio escopo", () => {
+  it("libera empresa apenas no prÃ³prio escopo", () => {
     const access = resolveAutomationAccess({
       role: "empresa",
       companyRole: "empresa",
@@ -38,10 +38,10 @@ describe("resolveAutomationAccess", () => {
     expect(access.canViewTechnicalLogs).toBe(false);
     expect(access.hasGlobalCompanyVisibility).toBe(false);
     expect(access.profileLabel).toBe("Empresa");
-    expect(access.visibilityLabel).toBe("Operação da empresa");
+    expect(access.visibilityLabel).toBe("OperaÃ§Ã£o da empresa");
   });
 
-  it("mantém usuário da empresa com a mesma visão da empresa", () => {
+  it("mantÃ©m usuÃ¡rio da empresa com a mesma visÃ£o da empresa", () => {
     const access = resolveAutomationAccess({
       role: "company_user",
       companyRole: "company_user",
@@ -54,7 +54,7 @@ describe("resolveAutomationAccess", () => {
     expect(access.canManageFlows).toBe(true);
     expect(access.canViewTechnicalLogs).toBe(false);
     expect(access.hasGlobalCompanyVisibility).toBe(false);
-    expect(access.profileLabel).toBe("Usuário da empresa");
+    expect(access.profileLabel).toBe("UsuÃ¡rio da empresa");
     expect(access.scopeLabel).toContain("empresa");
   });
 });
@@ -71,3 +71,4 @@ describe("resolveAutomationAllowedCompanySlugs", () => {
     expect(slugs).toEqual(["griaule", "acme", "beta"]);
   });
 });
+

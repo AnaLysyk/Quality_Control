@@ -217,3 +217,4 @@ export async function aguardarConferenciaVisual(page: Page, etapa: string) {
   console.log(`[CONFERENCIA VISUAL] ${etapa}. Aguardando ${delay}ms...`);
   await page.waitForTimeout(delay);
 }
+

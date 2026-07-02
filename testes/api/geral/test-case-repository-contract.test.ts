@@ -1,4 +1,4 @@
-type StoredTestCaseRow = {
+﻿type StoredTestCaseRow = {
   id: string;
   companyId: string | null;
   data: unknown;
@@ -139,3 +139,4 @@ describe("test case repository contracts", () => {
     expect(linked?.automationLink?.tags).toEqual(["@regression"]);
   });
 });
+

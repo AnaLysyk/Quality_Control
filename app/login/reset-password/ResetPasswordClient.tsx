@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
@@ -202,3 +202,4 @@ export default function ResetPasswordClient() {
     </div>
   );
 }
+

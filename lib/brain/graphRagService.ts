@@ -1,4 +1,4 @@
-import type { BrainAccessContext } from "@/lib/brain/access";
+﻿import type { BrainAccessContext } from "@/lib/brain/access";
 import { getSubgraph, searchNodes } from "@/lib/brain";
 import { isBrainNodeVisible } from "@/lib/brain/access";
 import { prisma } from "@/lib/prismaClient";
@@ -386,3 +386,4 @@ export class BrainGraphRagService {
     return Array.from(ids);
   }
 }
+

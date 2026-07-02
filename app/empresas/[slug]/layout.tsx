@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useParams } from "next/navigation";
 import { RequireClient } from "@/components/RequireClient";
@@ -14,3 +14,4 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
     </RequireClient>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { BrainEdge } from "../_types/brain.types";
 import type { BrainLayoutNode } from "../_utils/brainGraphLayout";
@@ -37,3 +37,4 @@ export function BrainConnectionLine({ edge, source, target, highlighted }: Brain
     />
   );
 }
+

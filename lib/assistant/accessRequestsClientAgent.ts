@@ -1,4 +1,4 @@
-function normalize(value: string) {
+﻿function normalize(value: string) {
   return value
     .toLowerCase()
     .normalize("NFD")
@@ -99,7 +99,7 @@ function splitRequesterCell(value: string) {
   let name = value;
   if (email) name = name.replace(email, " ");
   name = name
-    .replace(/Analista de QA|Advogada|Suporte Tecnico|Suporte Técnico|Usuario TC|Usuário TC|Lider TC|Líder TC/gi, " ")
+    .replace(/Analista de QA|Advogada|Suporte Tecnico|Suporte TÃ©cnico|Usuario TC|UsuÃ¡rio TC|Lider TC|LÃ­der TC/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -115,10 +115,10 @@ function readVisibleRequestSummary() {
   return rows.map((row, index) => {
     const cells = Array.from(row.children);
     const requester = splitRequesterCell(compactCellText(cells[0]));
-    const company = compactCellText(cells[1]) || "(não informado)";
-    const profile = compactCellText(cells[2]) || "Perfil não informado";
-    const status = compactCellText(cells[3]) || "Status não informado";
-    const password = compactCellText(cells[4]) || "Senha não informada";
+    const company = compactCellText(cells[1]) || "(nÃ£o informado)";
+    const profile = compactCellText(cells[2]) || "Perfil nÃ£o informado";
+    const status = compactCellText(cells[3]) || "Status nÃ£o informado";
+    const password = compactCellText(cells[4]) || "Senha nÃ£o informada";
     const changes = compactCellText(cells[5]) || "0";
 
     return {
@@ -136,7 +136,7 @@ function readVisibleRequestSummary() {
 
 function countBy(items: string[]) {
   return items.reduce<Record<string, number>>((acc, item) => {
-    const key = item || "Não informado";
+    const key = item || "NÃ£o informado";
     acc[key] = (acc[key] ?? 0) + 1;
     return acc;
   }, {});
@@ -153,61 +153,61 @@ function analyzeVisibleRequests() {
 
   if (rows.length === 0) {
     return [
-      "Não encontrei solicitações visíveis na tabela agora.",
+      "NÃ£o encontrei solicitaÃ§Ãµes visÃ­veis na tabela agora.",
       "",
-      "Pode ser que o filtro não tenha retornado resultado ou que a listagem ainda esteja carregando.",
+      "Pode ser que o filtro nÃ£o tenha retornado resultado ou que a listagem ainda esteja carregando.",
     ].join("\n");
   }
 
   const statusCounter = countBy(rows.map((row) => row.status));
   const profileCounter = countBy(rows.map((row) => row.profile));
-  const withCompany = rows.filter((row) => !/não informado|nao informado/i.test(row.company)).length;
+  const withCompany = rows.filter((row) => !/nÃ£o informado|nao informado/i.test(row.company)).length;
   const withoutCompany = rows.length - withCompany;
   const withChanges = rows.filter((row) => Number(row.changes.replace(/\D/g, "")) > 0).length;
 
   const lines = rows.slice(0, 6).map((row) => {
-    const emailPart = row.email ? ` — ${row.email}` : "";
-    return `- ${row.name}${emailPart}: ${row.status}, perfil ${row.profile}, empresa ${row.company}, alterações ${row.changes}.`;
+    const emailPart = row.email ? ` â€” ${row.email}` : "";
+    return `- ${row.name}${emailPart}: ${row.status}, perfil ${row.profile}, empresa ${row.company}, alteraÃ§Ãµes ${row.changes}.`;
   });
 
   const attention: string[] = [];
 
   if (withoutCompany > 0) {
-    attention.push(`${withoutCompany} solicitação(ões) sem empresa informada.`);
+    attention.push(`${withoutCompany} solicitaÃ§Ã£o(Ãµes) sem empresa informada.`);
   }
 
   if (withChanges === 0) {
-    attention.push("Nenhuma solicitação visível tem alteração marcada.");
+    attention.push("Nenhuma solicitaÃ§Ã£o visÃ­vel tem alteraÃ§Ã£o marcada.");
   }
 
   if (rows.some((row) => /recusad|rejeitad/i.test(row.status))) {
-    attention.push("Existem solicitações recusadas/rejeitadas no resultado; para elas não faz sentido editar/remover ajuste, só consultar histórico/PDF.");
+    attention.push("Existem solicitaÃ§Ãµes recusadas/rejeitadas no resultado; para elas nÃ£o faz sentido editar/remover ajuste, sÃ³ consultar histÃ³rico/PDF.");
   }
 
   if (rows.some((row) => /abert|nova/i.test(row.status))) {
-    attention.push("Existem solicitações abertas; essas são as melhores para validar aprovar, recusar e pedir ajuste.");
+    attention.push("Existem solicitaÃ§Ãµes abertas; essas sÃ£o as melhores para validar aprovar, recusar e pedir ajuste.");
   }
 
   return [
-    `Achei ${rows.length} solicitação(ões) visíveis na listagem.`,
+    `Achei ${rows.length} solicitaÃ§Ã£o(Ãµes) visÃ­veis na listagem.`,
     "",
     `Status: ${formatCounter(statusCounter)}.`,
     `Perfis: ${formatCounter(profileCounter)}.`,
     `Empresa informada: ${withCompany}; sem empresa: ${withoutCompany}.`,
-    `Com alterações marcadas: ${withChanges}.`,
+    `Com alteraÃ§Ãµes marcadas: ${withChanges}.`,
     "",
     "O que estou vendo:",
     ...lines,
     "",
     "Minha leitura:",
-    ...(attention.length ? attention.map((item) => `- ${item}`) : ["- A listagem está coerente visualmente para seguir com os testes."]),
+    ...(attention.length ? attention.map((item) => `- ${item}`) : ["- A listagem estÃ¡ coerente visualmente para seguir com os testes."]),
     "",
-    "Próximo passo recomendado: abrir uma solicitação aberta da Barbara Martins para validar o modal, depois testar PDF, ajuste e aprovação/recusa.",
+    "PrÃ³ximo passo recomendado: abrir uma solicitaÃ§Ã£o aberta da Barbara Martins para validar o modal, depois testar PDF, ajuste e aprovaÃ§Ã£o/recusa.",
   ].join("\n");
 }
 
 function isStatusFilterIntent(text: string) {
-  return /\b(status|situacao|situação)\b/.test(text);
+  return /\b(status|situacao|situaÃ§Ã£o)\b/.test(text);
 }
 
 function isRejectedStatusIntent(text: string) {
@@ -245,7 +245,7 @@ function isAnalyzeVisibleResultsIntent(text: string) {
     text.includes("analisar isso") ||
     text.includes("o que tem aqui") ||
     text.includes("o que voce viu") ||
-    text.includes("o que você viu") ||
+    text.includes("o que vocÃª viu") ||
     text.includes("tem algo errado") ||
     text.includes("resumo") ||
     text.includes("me diz") ||
@@ -261,38 +261,38 @@ function clickFirstRowAction(labels: string[]) {
 }
 
 function isAccessRequestsGreeting(text: string) {
-  return /^(oi+|ola|olá|oie|bom dia|boa tarde|boa noite|e ai|e aí|hello|hi)[!?.\s]*$/i.test(normalize(text));
+  return /^(oi+|ola|olÃ¡|oie|bom dia|boa tarde|boa noite|e ai|e aÃ­|hello|hi)[!?.\s]*$/i.test(normalize(text));
 }
 
 function isAccessRequestsFollowUp(text: string) {
   const normalized = normalize(text).replace(/[!?.,]/g, "").trim();
 
-  return /^(tudo|td|tudo bem|tudo certo|beleza|blz|ok|okay|ta|tá|sim|ss|aham|uhum|bora|vamos|pode|pode sim|entendi|certo|show|fechou)$/.test(normalized);
+  return /^(tudo|td|tudo bem|tudo certo|beleza|blz|ok|okay|ta|tÃ¡|sim|ss|aham|uhum|bora|vamos|pode|pode sim|entendi|certo|show|fechou)$/.test(normalized);
 }
 
 function buildAccessRequestsAgentGreeting() {
   return [
-    "Oi. Estou contigo como agente da tela de Solicitações de acesso.",
+    "Oi. Estou contigo como agente da tela de SolicitaÃ§Ãµes de acesso.",
     "",
-    "Pode mandar do jeito que vier, até bagunçado. Eu vou tentar entender a intenção antes de responder.",
+    "Pode mandar do jeito que vier, atÃ© bagunÃ§ado. Eu vou tentar entender a intenÃ§Ã£o antes de responder.",
     "",
-    "Exemplos que eu já consigo tratar aqui:",
+    "Exemplos que eu jÃ¡ consigo tratar aqui:",
     "- buscar a Ana",
     "- filtrar recusadas",
-    "- abrir a primeira solicitação",
-    "- baixar PDF da solicitação visível",
-    "- abrir em análise",
-    "- explicar o que dá para fazer nesta tela",
+    "- abrir a primeira solicitaÃ§Ã£o",
+    "- baixar PDF da solicitaÃ§Ã£o visÃ­vel",
+    "- abrir em anÃ¡lise",
+    "- explicar o que dÃ¡ para fazer nesta tela",
   ].join("\n");
 }
 
 function buildAccessRequestsAgentFollowUp() {
   return [
-    "Tudo certo. Continuo na tela de Solicitações de acesso.",
+    "Tudo certo. Continuo na tela de SolicitaÃ§Ãµes de acesso.",
     "",
-    "Me manda a ação do jeito que você falaria normalmente. Se ficar ambíguo, eu te pergunto antes de executar.",
+    "Me manda a aÃ§Ã£o do jeito que vocÃª falaria normalmente. Se ficar ambÃ­guo, eu te pergunto antes de executar.",
     "",
-    "Posso buscar pessoa, filtrar status, abrir solicitação, acionar PDF, explicar fluxo, ou te orientar em aprovação, recusa e ajuste.",
+    "Posso buscar pessoa, filtrar status, abrir solicitaÃ§Ã£o, acionar PDF, explicar fluxo, ou te orientar em aprovaÃ§Ã£o, recusa e ajuste.",
   ].join("\n");
 }
 
@@ -321,7 +321,7 @@ function explainAccessRequests() {
     "",
     "Pode pedir de forma natural. Eu consigo filtrar a fila, buscar uma pessoa, abrir a primeira solicitacao, entrar na analise pelo lapis, acionar o PDF e te orientar sobre aprovacao, recusa ou ajuste.",
     "",
-    "Para acoes sensiveis, como aprovar, recusar ou remover, eu nao saio clicando no escuro. Eu explico o impacto, confiro as pendencias e peço confirmacao antes.",
+    "Para acoes sensiveis, como aprovar, recusar ou remover, eu nao saio clicando no escuro. Eu explico o impacto, confiro as pendencias e peÃ§o confirmacao antes.",
   ].join("\n");
 }
 
@@ -349,28 +349,28 @@ export function runAccessRequestsClientAgentCommand(pathname: string, rawText: s
     const selected = selectStatusOption(["rejeitada", "recusada"]) || clickByLabel(["recusadas", "rejeitadas"]);
     return selected
       ? "Pronto, filtrei pelo status rejeitado/recusado."
-      : "Tentei filtrar por rejeitado/recusado, mas não encontrei o filtro de status visível.";
+      : "Tentei filtrar por rejeitado/recusado, mas nÃ£o encontrei o filtro de status visÃ­vel.";
   }
 
   if (isStatusFilterIntent(text) && isApprovedStatusIntent(text)) {
     const selected = selectStatusOption(["aprovada", "aprovado"]) || clickByLabel(["aprovadas"]);
     return selected
       ? "Pronto, filtrei pelo status aprovado."
-      : "Tentei filtrar por aprovado, mas não encontrei o filtro de status visível.";
+      : "Tentei filtrar por aprovado, mas nÃ£o encontrei o filtro de status visÃ­vel.";
   }
 
   if (isStatusFilterIntent(text) && isOpenStatusIntent(text)) {
     const selected = selectStatusOption(["aberta", "aberto"]) || clickByLabel(["novas"]);
     return selected
       ? "Pronto, filtrei pelo status aberto."
-      : "Tentei filtrar por aberto, mas não encontrei o filtro de status visível.";
+      : "Tentei filtrar por aberto, mas nÃ£o encontrei o filtro de status visÃ­vel.";
   }
 
   if (isStatusFilterIntent(text) && isAdjustmentStatusIntent(text)) {
     const selected = selectStatusOption(["aguardando ajuste", "ajuste"]) || clickByLabel(["em ajuste"]);
     return selected
       ? "Pronto, filtrei pelo status aguardando ajuste."
-      : "Tentei filtrar por ajuste, mas não encontrei o filtro de status visível.";
+      : "Tentei filtrar por ajuste, mas nÃ£o encontrei o filtro de status visÃ­vel.";
   }
 
   const searchTerm = extractSearchTerm(originalText);
@@ -449,3 +449,4 @@ export function runAccessRequestsClientAgentCommand(pathname: string, rawText: s
 
   return null;
 }
+

@@ -1,4 +1,4 @@
-jest.mock("@/lib/auth/localStore", () => ({
+﻿jest.mock("@/lib/auth/localStore", () => ({
   getLocalUserById: jest.fn().mockResolvedValue({
     id: "u1",
     name: "Ana Silva",
@@ -60,9 +60,9 @@ describe("toolGetScreenContext", () => {
     expect(result.tool).toBe("get_screen_context");
     expect(result.reply).toContain("Voce esta em:");
     expect(result.reply).toContain("O que posso fazer aqui:");
-    expect(result.reply).toContain("rápidas:");
+    expect(result.reply).toContain("rÃ¡pidas:");
     expect(result.reply).toContain("Contexto Atual:");
-    expect(result.reply).toContain("Permissões:");
+    expect(result.reply).toContain("PermissÃµes:");
     expect(result.reply).toContain("Perfil");
     expect(result.reply).toContain("admin");
     expect(result.reply).not.toContain("ana@test.com");
@@ -87,3 +87,4 @@ describe("toolGetScreenContext", () => {
     expect(result.reply.match(/Voce esta em/g)).toHaveLength(1);
   });
 });
+

@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   BrianActivationPolicy,
   BrianImpulseType,
   BrianNeuronKind,
@@ -227,3 +227,4 @@ export function findAllowedRelation(
     (item) => item.from === from && item.relation === relation && item.to === to,
   );
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+﻿import { NextResponse, type NextRequest } from "next/server";
 import { getAccessContext } from "@/lib/auth/session";
 import { readPlatformDocs } from "@/data/platformDocsStore";
 import { filterWikiCategoriesForDocs, filterWikiDocsForUser } from "@/lib/wikiDocsStatus";
@@ -34,3 +34,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

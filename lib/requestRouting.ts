@@ -1,4 +1,4 @@
-import type { AccessType } from "@/lib/accessRequestMessage";
+﻿import type { AccessType } from "@/lib/accessRequestMessage";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import {
   accessRequestProfileLabel,
@@ -82,7 +82,7 @@ export function normalizeRequestProfileType(value: string | null | undefined): R
   if (
     normalized === "global" ||
     normalized === "suporte tecnico" ||
-    normalized === "suporte tÃ©cnico" ||
+    normalized === "suporte tÃƒÂ©cnico" ||
     normalized === "technical support" ||
     normalized === "technical_support"
   ) {
@@ -138,3 +138,4 @@ export function deriveProfileTypeFromAccount(input: {
   }
   return "testing_company_user" as const;
 }
+

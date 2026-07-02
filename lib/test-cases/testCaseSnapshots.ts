@@ -1,4 +1,4 @@
-import type { TestCase, TestCaseSnapshot, TestCaseStep, TestCaseVersion } from "./types";
+﻿import type { TestCase, TestCaseSnapshot, TestCaseStep, TestCaseVersion } from "./types";
 
 export function buildTestCaseSnapshot(testCase: TestCase, steps: TestCaseStep[]): TestCaseSnapshot {
   return {
@@ -36,3 +36,4 @@ export function createTestCaseVersion(
     createdAt: new Date().toISOString(),
   };
 }
+

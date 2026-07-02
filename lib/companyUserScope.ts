@@ -1,4 +1,4 @@
-export type UserOrigin = "testing_company" | "client_company";
+﻿export type UserOrigin = "testing_company" | "client_company";
 export type UserScope = "shared" | "company_only";
 
 export type CompanyScopedUserState = {
@@ -94,3 +94,4 @@ export function assertUserCanLinkToCompany(
     throw error;
   }
 }
+

@@ -1,4 +1,4 @@
-import supertest from 'supertest';
+﻿import supertest from 'supertest';
 
 const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 const request = supertest(base);
@@ -88,3 +88,4 @@ describe('Clients PATCH Qase semantics', () => {
     expect(patched.qase_project_code === single || typeof patched.qase_project_code === 'string').toBeTruthy();
   });
 });
+

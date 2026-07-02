@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import type { AuthUser } from "@/lib/jwtAuth";
 
@@ -6,16 +6,16 @@ import type { AuthUser } from "@/lib/jwtAuth";
  * Test Data Hub Security Guardrails
  *
  * Enforce critical security rules:
- * 1. PromptDataGuardrail — AI never receives raw sensitive content
- * 2. GitHubPublishGuardrail — Prevent committing sensitive data to GitHub
- * 3. RunnerAssetGuardrail — Validate permissions before asset resolution
+ * 1. PromptDataGuardrail â€” AI never receives raw sensitive content
+ * 2. GitHubPublishGuardrail â€” Prevent committing sensitive data to GitHub
+ * 3. RunnerAssetGuardrail â€” Validate permissions before asset resolution
  */
 
 export type SensitivityLevel = "public" | "internal" | "restricted" | "sensitive";
 export type AssetEncoding = "file" | "base64" | "json" | "text";
 
 /**
- * Guardrail Error — thrown when security rule is violated
+ * Guardrail Error â€” thrown when security rule is violated
  */
 export class GuardrailViolation extends Error {
   constructor(
@@ -102,7 +102,7 @@ export class PromptDataGuardrail {
       if (asset.sensitivity !== "public" && asset.base64Value) {
         throw new GuardrailViolation(
           "PromptDataGuardrail",
-          `Sensitive asset ${asset.key} contains Base64 — cannot generate code with inline data`,
+          `Sensitive asset ${asset.key} contains Base64 â€” cannot generate code with inline data`,
         );
       }
     }
@@ -331,3 +331,4 @@ export class UsagePolicyValidator {
     }
   }
 }
+

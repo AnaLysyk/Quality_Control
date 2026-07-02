@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/lib/jwtAuth";
+﻿import type { AuthUser } from "@/lib/jwtAuth";
 import {
   canAccessGlobalSupportScope,
   canCommentSupportTickets,
@@ -60,3 +60,4 @@ export function canMoveTicket(user: AuthUser | null, ticket?: TicketRecord) {
   if (!ticket) return false;
   return canAccessGlobalTicketWorkspace(user) && canManageSupportWorkflow(user);
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from 'next/server';
+﻿import { NextResponse, NextRequest } from 'next/server';
 import { deleteUserOverride, setUserOverride } from '@/lib/store/permissionsStore';
 import { addAuditLogSafe } from '@/data/auditLogRepository';
 import { getAdminUserItem } from '@/lib/adminUsers';
@@ -19,11 +19,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
+      return NextResponse.json({ error: status === 401 ? 'NÃ£o autenticado' : 'Sem permissÃ£o' }, { status });
     }
     const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
     if (!access.canViewPermissions) {
-      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem permissÃ£o' }, { status: 403 });
     }
     const p = await params;
     const userId = p.id;
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
   } catch (e: any) {
     console.error("[admin.users.permissions.get]", e);
-    return NextResponse.json({ error: "Não foi possível carregar permissões agora." }, { status: 500 });
+    return NextResponse.json({ error: "NÃ£o foi possÃ­vel carregar permissÃµes agora." }, { status: 500 });
   }
 }
 
@@ -45,11 +45,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
+      return NextResponse.json({ error: status === 401 ? 'NÃ£o autenticado' : 'Sem permissÃ£o' }, { status });
     }
     const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
     if (!access.canEditPermissions) {
-      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem permissÃ£o' }, { status: 403 });
     }
     const p = await params;
     const userId = p.id;
@@ -92,7 +92,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true, saved, permissions: resolved.permissions });
   } catch (e: any) {
     console.error("[admin.users.permissions.patch]", e);
-    return NextResponse.json({ error: "Não foi possível salvar permissões agora." }, { status: 500 });
+    return NextResponse.json({ error: "NÃ£o foi possÃ­vel salvar permissÃµes agora." }, { status: 500 });
   }
 }
 
@@ -100,11 +100,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? 'Não autenticado' : 'Sem permissão' }, { status });
+      return NextResponse.json({ error: status === 401 ? 'NÃ£o autenticado' : 'Sem permissÃ£o' }, { status });
     }
     const access = await validarAcessoUsuariosNoServidor(await getAccessContext(req));
     if (!access.canResetPermissions) {
-      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+      return NextResponse.json({ error: 'Sem permissÃ£o' }, { status: 403 });
     }
     const body = await req.json().catch(() => null);
     const restored = body?.reason === "restored";
@@ -144,6 +144,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ ok: true, permissions: resolved.permissions });
   } catch (e: any) {
     console.error("[admin.users.permissions.delete]", e);
-    return NextResponse.json({ error: "Não foi possível restaurar permissões agora." }, { status: 500 });
+    return NextResponse.json({ error: "NÃ£o foi possÃ­vel restaurar permissÃµes agora." }, { status: 500 });
   }
 }
+

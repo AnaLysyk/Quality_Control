@@ -1,4 +1,4 @@
-export type DashboardScopeKind = "global" | "internal" | "company";
+﻿export type DashboardScopeKind = "global" | "internal" | "company";
 
 export type DashboardCompanyOption = {
   id?: string;
@@ -37,3 +37,4 @@ export type DashboardMetricCard = {
   note?: string;
   tone?: "default" | "positive" | "warning" | "critical";
 };
+

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { authenticateRequest } from "@/lib/jwtAuth";
@@ -20,7 +20,7 @@ export async function GET(
 
     if (!viewer) {
       return NextResponse.json(
-        { error: "Não autenticado" },
+        { error: "NÃ£o autenticado" },
         { status: 401 },
       );
     }
@@ -28,12 +28,12 @@ export async function GET(
     const company = await findLocalCompanyById(companyId);
     if (!company) {
       return NextResponse.json(
-        { error: "Empresa não encontrada" },
+        { error: "Empresa nÃ£o encontrada" },
         { status: 404 },
       );
     }
 
-    // Construir contexto (valida permissões)
+    // Construir contexto (valida permissÃµes)
     const context = buildProfileRuntimeContext({
       viewer,
       entityType: "company",
@@ -48,12 +48,12 @@ export async function GET(
 
     if (!context.permissions.canView) {
       return NextResponse.json(
-        { error: "Sem permissão para visualizar" },
+        { error: "Sem permissÃ£o para visualizar" },
         { status: 403 },
       );
     }
 
-    // Retornar apenas campos visíveis
+    // Retornar apenas campos visÃ­veis
     return NextResponse.json({
       id: company.id,
       name: company.name,
@@ -66,7 +66,7 @@ export async function GET(
       phone: company.phone ?? null,
       website: company.website ?? null,
       status: company.status,
-      context, // Debug: incluir contexto para validação
+      context, // Debug: incluir contexto para validaÃ§Ã£o
     });
   } catch (error) {
     console.error("Error fetching company profile:", error);
@@ -103,7 +103,7 @@ export async function PATCH(
 
     if (!viewer) {
       return NextResponse.json(
-        { error: "Não autenticado" },
+        { error: "NÃ£o autenticado" },
         { status: 401 },
       );
     }
@@ -111,12 +111,12 @@ export async function PATCH(
     const company = await findLocalCompanyById(companyId);
     if (!company) {
       return NextResponse.json(
-        { error: "Empresa não encontrada" },
+        { error: "Empresa nÃ£o encontrada" },
         { status: 404 },
       );
     }
 
-    // Construir contexto (valida permissões)
+    // Construir contexto (valida permissÃµes)
     const context = buildProfileRuntimeContext({
       viewer,
       entityType: "company",
@@ -131,7 +131,7 @@ export async function PATCH(
 
     if (!context.permissions.canEdit) {
       return NextResponse.json(
-        { error: "Sem permissão para editar" },
+        { error: "Sem permissÃ£o para editar" },
         { status: 403 },
       );
     }
@@ -148,7 +148,7 @@ export async function PATCH(
       address: company.address,
     };
 
-    // Aplicar atualização
+    // Aplicar atualizaÃ§Ã£o
     const updated = await updateLocalCompany(companyId, {
       name: update.name ?? company.name,
       tax_id: update.taxId ?? company.tax_id,
@@ -167,7 +167,7 @@ export async function PATCH(
       );
     }
 
-    // Log de auditoria (simplificado; em produção seria em Prisma)
+    // Log de auditoria (simplificado; em produÃ§Ã£o seria em Prisma)
     const auditEntry: ProfileAuditEntry = {
       id: crypto.randomUUID(),
       entityType: "company",
@@ -212,7 +212,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validação falhou", details: error.issues },
+        { error: "ValidaÃ§Ã£o falhou", details: error.issues },
         { status: 400 },
       );
     }
@@ -223,3 +223,4 @@ export async function PATCH(
     );
   }
 }
+

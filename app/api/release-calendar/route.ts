@@ -9,7 +9,7 @@ import {
 } from "@/data/releaseCalendarModel";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
 import { getAccessContext } from "@/lib/auth/session";
-import { canAccess } from "@/lib/permissions/can-access";
+import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
 import { getReleaseCalendarSummary, listReleaseCalendarEvents, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
@@ -39,7 +39,13 @@ async function requireReleaseCalendarAccess(req: NextRequest, action: "view" | "
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401, headers: NO_STORE_HEADERS });
   }
 
-  const allowed = canAccess(access, { moduleId: "release_calendar", action });
+  const permissions = resolveEffectivePermissionMatrix({
+    role: access.role,
+    companyRole: access.companyRole,
+    globalRole: access.globalRole,
+    isGlobalAdmin: access.isGlobalAdmin,
+  });
+  const allowed = access.isGlobalAdmin || hasPermissionAccess(permissions, "release_calendar", action);
   if (!allowed) {
     return NextResponse.json({ error: "Sem permissao para acessar a agenda." }, { status: 403, headers: NO_STORE_HEADERS });
   }

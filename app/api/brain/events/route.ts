@@ -1,21 +1,22 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+
 import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);
   if (!accessResult.ok) {
     return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
   }
+
   const url = new URL(req.url);
   const moduleFilter = url.searchParams.get("module");
   const graph = buildMockBrainGraph();
-  const canViewLogs = accessResult.ok && (accessResult.context.hasGlobalVisibility || accessResult.context.canManage);
+  const visibleGraph = filterBrainDomainGraphByAccess(graph.nodes, graph.edges, accessResult.context);
 
-  const events = graph.nodes
+  const events = visibleGraph.nodes
     .filter((node) => node.createdAt || node.generatedBy || node.type === "log")
     .filter((node) => !moduleFilter || node.module === moduleFilter)
-    .filter((node) => canViewLogs || node.type !== "log")
     .slice(0, 50)
     .map((node) => ({
       id: `event:${node.id}`,
@@ -35,4 +36,3 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ events, source: "fallback" });
 }
-

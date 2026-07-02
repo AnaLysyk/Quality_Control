@@ -23,7 +23,8 @@ test.describe("Mapa do Sistema", () => {
     await page.waitForLoadState("networkidle");
 
     await expect(page.getByRole("heading", { name: "Mapa do Sistema" })).toBeVisible();
-    await expect(page.getByTestId("nav-admin-system-map")).toBeVisible();
+    await expect(page.getByTestId("nav-management")).toBeVisible();
+    await expect(page.getByTestId("nav-logs")).toBeVisible();
     await expect(page.getByText(`Exibindo ${TOTAL_ROUTES} de ${TOTAL_ROUTES} rotas.`)).toBeVisible();
 
     await page.getByLabel("Buscar no mapa do sistema").fill("/automacoes/ui-studio");
@@ -62,6 +63,6 @@ test.describe("Mapa do Sistema", () => {
     });
     await expect(page.getByText("Mapa do Sistema", { exact: true })).toBeVisible();
     await expect(page.getByText("permissions.view", { exact: true })).toBeVisible();
-    await expect(page.getByTestId("nav-admin-system-map")).toHaveCount(0);
+    await expect(page.getByTestId("nav-management")).toHaveCount(0);
   });
 });

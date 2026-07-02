@@ -35,8 +35,8 @@ describe("perfil suporte - navegacao base", () => {
         "chat",
         "brain",
         "documents",
-        "users",
-        "admin",
+        "management",
+        "logs",
       ]),
     );
   });
@@ -54,14 +54,12 @@ describe("perfil suporte - navegacao base", () => {
         "support-create",
         "support-kanban",
         "support-chamados",
-        "users-list",
-        "users-list-empresas",
         "auto-playwright",
         "auto-ui-studio",
         "brain-graph",
         "brain-ask",
-        "admin-permissions",
-        "admin-audit-logs",
+        "management-profile",
+        "management-users",
       ]),
     );
   });

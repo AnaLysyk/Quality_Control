@@ -1,27 +1,46 @@
-"use client";
+﻿"use client";
 
+
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
 export const dynamic = "force-dynamic";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiAlertTriangle,
   FiCheck,
+  FiChevronDown,
+  FiChevronRight,
+  FiClock,
   FiEye,
   FiEyeOff,
-  FiFilter,
-  FiGrid,
-  FiLayers,
   FiRefreshCw,
+  FiRotateCcw,
   FiSave,
   FiSearch,
   FiShield,
   FiSliders,
+  FiUsers,
+  FiX,
 } from "react-icons/fi";
 import AccessDeniedState from "@/components/access/AccessDeniedState";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
 import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
-import { getFixedProfileHint, getFixedProfileLabel, getFixedProfileTone } from "@/lib/fixedProfilePresentation";
-import { ACTION_LABELS, PERMISSION_MODULES, getActionLabel, type PermissionModule } from "@/lib/permissionCatalog";
+import { getFixedProfileLabel } from "@/lib/fixedProfilePresentation";
+import { PERMISSION_MODULES, type PermissionModule } from "@/lib/permissionCatalog";
 import {
   applyPermissionOverride,
   hasPermissionAccess,
@@ -29,11 +48,52 @@ import {
   type PermissionMatrix,
 } from "@/lib/permissionMatrix";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
-import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
 
-type RoutePermission = { moduleId: string; action: string } | null;
+type ProfileUserSummary = {
+  id: string;
+  name: string | null;
+  fullName: string | null;
+  email: string;
+  label: string;
+  active: boolean;
+  status: string;
+  hasOverride: boolean;
+  overrideCount: number;
+  effectiveCount: number;
+  updatedAt: string | null;
+  companyId?: string | null;
+  companySlug?: string | null;
+  companyName?: string | null;
+  clientId?: string | null;
+  clientSlug?: string | null;
+  primaryCompanySlug?: string | null;
+  companyIds?: string[];
+  companySlugs?: string[];
+  companies?: Array<{
+    id?: string | null;
+    slug?: string | null;
+    name?: string | null;
+  }>;
+  company?: {
+    id?: string | null;
+    slug?: string | null;
+    name?: string | null;
+  } | null;
+};
 
-type ProfileOverride = {
+type ProfileUsersResponse = {
+  role: SystemRole;
+  label: string;
+  users: ProfileUserSummary[];
+  total: number;
+};
+
+type UserPermissionRow = ProfileUserSummary & {
+  role: SystemRole;
+  roleLabel: string;
+};
+
+type PermissionOverride = {
   role?: SystemRole;
   allow?: PermissionMatrix;
   deny?: PermissionMatrix;
@@ -42,11 +102,12 @@ type ProfileOverride = {
   reason?: string | null;
 };
 
-type ProfilePermissionsResponse = {
+type UserPermissionsResponse = {
   role: SystemRole;
   label: string;
   systemDefaults: PermissionMatrix;
-  override: ProfileOverride | null;
+  profileDefaults?: PermissionMatrix;
+  override: PermissionOverride | null;
   permissions: PermissionMatrix;
   canEdit: boolean;
   user?: {
@@ -66,69 +127,21 @@ type ProfilePermissionsResponse = {
   };
 };
 
-type ProfileUserSummary = {
-  id: string;
-  name: string | null;
-  fullName: string | null;
-  email: string;
-  label: string;
-  active: boolean;
-  status: string;
-  hasOverride: boolean;
-  overrideCount: number;
-  effectiveCount: number;
-  updatedAt: string | null;
-};
-
-type ProfileUsersResponse = {
-  role: SystemRole;
-  label: string;
-  users: ProfileUserSummary[];
-  total: number;
-};
-
 type NoticeState =
   | { type: "idle" }
   | { type: "success"; message: string }
   | { type: "error"; message: string };
 
-const PROFILE_ORDER: SystemRole[] = [
-  SYSTEM_ROLES.LEADER_TC,
-  SYSTEM_ROLES.TECHNICAL_SUPPORT,
-  SYSTEM_ROLES.TESTING_COMPANY_USER,
-  SYSTEM_ROLES.EMPRESA,
-  SYSTEM_ROLES.COMPANY_USER,
+type UserSortKey = "name" | "role" | "status" | "updatedAt" | "permissions" | "adjustments";
+type SortDirection = "asc" | "desc";
+
+const PROFILE_OPTIONS: Array<{ role: SystemRole; label: string }> = [
+  { role: SYSTEM_ROLES.LEADER_TC, label: "Líder TC" },
+  { role: SYSTEM_ROLES.TECHNICAL_SUPPORT, label: "Suporte Técnico" },
+  { role: SYSTEM_ROLES.TESTING_COMPANY_USER, label: "Usuário TC" },
+  { role: SYSTEM_ROLES.EMPRESA, label: "Empresa" },
+  { role: SYSTEM_ROLES.COMPANY_USER, label: "Usuário da Empresa" },
 ];
-
-const QUICK_CONTROL_MODULES = new Set(["dashboard", "context", "operations", "ai", "brain", "chat"]);
-
-const PROFILE_GUIDES: Record<SystemRole, string[]> = {
-  [SYSTEM_ROLES.LEADER_TC]: [
-    "Visão global sem precisar escolher empresa ou projeto.",
-    "Pode acompanhar Brain, IA, Chat, usuários, suporte e governança.",
-    "Operacional fica opcional: aparece apenas se o módulo estiver liberado.",
-  ],
-  [SYSTEM_ROLES.TECHNICAL_SUPPORT]: [
-    "Enxerga o que precisa para atendimento, suporte e operação assistida.",
-    "Não precisa selecionar empresa/projeto antes de consultar a visão geral.",
-    "Operacional, Brain, IA e Chat podem ser ligados ou escondidos por perfil.",
-  ],
-  [SYSTEM_ROLES.TESTING_COMPANY_USER]: [
-    "Troca empresa e projeto conforme o vínculo de trabalho.",
-    "Vê dados operacionais apenas quando o contexto permitir.",
-    "Acesso a IA, Brain e Chat pode ser ajustado sem mexer no código.",
-  ],
-  [SYSTEM_ROLES.EMPRESA]: [
-    "Perfil institucional da empresa com visão do próprio contexto.",
-    "Não precisa escolher empresa antes; o projeto guia o recorte de dados.",
-    "Menus administrativos ficam ocultos quando a permissão não existir.",
-  ],
-  [SYSTEM_ROLES.COMPANY_USER]: [
-    "Usuário da empresa com acesso simples e limitado ao próprio uso.",
-    "Vê apenas telas úteis para consultar, pedir suporte e acompanhar qualidade.",
-    "Funções avançadas ficam invisíveis para não poluir a navegação.",
-  ],
-};
 
 function normalizeText(value: string) {
   return value
@@ -171,12 +184,12 @@ function removeAction(matrix: PermissionMatrix, moduleId: string, action: string
 }
 
 function toggleOverrideAction(
-  override: ProfileOverride,
+  override: PermissionOverride,
   systemDefaults: PermissionMatrix,
   moduleId: string,
   action: string,
   shouldAllow: boolean,
-): ProfileOverride {
+): PermissionOverride {
   const baseHasAction = hasPermissionAccess(systemDefaults, moduleId, action);
   let allow = normalizePermissionMatrix(override.allow);
   let deny = normalizePermissionMatrix(override.deny);
@@ -192,54 +205,6 @@ function toggleOverrideAction(
   return { ...override, allow, deny };
 }
 
-function resolveRoutePermission(permission: RoutePermission | undefined, routeModuleId?: string | null): RoutePermission {
-  if (permission) return permission;
-  if (routeModuleId === "chat") return { moduleId: "chat", action: "view" };
-  return null;
-}
-
-function routePermissionAllowed(permissions: PermissionMatrix, permission: RoutePermission) {
-  if (!permission) return true;
-  if (permission.action === "view") {
-    return ["view", "view_own", "view_company", "view_all"].some((action) =>
-      hasPermissionAccess(permissions, permission.moduleId, action),
-    );
-  }
-  return hasPermissionAccess(permissions, permission.moduleId, permission.action);
-}
-
-function getModulePermissionState(
-  module: PermissionModule,
-  systemDefaults: PermissionMatrix,
-  effectivePermissions: PermissionMatrix,
-) {
-  const total = module.actions.length;
-  const allowed = module.actions.filter((action) => hasPermissionAccess(effectivePermissions, module.id, action)).length;
-  const baseAllowed = module.actions.filter((action) => hasPermissionAccess(systemDefaults, module.id, action)).length;
-  if (allowed === 0) return { label: "Oculto", tone: "border-rose-200 bg-rose-50 text-rose-700", allowed, total, baseAllowed };
-  if (allowed === total) return { label: "Completo", tone: "border-emerald-200 bg-emerald-50 text-emerald-700", allowed, total, baseAllowed };
-  return { label: "Parcial", tone: "border-amber-200 bg-amber-50 text-amber-800", allowed, total, baseAllowed };
-}
-
-function formatDateTime(value?: string | null) {
-  if (!value) return "Sem alteração salva";
-  const time = Date.parse(value);
-  if (!Number.isFinite(time)) return "Sem alteração salva";
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(time);
-}
-
-function notifyPermissionRuntimeChanged() {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("qc:permissions-changed"));
-  window.localStorage.setItem("qc:permissions-changed", String(Date.now()));
-}
-
 function resolveCurrentRole(user: ReturnType<typeof usePermissionAccess>["user"], accessRole?: string | null) {
   return (
     normalizeLegacyRole(typeof user?.permissionRole === "string" ? user.permissionRole : null) ??
@@ -249,330 +214,589 @@ function resolveCurrentRole(user: ReturnType<typeof usePermissionAccess>["user"]
   );
 }
 
-function PermissionToggle(props: {
-  moduleId: string;
-  action: string;
-  systemDefaults: PermissionMatrix;
-  effectivePermissions: PermissionMatrix;
-  disabled: boolean;
-  compact?: boolean;
-  onToggle: (moduleId: string, action: string, checked: boolean) => void;
-}) {
-  const { moduleId, action, systemDefaults, effectivePermissions, disabled, compact = false, onToggle } = props;
-  const checked = hasPermissionAccess(effectivePermissions, moduleId, action);
-  const baseChecked = hasPermissionAccess(systemDefaults, moduleId, action);
-  const changed = checked !== baseChecked;
+function formatDateTime(value?: string | null) {
+  if (!value) return "Sem data";
+  const time = Date.parse(value);
+  if (!Number.isFinite(time)) return "Sem data";
 
-  return (
-    <label
-      className={[
-        "group flex items-center gap-3 rounded-2xl border text-sm font-semibold transition",
-        compact ? "min-h-9 px-3 py-2" : "min-h-11 px-3.5 py-2.5",
-        checked
-          ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-          : "border-slate-200 bg-white text-slate-600",
-        changed ? "ring-2 ring-blue-100" : "",
-        disabled ? "cursor-not-allowed opacity-65" : "cursor-pointer hover:border-blue-300 hover:bg-blue-50/50",
-      ].join(" ")}
-    >
-      <span
-        className={[
-          "relative flex h-5 w-9 shrink-0 items-center rounded-full border transition",
-          checked ? "border-emerald-400 bg-emerald-500" : "border-slate-300 bg-slate-200",
-        ].join(" ")}
-      >
-        <input
-          type="checkbox"
-          className="sr-only"
-          checked={checked}
-          disabled={disabled}
-          onChange={(event) => onToggle(moduleId, action, event.target.checked)}
-        />
-        <span
-          className={[
-            "absolute h-4 w-4 rounded-full bg-white shadow-sm transition",
-            checked ? "left-4" : "left-0.5",
-          ].join(" ")}
-        />
-      </span>
-      <span className="min-w-0 flex-1">{getActionLabel(action)}</span>
-      {changed ? (
-        <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-blue-700">
-          ajuste
-        </span>
-      ) : null}
-    </label>
-  );
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(time);
 }
 
-export default function ProfileManagementPage() {
+function toRecord(value: unknown) {
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+}
+
+function addScopeKey(keys: Set<string>, value: unknown) {
+  if (typeof value !== "string") return;
+  const normalized = value.trim().toLowerCase();
+  if (normalized) keys.add(normalized);
+}
+
+function collectCompanyScopeKeys(source: unknown) {
+  const keys = new Set<string>();
+  const record = toRecord(source);
+
+  [
+    "companyId",
+    "companySlug",
+    "companyName",
+    "clientId",
+    "clientSlug",
+    "primaryCompanySlug",
+    "activeCompanySlug",
+    "activeClientSlug",
+  ].forEach((field) => addScopeKey(keys, record[field]));
+
+  ["companyIds", "companySlugs", "clientIds", "clientSlugs"].forEach((field) => {
+    const value = record[field];
+    if (Array.isArray(value)) value.forEach((item) => addScopeKey(keys, item));
+  });
+
+  const company = toRecord(record.company);
+  ["id", "slug", "name"].forEach((field) => addScopeKey(keys, company[field]));
+
+  const companies = record.companies;
+  if (Array.isArray(companies)) {
+    companies.forEach((item) => {
+      const itemRecord = toRecord(item);
+      ["id", "slug", "name"].forEach((field) => addScopeKey(keys, itemRecord[field]));
+    });
+  }
+
+  return keys;
+}
+
+function canAccessUserByCompanyScope(profileUser: UserPermissionRow, allowedCompanyKeys: Set<string>) {
+  const userCompanyKeys = collectCompanyScopeKeys(profileUser);
+
+  if (!allowedCompanyKeys.size) return false;
+  if (!userCompanyKeys.size) return false;
+
+  for (const key of userCompanyKeys) {
+    if (allowedCompanyKeys.has(key)) return true;
+  }
+
+  return false;
+}
+
+function notifyPermissionRuntimeChanged() {
+  if (typeof window === "undefined") return;
+
+  window.dispatchEvent(new CustomEvent("qc:permissions-changed"));
+
+  try {
+    window.localStorage.setItem("qc:permissions-changed", String(Date.now()));
+  } catch {
+    // Mantém apenas o evento.
+  }
+}
+
+function resolveStatusLabel(user: UserPermissionRow) {
+  const normalized = normalizeText(user.status ?? "");
+
+  if (normalized.includes("inactive") || normalized.includes("inativo")) return "Inativo";
+  if (normalized.includes("active") || normalized.includes("ativo")) return "Ativo";
+
+  return user.active ? "Ativo" : "Inativo";
+}
+
+function resolveStatusFilterValue(user: UserPermissionRow) {
+  return resolveStatusLabel(user) === "Ativo" ? "ativo" : "inativo";
+}
+
+
+function profileBadgeClass(role?: string | null) {
+  const value = String(role ?? "").toLowerCase();
+
+  if (value.includes("leader") || value.includes("lider")) {
+    return "border-red-300 bg-red-50 text-red-800 dark:border-red-400/50 dark:bg-red-500/20 dark:text-red-100";
+  }
+
+  if (value.includes("technical") || value.includes("support") || value.includes("suporte")) {
+    return "border-cyan-300 bg-cyan-50 text-cyan-800 dark:border-cyan-400/50 dark:bg-cyan-500/20 dark:text-cyan-100";
+  }
+
+  if (value.includes("testing") || value.includes("tc")) {
+    return "border-indigo-300 bg-indigo-50 text-indigo-800 dark:border-indigo-400/50 dark:bg-indigo-500/20 dark:text-indigo-100";
+  }
+
+  if (value.includes("empresa") && value.includes("user")) {
+    return "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-400/50 dark:bg-emerald-500/20 dark:text-emerald-100";
+  }
+
+  if (value.includes("empresa") || value.includes("company")) {
+    return "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-400/50 dark:bg-amber-500/20 dark:text-amber-100";
+  }
+
+  return "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-500/50 dark:bg-slate-700/45 dark:text-slate-100";
+}
+function statusBadgeClass(user: UserPermissionRow) {
+  return resolveStatusFilterValue(user) === "ativo"
+    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+    : "border-slate-200 bg-slate-50 text-slate-600";
+}
+
+function getModuleState(module: PermissionModule, permissions: PermissionMatrix) {
+  const allowed = module.actions.filter((action) => hasPermissionAccess(permissions, module.id, action)).length;
+  const total = module.actions.length;
+
+  if (allowed === 0) {
+    return {
+      label: "Oculto",
+      tone: "border-rose-200 bg-rose-50 text-rose-700",
+      icon: FiEyeOff,
+      allowed,
+      total,
+    };
+  }
+
+  if (allowed === total) {
+    return {
+      label: "Ativo",
+      tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      icon: FiEye,
+      allowed,
+      total,
+    };
+  }
+
+  return {
+    label: "Parcial",
+    tone: "border-amber-200 bg-amber-50 text-amber-800",
+    icon: FiSliders,
+    allowed,
+    total,
+  };
+}
+
+export default function UsersPermissionsPage() {
   const { user, accessContext, loading, can, refreshUser } = usePermissionAccess();
-  const [selectedRole, setSelectedRole] = useState<SystemRole>(SYSTEM_ROLES.LEADER_TC);
-  const [query, setQuery] = useState("");
-  const [profileState, setProfileState] = useState<ProfilePermissionsResponse | null>(null);
-  const [draftOverride, setDraftOverride] = useState<ProfileOverride>({ allow: {}, deny: {} });
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState<NoticeState>({ type: "idle" });
-  const [profileUsers, setProfileUsers] = useState<ProfileUserSummary[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  const [users, setUsers] = useState<UserPermissionRow[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<NoticeState>({ type: "idle" });
+
+  const [query, setQuery] = useState("");
+  const [profileFilter, setProfileFilter] = useState<"all" | SystemRole>("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateStart, setDateStart] = useState("");
+  const [dateEnd, setDateEnd] = useState("");
+
+  const [sortKey, setSortKey] = useState<UserSortKey>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [loadingDetailsId, setLoadingDetailsId] = useState<string | null>(null);
+  const [savingUserId, setSavingUserId] = useState<string | null>(null);
+  const [detailsByUserId, setDetailsByUserId] = useState<Record<string, UserPermissionsResponse>>({});
+  const [draftsByUserId, setDraftsByUserId] = useState<Record<string, PermissionOverride>>({});
 
   const currentRole = resolveCurrentRole(user, accessContext?.role ?? null);
+
   const canView =
     user?.isGlobalAdmin === true ||
     currentRole === SYSTEM_ROLES.LEADER_TC ||
     currentRole === SYSTEM_ROLES.TECHNICAL_SUPPORT ||
     can("permissions", "view");
-  const canEdit = profileState?.canEdit === true && can("permissions", "edit");
 
-  useEffect(() => {
-    let cancelled = false;
+  const canSeeAllUsers =
+    user?.isGlobalAdmin === true ||
+    currentRole === SYSTEM_ROLES.LEADER_TC ||
+    currentRole === SYSTEM_ROLES.TECHNICAL_SUPPORT;
 
-    async function loadProfile() {
-      setLoadingProfile(true);
-      setNotice({ type: "idle" });
-      try {
-        const response = await fetch(
-          selectedUserId ? `/api/admin/user-permissions/${selectedUserId}` : `/api/admin/profile-permissions/${selectedRole}`,
-          { credentials: "include" },
-        );
-        const payload = (await response.json().catch(() => null)) as ProfilePermissionsResponse | { error?: string } | null;
-        if (!response.ok) throw new Error((payload as { error?: string } | null)?.error ?? "Falha ao carregar perfil");
-        if (cancelled) return;
-        const data = payload as ProfilePermissionsResponse;
-        setProfileState(data);
-        setDraftOverride(data.override ?? { role: selectedRole, allow: {}, deny: {} });
-      } catch (error) {
-        if (!cancelled) {
-          setProfileState(null);
-          setDraftOverride({ role: selectedRole, allow: {}, deny: {} });
-          setNotice({ type: "error", message: error instanceof Error ? error.message : "Falha ao carregar perfil" });
-        }
-      } finally {
-        if (!cancelled) setLoadingProfile(false);
-      }
+  const allowedCompanyKeys = useMemo(() => {
+    const keys = new Set<string>();
+
+    collectCompanyScopeKeys(user).forEach((key) => keys.add(key));
+    collectCompanyScopeKeys(accessContext).forEach((key) => keys.add(key));
+
+    return keys;
+  }, [accessContext, user]);
+
+  const loadUsers = useCallback(async () => {
+    setLoadingUsers(true);
+    setError(null);
+
+    try {
+      const responses = await Promise.all(
+        PROFILE_OPTIONS.map(async (profile) => {
+          const response = await fetch(`/api/admin/profile-permissions/${profile.role}/users`, {
+            credentials: "include",
+          });
+
+          const payload = (await response.json().catch(() => null)) as ProfileUsersResponse | { error?: string } | null;
+
+          if (!response.ok) {
+            throw new Error((payload as { error?: string } | null)?.error ?? "Falha ao carregar usuários.");
+          }
+
+          return {
+            role: profile.role,
+            roleLabel: profile.label,
+            users: ((payload as ProfileUsersResponse)?.users ?? []) as ProfileUserSummary[],
+          };
+        }),
+      );
+
+      const byId = new Map<string, UserPermissionRow>();
+
+      responses.forEach((group) => {
+        group.users.forEach((profileUser) => {
+          if (!profileUser.id || byId.has(profileUser.id)) return;
+
+          byId.set(profileUser.id, {
+            ...profileUser,
+            role: group.role,
+            roleLabel: group.roleLabel,
+          });
+        });
+      });
+
+      const allUsers = Array.from(byId.values());
+      const scopedUsers = canSeeAllUsers
+        ? allUsers
+        : allUsers.filter((profileUser) => canAccessUserByCompanyScope(profileUser, allowedCompanyKeys));
+
+      setUsers(scopedUsers);
+    } catch (loadError) {
+      setUsers([]);
+      setError(loadError instanceof Error ? loadError.message : "Falha ao carregar usuários.");
+    } finally {
+      setLoadingUsers(false);
     }
-
-    if (canView) void loadProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, [canView, selectedRole, selectedUserId]);
+  }, [allowedCompanyKeys, canSeeAllUsers]);
 
   useEffect(() => {
-    setSelectedUserId(null);
-  }, [selectedRole]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadUsers() {
-      setLoadingUsers(true);
-      try {
-        const response = await fetch(`/api/admin/profile-permissions/${selectedRole}/users`, { credentials: "include" });
-        const payload = (await response.json().catch(() => null)) as ProfileUsersResponse | { error?: string } | null;
-        if (!response.ok) throw new Error((payload as { error?: string } | null)?.error ?? "Falha ao carregar usuários do perfil");
-        if (!cancelled) setProfileUsers((payload as ProfileUsersResponse).users ?? []);
-      } catch {
-        if (!cancelled) setProfileUsers([]);
-      } finally {
-        if (!cancelled) setLoadingUsers(false);
-      }
-    }
-
     if (canView) void loadUsers();
-    return () => {
-      cancelled = true;
-    };
-  }, [canView, selectedRole]);
+  }, [canView, loadUsers]);
 
-  const systemDefaults = useMemo(
-    () => profileState?.systemDefaults ?? normalizePermissionMatrix(resolveRoleDefaults(selectedRole)),
-    [profileState?.systemDefaults, selectedRole],
-  );
+  async function loadUserPermissions(profileUser: UserPermissionRow) {
+    if (detailsByUserId[profileUser.id]) return;
 
-  const effectivePermissions = useMemo(
-    () => applyPermissionOverride(systemDefaults, draftOverride),
-    [draftOverride, systemDefaults],
-  );
-
-  const hasDraftChanges = useMemo(() => {
-    const current = JSON.stringify({
-      allow: normalizePermissionMatrix(profileState?.override?.allow),
-      deny: normalizePermissionMatrix(profileState?.override?.deny),
-    });
-    const draft = JSON.stringify({
-      allow: normalizePermissionMatrix(draftOverride.allow),
-      deny: normalizePermissionMatrix(draftOverride.deny),
-    });
-    return current !== draft;
-  }, [draftOverride.allow, draftOverride.deny, profileState?.override?.allow, profileState?.override?.deny]);
-
-  const normalizedQuery = normalizeText(query);
-
-  const filteredModules = useMemo(() => {
-    if (!normalizedQuery) return PERMISSION_MODULES;
-    return PERMISSION_MODULES.filter((permissionModule) => {
-      const haystack = normalizeText(
-        `${permissionModule.id} ${permissionModule.label} ${permissionModule.description} ${permissionModule.category} ${permissionModule.actions.join(" ")}`,
-      );
-      return haystack.includes(normalizedQuery);
-    });
-  }, [normalizedQuery]);
-
-  const groupedModules = useMemo(() => {
-    const groups = new Map<string, PermissionModule[]>();
-    for (const permissionModule of filteredModules) {
-      const list = groups.get(permissionModule.category) ?? [];
-      list.push(permissionModule);
-      groups.set(permissionModule.category, list);
-    }
-    return Array.from(groups.entries());
-  }, [filteredModules]);
-
-  const allScreenRows = useMemo(() => {
-    return SYSTEM_ROUTES.map((route) => {
-      const permission = resolveRoutePermission(route.requiredPermission, route.moduleId);
-      const visible = routePermissionAllowed(effectivePermissions, permission);
-      const moduleLabel =
-        PERMISSION_MODULES.find((permissionModule) => permissionModule.id === permission?.moduleId)?.label ??
-        permission?.moduleId ??
-        "Controlada pelo produto";
-      return { route, permission, visible, moduleLabel };
-    });
-  }, [effectivePermissions]);
-
-  const screenRows = useMemo(() => {
-    if (!normalizedQuery) return allScreenRows;
-    return allScreenRows.filter((row) => {
-      const permissionLabel = row.permission
-        ? `${row.permission.moduleId} ${ACTION_LABELS[row.permission.action] ?? row.permission.action}`
-        : "produto";
-      const haystack = normalizeText(
-        `${row.route.label} ${row.route.path} ${row.route.moduleId} ${row.moduleLabel} ${permissionLabel}`,
-      );
-      return haystack.includes(normalizedQuery);
-    });
-  }, [allScreenRows, normalizedQuery]);
-
-  const selectedUser = profileUsers.find((item) => item.id === selectedUserId) ?? null;
-  const editingUser = Boolean(selectedUserId);
-  const visibleScreenCount = allScreenRows.filter((row) => row.visible).length;
-  const hiddenScreenCount = allScreenRows.length - visibleScreenCount;
-  const overriddenCount = countPermissionActions(draftOverride.allow) + countPermissionActions(draftOverride.deny);
-  const quickModules = PERMISSION_MODULES.filter((module) => QUICK_CONTROL_MODULES.has(module.id));
-  const fullModuleCount = PERMISSION_MODULES.filter(
-    (module) => getModulePermissionState(module, systemDefaults, effectivePermissions).allowed === module.actions.length,
-  ).length;
-  const hiddenModuleCount = PERMISSION_MODULES.filter(
-    (module) => getModulePermissionState(module, systemDefaults, effectivePermissions).allowed === 0,
-  ).length;
-
-  function handleToggle(moduleId: string, action: string, checked: boolean) {
-    setDraftOverride((current) => toggleOverrideAction(current, systemDefaults, moduleId, action, checked));
-  }
-
-  function handleModuleToggle(module: PermissionModule, shouldAllow: boolean) {
-    setDraftOverride((current) =>
-      module.actions.reduce(
-        (nextOverride, action) => toggleOverrideAction(nextOverride, systemDefaults, module.id, action, shouldAllow),
-        current,
-      ),
-    );
-  }
-
-  async function handleSave() {
-    if (!canEdit) return;
-    setSaving(true);
+    setLoadingDetailsId(profileUser.id);
     setNotice({ type: "idle" });
+
+    try {
+      const response = await fetch(`/api/admin/user-permissions/${profileUser.id}`, {
+        credentials: "include",
+      });
+
+      const payload = (await response.json().catch(() => null)) as UserPermissionsResponse | { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error((payload as { error?: string } | null)?.error ?? "Falha ao carregar permissões do usuário.");
+      }
+
+      const data = payload as UserPermissionsResponse;
+
+      setDetailsByUserId((current) => ({ ...current, [profileUser.id]: data }));
+      setDraftsByUserId((current) => ({
+        ...current,
+        [profileUser.id]: data.override ?? { role: data.role ?? profileUser.role, allow: {}, deny: {} },
+      }));
+    } catch (loadError) {
+      setNotice({
+        type: "error",
+        message: loadError instanceof Error ? loadError.message : "Falha ao carregar permissões do usuário.",
+      });
+    } finally {
+      setLoadingDetailsId(null);
+    }
+  }
+
+  function toggleExpandedUser(profileUser: UserPermissionRow) {
+    setExpandedUserId((current) => {
+      const next = current === profileUser.id ? null : profileUser.id;
+      if (next) void loadUserPermissions(profileUser);
+      return next;
+    });
+  }
+
+  function getUserSystemDefaults(profileUser: UserPermissionRow) {
+    return detailsByUserId[profileUser.id]?.systemDefaults ?? normalizePermissionMatrix(resolveRoleDefaults(profileUser.role));
+  }
+
+  function getUserDraft(profileUser: UserPermissionRow) {
+    return draftsByUserId[profileUser.id] ?? { role: profileUser.role, allow: {}, deny: {} };
+  }
+
+  function getUserEffectivePermissions(profileUser: UserPermissionRow) {
+    return applyPermissionOverride(getUserSystemDefaults(profileUser), getUserDraft(profileUser));
+  }
+
+  function handleUserModuleToggle(profileUser: UserPermissionRow, module: PermissionModule, shouldAllow: boolean) {
+    const systemDefaults = getUserSystemDefaults(profileUser);
+
+    setDraftsByUserId((current) => {
+      const currentDraft = current[profileUser.id] ?? { role: profileUser.role, allow: {}, deny: {} };
+
+      const nextDraft = module.actions.reduce(
+        (nextOverride, action) => toggleOverrideAction(nextOverride, systemDefaults, module.id, action, shouldAllow),
+        currentDraft,
+      );
+
+      return { ...current, [profileUser.id]: nextDraft };
+    });
+  }
+
+  async function handleSaveUser(profileUser: UserPermissionRow) {
+    const draft = getUserDraft(profileUser);
+    const systemDefaults = getUserSystemDefaults(profileUser);
+    const permissions = applyPermissionOverride(systemDefaults, draft);
+
+    setSavingUserId(profileUser.id);
+    setNotice({ type: "idle" });
+
     try {
       const body = {
-        allow: normalizePermissionMatrix(draftOverride.allow),
-        deny: normalizePermissionMatrix(draftOverride.deny),
-        reason: editingUser ? "Ajuste individual pela Gestão de Perfis" : "Ajuste pela Gestão de Perfis",
+        allow: normalizePermissionMatrix(draft.allow),
+        deny: normalizePermissionMatrix(draft.deny),
+        reason: `Ajuste individual de permissões para ${profileUser.label}`,
       };
-      const response = await fetch(selectedUserId ? `/api/admin/user-permissions/${selectedUserId}` : `/api/admin/profile-permissions/${selectedRole}`, {
+
+      const response = await fetch(`/api/admin/user-permissions/${profileUser.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(body),
       });
-      const payload = (await response.json().catch(() => null)) as { saved?: ProfileOverride; permissions?: PermissionMatrix; error?: string } | null;
-      if (!response.ok) throw new Error(payload?.error ?? "Falha ao salvar perfil");
-      const saved = payload?.saved ?? { role: selectedRole, ...body };
-      setDraftOverride(saved);
-      setProfileState((current) =>
-        current
-          ? {
-              ...current,
-              override: saved,
-              permissions: payload?.permissions ?? effectivePermissions,
-              counts: {
-                system: countPermissionActions(systemDefaults),
-                allow: countPermissionActions(saved.allow),
-                deny: countPermissionActions(saved.deny),
-                effective: countPermissionActions(payload?.permissions ?? effectivePermissions),
-              },
-            }
-          : current,
+
+      const payload = (await response.json().catch(() => null)) as
+        | { saved?: PermissionOverride; permissions?: PermissionMatrix; error?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Falha ao salvar permissões do usuário.");
+      }
+
+      const saved = payload?.saved ?? { role: profileUser.role, ...body, updatedAt: new Date().toISOString() };
+      const savedPermissions = payload?.permissions ?? permissions;
+
+      setDraftsByUserId((current) => ({ ...current, [profileUser.id]: saved }));
+      setDetailsByUserId((current) => ({
+        ...current,
+        [profileUser.id]: {
+          ...(current[profileUser.id] ?? {
+            role: profileUser.role,
+            label: profileUser.roleLabel,
+            systemDefaults,
+            override: null,
+            permissions: savedPermissions,
+            canEdit: true,
+          }),
+          override: saved,
+          permissions: savedPermissions,
+        },
+      }));
+
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === profileUser.id
+            ? {
+                ...item,
+                hasOverride: true,
+                overrideCount: countPermissionActions(saved.allow) + countPermissionActions(saved.deny),
+                effectiveCount: countPermissionActions(savedPermissions),
+                updatedAt: saved.updatedAt ?? new Date().toISOString(),
+              }
+            : item,
+        ),
       );
-      setNotice({
-        type: "success",
-        message: editingUser
-          ? "Usuário salvo. Ele mantém o perfil, mas agora usa permissões individuais."
-          : "Perfil salvo. As mudanças já entram no controle de módulos, telas, IA, Brain e Chat.",
-      });
-      notifyPermissionRuntimeChanged();
+
       await refreshUser();
-    } catch (error) {
-      setNotice({ type: "error", message: error instanceof Error ? error.message : "Falha ao salvar perfil" });
+      notifyPermissionRuntimeChanged();
+
+      setNotice({ type: "success", message: "Permissões individuais salvas." });
+    } catch (saveError) {
+      setNotice({
+        type: "error",
+        message: saveError instanceof Error ? saveError.message : "Falha ao salvar permissões do usuário.",
+      });
     } finally {
-      setSaving(false);
+      setSavingUserId(null);
     }
   }
 
-  async function handleReset() {
-    if (!canEdit) return;
-    setSaving(true);
+  async function handleResetUser(profileUser: UserPermissionRow) {
+    const confirmed = window.confirm(`Restaurar ${profileUser.label} para o padrão do perfil?`);
+    if (!confirmed) return;
+
+    setSavingUserId(profileUser.id);
     setNotice({ type: "idle" });
+
     try {
-      const response = await fetch(selectedUserId ? `/api/admin/user-permissions/${selectedUserId}` : `/api/admin/profile-permissions/${selectedRole}`, {
+      const response = await fetch(`/api/admin/user-permissions/${profileUser.id}`, {
         method: "DELETE",
         credentials: "include",
       });
+
       const payload = (await response.json().catch(() => null)) as { permissions?: PermissionMatrix; error?: string } | null;
-      if (!response.ok) throw new Error(payload?.error ?? "Falha ao restaurar perfil");
-      const emptyOverride = { role: selectedRole, allow: {}, deny: {} };
-      setDraftOverride(emptyOverride);
-      setProfileState((current) =>
-        current
-          ? {
-              ...current,
-              override: null,
-              permissions: payload?.permissions ?? systemDefaults,
-              counts: {
-                system: countPermissionActions(systemDefaults),
-                allow: 0,
-                deny: 0,
-                effective: countPermissionActions(payload?.permissions ?? systemDefaults),
-              },
-            }
-          : current,
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Falha ao restaurar permissões do usuário.");
+      }
+
+      const permissions = payload?.permissions ?? getUserSystemDefaults(profileUser);
+
+      setDraftsByUserId((current) => ({
+        ...current,
+        [profileUser.id]: { role: profileUser.role, allow: {}, deny: {} },
+      }));
+
+      setDetailsByUserId((current) => ({
+        ...current,
+        [profileUser.id]: {
+          ...(current[profileUser.id] ?? {
+            role: profileUser.role,
+            label: profileUser.roleLabel,
+            systemDefaults: getUserSystemDefaults(profileUser),
+            override: null,
+            permissions,
+            canEdit: true,
+          }),
+          override: null,
+          permissions,
+        },
+      }));
+
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === profileUser.id
+            ? {
+                ...item,
+                hasOverride: false,
+                overrideCount: 0,
+                effectiveCount: countPermissionActions(permissions),
+                updatedAt: null,
+              }
+            : item,
+        ),
       );
-      setNotice({
-        type: "success",
-        message: editingUser
-          ? "Usuário restaurado. Ele voltou a seguir o padrão efetivo do perfil."
-          : "Perfil restaurado para o padrão do sistema.",
-      });
-      notifyPermissionRuntimeChanged();
+
       await refreshUser();
-    } catch (error) {
-      setNotice({ type: "error", message: error instanceof Error ? error.message : "Falha ao restaurar perfil" });
+      notifyPermissionRuntimeChanged();
+
+      setNotice({ type: "success", message: "Usuário restaurado para o padrão do perfil." });
+    } catch (resetError) {
+      setNotice({
+        type: "error",
+        message: resetError instanceof Error ? resetError.message : "Falha ao restaurar permissões do usuário.",
+      });
     } finally {
-      setSaving(false);
+      setSavingUserId(null);
     }
+  }
+
+  const filteredUsers = useMemo(() => {
+    const normalizedQuery = normalizeText(query);
+    const minTime = dateStart ? new Date(`${dateStart}T00:00:00`).getTime() : null;
+    const maxTime = dateEnd ? new Date(`${dateEnd}T23:59:59`).getTime() : null;
+
+    return users.filter((profileUser) => {
+      if (normalizedQuery) {
+        const content = normalizeText(
+          `${profileUser.label} ${profileUser.name ?? ""} ${profileUser.fullName ?? ""} ${profileUser.email}`,
+        );
+
+        if (!content.includes(normalizedQuery)) return false;
+      }
+
+      if (profileFilter !== "all" && profileUser.role !== profileFilter) return false;
+      if (statusFilter !== "all" && resolveStatusFilterValue(profileUser) !== statusFilter) return false;
+
+      if (minTime || maxTime) {
+        const time = profileUser.updatedAt ? Date.parse(profileUser.updatedAt) : Number.NaN;
+
+        if (!Number.isFinite(time)) return false;
+        if (minTime && time < minTime) return false;
+        if (maxTime && time > maxTime) return false;
+      }
+
+      return true;
+    });
+  }, [dateEnd, dateStart, profileFilter, query, statusFilter, users]);
+
+  const sortedUsers = useMemo(() => {
+    const items = [...filteredUsers];
+
+    items.sort((a, b) => {
+      let left: number | string = "";
+      let right: number | string = "";
+
+      if (sortKey === "name") {
+        left = a.label || a.email;
+        right = b.label || b.email;
+      }
+
+      if (sortKey === "role") {
+        left = a.roleLabel;
+        right = b.roleLabel;
+      }
+
+      if (sortKey === "status") {
+        left = resolveStatusLabel(a);
+        right = resolveStatusLabel(b);
+      }
+
+      if (sortKey === "updatedAt") {
+        left = a.updatedAt ? Date.parse(a.updatedAt) : 0;
+        right = b.updatedAt ? Date.parse(b.updatedAt) : 0;
+      }
+
+      if (sortKey === "permissions") {
+        left = a.effectiveCount;
+        right = b.effectiveCount;
+      }
+
+      if (sortKey === "adjustments") {
+        left = a.overrideCount;
+        right = b.overrideCount;
+      }
+
+      const result =
+        typeof left === "number" && typeof right === "number"
+          ? left - right
+          : String(left).localeCompare(String(right), "pt-BR");
+
+      return sortDirection === "asc" ? result : -result;
+    });
+
+    return items;
+  }, [filteredUsers, sortDirection, sortKey]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = sortedUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const activeUsersCount = users.filter((profileUser) => profileUser.active).length;
+  const overrideUsersCount = users.filter((profileUser) => profileUser.hasOverride).length;
+
+  function clearFilters() {
+    setQuery("");
+    setProfileFilter("all");
+    setStatusFilter("all");
+    setDateStart("");
+    setDateEnd("");
+    setPage(1);
+  }
+
+  function toggleSort(nextKey: UserSortKey) {
+    if (sortKey === nextKey) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setSortKey(nextKey);
+    setSortDirection("asc");
   }
 
   if (loading) return <AccessDeniedState state="loading" />;
@@ -580,362 +804,565 @@ export default function ProfileManagementPage() {
   if (!canView) {
     return (
       <AccessDeniedState
-        moduleName="Gestão de Perfis"
+        moduleName="Usuários e Permissões"
         requiredPermission="permissions:view"
         title="Acesso restrito"
-        description="A central de perfis exige permissão para visualizar a matriz de acessos."
+        description="A gestão de permissões individuais exige permissão para visualizar acessos."
       />
     );
   }
 
+  const sortMark = sortDirection === "asc" ? "↑" : "↓";
+
   return (
-    <main className="profile-permissions-clean min-h-screen px-3 py-3 text-[#0b1a3c] sm:px-5 lg:px-6">
-      <div className="mx-auto flex w-full max-w-none flex-col gap-4">
-        <section className="profile-permissions-shell overflow-hidden rounded-[1.5rem] border border-slate-200/70 bg-white/82 shadow-sm shadow-slate-200/60">
-          <div className="profile-permissions-hero border-b border-slate-200/70 px-5 py-4 text-[#011848] dark:text-white sm:px-6">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/12 text-[#011848] dark:text-white ring-1 ring-white/20">
-                  <FiShield className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-100">Governança de acesso</p>
-                  <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Gestão de Perfis</h1>
-                </div>
+    <main className="qc-users-permissions-page min-h-screen px-4 py-4 text-[#0f172a] lg:px-6">
+      {notice.type !== "idle" ? (
+        <div
+          className={[
+            "fixed right-5 top-5 z-50 flex max-w-md items-start gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold shadow-xl",
+            notice.type === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+              : "border-rose-200 bg-rose-50 text-rose-800",
+          ].join(" ")}
+        >
+          {notice.type === "success" ? (
+            <FiCheck className="mt-0.5 h-4 w-4 shrink-0" />
+          ) : (
+            <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          )}
+          <span className="min-w-0 flex-1">{notice.message}</span>
+          <button
+            type="button"
+            onClick={() => setNotice({ type: "idle" })}
+            aria-label="Fechar mensagem"
+            title="Fechar mensagem"
+            className="rounded-lg p-1 opacity-70 transition hover:bg-white/70 hover:opacity-100"
+          >
+            <FiX className="h-4 w-4" />
+          </button>
+        </div>
+      ) : null}
+
+      <div className="flex w-full max-w-none flex-col gap-4">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0">
+              <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#011848]">
+                <FiShield className="h-4 w-4" />
+                Gestão de permissões individuais
               </div>
 
-              <div className="profile-permissions-kpis flex flex-wrap gap-2 text-xs font-bold text-blue-50/90">
-                <span>{countPermissionActions(effectivePermissions)} permissões</span>
-                <span>{visibleScreenCount} telas visíveis</span>
-                <span>{hiddenScreenCount} ocultas</span>
-                <span>{overriddenCount} ajustes</span>
-              </div>
+              <h1 className="text-2xl font-black tracking-tight text-[#0f172a] xl:text-3xl">
+                Permissões por usuário
+              </h1>
+
+              <p className="mt-1 max-w-6xl text-sm font-semibold text-slate-500">
+                Gerencie exceções individuais sem alterar o padrão global definido por perfil.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/admin/permissions"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
+              >
+                <FiShield className="h-3.5 w-3.5" />
+                Perfis e permissões
+              </Link>
             </div>
           </div>
 
-          <div className="profile-permissions-layout grid gap-4 p-4 sm:p-5 xl:grid-cols-[260px_minmax(0,1fr)]">
-            <aside className="profile-permissions-profile-list rounded-2xl border border-slate-200/70 bg-slate-50/55 p-2.5">
-              <p className="px-2 pb-2 text-xs font-black uppercase tracking-[0.18em] text-slate-500">Tipo de perfil</p>
-              <div className="grid gap-2">
-                {PROFILE_ORDER.map((profile) => {
-                  const selected = selectedRole === profile;
-                  return (
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: "Usuários", value: users.length, icon: FiUsers },
+              { label: "Ativos", value: activeUsersCount, icon: FiEye },
+              { label: "Ajustes individuais", value: overrideUsersCount, icon: FiSliders },
+              { label: "Perfis", value: PROFILE_OPTIONS.length, icon: FiShield },
+            ].map((metric) => {
+              const Icon = metric.icon;
+
+              return (
+                <div key={metric.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">{metric.label}</p>
+                      <p className="mt-1 text-2xl font-black text-[#011848]">{metric.value}</p>
+                    </div>
+                    <Icon className="h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-[#011848]">
+          Empresas visualizam apenas usuários vinculados ao próprio escopo. Liderança e suporte técnico visualizam todos.
+        </section>
+
+        <section className="sticky top-3 z-30 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <label className="flex h-11 w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3">
+            <FiSearch className="h-4 w-4 shrink-0 text-slate-500" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
+              placeholder="Buscar por nome, e-mail ou usuário"
+              className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
+            />
+          </label>
+
+          <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_auto_auto]">
+            <select
+              aria-label="Filtrar por perfil"
+              title="Filtrar por perfil"
+              value={profileFilter}
+              onChange={(event) => {
+                setProfileFilter(event.target.value as "all" | SystemRole);
+                setPage(1);
+              }}
+              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none"
+            >
+              <option value="all">Todos os perfis</option>
+              {PROFILE_OPTIONS.map((profile) => (
+                <option key={profile.role} value={profile.role}>
+                  {profile.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              aria-label="Filtrar por status"
+              title="Filtrar por status"
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setPage(1);
+              }}
+              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none"
+            >
+              <option value="all">Todos os status</option>
+              <option value="ativo">Ativo</option>
+              <option value="inativo">Inativo</option>
+            </select>
+
+            <input
+              aria-label="Data inicial"
+              title="Data inicial"
+              type="date"
+              value={dateStart}
+              onChange={(event) => {
+                setDateStart(event.target.value);
+                setPage(1);
+              }}
+              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none"
+            />
+
+            <input
+              aria-label="Data final"
+              title="Data final"
+              type="date"
+              value={dateEnd}
+              onChange={(event) => {
+                setDateEnd(event.target.value);
+                setPage(1);
+              }}
+              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none"
+            />
+
+            <select
+              aria-label="Itens por página"
+              title="Itens por página"
+              value={pageSize}
+              onChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(1);
+              }}
+              className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none"
+            >
+              <option value={10}>10 por página</option>
+              <option value={20}>20 por página</option>
+              <option value={50}>50 por página</option>
+              <option value={100}>100 por página</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-[#011848] hover:text-[#011848]"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-base font-black text-[#0f172a]">Listagem de usuários</h2>
+              <p className="mt-1 text-xs font-semibold text-slate-500">
+                {loadingUsers ? "Carregando usuários..." : `${sortedUsers.length} usuários encontrados`}
+              </p>
+            </div>
+          </div>
+
+          {error ? (
+            <div className="m-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
+              {error}
+            </div>
+          ) : null}
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-full border-collapse text-left">
+              <thead className="bg-slate-50 dark:bg-slate-900/80">
+                <tr className="border-b border-slate-200 dark:border-slate-700/70">
+                  <th className="w-10 px-4 py-3" />
+
+                  <th className="px-4 py-3">
                     <button
-                      key={profile}
                       type="button"
-                      onClick={() => setSelectedRole(profile)}
+                      onClick={() => {
+                        setSortKey("name");
+                        setSortDirection((current) => (sortKey === "name" ? (current === "asc" ? "desc" : "asc") : "asc"));
+                      }}
                       className={[
-                        "flex min-h-12 items-center justify-between gap-3 rounded-2xl border px-3 py-2 text-left text-sm font-black transition",
-                        selected
-                          ? "border-[#011848] bg-[#011848] text-[#011848] dark:text-white shadow-sm"
-                          : `${getFixedProfileTone(profile)} hover:border-[#011848] hover:bg-white`,
+                        "inline-flex items-center gap-1 text-xs font-black transition",
+                        sortKey === "name" ? "text-cyan-300" : "text-slate-400 hover:text-white",
                       ].join(" ")}
                     >
-                      <span>{getFixedProfileLabel(profile, { short: true })}</span>
-                      {selected ? <FiCheck className="h-4 w-4" /> : null}
+                      Usuário
+                      <span className={sortKey === "name" ? "text-cyan-300" : "text-slate-500"}>
+                        {sortKey === "name" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                      </span>
                     </button>
-                  );
-                })}
-              </div>
+                  </th>
 
-              <div className="profile-permissions-profile-hint mt-3 rounded-2xl border border-slate-200/70 bg-white/60 p-3">
-                <h2 className="text-base font-black text-[#0b1a3c]">{getFixedProfileLabel(selectedRole)}</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-600">{getFixedProfileHint(selectedRole)}</p>
-                <ul className="mt-3 space-y-2 text-xs font-semibold leading-5 text-slate-600">
-                  {PROFILE_GUIDES[selectedRole].map((item) => (
-                    <li key={item} className="flex gap-2">
-                      <FiCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </aside>
-
-            <div className="flex min-w-0 flex-col gap-4">
-              <section className="profile-permissions-toolbar sticky top-3 z-10 rounded-2xl border border-slate-200/70 bg-white/88 p-3 shadow-sm backdrop-blur">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                  <label className="flex min-h-11 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 xl:max-w-xl">
-                    <FiSearch className="h-4 w-4 shrink-0 text-slate-500" />
-                    <input
-                      type="search"
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Buscar módulo, tela, função, Chat, IA, Brain ou Operacional..."
-                      className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400"
-                      aria-label="Buscar módulo, tela ou função"
-                    />
-                  </label>
-
-                  <div className="flex flex-wrap items-center gap-2">
+                  <th className="px-4 py-3">
                     <button
                       type="button"
-                      onClick={handleReset}
-                      disabled={!canEdit || saving || loadingProfile}
-                      className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 text-sm font-black text-slate-700 transition hover:border-[#011848] disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={() => {
+                        setSortKey("role");
+                        setSortDirection((current) => (sortKey === "role" ? (current === "asc" ? "desc" : "asc") : "asc"));
+                      }}
+                      className={[
+                        "inline-flex items-center gap-1 text-xs font-black transition",
+                        sortKey === "role" ? "text-cyan-300" : "text-slate-400 hover:text-white",
+                      ].join(" ")}
                     >
-                      <FiRefreshCw className="h-4 w-4" />
-                      {editingUser ? "Restaurar usuário" : "Restaurar padrão"}
+                      Perfil
+                      <span className={sortKey === "role" ? "text-cyan-300" : "text-slate-500"}>
+                        {sortKey === "role" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                      </span>
                     </button>
+                  </th>
+
+                  <th className="px-4 py-3">
                     <button
                       type="button"
-                      onClick={handleSave}
-                      disabled={!canEdit || saving || loadingProfile || !hasDraftChanges}
-                      className="inline-flex h-11 items-center gap-2 rounded-2xl bg-[#011848] px-4 text-sm font-black text-[#011848] dark:text-white shadow-sm transition hover:bg-[#0b255d] disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={() => {
+                        setSortKey("status");
+                        setSortDirection((current) => (sortKey === "status" ? (current === "asc" ? "desc" : "asc") : "asc"));
+                      }}
+                      className={[
+                        "inline-flex items-center gap-1 text-xs font-black transition",
+                        sortKey === "status" ? "text-cyan-300" : "text-slate-400 hover:text-white",
+                      ].join(" ")}
                     >
-                      <FiSave className="h-4 w-4" />
-                      {saving ? "Salvando..." : hasDraftChanges ? "Salvar alterações" : "Tudo salvo"}
+                      Status
+                      <span className={sortKey === "status" ? "text-cyan-300" : "text-slate-500"}>
+                        {sortKey === "status" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                      </span>
                     </button>
-                  </div>
-                </div>
+                  </th>
 
-                <div className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 lg:flex-row lg:items-center lg:justify-between">
-                  <span>
-                    {editingUser && selectedUser ? (
-                      <>Editando usuário: <strong>{selectedUser.label}</strong> · </>
-                    ) : (
-                      <>Editando padrão do perfil · </>
-                    )}
-                    Última alteração: <strong>{formatDateTime(draftOverride.updatedAt)}</strong>{" "}
-                    {draftOverride.updatedBy ? `por ${draftOverride.updatedBy}` : ""}
-                  </span>
-                  <span className="font-semibold">
-                    {fullModuleCount} módulos completos · {hiddenModuleCount} ocultos · {screenRows.length} telas no filtro atual
-                  </span>
-                </div>
+                  <th className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSortKey("updatedAt");
+                        setSortDirection((current) => (sortKey === "updatedAt" ? (current === "asc" ? "desc" : "asc") : "desc"));
+                      }}
+                      className={[
+                        "inline-flex items-center gap-1 text-xs font-black transition",
+                        sortKey === "updatedAt" ? "text-cyan-300" : "text-slate-400 hover:text-white",
+                      ].join(" ")}
+                    >
+                      Último ajuste
+                      <span className={sortKey === "updatedAt" ? "text-cyan-300" : "text-slate-500"}>
+                        {sortKey === "updatedAt" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                      </span>
+                    </button>
+                  </th>
 
-                {notice.type !== "idle" ? (
-                  <div
-                    className={[
-                      "mt-4 flex items-start gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold",
-                      notice.type === "success"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                        : "border-rose-200 bg-rose-50 text-rose-800",
-                    ].join(" ")}
-                    role="status"
-                  >
-                    {notice.type === "success" ? <FiCheck className="mt-0.5 h-4 w-4" /> : <FiAlertTriangle className="mt-0.5 h-4 w-4" />}
-                    {notice.message}
-                  </div>
-                ) : null}
+                  <th className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSortKey("permissions");
+                        setSortDirection((current) => (sortKey === "permissions" ? (current === "asc" ? "desc" : "asc") : "desc"));
+                      }}
+                      className={[
+                        "inline-flex items-center gap-1 text-xs font-black transition",
+                        sortKey === "permissions" ? "text-cyan-300" : "text-slate-400 hover:text-white",
+                      ].join(" ")}
+                    >
+                      Permissões
+                      <span className={sortKey === "permissions" ? "text-cyan-300" : "text-slate-500"}>
+                        {sortKey === "permissions" ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+                      </span>
+                    </button>
+                  </th>
 
-                {!canEdit ? (
-                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-                    Seu perfil pode consultar esta central, mas não possui permissão para editar a matriz.
-                  </div>
-                ) : null}
-              </section>
+                  <th className="px-4 py-3 text-right text-xs font-black text-slate-400">
+                    Ajustes
+                  </th>
+                </tr>
+              </thead>
 
-              <section className="profile-permissions-section rounded-2xl border border-slate-200/70 bg-white/72 p-4">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <FiSliders className="h-4 w-4 text-[#ef0001]" />
-                      <h2 className="text-base font-black">Decisões rápidas do perfil</h2>
-                    </div>
-                    <p className="mt-1 text-xs leading-5 text-slate-600">
-                      Ligue ou esconda o que mais muda a experiência do usuário: visão geral, contexto, Operacional, IA, Brain e Chat.
-                    </p>
-                  </div>
-                </div>
+              <tbody className="divide-y divide-slate-100">
+                {pageRows.length ? (
+                  pageRows.map((profileUser) => {
+                    const expanded = expandedUserId === profileUser.id;
+                    const details = detailsByUserId[profileUser.id];
+                    const effectivePermissions = getUserEffectivePermissions(profileUser);
+                    const canEditUser = details?.canEdit === true && can("permissions", "edit");
+                    const savingThisUser = savingUserId === profileUser.id;
 
-                <div className="mt-4 grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
-                  {quickModules.map((module) => {
-                    const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
                     return (
-                      <div key={module.id} className="rounded-2xl border border-slate-200/70 bg-[#f8fafc] dark:bg-white/55 p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="font-black text-[#0b1a3c]">{module.label}</h3>
-                            <p className="mt-1 text-xs leading-5 text-slate-600">{module.description}</p>
-                          </div>
-                          <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${state.tone}`}>
-                            {state.label}
-                          </span>
-                        </div>
-                        <div className="mt-3 grid gap-2">
-                          {module.actions.map((action) => (
-                            <PermissionToggle
-                              key={`${module.id}-${action}`}
-                              moduleId={module.id}
-                              action={action}
-                              systemDefaults={systemDefaults}
-                              effectivePermissions={effectivePermissions}
-                              disabled={!canEdit || loadingProfile || saving}
-                              compact
-                              onToggle={handleToggle}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
+                      <Fragment key={profileUser.id}>
+                        <tr className="bg-white align-top hover:bg-slate-50">
+                          <td className="px-4 py-3">
+                            <button
+                              type="button"
+                              onClick={() => toggleExpandedUser(profileUser)}
+                              className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-[#011848] hover:text-[#011848]"
+                            >
+                              {expanded ? <FiChevronDown className="h-4 w-4" /> : <FiChevronRight className="h-4 w-4" />}
+                            </button>
+                          </td>
 
-              <section className="profile-permissions-section rounded-2xl border border-slate-200/70 bg-white/72 p-4">
-                <div className="flex items-center gap-2">
-                  <FiGrid className="h-4 w-4 text-[#ef0001]" />
-                  <h2 className="text-base font-black">Módulos e funções</h2>
-                </div>
-                <p className="mt-1 text-xs leading-5 text-slate-600">
-                  Cada módulo pode ser liberado, bloqueado ou ajustado ação por ação. O que ficar sem permissão sai do menu e da experiência do perfil.
-                </p>
+                          <td className="px-4 py-3">
+                            <p className="text-sm font-black text-[#0f172a]">{profileUser.label}</p>
+                            <p className="mt-1 text-xs font-semibold text-slate-500">{profileUser.email}</p>
+                          </td>
 
-                <div className="mt-5 space-y-5">
-                  {groupedModules.length ? (
-                    groupedModules.map(([category, modules]) => (
-                      <div key={category} className="border-t border-slate-200 pt-4 first:border-t-0 first:pt-0">
-                        <div className="mb-3 flex items-center gap-2">
-                          <FiLayers className="h-4 w-4 text-slate-500" />
-                          <h3 className="text-sm font-black uppercase tracking-[0.14em] text-slate-500">{category}</h3>
-                        </div>
-                        <div className="grid gap-3">
-                          {modules.map((module) => {
-                            const state = getModulePermissionState(module, systemDefaults, effectivePermissions);
-                            return (
-                              <div key={module.id} className="rounded-2xl border border-slate-200/70 bg-[#f8fafc] dark:bg-white/58 p-3">
-                                <div className="grid gap-4 xl:grid-cols-[minmax(220px,340px)_minmax(0,1fr)]">
-                                  <div>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <h4 className="font-black text-[#0b1a3c]">{module.label}</h4>
-                                      <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${state.tone}`}>
-                                        {state.allowed}/{state.total}
-                                      </span>
-                                    </div>
-                                    <p className="mt-1 text-xs leading-5 text-slate-600">{module.description}</p>
-                                    <p className="mt-2 text-[11px] font-black uppercase tracking-wide text-slate-400">{module.id}</p>
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleModuleToggle(module, true)}
-                                        disabled={!canEdit || loadingProfile || saving}
-                                        className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
-                                      >
-                                        Liberar módulo
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleModuleToggle(module, false)}
-                                        disabled={!canEdit || loadingProfile || saving}
-                                        className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
-                                      >
-                                        Ocultar módulo
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <div className="grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
-                                    {module.actions.map((action) => (
-                                      <PermissionToggle
-                                        key={`${module.id}-${action}`}
-                                        moduleId={module.id}
-                                        action={action}
-                                        systemDefaults={systemDefaults}
-                                        effectivePermissions={effectivePermissions}
-                                        disabled={!canEdit || loadingProfile || saving}
-                                        onToggle={handleToggle}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
-                      Nenhum módulo encontrado para a busca atual.
-                    </div>
-                  )}
-                </div>
-              </section>
+                          <td className="px-4 py-3">
+                            <span className={["w-fit rounded-full border px-2.5 py-1 text-xs font-black", profileBadgeClass(profileUser.role)].join(" ")}>{profileUser.roleLabel || getFixedProfileLabel(profileUser.role, { short: true })}</span>
+                          </td>
 
-              <section className="profile-permissions-section rounded-2xl border border-slate-200/70 bg-white/72 p-4">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <FiFilter className="h-4 w-4 text-[#ef0001]" />
-                      <h2 className="text-base font-black">Telas visíveis e invisíveis</h2>
-                    </div>
-                    <p className="mt-1 text-xs leading-5 text-slate-600">
-                      Prévia calculada em tempo real. Se uma tela depender de permissão bloqueada, ela fica invisível para o perfil selecionado.
-                    </p>
-                  </div>
-                  <div className="flex gap-2 text-xs font-black">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-800">
-                      <FiEye className="h-3.5 w-3.5" /> {visibleScreenCount} visíveis
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-rose-800">
-                      <FiEyeOff className="h-3.5 w-3.5" /> {hiddenScreenCount} ocultas
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-2">
-                  {screenRows.length ? (
-                    screenRows.map(({ route, permission, visible, moduleLabel }) => (
-                      <div
-                        key={route.id}
-                        className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-3 lg:grid-cols-[minmax(220px,1.3fr)_minmax(180px,0.8fr)_150px_minmax(220px,0.9fr)] lg:items-center"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-black text-[#0b1a3c]">{route.label}</div>
-                          <div className="mt-1 truncate text-xs font-semibold text-slate-500">{route.path}</div>
-                          <div className="mt-1 truncate text-[11px] font-semibold text-slate-400">{route.mainFile}</div>
-                        </div>
-                        <div>
-                          {permission ? (
-                            <div>
-                              <div className="text-sm font-black text-slate-700">{moduleLabel}</div>
-                              <div className="mt-1 text-xs text-slate-500">
-                                {permission.moduleId}:{ACTION_LABELS[permission.action] ?? permission.action}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-500">
-                              Controlada pelo produto
+                          <td className="px-4 py-3">
+                            <span
+                              className={[
+                                "w-fit rounded-full border px-2.5 py-1 text-xs font-black uppercase",
+                                statusBadgeClass(profileUser),
+                              ].join(" ")}
+                            >
+                              {resolveStatusLabel(profileUser)}
                             </span>
-                          )}
-                        </div>
-                        <div>
-                          <span
-                            className={[
-                              "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-black",
-                              visible
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                                : "border-rose-200 bg-rose-50 text-rose-800",
-                            ].join(" ")}
-                          >
-                            {visible ? <FiEye className="h-3.5 w-3.5" /> : <FiEyeOff className="h-3.5 w-3.5" />}
-                            {visible ? "Visível" : "Oculta"}
-                          </span>
-                        </div>
-                        <div>
-                          {permission ? (
-                            <PermissionToggle
-                              moduleId={permission.moduleId}
-                              action={permission.action}
-                              systemDefaults={systemDefaults}
-                              effectivePermissions={effectivePermissions}
-                              disabled={!canEdit || loadingProfile || saving}
-                              compact
-                              onToggle={handleToggle}
-                            />
-                          ) : (
-                            <span className="text-xs font-semibold text-slate-500">Sem ação configurável nesta matriz.</span>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
-                      Nenhuma tela encontrada para a busca atual.
-                    </div>
-                  )}
-                </div>
-              </section>
+                          </td>
+
+                          <td className="px-4 py-3 text-xs font-bold text-slate-500">
+                            {formatDateTime(profileUser.updatedAt)}
+                          </td>
+
+                          <td className="px-4 py-3 text-right">
+                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-600">
+                              {profileUser.effectiveCount}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-3 text-right">
+                            {profileUser.hasOverride ? (
+                              <span className="rounded-full border border-[#ef0001]/20 bg-[#ef0001]/5 px-2.5 py-1 text-xs font-black text-[#ef0001]">
+                                {profileUser.overrideCount}
+                              </span>
+                            ) : (
+                              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700">
+                                Padrão
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+
+                        {expanded ? (
+                          <tr className="bg-slate-50">
+                            <td colSpan={7} className="px-4 py-4">
+                              {loadingDetailsId === profileUser.id ? (
+                                <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-500">
+                                  Carregando permissões...
+                                </div>
+                              ) : (
+                                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+                                  <section className="rounded-2xl border border-slate-200 bg-white">
+                                    <div className="flex flex-col gap-2 border-b border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                                      <div>
+                                        <h3 className="text-sm font-black text-[#0f172a]">Permissões individuais</h3>
+                                        <p className="mt-1 text-xs font-semibold text-slate-500">
+                                          Ative ou desative módulos somente para este usuário.
+                                        </p>
+                                      </div>
+
+                                      <div className="flex flex-wrap gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleResetUser(profileUser)}
+                                          disabled={!canEditUser || savingThisUser}
+                                          aria-label={`Restaurar permissões de ${profileUser.label}`}
+                                          title="Restaurar para o padrão do perfil"
+                                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:border-[#ef0001] hover:text-[#ef0001] disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                          <FiRotateCcw className="h-3.5 w-3.5" />
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSaveUser(profileUser)}
+                                          disabled={!canEditUser || savingThisUser}
+                                          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#011848] px-3 text-xs font-black text-white transition hover:bg-[#0b245f] disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                          <FiSave className="h-3.5 w-3.5" />
+                                          {savingThisUser ? "Salvando..." : "Salvar"}
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    <div className="grid max-h-[520px] gap-0 overflow-y-auto">
+                                      {PERMISSION_MODULES.map((module) => {
+                                        const state = getModuleState(module, effectivePermissions);
+                                        const StateIcon = state.icon;
+
+                                        return (
+                                          <div key={module.id} className="grid gap-3 border-b border-slate-100 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_110px_160px] sm:items-center">
+                                            <div className="min-w-0">
+                                              <p className="truncate text-sm font-black text-[#0f172a]">{module.label}</p>
+                                              <p className="truncate text-xs font-semibold text-slate-500">{module.description}</p>
+                                            </div>
+
+                                            <span className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-black ${state.tone}`}>
+                                              <StateIcon className="h-3.5 w-3.5" />
+                                              {state.label}
+                                            </span>
+
+                                            <div className="flex justify-start gap-2 sm:justify-end">
+                                              <button
+                                                type="button"
+                                                onClick={() => handleUserModuleToggle(profileUser, module, true)}
+                                                disabled={!canEditUser || savingThisUser}
+                                                className="h-8 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-black text-emerald-800 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                              >
+                                                Ativar
+                                              </button>
+
+                                              <button
+                                                type="button"
+                                                onClick={() => handleUserModuleToggle(profileUser, module, false)}
+                                                disabled={!canEditUser || savingThisUser}
+                                                className="h-8 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-black text-rose-800 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                              >
+                                                Desativar
+                                              </button>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </section>
+
+                                  <aside className="rounded-2xl border border-slate-200 bg-white p-4">
+                                    <div className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-500">
+                                      <FiClock className="h-4 w-4" />
+                                      Histórico
+                                    </div>
+
+                                    {details?.override?.updatedAt ? (
+                                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                        <p className="text-sm font-black text-[#0f172a]">
+                                          {details.override.reason || "Permissões alteradas"}
+                                        </p>
+                                        <p className="mt-1 text-xs font-semibold text-slate-500">
+                                          {details.override.updatedBy ? `Alterado por ${details.override.updatedBy}` : "Alteração administrativa registrada."}
+                                        </p>
+                                        <p className="mt-2 text-[10px] font-black uppercase tracking-wide text-slate-400">
+                                          {formatDateTime(details.override.updatedAt)}
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                        <p className="text-sm font-black text-[#0f172a]">Sem alterações individuais</p>
+                                        <p className="mt-1 text-xs font-semibold text-slate-500">
+                                          Este usuário segue o padrão do perfil.
+                                        </p>
+                                      </div>
+                                    )}
+                                  </aside>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-10 text-center text-sm font-semibold text-slate-500">
+                      {loadingUsers ? "Carregando usuários..." : "Nenhum usuário encontrado com os filtros atuais."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-xs font-bold text-slate-500 md:flex-row md:items-center md:justify-between">
+            <span>
+              Exibindo {pageRows.length ? (currentPage - 1) * pageSize + 1 : 0}–
+              {Math.min(currentPage * pageSize, sortedUsers.length)} de {sortedUsers.length} usuários
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage(1)}
+                disabled={currentPage === 1}
+                className="h-8 rounded-lg border border-slate-200 bg-white px-3 font-black text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Primeira
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                disabled={currentPage === 1}
+                className="h-8 rounded-lg border border-slate-200 bg-white px-3 font-black text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Anterior
+              </button>
+
+              <span className="rounded-lg bg-slate-100 px-3 py-2 font-black text-slate-700">
+                {currentPage}/{totalPages}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                disabled={currentPage === totalPages}
+                className="h-8 rounded-lg border border-slate-200 bg-white px-3 font-black text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Próxima
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="h-8 rounded-lg border border-slate-200 bg-white px-3 font-black text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Última
+              </button>
             </div>
           </div>
         </section>
@@ -943,3 +1370,10 @@ export default function ProfileManagementPage() {
     </main>
   );
 }
+
+
+
+
+
+
+

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { canAccessBrainModule, resolveBrainAccess } from "@/lib/brain/access";
 import { prisma } from "@/lib/prismaClient";
 
 export async function GET(req: Request) {
@@ -29,7 +29,9 @@ export async function GET(req: Request) {
 
   const { context } = accessResult;
   const user = context.user;
-  const canViewLogs = context.hasGlobalVisibility || context.canManage;
+  const baseModules = ["Solicitacoes", "Defeitos", "Automacao", "Documentos", "Usuarios", "Permissoes", "Logs"];
+  const modules = baseModules.filter((moduleName) => canAccessBrainModule(context, moduleName));
+  const canViewLogs = modules.includes("Logs");
   const allowedCompanyIds = Array.from(context.allowedCompanyIds);
   const companies = await prisma.company.findMany({
     where: context.hasGlobalVisibility
@@ -69,7 +71,7 @@ export async function GET(req: Request) {
       slug: company.slug,
     })),
     projects,
-    modules: ["Solicitacoes", "Defeitos", "Automacao", "Documentos", "Usuarios", "Permissoes", ...(canViewLogs ? ["Logs"] : [])],
+    modules,
     permissions: {
       canViewGlobalBrain: context.hasGlobalVisibility,
       canViewLogs,

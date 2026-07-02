@@ -1,4 +1,6 @@
 import type { BrainAccessContext } from "./access";
+import { SYSTEM_ROUTES } from "@/lib/navigation/route-map";
+import { canAccessRoute } from "@/lib/permissions/can-access";
 
 export type ExecutiveBrainNode = {
   id: string;
@@ -178,11 +180,14 @@ const EXECUTIVE_EDGES: Array<[string, string, string]> = [
 ];
 
 function canSeeNode(node: ExecutiveNodeInput, access: BrainAccessContext) {
-  if (access.hasGlobalVisibility) return true;
   const roles = [access.user.permissionRole, access.user.companyRole, access.user.role]
     .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
     .map((value) => value.trim().toLowerCase());
-  return node.profiles.some((profile) => roles.includes(profile));
+  const hasProfileAccess = access.hasGlobalVisibility || node.profiles.some((profile) => roles.includes(profile));
+  if (!hasProfileAccess) return false;
+
+  const routeDefinition = SYSTEM_ROUTES.find((route) => route.path.split("?")[0] === node.route.split("?")[0]);
+  return routeDefinition ? canAccessRoute(access.userAccess, routeDefinition) : true;
 }
 
 export function getExecutiveBrainContextGraph(access: BrainAccessContext) {

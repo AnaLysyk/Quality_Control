@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
 import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { prisma } from "@/lib/prismaClient";
 
@@ -70,6 +70,21 @@ function profileLabel(profileType: string) {
   };
 
   return labels[profileType] ?? profileType.replace(/_/g, " ");
+}
+
+function readStringField(value: object, key: string) {
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" && field.trim().length > 0 ? field : null;
+}
+
+function profileKeyForUser(user: { role?: string | null; globalRole?: string | null }) {
+  return normalizeBrainProfile(
+    readStringField(user, "permissionRole") ??
+      user.role ??
+      user.globalRole ??
+      readStringField(user, "companyRole") ??
+      "",
+  );
 }
 
 function isSameUser(value?: string | null, userId?: string | null) {
@@ -303,14 +318,14 @@ export async function GET(req: Request) {
     [
       { id: "company" },
       ...visibleUsers.map((user) => ({
-        id: normalizeBrainProfile(String(user.permissionRole ?? user.role ?? user.globalRole ?? user.companyRole ?? "")),
+        id: profileKeyForUser(user),
       })),
     ],
   ).map((item) => item.id);
 
   for (const profileType of profileTypes) {
     const usersInProfile = visibleUsers.filter(
-      (user) => normalizeBrainProfile(String(user.permissionRole ?? user.role ?? user.globalRole ?? user.companyRole ?? "")) === profileType,
+      (user) => profileKeyForUser(user) === profileType,
     );
     const isCompanyProfile = profileType === "company";
 
@@ -401,7 +416,7 @@ export async function GET(req: Request) {
     const userCompanyId = user.home_company_id || user.created_by_company_id || companyBySlug.get(user.default_company_slug ?? "")?.id || null;
     const company = userCompanyId ? companyById.get(userCompanyId) : null;
     const userNodeId = `user:${user.id}`;
-    const profileType = normalizeBrainProfile(String(user.permissionRole ?? user.role ?? user.globalRole ?? user.companyRole ?? ""));
+    const profileType = profileKeyForUser(user);
     const role = normalizeRole(String(user.role ?? "")) ?? user.globalRole ?? "usuario";
 
     const userTickets = tickets.filter((ticket) => isSameUser(ticket.createdBy, user.id) || isSameUser(ticket.assignedToUserId, user.id));
@@ -671,19 +686,20 @@ export async function GET(req: Request) {
   const uniqueNodes = uniqueById(nodes);
   const nodeIds = new Set(uniqueNodes.map((node) => node.id));
   const uniqueEdges = uniqueById(edges).filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target));
+  const visibleGraph = filterBrainDomainGraphByAccess(uniqueNodes, uniqueEdges, access);
 
   return NextResponse.json({
-    nodes: uniqueNodes,
-    edges: uniqueEdges,
+    nodes: visibleGraph.nodes,
+    edges: visibleGraph.edges,
     summary: {
-      companies: companies.length,
-      projects: projects.length,
-      users: visibleUsers.length,
-      tickets: tickets.length,
-      ticketComments: comments.length,
-      defects: defects.length + kanbanCards.length,
-      notes: visibleNotes.length,
-      logs: events.length + visibleAuditLogs.length,
+      companies: visibleGraph.nodes.filter((node) => node.type === "company").length,
+      projects: visibleGraph.nodes.filter((node) => node.type === "project").length,
+      users: visibleGraph.nodes.filter((node) => node.type === "person").length,
+      tickets: visibleGraph.nodes.filter((node) => node.entityType === "ticket").length,
+      ticketComments: visibleGraph.nodes.filter((node) => node.entityType === "ticket_comment").length,
+      defects: visibleGraph.nodes.filter((node) => node.type === "defect").length,
+      notes: visibleGraph.nodes.filter((node) => node.entityType === "user_note").length,
+      logs: visibleGraph.nodes.filter((node) => node.type === "log").length,
       visibility: access.hasGlobalVisibility ? "global" : "scoped",
     },
   });

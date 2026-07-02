@@ -26,6 +26,16 @@ export type BrainNodeType =
   | "decision";
 
 export type BrainNodeStatus = "ok" | "warning" | "missing" | "pending" | "error" | "orphan";
+export type BrainNodeLifecycleStatus =
+  | "created"
+  | "active"
+  | "updated"
+  | "archived"
+  | "deleted"
+  | "hidden"
+  | "blocked_by_permission"
+  | "orphan"
+  | "stale";
 
 export type BrainEdgeType =
   | "belongs_to_company"
@@ -79,6 +89,21 @@ export type BrainNode = {
   outgoingCount?: number;
   missingKnowledge?: string[];
   actions?: string[];
+  tags?: string[];
+  aliases?: string[];
+  requiredPermissions?: string[];
+  visibleByPermission?: boolean;
+  lifecycleStatus?: BrainNodeLifecycleStatus;
+  source?: {
+    type?: string;
+    table?: string;
+    route?: string;
+    provider?: string;
+    externalId?: string;
+    generatedBy?: string;
+    generatedAt?: string;
+    updatedAt?: string;
+  };
   metadata?: Record<string, unknown>;
 };
 

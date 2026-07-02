@@ -20,6 +20,18 @@ export const OFFICIAL_BRAIN_NODE_TYPES = [
   "AgentRun",
   "GitHubPullRequest",
   "QaseCase",
+  "QaseProject",
+  "QaseSuite",
+  "QaseRun",
+  "QaseResult",
+  "QaseDefect",
+  "JiraProject",
+  "JiraIssue",
+  "JiraBug",
+  "JiraEpic",
+  "JiraSprint",
+  "BrainMemory",
+  "AuditEvent",
   "Artifact",
 ] as const;
 

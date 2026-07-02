@@ -1,10 +1,10 @@
-import { apiFail, apiOk } from "@/lib/apiResponse";
+﻿import { apiFail, apiOk } from "@/lib/apiResponse";
 import { getQualityRun, updateQualityRunStatus } from "@/lib/runOperationStore";
 import type { TestRunStatus } from "@/data/runOperationModel";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
@@ -24,9 +24,9 @@ function isRunStatus(value: unknown): value is TestRunStatus {
 
 export async function GET(request: Request, { params }: Params) {
   try {
-    const run = await getQualityRun(params.id);
+    const run = await getQualityRun((await params).id);
     if (!run) {
-      return apiFail(request, "Run não encontrada", { status: 404, code: "RUN_NOT_FOUND" });
+      return apiFail(request, "Run nÃ£o encontrada", { status: 404, code: "RUN_NOT_FOUND" });
     }
     return apiOk(request, { run }, "Run carregada");
   } catch (error) {
@@ -39,9 +39,9 @@ export async function PATCH(request: Request, { params }: Params) {
   const body = asRecord(await request.json().catch(() => null));
   try {
     if (!isRunStatus(body.status)) {
-      return apiFail(request, "Status inválido para run", { status: 400, code: "RUN_STATUS_INVALID" });
+      return apiFail(request, "Status invÃ¡lido para run", { status: 400, code: "RUN_STATUS_INVALID" });
     }
-    const result = await updateQualityRunStatus(params.id, body.status, actorFrom(request, body), text(body.reason) || null);
+    const result = await updateQualityRunStatus((await params).id, body.status, actorFrom(request, body), text(body.reason) || null);
     if (!result.ok) {
       return apiFail(request, result.error, { status: result.status, code: "RUN_STATUS_ERROR" });
     }
@@ -51,3 +51,6 @@ export async function PATCH(request: Request, { params }: Params) {
     return apiFail(request, "Erro ao atualizar run", { status: 500, code: "RUN_STATUS_UPDATE_ERROR", details: error });
   }
 }
+
+
+

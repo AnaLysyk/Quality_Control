@@ -14,6 +14,7 @@ import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios"
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { resolveProfilePermissionDefaults } from "@/lib/store/profilePermissionsStore";
+import { invalidateBrainCache } from "@/lib/brain/cache";
 import {
   countPermissionActions,
   deleteUserPermissionOverride,
@@ -223,6 +224,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
         effectiveCount: countPermissionActions(permissions),
       },
     });
+    invalidateBrainCache("user.permissions.updated");
 
     return NextResponse.json({
       ok: true,
@@ -278,6 +280,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ u
         effectiveCount: countPermissionActions(permissions),
       },
     });
+    invalidateBrainCache("user.permissions.reset");
 
     return NextResponse.json({ ok: true, permissions });
   } catch (error) {

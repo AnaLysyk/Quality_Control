@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ReactNode } from "react";
 import { getCompanyRouteSection } from "@/lib/companyRoutes";
@@ -60,3 +60,4 @@ export default function MainWrapper({ pathname, beforeContent, children }: MainW
     </main>
   );
 }
+

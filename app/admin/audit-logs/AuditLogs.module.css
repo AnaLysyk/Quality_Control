@@ -1265,3 +1265,761 @@
   font-size: 0.75rem;
   border-bottom: 1px solid rgba(229, 231, 235, 0.15);
 }
+
+/* =========================================================
+   DARK MODE — AUDIT LOGS
+   Ajuste direto no CSS module da tela.
+========================================================= */
+
+:global(html.dark) .card,
+:global([data-theme="dark"]) .card {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  box-shadow: 0 22px 52px rgba(2, 6, 23, 0.34) !important;
+}
+
+:global(html.dark) .overviewWrap,
+:global([data-theme="dark"]) .overviewWrap {
+  background: rgba(2, 6, 23, 0.20) !important;
+}
+
+:global(html.dark) .summaryCard,
+:global([data-theme="dark"]) .summaryCard {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.86)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: 0 14px 32px rgba(2, 6, 23, 0.28) !important;
+}
+
+:global(html.dark) .summaryLabel,
+:global([data-theme="dark"]) .summaryLabel {
+  color: rgba(191, 219, 254, 0.76) !important;
+}
+
+:global(html.dark) .summaryValue,
+:global([data-theme="dark"]) .summaryValue {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .summaryHint,
+:global([data-theme="dark"]) .summaryHint {
+  color: rgba(226, 232, 240, 0.74) !important;
+}
+
+:global(html.dark) .monitorCard,
+:global([data-theme="dark"]) .monitorCard {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: 0 16px 38px rgba(2, 6, 23, 0.28) !important;
+}
+
+:global(html.dark) .monitorTitle,
+:global([data-theme="dark"]) .monitorTitle {
+  color: #f8fafc !important;
+}
+
+:global(html.dark) .monitorSubtitle,
+:global(html.dark) .monitorMeta,
+:global([data-theme="dark"]) .monitorSubtitle,
+:global([data-theme="dark"]) .monitorMeta {
+  color: rgba(226, 232, 240, 0.74) !important;
+}
+
+:global(html.dark) .monitorMeta span,
+:global([data-theme="dark"]) .monitorMeta span {
+  background: rgba(30, 41, 59, 0.90) !important;
+  color: rgba(226, 232, 240, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+:global(html.dark) .monitorChart,
+:global([data-theme="dark"]) .monitorChart {
+  background: rgba(2, 6, 23, 0.26) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+:global(html.dark) .monitorEmpty,
+:global([data-theme="dark"]) .monitorEmpty {
+  background: rgba(2, 6, 23, 0.34) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: rgba(226, 232, 240, 0.78) !important;
+}
+
+:global(html.dark) .signalRow,
+:global([data-theme="dark"]) .signalRow {
+  background: rgba(15, 23, 42, 0.90) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+:global(html.dark) .signalRank,
+:global([data-theme="dark"]) .signalRank {
+  background: rgba(30, 41, 59, 0.95) !important;
+  color: rgba(226, 232, 240, 0.82) !important;
+}
+
+:global(html.dark) .signalName,
+:global([data-theme="dark"]) .signalName {
+  color: #f8fafc !important;
+}
+
+:global(html.dark) .signalMeta,
+:global([data-theme="dark"]) .signalMeta {
+  color: rgba(191, 219, 254, 0.76) !important;
+}
+
+:global(html.dark) .signalValue,
+:global([data-theme="dark"]) .signalValue {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .filtersWrap,
+:global([data-theme="dark"]) .filtersWrap {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+}
+
+:global(html.dark) .filterLabel,
+:global([data-theme="dark"]) .filterLabel {
+  color: rgba(226, 232, 240, 0.84) !important;
+}
+
+:global(html.dark) .filterInput,
+:global(html.dark) .filterSelect,
+:global([data-theme="dark"]) .filterInput,
+:global([data-theme="dark"]) .filterSelect {
+  background: rgba(2, 6, 23, 0.42) !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: #f8fafc !important;
+}
+
+:global(html.dark) .filterInput::placeholder,
+:global([data-theme="dark"]) .filterInput::placeholder {
+  color: rgba(226, 232, 240, 0.46) !important;
+}
+
+:global(html.dark) .eventList,
+:global([data-theme="dark"]) .eventList {
+  background: rgba(15, 23, 42, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+:global(html.dark) .listHeader,
+:global(html.dark) .paginationBar,
+:global([data-theme="dark"]) .listHeader,
+:global([data-theme="dark"]) .paginationBar {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: rgba(226, 232, 240, 0.82) !important;
+}
+
+:global(html.dark) .eventRow,
+:global([data-theme="dark"]) .eventRow {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+:global(html.dark) .eventRow:hover,
+:global([data-theme="dark"]) .eventRow:hover {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.18), rgba(59, 130, 246, 0.10)) !important;
+}
+
+:global(html.dark) .eventRowExpanded,
+:global([data-theme="dark"]) .eventRowExpanded {
+  background: rgba(30, 41, 59, 0.86) !important;
+}
+
+:global(html.dark) .eventTitle,
+:global([data-theme="dark"]) .eventTitle {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .eventTargetInline,
+:global(html.dark) .eventTime,
+:global(html.dark) .eventTimeDate,
+:global([data-theme="dark"]) .eventTargetInline,
+:global([data-theme="dark"]) .eventTime,
+:global([data-theme="dark"]) .eventTimeDate {
+  color: rgba(226, 232, 240, 0.72) !important;
+}
+
+:global(html.dark) .expandedPanel,
+:global([data-theme="dark"]) .expandedPanel {
+  background: rgba(2, 6, 23, 0.32) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+:global(html.dark) .tier,
+:global([data-theme="dark"]) .tier {
+  background: rgba(15, 23, 42, 0.78) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+:global(html.dark) .tierTitle,
+:global(html.dark) .tierTitleInline,
+:global([data-theme="dark"]) .tierTitle,
+:global([data-theme="dark"]) .tierTitleInline {
+  color: #f8fafc !important;
+}
+
+:global(html.dark) .kvLabel,
+:global([data-theme="dark"]) .kvLabel {
+  color: rgba(191, 219, 254, 0.72) !important;
+}
+
+:global(html.dark) .kvValue,
+:global([data-theme="dark"]) .kvValue {
+  color: rgba(226, 232, 240, 0.92) !important;
+}
+
+:global(html.dark) .technicalPre,
+:global([data-theme="dark"]) .technicalPre {
+  background: rgba(2, 6, 23, 0.76) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #e5e7eb !important;
+}
+
+:global(html.dark) .categoryChip,
+:global([data-theme="dark"]) .categoryChip {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: rgba(226, 232, 240, 0.86) !important;
+}
+
+:global(html.dark) .categoryChipActive,
+:global([data-theme="dark"]) .categoryChipActive {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.22), rgba(59, 130, 246, 0.14)) !important;
+  color: #ffffff !important;
+}
+
+
+/* =========================================================
+   AUDIT LOGS — FILTROS / SELECTS NO MODO ESCURO
+   Corrige fundo claro da lista dos filtros.
+========================================================= */
+
+:global(html.dark) .filterInput,
+:global(html.dark) .filterSelect,
+:global([data-theme="dark"]) .filterInput,
+:global([data-theme="dark"]) .filterSelect {
+  background: rgba(2, 6, 23, 0.62) !important;
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color-scheme: dark !important;
+}
+
+:global(html.dark) .filterSelect option,
+:global(html.dark) .filterSelect optgroup,
+:global([data-theme="dark"]) .filterSelect option,
+:global([data-theme="dark"]) .filterSelect optgroup {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+:global(html.dark) .filterSelect option:checked,
+:global(html.dark) .filterSelect option:hover,
+:global([data-theme="dark"]) .filterSelect option:checked,
+:global([data-theme="dark"]) .filterSelect option:hover {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+:global(html.dark) .filterInput::placeholder,
+:global([data-theme="dark"]) .filterInput::placeholder {
+  color: rgba(226, 232, 240, 0.48) !important;
+}
+
+:global(html.dark) .filterLabel,
+:global([data-theme="dark"]) .filterLabel {
+  color: rgba(226, 232, 240, 0.86) !important;
+}
+
+:global(html.dark) .filterInput:focus,
+:global(html.dark) .filterSelect:focus,
+:global([data-theme="dark"]) .filterInput:focus,
+:global([data-theme="dark"]) .filterSelect:focus {
+  outline: none !important;
+  border-color: rgba(59, 130, 246, 0.62) !important;
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.28),
+    0 10px 24px rgba(2, 6, 23, 0.28) !important;
+}
+
+/* Botões dos filtros no escuro */
+:global(html.dark) .btnPrimary,
+:global(html.dark) .btnGhost,
+:global(html.dark) .btnDanger,
+:global([data-theme="dark"]) .btnPrimary,
+:global([data-theme="dark"]) .btnGhost,
+:global([data-theme="dark"]) .btnDanger {
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+}
+
+:global(html.dark) .btnGhost,
+:global([data-theme="dark"]) .btnGhost {
+  background: rgba(15, 23, 42, 0.72) !important;
+}
+
+:global(html.dark) .btnGhost:hover,
+:global([data-theme="dark"]) .btnGhost:hover {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.18), rgba(59, 130, 246, 0.12)) !important;
+  color: #ffffff !important;
+}
+
+
+/* =========================================================
+   AUDIT LOGS — LISTA DARK REFINAMENTO FINAL
+========================================================= */
+
+/* Lista principal */
+:global(html.dark) .eventList,
+:global([data-theme="dark"]) .eventList {
+  background: rgba(15, 23, 42, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+/* Cabeçalho e paginação */
+:global(html.dark) .listHeader,
+:global(html.dark) .paginationBar,
+:global([data-theme="dark"]) .listHeader,
+:global([data-theme="dark"]) .paginationBar {
+  background: rgba(2, 6, 23, 0.28) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: rgba(226, 232, 240, 0.82) !important;
+}
+
+/* Linhas paradas sem destaque fixo */
+:global(html.dark) .eventRow,
+:global([data-theme="dark"]) .eventRow {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.20) !important;
+}
+
+/* Linha aberta não fica com degradê fixo */
+:global(html.dark) .eventRowExpanded,
+:global([data-theme="dark"]) .eventRowExpanded {
+  background: rgba(15, 23, 42, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+/* Degradê só ao passar o mouse na linha */
+:global(html.dark) .eventRow:hover,
+:global([data-theme="dark"]) .eventRow:hover {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.18), rgba(59, 130, 246, 0.12)) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Botão interno da linha sem fundo fixo */
+:global(html.dark) .eventButton,
+:global([data-theme="dark"]) .eventButton {
+  background: transparent !important;
+  color: #e5e7eb !important;
+}
+
+/* Título e metadados */
+:global(html.dark) .eventTitle,
+:global([data-theme="dark"]) .eventTitle {
+  color: #f8fafc !important;
+}
+
+:global(html.dark) .eventTargetInline,
+:global(html.dark) .eventTime,
+:global(html.dark) .eventTimeDate,
+:global([data-theme="dark"]) .eventTargetInline,
+:global([data-theme="dark"]) .eventTime,
+:global([data-theme="dark"]) .eventTimeDate {
+  color: rgba(226, 232, 240, 0.72) !important;
+}
+
+/* Avatar */
+:global(html.dark) .eventAvatar,
+:global([data-theme="dark"]) .eventAvatar {
+  background: rgba(226, 232, 240, 0.92) !important;
+  color: #011848 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Badges mais profissionais no dark */
+:global(html.dark) .badge,
+:global([data-theme="dark"]) .badge {
+  background: rgba(30, 41, 59, 0.86) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: rgba(226, 232, 240, 0.88) !important;
+}
+
+/* Badge de entidade */
+:global(html.dark) .badgeEntity,
+:global([data-theme="dark"]) .badgeEntity {
+  background: rgba(59, 130, 246, 0.16) !important;
+  color: rgba(219, 234, 254, 0.94) !important;
+  border-color: rgba(96, 165, 250, 0.26) !important;
+}
+
+/* Badges de sucesso/erro/alerta continuam legíveis */
+:global(html.dark) .badgeSuccess,
+:global([data-theme="dark"]) .badgeSuccess {
+  background: rgba(34, 197, 94, 0.16) !important;
+  color: rgba(187, 247, 208, 0.94) !important;
+  border-color: rgba(74, 222, 128, 0.28) !important;
+}
+
+:global(html.dark) .badgeError,
+:global([data-theme="dark"]) .badgeError {
+  background: rgba(239, 68, 68, 0.16) !important;
+  color: rgba(254, 202, 202, 0.94) !important;
+  border-color: rgba(248, 113, 113, 0.30) !important;
+}
+
+:global(html.dark) .badgeWarning,
+:global([data-theme="dark"]) .badgeWarning {
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: rgba(253, 230, 138, 0.94) !important;
+  border-color: rgba(251, 191, 36, 0.30) !important;
+}
+
+/* Paginação */
+:global(html.dark) .paginationSelect,
+:global([data-theme="dark"]) .paginationSelect {
+  background: rgba(2, 6, 23, 0.48) !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+
+:global(html.dark) .paginationBtn,
+:global(html.dark) .paginationPageBtn,
+:global([data-theme="dark"]) .paginationBtn,
+:global([data-theme="dark"]) .paginationPageBtn {
+  background: rgba(15, 23, 42, 0.82) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: rgba(226, 232, 240, 0.84) !important;
+}
+
+:global(html.dark) .paginationPageBtnActive,
+:global([data-theme="dark"]) .paginationPageBtnActive {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.22), rgba(59, 130, 246, 0.16)) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+/* Painel expandido */
+:global(html.dark) .expandedPanel,
+:global([data-theme="dark"]) .expandedPanel {
+  background: rgba(2, 6, 23, 0.34) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+
+/* =========================================================
+   AUDIT LOGS — LINHA SEM FOCO FIXO + HOVER ONLY
+========================================================= */
+
+/* Linha parada normal */
+:global(html.dark) .eventRow,
+:global([data-theme="dark"]) .eventRow {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+/* Linha expandida/selecionada NÃO fica vermelha fixa */
+:global(html.dark) .eventRowExpanded,
+:global([data-theme="dark"]) .eventRowExpanded {
+  background: rgba(15, 23, 42, 0.94) !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: none !important;
+}
+
+/* Botão interno da linha também não fica com foco fixo */
+:global(html.dark) .eventButton,
+:global(html.dark) .eventButton:focus,
+:global(html.dark) .eventButton:focus-visible,
+:global(html.dark) .eventButton:active,
+:global([data-theme="dark"]) .eventButton,
+:global([data-theme="dark"]) .eventButton:focus,
+:global([data-theme="dark"]) .eventButton:focus-visible,
+:global([data-theme="dark"]) .eventButton:active {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Degradê SOMENTE quando passa o mouse */
+:global(html.dark) .eventRow:hover,
+:global([data-theme="dark"]) .eventRow:hover {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.22), rgba(59, 130, 246, 0.14)) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Se a linha estiver expandida, só fica degradê se estiver em hover */
+:global(html.dark) .eventRowExpanded:not(:hover),
+:global([data-theme="dark"]) .eventRowExpanded:not(:hover) {
+  background: rgba(15, 23, 42, 0.94) !important;
+  background-image: none !important;
+}
+
+/* Badges com texto corrigido e contraste melhor */
+:global(html.dark) .badge,
+:global([data-theme="dark"]) .badge {
+  background: rgba(30, 41, 59, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: rgba(226, 232, 240, 0.92) !important;
+}
+
+:global(html.dark) .badgeError,
+:global([data-theme="dark"]) .badgeError {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(248, 113, 113, 0.34) !important;
+  color: #fecaca !important;
+}
+
+:global(html.dark) .badgeEntity,
+:global([data-theme="dark"]) .badgeEntity {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border-color: rgba(96, 165, 250, 0.34) !important;
+  color: #dbeafe !important;
+}
+
+
+/* =========================================================
+   AUDIT LOGS — LINHA EXPANDIDA SEM DEGRADÊ FIXO
+   O degradê aparece somente no hover.
+========================================================= */
+
+/* linha normal parada */
+:global(html.dark) .eventList .eventRow,
+:global([data-theme="dark"]) .eventList .eventRow {
+  background: rgba(15, 23, 42, 0.94) !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: none !important;
+}
+
+/* linha expandida parada: sem vermelho fixo */
+:global(html.dark) .eventList .eventRow.eventRowExpanded:not(:hover),
+:global([data-theme="dark"]) .eventList .eventRow.eventRowExpanded:not(:hover) {
+  background: rgba(15, 23, 42, 0.94) !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: none !important;
+}
+
+/* botão interno da linha parada */
+:global(html.dark) .eventList .eventRow:not(:hover) .eventButton,
+:global(html.dark) .eventList .eventRow.eventRowExpanded:not(:hover) .eventButton,
+:global([data-theme="dark"]) .eventList .eventRow:not(:hover) .eventButton,
+:global([data-theme="dark"]) .eventList .eventRow.eventRowExpanded:not(:hover) .eventButton {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* degradê somente quando passa o mouse */
+:global(html.dark) .eventList .eventRow:hover,
+:global([data-theme="dark"]) .eventList .eventRow:hover {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.22), rgba(59, 130, 246, 0.14)) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* garante que os textos não mudem quando está parado */
+:global(html.dark) .eventList .eventRow:not(:hover) .eventTitle,
+:global([data-theme="dark"]) .eventList .eventRow:not(:hover) .eventTitle {
+  color: #f8fafc !important;
+}
+
+:global(html.dark) .eventList .eventRow:not(:hover) .eventTargetInline,
+:global(html.dark) .eventList .eventRow:not(:hover) .eventTime,
+:global(html.dark) .eventList .eventRow:not(:hover) .eventTimeDate,
+:global([data-theme="dark"]) .eventList .eventRow:not(:hover) .eventTargetInline,
+:global([data-theme="dark"]) .eventList .eventRow:not(:hover) .eventTime,
+:global([data-theme="dark"]) .eventList .eventRow:not(:hover) .eventTimeDate {
+  color: rgba(226, 232, 240, 0.72) !important;
+}
+
+
+/* =========================================================
+   AUDIT LOGS — LISTAGEM MAIS CLARA E PADRONIZADA
+========================================================= */
+
+/* linha da lista */
+:global(html.dark) .eventRow,
+:global([data-theme="dark"]) .eventRow {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+/* sem foco fixo vermelho/gradiente */
+:global(html.dark) .eventRowExpanded:not(:hover),
+:global([data-theme="dark"]) .eventRowExpanded:not(:hover) {
+  background: rgba(15, 23, 42, 0.94) !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: none !important;
+}
+
+/* hover com degradê apenas ao passar o mouse */
+:global(html.dark) .eventRow:hover,
+:global([data-theme="dark"]) .eventRow:hover {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.18), rgba(59, 130, 246, 0.12)) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* botão interno sem fundo próprio */
+:global(html.dark) .eventButton,
+:global([data-theme="dark"]) .eventButton {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* avatar: fica claro que é ator/iniciais, não logo */
+:global(html.dark) .eventAvatar,
+:global([data-theme="dark"]) .eventAvatar {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  background:
+    linear-gradient(135deg, rgba(226, 232, 240, 0.96), rgba(148, 163, 184, 0.86)) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* conteúdo principal */
+:global(html.dark) .eventContent,
+:global([data-theme="dark"]) .eventContent {
+  gap: 0.28rem !important;
+}
+
+:global(html.dark) .eventTitle,
+:global([data-theme="dark"]) .eventTitle {
+  color: #ffffff !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* nova linha de contexto: ator · entidade · alvo */
+.eventSubtitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+:global(html.dark) .eventSubtitle,
+:global([data-theme="dark"]) .eventSubtitle {
+  color: rgba(203, 213, 225, 0.78) !important;
+}
+
+/* horário mais organizado */
+:global(html.dark) .eventMeta,
+:global([data-theme="dark"]) .eventMeta {
+  min-width: 6.5rem !important;
+  align-items: flex-end !important;
+}
+
+:global(html.dark) .eventTime,
+:global([data-theme="dark"]) .eventTime {
+  color: #dbeafe !important;
+  font-weight: 800 !important;
+}
+
+:global(html.dark) .eventTimeDate,
+:global([data-theme="dark"]) .eventTimeDate {
+  color: rgba(191, 219, 254, 0.72) !important;
+}
+
+/* badges menos gritantes e mais consistentes */
+:global(html.dark) .badge,
+:global([data-theme="dark"]) .badge {
+  border-radius: 0.45rem !important;
+  padding: 0.18rem 0.45rem !important;
+  font-size: 0.58rem !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+:global(html.dark) .badgeError,
+:global([data-theme="dark"]) .badgeError {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(248, 113, 113, 0.34) !important;
+  color: #fecaca !important;
+}
+
+:global(html.dark) .badgeEntity,
+:global([data-theme="dark"]) .badgeEntity {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border-color: rgba(96, 165, 250, 0.34) !important;
+  color: #dbeafe !important;
+}
+
+:global(html.dark) .badgeSuccess,
+:global([data-theme="dark"]) .badgeSuccess {
+  background: rgba(34, 197, 94, 0.16) !important;
+  border-color: rgba(74, 222, 128, 0.30) !important;
+  color: #bbf7d0 !important;
+}
+
+/* espaçamento das linhas */
+:global(html.dark) .eventList,
+:global([data-theme="dark"]) .eventList {
+  background: rgba(15, 23, 42, 0.96) !important;
+}
+
+:global(html.dark) .eventRow + .eventRow,
+:global([data-theme="dark"]) .eventRow + .eventRow {
+  border-top-color: rgba(148, 163, 184, 0.20) !important;
+}
+
+
+/* =========================================================
+   AUDIT LOGS — LINHA SEM SELEÇÃO FIXA
+   Degradê somente ao passar o mouse.
+========================================================= */
+
+:global(html.dark) .eventRow,
+:global([data-theme="dark"]) .eventRow {
+  background: rgba(15, 23, 42, 0.94) !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: none !important;
+}
+
+:global(html.dark) .eventRow:hover,
+:global([data-theme="dark"]) .eventRow:hover {
+  background:
+    linear-gradient(90deg, rgba(239, 0, 1, 0.20), rgba(59, 130, 246, 0.12)) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+:global(html.dark) .eventButton,
+:global(html.dark) .eventButton:focus,
+:global(html.dark) .eventButton:focus-visible,
+:global(html.dark) .eventButton:active,
+:global([data-theme="dark"]) .eventButton,
+:global([data-theme="dark"]) .eventButton:focus,
+:global([data-theme="dark"]) .eventButton:focus-visible,
+:global([data-theme="dark"]) .eventButton:active {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+

@@ -1,10 +1,10 @@
-import { apiFail, apiOk } from "@/lib/apiResponse";
+﻿import { apiFail, apiOk } from "@/lib/apiResponse";
 import { updateRunItemResult } from "@/lib/runOperationStore";
 import type { QaseResultSyncStatus, TestRunItemStatus } from "@/data/runOperationModel";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: { id: string; itemId: string } };
+type Params = { params: Promise<{ id: string; itemId: string }> };
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
@@ -30,12 +30,12 @@ export async function PATCH(request: Request, { params }: Params) {
   const body = asRecord(await request.json().catch(() => null));
   try {
     if (!isItemStatus(body.status)) {
-      return apiFail(request, "Status inválido para item da run", { status: 400, code: "RUN_ITEM_STATUS_INVALID" });
+      return apiFail(request, "Status invÃ¡lido para item da run", { status: 400, code: "RUN_ITEM_STATUS_INVALID" });
     }
 
     const result = await updateRunItemResult({
-      runId: params.id,
-      runItemId: params.itemId,
+      runId: (await params).id,
+      runItemId: (await params).itemId,
       status: body.status,
       actorId: actorFrom(request, body),
       executorId: text(body.executorId) || null,
@@ -66,3 +66,6 @@ export async function PATCH(request: Request, { params }: Params) {
     return apiFail(request, "Erro ao atualizar resultado do item", { status: 500, code: "RUN_ITEM_RESULT_UPDATE_ERROR", details: error });
   }
 }
+
+
+

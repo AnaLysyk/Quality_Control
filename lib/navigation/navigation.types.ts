@@ -1,6 +1,6 @@
-import type { SystemRole } from "@/lib/auth/roles";
+﻿import type { SystemRole } from "@/lib/auth/roles";
 
-export type SystemMapStatus = "ativo" | "parcial" | "legado" | "oculto" | "quebrado";
+export type SystemMapStatus = "ativo" | "parcial" | "legado" | "oculto" | "quebrado" | "disabled";
 
 export type SystemModuleId =
   | "empresas"
@@ -45,3 +45,4 @@ export type SystemRouteDefinition = {
   mainFile: string;
   notes?: string;
 };
+

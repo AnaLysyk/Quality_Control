@@ -54,10 +54,10 @@ describe("navigation permission filtering", () => {
     expect(items).not.toContain("support-chamados");
   });
 
-  it("uses permission matrix to hide create-user shortcuts from support users", () => {
+  it("uses permission matrix to expose user permissions without create-user shortcuts for support users", () => {
     const items = itemIds(buildRoleNavigation(SYSTEM_ROLES.TECHNICAL_SUPPORT));
 
-    expect(items).toContain("users-list");
+    expect(items).toContain("management-users");
     expect(items).not.toContain("users-create-company-user");
     expect(items).not.toContain("users-create-leader-tc");
   });

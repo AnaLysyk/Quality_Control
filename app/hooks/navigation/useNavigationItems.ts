@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -98,7 +98,11 @@ function resolveItemHref(
 ): string | undefined {
   const includeProject = PROJECT_SCOPED_ITEM_IDS.has(item.id);
 
-  if (item.id === "admin-permissions") {
+  if (item.id === "admin-permissions-profile") {
+    return "/admin/permissions";
+  }
+
+  if (item.id === "admin-permissions" || item.id === "admin-permissions-user") {
     return "/admin/users/permissions";
   }
 
@@ -216,16 +220,41 @@ function resolveModuleItems(
     mod.id === "home" && effectiveRole != null && INTERNAL_DASHBOARD_ROLES.has(effectiveRole);
   const usesCompanyCentral =
     mod.id === "home" && effectiveRole != null && COMPANY_DASHBOARD_ROLES.has(effectiveRole);
+    const permissionItems: NavItemDef[] = [
+    {
+      id: "admin-permissions-profile",
+      routeId: "permissoes.perfil",
+      label: "Gestão de perfil",
+      iconKey: "shield",
+      module: "permissoes",
+      href: "/admin/permissions",
+      favoriteEnabled: true,
+      testId: "nav-admin-permissions-profile",
+    },
+    {
+      id: "admin-permissions-user",
+      routeId: "permissoes.matriz",
+      label: "Gestão de usuário",
+      iconKey: "users",
+      module: "permissoes",
+      href: "/admin/users/permissions",
+      favoriteEnabled: true,
+      testId: "nav-admin-permissions-user",
+    },
+  ];
+
   const dynamicItems =
-    mod.id === "brain"
-      ? buildBrainItems(effectiveRole, companySlug, projectSlug)
-      : mod.id === "quality"
-        ? buildQualityItems(mod.items, companySlug)
-        : mod.items;
+    mod.id === "permissoes"
+      ? permissionItems
+      : mod.id === "brain"
+        ? buildBrainItems(effectiveRole, companySlug, projectSlug)
+        : mod.id === "quality"
+          ? buildQualityItems(mod.items, companySlug)
+          : mod.items;
 
   return {
     ...mod,
-    label: usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
+    label: mod.id === "permissoes" ? "Gestão de permissões" : usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {
@@ -235,9 +264,9 @@ function resolveModuleItems(
       })
       .map((item) => ({
         ...item,
-        label: item.id === "admin-permissions" ? "Gestão de Perfis" : item.label,
+        label: item.label,
         href: resolveItemHref(item, companySlug, projectSlug, companyRouteInput),
-        testId: item.id === "admin-permissions" ? "nav-admin-profiles" : item.testId,
+        testId: item.testId,
       })),
   };
 }
@@ -358,3 +387,7 @@ export function useNavigationItems() {
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }
+
+
+
+

@@ -12,6 +12,7 @@ type BrainNodeOverlayProps = {
   onClose: () => void;
   onResetFocus: () => void;
   onOpenRelatedModule: (module: string) => void;
+  debugMode?: boolean;
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -102,6 +103,7 @@ export function BrainNodeOverlay({
   onClose,
   onResetFocus,
   onOpenRelatedModule,
+  debugMode = false,
 }: BrainNodeOverlayProps) {
   if (typeof document === "undefined") return null;
 
@@ -173,6 +175,29 @@ export function BrainNodeOverlay({
                   <div key={item.key} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                     <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">{formatKey(item.key)}</p>
                     <p className="mt-1 break-words text-xs font-bold text-slate-100">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {debugMode ? (
+            <section className="mt-3 rounded-2xl border border-sky-200/18 bg-sky-200/[0.07] p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-100/70">Debug QA</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {[
+                  ["nodeId", node.id],
+                  ["type", node.type],
+                  ["moduleId", node.module],
+                  ["requiredPermissions", readable(node.requiredPermissions ?? node.metadata?.requiredPermissions ?? node.metadata?.requiredPermission) ?? "nao informado"],
+                  ["visibleByPermission", String(node.visibleByPermission ?? true)],
+                  ["source", readable(node.source ?? node.metadata?.source ?? node.generatedBy ?? "initial") ?? "initial"],
+                  ["edges count", String(relations.length)],
+                  ["actions count", String(actions.length)],
+                ].map(([key, value]) => (
+                  <div key={key} className="rounded-xl border border-sky-100/10 bg-black/18 px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-sky-100/45">{key}</p>
+                    <p className="mt-1 break-words text-xs font-bold text-sky-50/90">{value}</p>
                   </div>
                 ))}
               </div>

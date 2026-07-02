@@ -33,6 +33,7 @@ import { buildPromptActions } from "./data";
 import { extractTicketReference } from "./pure/parsing";
 import { extractNarrativePayload, isTicketTemplateRequest, parseStructuredTicketDraft } from "./tools/ticketHelpers";
 import { buildBrainContextForAI } from "@/lib/brain/aiContext";
+import { buildBrainAccessContextFromAuthUser } from "@/lib/brain/access";
 import {
   toolGetScreenContext,
   toolListAvailableActions,
@@ -304,7 +305,7 @@ function buildClarifyReply(
     success: true,
     summary: "pedido pouco claro",
     reply: compactMultiline([
-      `${prefix}Ainda preciso entender melhor o que voce quer que eu faca.`,
+      `${prefix}Nao consegui entender bem o que voce quer que eu faca.`,
       "",
       `Estou em ${context.screenLabel}. Me diga o objetivo em uma frase e eu sigo contigo passo a passo.`,
       "",
@@ -417,10 +418,12 @@ export async function runAssistantRequest(user: AuthUser, request: AssistantClie
   // Enriquecer com contexto do Brain (inclui busca semântica pela query do usuário)
   let brainContext: string | null = null;
   try {
+    const brainAccess = await buildBrainAccessContextFromAuthUser(user);
     brainContext = await buildBrainContextForAI({
       companySlug: context.companySlug,
       entityType: context.entityType,
       entityId: context.entityId,
+      access: brainAccess,
       userQuery: message, // Permite busca semântica nos nós e memórias
     });
   } catch { /* brain context is optional */ }

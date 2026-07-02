@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
@@ -176,7 +176,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
   const sidebarBody = (
     <aside
       data-testid="sidebar-operational-shell"
-      className={`sidebar-theme sidebar-operational-shell flex h-full flex-col overflow-hidden border-r text-white transition-[width] duration-300 ease-in-out ${
+      data-sidebar="true" className={`qc-sidebar sidebar-theme sidebar-operational-shell flex h-full flex-col overflow-hidden border-r text-white transition-[width] duration-300 ease-in-out ${
         collapsed ? "w-18" : "w-72"
       }`}
     >
@@ -292,15 +292,12 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
 
         {!collapsed && (
           <nav className="px-3 py-3" aria-label="Navegação principal">
-            <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-white/55">
-              Módulos operacionais
-            </p>
             <div className="sidebar-search mb-3 flex items-center gap-2 rounded-xl border px-2.5 py-2">
               <FiSearch size={14} className="shrink-0 text-white/55" />
               <input
                 value={navSearch}
                 onChange={(event) => setNavSearch(event.target.value)}
-                placeholder="Buscar módulo, run, Brain..."
+                placeholder="Digite para procurar telas e módulos..."
                 className="w-full bg-transparent text-[12px] text-white placeholder:text-white/50 outline-none"
                 data-testid="sidebar-nav-search"
               />
@@ -321,7 +318,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
             {!loading && visibleModules.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/15 bg-white/8 px-3 py-4 text-center text-xs text-white/65">
-                Nenhum módulo encontrado.
+                Nenhum mÃ³dulo encontrado.
               </div>
             ) : null}
           </nav>
@@ -362,3 +359,13 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+

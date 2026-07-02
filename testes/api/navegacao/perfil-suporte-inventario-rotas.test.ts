@@ -6,14 +6,16 @@ import { NAV_CATALOG, type NavItemDef } from "@/lib/navigation/navigationCatalog
 import { buildNavigationForUser } from "@/lib/navigation/navigationPermissions";
 import { resolveRoleDefaults } from "@/lib/permissions/roleDefaults";
 
-function buildSupportItems() {
-  const modules = buildNavigationForUser(
+function buildSupportModules() {
+  return buildNavigationForUser(
     NAV_CATALOG,
     SYSTEM_ROLES.TECHNICAL_SUPPORT,
     resolveRoleDefaults(SYSTEM_ROLES.TECHNICAL_SUPPORT),
   );
+}
 
-  return modules.flatMap((module) => module.items);
+function buildSupportItems() {
+  return buildSupportModules().flatMap((module) => module.items);
 }
 
 function normalizeHref(href: string) {
@@ -53,9 +55,27 @@ function appPageRoutes() {
         const withoutPage = relative.replace(new RegExp(`\\${path.sep}?page\\.tsx$`), "");
         const route = `/${withoutPage.split(path.sep).filter(Boolean).join("/")}`;
 
-        return route === "/" ? "/" : route;
+    return route === "/" ? "/" : route;
       }),
   );
+}
+
+function moduleRouteInventory() {
+  const routes = appPageRoutes();
+
+  return buildSupportModules()
+    .filter((module) => module.href)
+    .map((module) => {
+      const route = normalizeHref(module.href!);
+
+      return {
+        id: module.id,
+        label: module.label,
+        href: module.href,
+        route,
+        hasPage: routes.has(route),
+      };
+    });
 }
 
 function itemRouteInventory(items: NavItemDef[]) {
@@ -85,7 +105,7 @@ describe("perfil suporte - inventario de rotas", () => {
   });
 
   it("mantem inventario minimo de rotas criticas do suporte tecnico", () => {
-    const inventory = itemRouteInventory(buildSupportItems());
+    const inventory = [...itemRouteInventory(buildSupportItems()), ...moduleRouteInventory()];
 
     expect(inventory).toEqual(
       expect.arrayContaining([
@@ -96,9 +116,9 @@ describe("perfil suporte - inventario de rotas", () => {
         expect.objectContaining({ id: "support-chamados", route: "/chamados", hasPage: true }),
         expect.objectContaining({ id: "brain-graph", route: "/brain", hasPage: true }),
         expect.objectContaining({ id: "brain-ask", route: "/brain/perguntar", hasPage: true }),
-        expect.objectContaining({ id: "users-list", route: "/admin/users", hasPage: true }),
-        expect.objectContaining({ id: "admin-permissions", route: "/admin/permissoes", hasPage: true }),
-        expect.objectContaining({ id: "admin-audit-logs", route: "/audit-logs", hasPage: true }),
+        expect.objectContaining({ id: "management-profile", route: "/admin/permissions", hasPage: true }),
+        expect.objectContaining({ id: "management-users", route: "/admin/users/permissions", hasPage: true }),
+        expect.objectContaining({ id: "logs", route: "/admin/audit-logs", hasPage: true }),
       ]),
     );
   });

@@ -18,10 +18,10 @@ function resolveSidebarHref(href: string) {
 }
 
 const miniBaseClass =
-  "flex w-full items-center justify-center rounded-xl border border-transparent border-l-transparent bg-transparent p-2 text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
+  "flex w-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl border border-transparent border-l-transparent bg-transparent p-2 text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 const flyoutItemClass =
-  "flex items-center gap-2.5 rounded-lg border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
+  "flex w-full min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: SidebarFlyoutProps) {
   const [open, setOpen] = useState(false);
@@ -60,6 +60,8 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
         data-testid={mod.testId}
         title={mod.label}
         aria-label={mod.label}
+        data-active={isActive ? "true" : undefined}
+        aria-current={isActive ? "page" : undefined}
         onClick={onClose}
         className={baseClassName}
       >
@@ -76,6 +78,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
         data-testid={mod.testId}
         title={mod.label}
         aria-label={mod.label}
+        data-active={isActive ? "true" : undefined}
         className={baseClassName}
       >
         {createElement(getIcon(mod.iconKey), { size: 17, className: "text-current" })}
@@ -98,6 +101,8 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
                   key={item.id}
                   href={resolveSidebarHref(item.href!)}
                   data-testid={item.testId}
+                  data-active={active ? "true" : undefined}
+                  aria-current={active ? "page" : undefined}
                   onClick={() => {
                     setOpen(false);
                     onClose?.();
@@ -105,7 +110,7 @@ export default function SidebarFlyout({ mod, isActive, isItemActive, onClose }: 
                   className={`${flyoutItemClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
                 >
                   {createElement(getIcon(item.iconKey), { size: 14, className: "shrink-0 text-current opacity-75" })}
-                  <span>{item.label}</span>
+                  <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
                 </Link>
               );
             })}

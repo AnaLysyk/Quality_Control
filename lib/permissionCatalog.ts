@@ -1,15 +1,16 @@
-export type PermissionModuleCategory =
+﻿export type PermissionModuleCategory =
   | "Módulos e páginas"
   | "Chamados e suporte"
   | "Usuários e administração"
   | "Produtividade"
+  | "OperaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o"
   | "Operação";
 
 export type PermissionModule = {
   id: string;
   label: string;
   description: string;
-  category: PermissionModuleCategory;
+  category: string;
   actions: string[];
 };
 
@@ -45,6 +46,34 @@ export const ACTION_LABELS: Record<string, string> = {
   view_own_company: "Ver própria empresa",
   view_all_projects: "Ver todos os projetos",
   view_linked_projects: "Ver projetos vinculados",
+  view_external_sources: "Ver fontes externas",
+  use_qase_data: "Usar dados Qase",
+  use_jira_data: "Usar dados Jira",
+  query_qase: "Consultar Qase",
+  query_jira: "Consultar Jira",
+  create_external_ticket: "Criar ticket externo",
+  update_external_ticket: "Atualizar ticket externo",
+  view_projects: "Ver projetos",
+  view_suítes: "Ver suítes",
+  view_cases: "Ver casos",
+  view_runs: "Ver runs",
+  view_results: "Ver resultados",
+  view_defects: "Ver defeitos",
+  create_case: "Criar caso",
+  update_case: "Atualizar caso",
+  create_run: "Criar run",
+  update_run: "Atualizar run",
+  sync: "Sincronizar",
+  link_defect: "Vincular defeito",
+  view_issues: "Ver issues",
+  view_bugs: "Ver bugs",
+  view_epics: "Ver épicos",
+  view_sprints: "Ver sprints",
+  create_issue: "Criar issue",
+  update_issue: "Atualizar issue",
+  transition_issue: "Mover issue",
+  comment_issue: "Comentar issue",
+  link_issue: "Vincular issue",
 };
 
 export const PERMISSION_MODULES: PermissionModule[] = [
@@ -142,6 +171,13 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     actions: ["read", "create", "approve", "block"],
   },
   {
+    id: "release_calendar",
+    label: "Agendamento",
+    description: "Calendário operacional, marcações, entregas e acompanhamento de horários por empresa, projeto e usuário.",
+    category: "Módulos e páginas",
+    actions: ["view", "create", "edit", "delete", "status"],
+  },
+  {
     id: "releases",
     label: "Releases",
     description: "Fluxo de releases, histórico e qualidade.",
@@ -202,7 +238,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: "Brain",
     description: "Grafo de conhecimento e leitura contextual permitida para o perfil.",
     category: "Produtividade",
-    actions: ["view", "read", "use"],
+    actions: ["view", "read", "use", "view_external_sources", "use_qase_data", "use_jira_data"],
   },
   {
     id: "chat",
@@ -210,6 +246,27 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     description: "Conversas, busca de mensagens e comunicação dentro do workspace.",
     category: "Produtividade",
     actions: ["view", "use"],
+  },
+  {
+    id: "assistant",
+    label: "Assistente",
+    description: "Ações do assistente sobre fontes internas e externas respeitando permissões.",
+    category: "Produtividade",
+    actions: ["query_qase", "query_jira", "create_external_ticket", "update_external_ticket"],
+  },
+  {
+    id: "qase",
+    label: "Qase/Kase",
+    description: "Projetos, suítes, casos, runs, resultados e defeitos vindos da integração Qase/Kase.",
+    category: "Operação",
+    actions: ["view", "view_projects", "view_suítes", "view_cases", "view_runs", "view_results", "view_defects", "create_case", "update_case", "create_run", "update_run", "sync", "link_defect"],
+  },
+  {
+    id: "jira",
+    label: "Jira",
+    description: "Projetos, issues, bugs, épicos, sprints e transições da integração Jira.",
+    category: "Operação",
+    actions: ["view", "view_projects", "view_issues", "view_bugs", "view_epics", "view_sprints", "create_issue", "update_issue", "transition_issue", "comment_issue", "link_issue", "sync"],
   },
   {
     id: "tickets",
@@ -262,3 +319,5 @@ export function getPermissionModule(moduleId: string) {
 export function getActionLabel(action: string) {
   return ACTION_LABELS[action] ?? action;
 }
+
+

@@ -1052,7 +1052,7 @@ export default function KanbanItPage() {
                 />
               )
             ) : supportBrand.isCompanyScoped ? (
-              <span className="text-lg font-bold tracking-[0.18em] text-white/90 sm:text-xl">
+              <span className="text-lg font-bold tracking-[0.18em] text-[#011848] dark:text-slate-900 dark:text-white/90 sm:text-xl">
                 {supportBrand.logoFallback}
               </span>
             ) : (

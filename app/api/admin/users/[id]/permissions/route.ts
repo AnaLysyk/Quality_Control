@@ -7,6 +7,7 @@ import { requireGlobalAdminWithStatus } from '@/lib/rbac/requireGlobalAdmin';
 import { resolvePermissionAccessForUser } from '@/lib/serverPermissionAccess';
 import { getAccessContext } from '@/lib/auth/session';
 import { validarAcessoUsuariosNoServidor } from '@/lib/permissions/validarAcessoUsuariosNoServidor';
+import { invalidateBrainCache } from '@/lib/brain/cache';
 
 export const revalidate = 0;
 
@@ -86,6 +87,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       companyLabel: targetUser?.company_name ?? null,
       permissionsCount: effectiveCount,
     });
+    invalidateBrainCache("admin.users.permissions.updated");
 
     return NextResponse.json({ ok: true, saved, permissions: resolved.permissions });
   } catch (e: any) {
@@ -137,6 +139,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       permissionsCount: effectiveCount,
       restored,
     });
+    invalidateBrainCache("admin.users.permissions.reset");
 
     return NextResponse.json({ ok: true, permissions: resolved.permissions });
   } catch (e: any) {

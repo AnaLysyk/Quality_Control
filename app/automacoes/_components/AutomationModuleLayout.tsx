@@ -31,7 +31,7 @@ function AccessDenied() {
         <div className="h-64 rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff)" />
       </aside>
       <section className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#011848,#ef0001)] text-white">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#011848,#ef0001)] text-[#011848] dark:text-white">
           <FiLock className="h-6 w-6" />
         </div>
         <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">Acesso restrito</p>
@@ -43,7 +43,7 @@ function AccessDenied() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/documentos"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-[#011848] dark:text-white transition hover:opacity-90"
           >
             Abrir documentos
             <FiArrowRight className="h-4 w-4" />
@@ -75,13 +75,13 @@ export default function AutomationModuleLayout({ children }: { children: React.R
           <FiBookOpen className="h-4 w-4 shrink-0" />
           Abrir documentação do código
         </Link>
-        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-[#f8fafc] dark:bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-[#011848] dark:text-white/92">
           <FiShield className="h-4 w-4 shrink-0" />
           <span className="wrap-break-word">
             {access.profileLabel}: {access.scopeLabel}
           </span>
         </div>
-        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-[#f8fafc] dark:bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-[#011848] dark:text-white/92">
           <FiLayers className="h-4 w-4 shrink-0" />
           <span>{clients.length} empresa{clients.length === 1 ? "" : "s"} visíveis</span>
         </div>

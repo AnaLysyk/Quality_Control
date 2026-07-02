@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { FiMap, FiSearch, FiX } from "react-icons/fi";
@@ -49,14 +49,15 @@ const STATUS_META: Record<SystemMapStatus, { label: string; className: string }>
     label: "Quebrado",
     className: "border-red-200 bg-red-50 text-red-700",
   },
+  disabled: { label: "Desativado", className: "border-slate-300 bg-slate-100 text-slate-600" },
 };
 
 const PROFILE_LABELS: Record<SystemRole, string> = {
-  leader_tc: "Líder TC",
-  technical_support: "Suporte Técnico",
-  testing_company_user: "Usuário TC",
+  leader_tc: "LÃ­der TC",
+  technical_support: "Suporte TÃ©cnico",
+  testing_company_user: "UsuÃ¡rio TC",
   empresa: "Empresa",
-  company_user: "Usuário da Empresa",
+  company_user: "UsuÃ¡rio da Empresa",
 };
 
 function normalizeText(value: string) {
@@ -68,7 +69,7 @@ function normalizeText(value: string) {
 }
 
 function formatPermission(permission: SystemPermission | null) {
-  return permission ? `${permission.moduleId}.${permission.action}` : "Não centralizada";
+  return permission ? `${permission.moduleId}.${permission.action}` : "NÃ£o centralizada";
 }
 
 function StatusBadge({ status }: { status: SystemMapStatus }) {
@@ -124,6 +125,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
       legado: 0,
       oculto: 0,
       quebrado: 0,
+      disabled: 0,
     };
     for (const routeDefinition of routes) counts[routeDefinition.status] += 1;
     return counts;
@@ -147,7 +149,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
         moduleName="Mapa do Sistema"
         requiredPermission="permissions.view"
         title="Acesso negado"
-        description="Seu perfil não possui permissão para visualizar o mapa do sistema."
+        description="Seu perfil nÃ£o possui permissÃ£o para visualizar o mapa do sistema."
       />
     );
   }
@@ -166,25 +168,25 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
         <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-(--tc-primary,#011848) text-white">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-(--tc-primary,#011848) text-[#011848] dark:text-white">
                 <FiMap className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--tc-accent,#ef0001)">
-                  Governança interna
+                  GovernanÃ§a interna
                 </p>
                 <h1 className="mt-1 text-2xl font-black tracking-[-0.03em] text-(--tc-text-primary,#0b1a3c) sm:text-3xl">
                   Mapa do Sistema
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
-                  Fonte de verdade inicial para módulos, rotas, permissões, perfis esperados e estado técnico das telas.
+                  Fonte de verdade inicial para mÃ³dulos, rotas, permissÃµes, perfis esperados e estado tÃ©cnico das telas.
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3">
-                <div className="text-xs font-semibold text-(--tc-text-muted,#64748b)">Módulos</div>
+                <div className="text-xs font-semibold text-(--tc-text-muted,#64748b)">MÃ³dulos</div>
                 <div className="mt-1 text-2xl font-black">{modules.length}</div>
               </div>
               <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3">
@@ -213,7 +215,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar rota, arquivo, permissão..."
+                placeholder="Buscar rota, arquivo, permissÃ£o..."
                 className="w-full bg-transparent text-sm outline-none placeholder:text-(--tc-text-muted,#94a3b8)"
                 aria-label="Buscar no mapa do sistema"
               />
@@ -223,9 +225,9 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
               value={moduleFilter}
               onChange={(event) => setModuleFilter(event.target.value)}
               className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-alt,#f8fafc) px-4 py-3 text-sm font-semibold outline-none"
-              aria-label="Filtrar por módulo"
+              aria-label="Filtrar por mÃ³dulo"
             >
-              <option value="todos">Todos os módulos</option>
+              <option value="todos">Todos os mÃ³dulos</option>
               {modules.map((moduleDefinition) => (
                 <option key={moduleDefinition.id} value={moduleDefinition.id}>
                   {moduleDefinition.name}
@@ -263,7 +265,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
               Exibindo <strong className="text-(--tc-text-primary,#0b1a3c)">{filteredRoutes.length}</strong> de{" "}
               {routes.length} rotas.
             </span>
-            <span>Este mapa governa as rotas e permissões usadas pelo menu.</span>
+            <span>Este mapa governa as rotas e permissÃµes usadas pelo menu.</span>
           </div>
         </section>
 
@@ -278,16 +280,16 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-400 w-full border-collapse text-left text-sm">
-                <thead className="bg-(--tc-primary,#011848) text-white">
+                <thead className="bg-(--tc-primary,#011848) text-[#011848] dark:text-white">
                   <tr>
-                    <th className="px-4 py-4 font-semibold">Módulo</th>
+                    <th className="px-4 py-4 font-semibold">MÃ³dulo</th>
                     <th className="px-4 py-4 font-semibold">Rota</th>
                     <th className="px-4 py-4 font-semibold">Nome</th>
-                    <th className="px-4 py-4 font-semibold">Permissão</th>
+                    <th className="px-4 py-4 font-semibold">PermissÃ£o</th>
                     <th className="px-4 py-4 font-semibold">Perfis esperados</th>
                     <th className="px-4 py-4 font-semibold">Status</th>
                     <th className="px-4 py-4 font-semibold">Arquivo</th>
-                    <th className="px-4 py-4 font-semibold">Observação</th>
+                    <th className="px-4 py-4 font-semibold">ObservaÃ§Ã£o</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-(--tc-border,#e2e8f0)">
@@ -352,7 +354,7 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
                         </td>
                         <td className="px-4 py-4">
                           <p className="min-w-64 leading-5 text-(--tc-text-secondary,#4b5563)">
-                            {routeDefinition.notes ?? "Sem observação."}
+                            {routeDefinition.notes ?? "Sem observaÃ§Ã£o."}
                           </p>
                         </td>
                       </tr>
@@ -367,3 +369,4 @@ export default function SistemaMapaClient({ modules, routes }: SistemaMapaClient
     </main>
   );
 }
+

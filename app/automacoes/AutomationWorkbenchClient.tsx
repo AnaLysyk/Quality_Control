@@ -123,7 +123,7 @@ function DeferredRunnerPlaceholder({ onLoad }: { onLoad: () => void }) {
           <button
             type="button"
             onClick={onLoad}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-[#011848] dark:text-white transition hover:opacity-90"
           >
             Carregar runner agora
             <FiArrowRight className="h-4 w-4" />
@@ -215,13 +215,13 @@ export default function AutomationWorkbenchClient() {
           <FiBookOpen className="h-4 w-4 shrink-0" />
           Abrir documentação do código
         </Link>
-        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-[#f8fafc] dark:bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-[#011848] dark:text-white/92">
           <FiShield className="h-4 w-4 shrink-0" />
           <span className="wrap-break-word">
             {access.profileLabel}: {access.scopeLabel}
           </span>
         </div>
-        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
+        <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-[#f8fafc] dark:bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-[#011848] dark:text-white/92">
           <FiLayers className="h-4 w-4 shrink-0" />
           <span>{clients.length} empresa{clients.length === 1 ? "" : "s"} visíveis</span>
         </div>
@@ -249,7 +249,7 @@ export default function AutomationWorkbenchClient() {
         {!access.canOpen ? (
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
             <section className="rounded-[30px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#ffffff) p-6 shadow-sm">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#011848,#ef0001)] text-white">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#011848,#ef0001)] text-[#011848] dark:text-white">
                 <FiLock className="h-6 w-6" />
               </div>
               <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-(--tc-accent,#ef0001)">Acesso restrito</p>
@@ -261,7 +261,7 @@ export default function AutomationWorkbenchClient() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href="/documentos"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--tc-primary,#011848) px-5 py-2 text-sm font-semibold text-[#011848] dark:text-white transition hover:opacity-90"
                 >
                   Abrir documentos
                   <FiArrowRight className="h-4 w-4" />
@@ -297,14 +297,14 @@ export default function AutomationWorkbenchClient() {
         ) : (
           <div className="space-y-6">
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.28fr)_minmax(340px,0.82fr)]">
-              <section className="rounded-[30px] bg-[linear-gradient(135deg,#011848_0%,#1b2563_54%,#ef0001_100%)] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+              <section className="rounded-[30px] bg-[linear-gradient(135deg,#011848_0%,#1b2563_54%,#ef0001_100%)] p-6 text-[#011848] dark:text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/72">Quality Control • automações</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/72">Quality Control • automações</p>
                     <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
                       Orquestrador visual por empresa para API, navegador e fluxos guiados
                     </h2>
-                    <p className="mt-4 max-w-3xl text-sm leading-7 text-white/82">
+                    <p className="mt-4 max-w-3xl text-sm leading-7 text-[#011848] dark:text-white/82">
                       O módulo deixa de ser um agrupador de requests e passa a virar studio operacional. O front recebe fluxo,
                       assets e script editável; o backend executa com segurança; e cada perfil enxerga a mesma identidade visual
                       respeitando o escopo de empresa, vínculo e operação técnica.
@@ -314,7 +314,7 @@ export default function AutomationWorkbenchClient() {
                       {["Front em React", "Studio low-code", "Script editável no front", "Playwright só onde houver browser"].map((item) => (
                         <span
                           key={item}
-                          className="inline-flex items-center rounded-full border border-white/16 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90"
+                          className="inline-flex items-center rounded-full border border-white/16 bg-[#f8fafc] dark:bg-white/10 px-3 py-1 text-xs font-semibold text-[#011848] dark:text-slate-900 dark:text-white/90"
                         >
                           {item}
                         </span>
@@ -333,7 +333,7 @@ export default function AutomationWorkbenchClient() {
                             }));
                           }
                         }}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/12 px-3 py-1 text-xs font-semibold text-white transition hover:bg-white/20"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/12 px-3 py-1 text-xs font-semibold text-[#011848] dark:text-white transition hover:bg-white/20"
                       >
                         🧠 Perguntar IA
                       </button>
@@ -341,47 +341,47 @@ export default function AutomationWorkbenchClient() {
 
                     <div className="mt-6 grid gap-3 sm:grid-cols-3">
                       <div className="rounded-2xl border border-white/14 bg-white/8 p-4 backdrop-blur">
-                        <FiTarget className="h-5 w-5 text-white/88" />
+                        <FiTarget className="h-5 w-5 text-[#011848] dark:text-white/88" />
                         <h3 className="mt-3 text-sm font-bold">Entrada simplificada</h3>
-                        <p className="mt-2 text-xs leading-6 text-white/72">O operador preenche só o essencial e o sistema monta o fluxo.</p>
+                        <p className="mt-2 text-xs leading-6 text-[#011848] dark:text-white/72">O operador preenche só o essencial e o sistema monta o fluxo.</p>
                       </div>
                       <div className="rounded-2xl border border-white/14 bg-white/8 p-4 backdrop-blur">
-                        <FiServer className="h-5 w-5 text-white/88" />
+                        <FiServer className="h-5 w-5 text-[#011848] dark:text-white/88" />
                         <h3 className="mt-3 text-sm font-bold">Ambientes controlados</h3>
-                        <p className="mt-2 text-xs leading-6 text-white/72">Base URL, segredos e headers ficam centralizados fora do front.</p>
+                        <p className="mt-2 text-xs leading-6 text-[#011848] dark:text-white/72">Base URL, segredos e headers ficam centralizados fora do front.</p>
                       </div>
                       <div className="rounded-2xl border border-white/14 bg-white/8 p-4 backdrop-blur">
-                        <FiActivity className="h-5 w-5 text-white/88" />
+                        <FiActivity className="h-5 w-5 text-[#011848] dark:text-white/88" />
                         <h3 className="mt-3 text-sm font-bold">Histórico rastreável</h3>
-                        <p className="mt-2 text-xs leading-6 text-white/72">Cada execução deixa rastro suficiente para auditoria e onboarding.</p>
+                        <p className="mt-2 text-xs leading-6 text-[#011848] dark:text-white/72">Cada execução deixa rastro suficiente para auditoria e onboarding.</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="grid gap-3">
-                    <div className="rounded-3xl border border-white/14 bg-white/10 p-4 backdrop-blur">
-                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/68">
+                    <div className="rounded-3xl border border-white/14 bg-[#f8fafc] dark:bg-white/10 p-4 backdrop-blur">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/68">
                         <FiLayers className="h-4 w-4" />
                         Coleção atual
                       </div>
                       <div className="mt-3 text-4xl font-black">{AUTOMATION_REQUEST_TOTAL}</div>
-                      <p className="mt-2 text-sm text-white/76">requests mapeados para virar catálogo profissional.</p>
+                      <p className="mt-2 text-sm text-[#011848] dark:text-white/76">requests mapeados para virar catálogo profissional.</p>
                     </div>
-                    <div className="rounded-3xl border border-white/14 bg-white/10 p-4 backdrop-blur">
-                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/68">
+                    <div className="rounded-3xl border border-white/14 bg-[#f8fafc] dark:bg-white/10 p-4 backdrop-blur">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/68">
                         <FiZap className="h-4 w-4" />
                         Domínios
                       </div>
                       <div className="mt-3 text-4xl font-black">{AUTOMATION_DOMAIN_TOTAL}</div>
-                      <p className="mt-2 text-sm text-white/76">blocos separados para priorizar MVP, expansão e observabilidade.</p>
+                      <p className="mt-2 text-sm text-[#011848] dark:text-white/76">blocos separados para priorizar MVP, expansão e observabilidade.</p>
                     </div>
-                    <div className="rounded-3xl border border-white/14 bg-white/10 p-4 backdrop-blur">
-                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/68">
+                    <div className="rounded-3xl border border-white/14 bg-[#f8fafc] dark:bg-white/10 p-4 backdrop-blur">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/68">
                         <FiShield className="h-4 w-4" />
                         Perfil ativo
                       </div>
                       <div className="mt-3 text-2xl font-black">{access.visibilityLabel}</div>
-                      <p className="mt-2 text-sm text-white/76">{access.helperText}</p>
+                      <p className="mt-2 text-sm text-[#011848] dark:text-white/76">{access.helperText}</p>
                     </div>
                   </div>
                 </div>

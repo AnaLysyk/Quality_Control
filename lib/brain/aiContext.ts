@@ -2,6 +2,9 @@ import "server-only";
 
 import { prisma } from "@/lib/prismaClient";
 import { getSubgraph, getNodeMemories, searchNodes } from "@/lib/brain";
+import { filterBrainGraphByAccess, isBrainNodeVisible, type BrainAccessContext } from "@/lib/brain/access";
+import { buildBrainRuntimeContext } from "@/lib/brain/runtime";
+import { redactBrainNodeForUser } from "@/lib/brain/redaction";
 
 /**
  * Gera contexto do Brain para alimentar o assistente de IA.
@@ -12,6 +15,7 @@ export async function buildBrainContextForAI(options: {
   entityType?: string | null;
   entityId?: string | null;
   userQuery?: string;
+  access?: BrainAccessContext | null;
 }): Promise<string | null> {
   try {
     const parts: string[] = [];
@@ -22,10 +26,11 @@ export async function buildBrainContextForAI(options: {
       
       if (queryTerms.length > 0) {
         // Buscar nós relevantes
-        const relevantNodes = await searchNodes({
+        const relevantNodes = (await searchNodes({
           query: options.userQuery,
           limit: 5,
-        });
+        })).filter((node) => !options.access || isBrainNodeVisible(node, options.access));
+        const runtime = options.access ? buildBrainRuntimeContext(options.access) : null;
 
         if (relevantNodes.length > 0) {
           parts.push("## Conhecimento Relevante do Brain:");

@@ -7,7 +7,8 @@ import type { AgentMode } from "@/lib/brain/agents";
 import { runAllGuardrails } from "@/lib/brain/guardrails";
 import { buildMockBrainGraph } from "@/brain/_data/brainMockGraph";
 import { normalizeBrainText } from "@/brain/_utils/brainGraphFormatters";
-import { resolveBrainAccess } from "@/lib/brain/access";
+import { filterBrainDomainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
+import { answerBrainChatQuestion } from "@/lib/brain/chat";
 
 function isE2eJsonMode() {
   return process.env.E2E_USE_JSON === "1" || process.env.E2E_USE_JSON === "true";
@@ -27,19 +28,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
   }
     const graph = buildMockBrainGraph();
+    const visibleGraph = filterBrainDomainGraphByAccess(graph.nodes, graph.edges, accessResult.context);
     const text = normalizeBrainText(lightweightBody.message);
     const moduleName = lightweightBody.activeContext?.module ?? null;
-    const visibleNodes = graph.nodes.filter((node) => {
-      if (accessResult.ok && !accessResult.context.hasGlobalVisibility && node.module === "Logs") return false;
+    const visibleNodes = visibleGraph.nodes.filter((node) => {
       if (moduleName && node.module !== moduleName) return false;
       return true;
     });
+    const connectedNodeIds = new Set(visibleGraph.edges.flatMap((edge) => [edge.source, edge.target]));
+    const visibleOrphanCount = visibleNodes.filter((node) => !connectedNodeIds.has(node.id)).length;
     const pending = visibleNodes.filter((node) => ["pending", "missing", "warning", "error", "orphan"].includes(node.status));
-    const selectedNode = graph.nodes.find((node) => node.id === lightweightBody.selectedNodeId) ?? null;
+    const pendingMappings = visibleNodes.flatMap((node) => node.missingKnowledge ?? []);
+    const selectedNode = visibleNodes.find((node) => node.id === lightweightBody.selectedNodeId) ?? null;
 
     if (/\borfaos?\b/.test(text)) {
       return NextResponse.json({
-        reply: `Filtrei os nos orfaos do contexto. Encontrei ${graph.summary.orphanNodes} no(s) sem conexao suficiente.`,
+        reply: `Filtrei os nos orfaos do contexto. Encontrei ${visibleOrphanCount} no(s) sem conexao suficiente.`,
         action: "show_orphans",
         filters: { onlyOrphans: true },
         suggestedActions: ["Mostrar pendencias", "Ver tudo que tenho acesso"],
@@ -49,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     if (/\bpendencias?\b|\bfalta mapear\b/.test(text)) {
       return NextResponse.json({
-        reply: `No contexto ${moduleName ?? "geral"}, encontrei ${pending.length} pendencia(s). Principais pontos: ${graph.summary.pendingMappings.slice(0, 4).join("; ") || "sem pendencias criticas no fallback"}.`,
+        reply: `No contexto ${moduleName ?? "geral"}, encontrei ${pending.length} pendencia(s). Principais pontos: ${pendingMappings.slice(0, 4).join("; ") || "sem pendencias criticas no fallback"}.`,
         action: "show_pending",
         filters: { onlyPending: true },
         suggestedActions: ["Explicar no selecionado", "Atualizar grafo"],
@@ -77,11 +81,30 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const brainAnswer = await answerBrainChatQuestion({
+      message: lightweightBody.message,
+      access: accessResult.context,
+      currentBrainContext: selectedNode
+        ? {
+            lastNodeId: selectedNode.id,
+            lastNodeType: selectedNode.type,
+            lastCompanyId: selectedNode.companyId ?? null,
+            lastProjectId: selectedNode.projectId ?? null,
+            lastRoute: null,
+            lastIntent: "inspect",
+          }
+        : null,
+    });
+
     return NextResponse.json({
-      reply: `Oi. No Brain encontrei ${visibleNodes.length} nos e ${graph.edges.length} conexoes neste recorte. Existem ${pending.length} pendencia(s). Posso mostrar modulos, empresas, projetos, nos orfaos, pendencias, criado hoje ou explicar o no selecionado.`,
-      action: "summarize_context",
+      reply: brainAnswer.foundNodes.length
+        ? brainAnswer.answer
+        : `Oi. No Brain encontrei ${visibleNodes.length} nos e ${visibleGraph.edges.length} conexoes neste recorte. Existem ${pending.length} pendencia(s). Posso mostrar modulos, empresas, projetos, nos orfaos, pendencias, criado hoje ou explicar o no selecionado.`,
+      action: brainAnswer.navigation ? "navigate" : "summarize_context",
+      navigation: brainAnswer.navigation ?? null,
+      foundNodes: brainAnswer.foundNodes,
+      suggestedActions: brainAnswer.suggestedActions.map((action) => action.label).slice(0, 5),
       filters: lightweightBody.visibleFilters ?? {},
-      suggestedActions: ["Mostrar pendencias", "Mostrar nos orfaos", "O que foi criado hoje"],
       requiresConfirmation: false,
     });
   }
@@ -190,4 +213,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Erro ao processar agente" }, { status: 500 });
   }
 }
-

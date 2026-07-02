@@ -25,6 +25,7 @@ type BrainNeuralCanvasProps = {
   localGraphOnly: boolean;
   onToggleLocalGraph: () => void;
   loading?: boolean;
+  debugMode?: boolean;
 };
 
 const nodeTypes = { brainNeuron: BrainNeuronNode };
@@ -181,6 +182,7 @@ export function BrainNeuralCanvas({
   localGraphOnly,
   onToggleLocalGraph,
   loading = false,
+  debugMode = false,
 }: BrainNeuralCanvasProps) {
   const containerRef = useRef<HTMLElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 720 });
@@ -378,6 +380,7 @@ export function BrainNeuralCanvas({
           node={overlayNode}
           nodes={focusedGraph.nodes}
           edges={focusedGraph.edges}
+          debugMode={debugMode}
           onClose={() => setOverlayNode(null)}
           onResetFocus={() => {
             setOverlayNode(null);

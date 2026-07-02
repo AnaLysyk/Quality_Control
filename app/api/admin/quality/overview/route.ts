@@ -319,7 +319,7 @@ function releaseExecutor(release: ReturnType<typeof buildReleaseWithStats>) {
 
 function buildRunRiskItems(releases: ReturnType<typeof buildReleaseWithStats>[], threshold: number, companyByKey: Map<string, { name: string; slug: string | null }>): RunRiskItem[] {
   return releases
-    .map((release) => {
+    .map((release): RunRiskItem | null => {
       const failureRate = runFailureRate(release);
       if (failureRate === null || failureRate < threshold) return null;
       const companyKey = releaseCompanyKey(release);

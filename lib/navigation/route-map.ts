@@ -1,4 +1,4 @@
-import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import type { SystemRouteDefinition } from "./navigation.types";
 
 const ALL_PROFILES: SystemRole[] = [
@@ -89,7 +89,7 @@ export const SYSTEM_ROUTES = [
     moduleId: "empresas",
     path: "/empresas/[slug]/aplicacoes",
     label: "Aplicações da empresa",
-    description: "Aplicações e integrações vinculadas à empresa.",
+    description: "Aplicações e integrações vinculadas Ã  empresa.",
     requiredPermission: { moduleId: "applications", action: "view" },
     expectedProfiles: COMPANY_PROFILES,
     status: "ativo",
@@ -129,7 +129,7 @@ export const SYSTEM_ROUTES = [
     mainFile: "app/admin/users/page.tsx",
   },
   {
-    id: "usuarios.criar-usuario-tc",
+    id: "usuarios.criar-usuário-tc",
     moduleId: "usuarios",
     path: "/admin/users?tab=testing&modal=create&role=testing_company_user",
     label: "Criar Usuário TC",
@@ -140,18 +140,18 @@ export const SYSTEM_ROUTES = [
     mainFile: "app/admin/users/page.tsx",
   },
   {
-    id: "usuarios.criar-usuario-empresa",
+    id: "usuarios.criar-usuário-empresa",
     moduleId: "usuarios",
     path: "/admin/users?tab=company&modal=create&role=company_user",
     label: "Criar Usuário da Empresa",
-    description: "Abre o cadastro de um usuário vinculado à empresa.",
+    description: "Abre o cadastro de um usuário vinculado Ã  empresa.",
     requiredPermission: { moduleId: "users", action: "create" },
     expectedProfiles: ADMIN_PROFILES,
     status: "ativo",
     mainFile: "app/admin/users/page.tsx",
   },
   {
-    id: "usuarios.criar-usuario",
+    id: "usuarios.criar-usuário",
     moduleId: "usuarios",
     path: "/admin/users?tab=company&modal=create&role=company_user",
     label: "Criar usuário",
@@ -162,10 +162,21 @@ export const SYSTEM_ROUTES = [
     mainFile: "app/admin/users/page.tsx",
   },
   {
+    id: "permissoes.perfil",
+    moduleId: "permissoes",
+    path: "/admin/permissions",
+    label: "Gestão de perfil",
+    description: "Gestão das permissões padrão por perfil.",
+    requiredPermission: { moduleId: "permissions", action: "view" },
+    expectedProfiles: ADMIN_PROFILES,
+    status: "ativo",
+    mainFile: "app/admin/permissions/page.tsx",
+  },
+  {
     id: "permissoes.matriz",
     moduleId: "permissoes",
     path: "/admin/users/permissions",
-    label: "Matriz de permissões",
+    label: "Gestão de usuário",
     description: "Perfil base e permissões efetivas por usuário.",
     requiredPermission: { moduleId: "permissions", action: "view" },
     expectedProfiles: ADMIN_PROFILES,
@@ -175,13 +186,13 @@ export const SYSTEM_ROUTES = [
   {
     id: "permissoes.atalho-admin",
     moduleId: "permissoes",
-    path: "/admin/permissoes",
+    path: "/admin/permissões",
     label: "Permissões administrativas",
     description: "Entrada administrativa anterior para permissões.",
     requiredPermission: { moduleId: "permissions", action: "view" },
     expectedProfiles: ADMIN_PROFILES,
     status: "legado",
-    mainFile: "app/admin/permissoes/page.tsx",
+    mainFile: "app/admin/permissões/page.tsx",
     notes: "Manter enquanto houver links apontando para esta rota; consolidar com a matriz principal.",
   },
   {
@@ -306,7 +317,7 @@ export const SYSTEM_ROUTES = [
     expectedProfiles: INTERNAL_PROFILES,
     status: "legado",
     mainFile: "app/automacoes/casos/page.tsx",
-    notes: "A navegação canônica de casos manuais permanece em /casos-de-teste.",
+    notes: "A navegação canÃ´nica de casos manuais permanece em /casos-de-teste.",
   },
   {
     id: "automacao.scripts",
@@ -446,7 +457,7 @@ export const SYSTEM_ROUTES = [
   },
   {
     id: "agenda.release",
-    moduleId: "release_calendar",
+    moduleId: "agenda",
     path: "/agenda",
     label: "Agenda",
     description: "Calendário operacional para Líder TC e Suporte Técnico acompanharem marcações por empresa, projeto, usuário, contexto e entrega.",
@@ -719,3 +730,9 @@ export const SYSTEM_ROUTES = [
 export const SYSTEM_ROUTE_BY_ID: ReadonlyMap<string, SystemRouteDefinition> = new Map(
   SYSTEM_ROUTES.map((routeDefinition) => [routeDefinition.id, routeDefinition]),
 );
+
+
+
+
+
+

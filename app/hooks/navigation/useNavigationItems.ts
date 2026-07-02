@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -8,7 +8,7 @@ import { normalizeLegacyRole, SYSTEM_ROLES } from "@/lib/auth/roles";
 import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 import { isInstitutionalCompanyAccount } from "@/lib/activeIdentity";
 import { NAV_CATALOG, type NavItemDef, type NavModuleDef } from "@/lib/navigation/navigationCatalog";
-import { buildNavigationForUser, getNavigationRoute } from "@/lib/navigation/navigationPermissions";
+import { buildNavigationForUser, canSeeNavItem, getNavigationRoute } from "@/lib/navigation/navigationPermissions";
 import { hasPermissionAccess, type PermissionMatrix } from "@/lib/permissionMatrix";
 import type { SystemRole } from "@/lib/auth/roles";
 
@@ -24,6 +24,9 @@ const COMPANY_DASHBOARD_ROLES = new Set<SystemRole>([
 const AGENDA_ROLES: SystemRole[] = [
   SYSTEM_ROLES.LEADER_TC,
   SYSTEM_ROLES.TECHNICAL_SUPPORT,
+  SYSTEM_ROLES.TESTING_COMPANY_USER,
+  SYSTEM_ROLES.EMPRESA,
+  SYSTEM_ROLES.COMPANY_USER,
 ];
 const AGENDA_MODULE: NavModuleDef = {
   id: "agenda" as NavModuleDef["id"],
@@ -98,7 +101,11 @@ function resolveItemHref(
 ): string | undefined {
   const includeProject = PROJECT_SCOPED_ITEM_IDS.has(item.id);
 
-  if (item.id === "admin-permissions") {
+  if (item.id === "admin-permissions-profile") {
+    return "/admin/permissions";
+  }
+
+  if (item.id === "admin-permissions" || item.id === "admin-permissions-user") {
     return "/admin/users/permissions";
   }
 
@@ -211,33 +218,60 @@ function resolveModuleItems(
   projectSlug: string | null,
   companyRouteInput: Parameters<typeof buildCompanyPathForAccess>[2],
   effectiveRole: SystemRole | null,
+  permissions?: PermissionMatrix | null,
 ): NavModuleDef {
   const usesInternalOverview =
     mod.id === "home" && effectiveRole != null && INTERNAL_DASHBOARD_ROLES.has(effectiveRole);
   const usesCompanyCentral =
     mod.id === "home" && effectiveRole != null && COMPANY_DASHBOARD_ROLES.has(effectiveRole);
+    const permissionItems: NavItemDef[] = [
+    {
+      id: "admin-permissions-profile",
+      routeId: "permissoes.perfil",
+      label: "Gestão de perfil",
+      iconKey: "shield",
+      module: "permissoes",
+      href: "/admin/permissions",
+      favoriteEnabled: true,
+      testId: "nav-admin-permissions-profile",
+    },
+    {
+      id: "admin-permissions-user",
+      routeId: "permissoes.matriz",
+      label: "Gestão de usuário",
+      iconKey: "users",
+      module: "permissoes",
+      href: "/admin/users/permissions",
+      favoriteEnabled: true,
+      testId: "nav-admin-permissions-user",
+    },
+  ];
+
   const dynamicItems =
-    mod.id === "brain"
-      ? buildBrainItems(effectiveRole, companySlug, projectSlug)
-      : mod.id === "quality"
-        ? buildQualityItems(mod.items, companySlug)
-        : mod.items;
+    mod.id === "permissoes"
+      ? permissionItems
+      : mod.id === "brain"
+        ? buildBrainItems(effectiveRole, companySlug, projectSlug)
+        : mod.id === "quality"
+          ? buildQualityItems(mod.items, companySlug)
+          : mod.items;
 
   return {
     ...mod,
-    label: usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
+    label: mod.id === "permissoes" ? "Gestão de permissões" : usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {
         if (DISABLED_ITEM_IDS.has(item.id)) return false;
+        if (!canSeeNavItem(item, effectiveRole, permissions)) return false;
         if (PROJECT_SCOPED_ITEM_IDS.has(item.id)) return Boolean(projectSlug);
         return true;
       })
       .map((item) => ({
         ...item,
-        label: item.id === "admin-permissions" ? "Gestão de Perfis" : item.label,
+        label: item.label,
         href: resolveItemHref(item, companySlug, projectSlug, companyRouteInput),
-        testId: item.id === "admin-permissions" ? "nav-admin-profiles" : item.testId,
+        testId: item.testId,
       })),
   };
 }
@@ -340,7 +374,7 @@ export function useNavigationItems() {
     const contextCatalog = filterByActiveContext(catalog, companySlug);
     const filtered = buildNavigationForUser(contextCatalog, roleForFiltering, permissions, accessContext);
     const resolvedModules = filtered
-      .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole))
+      .map((mod) => resolveModuleItems(mod, companySlug, activeProjectSlug, companyRouteInput, effectiveRole, permissions))
       .filter((mod) => mod.href || mod.items.length > 0);
 
     return withReleaseAgendaModule(resolvedModules, effectiveRole, permissions);
@@ -358,3 +392,9 @@ export function useNavigationItems() {
 
   return { modules, loading, companySlug, effectiveRole, isGlobalAdmin };
 }
+
+
+
+
+
+

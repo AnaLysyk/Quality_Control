@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       where: {
         OR: [
           { entityType: "BrainNode", entityId: { in: visibleNodeIds } },
-          { entityType: "BrainEdge" },
+          { entityType: "BrainEdge", entityId: { in: Array.from(visibility.visibleEdgeIds) } },
           { entityType: "BrainMemory" },
         ],
       },
@@ -47,6 +47,24 @@ export async function GET(req: Request) {
         createdAt: true,
       },
     });
+    const memoryIds = logs
+      .filter((entry) => entry.entityType === "BrainMemory")
+      .map((entry) => entry.entityId);
+    const visibleMemoryIds = new Set(
+      memoryIds.length
+        ? (await prisma.brainMemory.findMany({
+            where: { id: { in: memoryIds } },
+            select: { id: true, nodeId: true, relatedNodeIds: true },
+          }))
+            .filter((memory) => {
+              const relatedNodeIds = Array.isArray(memory.relatedNodeIds)
+                ? memory.relatedNodeIds.filter((item): item is string => typeof item === "string")
+                : [];
+              return [memory.nodeId, ...relatedNodeIds].some((nodeId) => nodeId && visibility.visibleNodeIds.has(nodeId));
+            })
+            .map((memory) => memory.id)
+        : [],
+    );
 
     const nodeMap = new Map(
       graph.nodes
@@ -54,7 +72,9 @@ export async function GET(req: Request) {
         .map((node) => [node.id, node]),
     );
 
-    const replay = logs.map((entry, index) => {
+    const replay = logs
+      .filter((entry) => entry.entityType !== "BrainMemory" || visibleMemoryIds.has(entry.entityId))
+      .map((entry, index) => {
       const node = entry.entityType === "BrainNode" ? nodeMap.get(entry.entityId) : undefined;
       return {
         step: index + 1,

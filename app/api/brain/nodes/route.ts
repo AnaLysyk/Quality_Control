@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { searchNodes, upsertNode } from "@/lib/brain";
+import { isBrainNodeVisible, resolveBrainAccess } from "@/lib/brain/access";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
 export async function GET(req: Request) {
-  const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+  const accessResult = await resolveBrainAccess(req);
+  if (!accessResult.ok) {
+    return NextResponse.json({ error: accessResult.error }, { status: accessResult.status });
   }
 
   const url = new URL(req.url);
@@ -14,14 +15,16 @@ export async function GET(req: Request) {
   const label = url.searchParams.get("label") ?? undefined;
   const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit") ?? 50)));
 
-  const nodes = await searchNodes({ type, label, limit });
+  const nodes = (await searchNodes({ type, label, limit })).filter((node) =>
+    isBrainNodeVisible(node, accessResult.context),
+  );
   return NextResponse.json({ nodes });
 }
 
 export async function POST(req: Request) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "Não autorizado" : "Sem permissão" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Nao autorizado" : "Sem permissao" }, { status });
   }
 
   try {

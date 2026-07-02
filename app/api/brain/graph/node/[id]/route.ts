@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getNodeWithContext } from "@/lib/brain";
-import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
+import { assertBrainNodeAccess, filterBrainGraphByAccess, resolveBrainAccess } from "@/lib/brain/access";
 import { getExecutiveBrainContextGraph } from "@/lib/brain/executiveContext";
 
 export async function GET(
@@ -52,11 +52,14 @@ export async function GET(
       return NextResponse.json({ error: "No nao encontrado" }, { status: 404 });
     }
 
+    const edges = [...context.outgoing, ...context.incoming];
+    const visibility = filterBrainGraphByAccess([context.node, ...context.neighbors], edges, accessResult.context);
+
     return NextResponse.json({
       node: context.node,
-      outgoing: context.outgoing,
-      incoming: context.incoming,
-      neighbors: context.neighbors,
+      outgoing: context.outgoing.filter((edge) => visibility.visibleEdgeIds.has(edge.id)),
+      incoming: context.incoming.filter((edge) => visibility.visibleEdgeIds.has(edge.id)),
+      neighbors: context.neighbors.filter((node) => visibility.visibleNodeIds.has(node.id)),
     });
   } catch (error) {
     console.error("[brain/graph/node/[id]] GET error:", error);

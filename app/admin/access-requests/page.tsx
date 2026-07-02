@@ -1211,7 +1211,7 @@ function AccessRequestsPage() {
     <div className="min-h-screen bg-white text-(--tc-text-primary) transition-colors dark:bg-[#081323]">
       <div className="mx-auto flex w-full max-w-none flex-col gap-3 px-1.5 py-3 sm:px-2 lg:px-3 xl:px-4">
         <section
-          className={`relative overflow-hidden rounded-none border-0 bg-transparent px-0 py-1 text-slate-950 shadow-none sm:px-0 dark:rounded-[24px] dark:border dark:border-white/10 dark:bg-[linear-gradient(135deg,#07132a_0%,#101a34_54%,rgba(239,0,1,0.20)_140%)] dark:px-4 dark:py-3 dark:text-white dark:shadow-[0_18px_44px_rgba(0,0,0,0.28)]`}
+          className={`relative overflow-hidden rounded-none border-0 bg-transparent px-0 py-1 text-slate-950 shadow-none sm:px-0 dark:rounded-3xl dark:border dark:border-white/10 dark:bg-[linear-gradient(135deg,#07132a_0%,#101a34_54%,rgba(239,0,1,0.20)_140%)] dark:px-4 dark:py-3 dark:text-white dark:shadow-[0_18px_44px_rgba(0,0,0,0.28)]`}
         >
           <div className={`pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full blur-3xl ${styles.blurDecorWhite}`} />
           <div className={`pointer-events-none absolute bottom-0 left-1/3 h-24 w-24 rounded-full blur-3xl ${styles.blurDecorRed}`} />
@@ -1289,7 +1289,7 @@ function AccessRequestsPage() {
         </section>
 
         {(error || successMessage) ? (
-          <div className="pointer-events-none fixed right-4 top-28 z-[2147483647] flex w-[min(420px,calc(100vw-2rem))] flex-col gap-3 sm:right-8">
+          <div className="pointer-events-none fixed right-4 top-28 z-2147483647 flex w-[min(420px,calc(100vw-2rem))] flex-col gap-3 sm:right-8">
             {error ? (
               <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 rounded-3xl border border-rose-200 bg-white px-4 py-3 text-sm text-rose-800 shadow-[0_22px_50px_rgba(15,23,42,0.18)]">
                 <div className="flex items-start gap-3">

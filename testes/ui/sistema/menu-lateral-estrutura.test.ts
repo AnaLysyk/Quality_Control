@@ -13,7 +13,7 @@ function itemIds(modules: ReturnType<typeof filtrarMenuPorPerfil>) {
 describe("estrutura organizada do menu lateral", () => {
   it("reaproveita o catalogo real como fonte da verdade", () => {
     expect(NAV_CATALOG.map((module) => module.id)).toEqual(
-      expect.arrayContaining(["home", "quality", "support", "brain", "admin"]),
+      expect.arrayContaining(["home", "quality", "support", "brain", "management", "logs"]),
     );
   });
 
@@ -40,7 +40,7 @@ describe("estrutura organizada do menu lateral", () => {
     });
     const supportItems = itemIds(supportModules);
 
-    expect(supportItems).toContain("users-list");
+    expect(supportItems).toContain("management-users");
     expect(supportItems).not.toContain("users-create-leader-tc");
 
     const leaderModules = filtrarMenuPorPerfil({
@@ -49,7 +49,7 @@ describe("estrutura organizada do menu lateral", () => {
     });
     const leaderItems = itemIds(leaderModules);
 
-    expect(leaderItems).toContain("admin-permissions");
-    expect(leaderItems).toContain("users-create-leader-tc");
+    expect(leaderItems).toContain("management-profile");
+    expect(leaderItems).toContain("management-users");
   });
 });

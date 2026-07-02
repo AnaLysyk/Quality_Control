@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FiDatabase, FiRefreshCw, FiShield } from "react-icons/fi";
 import { fetchBrainDashboardData } from "../_api/brain.client";
 import { buildMockBrainGraph } from "../_data/brainMockGraph";
@@ -411,6 +411,8 @@ export function BrainNeuralDashboard() {
   const [selectedNode, setSelectedNode] = useState<BrainNode | null>(null);
   const [expandedNodeId, setExpandedNodeId] = useState<string | null>(null);
   const [graphSource, setGraphSource] = useState<"database" | "fallback" | "partial">("fallback");
+  const [debugMode, setDebugMode] = useState(false);
+  const appliedQueryFocusRef = useRef(false);
 
   useEffect(() => {
     document.body.classList.add("qc-brain-route");
@@ -419,6 +421,12 @@ export function BrainNeuralDashboard() {
       document.body.classList.remove("qc-brain-route");
       document.body.classList.remove("qc-brain-active-route");
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setDebugMode(params.get("debug") === "1");
   }, []);
 
   useEffect(() => {
@@ -478,6 +486,26 @@ export function BrainNeuralDashboard() {
       }),
     [activeModule, graph.edges, graph.nodes, localGraphOnly, nodeStatus, nodeType, period, searchText, selectedCompanyId, selectedNode?.id, selectedProjectId, showOrphansOnly, showPendingOnly],
   );
+
+  useEffect(() => {
+    if (appliedQueryFocusRef.current || loadingData || graph.nodes.length === 0) return;
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const nodeId = params.get("node");
+    if (!nodeId) {
+      appliedQueryFocusRef.current = true;
+      return;
+    }
+
+    const node = graph.nodes.find((item) => item.id === nodeId) ?? null;
+    if (node) {
+      setSelectedNode(node);
+      setExpandedNodeId(node.id);
+      if (node.module) setActiveModule(node.module);
+    }
+    appliedQueryFocusRef.current = true;
+  }, [graph.nodes, loadingData]);
   const contextCompanies = useMemo(() => mergeContextCompanies(brainContext, graph.nodes), [brainContext, graph.nodes]);
   const contextProjects = useMemo(() => mergeContextProjects(brainContext, graph.nodes), [brainContext, graph.nodes]);
   const visibleGraph = useMemo(
@@ -863,6 +891,7 @@ function handleSelectNode(node: BrainNode) {
           localGraphOnly={localGraphOnly}
           onToggleLocalGraph={() => setLocalGraphOnly((current) => !current)}
           loading={loadingData}
+          debugMode={debugMode}
         />
       </div>
 
@@ -874,7 +903,6 @@ function handleSelectNode(node: BrainNode) {
 export function BrainDashboard() {
   return <BrainNeuralDashboard />;
 }
-
 
 
 

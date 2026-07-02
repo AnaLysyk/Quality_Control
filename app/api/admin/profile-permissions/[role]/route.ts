@@ -15,6 +15,7 @@ import { resolverAcessoUsuarios } from "@/lib/permissions/validarAcessoUsuarios"
 import { validarAcessoUsuariosNoServidor } from "@/lib/permissions/validarAcessoUsuariosNoServidor";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 import { notifyProfilePermissionsChanged } from "@/lib/notificationService";
+import { invalidateBrainCache } from "@/lib/brain/cache";
 
 export const revalidate = 0;
 
@@ -152,6 +153,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
       changedSummary: summary,
       updatedAt: saved.updatedAt ?? null,
     });
+    invalidateBrainCache("profile.permissions.updated");
 
     return NextResponse.json({ ok: true, saved, permissions });
   } catch (error) {
@@ -195,6 +197,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
       changedSummary: "perfil restaurado para o padrão do sistema",
       updatedAt,
     });
+    invalidateBrainCache("profile.permissions.reset");
 
     return NextResponse.json({ ok: true, permissions });
   } catch (error) {

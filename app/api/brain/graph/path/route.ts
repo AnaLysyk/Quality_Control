@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 
 import { findPathBetweenNodes } from "@/lib/brain";
-import { assertBrainNodeAccess, resolveBrainAccess } from "@/lib/brain/access";
+import { assertBrainNodeAccess, isBrainNodeVisible, resolveBrainAccess, type BrainAccessContext } from "@/lib/brain/access";
 import { BrainGraphAnalyticsService } from "@/lib/brain/graphAnalyticsService";
 import { prisma } from "@/lib/prismaClient";
+
+async function allPathNodesVisible(nodeIds: string[], access: BrainAccessContext) {
+  const uniqueNodeIds = Array.from(new Set(nodeIds));
+  const nodes = await prisma.brainNode.findMany({ where: { id: { in: uniqueNodeIds } } });
+  const visibleNodeIds = new Set(nodes.filter((node) => isBrainNodeVisible(node, access)).map((node) => node.id));
+  return uniqueNodeIds.every((nodeId) => visibleNodeIds.has(nodeId));
+}
 
 export async function GET(req: Request) {
   const accessResult = await resolveBrainAccess(req);
@@ -39,6 +46,10 @@ export async function GET(req: Request) {
     const explainablePath = await analyticsService.calculatePath(fromId, toId);
 
     if (explainablePath.found) {
+      if (!(await allPathNodesVisible(explainablePath.path.map((step) => step.nodeId), accessResult.context))) {
+        return NextResponse.json({ error: "Sem permissao para consultar caminho" }, { status: 403 });
+      }
+
       return NextResponse.json({
         from: fromId,
         to: toId,
@@ -65,6 +76,10 @@ export async function GET(req: Request) {
         edges: [],
         explanation: "Nao encontrei caminho entre os nos solicitados.",
       });
+    }
+
+    if (!(await allPathNodesVisible(pathResult.path, accessResult.context))) {
+      return NextResponse.json({ error: "Sem permissao para consultar caminho" }, { status: 403 });
     }
 
     const nodes = await prisma.brainNode.findMany({

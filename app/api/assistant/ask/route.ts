@@ -3,6 +3,9 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
 import { detectAgentMode, AGENT_REGISTRY } from "@/lib/brain/agents";
+import { buildBrainAccessContextFromAuthUser } from "@/lib/brain/access";
+import { answerBrainChatQuestion } from "@/lib/brain/chat";
+import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { buildWebSupportContext, shouldUseWebSupport } from "@/lib/assistant/webSupport";
 import type { AgentMode } from "@/lib/brain/agents";
 import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
@@ -143,6 +146,14 @@ function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?
   return fromActor ?? authUser.companySlug ?? body.brainContext?.companySlug ?? null;
 }
 
+function shouldAnswerFromBrain(message: string) {
+  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cç][aã]o|defeito|bug|usuario|usu[aá]rio|qase|kase|jira|operacional|brain|brian|n[oó]|dashboard|painel)\b/i.test(message);
+}
+
+function shouldUseBrainFirstContext(brainContext: AssistantOpenEventDetail | null) {
+  return Boolean(brainContext?.source === "brain" || brainContext?.nodeId || brainContext?.agentMode);
+}
+
 function appendContextToLastUserMessage(messages: Array<{ role: "user" | "assistant"; content: string }>, title: string, context: string) {
   if (!context.trim()) return messages;
   let lastUserIndex = -1;
@@ -166,6 +177,9 @@ export async function POST(req: Request) {
   }
 
   const authUser = await authenticateRequest(req);
+  if (authUser && (!hasPermissionAccess(authUser.permissions, "ai", "view") || !hasPermissionAccess(authUser.permissions, "ai", "use"))) {
+    return NextResponse.json({ error: "Sem permissao para usar o assistente" }, { status: 403 });
+  }
   if (!authUser) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
@@ -199,6 +213,72 @@ export async function POST(req: Request) {
 
     const messages = buildMessagesFromHistory(body);
     const latestUserMessage = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
+    if (shouldAnswerFromBrain(latestUserMessage)) {
+      const brainAccess = await buildBrainAccessContextFromAuthUser(authUser);
+      if (brainAccess) {
+        const brainAnswer = await answerBrainChatQuestion({
+          message: latestUserMessage,
+          access: brainAccess,
+          currentBrainContext: {
+            lastNodeId: brainContext?.nodeId ?? null,
+            lastNodeType: brainContext?.nodeType ?? null,
+            lastCompanyId: authUser.companyId ?? null,
+            lastProjectId: null,
+            lastRoute: brainContext?.route ?? body.context?.route ?? null,
+            lastIntent: null,
+          },
+        });
+
+        await persistConversationMemory({
+          body,
+          authUser,
+          reply: brainAnswer.answer,
+          tool: "use_brain",
+          agentMode: brainContext?.agentMode ?? "qa",
+          brainContext,
+        });
+
+        return NextResponse.json({
+          reply: brainAnswer.answer,
+          tool: "use_brain",
+          actions: brainAnswer.navigation
+            ? [{ kind: "prompt", label: brainAnswer.navigation.label, prompt: `abrir ${brainAnswer.navigation.route}` }]
+            : brainAnswer.suggestedActions.slice(0, 3).map((action) => ({ kind: "prompt", label: action.label, prompt: action.label })),
+          context: null,
+          meta: {
+            agentMode: brainContext?.agentMode ?? "qa",
+            nodeId: brainAnswer.currentBrainContext.lastNodeId ?? null,
+            source: "brain",
+            navigation: brainAnswer.navigation ?? null,
+            blocked: brainAnswer.blocked ?? null,
+            evidence: brainAnswer.evidence,
+          },
+        });
+      }
+    }
+    if (!shouldUseBrainFirstContext(brainContext)) {
+      const { runAssistantRequest } = await import("@/lib/assistant/service");
+      const response = await runAssistantRequest(authUser, {
+        message: body.message,
+        context: body.context ?? null,
+        actor: body.actor ?? null,
+        action: body.action ?? null,
+        history: body.history ?? null,
+        brainContext: brainContext ?? null,
+      } as Parameters<typeof runAssistantRequest>[1]);
+
+      await persistConversationMemory({
+        body,
+        authUser,
+        reply: String(response.reply ?? ""),
+        tool: response.tool,
+        agentMode: null,
+        brainContext,
+      });
+
+      return NextResponse.json(response);
+    }
+
     const brainRuntimeSnapshot = compactJson(brainContext?.metadata ?? body.context?.metadata ?? null);
     appendContextToLastUserMessage(messages, "Brain runtime context", brainRuntimeSnapshot);
 

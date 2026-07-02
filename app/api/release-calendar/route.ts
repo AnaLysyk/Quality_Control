@@ -8,6 +8,8 @@ import {
   type ReleaseCalendarEvent,
 } from "@/data/releaseCalendarModel";
 import { NO_STORE_HEADERS } from "@/lib/http/noStore";
+import { getAccessContext } from "@/lib/auth/session";
+import { hasPermissionAccess, resolveEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { createNotificationEvent, type NotificationEventRecipient } from "@/lib/notificationEventsStore";
 import { getReleaseCalendarSummary, listReleaseCalendarEvents, updateReleaseCalendarEventStatus, upsertReleaseCalendarEvent } from "@/lib/releaseCalendarStore";
@@ -30,6 +32,26 @@ const VALID_AUDIENCE_PROFILES = [
 ] as const;
 
 type ReleaseStatus = (typeof VALID_STATUSES)[number];
+
+async function requireReleaseCalendarAccess(req: NextRequest, action: "view" | "create" | "edit" | "status") {
+  const access = await getAccessContext(req);
+  if (!access) {
+    return NextResponse.json({ error: "Nao autorizado" }, { status: 401, headers: NO_STORE_HEADERS });
+  }
+
+  const permissions = resolveEffectivePermissionMatrix({
+    role: access.role,
+    companyRole: access.companyRole,
+    globalRole: access.globalRole,
+    isGlobalAdmin: access.isGlobalAdmin,
+  });
+  const allowed = access.isGlobalAdmin || hasPermissionAccess(permissions, "release_calendar", action);
+  if (!allowed) {
+    return NextResponse.json({ error: "Sem permissao para acessar a agenda." }, { status: 403, headers: NO_STORE_HEADERS });
+  }
+
+  return null;
+}
 
 function normalizeStatus(value: unknown): ReleaseStatus | null {
   return typeof value === "string" && VALID_STATUSES.includes(value as ReleaseStatus) ? (value as ReleaseStatus) : null;
@@ -117,6 +139,9 @@ async function recordCalendarNotification(input: {
 }
 
 export async function GET(req: NextRequest) {
+  const blocked = await requireReleaseCalendarAccess(req, "view");
+  if (blocked) return blocked;
+
   const url = new URL(req.url);
   const companySlug = url.searchParams.get("companySlug")?.trim() || null;
   const projectSlug = url.searchParams.get("projectSlug")?.trim() || null;
@@ -139,6 +164,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const blocked = await requireReleaseCalendarAccess(req, "create");
+  if (blocked) return blocked;
+
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
@@ -165,6 +193,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const blocked = await requireReleaseCalendarAccess(req, "status");
+  if (blocked) return blocked;
+
   const user = await authenticateRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });

@@ -40,3 +40,17 @@ export type BrainAssistantResponseContract = {
   }>;
   insufficientEvidence: boolean;
 };
+
+export type BrainChatAnswer = {
+  answer: string;
+  foundNodes: unknown[];
+  suggestedActions: unknown[];
+  navigation?: {
+    label: string;
+    route: string;
+  };
+  blocked?: {
+    reason: string;
+    missingPermissions: string[];
+  };
+};

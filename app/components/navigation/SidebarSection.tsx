@@ -21,10 +21,10 @@ function resolveSidebarHref(href: string) {
 }
 
 const moduleBaseClass =
-  "flex w-full items-center gap-3 rounded-xl border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm font-semibold text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
+  "flex w-full min-w-0 items-center gap-3 whitespace-nowrap rounded-xl border border-transparent border-l-transparent bg-transparent px-3 py-2 text-sm font-semibold text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 const subItemBaseClass =
-  "flex items-center gap-2.5 rounded-lg border border-transparent border-l-transparent bg-transparent px-2 py-1.5 text-[13px] font-medium text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
+  "flex w-full min-w-0 items-center gap-2.5 whitespace-nowrap rounded-lg border border-transparent border-l-transparent bg-transparent px-2 py-1.5 text-[13px] font-medium text-(--shell-sidebar-text-muted) transition duration-200 hover:border-(--shell-menu-border) hover:border-l-(--tc-accent) hover:bg-white/10 hover:text-(--shell-sidebar-text-strong)";
 
 export default function SidebarSection({
   mod,
@@ -43,11 +43,13 @@ export default function SidebarSection({
       <Link
         href={resolveSidebarHref(mod.href)}
         data-testid={mod.testId}
+        data-active={isActive ? "true" : undefined}
+        aria-current={isActive ? "page" : undefined}
         onClick={onClose}
         className={moduleClassName}
       >
         {createElement(getIcon(mod.iconKey), { size: 16, className: "shrink-0 text-current" })}
-        <span className="flex-1 truncate text-left">{mod.label}</span>
+        <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">{mod.label}</span>
       </Link>
     );
   }
@@ -57,10 +59,11 @@ export default function SidebarSection({
       <button
         onClick={onToggle}
         data-testid={mod.testId}
+        data-active={isActive ? "true" : undefined}
         className={moduleClassName}
       >
         {createElement(getIcon(mod.iconKey), { size: 16, className: "shrink-0 text-current" })}
-        <span className="flex-1 truncate text-left">{mod.label}</span>
+        <span className="min-w-0 flex-1 truncate whitespace-nowrap text-left">{mod.label}</span>
         {open ? (
           <FiChevronDown size={13} className="shrink-0 text-current opacity-55" />
         ) : (
@@ -83,11 +86,13 @@ export default function SidebarSection({
                 <Link
                   href={resolveSidebarHref(item.href!)}
                   data-testid={item.testId}
+                  data-active={active ? "true" : undefined}
+                  aria-current={active ? "page" : undefined}
                   onClick={onClose}
                   className={`${subItemBaseClass} ${active ? "border-l-(--tc-accent) text-(--shell-sidebar-text-strong)" : ""}`}
                 >
                   {createElement(getIcon(item.iconKey), { size: 13, className: "shrink-0 text-current opacity-75" })}
-                  <span className="truncate">{item.label}</span>
+                  <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
                 </Link>
               </Fragment>
             );

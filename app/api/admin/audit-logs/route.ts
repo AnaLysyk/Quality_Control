@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 import {
   AUDIT_LOG_RETENTION_DAYS,
   addAuditLogSafe,
@@ -215,7 +215,7 @@ function buildSummary(items: AuditLogItem[]) {
 export async function DELETE(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const msg = status === 401 ? "Não autenticado" : "Sem permissão";
+    const msg = status === 401 ? "Não autenticado" : "Sem permissÃ£o";
     return apiFail(req, msg, {
       status,
       code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN",
@@ -265,7 +265,7 @@ export async function DELETE(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const msg = status === 401 ? "Não autenticado" : "Sem permissão";
+    const msg = status === 401 ? "Não autenticado" : "Sem permissÃ£o";
     return apiFail(req, msg, {
       status,
       code: status === 401 ? "AUTH_REQUIRED" : "FORBIDDEN",
@@ -287,7 +287,7 @@ export async function GET(req: NextRequest) {
 
   const storageReady = isAuditLogStorageConfigured();
   if (!storageReady) {
-    const warning = "Audit logs desativado neste ambiente: configure armazenamento próprio.";
+    const warning = "Audit logs desativado neste ambiente: configure armazenamento prÃ³prio.";
     const payload = {
       items: [],
       avatars: {},
@@ -378,7 +378,7 @@ export async function GET(req: NextRequest) {
       actorNames: {},
       retentionDays: AUDIT_LOG_RETENTION_DAYS,
       warning:
-        "Não foi possível carregar audit logs (banco indisponivel ou tabela ausente). Configure DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL e rode a migração da tabela audit_logs.",
+        "Não foi possÃ­vel carregar audit logs (banco indisponivel ou tabela ausente). Configure DATABASE_URL, POSTGRES_URL ou POSTGRES_PRISMA_URL e rode a migração da tabela audit_logs.",
       total: 0,
       summary: {
         total: 0,
@@ -403,3 +403,4 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+

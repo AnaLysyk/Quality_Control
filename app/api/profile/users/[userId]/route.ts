@@ -23,7 +23,7 @@ function normalizeProfileStatus(status: unknown): EntityStatus | undefined {
 
 /**
  * GET /api/profile/users/[userId]
- * Retorna perfil do usuÃ¡rio
+ * Retorna perfil do usuário
  */
 export async function GET(
   req: NextRequest,
@@ -35,7 +35,7 @@ export async function GET(
 
     if (!viewer) {
       return NextResponse.json(
-        { error: "NÃ£o autenticado" },
+        { error: "Não autenticado" },
         { status: 401 },
       );
     }
@@ -44,12 +44,12 @@ export async function GET(
     const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) {
       return NextResponse.json(
-        { error: "UsuÃ¡rio nÃ£o encontrado" },
+        { error: "Usuário não encontrado" },
         { status: 404 },
       );
     }
 
-    // Construir contexto (valida permissÃµes)
+    // Construir contexto (valida permissões)
     const context = buildProfileRuntimeContext({
       viewer,
       entityType: "user",
@@ -65,12 +65,12 @@ export async function GET(
 
     if (!context.permissions.canView) {
       return NextResponse.json(
-        { error: "Sem permissÃ£o para visualizar" },
+        { error: "Sem permissão para visualizar" },
         { status: 403 },
       );
     }
 
-    // Retornar apenas campos visÃ­veis
+    // Retornar apenas campos visíveis
     return NextResponse.json({
       id: targetUser.id,
       name: targetUser.name,
@@ -79,7 +79,7 @@ export async function GET(
       phone: targetUser.phone ?? null,
       role: targetUser.role,
       status: targetUser.status,
-      context, // Debug: incluir contexto para validaÃ§Ã£o
+      context, // Debug: incluir contexto para validação
     });
   } catch (error) {
     console.error("Error fetching user profile:", error);
@@ -92,7 +92,7 @@ export async function GET(
 
 /**
  * PATCH /api/profile/users/[userId]
- * Atualiza perfil do usuÃ¡rio
+ * Atualiza perfil do usuário
  */
 const UpdateUserProfileSchema = z.object({
   name: z.string().min(2).max(200).optional(),
@@ -112,7 +112,7 @@ export async function PATCH(
 
     if (!viewer) {
       return NextResponse.json(
-        { error: "NÃ£o autenticado" },
+        { error: "Não autenticado" },
         { status: 401 },
       );
     }
@@ -121,12 +121,12 @@ export async function PATCH(
     const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) {
       return NextResponse.json(
-        { error: "UsuÃ¡rio nÃ£o encontrado" },
+        { error: "Usuário não encontrado" },
         { status: 404 },
       );
     }
 
-    // Construir contexto (valida permissÃµes)
+    // Construir contexto (valida permissões)
     const context = buildProfileRuntimeContext({
       viewer,
       entityType: "user",
@@ -142,7 +142,7 @@ export async function PATCH(
 
     if (!context.permissions.canEdit) {
       return NextResponse.json(
-        { error: "Sem permissÃ£o para editar" },
+        { error: "Sem permissão para editar" },
         { status: 403 },
       );
     }
@@ -158,7 +158,7 @@ export async function PATCH(
       avatar: targetUser.avatar_url,
     };
 
-    // Aplicar atualizaÃ§Ã£o
+    // Aplicar atualização
     const updated = await updateLocalUser(userId, {
       name: update.name ?? targetUser.name,
       email: update.email ?? targetUser.email,
@@ -173,7 +173,7 @@ export async function PATCH(
       );
     }
 
-    // Log de auditoria (simplificado; em produÃ§Ã£o seria em Prisma)
+    // Log de auditoria (simplificado; em produção seria em Prisma)
     const auditEntry: ProfileAuditEntry = {
       id: crypto.randomUUID(),
       entityType: "user",
@@ -213,7 +213,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "ValidaÃ§Ã£o falhou", details: error.issues },
+        { error: "Validação falhou", details: error.issues },
         { status: 400 },
       );
     }

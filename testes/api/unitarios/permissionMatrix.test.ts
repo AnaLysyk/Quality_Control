@@ -10,7 +10,7 @@
   PermissionMatrix
 } from "../../../lib/permissionMatrix";
 
-describe("permissionMatrix - Matriz RÃ­gida de AutorizaÃ§Ã£o baseada em MÃ³dulos", () => {
+describe("permissionMatrix - Matriz Rígida de Autorização baseada em Módulos", () => {
   describe("normalizePermissionMatrix", () => {
     it("deve rejeitar lixos (null, strings, arrays) devolvendo interface limpa {}", () => {
       expect(normalizePermissionMatrix(null)).toEqual({});
@@ -20,7 +20,7 @@ describe("permissionMatrix - Matriz RÃ­gida de AutorizaÃ§Ã£o baseada em M�
       expect(normalizePermissionMatrix(123)).toEqual({});
     });
 
-    it("deve remover arrays corrompidos, chaves nÃ£o-string, e formatar strings vazias", () => {
+    it("deve remover arrays corrompidos, chaves não-string, e formatar strings vazias", () => {
       const dirty = {
         users: ["view", 123, null, "create", ""],
         settings: { view: true }, // Not an array
@@ -36,7 +36,7 @@ describe("permissionMatrix - Matriz RÃ­gida de AutorizaÃ§Ã£o baseada em M�
       expect(clean).not.toHaveProperty("broken");
     });
 
-    it("deve preservar apenas actions Ãºnicas evitando duplicidades", () => {
+    it("deve preservar apenas actions únicas evitando duplicidades", () => {
       const duplicated = {
         tickets: ["view", "view", "edit", "edit", "delete"]
       };
@@ -54,7 +54,7 @@ describe("permissionMatrix - Matriz RÃ­gida de AutorizaÃ§Ã£o baseada em M�
         role: "technical_support",
         isGlobalAdmin: false
       });
-      // Importante: prevalece os permissions override explÃ­citos se existem
+      // Importante: prevalece os permissions override explícitos se existem
       expect(matrix).toEqual({ tickets: ["view_all"] });
     });
 
@@ -142,7 +142,7 @@ describe("permissionMatrix - Matriz RÃ­gida de AutorizaÃ§Ã£o baseada em M�
 
       const result = applyPermissionOverride(baseDefaults, override);
       
-      // Users sÃ³ sobrou view
+      // Users só sobrou view
       expect(result.users).toEqual(["view"]);
       // Settings ganhou edit
       expect(result.settings).toHaveLength(2);
@@ -152,7 +152,7 @@ describe("permissionMatrix - Matriz RÃ­gida de AutorizaÃ§Ã£o baseada em M�
       expect(result.tickets).toEqual(["create"]);
     });
 
-    it("na colisÃ£o entre allow e deny sobre a mesma policy: subtrai (prioritÃ¡rio ao deny)", () => {
+    it("na colisão entre allow e deny sobre a mesma policy: subtrai (prioritário ao deny)", () => {
       const base: PermissionMatrix = { tickets: ["comment"] };
       const override = {
         allow: { tickets: ["delete"] },
@@ -160,7 +160,7 @@ describe("permissionMatrix - Matriz RÃ­gida de AutorizaÃ§Ã£o baseada em M�
       };
 
       const result = applyPermissionOverride(base, override);
-      expect(result.tickets).not.toContain("delete"); // Deny prevaleceu na execuÃ§Ã£o do merge set iterators
+      expect(result.tickets).not.toContain("delete"); // Deny prevaleceu na execução do merge set iterators
       expect(result.tickets).toContain("comment"); // intacto
     });
   });
@@ -195,7 +195,7 @@ describe("permissionMatrix - Matriz RÃ­gida de AutorizaÃ§Ã£o baseada em M�
 
       const visMap = toVisibilityMap(perms);
       expect(visMap.users).toBe(true);
-      expect(visMap.runs).toBe(false); // nÃ£o tem view action
+      expect(visMap.runs).toBe(false); // não tem view action
       expect(visMap.tickets).toBe(true); 
     });
   });

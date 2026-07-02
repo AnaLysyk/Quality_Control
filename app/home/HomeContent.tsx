@@ -13,7 +13,7 @@ import { buildCompanyPathForAccess } from "@/lib/companyRoutes";
 const cards = [
   {
     title: "Empresa ativa",
-    description: "Entenda onde vocÃª estÃ¡ trabalhando agora e acesse o hub da empresa.",
+    description: "Entenda onde você está trabalhando agora e acesse o hub da empresa.",
     href: "/empresas",
     badge: "Empresa",
   },
@@ -108,7 +108,7 @@ export default function HomeContent() {
           </div>
           <h1 className="mt-4 text-4xl font-extrabold text-(--page-text,#0b1a3c)">Quality Control</h1>
           <p className="mt-3 text-sm text-[var(--tc-text-secondary,#4b5563)] max-w-3xl mx-auto">
-            Esta tela nÃ£o administra o sistema. Ela mostra quem vocÃª Ã©, onde estÃ¡ e no que estÃ¡ trabalhando agora.
+            Esta tela não administra o sistema. Ela mostra quem você é, onde está e no que está trabalhando agora.
           </p>
           {isLoggedOut && (
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -140,7 +140,7 @@ export default function HomeContent() {
             <section className="rounded-[28px] bg-white/90 p-8 shadow-xl">
               <CompanySelector
                 title="Empresas vinculadas"
-                description="Selecione a empresa para ver dashboards, relatÃ³rios e executar aÃ§Ãµes especÃ­ficas."
+                description="Selecione a empresa para ver dashboards, relatórios e executar ações específicas."
                 buildHref={(company) =>
                   buildCompanyPathForAccess(company.clientSlug, "home", {
                     isGlobalAdmin: user?.isGlobalAdmin === true,

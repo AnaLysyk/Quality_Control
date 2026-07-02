@@ -66,7 +66,7 @@ const STATUS_CLASS: Record<DocStatus, string> = {
 
 const ICON_OPTIONS = [
   { value: "FiBookOpen", label: "Livro", Icon: FiBookOpen },
-  { value: "FiCode", label: "CÃ³digo", Icon: FiCode },
+  { value: "FiCode", label: "Código", Icon: FiCode },
   { value: "FiDatabase", label: "Banco", Icon: FiDatabase },
   { value: "FiLayers", label: "Camadas", Icon: FiLayers },
   { value: "FiSettings", label: "Config", Icon: FiSettings },
@@ -228,7 +228,7 @@ function BlockEditor({
         <>
           <span className="text-xs text-[#dc2626]">Confirmar?</span>
           <button onClick={onDelete} className="px-2 py-0.5 rounded text-xs bg-[#fee2e2] text-[#dc2626] hover:bg-[#fecaca]">Sim</button>
-          <button onClick={() => setConfirmDelete(false)} className="px-2 py-0.5 rounded text-xs bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]">NÃ£o</button>
+          <button onClick={() => setConfirmDelete(false)} className="px-2 py-0.5 rounded text-xs bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]">Não</button>
         </>
       ) : (
         <button onClick={() => setConfirmDelete(true)} className="p-1 rounded hover:bg-[#fee2e2] text-[#6b7280] hover:text-[#dc2626]" title="Deletar bloco"><FiTrash2 size={13} /></button>
@@ -247,10 +247,10 @@ function BlockEditor({
   );
 
   if (block.type === "heading") {
-    return wrap("TÃ­tulo", (
+    return wrap("Título", (
       <div className="flex gap-2">
         <select
-          aria-label="NÃ­vel do tÃ­tulo"
+          aria-label="Nível do título"
           value={block.level}
           onChange={(e) => onUpdate({ ...block, level: Number(e.target.value) as 1 | 2 | 3 })}
           className="border border-[#e5e7eb] rounded px-2 py-1 text-xs text-[#374151] bg-[#ffffff] shrink-0"
@@ -263,7 +263,7 @@ function BlockEditor({
           type="text"
           value={block.text}
           onChange={(e) => onUpdate({ ...block, text: e.target.value })}
-          placeholder="Texto do tÃ­tulo..."
+          placeholder="Texto do título..."
           className="flex-1 border border-[#e5e7eb] rounded px-2 py-1 text-sm text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1]"
         />
       </div>
@@ -271,11 +271,11 @@ function BlockEditor({
   }
 
   if (block.type === "paragraph") {
-    return wrap("ParÃ¡grafo", (
+    return wrap("Parágrafo", (
       <textarea
         value={block.text}
         onChange={(e) => onUpdate({ ...block, text: e.target.value })}
-        placeholder="Texto... use **negrito**, _itÃ¡lico_, `cÃ³digo`"
+        placeholder="Texto... use **negrito**, _itálico_, `código`"
         rows={3}
         className="w-full border border-[#e5e7eb] rounded px-2 py-1 text-sm text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1] resize-y"
       />
@@ -283,7 +283,7 @@ function BlockEditor({
   }
 
   if (block.type === "divider") {
-    return wrap("Divisor", <p className="text-xs text-[#9ca3af] italic">Sem configuraÃ§Ãµes</p>);
+    return wrap("Divisor", <p className="text-xs text-[#9ca3af] italic">Sem configurações</p>);
   }
 
   if (block.type === "card") {
@@ -303,14 +303,14 @@ function BlockEditor({
             type="text"
             value={block.title ?? ""}
             onChange={(e) => onUpdate({ ...block, title: e.target.value || undefined })}
-            placeholder="TÃ­tulo do card (opcional)"
+            placeholder="Título do card (opcional)"
             className="flex-1 border border-[#e5e7eb] rounded px-2 py-1 text-xs text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1]"
           />
         </div>
         <textarea
           value={block.text}
           onChange={(e) => onUpdate({ ...block, text: e.target.value })}
-          placeholder="ConteÃºdo do card..."
+          placeholder="Conteúdo do card..."
           rows={2}
           className="w-full border border-[#e5e7eb] rounded px-2 py-1 text-sm text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1] resize-y"
         />
@@ -319,7 +319,7 @@ function BlockEditor({
   }
 
   if (block.type === "code") {
-    return wrap("CÃ³digo", (
+    return wrap("Código", (
       <div className="space-y-2">
         <div className="flex gap-2">
           <input
@@ -340,7 +340,7 @@ function BlockEditor({
         <textarea
           value={block.code}
           onChange={(e) => onUpdate({ ...block, code: e.target.value })}
-          placeholder="CÃ³digo..."
+          placeholder="Código..."
           rows={5}
           className="w-full border border-[#e5e7eb] rounded px-2 py-1 text-xs font-mono text-[#374151] bg-[#f9fafb] outline-none focus:border-[#6366f1] resize-y"
         />
@@ -490,7 +490,7 @@ function CategoryModal({
   const [error, setError] = useState("");
 
   const handleSave = async () => {
-    if (!title.trim()) { setError("TÃ­tulo obrigatÃ³rio"); return; }
+    if (!title.trim()) { setError("Título obrigatório"); return; }
     setSaving(true);
     try {
       await onSave({ title: title.trim(), description: description.trim() || undefined, icon });
@@ -511,7 +511,7 @@ function CategoryModal({
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="text-xs font-semibold text-[#374151] block mb-1">TÃ­tulo *</label>
+            <label className="text-xs font-semibold text-[#374151] block mb-1">Título *</label>
             <input
               type="text"
               value={title}
@@ -522,17 +522,17 @@ function CategoryModal({
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-[#374151] block mb-1">DescriÃ§Ã£o</label>
+            <label className="text-xs font-semibold text-[#374151] block mb-1">Descrição</label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full border border-[#e5e7eb] rounded-lg px-3 py-2 text-sm text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1]"
-              placeholder="DescriÃ§Ã£o opcional"
+              placeholder="Descrição opcional"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-[#374151] block mb-2">Ãcone</label>
+            <label className="text-xs font-semibold text-[#374151] block mb-2">Ícone</label>
             <div className="flex gap-2 flex-wrap">
               {ICON_OPTIONS.map(({ value, label, Icon }) => (
                 <button
@@ -588,7 +588,7 @@ function DocMetaModal({
   const [error, setError] = useState("");
 
   const handleSave = async () => {
-    if (!title.trim()) { setError("TÃ­tulo obrigatÃ³rio"); return; }
+    if (!title.trim()) { setError("Título obrigatório"); return; }
     if (!categoryId) { setError("Selecione uma categoria"); return; }
     setSaving(true);
     try {
@@ -610,7 +610,7 @@ function DocMetaModal({
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <label className="text-xs font-semibold text-[#374151] block mb-1">TÃ­tulo *</label>
+            <label className="text-xs font-semibold text-[#374151] block mb-1">Título *</label>
             <input
               type="text"
               value={title}
@@ -621,13 +621,13 @@ function DocMetaModal({
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-[#374151] block mb-1">DescriÃ§Ã£o</label>
+            <label className="text-xs font-semibold text-[#374151] block mb-1">Descrição</label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full border border-[#e5e7eb] rounded-lg px-3 py-2 text-sm text-[#374151] bg-[#ffffff] outline-none focus:border-[#6366f1]"
-              placeholder="DescriÃ§Ã£o opcional"
+              placeholder="Descrição opcional"
             />
           </div>
           <div className="flex gap-3">
@@ -657,7 +657,7 @@ function DocMetaModal({
             </div>
           </div>
           <p className="text-[11px] leading-5 text-[#6b7280]">
-            Rascunho fica visÃ­vel apenas para vocÃª. Publicado avisa todos com acesso ao repositÃ³rio. Desativado fica oculto para os demais.
+            Rascunho fica visível apenas para você. Publicado avisa todos com acesso ao repositório. Desativado fica oculto para os demais.
           </p>
           {error && <p className="text-xs text-[#dc2626]">{error}</p>}
         </div>
@@ -710,7 +710,7 @@ function DeleteModal({
             <div>
               <h2 className="font-bold text-[#0b1a3c]">Deletar {title}</h2>
               {warning && <p className="text-sm text-[#dc2626] mt-1">{warning}</p>}
-              <p className="text-sm text-[#6b7280] mt-1">Esta aÃ§Ã£o nÃ£o pode ser desfeita.</p>
+              <p className="text-sm text-[#6b7280] mt-1">Esta ação não pode ser desfeita.</p>
             </div>
           </div>
           <div className="flex justify-end gap-2">
@@ -822,7 +822,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
       // Auto-expand all categories on first load
       setExpandedCategories(new Set(data.categories.map((c) => c.id)));
     } catch {
-      setError("NÃ£o foi possÃ­vel carregar a documentaÃ§Ã£o.");
+      setError("Não foi possível carregar a documentação.");
     } finally {
       setLoading(false);
     }
@@ -988,7 +988,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-[#f3f4f6] shrink-0">
-        <h2 className="text-xs font-bold text-[#9ca3af] uppercase tracking-wider">RepositÃ³rio</h2>
+        <h2 className="text-xs font-bold text-[#9ca3af] uppercase tracking-wider">Repositório</h2>
       </div>
       <nav
         className={`${styles.navScroll} wiki-nav-scroll flex-1 overflow-y-auto py-2 px-2 space-y-1`}
@@ -1189,8 +1189,8 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
                       onClick={() => addBlock(t)}
                       className="w-full text-left px-3 py-2 text-sm text-[#374151] hover:bg-[#f3f4f6] capitalize"
                     >
-                      {t === "heading" ? "TÃ­tulo" : t === "paragraph" ? "ParÃ¡grafo" : t === "card" ? "Card" :
-                       t === "code" ? "CÃ³digo" : t === "list" ? "Lista" : t === "divider" ? "Divisor" : "Tabela"}
+                      {t === "heading" ? "Título" : t === "paragraph" ? "Parágrafo" : t === "card" ? "Card" :
+                       t === "code" ? "Código" : t === "list" ? "Lista" : t === "divider" ? "Divisor" : "Tabela"}
                     </button>
                   ))}
                 </div>
@@ -1217,7 +1217,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
           {blocksToRender.length === 0 && !editMode && (
             <div className="text-center py-16 text-[#9ca3af]">
               <FiFileText size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Este documento ainda nÃ£o tem conteÃºdo.</p>
+              <p className="text-sm">Este documento ainda não tem conteúdo.</p>
               {canEdit && (
                 <button onClick={startEdit} className="mt-2 text-sm text-[#6366f1] hover:underline">Adicionar blocos</button>
               )}
@@ -1239,7 +1239,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
               ))}
               {editBlocks.length === 0 && (
                 <p className="text-xs text-[#9ca3af] text-center py-6 border border-dashed border-[#e5e7eb] rounded-lg">
-                  Clique em &quot;Adicionar Bloco&quot; para comeÃ§ar.
+                  Clique em &quot;Adicionar Bloco&quot; para começar.
                 </p>
               )}
             </div>
@@ -1273,7 +1273,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
           <div className="absolute inset-0 bg-[#0b1a3c]/40" />
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-[#ffffff] border-r border-[#e5e7eb] z-50" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#f3f4f6]">
-              <span className="font-bold text-[#0b1a3c] text-sm">DocumentaÃ§Ã£o</span>
+              <span className="font-bold text-[#0b1a3c] text-sm">Documentação</span>
               <button type="button" onClick={() => setSidebarOpen(false)} title="Fechar menu" className="p-1 rounded hover:bg-[#f3f4f6] text-[#6b7280]"><FiX /></button>
             </div>
             <SidebarContent />
@@ -1348,7 +1348,7 @@ export default function DocsWikiClient({ basePath = "/api/platform-docs" }: { ba
       {deleteTarget !== null && (
         <DeleteModal
           title={`"${deleteTarget.item.title}"`}
-          warning={deleteTarget.type === "category" ? "Todos os documentos desta categoria tambÃ©m serÃ£o deletados." : undefined}
+          warning={deleteTarget.type === "category" ? "Todos os documentos desta categoria também serão deletados." : undefined}
           onConfirm={deleteTarget.type === "category"
             ? () => handleDeleteCategory(deleteTarget.item.id)
             : () => handleDeleteDoc(deleteTarget.item.id)

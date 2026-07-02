@@ -26,7 +26,7 @@ function maturityTone(maturity: (typeof AUTOMATION_DOMAINS)[number]["maturity"])
 function maturityLabel(maturity: (typeof AUTOMATION_DOMAINS)[number]["maturity"]) {
   if (maturity === "priority") return "Prioridade MVP";
   if (maturity === "mapped") return "Mapeado";
-  return "PrÃ³xima fase";
+  return "Próxima fase";
 }
 
 function environmentTone(status: (typeof AUTOMATION_ENVIRONMENTS)[number]["status"]) {
@@ -52,11 +52,11 @@ export default function AutomationWorkbenchCatalog() {
     <>
       <section className="space-y-4">
         <div className="flex flex-col gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">CatÃ¡logo inicial</p>
-          <h3 className="text-3xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)]">DomÃ­nios jÃ¡ mapeados da coleÃ§Ã£o</h3>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Catálogo inicial</p>
+          <h3 className="text-3xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)]">Domínios já mapeados da coleção</h3>
           <p className="max-w-4xl text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-            O ponto correto nÃ£o Ã© clonar o Postman no front. O correto Ã© transformar os grupos de endpoint em fluxos orientados, com
-            validaÃ§Ã£o de entrada, presets por ambiente e execuÃ§Ã£o centralizada no backend.
+            O ponto correto não é clonar o Postman no front. O correto é transformar os grupos de endpoint em fluxos orientados, com
+            validação de entrada, presets por ambiente e execução centralizada no backend.
           </p>
         </div>
 
@@ -68,7 +68,7 @@ export default function AutomationWorkbenchCatalog() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">DomÃ­nio</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Domínio</p>
                   <h4 className="mt-2 text-xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{domain.title}</h4>
                 </div>
                 <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${maturityTone(domain.maturity)}`}>
@@ -102,7 +102,7 @@ export default function AutomationWorkbenchCatalog() {
         <article className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
             <FiPlay className="h-4 w-4" />
-            Fluxos prioritÃ¡rios
+            Fluxos prioritários
           </div>
           <div className="mt-5 space-y-4">
             {AUTOMATION_FLOWS.map((flow) => (
@@ -182,14 +182,14 @@ export default function AutomationWorkbenchCatalog() {
         <article className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
             <FiZap className="h-4 w-4" />
-            PrÃ³ximos passos
+            Próximos passos
           </div>
           <div className="mt-5 space-y-3">
             {[
-              "Converter a coleÃ§Ã£o Postman em catÃ¡logo versionado por domÃ­nio e fluxo.",
-              "Criar executor backend com presets de ambiente, autenticaÃ§Ã£o e masking de payload.",
-              "Montar telas de execuÃ§Ã£o rÃ¡pida para CPF, processos e cardscan.",
-              "Registrar histÃ³rico com duraÃ§Ã£o, resultado final e evidÃªncias reutilizÃ¡veis.",
+              "Converter a coleção Postman em catálogo versionado por domínio e fluxo.",
+              "Criar executor backend com presets de ambiente, autenticação e masking de payload.",
+              "Montar telas de execução rápida para CPF, processos e cardscan.",
+              "Registrar histórico com duração, resultado final e evidências reutilizáveis.",
             ].map((item, index) => (
               <div key={item} className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Etapa {index + 1}</p>

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 /**
- * Profile Tabs â€” navegaÃ§Ã£o entre abas
+ * Profile Tabs — navegação entre abas
  */
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,17 +9,17 @@ import { useProfileContext } from "@/lib/profile/useProfileContext";
 import type { ProfileTab } from "@/lib/profile/types";
 
 const TAB_LABELS: Record<ProfileTab, string> = {
-  overview: "VisÃ£o geral",
+  overview: "Visão geral",
   profile: "Cadastro",
   access: "Acesso",
   companies: "Empresas",
-  users: "UsuÃ¡rios",
-  applications: "AplicaÃ§Ãµes",
-  integrations: "IntegraÃ§Ãµes",
-  permissions: "PermissÃµes",
-  preferences: "PreferÃªncias",
-  security: "SeguranÃ§a",
-  audit: "HistÃ³rico",
+  users: "Usuários",
+  applications: "Aplicações",
+  integrations: "Integrações",
+  permissions: "Permissões",
+  preferences: "Preferências",
+  security: "Segurança",
+  audit: "Histórico",
 };
 
 export type ProfileTabsProps = {

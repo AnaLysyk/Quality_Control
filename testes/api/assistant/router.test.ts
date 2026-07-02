@@ -30,7 +30,7 @@ const EMPTY_HISTORY: AssistantConversationTurn[] = [];
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("chooseTool", () => {
-  /* â”€â”€ greeting / empty message â†’ screen context â”€â”€ */
+  /* â”€â”€ greeting / empty message → screen context â”€â”€ */
 
   it("routes empty message to get_screen_context", () => {
     expect(chooseTool("", makeContext(), EMPTY_HISTORY)).toBe("get_screen_context");
@@ -60,14 +60,14 @@ describe("chooseTool", () => {
     expect(chooseTool("explicar meu escopo de acesso", makeContext(), EMPTY_HISTORY)).toBe("explain_permission");
   });
 
-  it("routes 'por que nÃ£o vejo tal tela' to explain_permission", () => {
-    expect(chooseTool("por que nÃ£o vejo tal tela", makeContext(), EMPTY_HISTORY)).toBe("explain_permission");
+  it("routes 'por que não vejo tal tela' to explain_permission", () => {
+    expect(chooseTool("por que não vejo tal tela", makeContext(), EMPTY_HISTORY)).toBe("explain_permission");
   });
 
   /* â”€â”€ list available actions â”€â”€ */
 
-  it("routes 'aÃ§Ãµes disponÃ­veis' to list_available_actions", () => {
-    expect(chooseTool("aÃ§Ãµes disponÃ­veis", makeContext(), EMPTY_HISTORY)).toBe("list_available_actions");
+  it("routes 'ações disponíveis' to list_available_actions", () => {
+    expect(chooseTool("ações disponíveis", makeContext(), EMPTY_HISTORY)).toBe("list_available_actions");
   });
 
   it("routes 'o que posso fazer' to list_available_actions", () => {
@@ -90,8 +90,8 @@ describe("chooseTool", () => {
     expect(chooseTool("comentar no ticket SP-123", makeContext(), EMPTY_HISTORY)).toBe("create_comment");
   });
 
-  it("routes 'publicar comentÃ¡rio no chamado 456' to create_comment", () => {
-    expect(chooseTool("publicar comentÃ¡rio no chamado 456", makeContext(), EMPTY_HISTORY)).toBe("create_comment");
+  it("routes 'publicar comentário no chamado 456' to create_comment", () => {
+    expect(chooseTool("publicar comentário no chamado 456", makeContext(), EMPTY_HISTORY)).toBe("create_comment");
   });
 
   /* â”€â”€ create ticket â”€â”€ */
@@ -128,12 +128,12 @@ describe("chooseTool", () => {
 
   /* â”€â”€ suggest next step (fallback) â”€â”€ */
 
-  it("routes 'prÃ³ximo passo' to suggest_next_step", () => {
-    expect(chooseTool("prÃ³ximo passo", makeContext(), EMPTY_HISTORY)).toBe("suggest_next_step");
+  it("routes 'próximo passo' to suggest_next_step", () => {
+    expect(chooseTool("próximo passo", makeContext(), EMPTY_HISTORY)).toBe("suggest_next_step");
   });
 
   it("falls back to suggest_next_step for unrecognized input", () => {
-    expect(chooseTool("algo completamente aleatÃ³rio", makeContext(), EMPTY_HISTORY)).toBe("suggest_next_step");
+    expect(chooseTool("algo completamente aleatório", makeContext(), EMPTY_HISTORY)).toBe("suggest_next_step");
   });
 
   /* â”€â”€ context module influences fallback priority â”€â”€ */
@@ -163,7 +163,7 @@ describe("isAwaitingTicketPayload", () => {
 
   it("returns true when last assistant turn is create_ticket with awaiting text", () => {
     const history: AssistantConversationTurn[] = [
-      { from: "assistant", text: "Preciso do conteÃºdo real do chamado.", tool: "create_ticket" },
+      { from: "assistant", text: "Preciso do conteúdo real do chamado.", tool: "create_ticket" },
     ];
     expect(isAwaitingTicketPayload(history)).toBe(true);
   });

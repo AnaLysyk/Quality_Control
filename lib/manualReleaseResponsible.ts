@@ -27,7 +27,7 @@ export function resolveLocalUserDisplayName(
 function buildResponsibleOption(user: LocalAuthUser): ManualReleaseResponsibleOption {
   const name = resolveLocalUserDisplayName(user) ?? user.id;
   const email = typeof user.email === "string" && user.email.trim() ? user.email.trim().toLowerCase() : null;
-  const label = email && name.toLowerCase() !== email ? `${name} Â· ${email}` : name;
+  const label = email && name.toLowerCase() !== email ? `${name} · ${email}` : name;
   return {
     userId: user.id,
     label,

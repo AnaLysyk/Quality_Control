@@ -225,7 +225,7 @@ export default function AutomacoesLogsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 text-slate-600 dark:text-zinc-500">
             <FiTerminal className="h-4 w-4 text-red-500" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em]">Console Â· Logs de Automacao</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.22em]">Console · Logs de Automacao</span>
           </div>
 
           <div className="ml-2 flex items-center gap-2">
@@ -369,7 +369,7 @@ export default function AutomacoesLogsPage() {
             <span>Descricao</span>
             <span>Empresa</span>
             <span>Usuario</span>
-            <span>DuraÃ§Ã£o</span>
+            <span>Duração</span>
             <span>HTTP</span>
             <span>Erro</span>
           </div>
@@ -425,9 +425,9 @@ export default function AutomacoesLogsPage() {
                   <div className="mb-2 flex items-center gap-3 text-slate-700 dark:text-zinc-500">
                     <FiClock className="h-3.5 w-3.5" />
                     <span>{formatDate(entry.payload.createdAt)}</span>
-                    <span>Â·</span>
+                    <span>·</span>
                     <span>{entry.payload.route}</span>
-                    <span>Â·</span>
+                    <span>·</span>
                     <span className={isOk ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}>
                       {isOk ? "Sucesso" : "Erro"}
                     </span>

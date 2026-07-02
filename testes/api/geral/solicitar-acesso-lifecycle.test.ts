@@ -1,17 +1,17 @@
 ﻿/**
- * Fluxo completo de "Solicitar Acesso" â€” criaÃ§Ã£o, aceitaÃ§Ã£o e rejeiÃ§Ã£o.
+ * Fluxo completo de "Solicitar Acesso" — criação, aceitação e rejeição.
  *
- * CenÃ¡rios (8):
- *  1. Cria solicitaÃ§Ã£o de acesso com mensagem estruturada (composeAccessRequestMessage)
- *  2. SolicitaÃ§Ã£o fica "open" no accessRequestsStore
+ * Cenários (8):
+ *  1. Cria solicitação de acesso com mensagem estruturada (composeAccessRequestMessage)
+ *  2. Solicitação fica "open" no accessRequestsStore
  *  3. parseAccessRequestMessage extrai campos corretamente da mensagem
- *  4. AceitaÃ§Ã£o: cria usuÃ¡rio local, vincula Ã  empresa e fecha a solicitaÃ§Ã£o
- *  5. UsuÃ¡rio criado tem campos corretos (email, nome, role, empresa)
- *  6. SolicitaÃ§Ã£o aceita tem status "closed" e user_id preenchido
- *  7. RejeiÃ§Ã£o: solicitaÃ§Ã£o rejeitada tem status "rejected"
- *  8. ComentÃ¡rio de rejeiÃ§Ã£o Ã© registrado com motivo
+ *  4. Aceitação: cria usuário local, vincula à empresa e fecha a solicitação
+ *  5. Usuário criado tem campos corretos (email, nome, role, empresa)
+ *  6. Solicitação aceita tem status "closed" e user_id preenchido
+ *  7. Rejeição: solicitação rejeitada tem status "rejected"
+ *  8. Comentário de rejeição é registrado com motivo
  *
- * âœ… Cleanup total em afterAll â€” nenhum dado permanece.
+ * âœ… Cleanup total em afterAll — nenhum dado permanece.
  */
 
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
@@ -70,19 +70,19 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Limpar comentÃ¡rios
+  // Limpar comentários
   if (createdCommentIds.length > 0) {
     for (const cId of createdCommentIds) {
       await prisma.accessRequestComment.delete({ where: { id: cId } }).catch(() => null);
     }
   }
-  // Limpar solicitaÃ§Ãµes
+  // Limpar solicitações
   if (createdRequestIds.length > 0) {
     await prisma.accessRequest
       .deleteMany({ where: { id: { in: createdRequestIds } } })
       .catch(() => null);
   }
-  // Limpar memberships e usuÃ¡rios
+  // Limpar memberships e usuários
   if (createdUserIds.length > 0) {
     await prisma.membership
       .deleteMany({ where: { userId: { in: createdUserIds } } })
@@ -98,9 +98,9 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-// â”€â”€ CriaÃ§Ã£o da solicitaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Criação da solicitação â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("CriaÃ§Ã£o de solicitaÃ§Ã£o de acesso estruturada", () => {
+describePg("Criação de solicitação de acesso estruturada", () => {
   let requestId: string;
   let composedMessage: string;
 
@@ -130,14 +130,14 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ã£o de acesso estruturada", () => {
     createdRequestIds.push(req.id);
   });
 
-  test("1. solicitaÃ§Ã£o Ã© criada com status open", async () => {
+  test("1. solicitação é criada com status open", async () => {
     const found = await getAccessRequestById(requestId);
     expect(found).not.toBeNull();
     expect(found!.status).toBe("open");
     expect(found!.email).toBe(testEmail("user1"));
   });
 
-  test("2. mensagem contÃ©m marcador ACCESS_REQUEST_V1", () => {
+  test("2. mensagem contém marcador ACCESS_REQUEST_V1", () => {
     expect(composedMessage).toContain("ACCESS_REQUEST_V1");
     expect(composedMessage).toContain("Ana Testadora Silva");
     expect(composedMessage).toContain(testEmail("user1"));
@@ -160,9 +160,9 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ã£o de acesso estruturada", () => {
   });
 });
 
-// â”€â”€ AceitaÃ§Ã£o (aceitar solicitaÃ§Ã£o â†’ cria usuÃ¡rio) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Aceitação (aceitar solicitação → cria usuário) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("AceitaÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
+describePg("Aceitação de solicitação de acesso", () => {
   let requestId: string;
   let createdUserId: string;
   const userEmail = testEmail("accept");
@@ -193,7 +193,7 @@ describePg("AceitaÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
     // 1. Parse da mensagem
     const parsed = parseAccessRequestMessage(message, userEmail);
 
-    // 2. Cria o usuÃ¡rio local
+    // 2. Cria o usuário local
     const user = await createLocalUser({
       full_name: parsed.fullName,
       name: parsed.fullName || parsed.name,
@@ -205,7 +205,7 @@ describePg("AceitaÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
     createdUserId = user.id;
     createdUserIds.push(user.id);
 
-    // 3. Vincula Ã  empresa (upsert membership)
+    // 3. Vincula à empresa (upsert membership)
     await prisma.membership.create({
       data: {
         userId: user.id,
@@ -214,13 +214,13 @@ describePg("AceitaÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
       },
     });
 
-    // 4. Fecha a solicitaÃ§Ã£o com user_id
+    // 4. Fecha a solicitação com user_id
     await updateAccessRequest(requestId, {
       status: "closed",
       user_id: createdUserId,
     });
 
-    // 5. Cria comentÃ¡rio de aprovaÃ§Ã£o
+    // 5. Cria comentário de aprovação
     const cmt = await createAccessRequestComment({
       requestId,
       authorRole: "admin",
@@ -232,14 +232,14 @@ describePg("AceitaÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
     if (cmt?.id) createdCommentIds.push(cmt.id);
   });
 
-  test("4. usuÃ¡rio Ã© criado com campos corretos", async () => {
+  test("4. usuário é criado com campos corretos", async () => {
     const user = await getLocalUserById(createdUserId);
     expect(user).not.toBeNull();
     expect(user!.email).toBe(userEmail);
     expect(user!.name).toContain("Carlos Aceito");
   });
 
-  test("5. membership vincula usuÃ¡rio Ã  empresa", async () => {
+  test("5. membership vincula usuário à empresa", async () => {
     const membership = await prisma.membership.findFirst({
       where: { userId: createdUserId, companyId },
     });
@@ -247,7 +247,7 @@ describePg("AceitaÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
     expect(membership!.role).toBe("user");
   });
 
-  test("6. solicitaÃ§Ã£o aceita tem status closed e user_id", async () => {
+  test("6. solicitação aceita tem status closed e user_id", async () => {
     const req = await getAccessRequestById(requestId);
     expect(req).not.toBeNull();
     expect(req!.status).toBe("closed");
@@ -255,9 +255,9 @@ describePg("AceitaÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
   });
 });
 
-// â”€â”€ RejeiÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Rejeição â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("RejeiÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
+describePg("Rejeição de solicitação de acesso", () => {
   let requestId: string;
 
   beforeAll(async () => {
@@ -282,7 +282,7 @@ describePg("RejeiÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
     requestId = req.id;
     createdRequestIds.push(req.id);
 
-    // Simula rejeiÃ§Ã£o
+    // Simula rejeição
     await updateAccessRequest(requestId, { status: "rejected" });
 
     const cmt = await createAccessRequestComment({
@@ -296,13 +296,13 @@ describePg("RejeiÃ§Ã£o de solicitaÃ§Ã£o de acesso", () => {
     if (cmt?.id) createdCommentIds.push(cmt.id);
   });
 
-  test("7. solicitaÃ§Ã£o rejeitada tem status rejected", async () => {
+  test("7. solicitação rejeitada tem status rejected", async () => {
     const req = await getAccessRequestById(requestId);
     expect(req).not.toBeNull();
     expect(req!.status).toBe("rejected");
   });
 
-  test("8. solicitaÃ§Ã£o rejeitada nÃ£o possui user_id", async () => {
+  test("8. solicitação rejeitada não possui user_id", async () => {
     const req = await getAccessRequestById(requestId);
     expect(req!.user_id).toBeFalsy();
   });

@@ -84,7 +84,7 @@ const BASE_PERMISSIONS: Permission[] = [
 ];
 
 /**
- * Full admin / leader_tc permissions â€” can do everything including delete and approve.
+ * Full admin / leader_tc permissions — can do everything including delete and approve.
  */
 const LEADER_PERMISSIONS: Permission[] = [
   ...BASE_PERMISSIONS,
@@ -114,7 +114,7 @@ const LEADER_PERMISSIONS: Permission[] = [
   "admin:settings",
 ];
 
-/** Testing-company user â€” creates and updates, but no delete or admin. */
+/** Testing-company user — creates and updates, but no delete or admin. */
 const TC_USER_PERMISSIONS: Permission[] = [
   ...BASE_PERMISSIONS,
   "test_repository:create",
@@ -130,7 +130,7 @@ const TC_USER_PERMISSIONS: Permission[] = [
   "defect:status",
 ];
 
-/** Company/empresa user â€” read access only to QA modules. */
+/** Company/empresa user — read access only to QA modules. */
 const EMPRESA_PERMISSIONS: Permission[] = [
   ...BASE_PERMISSIONS,
 ];

@@ -48,7 +48,7 @@ describe("InternalBrainEngine human continuation", () => {
 
     expect(reply.toLowerCase()).toContain("continuando sobre");
     expect(reply.toLowerCase()).toContain("riscos do release");
-    expect(reply.toLowerCase()).toContain("resumo rÃ¡pido");
+    expect(reply.toLowerCase()).toContain("resumo rápido");
   });
 
   it("learns previous topic from conversation and explains in humanized flow", async () => {

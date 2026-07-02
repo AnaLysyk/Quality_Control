@@ -142,7 +142,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
     return (
       <div className="tc-section space-y-3 rounded-2xl p-4">
         <div className="text-sm font-semibold">Sessao expirada</div>
-        <div className="text-xs text-muted">Redirecionando para loginâ€¦</div>
+        <div className="text-xs text-muted">Redirecionando para login…</div>
       </div>
     );
   }

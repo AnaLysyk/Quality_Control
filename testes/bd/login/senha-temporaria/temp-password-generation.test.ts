@@ -1,10 +1,10 @@
 ﻿/**
- * Testa a geraÃ§Ã£o e validaÃ§Ã£o de senhas temporÃ¡rias para novos usuÃ¡rios.
+ * Testa a geração e validação de senhas temporárias para novos usuários.
  *
  * Cobre:
  * - Formato e unicidade da senha gerada
  * - Compatibilidade com o hash SHA-256 armazenado
- * - IntegraÃ§Ã£o de criaÃ§Ã£o de usuÃ¡rio com senha temporÃ¡ria persistida e verificÃ¡vel
+ * - Integração de criação de usuário com senha temporária persistida e verificável
  */
 
 import { randomUUID } from "crypto";
@@ -31,24 +31,24 @@ describe("generateTempPassword()", () => {
     expect(pwd).toHaveLength(12);
   });
 
-  it("contÃ©m apenas caracteres permitidos (sem 0, O, 1, l, I)", () => {
+  it("contém apenas caracteres permitidos (sem 0, O, 1, l, I)", () => {
     const forbidden = /[0O1lI]/;
     for (let i = 0; i < 50; i++) {
       expect(forbidden.test(generateTempPassword())).toBe(false);
     }
   });
 
-  it("gera senhas Ãºnicas a cada chamada", () => {
+  it("gera senhas únicas a cada chamada", () => {
     const passwords = new Set(Array.from({ length: 20 }, () => generateTempPassword()));
     expect(passwords.size).toBe(20);
   });
 
-  it("tem ao menos 8 caracteres (valida requisito mÃ­nimo do sistema)", () => {
+  it("tem ao menos 8 caracteres (valida requisito mínimo do sistema)", () => {
     expect(generateTempPassword().length).toBeGreaterThanOrEqual(8);
   });
 });
 
-describePg("CriaÃ§Ã£o de usuÃ¡rio com senha temporÃ¡ria", () => {
+describePg("Criação de usuário com senha temporária", () => {
   it("armazena hash correto e permite verificar a senha plain-text posteriormente", async () => {
     const tempPassword = generateTempPassword();
     const passwordHash = hashPasswordSha256(tempPassword);
@@ -63,14 +63,14 @@ describePg("CriaÃ§Ã£o de usuÃ¡rio com senha temporÃ¡ria", () => {
     const row = await prisma.user.findUnique({ where: { id: user.id } });
     expect(row).not.toBeNull();
 
-    // O hash armazenado deve bater com a senha temporÃ¡ria original
+    // O hash armazenado deve bater com a senha temporária original
     expect(safeEqualHex(row!.password_hash, hashPasswordSha256(tempPassword))).toBe(true);
 
-    // NÃ£o deve bater com outra senha qualquer
+    // Não deve bater com outra senha qualquer
     expect(safeEqualHex(row!.password_hash, hashPasswordSha256("outra-senha"))).toBe(false);
   });
 
-  it("hash de senha diferente nÃ£o autentica com a senha temporÃ¡ria", () => {
+  it("hash de senha diferente não autentica com a senha temporária", () => {
     const tempPassword = generateTempPassword();
     const otherHash = hashPasswordSha256("senha-errada");
     expect(safeEqualHex(otherHash, hashPasswordSha256(tempPassword))).toBe(false);

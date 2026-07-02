@@ -208,12 +208,12 @@ export async function deleteUserOverride(userId: string) {
   await writeOverridesFile({ items: nextItems });
 }
 
-/** Lista todos os overrides (para painel de administraÃ§Ã£o). */
+/** Lista todos os overrides (para painel de administração). */
 export async function listUserOverrides(): Promise<UserPermissionsOverride[]> {
   if (USE_POSTGRES) return pgListOverrides();
 
   if (isRedisConfigured()) {
-    // Redis nÃ£o tem scan simplificado aqui â€” retorna vazio para evitar complexidade
+    // Redis não tem scan simplificado aqui — retorna vazio para evitar complexidade
     return [];
   }
 

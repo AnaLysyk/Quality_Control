@@ -206,7 +206,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
         const payload = (await response.json().catch(() => null)) as MetaResponse | { error?: string } | null;
 
         if (!response.ok) {
-          throw new Error((payload as { error?: string } | null)?.error || "Falha ao carregar metadata biomÃ©trica.");
+          throw new Error((payload as { error?: string } | null)?.error || "Falha ao carregar metadata biométrica.");
         }
 
         if (!active) return;
@@ -217,7 +217,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
         setForm((current) => applyMetaDefaults(current, nextMeta));
       } catch (error) {
         if (!active) return;
-        setMetaError(error instanceof Error ? error.message : "Falha ao carregar metadata biomÃ©trica.");
+        setMetaError(error instanceof Error ? error.message : "Falha ao carregar metadata biométrica.");
       } finally {
         if (active) setMetaLoading(false);
       }
@@ -270,12 +270,12 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
     }
 
     if (!selectedFixture) {
-      setRunError("Selecione uma digital vÃ¡lida.");
+      setRunError("Selecione uma digital válida.");
       return;
     }
 
     if (!Number.isFinite(effectiveIndex)) {
-      setRunError("Informe um Ã­ndice de dedo vÃ¡lido para a fixture escolhida.");
+      setRunError("Informe um índice de dedo válido para a fixture escolhida.");
       return;
     }
 
@@ -312,13 +312,13 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
       const payload = (await response.json().catch(() => null)) as RunnerResponse | { error?: string } | null;
 
       if (!response.ok) {
-        throw new Error((payload as { error?: string } | null)?.error || "Falha ao executar o fluxo biomÃ©trico.");
+        throw new Error((payload as { error?: string } | null)?.error || "Falha ao executar o fluxo biométrico.");
       }
 
       setResult((payload as RunnerResponse).result);
       setForm((current) => ({ ...current, password: "" }));
     } catch (error) {
-      setRunError(error instanceof Error ? error.message : "Falha ao executar o fluxo biomÃ©trico.");
+      setRunError(error instanceof Error ? error.message : "Falha ao executar o fluxo biométrico.");
     } finally {
       setIsSubmitting(false);
     }
@@ -329,15 +329,15 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
       <article className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Fluxo executÃ¡vel</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Fluxo executável</p>
             <h3 className="mt-2 text-3xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)]">Biometria Griaule</h3>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-              Runner visual para anexar digital e face na API biomÃ©trica da Griaule, preservando a regra real de Base64 da Wallet.
+              Runner visual para anexar digital e face na API biométrica da Griaule, preservando a regra real de Base64 da Wallet.
             </p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
             <FiShield className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
-            {canConfigure ? "ConfiguraÃ§Ã£o liberada" : "Escopo operacional"}
+            {canConfigure ? "Configuração liberada" : "Escopo operacional"}
           </div>
         </div>
 
@@ -368,7 +368,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                 {fingerprintFixtures.map((fixture) => (
                   <option key={fixture.slug} value={fixture.slug}>
                     {fixture.label}
-                    {fixture.isStandard ? "" : " Â· avulsa"}
+                    {fixture.isStandard ? "" : " · avulsa"}
                   </option>
                 ))}
               </select>
@@ -401,13 +401,13 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                 onChange={(event) => setForm((current) => ({ ...current, mode: event.target.value as "above" | "below" }))}
                 className="min-h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               >
-                <option value="below">Below Â· reduzir para o limite</option>
-                <option value="above">Above Â· inflar acima do alvo</option>
+                <option value="below">Below · reduzir para o limite</option>
+                <option value="above">Above · inflar acima do alvo</option>
               </select>
             </label>
 
             <label className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Ãndice do dedo</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Índice do dedo</span>
               <input
                 value={form.manualIndex}
                 onChange={(event) => setForm((current) => ({ ...current, manualIndex: event.target.value }))}
@@ -465,7 +465,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                 {showAdvanced ? "Ocultar ambiente" : "Ajustar ambiente"}
               </button>
             ) : (
-              <div className="text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">UsuÃ¡rio TC consome o preset jÃ¡ configurado.</div>
+              <div className="text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Usuário TC consome o preset já configurado.</div>
             )}
           </div>
 
@@ -490,7 +490,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">UsuÃ¡rio API</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Usuário API</span>
                 <input
                   value={form.user}
                   onChange={(event) => setForm((current) => ({ ...current, user: event.target.value }))}
@@ -520,7 +520,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
-              Informe processo ou protocolo. O backend resolve token, GET antes, PUT biomÃ©trico e GET depois.
+              Informe processo ou protocolo. O backend resolve token, GET antes, PUT biométrico e GET depois.
             </div>
             <button
               type="submit"
@@ -538,7 +538,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
         <article className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
             <FiCpu className="h-4 w-4" />
-            Preset biomÃ©trico
+            Preset biométrico
           </div>
 
           {metaLoading ? (
@@ -554,7 +554,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
             <div className="mt-5 space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Limite de referÃªncia</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Limite de referência</p>
                   <p className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{meta?.defaults.referenceLimit.toLocaleString("pt-BR")}</p>
                 </div>
                 <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
@@ -598,12 +598,12 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
         <article className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
             <FiActivity className="h-4 w-4" />
-            Ãšltima execuÃ§Ã£o
+            Última execução
           </div>
 
           {!result ? (
             <div className="mt-5 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-5 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-              Execute o runner para validar a cadeia completa: autenticaÃ§Ã£o, leitura inicial, PUT biomÃ©trico e leitura final.
+              Execute o runner para validar a cadeia completa: autenticação, leitura inicial, PUT biométrico e leitura final.
             </div>
           ) : (
             <div className="mt-5 space-y-3">
@@ -621,7 +621,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                     {formatDuration(result.durationMs)}
                   </div>
                   <p className="mt-2 text-sm text-sky-700">
-                    {result.mode} Â· {result.fingerprintBase64Length.toLocaleString("pt-BR")} chars
+                    {result.mode} · {result.fingerprintBase64Length.toLocaleString("pt-BR")} chars
                   </p>
                 </div>
               </div>
@@ -633,7 +633,7 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                     Empresa: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.companySlug || "global"}</span>
                   </p>
                   <p>
-                    Ãndice: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.fingerprintIndex}</span>
+                    Índice: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.fingerprintIndex}</span>
                   </p>
                   <p>
                     Formato: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.fingerprintFormat}</span>
@@ -655,10 +655,10 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                       Face: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.faceCount}</span>
                     </p>
                     <p>
-                      Ãndice presente: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.selectedFingerprintPresent ? "Sim" : "NÃ£o"}</span>
+                      Índice presente: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.selectedFingerprintPresent ? "Sim" : "Não"}</span>
                     </p>
                     <p>
-                      ConteÃºdo: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.selectedFingerprintContentLength.toLocaleString("pt-BR")}</span>
+                      Conteúdo: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.beforeSummary.selectedFingerprintContentLength.toLocaleString("pt-BR")}</span>
                     </p>
                   </div>
                 </div>
@@ -672,10 +672,10 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
                       Face: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.faceCount}</span>
                     </p>
                     <p>
-                      Ãndice presente: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.selectedFingerprintPresent ? "Sim" : "NÃ£o"}</span>
+                      Índice presente: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.selectedFingerprintPresent ? "Sim" : "Não"}</span>
                     </p>
                     <p>
-                      ConteÃºdo: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.selectedFingerprintContentLength.toLocaleString("pt-BR")}</span>
+                      Conteúdo: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.afterSummary.selectedFingerprintContentLength.toLocaleString("pt-BR")}</span>
                     </p>
                   </div>
                 </div>
@@ -683,10 +683,10 @@ export default function BiometricAutomationRunner({ activeCompanySlug, canConfig
 
               <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
                 <p>
-                  SaÃ­da versionada: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.outputPath}</span>
+                  Saída versionada: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.outputPath}</span>
                 </p>
                 <p>
-                  Ãšltimo snapshot: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.latestOutputPath}</span>
+                  Último snapshot: <span className="font-semibold text-[var(--tc-text,#0b1a3c)]">{result.latestOutputPath}</span>
                 </p>
                 {result.host ? (
                   <p>

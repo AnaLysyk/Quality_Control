@@ -308,7 +308,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
             {!loading && visibleModules.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/15 bg-white/8 px-3 py-4 text-center text-xs text-white/65">
-                Nenhum mÃ³dulo encontrado.
+                Nenhum módulo encontrado.
               </div>
             ) : null}
           </nav>

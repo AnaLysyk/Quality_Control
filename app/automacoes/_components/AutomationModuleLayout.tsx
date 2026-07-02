@@ -35,10 +35,10 @@ function AccessDenied() {
           <FiLock className="h-6 w-6" />
         </div>
         <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Acesso restrito</p>
-        <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">MÃ³dulo interno de automaÃ§Ãµes</h2>
+        <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">Módulo interno de automações</h2>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-          Esse workspace foi desenhado para operaÃ§Ã£o tÃ©cnica da Testing Company. Perfis de empresa e usuÃ¡rio da empresa continuam usando os prÃ³prios
-          documentos, repositÃ³rios e telas da organizaÃ§Ã£o sem acesso aos fluxos internos.
+          Esse workspace foi desenhado para operação técnica da Testing Company. Perfis de empresa e usuário da empresa continuam usando os próprios
+          documentos, repositórios e telas da organização sem acesso aos fluxos internos.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
@@ -73,7 +73,7 @@ export default function AutomationModuleLayout({ children }: { children: React.R
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 py-2 text-center text-sm font-bold text-[#011848] shadow-[0_2px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-[#f0f4ff] sm:justify-start"
         >
           <FiBookOpen className="h-4 w-4 shrink-0" />
-          Abrir documentaÃ§Ã£o do cÃ³digo
+          Abrir documentação do código
         </Link>
         <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-[#f8fafc] dark:bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-[#011848] dark:text-white/92">
           <FiShield className="h-4 w-4 shrink-0" />
@@ -83,7 +83,7 @@ export default function AutomationModuleLayout({ children }: { children: React.R
         </div>
         <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-[#f8fafc] dark:bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-[#011848] dark:text-white/92">
           <FiLayers className="h-4 w-4 shrink-0" />
-          <span>{clients.length} empresa{clients.length === 1 ? "" : "s"} visÃ­veis</span>
+          <span>{clients.length} empresa{clients.length === 1 ? "" : "s"} visíveis</span>
         </div>
       </div>
     ),

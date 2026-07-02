@@ -47,7 +47,7 @@ function makeParsed(overrides?: Partial<ParsedAccessRequest>): ParsedAccessReque
 
 describe("accessRequestLookup", () => {
   it("normalizes case and accents", () => {
-    expect(normalizeAccessRequestLookup(" ÃnÃ¡ PÃ¡ula ")).toBe("ana paula");
+    expect(normalizeAccessRequestLookup(" Áná Páula ")).toBe("ana paula");
   });
 
   it("matches current triage values", () => {

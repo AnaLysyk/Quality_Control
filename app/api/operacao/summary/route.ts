@@ -175,7 +175,7 @@ async function parseJsonSafe(response: Response) {
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth) {
-    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const url = new URL(request.url);

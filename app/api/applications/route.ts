@@ -99,5 +99,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
 }
-// Duplicate block removed â€” this route already exports a GET/POST above
+// Duplicate block removed — this route already exports a GET/POST above
 

@@ -133,11 +133,11 @@ export function AccessRequestProfileWorkspace({
     const events: ProfileTimelineItem[] = [
       {
         id: "created",
-        title: "SolicitaÃ§Ã£o recebida",
+        title: "Solicitação recebida",
         side: "Solicitante",
         date: safeTimelineDate(selected.createdAt),
-        summary: "Pedido entrou na fila de anÃ¡lise.",
-        details: `SolicitaÃ§Ã£o de ${previewProfile.fullName || previewProfile.name || previewProfile.email}.`,
+        summary: "Pedido entrou na fila de análise.",
+        details: `Solicitação de ${previewProfile.fullName || previewProfile.name || previewProfile.email}.`,
         tone: "neutral",
       },
     ];
@@ -150,7 +150,7 @@ export function AccessRequestProfileWorkspace({
         side: "Revisor",
         date: "Agora",
         summary: row?.label ?? field,
-        details: adjustmentFieldComments[field] || "Campo marcado para ajuste, ainda sem orientaÃ§Ã£o.",
+        details: adjustmentFieldComments[field] || "Campo marcado para ajuste, ainda sem orientação.",
         tone: "warn",
       });
     });
@@ -162,9 +162,9 @@ export function AccessRequestProfileWorkspace({
           id: "changed-" + row.field,
           title: row.label + " alterado",
           side: "Cadastro",
-          date: "Durante anÃ¡lise",
-          summary: `${row.originalText || "NÃ£o informado"} â†’ ${row.currentText || "NÃ£o informado"}`,
-          details: `Valor recebido: ${row.originalText || "NÃ£o informado"}\nValor atual: ${row.currentText || "NÃ£o informado"}`,
+          date: "Durante análise",
+          summary: `${row.originalText || "Não informado"} → ${row.currentText || "Não informado"}`,
+          details: `Valor recebido: ${row.originalText || "Não informado"}\nValor atual: ${row.currentText || "Não informado"}`,
           tone: "ok",
         });
       });

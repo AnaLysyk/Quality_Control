@@ -17,7 +17,7 @@ test("admin cria empresa e usuario", async ({ page }) => {
   await page.getByRole("button", { name: /Cadastrar.*empresa/i }).first().click();
   await expect(page.getByRole("heading", { name: /Cadastrar.*empresa/i })).toBeVisible();
 
-  await page.getByLabel(/Nome\s*\/\s*raz[aÃ£]o social/i).fill(companyName);
+  await page.getByLabel(/Nome\s*\/\s*raz[aã]o social/i).fill(companyName);
   const createResponsePromise = page.waitForResponse(
     (response) => response.url().includes("/api/clients") && response.request().method() === "POST"
   );
@@ -36,7 +36,7 @@ test("admin cria empresa e usuario", async ({ page }) => {
   });
 
   await page.goto("/admin/users", { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: /Criar usu[aÃ¡]rio da empresa/i }).click();
+  await page.getByRole("button", { name: /Criar usu[aá]rio da empresa/i }).click();
   await expect(page.getByRole("heading", { name: /Criar usu/i })).toBeVisible();
 
   const companySelect = page.locator('select[aria-label*="Empresa vinculada"]').first();

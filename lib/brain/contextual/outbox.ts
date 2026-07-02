@@ -49,7 +49,7 @@ export function createBrianDeadLetterImpulse(input: {
 
 export const BRIAN_PRODUCTION_DDL = String.raw`
 -- Brian production hardening DDL.
--- Intencionalmente mantido fora de prisma/migrations atÃ© validaÃ§Ã£o do rollout.
+-- Intencionalmente mantido fora de prisma/migrations até validação do rollout.
 
 CREATE TABLE IF NOT EXISTS brian_outbox (
   id TEXT PRIMARY KEY,

@@ -8,22 +8,22 @@ export function montarPayloadSolicitacaoAcesso(suffix = Date.now()) {
     name: `Ana E2E ${suffix}`,
     email: `solicitante.e2e.${suffix}@demo.test`,
     phone: "11999999999",
-    role: "Suporte TÃ©cnico",
-    job_role: "Suporte TÃ©cnico",
-    title: "SolicitaÃ§Ã£o de acesso para validaÃ§Ã£o",
-    description: "SolicitaÃ§Ã£o criada para validar o fluxo de acesso.",
-    notes: "Massa isolada para validar o fluxo de solicitaÃ§Ã£o de acesso.",
+    role: "Suporte Técnico",
+    job_role: "Suporte Técnico",
+    title: "Solicitação de acesso para validação",
+    description: "Solicitação criada para validar o fluxo de acesso.",
+    notes: "Massa isolada para validar o fluxo de solicitação de acesso.",
     password: obterSenhaTesteSolicitacaoAcesso(),
   };
 }
 
 export const dadosAjusteSolicitacao = {
-  comment: "Corrigir nome completo e telefone antes da aprovaÃ§Ã£o.",
+  comment: "Corrigir nome completo e telefone antes da aprovação.",
   fields: ["fullName", "phone"],
 };
 
 export const dadosRecusaSolicitacao = {
-  reason: "SolicitaÃ§Ã£o recusada durante a validaÃ§Ã£o do fluxo.",
-  comment: "Dados incompatÃ­veis para criaÃ§Ã£o do acesso.",
+  reason: "Solicitação recusada durante a validação do fluxo.",
+  comment: "Dados incompatíveis para criação do acesso.",
 };
 

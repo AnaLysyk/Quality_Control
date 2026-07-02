@@ -96,30 +96,30 @@ export default function CreateSupportTicketButton() {
             <h2 className="text-lg font-bold mb-4">Novo chamado de suporte</h2>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-semibold text-[var(--tc-text-muted)]">TÃ­tulo</label>
+                <label className="text-sm font-semibold text-[var(--tc-text-muted)]">Título</label>
                 <input
                   className="w-full rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface,#f8fafc)] px-3 py-2 text-sm text-[var(--tc-text,#0f172a)] shadow-sm outline-none transition focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-[var(--tc-surface-darker,#0c1220)] dark:text-[var(--tc-text-inverse,#fff)]"
                   value={form.title}
                   onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="TÃ­tulo do chamado"
+                  placeholder="Título do chamado"
                 />
               </div>
               <div>
-                <label className="text-sm font-semibold text-[var(--tc-text-muted)]">DescriÃ§Ã£o</label>
+                <label className="text-sm font-semibold text-[var(--tc-text-muted)]">Descrição</label>
                 <textarea
                   className="w-full rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface,#f8fafc)] px-3 py-2 text-sm text-[var(--tc-text,#0f172a)] shadow-sm outline-none transition focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-(--tc-accent)/40 dark:border-white/20 dark:bg-[var(--tc-surface-darker,#0c1220)] dark:text-[var(--tc-text-inverse,#fff)]"
                   rows={4}
                   value={form.description}
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="Descreva o problema ou solicitaÃ§Ã£o"
+                  placeholder="Descreva o problema ou solicitação"
                 />
               </div>
               {supportOperators.length > 0 && (
                 <div>
-                  <label className="text-sm font-semibold text-[var(--tc-text-muted)]">Atribuir ao suporte tÃ©cnico</label>
+                  <label className="text-sm font-semibold text-[var(--tc-text-muted)]">Atribuir ao suporte técnico</label>
                   <select
                     id="create-support-assignee"
-                    aria-label="Atribuir ao suporte tÃ©cnico"
+                    aria-label="Atribuir ao suporte técnico"
                     className="w-full rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface,#f8fafc)] px-3 py-2 text-sm text-[var(--tc-text,#0f172a)] shadow-sm outline-none transition focus:border-[var(--tc-accent)]"
                     value={assignedTo ?? ""}
                     onChange={(e) => setAssignedTo(e.target.value || null)}

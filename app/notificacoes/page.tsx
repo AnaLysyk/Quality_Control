@@ -3,8 +3,8 @@
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "NotificaÃ§Ãµes",
-  description: "Central de notificaÃ§Ãµes por empresa, perfil e Brain",
+  title: "Notificações",
+  description: "Central de notificações por empresa, perfil e Brain",
 };
 
 export default function NotificacoesPage() {

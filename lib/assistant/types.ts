@@ -103,7 +103,7 @@ export type AssistantClientRequest = {
   } | null;
   action?: AssistantToolAction | null;
   history?: AssistantConversationTurn[] | null;
-  /** Contexto enriquecido vindo de telas externas (Brain, tickets, releasesâ€¦) */
+  /** Contexto enriquecido vindo de telas externas (Brain, tickets, releases…) */
   brainContext?: {
     route?: string | null;
     nodeId?: string | null;
@@ -119,7 +119,7 @@ export type AssistantClientRequest = {
 
 // â”€â”€â”€ Evento global para abrir o assistente flutuante â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Qualquer tela pode despachar window.dispatchEvent(new CustomEvent("assistant:open", { detail }))
-// para abrir o ChatButton jÃ¡ contextualizado.
+// para abrir o ChatButton já contextualizado.
 export type AssistantOpenEventDetail = {
   /** Origem: brain, autologs, automacoes, tickets, dashboard, etc. */
   source?: string;
@@ -127,21 +127,21 @@ export type AssistantOpenEventDetail = {
   route?: string;
   /** Empresa ativa */
   companySlug?: string;
-  /** Tipo da entidade selecionada (BrainNode, ticket, defectâ€¦) */
+  /** Tipo da entidade selecionada (BrainNode, ticket, defect…) */
   entityType?: string;
   /** ID da entidade selecionada */
   entityId?: string;
-  /** ID do nÃ³ no Brain */
+  /** ID do nó no Brain */
   nodeId?: string;
-  /** Label do nÃ³ */
+  /** Label do nó */
   nodeLabel?: string;
-  /** Tipo do nÃ³ */
+  /** Tipo do nó */
   nodeType?: string;
   /** Agente sugerido: qa | debug | playwright | memory */
   agentMode?: string;
-  /** Mensagem jÃ¡ preenchida no input do assistente */
+  /** Mensagem já preenchida no input do assistente */
   initialMessage?: string;
-  /** Contexto parcial para abrir o assistente jÃ¡ enriquecido */
+  /** Contexto parcial para abrir o assistente já enriquecido */
   context?: Partial<AssistantScreenContext> | null;
   /** Modo preferido ao abrir o painel */
   panelMode?: AssistantPanelMode;

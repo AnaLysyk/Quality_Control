@@ -1,7 +1,7 @@
 ﻿"use client";
 
 /**
- * Profile Actions â€” botÃµes de aÃ§Ã£o contextuais
+ * Profile Actions — botões de ação contextuais
  */
 
 import { useProfileAction, useDangerZone, useProfileMode } from "@/lib/profile/useProfileContext";

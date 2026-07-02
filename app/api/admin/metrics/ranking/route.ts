@@ -26,7 +26,7 @@ async function fetchSummary(slug: string) {
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    const msg = status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o";
+    const msg = status === 401 ? "Não autenticado" : "Sem permissão";
     return NextResponse.json({ error: msg }, { status });
   }
 

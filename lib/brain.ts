@@ -3,7 +3,7 @@ import { BrainNode, BrainEdge, BrainMemory, Prisma } from '@prisma/client'
 import { normalizeEdgeContract, normalizeNodeContract, toRecord } from '@/lib/brain/ontology'
 
 /**
- * Recupera um nÃ³ com seus vizinhos atÃ© uma profundidade especificada
+ * Recupera um nó com seus vizinhos até uma profundidade especificada
  */
 export async function getNodeWithContext(
   nodeId: string,
@@ -31,7 +31,7 @@ export async function getNodeWithContext(
       }),
     ])
 
-    // Buscar nÃ³s vizinhos
+    // Buscar nós vizinhos
     const neighborIds = new Set<string>()
     outgoing.forEach(e => neighborIds.add(e.toId))
     incoming.forEach(e => neighborIds.add(e.fromId))
@@ -55,7 +55,7 @@ export async function getNodeWithContext(
 }
 
 /**
- * Busca nÃ³s por tipo e/ou label
+ * Busca nós por tipo e/ou label
  */
 export async function searchNodes(
   options: {
@@ -92,7 +92,7 @@ export async function searchNodes(
 }
 
 /**
- * Cria ou atualiza um nÃ³ do brain
+ * Cria ou atualiza um nó do brain
  */
 export async function upsertNode(data: {
   id?: string
@@ -117,7 +117,7 @@ export async function upsertNode(data: {
       enforceOntology,
     })
 
-    // Se refId e refType existem, tenta encontrar nÃ³ existente
+    // Se refId e refType existem, tenta encontrar nó existente
     if (normalized.refType && normalized.refId) {
       const existing = await prisma.brainNode.findFirst({
         where: { refType: normalized.refType, refId: normalized.refId },
@@ -135,7 +135,7 @@ export async function upsertNode(data: {
       }
     }
 
-    // Criar novo nÃ³
+    // Criar novo nó
     const node = await prisma.brainNode.create({
       data: {
         id,
@@ -166,7 +166,7 @@ export async function upsertNode(data: {
 }
 
 /**
- * Conecta dois nÃ³s com uma aresta
+ * Conecta dois nós com uma aresta
  */
 export async function connectNodes(
   fromId: string,
@@ -184,7 +184,7 @@ export async function connectNodes(
       enforceOntology: options?.enforceOntology,
     })
 
-    // Validar que ambos nÃ³s existem
+    // Validar que ambos nós existem
     const [from, to] = await Promise.all([
       prisma.brainNode.findUnique({ where: { id: fromId } }),
       prisma.brainNode.findUnique({ where: { id: toId } }),
@@ -234,7 +234,7 @@ export async function connectNodes(
 }
 
 /**
- * Adiciona memÃ³ria ao brain
+ * Adiciona memória ao brain
  */
 export async function addMemory(data: {
   title: string
@@ -289,7 +289,7 @@ export async function addMemory(data: {
 }
 
 /**
- * Retorna memÃ³rias associadas a um nÃ³
+ * Retorna memórias associadas a um nó
  */
 export async function getNodeMemories(nodeId: string): Promise<BrainMemory[]> {
   try {
@@ -310,7 +310,7 @@ export async function getNodeMemories(nodeId: string): Promise<BrainMemory[]> {
 }
 
 /**
- * TraÃ§a o impacto de um nÃ³ (todos os nÃ³s que ele afeta)
+ * Traça o impacto de um nó (todos os nós que ele afeta)
  */
 export async function traceImpact(
   nodeId: string,
@@ -346,7 +346,7 @@ export async function traceImpact(
         })
       }
 
-      // Buscar prÃ³ximos nÃ³s
+      // Buscar próximos nós
       const outgoing = await prisma.brainEdge.findMany({
         where: { fromId: current.nodeId },
       })
@@ -362,7 +362,7 @@ export async function traceImpact(
       })
     }
 
-    // Buscar nÃ³s impactados
+    // Buscar nós impactados
     const impactedNodesData = await prisma.brainNode.findMany({
       where: {
         id: { in: paths.map(p => p.nodeId) },
@@ -380,7 +380,7 @@ export async function traceImpact(
 }
 
 /**
- * Busca todo o contexto relacionado a um nÃ³ (subgrafo)
+ * Busca todo o contexto relacionado a um nó (subgrafo)
  */
 export async function getSubgraph(
   nodeId: string,
@@ -486,7 +486,7 @@ async function logBrainAudit(data: {
     })
   } catch (error) {
     console.error('Error in logBrainAudit:', error)
-    // NÃ£o lance erro para nÃ£o interromper a operaÃ§Ã£o principal
+    // Não lance erro para não interromper a operação principal
   }
 }
 
@@ -512,7 +512,7 @@ export async function validateBrainIntegrity(): Promise<{
       prisma.brainMemory.count(),
     ])
 
-    // Verificar se hÃ¡ nÃ³s sem conexÃµes (ilhados)
+    // Verificar se há nós sem conexões (ilhados)
     const isolatedNodes = await prisma.brainNode.findMany({
       where: {
         AND: [
@@ -528,7 +528,7 @@ export async function validateBrainIntegrity(): Promise<{
       errors.push(`Found ${isolatedNodes.length} isolated nodes without connections`)
     }
 
-    // Verificar memÃ³rias sem nÃ³ associado
+    // Verificar memórias sem nó associado
     const orphanMemories = await prisma.brainMemory.findMany({
       where: {
         nodeId: null,
@@ -562,7 +562,7 @@ export async function validateBrainIntegrity(): Promise<{
 }
 
 /**
- * Deleta um nÃ³ e todas suas conexÃµes
+ * Deleta um nó e todas suas conexões
  */
 export async function deleteNode(
   nodeId: string,
@@ -578,14 +578,14 @@ export async function deleteNode(
       prisma.brainEdge.deleteMany({ where: { toId: nodeId } }),
     ])
 
-    // Deletar memÃ³rias relacionadas
+    // Deletar memórias relacionadas
     await prisma.brainMemory.deleteMany({
       where: {
         relatedNodeIds: { array_contains: [nodeId] },
       },
     })
 
-    // Deletar o nÃ³
+    // Deletar o nó
     await prisma.brainNode.delete({ where: { id: nodeId } })
 
     // Registrar auditoria
@@ -609,7 +609,7 @@ export async function deleteNode(
 }
 
 /**
- * Remove uma aresta entre dois nÃ³s
+ * Remove uma aresta entre dois nós
  */
 export async function disconnectNodes(
   fromId: string,
@@ -642,7 +642,7 @@ export async function disconnectNodes(
 }
 
 /**
- * Encontra o caminho mais curto entre dois nÃ³s (BFS)
+ * Encontra o caminho mais curto entre dois nós (BFS)
  */
 export async function findPathBetweenNodes(
   startId: string,
@@ -711,7 +711,7 @@ export async function findPathBetweenNodes(
 }
 
 /**
- * ObtÃ©m memÃ³rias relacionadas baseadas em relacionamentos do nÃ³
+ * Obtém memórias relacionadas baseadas em relacionamentos do nó
  */
 export async function getRelatedMemories(
   nodeId: string,
@@ -737,7 +737,7 @@ export async function getRelatedMemories(
 }
 
 /**
- * Calcula importÃ¢ncia de um nÃ³ baseado em seu grau de conexÃ£o
+ * Calcula importância de um nó baseado em seu grau de conexão
  */
 export async function computeNodeImportance(nodeId: string): Promise<{
   nodeId: string
@@ -753,7 +753,7 @@ export async function computeNodeImportance(nodeId: string): Promise<{
     ])
 
     const totalDegree = inEdges + outEdges
-    // ImportÃ¢ncia: mÃ©dia ponderada (entrada mais pesada que saÃ­da)
+    // Importância: média ponderada (entrada mais pesada que saída)
     const importance = (inEdges * 0.6 + outEdges * 0.4) / Math.max(totalDegree, 1)
 
     return {
@@ -770,7 +770,7 @@ export async function computeNodeImportance(nodeId: string): Promise<{
 }
 
 /**
- * ObtÃ©m estatÃ­sticas de um nÃ³
+ * Obtém estatísticas de um nó
  */
 export async function getNodeStats(nodeId: string): Promise<{
   nodeId: string
@@ -815,7 +815,7 @@ export async function getNodeStats(nodeId: string): Promise<{
 }
 
 /**
- * Cria mÃºltiplos nÃ³s em batch
+ * Cria múltiplos nós em batch
  */
 export async function bulkUpsertNodes(
   nodes: Array<{
@@ -845,7 +845,7 @@ export async function bulkUpsertNodes(
 }
 
 /**
- * Encontra nÃ³s similares baseado em tipo e metadados
+ * Encontra nós similares baseado em tipo e metadados
  */
 export async function findSimilarNodes(
   nodeId: string,
@@ -855,7 +855,7 @@ export async function findSimilarNodes(
     const node = await prisma.brainNode.findUnique({ where: { id: nodeId } })
     if (!node) throw new Error(`Node not found: ${nodeId}`)
 
-    // Buscar nÃ³s do mesmo tipo (exceto o prÃ³prio)
+    // Buscar nós do mesmo tipo (exceto o próprio)
     const similar = await prisma.brainNode.findMany({
       where: {
         AND: [{ type: node.type }, { id: { not: nodeId } }],
@@ -872,7 +872,7 @@ export async function findSimilarNodes(
 }
 
 /**
- * ObtÃ©m histÃ³rico de mudanÃ§as de um nÃ³ via audit log
+ * Obtém histórico de mudanças de um nó via audit log
  */
 export async function getNodeTimeline(nodeId: string): Promise<
   Array<{
@@ -915,7 +915,7 @@ export async function getNodeTimeline(nodeId: string): Promise<
 }
 
 /**
- * Busca nÃ³s por metadados especÃ­ficos
+ * Busca nós por metadados específicos
  */
 export async function getNodesByMetadata(
   query: Prisma.InputJsonValue,
@@ -940,7 +940,7 @@ export async function getNodesByMetadata(
 }
 
 /**
- * Atualiza apenas metadados de um nÃ³
+ * Atualiza apenas metadados de um nó
  */
 export async function updateNodeMetadata(
   nodeId: string,
@@ -1011,7 +1011,7 @@ export async function getEdgesByType(
 }
 
 /**
- * Encontra vizinhos em comum entre dois nÃ³s
+ * Encontra vizinhos em comum entre dois nós
  */
 export async function getCommonNeighbors(
   nodeId1: string,
@@ -1022,13 +1022,13 @@ export async function getCommonNeighbors(
   totalCommon: number
 }> {
   try {
-    // Vizinhos do primeiro nÃ³
+    // Vizinhos do primeiro nó
     const [outgoing1, incoming1] = await Promise.all([
       prisma.brainEdge.findMany({ where: { fromId: nodeId1 } }),
       prisma.brainEdge.findMany({ where: { toId: nodeId1 } }),
     ])
 
-    // Vizinhos do segundo nÃ³
+    // Vizinhos do segundo nó
     const [outgoing2, incoming2] = await Promise.all([
       prisma.brainEdge.findMany({ where: { fromId: nodeId2 } }),
       prisma.brainEdge.findMany({ where: { toId: nodeId2 } }),
@@ -1064,7 +1064,7 @@ export async function getCommonNeighbors(
 }
 
 /**
- * Agrupa nÃ³s por tipo (clustering)
+ * Agrupa nós por tipo (clustering)
  */
 export async function clusterNodesByType(): Promise<
   Record<string, { count: number; nodes: BrainNode[] }>
@@ -1090,7 +1090,7 @@ export async function clusterNodesByType(): Promise<
 }
 
 /**
- * Retorna os nÃ³s mais conectados (ranking)
+ * Retorna os nós mais conectados (ranking)
  */
 export async function getMostConnectedNodes(
   limit: number = 20
@@ -1129,7 +1129,7 @@ export async function getMostConnectedNodes(
 }
 
 /**
- * Calcula distÃ¢ncia (hops) entre dois nÃ³s
+ * Calcula distância (hops) entre dois nós
  */
 export async function getNodeDistance(startId: string, endId: string): Promise<number | null> {
   try {
@@ -1142,7 +1142,7 @@ export async function getNodeDistance(startId: string, endId: string): Promise<n
 }
 
 /**
- * Mescla dois nÃ³s em um
+ * Mescla dois nós em um
  */
 export async function mergeNodes(
   sourceId: string,
@@ -1319,7 +1319,7 @@ export async function pruneOldEdges(
 }
 
 /**
- * Calcula influÃªncia de um nÃ³ (PageRank simplificado)
+ * Calcula influência de um nó (PageRank simplificado)
  */
 export async function getNodeInfluence(nodeId: string): Promise<{
   nodeId: string
@@ -1342,10 +1342,10 @@ export async function getNodeInfluence(nodeId: string): Promise<{
 
     const totalDegree = allNodesInDegreeSum.reduce((sum, item) => sum + item._count, 0)
 
-    // Score: percentual de influÃªncia em relaÃ§Ã£o ao total
+    // Score: percentual de influência em relação ao total
     const influenceScore = totalDegree > 0 ? (incomingCount / totalDegree) * 100 : 0
 
-    // Ranquear entre todos os nÃ³s
+    // Ranquear entre todos os nós
     const rankedPosition = (
       await prisma.brainNode.findMany({
         select: { id: true },
@@ -1364,7 +1364,7 @@ export async function getNodeInfluence(nodeId: string): Promise<{
 }
 
 /**
- * Matriz de alcanÃ§abilidade (quais nÃ³s podem alcanÃ§ar quais)
+ * Matriz de alcançabilidade (quais nós podem alcançar quais)
  */
 export async function getReachabilityMatrix(): Promise<
   Record<string, Record<string, boolean>>
@@ -1412,7 +1412,7 @@ export async function exportSubgraphToJSON(nodeId: string, depth: number = 2): P
 }
 
 /**
- * Importar nÃ³s de JSON
+ * Importar nós de JSON
  */
 export async function importNodesFromJSON(
   jsonData: string,
@@ -1452,7 +1452,7 @@ export async function importNodesFromJSON(
 }
 
 /**
- * Obter breadcrumbs atÃ© um nÃ³ (caminho desde raiz)
+ * Obter breadcrumbs até um nó (caminho desde raiz)
  */
 export async function getNodeBreadcrumbs(
   nodeId: string,
@@ -1464,7 +1464,7 @@ export async function getNodeBreadcrumbs(
       return path?.path || [nodeId]
     }
 
-    // Se nÃ£o tiver raiz, tenta encontrar o nÃ³ com in-degree 0
+    // Se não tiver raiz, tenta encontrar o nó com in-degree 0
     const allNodes = await prisma.brainNode.findMany()
 
     for (const potentialRoot of allNodes) {
@@ -1486,7 +1486,7 @@ export async function getNodeBreadcrumbs(
 }
 
 /**
- * MÃ©tricas gerais do grafo
+ * Métricas gerais do grafo
  */
 export async function getGraphMetrics(): Promise<{
   nodeCount: number
@@ -1537,7 +1537,7 @@ export async function getGraphMetrics(): Promise<{
 }
 
 /**
- * Sugerir conexÃµes entre nÃ³s (baseado em vizinhos similares)
+ * Sugerir conexões entre nós (baseado em vizinhos similares)
  */
 export async function suggestConnections(
   nodeId: string,
@@ -1554,13 +1554,13 @@ export async function suggestConnections(
     const node = await prisma.brainNode.findUnique({ where: { id: nodeId } })
     if (!node) throw new Error(`Node not found: ${nodeId}`)
 
-    // Buscar vizinhos do nÃ³
+    // Buscar vizinhos do nó
     const neighbors = await getNodeWithContext(nodeId, 1)
     if (!neighbors) throw new Error('Cannot get node context')
 
     const neighborIds = new Set(neighbors.neighbors.map(n => n.id))
 
-    // Buscar nÃ³s similares
+    // Buscar nós similares
     const similar = await findSimilarNodes(nodeId, 50)
 
     const suggestions: Array<{
@@ -1595,7 +1595,7 @@ export async function suggestConnections(
 }
 
 /**
- * Filtrar nÃ³s com mÃºltiplos critÃ©rios
+ * Filtrar nós com múltiplos critérios
  */
 export async function filterNodes(criteria: {
   type?: string
@@ -1626,7 +1626,7 @@ export async function filterNodes(criteria: {
       take: criteria.limit || 100,
     })
 
-    // Filtrar por conexÃµes se especificado
+    // Filtrar por conexões se especificado
     if (criteria.minConnections !== undefined || criteria.maxConnections !== undefined) {
       const filtered = []
 
@@ -1657,7 +1657,7 @@ export async function filterNodes(criteria: {
 }
 
 /**
- * Atualizar metadados de mÃºltiplos nÃ³s
+ * Atualizar metadados de múltiplos nós
  */
 export async function updateBulkMetadata(
   nodeIds: string[],
@@ -1695,7 +1695,7 @@ export async function updateBulkMetadata(
 }
 
 /**
- * Comparar dois nÃ³s
+ * Comparar dois nós
  */
 export async function getNodeDiff(nodeId1: string, nodeId2: string): Promise<{
   sameType: boolean
@@ -1732,7 +1732,7 @@ export async function getNodeDiff(nodeId1: string, nodeId2: string): Promise<{
 }
 
 /**
- * Arquivar um nÃ³ em vez de deletar
+ * Arquivar um nó em vez de deletar
  */
 export async function archiveNode(
   nodeId: string,
@@ -1769,7 +1769,7 @@ export async function archiveNode(
 }
 
 /**
- * Recuperar nÃ³s arquivados
+ * Recuperar nós arquivados
  */
 export async function getArchivedNodes(): Promise<BrainNode[]> {
   try {
@@ -1786,7 +1786,7 @@ export async function getArchivedNodes(): Promise<BrainNode[]> {
 }
 
 /**
- * Todos os ancestrais de um nÃ³
+ * Todos os ancestrais de um nó
  */
 export async function getNodeAncestors(nodeId: string): Promise<BrainNode[]> {
   try {
@@ -1820,7 +1820,7 @@ export async function getNodeAncestors(nodeId: string): Promise<BrainNode[]> {
 }
 
 /**
- * Todos os descendentes de um nÃ³
+ * Todos os descendentes de um nó
  */
 export async function getNodeDescendants(nodeId: string): Promise<BrainNode[]> {
   try {
@@ -1854,7 +1854,7 @@ export async function getNodeDescendants(nodeId: string): Promise<BrainNode[]> {
 }
 
 /**
- * Ãšltimas alteraÃ§Ãµes no brain
+ * Últimas alterações no brain
  */
 export async function getMostRecentChanges(limit: number = 50): Promise<
   Array<{
@@ -1892,7 +1892,7 @@ export async function getMostRecentChanges(limit: number = 50): Promise<
 }
 
 /**
- * Validar integridade de referÃªncias
+ * Validar integridade de referências
  */
 export async function validateNodeReferences(): Promise<{
   valid: boolean
@@ -1917,8 +1917,8 @@ export async function validateNodeReferences(): Promise<{
       },
     })
 
-    // Aqui vocÃª poderia validar contra banco de dados real
-    // Por enquanto, apenas retorna nÃ³s com referÃªncias
+    // Aqui você poderia validar contra banco de dados real
+    // Por enquanto, apenas retorna nós com referências
     for (const node of nodes) {
       if (!node.refType || !node.refId) {
         invalidReferences.push({

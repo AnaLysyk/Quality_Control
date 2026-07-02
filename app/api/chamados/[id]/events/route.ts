@@ -1,9 +1,9 @@
 ﻿import { NextResponse } from "next/server";
-// AutenticaÃ§Ã£o removida para endpoint pÃºblico
+// Autenticação removida para endpoint público
 import { getTicketById } from "@/lib/ticketsStore";
 import { listTicketEvents } from "@/lib/ticketEventsStore";
 import { getLocalUserById } from "@/lib/auth/localStore";
-// RBAC removido para endpoint pÃºblico
+// RBAC removido para endpoint público
 
 function resolveDisplayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
   return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || null;
@@ -14,7 +14,7 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   const ticket = await getTicketById(id);
   if (!ticket) {
     return NextResponse.json(
-      { error: "Chamado nÃ£o encontrado. Atualize a pÃ¡gina e tente novamente." },
+      { error: "Chamado não encontrado. Atualize a página e tente novamente." },
       { status: 404 },
     );
   }

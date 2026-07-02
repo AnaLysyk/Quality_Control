@@ -18,7 +18,7 @@ test.describe("Mapa do Sistema", () => {
     });
   });
 
-  test("lista e filtra mÃ³dulos, rotas e status", async ({ page }) => {
+  test("lista e filtra módulos, rotas e status", async ({ page }) => {
     await page.goto("/admin/sistema/mapa", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
 
@@ -33,10 +33,10 @@ test.describe("Mapa do Sistema", () => {
     await expect(page.getByText("UI Studio", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "Limpar" }).click();
-    await page.getByLabel("Filtrar por mÃ³dulo").selectOption("brain");
+    await page.getByLabel("Filtrar por módulo").selectOption("brain");
     await expect(page.getByText(`Exibindo ${BRAIN_ROUTES} de ${TOTAL_ROUTES} rotas.`)).toBeVisible();
 
-    await page.getByLabel("Filtrar por mÃ³dulo").selectOption("todos");
+    await page.getByLabel("Filtrar por módulo").selectOption("todos");
     await page.getByLabel("Filtrar por status").selectOption("legado");
     await expect(page.getByText(`Exibindo ${LEGACY_ROUTES} de ${TOTAL_ROUTES} rotas.`)).toBeVisible();
     await expect(page.getByText("Perfil legado", { exact: true })).toBeVisible();

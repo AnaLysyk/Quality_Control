@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Brain - ValidaÃ§Ãµes",
+  title: "Brain - Validações",
   description: "Eval Center do Brain",
 };
 

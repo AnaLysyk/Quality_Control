@@ -36,7 +36,7 @@ async function requirePermissionManager(req: NextRequest) {
       admin: null,
       access: null,
       response: NextResponse.json(
-        { error: status === 401 ? "VocÃª precisa estar autenticado para acessar a GestÃ£o de Perfis." : "VocÃª nÃ£o tem permissÃ£o para acessar a GestÃ£o de Perfis." },
+        { error: status === 401 ? "Você precisa estar autenticado para acessar a Gestão de Perfis." : "Você não tem permissão para acessar a Gestão de Perfis." },
         { status },
       ),
     };
@@ -57,7 +57,7 @@ async function requirePermissionManager(req: NextRequest) {
     return {
       admin,
       access,
-      response: NextResponse.json({ error: "VocÃª nÃ£o tem permissÃ£o para visualizar a matriz de usuÃ¡rios." }, { status: 403 }),
+      response: NextResponse.json({ error: "Você não tem permissão para visualizar a matriz de usuários." }, { status: 403 }),
     };
   }
 
@@ -155,10 +155,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     if (guard.response) return guard.response;
 
     const userId = await resolveUserId(params);
-    if (!userId) return NextResponse.json({ error: "UsuÃ¡rio invÃ¡lido." }, { status: 400 });
+    if (!userId) return NextResponse.json({ error: "Usuário inválido." }, { status: 400 });
 
     const resolved = await getUserWithRole(userId);
-    if (!resolved?.role) return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado ou sem perfil vÃ¡lido." }, { status: 404 });
+    if (!resolved?.role) return NextResponse.json({ error: "Usuário não encontrado ou sem perfil válido." }, { status: 404 });
 
     const systemDefaults = normalizePermissionMatrix(resolveRoleDefaults(resolved.role));
     const profilePermissions = await resolveProfilePermissionDefaults(resolved.role);
@@ -178,7 +178,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     );
   } catch (error) {
     console.error("[admin.user-permissions.get]", error);
-    return NextResponse.json({ error: "NÃ£o foi possÃ­vel carregar permissÃµes do usuÃ¡rio agora." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível carregar permissões do usuário agora." }, { status: 500 });
   }
 }
 
@@ -187,14 +187,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     const guard = await requirePermissionManager(req);
     if (guard.response) return guard.response;
     if (guard.access?.canEditPermissions !== true) {
-      return NextResponse.json({ error: "VocÃª pode visualizar, mas nÃ£o pode editar permissÃµes por usuÃ¡rio." }, { status: 403 });
+      return NextResponse.json({ error: "Você pode visualizar, mas não pode editar permissões por usuário." }, { status: 403 });
     }
 
     const userId = await resolveUserId(params);
-    if (!userId) return NextResponse.json({ error: "UsuÃ¡rio invÃ¡lido." }, { status: 400 });
+    if (!userId) return NextResponse.json({ error: "Usuário inválido." }, { status: 400 });
 
     const resolved = await getUserWithRole(userId);
-    if (!resolved?.role) return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado ou sem perfil vÃ¡lido." }, { status: 404 });
+    if (!resolved?.role) return NextResponse.json({ error: "Usuário não encontrado ou sem perfil válido." }, { status: 404 });
 
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     const allow = normalizePermissionMatrix(body?.allow);
@@ -242,7 +242,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     });
   } catch (error) {
     console.error("[admin.user-permissions.patch]", error);
-    return NextResponse.json({ error: "NÃ£o foi possÃ­vel salvar permissÃµes do usuÃ¡rio agora." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível salvar permissões do usuário agora." }, { status: 500 });
   }
 }
 
@@ -251,14 +251,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ u
     const guard = await requirePermissionManager(req);
     if (guard.response) return guard.response;
     if (guard.access?.canResetPermissions !== true) {
-      return NextResponse.json({ error: "VocÃª nÃ£o tem permissÃ£o para restaurar permissÃµes deste usuÃ¡rio." }, { status: 403 });
+      return NextResponse.json({ error: "Você não tem permissão para restaurar permissões deste usuário." }, { status: 403 });
     }
 
     const userId = await resolveUserId(params);
-    if (!userId) return NextResponse.json({ error: "UsuÃ¡rio invÃ¡lido." }, { status: 400 });
+    if (!userId) return NextResponse.json({ error: "Usuário inválido." }, { status: 400 });
 
     const resolved = await getUserWithRole(userId);
-    if (!resolved?.role) return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado ou sem perfil vÃ¡lido." }, { status: 404 });
+    if (!resolved?.role) return NextResponse.json({ error: "Usuário não encontrado ou sem perfil válido." }, { status: 404 });
 
     await deleteUserPermissionOverride(userId);
 
@@ -285,7 +285,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ u
     return NextResponse.json({ ok: true, permissions });
   } catch (error) {
     console.error("[admin.user-permissions.delete]", error);
-    return NextResponse.json({ error: "NÃ£o foi possÃ­vel restaurar permissÃµes do usuÃ¡rio agora." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível restaurar permissões do usuário agora." }, { status: 500 });
   }
 }
 

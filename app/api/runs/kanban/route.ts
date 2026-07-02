@@ -34,7 +34,7 @@ function asSlug(value: string | null) {
 
 export async function GET(request: NextRequest) {
   const user = await authenticateRequest(request);
-  if (!user) return jsonError("NÃ£o autorizado", 401);
+  if (!user) return jsonError("Não autorizado", 401);
 
   const { searchParams } = new URL(request.url);
   const project = asProject(searchParams.get("project"));
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   const requestedSlug = asSlug(searchParams.get("companySlug") ?? searchParams.get("slug"));
 
   if (!project || runId === null) {
-    return jsonError("project e runId sÃ£o obrigatÃ³rios", 400);
+    return jsonError("project e runId são obrigatórios", 400);
   }
 
   const allowedSlugs = resolveNormalizedCompanySlugs(user);
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data });
   } catch (error) {
     console.error("Falha ao carregar kanban integrado da run", error);
-    return jsonError("NÃ£o foi possÃ­vel carregar o kanban da run", 500);
+    return jsonError("Não foi possível carregar o kanban da run", 500);
   }
 }
 

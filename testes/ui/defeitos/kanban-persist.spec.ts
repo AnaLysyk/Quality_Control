@@ -1,8 +1,8 @@
 ﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
-test.describe("kanban - persistÃƒÂªncia local", () => {
-  test("status persiste apÃƒÂ³s reload", async ({ page, context }) => {
+test.describe("kanban - persistÃƒªncia local", () => {
+  test("status persiste após reload", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "admin",
       companies: ["DEMO"],

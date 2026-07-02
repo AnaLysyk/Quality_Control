@@ -18,7 +18,7 @@ export default function UsersList({ users, onSelect }: { users: User[]; onSelect
         {users.map(u => (
           <div key={u.id} className={styles.userItem} onClick={() => onSelect(u)}>
             <div className={styles.userNameSmall}>{u.name}</div>
-            <div className={styles.userMeta}>{u.email} â€” {u.role}</div>
+            <div className={styles.userMeta}>{u.email} — {u.role}</div>
           </div>
         ))}
       </div>

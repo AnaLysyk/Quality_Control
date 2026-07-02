@@ -26,7 +26,7 @@ test("admin sees company menu inside company context", async ({ page }) => {
 
   const sidebar = nav(page);
   await expect(sidebar.getByRole("link", { name: /^Home$/i })).toHaveCount(1);
-  await expect(sidebar.getByRole("button", { name: /^OperaÃ§Ãµes$/ })).toHaveCount(1);
+  await expect(sidebar.getByRole("button", { name: /^Operações$/ })).toHaveCount(1);
   await expect(sidebar.getByRole("button", { name: /^Empresas$/ })).toHaveCount(1);
   await expect(sidebar.getByRole("link", { name: /Empresas/i })).toHaveCount(0);
 });
@@ -38,7 +38,7 @@ test("client user lands in company and cannot access admin", async ({ page }) =>
   await expect(page).toHaveURL(/\/(empresas|user-tc)\/testing-company\/(dashboard|home)/i);
 
   const sidebar = nav(page);
-  await expect(sidebar.getByRole("button", { name: /^OperaÃ§Ãµes$/ })).toHaveCount(1);
+  await expect(sidebar.getByRole("button", { name: /^Operações$/ })).toHaveCount(1);
   await expect(sidebar.getByRole("link", { name: /Empresas/i })).toHaveCount(0);
 
   await page.goto("/admin/clients");

@@ -129,7 +129,7 @@ type ContextualFilterKey =
   | "statusFilter";
 
 const PERIOD_OPTIONS: Array<{ value: PeriodPreset; label: string }> = [
-  { value: "all", label: "Todo perÃ­odo" },
+  { value: "all", label: "Todo período" },
   { value: "7d", label: "7 dias" },
   { value: "30d", label: "30 dias" },
   { value: "90d", label: "90 dias" },
@@ -140,15 +140,15 @@ const PERIOD_OPTIONS: Array<{ value: PeriodPreset; label: string }> = [
 const GROUP_OPTIONS: Array<{ value: GroupBy; label: string }> = [
   { value: "day", label: "Dia" },
   { value: "week", label: "Semana" },
-  { value: "month", label: "MÃªs" },
+  { value: "month", label: "Mês" },
   { value: "release", label: "Run" },
 ];
 
 const CHART_VIEW_OPTIONS: Array<{ value: ChartView; label: string }> = [
   { value: "qualityTimeline", label: "Qualidade no tempo" },
   { value: "runsTimeline", label: "Volume de runs" },
-  { value: "applicationHealth", label: "SaÃºde por aplicaÃ§Ã£o" },
-  { value: "applicationDefects", label: "Defeitos por aplicaÃ§Ã£o" },
+  { value: "applicationHealth", label: "Saúde por aplicação" },
+  { value: "applicationDefects", label: "Defeitos por aplicação" },
 ];
 
 const CHART_METRIC_OPTIONS: Array<{ value: ChartMetric; label: string }> = [
@@ -157,13 +157,13 @@ const CHART_METRIC_OPTIONS: Array<{ value: ChartMetric; label: string }> = [
   { value: "runs", label: "Quantidade de runs" },
   { value: "blocked", label: "Bloqueios" },
   { value: "defects", label: "Defeitos" },
-  { value: "logs", label: "Logs tÃ©cnicos" },
-  { value: "cycleTimeHours", label: "Tempo mÃ©dio de fechamento" },
+  { value: "logs", label: "Logs técnicos" },
+  { value: "cycleTimeHours", label: "Tempo médio de fechamento" },
 ];
 
 const DEFECT_SCOPE_OPTIONS: Array<{ value: DefectScope; label: string }> = [
   { value: "filtered", label: "Defeitos filtrados" },
-  { value: "periodTotal", label: "Defeitos totais do perÃ­odo" },
+  { value: "periodTotal", label: "Defeitos totais do período" },
 ];
 
 const DEFAULT_FILTERS: DashboardFilterState = {
@@ -455,7 +455,7 @@ function buildDelta(
 ): MetricDelta {
   const diff = current - previous;
   const rounded = Math.abs(diff) >= 10 ? Math.round(diff) : Number(diff.toFixed(1));
-  const label = `${diff >= 0 ? "+" : ""}${rounded}${suffix} vs. perÃ­odo anterior`;
+  const label = `${diff >= 0 ? "+" : ""}${rounded}${suffix} vs. período anterior`;
 
   if (kind === "neutral" || Math.abs(diff) < 0.1) {
     return { label, tone: "neutral" };
@@ -541,7 +541,7 @@ function resolveChartMetricMeta(metric: ChartMetric) {
   if (metric === "defects") {
     return {
       label: "Defeitos",
-      hint: "OcorrÃªncias no recorte e no perÃ­odo",
+      hint: "Ocorrências no recorte e no período",
       targetValue: null,
       colors: ["#7f1d1d", "#dc2626", "#f97316"],
       surface: "rgba(239,68,68,0.08)",
@@ -550,8 +550,8 @@ function resolveChartMetricMeta(metric: ChartMetric) {
 
   if (metric === "logs") {
     return {
-      label: "Logs tÃ©cnicos",
-      hint: "Eventos e alertas no perÃ­odo filtrado",
+      label: "Logs técnicos",
+      hint: "Eventos e alertas no período filtrado",
       targetValue: null,
       colors: ["#0f172a", "#0ea5e9", "#14b8a6"],
       surface: "rgba(14,165,233,0.09)",
@@ -560,8 +560,8 @@ function resolveChartMetricMeta(metric: ChartMetric) {
 
   if (metric === "cycleTimeHours") {
     return {
-      label: "Tempo mÃ©dio de fechamento",
-      hint: "MÃ©dia entre abertura e atualizaÃ§Ã£o final das runs",
+      label: "Tempo médio de fechamento",
+      hint: "Média entre abertura e atualização final das runs",
       targetValue: null,
       colors: ["#0f172a", "#1d4ed8", "#06b6d4"],
       surface: "rgba(29,78,216,0.08)",
@@ -570,7 +570,7 @@ function resolveChartMetricMeta(metric: ChartMetric) {
 
   return {
     label: "Bloqueios",
-    hint: "InterrupÃ§Ãµes no perÃ­odo",
+    hint: "Interrupções no período",
     targetValue: null,
     colors: ["#011848", "#245295", "#f59e0b"],
     surface: "rgba(245,158,11,0.08)",
@@ -618,32 +618,32 @@ function isTimeChartView(view: ChartView) {
 function resolveChartPanelCopy(view: ChartView) {
   if (view === "qualityTimeline") {
     return {
-      eyebrow: "GrÃ¡fico principal",
+      eyebrow: "Gráfico principal",
       title: "Qualidade ao longo do tempo",
-      description: "EvoluÃ§Ã£o da qualidade no recorte atual.",
+      description: "Evolução da qualidade no recorte atual.",
     };
   }
 
   if (view === "runsTimeline") {
     return {
-      eyebrow: "GrÃ¡fico principal",
+      eyebrow: "Gráfico principal",
       title: "Volume de runs no tempo",
-      description: "Quantidade de execuÃ§Ãµes em cada perÃ­odo do recorte.",
+      description: "Quantidade de execuções em cada período do recorte.",
     };
   }
 
   if (view === "applicationHealth") {
     return {
-      eyebrow: "GrÃ¡fico principal",
-      title: "SaÃºde por aplicaÃ§Ã£o",
-      description: "Comparativo entre aplicaÃ§Ãµes jÃ¡ filtradas no painel.",
+      eyebrow: "Gráfico principal",
+      title: "Saúde por aplicação",
+      description: "Comparativo entre aplicações já filtradas no painel.",
     };
   }
 
   return {
-    eyebrow: "GrÃ¡fico principal",
-    title: "Defeitos por aplicaÃ§Ã£o",
-    description: "ConcentraÃ§Ã£o de defeitos nas aplicaÃ§Ãµes do recorte atual.",
+    eyebrow: "Gráfico principal",
+    title: "Defeitos por aplicação",
+    description: "Concentração de defeitos nas aplicações do recorte atual.",
   };
 }
 
@@ -814,20 +814,20 @@ function buildLinePath(values: number[], min: number, max: number, width = 100, 
 function downloadCsv(rows: EnrichedRun[]) {
   const header = [
     "Run",
-    "AplicaÃ§Ã£o",
+    "Aplicação",
     "Status",
     "Origem",
     "Pass rate",
     "Falhas",
     "Bloqueados",
     "Defeitos vinculados",
-    "Ãšltima atualizaÃ§Ã£o",
+    "Última atualização",
   ];
   const body = rows.map((row) => [
     row.title,
     row.applicationName,
     row.statusLabel,
-    row.sourceType === "manual" ? "Manual" : `IntegraÃ§Ã£o${row.integrationProvider ? ` ${row.integrationProvider}` : ""}`,
+    row.sourceType === "manual" ? "Manual" : `Integração${row.integrationProvider ? ` ${row.integrationProvider}` : ""}`,
     row.passRate.toFixed(1),
     String(row.stats.fail),
     String(row.stats.blocked),
@@ -958,8 +958,8 @@ function MiniLineChart(props: {
   const compareDelta = previousAverage == null ? null : avg - previousAverage;
   const compareLabel =
     previousAverage == null
-      ? "Sem perÃ­odo anterior comparÃ¡vel"
-      : `${compareDelta && compareDelta >= 0 ? "+" : ""}${(compareDelta ?? 0).toFixed(1)} ${effectiveMetric === "cycleTimeHours" ? "h" : effectiveMetric === "passRate" || effectiveMetric === "failRate" ? "p.p." : ""} vs perÃ­odo anterior`;
+      ? "Sem período anterior comparável"
+      : `${compareDelta && compareDelta >= 0 ? "+" : ""}${(compareDelta ?? 0).toFixed(1)} ${effectiveMetric === "cycleTimeHours" ? "h" : effectiveMetric === "passRate" || effectiveMetric === "failRate" ? "p.p." : ""} vs período anterior`;
   const best = values.length > 0 ? Math.max(...values) : 0;
   const worst = values.length > 0 ? Math.min(...values) : 0;
   const targetY = meta.targetValue == null
@@ -983,7 +983,7 @@ function MiniLineChart(props: {
         : (momentum > 0 ? "positive" : "warning");
   const momentumLabel =
     momentum == null
-      ? "Sem referÃªncia"
+      ? "Sem referência"
       : `${momentum >= 0 ? "+" : ""}${effectiveMetric === "passRate" || effectiveMetric === "failRate" ? momentum.toFixed(1) : Math.round(momentum)}${effectiveMetric === "passRate" || effectiveMetric === "failRate" ? " p.p." : ""}`;
   const chartGradientId = `desktopboard-line-${effectiveMetric}`;
   const chartShadowId = `desktopboard-shadow-${effectiveMetric}`;
@@ -1017,7 +1017,7 @@ function MiniLineChart(props: {
             </div>
           ) : null}
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">PerÃ­odo</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Período</span>
             <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{periodStartLabel} a {periodEndLabel}</span>
           </div>
         </div>
@@ -1025,7 +1025,7 @@ function MiniLineChart(props: {
 
       {shouldFallbackToRuns ? (
         <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
-          Pass rate sem massa suficiente neste recorte. Exibindo volume de runs para manter a leitura Ãºtil.
+          Pass rate sem massa suficiente neste recorte. Exibindo volume de runs para manter a leitura útil.
         </div>
       ) : null}
 
@@ -1044,11 +1044,11 @@ function MiniLineChart(props: {
                 <div className="mt-1 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{metricFormatter(latest)}</div>
               </div>
               <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-2.5 py-2">
-                <div className="uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">MÃ©dia</div>
+                <div className="uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">Média</div>
                 <div className="mt-1 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{metricFormatter(avg)}</div>
               </div>
                 <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-2.5 py-2">
-                  <div className="uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">MÃ©dia anterior</div>
+                  <div className="uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">Média anterior</div>
                   <div className="mt-1 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{previousAverage == null ? "-" : metricFormatter(previousAverage)}</div>
                 </div>
               <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-2.5 py-2">
@@ -1153,7 +1153,7 @@ function MiniLineChart(props: {
             </div>
 
             <div className="mt-4 space-y-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
-              <div>VisualizaÃ§Ã£o: sÃ©rie + colunas | PerÃ­odo analisado: {periodStartLabel} a {periodEndLabel}</div>
+              <div>Visualização: série + colunas | Período analisado: {periodStartLabel} a {periodEndLabel}</div>
               {props.compareEnabled ? <div>Comparativo: {compareLabel}</div> : null}
             </div>
           </div>
@@ -1186,8 +1186,8 @@ function LogsTimelineChart(props: {
   const compareDelta = previousAverage == null ? null : avg - previousAverage;
   const compareLabel =
     previousAverage == null
-      ? "Sem perÃ­odo anterior comparÃ¡vel"
-      : `${compareDelta && compareDelta >= 0 ? "+" : ""}${Math.round(compareDelta ?? 0)} alertas vs perÃ­odo anterior`;
+      ? "Sem período anterior comparável"
+      : `${compareDelta && compareDelta >= 0 ? "+" : ""}${Math.round(compareDelta ?? 0)} alertas vs período anterior`;
   const best = values.length > 0 ? Math.max(...values) : 0;
   const worst = values.length > 0 ? Math.min(...values) : 0;
   
@@ -1197,7 +1197,7 @@ function LogsTimelineChart(props: {
       : (momentum < 0 ? "positive" : "warning");
   const momentumLabel =
     momentum == null
-      ? "Sem referÃªncia"
+      ? "Sem referência"
       : `${momentum >= 0 ? "+" : ""}${Math.round(momentum)} alertas`;
 
   const chartGradientId = `desktopboard-logs-line`;
@@ -1211,7 +1211,7 @@ function LogsTimelineChart(props: {
       <div className="mb-4 flex flex-col gap-4 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">
-            Alertas tÃ©cnicos
+            Alertas técnicos
           </div>
           <div className="mt-2 flex flex-wrap items-end gap-3">
             <div className="text-[40px] font-extrabold leading-none tracking-[-0.06em] text-[var(--tc-text,#0b1a3c)]">
@@ -1226,7 +1226,7 @@ function LogsTimelineChart(props: {
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">PerÃ­odo</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Período</span>
             <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{periodStartLabel} a {periodEndLabel}</span>
           </div>
         </div>
@@ -1250,12 +1250,12 @@ function LogsTimelineChart(props: {
                 <div className="mt-1 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{Math.round(latest)}</div>
               </div>
               <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-2.5 py-2">
-                <div className="uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">MÃ©dia</div>
+                <div className="uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">Média</div>
                 <div className="mt-1 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{Math.round(avg)}</div>
               </div>
               {props.compareEnabled && previousAverage != null ? (
                 <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-2.5 py-2">
-                  <div className="uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">MÃ©dia anterior</div>
+                  <div className="uppercase tracking-widest text-[var(--tc-text-muted,#6b7280)]">Média anterior</div>
                   <div className="mt-1 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{Math.round(previousAverage)}</div>
                 </div>
               ) : null}
@@ -1355,14 +1355,14 @@ function LogsTimelineChart(props: {
             </div>
 
             <div className="mt-4 space-y-1 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
-              <div>VisualizaÃ§Ã£o: sÃ©rie de alertas + colunas | PerÃ­odo analisado: {periodStartLabel} a {periodEndLabel}</div>
+              <div>Visualização: série de alertas + colunas | Período analisado: {periodStartLabel} a {periodEndLabel}</div>
               {props.compareEnabled ? <div>Comparativo: {compareLabel}</div> : null}
             </div>
           </div>
         </div>
       ) : (
         <div className="flex h-44 items-center justify-center rounded-[22px] border border-dashed border-[var(--tc-border,#d7deea)] text-sm text-[var(--tc-text-muted,#6b7280)]">
-          Sem alertas registrados neste perÃ­odo.
+          Sem alertas registrados neste período.
         </div>
       )}
     </div>
@@ -1379,7 +1379,7 @@ function RunsBarChart(props: { points: SeriesPoint[] }) {
     <div className={`overflow-hidden rounded-[20px] border p-5 ${css.chartContainer}`}>
       <div className="mb-4 flex flex-col gap-3 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">ExecuÃ§Ãµes</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">Execuções</div>
           <div className="mt-2 text-[40px] font-extrabold leading-none tracking-[-0.06em] text-[var(--tc-text,#0b1a3c)]">
             {formatCompactNumber(totalRuns)}
           </div>
@@ -1390,7 +1390,7 @@ function RunsBarChart(props: { points: SeriesPoint[] }) {
             <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{formatCompactNumber(peak)} run(s)</span>
           </div>
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">PerÃ­odo</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgba(8,32,77,0.46)] dark:text-slate-400">Período</span>
             <span className="ml-2 font-medium text-[rgba(8,32,77,0.68)] dark:text-slate-300">{periodStartLabel} a {periodEndLabel}</span>
           </div>
         </div>
@@ -1431,8 +1431,8 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
   return (
     <div className={`overflow-hidden rounded-[20px] border p-5 ${css.chartContainer}`}>
       <div className="mb-4 flex flex-col gap-2 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">AplicaÃ§Ãµes comparadas</div>
-        <div className="text-sm text-[rgba(8,32,77,0.66)] dark:text-slate-400">Pass rate por aplicaÃ§Ã£o jÃ¡ considerando os filtros ativos.</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">Aplicações comparadas</div>
+        <div className="text-sm text-[rgba(8,32,77,0.66)] dark:text-slate-400">Pass rate por aplicação já considerando os filtros ativos.</div>
       </div>
 
       <div className="space-y-4">
@@ -1445,10 +1445,10 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
                 : "linear-gradient(90deg,rgba(36,82,149,0.9)_0%,rgba(1,24,72,0.98)_100%)";
           const riskLabel =
             application.riskLevel === "critical"
-              ? "CrÃ­tico"
+              ? "Crítico"
               : application.riskLevel === "warning"
-                ? "AtenÃ§Ã£o"
-                : "EstÃ¡vel";
+                ? "Atenção"
+                : "Estável";
 
           return (
             <div key={application.key}>
@@ -1456,7 +1456,7 @@ function ApplicationHealthChart(props: { applications: ApplicationAggregate[] })
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{application.label}</div>
                   <div className="mt-1 text-[11px] text-[var(--tc-text-muted,#6b7280)]">
-                    {application.runs} run(s) â€¢ {application.defects} defeito(s) â€¢ {riskLabel}
+                    {application.runs} run(s) • {application.defects} defeito(s) • {riskLabel}
                   </div>
                 </div>
                 <div className="shrink-0 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{formatPercent(application.passRate)}</div>
@@ -1484,8 +1484,8 @@ function ApplicationDefectsChart(props: { applications: ApplicationAggregate[] }
   return (
     <div className={`overflow-hidden rounded-[20px] border p-5 ${css.chartContainer}`}>
       <div className="mb-4 flex flex-col gap-2 border-b border-[rgba(15,23,42,0.06)] pb-4 dark:border-slate-700/30">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">ConcentraÃ§Ã£o de defeitos</div>
-        <div className="text-sm text-[rgba(8,32,77,0.66)] dark:text-slate-400">Onde os defeitos estÃ£o se acumulando dentro do recorte filtrado.</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(8,32,77,0.48)] dark:text-slate-400">Concentração de defeitos</div>
+        <div className="text-sm text-[rgba(8,32,77,0.66)] dark:text-slate-400">Onde os defeitos estão se acumulando dentro do recorte filtrado.</div>
       </div>
 
       <div className="space-y-4">
@@ -1498,7 +1498,7 @@ function ApplicationDefectsChart(props: { applications: ApplicationAggregate[] }
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{application.label}</div>
                   <div className="mt-1 text-[11px] text-[var(--tc-text-muted,#6b7280)]">
-                    {application.runs} run(s) â€¢ {application.regressions} regressÃ£o(Ãµes)
+                    {application.runs} run(s) • {application.regressions} regressão(ões)
                   </div>
                 </div>
                 <div className="shrink-0 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{formatCompactNumber(application.defects)}</div>
@@ -1607,13 +1607,13 @@ function buildFilterChipList(
   if (filters.environmentFilter !== "all" && filterOptions.environments.length > 1) {
     chips.push(`Ambiente ${filters.environmentFilter}`);
   }
-  if (filters.sourceFilter !== "all") chips.push(filters.sourceFilter === "manual" ? "Somente manual" : "Somente integraÃ§Ã£o");
-  if (filters.responsibleFilter !== "all") chips.push(`ResponsÃ¡vel ${filters.responsibleFilter}`);
-  if (filters.riskFilter !== "all") chips.push(filters.riskFilter === "critical" ? "Risco crÃ­tico" : filters.riskFilter === "warning" ? "Em atenÃ§Ã£o" : "EstÃ¡vel");
+  if (filters.sourceFilter !== "all") chips.push(filters.sourceFilter === "manual" ? "Somente manual" : "Somente integração");
+  if (filters.responsibleFilter !== "all") chips.push(`Responsável ${filters.responsibleFilter}`);
+  if (filters.riskFilter !== "all") chips.push(filters.riskFilter === "critical" ? "Risco crítico" : filters.riskFilter === "warning" ? "Em atenção" : "Estável");
   if (filters.statusFilter !== "all") {
     chips.push(
       filters.statusFilter === "completed"
-        ? "ConcluÃ­das"
+        ? "Concluídas"
         : filters.statusFilter === "in_progress"
           ? "Em andamento"
           : filters.statusFilter === "risk"
@@ -1622,11 +1622,11 @@ function buildFilterChipList(
     );
   }
   if (filters.onlyWithDefects) chips.push("Com defeitos");
-  if (filters.onlyRegression) chips.push("Com regressÃ£o");
+  if (filters.onlyRegression) chips.push("Com regressão");
   if (filters.chartView === "qualityTimeline") {
-    chips.push(`MÃ©trica ${CHART_METRIC_OPTIONS.find((option) => option.value === filters.chartMetric)?.label ?? filters.chartMetric}`);
+    chips.push(`Métrica ${CHART_METRIC_OPTIONS.find((option) => option.value === filters.chartMetric)?.label ?? filters.chartMetric}`);
     if (filters.chartMetric === "defects") {
-      chips.push(filters.defectScope === "periodTotal" ? "Defeitos totais do perÃ­odo" : "Defeitos filtrados");
+      chips.push(filters.defectScope === "periodTotal" ? "Defeitos totais do período" : "Defeitos filtrados");
     }
   }
   if (isTimeChartView(filters.chartView) && filters.groupBy !== "month") {
@@ -1656,18 +1656,18 @@ function buildResolvedFilterChipList(
   if (filters.environmentFilter !== "all" && filterOptions.environments.length > 1) {
     chips.push(`Ambiente ${filters.environmentFilter}`);
   }
-  if (filters.sourceFilter !== "all") chips.push(filters.sourceFilter === "manual" ? "Somente manual" : "Somente integraÃ§Ã£o");
-  if (filters.responsibleFilter !== "all") chips.push(`ResponsÃ¡vel ${filters.responsibleFilter}`);
-  if (filters.riskFilter !== "all") chips.push(filters.riskFilter === "critical" ? "Risco crÃ­tico" : filters.riskFilter === "warning" ? "Em atenÃ§Ã£o" : "EstÃ¡vel");
+  if (filters.sourceFilter !== "all") chips.push(filters.sourceFilter === "manual" ? "Somente manual" : "Somente integração");
+  if (filters.responsibleFilter !== "all") chips.push(`Responsável ${filters.responsibleFilter}`);
+  if (filters.riskFilter !== "all") chips.push(filters.riskFilter === "critical" ? "Risco crítico" : filters.riskFilter === "warning" ? "Em atenção" : "Estável");
   if (filters.statusFilter !== STATUS_FILTER_ALL) {
     chips.push(filterOptions.statuses?.find((option) => option.value === filters.statusFilter)?.label ?? filters.statusFilter);
   }
   if (filters.onlyWithDefects) chips.push("Com defeitos");
-  if (filters.onlyRegression) chips.push("Com regressÃ£o");
+  if (filters.onlyRegression) chips.push("Com regressão");
   if (filters.chartView === "qualityTimeline") {
-    chips.push(`MÃ©trica ${CHART_METRIC_OPTIONS.find((option) => option.value === filters.chartMetric)?.label ?? filters.chartMetric}`);
+    chips.push(`Métrica ${CHART_METRIC_OPTIONS.find((option) => option.value === filters.chartMetric)?.label ?? filters.chartMetric}`);
     if (filters.chartMetric === "defects") {
-      chips.push(filters.defectScope === "periodTotal" ? "Defeitos totais do perÃ­odo" : "Defeitos filtrados");
+      chips.push(filters.defectScope === "periodTotal" ? "Defeitos totais do período" : "Defeitos filtrados");
     }
   }
   if (isTimeChartView(filters.chartView) && filters.groupBy !== "month") {
@@ -2270,13 +2270,13 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const trendSummary = useMemo(() => {
     const delta = executiveSummary.passRate - previousSummary.passRate;
     if (!activeCompareEnabled || previousSummary.totalRuns === 0) {
-      if (executiveSummary.passRate >= 92) return { label: "SaÃºde forte", tone: "positive" as const };
-      if (executiveSummary.passRate >= 80) return { label: "AtenÃ§Ã£o moderada", tone: "warning" as const };
+      if (executiveSummary.passRate >= 92) return { label: "Saúde forte", tone: "positive" as const };
+      if (executiveSummary.passRate >= 80) return { label: "Atenção moderada", tone: "warning" as const };
       return { label: "Risco elevado", tone: "critical" as const };
     }
     if (delta >= 2) return { label: "Melhorou", tone: "positive" as const };
     if (delta <= -2) return { label: "Piorou", tone: "critical" as const };
-    return { label: "EstÃ¡vel", tone: "neutral" as const };
+    return { label: "Estável", tone: "neutral" as const };
   }, [activeCompareEnabled, executiveSummary.passRate, previousSummary.passRate, previousSummary.totalRuns]);
 
   const syncDraftFilters = (next: DashboardFilterState) => {
@@ -2363,7 +2363,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(93, 105, 128);
-      doc.text("Desktopboard | ExportaÃ§Ã£o filtrada", marginX + 38, cursorY + 24);
+      doc.text("Desktopboard | Exportação filtrada", marginX + 38, cursorY + 24);
       cursorY += 48;
 
       writeLine(`Empresa: ${props.companyName}`, { size: 18, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
@@ -2373,14 +2373,14 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
       writeLine("Resumo executivo", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
       writeBulletList([
-        `Runs no perÃ­odo: ${formatCompactNumber(executiveSummary.totalRuns)}`,
-        `Pass rate mÃ©dio: ${formatPercent(executiveSummary.passRate)}`,
+        `Runs no período: ${formatCompactNumber(executiveSummary.totalRuns)}`,
+        `Pass rate médio: ${formatPercent(executiveSummary.passRate)}`,
         `Taxa de falha: ${formatPercent(executiveSummary.failRate)}`,
         `Defeitos vinculados: ${formatCompactNumber(executiveSummary.defects)}`,
-        `AplicaÃ§Ãµes em risco: ${formatCompactNumber(executiveSummary.applicationsAtRisk)}`,
-        `Melhor run: ${executiveSummary.bestRun?.title ?? "Sem referÃªncia"}`,
-        `Run crÃ­tica: ${executiveSummary.worstRun?.title ?? "Nenhuma crÃ­tica"}`,
-        `TendÃªncia: ${trendSummary.label}`,
+        `Aplicações em risco: ${formatCompactNumber(executiveSummary.applicationsAtRisk)}`,
+        `Melhor run: ${executiveSummary.bestRun?.title ?? "Sem referência"}`,
+        `Run crítica: ${executiveSummary.worstRun?.title ?? "Nenhuma crítica"}`,
+        `Tendência: ${trendSummary.label}`,
       ]);
       writeDivider();
 
@@ -2389,13 +2389,13 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         writeLine(answer.label, { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
         writeLine(`${answer.value}. ${answer.detail}`, { size: 10, color: [75, 85, 99], indent: 10, gapAfter: 8 });
       }
-            // IntegraÃ§Ã£o de AnÃ¡lise Executiva (se disponÃ­vel)
+            // Integração de Análise Executiva (se disponível)
             if (executiveAnalysis) {
-              writeLine("AnÃ¡lise executiva avanÃ§ada", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
+              writeLine("Análise executiva avançada", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
         
               // Risk Assessment
               const riskColor: [number, number, number] = executiveAnalysis.riskAssessment.level === "critical" ? [220, 38, 38] : executiveAnalysis.riskAssessment.level === "warning" ? [217, 119, 6] : [34, 197, 94];
-              writeLine(`NÃ­vel de Risco: ${executiveAnalysis.riskAssessment.level.toUpperCase()}`, { size: 11, weight: "bold", color: riskColor, gapAfter: 4 });
+              writeLine(`Nível de Risco: ${executiveAnalysis.riskAssessment.level.toUpperCase()}`, { size: 11, weight: "bold", color: riskColor, gapAfter: 4 });
               writeLine(executiveAnalysis.riskAssessment.description, { size: 10, color: [75, 85, 99], gapAfter: 8 });
         
               // Key Findings
@@ -2403,18 +2403,18 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               writeBulletList(executiveAnalysis.keyFindings);
         
               // Recommendations
-              writeLine("RecomendaÃ§Ãµes:", { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
+              writeLine("Recomendações:", { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
               writeBulletList(executiveAnalysis.recommendations);
         
               writeDivider();
             }
       writeDivider();
 
-      // SeÃ§Ã£o: AnÃ¡lise TÃ©cnica AvanÃ§ada
-      writeLine("AnÃ¡lise tÃ©cnica avanÃ§ada", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
+      // Seção: Análise Técnica Avançada
+      writeLine("Análise técnica avançada", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
       const technicalInsights: string[] = [];
       
-      // MÃ©trica 1: DistribuiÃ§Ã£o de cobertura
+      // Métrica 1: Distribuição de cobertura
       const coverageByApp = new Map<string, { total: number; pass: number }>();
       for (const run of filteredRuns) {
         const current = coverageByApp.get(run.applicationKey) || { total: 0, pass: 0 };
@@ -2423,62 +2423,62 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         coverageByApp.set(run.applicationKey, current);
       }
       const avgAppCoverage = Array.from(coverageByApp.values()).reduce((sum, v) => sum + (v.total > 0 ? (v.pass / v.total) * 100 : 0), 0) / Math.max(coverageByApp.size, 1);
-      technicalInsights.push(`Cobertura mÃ©dia por aplicaÃ§Ã£o: ${formatPercent(avgAppCoverage)}`);
+      technicalInsights.push(`Cobertura média por aplicação: ${formatPercent(avgAppCoverage)}`);
       
-      // MÃ©trica 2: VariaÃ§Ã£o de qualidade entre perÃ­odos
+      // Métrica 2: Variação de qualidade entre períodos
       if (activeCompareEnabled && previousSummary.totalRuns > 0) {
         const deltaPass = executiveSummary.passRate - previousSummary.passRate;
-        const trend = deltaPass > 2 ? "tendÃªncia ascendente" : deltaPass < -2 ? "tendÃªncia descendente" : "estabilidade";
+        const trend = deltaPass > 2 ? "tendência ascendente" : deltaPass < -2 ? "tendência descendente" : "estabilidade";
         technicalInsights.push(`Qualidade em ${trend} (Î” ${deltaPass.toFixed(1)}p.p.))`);
       }
       
-      // MÃ©trica 3: ConcentraÃ§Ã£o de problemas
+      // Métrica 3: Concentração de problemas
       if (applicationRanking.length > 0) {
         const topAppDefects = applicationRanking[0]?.defects ?? 0;
         const totalDefects = applicationRanking.reduce((sum, a) => sum + a.defects, 0);
         const concentration = totalDefects > 0 ? (topAppDefects / totalDefects) * 100 : 0;
-        technicalInsights.push(`ConcentraÃ§Ã£o de defeitos: ${formatPercent(concentration)} na aplicaÃ§Ã£o de maior risco`);
+        technicalInsights.push(`Concentração de defeitos: ${formatPercent(concentration)} na aplicação de maior risco`);
       }
       
-      // MÃ©trica 4: Taxa de bloqueios crÃ­ticos
+      // Métrica 4: Taxa de bloqueios críticos
       const totalBlocked = filteredRuns.reduce((sum, r) => sum + r.stats.blocked, 0);
       const totalCasesRuns = filteredRuns.reduce((sum, r) => sum + r.stats.total, 0);
       const blockageRate = totalCasesRuns > 0 ? (totalBlocked / totalCasesRuns) * 100 : 0;
       technicalInsights.push(`Taxa de bloqueios: ${formatPercent(blockageRate)} (${totalBlocked}/${totalCasesRuns} casos)`);
       
-      // MÃ©trica 5: RegressÃµes detectadas
+      // Métrica 5: Regressões detectadas
       const regressionCount = filteredRuns.filter(r => r.isRegression).length;
-      technicalInsights.push(`RegressÃµes identificadas: ${regressionCount} execuÃ§Ã£o(Ãµes)`);
+      technicalInsights.push(`Regressões identificadas: ${regressionCount} execução(ões)`);
       
       if (technicalInsights.length > 0) {
         writeBulletList(technicalInsights);
       } else {
-        writeLine("Massa de dados insuficiente para anÃ¡lise tÃ©cnica detalhada.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
+        writeLine("Massa de dados insuficiente para análise técnica detalhada.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
       }
       writeDivider();
 
-      writeLine("Insights automÃ¡ticos", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
+      writeLine("Insights automáticos", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
       if (insights.length > 0) {
         for (const insight of insights) {
           writeLine(insight.title, { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
           writeLine(insight.detail, { size: 10, color: [75, 85, 99], indent: 10, gapAfter: 8 });
         }
       } else {
-        writeLine("Sem massa suficiente para gerar insights automÃ¡ticos no recorte atual.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
+        writeLine("Sem massa suficiente para gerar insights automáticos no recorte atual.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
       }
       writeDivider();
 
-      writeLine("SaÃºde por aplicaÃ§Ã£o", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
+      writeLine("Saúde por aplicação", { size: 14, weight: "bold", color: [11, 26, 60], gapAfter: 10 });
       if (applicationRanking.length > 0) {
         applicationRanking.forEach((aggregate, index) => {
           writeLine(`${index + 1}. ${aggregate.label}`, { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
           writeLine(
-            `${aggregate.runs} run(s) | pass ${formatPercent(aggregate.passRate)} | falha ${formatPercent(aggregate.failRate)} | defeitos ${aggregate.defects} | regressÃ£o(Ãµes) ${aggregate.regressions} | risco ${aggregate.riskLevel}`,
+            `${aggregate.runs} run(s) | pass ${formatPercent(aggregate.passRate)} | falha ${formatPercent(aggregate.failRate)} | defeitos ${aggregate.defects} | regressão(ões) ${aggregate.regressions} | risco ${aggregate.riskLevel}`,
             { size: 10, color: [75, 85, 99], indent: 10, gapAfter: 8 },
           );
         });
       } else {
-        writeLine("Sem aplicaÃ§Ãµes suficientes no recorte atual.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
+        writeLine("Sem aplicações suficientes no recorte atual.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
       }
       writeDivider();
 
@@ -2487,7 +2487,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         filteredRuns.forEach((run, index) => {
           writeLine(`${index + 1}. ${run.title}`, { size: 11, weight: "bold", color: [11, 26, 60], gapAfter: 4 });
           writeLine(
-            `${run.applicationName} | ${run.sourceType === "manual" ? "Manual" : `IntegraÃ§Ã£o${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`} | status ${run.statusLabel} | pass ${formatPercent(run.passRate)} | falhas ${run.stats.fail} | bloqueios ${run.stats.blocked} | defeitos ${run.directDefectCount} | atualizaÃ§Ã£o ${formatDateTime(run.updatedAt ?? run.createdAt)}`,
+            `${run.applicationName} | ${run.sourceType === "manual" ? "Manual" : `Integração${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`} | status ${run.statusLabel} | pass ${formatPercent(run.passRate)} | falhas ${run.stats.fail} | bloqueios ${run.stats.blocked} | defeitos ${run.directDefectCount} | atualização ${formatDateTime(run.updatedAt ?? run.createdAt)}`,
             { size: 10, color: [75, 85, 99], indent: 10, gapAfter: 8 },
           );
         });
@@ -2504,7 +2504,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           writeLine(`${alert.severity.toUpperCase()} | ${formatDateTime(alert.timestamp)}`, { size: 9, color: [120, 130, 150], indent: 10, gapAfter: 8 });
         });
       } else {
-        writeLine("Nenhum alerta recente entrou no perÃ­odo filtrado.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
+        writeLine("Nenhum alerta recente entrou no período filtrado.", { size: 10, color: [75, 85, 99], gapAfter: 8 });
       }
 
       doc.save(`desktopboard-${props.companySlug}-filtrado.pdf`);
@@ -2521,31 +2521,31 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         detail:
           activeCompareEnabled && previousSummary.totalRuns > 0
             ? `${buildDelta(executiveSummary.passRate, previousSummary.passRate, "higher_better", " p.p.").label}.`
-            : `Pass rate mÃ©dio em ${formatPercent(executiveSummary.passRate)} no recorte atual.`,
+            : `Pass rate médio em ${formatPercent(executiveSummary.passRate)} no recorte atual.`,
         tone: trendSummary.tone,
       },
       {
-        label: "AplicaÃ§Ã£o puxando para baixo",
-        value: topApplication ? topApplication.label : "Sem concentraÃ§Ã£o clara",
+        label: "Aplicação puxando para baixo",
+        value: topApplication ? topApplication.label : "Sem concentração clara",
         detail: topApplication
-          ? `${formatPercent(topApplication.passRate)} de pass rate, ${topApplication.defects} defeitos e ${topApplication.regressions} regressÃ£o(Ãµes).`
-          : "NÃ£o hÃ¡ massa suficiente para destacar uma aplicaÃ§Ã£o dominante.",
+          ? `${formatPercent(topApplication.passRate)} de pass rate, ${topApplication.defects} defeitos e ${topApplication.regressions} regressão(ões).`
+          : "Não há massa suficiente para destacar uma aplicação dominante.",
         tone: topApplication ? riskTone(topApplication.riskLevel) : "neutral",
       },
       {
-        label: "Run com regressÃ£o",
-        value: worstRegression ? worstRegression.title : "Sem regressÃ£o relevante",
+        label: "Run com regressão",
+        value: worstRegression ? worstRegression.title : "Sem regressão relevante",
         detail: worstRegression
-          ? `${worstRegression.applicationName} caiu ${Math.abs(worstRegression.deltaPassRate ?? 0).toFixed(1)} p.p. em relaÃ§Ã£o Ã  execuÃ§Ã£o anterior.`
-          : "O recorte atual nÃ£o mostra regressÃ£o relevante frente Ã s execuÃ§Ãµes anteriores.",
+          ? `${worstRegression.applicationName} caiu ${Math.abs(worstRegression.deltaPassRate ?? 0).toFixed(1)} p.p. em relação à execução anterior.`
+          : "O recorte atual não mostra regressão relevante frente às execuções anteriores.",
         tone: worstRegression ? "critical" : "positive",
       },
       {
-        label: "Onde estÃ¡ o risco",
-        value: topRiskRun ? topRiskRun.applicationName : "Risco distribuÃ­do baixo",
+        label: "Onde está o risco",
+        value: topRiskRun ? topRiskRun.applicationName : "Risco distribuído baixo",
         detail: topRiskRun
           ? `${topRiskRun.title} combina ${topRiskRun.stats.fail} falha(s), ${topRiskRun.stats.blocked} bloqueio(s) e ${topRiskRun.directDefectCount} defeito(s) direto(s).`
-          : "Nenhuma run entrou no bloco crÃ­tico ou de atenÃ§Ã£o com o filtro atual.",
+          : "Nenhuma run entrou no bloco crítico ou de atenção com o filtro atual.",
         tone: topRiskRun ? riskTone(topRiskRun.riskLevel) : "positive",
       },
     ],
@@ -2568,8 +2568,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
       const delta = executiveSummary.passRate - previousSummary.passRate;
       items.push({
         id: "trend",
-        title: delta >= 2 ? "A qualidade melhorou no perÃ­odo." : delta <= -2 ? "A qualidade piorou no perÃ­odo." : "A qualidade ficou estÃ¡vel no perÃ­odo.",
-        detail: `Pass rate mÃ©dio atual em ${formatPercent(executiveSummary.passRate)} contra ${formatPercent(previousSummary.passRate)} no perÃ­odo anterior comparÃ¡vel.`,
+        title: delta >= 2 ? "A qualidade melhorou no período." : delta <= -2 ? "A qualidade piorou no período." : "A qualidade ficou estável no período.",
+        detail: `Pass rate médio atual em ${formatPercent(executiveSummary.passRate)} contra ${formatPercent(previousSummary.passRate)} no período anterior comparável.`,
         tone: delta >= 2 ? "positive" : delta <= -2 ? "critical" : "neutral",
       });
     }
@@ -2577,8 +2577,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     if (topApplication) {
       items.push({
         id: "app",
-        title: `${topApplication.label} concentra a maior pressÃ£o de qualidade.`,
-        detail: `${topApplication.defects} defeito(s), ${topApplication.regressions} regressÃ£o(Ãµes) e ${formatPercent(topApplication.failRate)} de taxa de falha no recorte filtrado.`,
+        title: `${topApplication.label} concentra a maior pressão de qualidade.`,
+        detail: `${topApplication.defects} defeito(s), ${topApplication.regressions} regressão(ões) e ${formatPercent(topApplication.failRate)} de taxa de falha no recorte filtrado.`,
         tone: riskTone(topApplication.riskLevel),
       });
     }
@@ -2586,8 +2586,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     if (worstRegression) {
       items.push({
         id: "regression",
-        title: `${worstRegression.title} foi a principal regressÃ£o observada.`,
-        detail: `A execuÃ§Ã£o caiu ${Math.abs(worstRegression.deltaPassRate ?? 0).toFixed(1)} p.p. e gerou ${worstRegression.directDefectCount} defeito(s) direto(s).`,
+        title: `${worstRegression.title} foi a principal regressão observada.`,
+        detail: `A execução caiu ${Math.abs(worstRegression.deltaPassRate ?? 0).toFixed(1)} p.p. e gerou ${worstRegression.directDefectCount} defeito(s) direto(s).`,
         tone: "critical",
       });
     }
@@ -2597,8 +2597,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
         id: "risk",
         title: recurringProblem ? "O problema parece recorrente." : "O problema parece mais pontual.",
         detail: recurringProblem
-          ? `${topRiskRun.applicationName} repete sinais de risco em mais de uma execuÃ§Ã£o ou concentraÃ§Ã£o de defeitos.`
-          : `O maior risco atual estÃ¡ concentrado em ${topRiskRun.title}, sem repetiÃ§Ã£o forte em outras execuÃ§Ãµes filtradas.`,
+          ? `${topRiskRun.applicationName} repete sinais de risco em mais de uma execução ou concentração de defeitos.`
+          : `O maior risco atual está concentrado em ${topRiskRun.title}, sem repetição forte em outras execuções filtradas.`,
         tone: recurringProblem ? "warning" : "neutral",
       });
     }
@@ -2606,7 +2606,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
     if (relevantAlerts[0]) {
       items.push({
         id: "alerts",
-        title: "Alertas recentes reforÃ§am o contexto do perÃ­odo.",
+        title: "Alertas recentes reforçam o contexto do período.",
         detail: `${relevantAlerts[0].message} (${formatDateTime(relevantAlerts[0].timestamp)}).`,
         tone: relevantAlerts[0].severity === "critical" ? "critical" : "warning",
       });
@@ -2644,8 +2644,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const previousChartMetricAverage = previousChartPoints.length > 0 ? metricAverage(previousChartPoints, activeChartMetric) : null;
   const chartLogsAverage = metricAverage(chartLogsPoints, "logs");
   const previousChartLogsAverage = previousChartLogsPoints.length > 0 ? metricAverage(previousChartLogsPoints, "logs") : null;
-  const defectScopeLabel = activeDefectScope === "periodTotal" ? "defeitos totais do perÃ­odo" : "defeitos filtrados";
-  const logsScopeLabel = "logs tÃ©cnicos por perÃ­odo filtrado";
+  const defectScopeLabel = activeDefectScope === "periodTotal" ? "defeitos totais do período" : "defeitos filtrados";
+  const logsScopeLabel = "logs técnicos por período filtrado";
   const activeChartLabel = CHART_VIEW_OPTIONS.find((option) => option.value === activeChartView)?.label ?? activeChartView;
   const activeMetricLabel = CHART_METRIC_OPTIONS.find((option) => option.value === activeChartMetric)?.label ?? activeChartMetric;
   const chartPanelCopy = resolveChartPanelCopy(activeChartView);
@@ -2657,7 +2657,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
   const compactActiveChips = activeFilterChips.slice(0, 4);
   const hiddenActiveChipCount = Math.max(0, activeFilterChips.length - compactActiveChips.length);
   const resultSummaryLine = hasFilterResults
-    ? `Recorte atual: ${activeFilterChips[0] ?? "Filtro aplicado"} | ${filteredRuns.length} runs | ${filteredDefects.length} defeitos | ${applicationRanking.length} aplicaÃ§Ãµes`
+    ? `Recorte atual: ${activeFilterChips[0] ?? "Filtro aplicado"} | ${filteredRuns.length} runs | ${filteredDefects.length} defeitos | ${applicationRanking.length} aplicações`
     : "Nenhum dado encontrado para o recorte atual.";
 
   return (
@@ -2675,7 +2675,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
         <Panel
           eyebrow="Filtros"
-          title="Recorte analÃ­tico"
+          title="Recorte analítico"
           description="Filtros aplicados em tempo real."
           variant="softGradient"
         >
@@ -2711,7 +2711,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
 
             <div className="grid gap-2.5 lg:grid-cols-3">
               <SelectField
-                label="AplicaÃ§Ã£o"
+                label="Aplicação"
                 value={applicationFilter}
                 onChange={setApplicationFilter}
                 options={[{ value: "all", label: "Todas" }, ...filterOptions.applications.map((option) => ({ value: option.key, label: option.label }))]}
@@ -2738,12 +2738,12 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 options={[
                   { value: "all", label: "Todas" },
                   { value: "manual", label: "Manual" },
-                  { value: "integration", label: "IntegraÃ§Ã£o" },
+                  { value: "integration", label: "Integração" },
                 ]}
               />
               {showEnvironmentFilter ? (
                 <SelectField
-                  label="Ambiente da execuÃ§Ã£o"
+                  label="Ambiente da execução"
                   value={environmentFilter}
                   onChange={setEnvironmentFilter}
                   options={[{ value: "all", label: "Todos" }, ...draftFilterOptions.environments.map((option) => ({ value: option, label: option }))]}
@@ -2751,18 +2751,18 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               ) : null}
               {showResponsibleFilter ? (
                 <SelectField
-                  label="ResponsÃ¡vel"
+                  label="Responsável"
                   value={responsibleFilter}
                   onChange={setResponsibleFilter}
                   options={[{ value: "all", label: "Todos" }, ...draftFilterOptions.responsibles.map((option) => ({ value: option, label: option }))]}
                 />
               ) : (
                 <SelectField
-                  label="ResponsÃ¡vel"
+                  label="Responsável"
                   value="all"
                   onChange={() => {}}
-                  options={[{ value: "all", label: "Nenhum usuÃ¡rio vinculado" }]}
-                  hint="Vincule usuÃ¡rios Ã  empresa para filtrar por responsÃ¡vel."
+                  options={[{ value: "all", label: "Nenhum usuário vinculado" }]}
+                  hint="Vincule usuários à empresa para filtrar por responsável."
                 />
               )}
               <SelectField
@@ -2771,9 +2771,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 onChange={(value) => setRiskFilter(value as "all" | RiskLevel)}
                 options={[
                   { value: "all", label: "Todos" },
-                  { value: "critical", label: "CrÃ­tico" },
-                  { value: "warning", label: "AtenÃ§Ã£o" },
-                  { value: "stable", label: "EstÃ¡vel" },
+                  { value: "critical", label: "Crítico" },
+                  { value: "warning", label: "Atenção" },
+                  { value: "stable", label: "Estável" },
                 ]}
               />
               <SelectField
@@ -2782,24 +2782,24 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 onChange={(value) => setGroupBy(value as GroupBy)}
                 options={GROUP_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
                 disabled={!chartUsesGrouping}
-                hint={chartUsesGrouping ? "Define como o grÃ¡fico temporal distribui as execuÃ§Ãµes." : "Usado apenas nas visualizaÃ§Ãµes ao longo do tempo."}
+                hint={chartUsesGrouping ? "Define como o gráfico temporal distribui as execuções." : "Usado apenas nas visualizações ao longo do tempo."}
               />
             </div>
 
             <div className="grid gap-2.5 lg:grid-cols-5">
               <SelectField
-                label="VisualizaÃ§Ã£o principal"
+                label="Visualização principal"
                 value={chartView}
                 onChange={(value) => setChartView(value as ChartView)}
                 options={CHART_VIEW_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                hint="Escolha como deseja enxergar as execuÃ§Ãµes jÃ¡ filtradas."
+                hint="Escolha como deseja enxergar as execuções já filtradas."
               />
               <SelectField
-                label="MÃ©trica temporal"
+                label="Métrica temporal"
                 value={chartMetric}
                 onChange={(value) => setChartMetric(value as ChartMetric)}
                 options={CHART_METRIC_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                hint="Controla a leitura no grÃ¡fico de qualidade no tempo."
+                hint="Controla a leitura no gráfico de qualidade no tempo."
                 disabled={chartView !== "qualityTimeline"}
               />
               <SelectField
@@ -2807,7 +2807,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 value={defectScope}
                 onChange={(value) => setDefectScope(value as DefectScope)}
                 options={DEFECT_SCOPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
-                hint="Filtrado ou total do perÃ­odo selecionado."
+                hint="Filtrado ou total do período selecionado."
                 disabled={chartView !== "qualityTimeline" || chartMetric !== "defects"}
               />
               <label className="flex flex-col gap-1.5">
@@ -2839,9 +2839,9 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             <div className="flex flex-col gap-1.5">
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgba(8,32,77,0.58)] dark:text-slate-400">Atalhos</span>
               <div className="flex flex-wrap gap-2">
-                <ToggleChip active={compareEnabled} onClick={() => setCompareEnabled((value) => !value)} label="Comparar perÃ­odo" />
+                <ToggleChip active={compareEnabled} onClick={() => setCompareEnabled((value) => !value)} label="Comparar período" />
                 <ToggleChip active={onlyWithDefects} onClick={() => setOnlyWithDefects((value) => !value)} label="Com defeitos" />
-                <ToggleChip active={onlyRegression} onClick={() => setOnlyRegression((value) => !value)} label="Com regressÃ£o" />
+                <ToggleChip active={onlyRegression} onClick={() => setOnlyRegression((value) => !value)} label="Com regressão" />
               </div>
             </div>
 
@@ -2869,7 +2869,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           <Panel
             eyebrow="Sem dados"
             title="Nenhum dado encontrado para esse recorte."
-            description="NÃ£o faz sentido ocupar a tela com blocos vazios. Ajuste o perÃ­odo ou alivie os filtros para ampliar a leitura."
+            description="Não faz sentido ocupar a tela com blocos vazios. Ajuste o período ou alivie os filtros para ampliar a leitura."
           >
             <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-slate-50/70 dark:bg-[var(--tc-surface-2,#1e293b)]/70 p-6">
               <div className="flex flex-wrap gap-2">
@@ -2880,7 +2880,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 ))}
               </div>
               <p className="mt-4 text-sm leading-6 text-[var(--tc-text-muted,#6b7280)]">
-                Nenhuma run, insight, grÃ¡fico ou tabela foi renderizado para esse recorte. Tente ampliar o perÃ­odo, remover restriÃ§Ãµes ou trocar a aplicaÃ§Ã£o analisada.
+                Nenhuma run, insight, gráfico ou tabela foi renderizado para esse recorte. Tente ampliar o período, remover restrições ou trocar a aplicação analisada.
               </p>
             </div>
           </Panel>
@@ -2950,8 +2950,8 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                 {activeChartView === "applicationDefects" ? <ApplicationDefectsChart applications={applicationRanking} /> : null}
                 <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-[rgba(8,32,77,0.48)] dark:text-slate-500">
                   {chartUsesGrouping
-                    ? `VisualizaÃ§Ã£o: ${activeChartLabel} | MÃ©trica: ${activeMetricLabel} | MÃ©dia atual: ${formatChartMetricValue(activeChartMetric, chartMetricAverage)} | ${activeChartMetric === "defects" ? `Escopo: ${defectScopeLabel}` : activeChartMetric === "logs" ? `Escopo: ${logsScopeLabel}` : `Agrupado por: ${activeGroupLabel}`}`
-                    : `VisualizaÃ§Ã£o: ${activeChartLabel} | Base: aplicaÃ§Ãµes filtradas`}
+                    ? `Visualização: ${activeChartLabel} | Métrica: ${activeMetricLabel} | Média atual: ${formatChartMetricValue(activeChartMetric, chartMetricAverage)} | ${activeChartMetric === "defects" ? `Escopo: ${defectScopeLabel}` : activeChartMetric === "logs" ? `Escopo: ${logsScopeLabel}` : `Agrupado por: ${activeGroupLabel}`}`
+                    : `Visualização: ${activeChartLabel} | Base: aplicações filtradas`}
                 </div>
               </Panel>
             ) : null}
@@ -3004,18 +3004,18 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--tc-border,#e6ecf5)] text-left text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]">
-                    <th className="px-2 py-3">Run</th><th className="px-2 py-3">AplicaÃ§Ã£o</th><th className="px-2 py-3">Pass rate</th><th className="px-2 py-3">VariaÃ§Ã£o</th><th className="px-2 py-3">Defeitos</th><th className="px-2 py-3">Risco</th>
+                    <th className="px-2 py-3">Run</th><th className="px-2 py-3">Aplicação</th><th className="px-2 py-3">Pass rate</th><th className="px-2 py-3">Variação</th><th className="px-2 py-3">Defeitos</th><th className="px-2 py-3">Risco</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRuns.slice(0, 10).map((run) => (
                     <tr key={run.id} className="border-b border-[var(--tc-border,#eef2f7)] align-top">
                       <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.title}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{formatDateTime(run.updatedAt ?? run.createdAt)}</div></td>
-                      <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationName}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.sourceType === "manual" ? "Manual" : `IntegraÃ§Ã£o${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`}</div></td>
+                      <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationName}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.sourceType === "manual" ? "Manual" : `Integração${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`}</div></td>
                       <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{formatPercent(run.passRate)}</td>
-                      <td className="px-2 py-3">{run.deltaPassRate != null ? <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${run.deltaPassRate <= -5 ? toneClasses("critical") : run.deltaPassRate >= 2 ? toneClasses("positive") : toneClasses("neutral")}`}>{run.deltaPassRate <= -5 ? <FiArrowDownRight className="h-3.5 w-3.5" /> : run.deltaPassRate >= 2 ? <FiArrowUpRight className="h-3.5 w-3.5" /> : <FiMinus className="h-3.5 w-3.5" />}{`${run.deltaPassRate >= 0 ? "+" : ""}${run.deltaPassRate.toFixed(1)} p.p.`}</span> : <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">Primeira referÃªncia</span>}</td>
+                      <td className="px-2 py-3">{run.deltaPassRate != null ? <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${run.deltaPassRate <= -5 ? toneClasses("critical") : run.deltaPassRate >= 2 ? toneClasses("positive") : toneClasses("neutral")}`}>{run.deltaPassRate <= -5 ? <FiArrowDownRight className="h-3.5 w-3.5" /> : run.deltaPassRate >= 2 ? <FiArrowUpRight className="h-3.5 w-3.5" /> : <FiMinus className="h-3.5 w-3.5" />}{`${run.deltaPassRate >= 0 ? "+" : ""}${run.deltaPassRate.toFixed(1)} p.p.`}</span> : <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">Primeira referência</span>}</td>
                       <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.directDefectCount}</td>
-                      <td className="px-2 py-3"><span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(run.riskLevel))}`}>{run.riskLevel === "critical" ? "CrÃ­tico" : run.riskLevel === "warning" ? "AtenÃ§Ã£o" : "EstÃ¡vel"}</span></td>
+                      <td className="px-2 py-3"><span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(run.riskLevel))}`}>{run.riskLevel === "critical" ? "Crítico" : run.riskLevel === "warning" ? "Atenção" : "Estável"}</span></td>
                     </tr>
                   ))}
                   {filteredRuns.length === 0 ? <tr><td colSpan={6} className="px-2 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma run entrou no filtro atual.</td></tr> : null}
@@ -3024,7 +3024,7 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
             </div>
           </Panel>
 
-          <Panel eyebrow="AplicaÃ§Ãµes" title="SaÃºde por aplicaÃ§Ã£o" description={undefined}>
+          <Panel eyebrow="Aplicações" title="Saúde por aplicação" description={undefined}>
             <div className="grid gap-3">
               {applicationRanking.length > 0 ? applicationRanking.slice(0, 6).map((aggregate) => {
                 const appMeta = getAppMeta(aggregate.key, aggregate.label);
@@ -3034,10 +3034,10 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                       <div>
                         <div className="flex items-center gap-2">
                           <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${css.appPill}`} {...{ style: { '--app-color': appMeta.color, '--app-border': `${appMeta.color}35`, '--app-bg': `${appMeta.color}12` } as React.CSSProperties }}>{appMeta.label}</span>
-                          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(aggregate.riskLevel))}`}>{aggregate.riskLevel === "critical" ? "CrÃ­tica" : aggregate.riskLevel === "warning" ? "AtenÃ§Ã£o" : "EstÃ¡vel"}</span>
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(aggregate.riskLevel))}`}>{aggregate.riskLevel === "critical" ? "Crítica" : aggregate.riskLevel === "warning" ? "Atenção" : "Estável"}</span>
                         </div>
                         <div className="mt-2 text-base font-bold text-[var(--tc-text,#0b1a3c)]">{aggregate.label}</div>
-                        <div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{aggregate.runs} run(s) â€¢ {aggregate.defects} defeito(s) â€¢ {aggregate.regressions} regressÃ£o(Ãµes)</div>
+                        <div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{aggregate.runs} run(s) • {aggregate.defects} defeito(s) • {aggregate.regressions} regressão(ões)</div>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">{formatPercent(aggregate.passRate)}</div>
@@ -3050,12 +3050,12 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     </div>
                   </div>
                 );
-              }) : <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Sem aplicaÃ§Ãµes suficientes no recorte atual.</div>}
+              }) : <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Sem aplicações suficientes no recorte atual.</div>}
             </div>
           </Panel>
         </div>
           ) : (
-            <Panel eyebrow="Comparativo" title="Sem comparativos para exibir" description="Esse recorte nÃ£o trouxe runs suficientes para comparaÃ§Ã£o.">
+            <Panel eyebrow="Comparativo" title="Sem comparativos para exibir" description="Esse recorte não trouxe runs suficientes para comparação.">
               <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
                 Ajuste o recorte para incluir runs consolidadas e liberar os comparativos.
               </div>
@@ -3077,14 +3077,14 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead><tr className="border-b border-[var(--tc-border,#e6ecf5)] text-left text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]"><th className="px-2 py-3">Run</th><th className="px-2 py-3">AplicaÃ§Ã£o</th><th className="px-2 py-3">Status</th><th className="px-2 py-3">Origem</th><th className="px-2 py-3">Pass</th><th className="px-2 py-3">Falhas</th><th className="px-2 py-3">Defeitos</th><th className="px-2 py-3">AtualizaÃ§Ã£o</th><th className="px-2 py-3">Abrir</th></tr></thead>
+              <thead><tr className="border-b border-[var(--tc-border,#e6ecf5)] text-left text-[11px] font-semibold tracking-[0.04em] text-[var(--tc-text-muted,#6b7280)]"><th className="px-2 py-3">Run</th><th className="px-2 py-3">Aplicação</th><th className="px-2 py-3">Status</th><th className="px-2 py-3">Origem</th><th className="px-2 py-3">Pass</th><th className="px-2 py-3">Falhas</th><th className="px-2 py-3">Defeitos</th><th className="px-2 py-3">Atualização</th><th className="px-2 py-3">Abrir</th></tr></thead>
               <tbody>
                 {filteredRuns.map((run) => (
                   <tr key={run.id} className="border-b border-[var(--tc-border,#eef2f7)]">
                     <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.title}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.releaseLabel ?? "Sem run vinculada"}</div></td>
                     <td className="px-2 py-3"><div className="font-semibold text-[var(--tc-text,#0b1a3c)]">{run.applicationName}</div><div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{run.environments.length > 0 ? run.environments.join(", ") : "Sem ambiente"}</div></td>
                     <td className="px-2 py-3"><span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.04em] ${toneClasses(riskTone(run.riskLevel))}`}>{run.statusLabel}</span></td>
-                    <td className="px-2 py-3 text-[var(--tc-text,#0b1a3c)]">{run.sourceType === "manual" ? "Manual" : `IntegraÃ§Ã£o${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`}</td>
+                    <td className="px-2 py-3 text-[var(--tc-text,#0b1a3c)]">{run.sourceType === "manual" ? "Manual" : `Integração${run.integrationProvider ? ` ${run.integrationProvider}` : ""}`}</td>
                     <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{formatPercent(run.passRate)}</td>
                     <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.stats.fail}</td>
                     <td className="px-2 py-3 font-semibold text-[var(--tc-text,#0b1a3c)]">{run.directDefectCount}</td>
@@ -3092,13 +3092,13 @@ export default function CompanyIntelligenceDashboardClient(props: CompanyDashboa
                     <td className="px-2 py-3"><Link href={run.href} className="inline-flex items-center gap-2 font-semibold text-[var(--tc-accent,#ef0001)]">Drilldown<FiArrowRight className="h-4 w-4" /></Link></td>
                   </tr>
                 ))}
-                {filteredRuns.length === 0 ? <tr><td colSpan={9} className="px-2 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma linha disponÃ­vel com o filtro atual.</td></tr> : null}
+                {filteredRuns.length === 0 ? <tr><td colSpan={9} className="px-2 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma linha disponível com o filtro atual.</td></tr> : null}
               </tbody>
             </table>
           </div>
         </Panel>
           ) : (
-            <Panel eyebrow="Drilldown" title="Sem linhas detalhadas" description="NÃ£o hÃ¡ runs suficientes para abrir a grade detalhada neste recorte.">
+            <Panel eyebrow="Drilldown" title="Sem linhas detalhadas" description="Não há runs suficientes para abrir a grade detalhada neste recorte.">
               <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-8 text-center text-sm text-[var(--tc-text-muted,#6b7280)]">
                 Ajuste os filtros para incluir runs e habilitar o drilldown.
               </div>

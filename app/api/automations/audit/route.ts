@@ -119,22 +119,22 @@ export async function GET(request: Request) {
   const user = await authenticateRequest(request);
 
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { access, allowedCompanySlugs } = resolveAccess(user);
 
   if (!access.canOpen) {
-    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   if (!access.canViewTechnicalLogs) {
-    return NextResponse.json({ error: "Sem permissÃ£o para logs tÃ©cnicos." }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão para logs técnicos." }, { status: 403 });
   }
 
   const parsedQuery = QuerySchema.safeParse(Object.fromEntries(new URL(request.url).searchParams.entries()));
   if (!parsedQuery.success) {
-    return NextResponse.json({ error: "ParÃ¢metros invÃ¡lidos." }, { status: 400 });
+    return NextResponse.json({ error: "Parâmetros inválidos." }, { status: 400 });
   }
 
   const routeFilter = parsedQuery.data.route?.trim();
@@ -149,7 +149,7 @@ export async function GET(request: Request) {
   const fetchLimit = Math.max(limit * 4, 50);
 
   if (companySlug && !access.hasGlobalCompanyVisibility && !allowedCompanySlugs.includes(companySlug)) {
-    return NextResponse.json({ error: "Empresa fora do escopo da sessÃ£o." }, { status: 403 });
+    return NextResponse.json({ error: "Empresa fora do escopo da sessão." }, { status: 403 });
   }
 
   const historyPrefix = routeFilter

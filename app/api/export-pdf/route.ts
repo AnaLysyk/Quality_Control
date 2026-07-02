@@ -32,9 +32,9 @@ export async function GET(req: NextRequest) {
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   pdf.setFontSize(14);
-  pdf.text(`RelatÃ³rio ${fileName}`, 20, 30);
+  pdf.text(`Relatório ${fileName}`, 20, 30);
   pdf.setFontSize(10);
-  pdf.text("Run nÃ£o encontrada ou dados indisponÃ­veis.", 20, 42);
+  pdf.text("Run não encontrada ou dados indisponíveis.", 20, 42);
   const fallbackBuffer = Buffer.from(pdf.output("arraybuffer"));
 
   return new NextResponse(fallbackBuffer, {

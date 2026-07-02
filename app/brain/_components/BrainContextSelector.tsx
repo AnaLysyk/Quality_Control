@@ -42,21 +42,21 @@ type BrainContextSelectorProps = {
 };
 
 const MODULE_LABELS: Record<string, string> = {
-  Automacao: "AutomaÃ§Ã£o",
+  Automacao: "Automação",
   Chat: "Chat",
   "Chat/Brain": "Chat / Brain",
   Contexto: "Contexto",
   Defeitos: "Defeitos",
   Documentos: "Documentos",
-  Execucoes: "ExecuÃ§Ãµes",
+  Execucoes: "Execuções",
   Logs: "Logs",
-  Permissoes: "PermissÃµes",
+  Permissoes: "Permissões",
   "Plano de Teste": "Plano de teste",
-  "Repositorio de Testes": "RepositÃ³rio de testes",
+  "Repositorio de Testes": "Repositório de testes",
   Runs: "Runs",
-  Solicitacoes: "SolicitaÃ§Ãµes",
+  Solicitacoes: "Solicitações",
   Suporte: "Suporte",
-  Usuarios: "UsuÃ¡rios",
+  Usuarios: "Usuários",
 };
 
 function unique(values: Array<string | undefined>) {
@@ -70,7 +70,7 @@ function displayModule(value: string) {
 }
 
 function contextLabel(company: string, project: string, area: string | null) {
-  return `${company} / ${project} / ${area ? displayModule(area) : "Todas as Ã¡reas"}`;
+  return `${company} / ${project} / ${area ? displayModule(area) : "Todas as áreas"}`;
 }
 
 function belongsToSelectedCompany(node: BrainNode, selectedCompanyId: string | null) {
@@ -142,9 +142,9 @@ export function BrainContextSelector({
         </div>
 
         <div className="qc-brain-filter-stats" aria-label="Resumo do grafo filtrado">
-          <span>{visibleNodeCount} nÃ³s visÃ­veis</span>
-          <span>{visibleEdgeCount} conexÃµes</span>
-          <span>{pendingCount} pendÃªncias no recorte</span>
+          <span>{visibleNodeCount} nós visíveis</span>
+          <span>{visibleEdgeCount} conexões</span>
+          <span>{pendingCount} pendências no recorte</span>
           {source !== "database" ? <span>dados parciais</span> : null}
         </div>
       </div>
@@ -185,13 +185,13 @@ export function BrainContextSelector({
         </label>
 
         <label className="qc-brain-filter-field">
-          <span>Ãrea</span>
+          <span>Área</span>
           <select
-            aria-label="Ãrea"
+            aria-label="Área"
             value={activeModule ?? "all"}
             onChange={(event) => onModuleChange(event.target.value === "all" ? null : event.target.value)}
           >
-            <option value="all">Todas as Ã¡reas</option>
+            <option value="all">Todas as áreas</option>
             {modules.map((moduleName) => (
               <option key={moduleName} value={moduleName}>
                 {displayModule(moduleName)}
@@ -202,9 +202,9 @@ export function BrainContextSelector({
         </label>
 
         <label className="qc-brain-filter-field">
-          <span>Tipo de nÃ³</span>
+          <span>Tipo de nó</span>
           <select
-            aria-label="Tipo de nÃ³"
+            aria-label="Tipo de nó"
             value={nodeType}
             onChange={(event) => resetDependentFilters(() => onNodeTypeChange(event.target.value as BrainNodeType | "all"))}
           >
@@ -219,9 +219,9 @@ export function BrainContextSelector({
         </label>
 
         <label className="qc-brain-filter-field">
-          <span>Status do nÃ³</span>
+          <span>Status do nó</span>
           <select
-            aria-label="Status do nÃ³"
+            aria-label="Status do nó"
             value={nodeStatus}
             onChange={(event) => onNodeStatusChange(event.target.value as BrainNodeStatus | "all")}
           >
@@ -242,18 +242,18 @@ export function BrainContextSelector({
           <input
             value={searchText}
             onChange={(event) => onSearchTextChange(event.target.value)}
-            placeholder="Buscar nÃ³, usuÃ¡rio, empresa, defeito, suporte, caso, plano ou nota..."
+            placeholder="Buscar nó, usuário, empresa, defeito, suporte, caso, plano ou nota..."
           />
         </label>
 
         <label className="qc-brain-filter-field qc-brain-filter-period">
-          <span>PerÃ­odo</span>
+          <span>Período</span>
           <select
-            aria-label="PerÃ­odo"
+            aria-label="Período"
             value={period}
             onChange={(event) => onPeriodChange(event.target.value as "all" | "today" | "7d" | "30d")}
           >
-            <option value="all">Todo perÃ­odo</option>
+            <option value="all">Todo período</option>
             <option value="today">Hoje</option>
             <option value="7d">7 dias</option>
             <option value="30d">30 dias</option>
@@ -263,11 +263,11 @@ export function BrainContextSelector({
 
         <div className="qc-brain-filter-actions">
           <button type="button" onClick={onTogglePending} data-active={showPendingOnly ? "true" : "false"} className="qc-brain-filter-chip qc-brain-filter-chip-pending">
-            SÃ³ pendÃªncias
+            Só pendências
           </button>
 
           <button type="button" onClick={onToggleOrphans} data-active={showOrphansOnly ? "true" : "false"} className="qc-brain-filter-chip qc-brain-filter-chip-orphan">
-            SÃ³ Ã³rfÃ£os
+            Só órfãos
           </button>
 
           <button type="button" onClick={onRefresh} className="qc-brain-filter-icon-button" aria-label="Atualizar Brain" title="Atualizar Brain">

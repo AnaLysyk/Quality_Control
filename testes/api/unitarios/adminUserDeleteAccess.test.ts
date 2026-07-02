@@ -2,9 +2,9 @@
 
 describe("adminUserDeleteAccess - Rigorous Access Control Tests", () => {
 
-  describe("canManageInstitutionalProfiles - PermissÃµes Administrativas Root", () => {
-    it("cenÃ¡rios VÃLIDOS: devem ser estritamente permitidos", () => {
-      // LÃ­der TC
+  describe("canManageInstitutionalProfiles - Permissões Administrativas Root", () => {
+    it("cenários VÁLIDOS: devem ser estritamente permitidos", () => {
+      // Líder TC
       expect(canManageInstitutionalProfiles({ role: "leader_tc", companyRole: "" })).toBe(true);
       expect(canManageInstitutionalProfiles({ role: "", companyRole: "leader_tc" })).toBe(true);
       expect(canManageInstitutionalProfiles({ role: "lider_tc", companyRole: "" })).toBe(true);
@@ -12,7 +12,7 @@ describe("adminUserDeleteAccess - Rigorous Access Control Tests", () => {
       expect(canManageInstitutionalProfiles({ role: "admin", companyRole: "" })).toBe(true);
       expect(canManageInstitutionalProfiles({ role: "global_admin", companyRole: "" })).toBe(true);
 
-      // Suporte TÃ©cnico
+      // Suporte Técnico
       expect(canManageInstitutionalProfiles({ role: "technical_support", companyRole: "" })).toBe(true);
       expect(canManageInstitutionalProfiles({ role: "", companyRole: "technical_support" })).toBe(true);
       expect(canManageInstitutionalProfiles({ role: "support", companyRole: "" })).toBe(true);
@@ -20,7 +20,7 @@ describe("adminUserDeleteAccess - Rigorous Access Control Tests", () => {
       expect(canManageInstitutionalProfiles({ role: "it_dev", companyRole: "" })).toBe(true);
     });
 
-    it("cenÃ¡rios INVÃLIDOS: devem ser estritamente bloqueados", () => {
+    it("cenários INVÁLIDOS: devem ser estritamente bloqueados", () => {
       // Outros perfis QA
       expect(canManageInstitutionalProfiles({ role: "testing_company_user", companyRole: "" })).toBe(false);
       expect(canManageInstitutionalProfiles({ role: "user", companyRole: "" })).toBe(false);
@@ -32,7 +32,7 @@ describe("adminUserDeleteAccess - Rigorous Access Control Tests", () => {
       expect(canManageInstitutionalProfiles({ role: "company_admin", companyRole: "" })).toBe(false);
     });
 
-    it("cenÃ¡rios EXTREMOS: nulls, undefines, empty objects", () => {
+    it("cenários EXTREMOS: nulls, undefines, empty objects", () => {
       expect(canManageInstitutionalProfiles(null)).toBe(false);
       expect(canManageInstitutionalProfiles(undefined)).toBe(false);
       expect(canManageInstitutionalProfiles({ role: "", companyRole: "" })).toBe(false);
@@ -41,36 +41,36 @@ describe("adminUserDeleteAccess - Rigorous Access Control Tests", () => {
     });
   });
 
-  describe("canDeleteUserByProfile - Regras de DeleÃ§Ã£o", () => {
-    it("LÃ­deres TC tÃªm poder absoluto sobre todos os perfis vÃ¡lidos", () => {
+  describe("canDeleteUserByProfile - Regras de Deleção", () => {
+    it("Líderes TC têm poder absoluto sobre todos os perfis válidos", () => {
       const allValidTargets = ["leader_tc", "technical_support", "testing_company_user", "company_user", "empresa"];
       allValidTargets.forEach(target => {
         expect(canDeleteUserByProfile({ role: "leader_tc", companyRole: "" }, target)).toBe(true);
       });
     });
 
-    it("Suporte TÃ©cnico pode deletar qualquer perfil", () => {
+    it("Suporte Técnico pode deletar qualquer perfil", () => {
       const allValidTargets = ["leader_tc", "technical_support", "testing_company_user", "company_user", "empresa"];
       allValidTargets.forEach(target => {
         expect(canDeleteUserByProfile({ role: "technical_support", companyRole: "" }, target)).toBe(true);
       });
     });
 
-    it("UsuÃ¡rios de QA comuns (Testing Company Users) sÃ£o bloqueados", () => {
+    it("Usuários de QA comuns (Testing Company Users) são bloqueados", () => {
       const allValidTargets = ["leader_tc", "technical_support", "testing_company_user", "company_user", "empresa"];
       allValidTargets.forEach(target => {
         expect(canDeleteUserByProfile({ role: "testing_company_user", companyRole: "" }, target)).toBe(false);
       });
     });
 
-    it("Administradores de Empresas sÃ£o estritamente bloqueados", () => {
+    it("Administradores de Empresas são estritamente bloqueados", () => {
       const allValidTargets = ["leader_tc", "technical_support", "testing_company_user", "company_user", "empresa"];
       allValidTargets.forEach(target => {
         expect(canDeleteUserByProfile({ role: "empresa", companyRole: "" }, target)).toBe(false);
       });
     });
 
-    it("Alvos extremanente invÃ¡lidos barram a execuÃ§Ã£o independente de quem pede", () => {
+    it("Alvos extremanente inválidos barram a execução independente de quem pede", () => {
       const godActor = { role: "leader_tc", companyRole: "" };
       expect(canDeleteUserByProfile(godActor, "")).toBe(false);
       expect(canDeleteUserByProfile(godActor, null)).toBe(false);

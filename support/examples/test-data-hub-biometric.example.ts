@@ -1,5 +1,5 @@
 ﻿/**
- * Example: Test Data Hub â€” Biometric Upload with Assets
+ * Example: Test Data Hub — Biometric Upload with Assets
  *
  * This test demonstrates how to use the Test Data Hub to:
  * 1. Resolve biometric assets by ID

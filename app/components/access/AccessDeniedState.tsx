@@ -13,7 +13,7 @@ export default function AccessDeniedState({
   moduleName,
   requiredPermission,
   title = "Acesso negado",
-  description = "Seu perfil nÃ£o possui permissÃ£o para acessar esta Ã¡rea.",
+  description = "Seu perfil não possui permissão para acessar esta área.",
 }: AccessDeniedStateProps) {
   const loading = state === "loading";
 
@@ -27,14 +27,14 @@ export default function AccessDeniedState({
           {loading ? "Validando acesso" : title}
         </h1>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-          {loading ? "Aguarde enquanto suas permissÃµes sÃ£o carregadas." : description}
+          {loading ? "Aguarde enquanto suas permissões são carregadas." : description}
         </p>
         {!loading && (moduleName || requiredPermission) ? (
           <dl className="mx-auto mt-5 grid max-w-xl gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-3 text-left text-sm sm:grid-cols-2">
             {moduleName ? (
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#64748b)]">
-                  MÃ³dulo
+                  Módulo
                 </dt>
                 <dd className="mt-1 font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{moduleName}</dd>
               </div>
@@ -42,7 +42,7 @@ export default function AccessDeniedState({
             {requiredPermission ? (
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#64748b)]">
-                  PermissÃ£o necessÃ¡ria
+                  Permissão necessária
                 </dt>
                 <dd className="mt-1">
                   <code className="rounded-lg bg-white px-2 py-1 text-xs text-[var(--tc-primary,#011848)]">

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   const releases = await getAllReleases();
 
-  // Filtra por empresa se o parÃ¢metro foi fornecido
+  // Filtra por empresa se o parâmetro foi fornecido
   const filteredReleases = companySlugParam
     ? releases.filter((r) => r.clientId === companySlugParam || r.clientName === companySlugParam)
     : releases;
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const mockRole = await getRunMockRole();
     const effectiveActor = actor ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
     if (!effectiveActor) {
-      return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
     const role = mockRole ?? (await resolveRunRole(effectiveActor));
     if (!canCreateRun(role)) {
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
 
     const runId = Number(runIdRaw);
     if (Number.isNaN(runId)) {
-      return NextResponse.json({ error: "runId deve ser um nÃºmero." }, { status: 400 });
+      return NextResponse.json({ error: "runId deve ser um número." }, { status: 400 });
     }
 
     const slug = slugifyRelease(body.slug || name);
@@ -157,7 +157,7 @@ export async function DELETE(request: Request) {
     const mockRole = await getRunMockRole();
     const effectiveActor = actor ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
     if (!effectiveActor) {
-      return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
     const role = mockRole ?? (await resolveRunRole(effectiveActor));
     if (!canDeleteRun(role)) {
@@ -166,7 +166,7 @@ export async function DELETE(request: Request) {
     const body = await request.json().catch(() => ({}));
     const slug = body.slug ? slugifyRelease(body.slug) : "";
     if (!slug) {
-      return NextResponse.json({ error: "Slug e obrigatÃ³rio." }, { status: 400 });
+      return NextResponse.json({ error: "Slug e obrigatório." }, { status: 400 });
     }
     const removed = await deleteReleaseFromStore(slug);
 

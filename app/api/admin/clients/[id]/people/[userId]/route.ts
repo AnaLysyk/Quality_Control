@@ -11,23 +11,23 @@ export async function DELETE(
 ) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const { id: companyId, userId } = await params;
   const company = await findLocalCompanyById(companyId);
   if (!company) {
-    return NextResponse.json({ error: "Empresa nÃ£o encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
 
   const user = await getAdminUserItem(userId);
   if (!user) {
-    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const removed = await removeLocalLink(userId, companyId);
   if (!removed) {
-    return NextResponse.json({ error: "VÃ­nculo nÃ£o encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Vínculo não encontrado" }, { status: 404 });
   }
 
   await addAuditLogSafe({

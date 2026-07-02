@@ -75,7 +75,7 @@ export default function AdminAlertsPage() {
                         </span>
                       </div>
                       <div className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">
-                        {alert.companySlug} â€¢ {alert.type} â€¢ {new Date(alert.timestamp).toLocaleString()}
+                        {alert.companySlug} • {alert.type} • {new Date(alert.timestamp).toLocaleString()}
                       </div>
                     </li>
                   ))}

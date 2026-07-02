@@ -1,18 +1,18 @@
 ﻿/**
- * CenÃ¡rios de ediÃ§Ã£o de usuÃ¡rio por tipo de perfil no PostgreSQL.
- * âœ… cleanup total em afterAll â€” nenhum dado permanece.
+ * Cenários de edição de usuário por tipo de perfil no PostgreSQL.
+ * âœ… cleanup total em afterAll — nenhum dado permanece.
  *
  * Perfis cobertos:
- *  1. Regular    â€” edita nome, email, phone
- *  2. IT Dev     â€” edita job_title, linkedin_url
- *  3. Admin Global â€” altera is_global_admin e globalRole
- *  4. Viewer     â€” promove membership viewer â†’ company_admin
- *  5. CompAdmin  â€” desativa conta (active=false / status=blocked)
- *  6. Convidado  â€” ativa conta (status invited â†’ active)
- *  7. MudanÃ§a de role de usuÃ¡rio (user â†’ it_dev)
- *  8. Rejeitar e-mail duplicado na ediÃ§Ã£o
- *  9. Retornar null para usuÃ¡rio inexistente
- * 10. Editar mÃºltiplos campos em uma operaÃ§Ã£o
+ *  1. Regular    — edita nome, email, phone
+ *  2. IT Dev     — edita job_title, linkedin_url
+ *  3. Admin Global — altera is_global_admin e globalRole
+ *  4. Viewer     — promove membership viewer → company_admin
+ *  5. CompAdmin  — desativa conta (active=false / status=blocked)
+ *  6. Convidado  — ativa conta (status invited → active)
+ *  7. Mudança de role de usuário (user → it_dev)
+ *  8. Rejeitar e-mail duplicado na edição
+ *  9. Retornar null para usuário inexistente
+ * 10. Editar múltiplos campos em uma operação
  */
 
 import { prisma } from "@/lib/prismaClient";
@@ -59,9 +59,9 @@ async function makeUser(tag: string, overrides: Record<string, unknown> = {}) {
   return user;
 }
 
-describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
+describePg("Edição de usuário — por tipo de perfil", () => {
 
-  // â”€â”€ 1. Regular â€” edita nome, email, phone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ 1. Regular — edita nome, email, phone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("Regular: edita nome, email e telefone", async () => {
     const user = await makeUser("regular");
 
@@ -81,7 +81,7 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
     console.log(`\nâœ… Regular: nome="${updated!.name}" | email=${updated!.email} | phone=${updated!.phone}`);
   });
 
-  // â”€â”€ 2. IT Dev â€” edita job_title e linkedin_url â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ 2. IT Dev — edita job_title e linkedin_url â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("IT Dev: edita job_title e linkedin_url", async () => {
     const user = await makeUser("itdev", { role: "it_dev", is_global_admin: true, globalRole: "global_admin" });
 
@@ -95,8 +95,8 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
     console.log(`\nâœ… IT Dev: job_title="${updated!.job_title}" | linkedin=${updated!.linkedin_url}`);
   });
 
-  // â”€â”€ 3. Admin Global â€” altera is_global_admin e globalRole â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("Admin Global: rebaixa para usuÃ¡rio normal (is_global_admin=false)", async () => {
+  // â”€â”€ 3. Admin Global — altera is_global_admin e globalRole â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("Admin Global: rebaixa para usuário normal (is_global_admin=false)", async () => {
     const user = await makeUser("globaladmin", {
       role: "it_dev",
       is_global_admin: true,
@@ -113,10 +113,10 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
     expect(updated!.is_global_admin).toBe(false);
     expect(updated!.globalRole).toBeNull();
     expect(updated!.role).toBe("user");
-    console.log(`\nâœ… Admin Global â†’ rebaixado: is_global_admin=${updated!.is_global_admin} | role=${updated!.role}`);
+    console.log(`\nâœ… Admin Global → rebaixado: is_global_admin=${updated!.is_global_admin} | role=${updated!.role}`);
   });
 
-  // â”€â”€ 4. Viewer â€” promove membership viewer â†’ company_admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ 4. Viewer — promove membership viewer → company_admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("Viewer: promove membership de viewer para company_admin", async () => {
     const company = await pgCreateLocalCompany({
       name: `Empresa Edit Viewer ${UID}`,
@@ -140,10 +140,10 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
       where: { userId: user.id, companyId: company.id },
     });
     expect(memDepois!.role).toBe("company_admin");
-    console.log(`\nâœ… Viewer â†’ company_admin: membership atualizado`);
+    console.log(`\nâœ… Viewer → company_admin: membership atualizado`);
   });
 
-  // â”€â”€ 5. CompAdmin â€” desativa conta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ 5. CompAdmin — desativa conta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("CompAdmin: desativa conta (active=false, status=blocked)", async () => {
     const user = await makeUser("compadmin");
 
@@ -161,7 +161,7 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
     console.log(`\nâœ… CompAdmin desativado: active=${updated!.active} | status=${updated!.status}`);
   });
 
-  // â”€â”€ 6. Convidado â€” ativa conta (invited â†’ active) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ 6. Convidado — ativa conta (invited → active) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("Convidado: ativa conta mudando status de invited para active", async () => {
     const user = await makeUser("convidado", { status: "invited", active: false });
     expect(user.status).toBe("invited");
@@ -173,10 +173,10 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
 
     expect(updated!.status).toBe("active");
     expect(updated!.active).toBe(true);
-    console.log(`\nâœ… Convidado ativado: invited â†’ active`);
+    console.log(`\nâœ… Convidado ativado: invited → active`);
   });
 
-  // â”€â”€ 7. MudanÃ§a de role (user â†’ it_dev) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ 7. Mudança de role (user → it_dev) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("Regular: promove role de user para it_dev com is_global_admin", async () => {
     const user = await makeUser("promove-role");
     expect(user.role).toBe("user");
@@ -191,11 +191,11 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
     expect(updated!.role).toBe("it_dev");
     expect(updated!.is_global_admin).toBe(true);
     expect(updated!.globalRole).toBe("global_admin");
-    console.log(`\nâœ… Promovido: user â†’ it_dev | is_global_admin=true`);
+    console.log(`\nâœ… Promovido: user → it_dev | is_global_admin=true`);
   });
 
-  // â”€â”€ 8. Rejeitar e-mail duplicado na ediÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("rejeita ediÃ§Ã£o com e-mail jÃ¡ cadastrado para outro usuÃ¡rio", async () => {
+  // â”€â”€ 8. Rejeitar e-mail duplicado na edição â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("rejeita edição com e-mail já cadastrado para outro usuário", async () => {
     const userA = await makeUser("dup-a");
     const userB = await makeUser("dup-b");
 
@@ -203,18 +203,18 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
       pgUpdateLocalUser(userB.id, { email: userA.email })
     ).rejects.toMatchObject({ code: "DUPLICATE_EMAIL" });
 
-    console.log(`\nâœ… E-mail duplicado rejeitado na ediÃ§Ã£o (DUPLICATE_EMAIL)`);
+    console.log(`\nâœ… E-mail duplicado rejeitado na edição (DUPLICATE_EMAIL)`);
   });
 
-  // â”€â”€ 9. Retorna null para usuÃ¡rio inexistente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("retorna null ao tentar editar usuÃ¡rio com id inexistente", async () => {
+  // â”€â”€ 9. Retorna null para usuário inexistente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("retorna null ao tentar editar usuário com id inexistente", async () => {
     const result = await pgUpdateLocalUser("id-inexistente-9999", { name: "Fantasma" });
     expect(result).toBeNull();
-    console.log(`\nâœ… UsuÃ¡rio inexistente â†’ retornou null`);
+    console.log(`\nâœ… Usuário inexistente → retornou null`);
   });
 
-  // â”€â”€ 10. MÃºltiplos campos em uma operaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("edita mÃºltiplos campos do usuÃ¡rio em uma Ãºnica operaÃ§Ã£o", async () => {
+  // â”€â”€ 10. Múltiplos campos em uma operação â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("edita múltiplos campos do usuário em uma única operação", async () => {
     const user = await makeUser("multiplos");
 
     const updated = await pgUpdateLocalUser(user.id, {
@@ -232,7 +232,7 @@ describePg("EdiÃ§Ã£o de usuÃ¡rio â€” por tipo de perfil", () => {
     expect(updated!.phone).toBe("+55 31 99876-5432");
     expect(updated!.job_title).toBe("Test Automation Engineer");
     expect(updated!.linkedin_url).toContain(UID);
-    console.log(`\nâœ… MÃºltiplos campos editados: ${Object.keys({ name: 1, full_name: 1, phone: 1, job_title: 1, linkedin_url: 1 }).join(", ")}`);
+    console.log(`\nâœ… Múltiplos campos editados: ${Object.keys({ name: 1, full_name: 1, phone: 1, job_title: 1, linkedin_url: 1 }).join(", ")}`);
   });
 
   it("rejeita edicao com usuario ja cadastrado para outro usuario", async () => {

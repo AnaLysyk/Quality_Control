@@ -1,22 +1,22 @@
 ﻿/**
- * Testes: GestÃ£o de permissÃµes
+ * Testes: Gestão de permissões
  *
- * Verifica que todas as permissÃµes SÃƒO BLOQUEADAS quando nÃ£o estÃ£o ativas no perfil.
+ * Verifica que todas as permissões SÃƒO BLOQUEADAS quando não estão ativas no perfil.
  *
- * SeÃ§Ãµes:
- *  A) Perfil 'user' (UsuÃ¡rio TC) â€” permissÃµes por empresa vinculada
- *  B) Perfil 'company' (company_admin) â€” permissÃµes ausentes verificadas
- *  C) Perfil 'support' â€” mÃ³dulos completamente ausentes
- *  D) Overrides de permissÃ£o (deny / allow)
+ * Seções:
+ *  A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada
+ *  B) Perfil 'company' (company_admin) — permissões ausentes verificadas
+ *  C) Perfil 'support' — módulos completamente ausentes
+ *  D) Overrides de permissão (deny / allow)
  *  E) Mapeamento de role (resolvePermissionRoleForUser)
- *  F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser com usuÃ¡rios reais
+ *  F) Integração DB — resolvePermissionAccessForUser com usuários reais
  */
 
 jest.setTimeout(30000);
 
 const describePg = process.env.DATABASE_URL ? describe : describe.skip;
 
-// Mock redis para evitar erros de conexÃ£o nos testes
+// Mock redis para evitar erros de conexão nos testes
 jest.mock("../../../lib/redis", () => ({
   isRedisConfigured: jest.fn(() => false),
   getRedis: jest.fn(() => ({
@@ -45,7 +45,7 @@ import {
   upsertLocalLink,
 } from "@/lib/core/auth/localStore";
 
-// â”€â”€ Helper: retorna a matriz de permissÃµes padrÃ£o para um perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Helper: retorna a matriz de permissões padrão para um perfil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function perm(role: string): Record<string, string[]> {
   return resolveRoleDefaults(role);
 }
@@ -66,10 +66,10 @@ afterAll(async () => {
 }, 30000);
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// A) Perfil 'user' (UsuÃ¡rio TC) â€” permissÃµes por empresa vinculada
+// A) Perfil 'user' (Usuário TC) — permissões por empresa vinculada
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("A) Perfil 'user' (viewer) â€” permissÃµes bloqueadas", () => {
+describePg("A) Perfil 'user' (viewer) — permissões bloqueadas", () => {
   const p = perm("testing_company_user");
 
   test("A1. releases: view permitido; escrita bloqueada", () => {
@@ -77,7 +77,7 @@ describePg("A) Perfil 'user' (viewer) â€” permissÃµes bloqueadas", () => 
     expect(hasPermissionAccess(p, "releases", "create")).toBe(false);
     expect(hasPermissionAccess(p, "releases", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "releases", "delete")).toBe(false);
-    console.log("âœ… A1. user TC: releases visÃ­vel no escopo da empresa");
+    console.log("âœ… A1. user TC: releases visível no escopo da empresa");
   });
 
   test("A2. runs: view permitido; escrita/export bloqueados", () => {
@@ -86,7 +86,7 @@ describePg("A) Perfil 'user' (viewer) â€” permissÃµes bloqueadas", () => 
     expect(hasPermissionAccess(p, "runs", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "runs", "delete")).toBe(false);
     expect(hasPermissionAccess(p, "runs", "export")).toBe(false);
-    console.log("âœ… A2. user TC: runs visÃ­vel no escopo da empresa");
+    console.log("âœ… A2. user TC: runs visível no escopo da empresa");
   });
 
   test("A3. defects: view permitido; escrita bloqueada", () => {
@@ -94,7 +94,7 @@ describePg("A) Perfil 'user' (viewer) â€” permissÃµes bloqueadas", () => 
     expect(hasPermissionAccess(p, "defects", "create")).toBe(false);
     expect(hasPermissionAccess(p, "defects", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "defects", "delete")).toBe(false);
-    console.log("âœ… A3. user TC: defects visÃ­vel no escopo da empresa");
+    console.log("âœ… A3. user TC: defects visível no escopo da empresa");
   });
 
   test("A4. users: view/create por empresa; edit/delete globais bloqueados", () => {
@@ -104,7 +104,7 @@ describePg("A) Perfil 'user' (viewer) â€” permissÃµes bloqueadas", () => 
     expect(hasPermissionAccess(p, "users", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "users", "delete")).toBe(false);
     expect(hasPermissionAccess(p, "users", "view_all")).toBe(false);
-    console.log("âœ… A4. user TC: users limitado Ã  empresa vinculada");
+    console.log("âœ… A4. user TC: users limitado à empresa vinculada");
   });
 
   test("A5. permissions: view/edit/reset/clone todos bloqueados", () => {
@@ -126,13 +126,13 @@ describePg("A) Perfil 'user' (viewer) â€” permissÃµes bloqueadas", () => 
     console.log("âœ… A7. user: access_requests bloqueado");
   });
 
-  test("A8. tickets: aÃ§Ãµes privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)", () => {
-    // O que Ã© permitido para user
+  test("A8. tickets: ações privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)", () => {
+    // O que é permitido para user
     expect(hasPermissionAccess(p, "tickets", "view")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "create")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "comment")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "view_own")).toBe(true);
-    // O que NÃƒO Ã© permitido
+    // O que NÃƒO é permitido
     expect(hasPermissionAccess(p, "tickets", "edit")).toBe(false);
     expect(hasPermissionAccess(p, "tickets", "delete")).toBe(false);
     expect(hasPermissionAccess(p, "tickets", "assign")).toBe(false);
@@ -152,10 +152,10 @@ describePg("A) Perfil 'user' (viewer) â€” permissÃµes bloqueadas", () => 
 });
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// B) Perfil 'company' (company_admin) â€” usuÃ¡rios da empresa liberados
+// B) Perfil 'company' (company_admin) — usuários da empresa liberados
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("B) Perfil 'company' (company_admin) â€” permissÃµes bloqueadas", () => {
+describePg("B) Perfil 'company' (company_admin) — permissões bloqueadas", () => {
   const p = perm("empresa");
 
   test("B1. users: view/create liberados; edit/delete bloqueados", () => {
@@ -166,7 +166,7 @@ describePg("B) Perfil 'company' (company_admin) â€” permissÃµes bloqueada
     console.log("âœ… B1. company: users com view/create e sem edit/delete");
   });
 
-  test("B1b. company_user tambÃ©m pode ver e criar usuÃ¡rios", () => {
+  test("B1b. company_user também pode ver e criar usuários", () => {
     const companyUser = perm("company_user");
     expect(hasPermissionAccess(companyUser, "users", "view")).toBe(true);
     expect(hasPermissionAccess(companyUser, "users", "create")).toBe(true);
@@ -231,7 +231,7 @@ describePg("B) Perfil 'company' (company_admin) â€” permissÃµes bloqueada
     console.log("âœ… B8. company: applications sem delete/export");
   });
 
-  test("B9. tickets: aÃ§Ãµes privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)", () => {
+  test("B9. tickets: ações privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)", () => {
     expect(hasPermissionAccess(p, "tickets", "view")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "create")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "comment")).toBe(true);
@@ -255,38 +255,38 @@ describePg("B) Perfil 'company' (company_admin) â€” permissÃµes bloqueada
 });
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// C) Perfil 'support' â€” mÃ³dulos completamente ausentes
+// C) Perfil 'support' — módulos completamente ausentes
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("C) Perfil 'support' â€” mesma visÃ£o do lider_tc + tickets view_all", () => {
+describePg("C) Perfil 'support' — mesma visão do lider_tc + tickets view_all", () => {
   const p = perm("technical_support");
 
-  test("C1. applications: mesma visÃ£o do lider_tc", () => {
+  test("C1. applications: mesma visão do lider_tc", () => {
     expect(hasPermissionAccess(p, "applications", "view")).toBe(true);
     expect(hasPermissionAccess(p, "applications", "create")).toBe(true);
     expect(hasPermissionAccess(p, "applications", "edit")).toBe(true);
-    console.log("âœ… C1. support: applications visÃ­vel (mesma visÃ£o lider_tc)");
+    console.log("âœ… C1. support: applications visível (mesma visão lider_tc)");
   });
 
   test("C2. releases: view permitido", () => {
     expect(hasPermissionAccess(p, "releases", "view")).toBe(true);
-    console.log("âœ… C2. support: releases visÃ­vel");
+    console.log("âœ… C2. support: releases visível");
   });
 
   test("C3. runs: view permitido", () => {
     expect(hasPermissionAccess(p, "runs", "view")).toBe(true);
-    console.log("âœ… C3. support: runs visÃ­vel");
+    console.log("âœ… C3. support: runs visível");
   });
 
   test("C4. defects: view permitido", () => {
     expect(hasPermissionAccess(p, "defects", "view")).toBe(true);
-    console.log("âœ… C4. support: defects visÃ­vel");
+    console.log("âœ… C4. support: defects visível");
   });
 
   test("C5. notes: view/create permitidos", () => {
     expect(hasPermissionAccess(p, "notes", "view")).toBe(true);
     expect(hasPermissionAccess(p, "notes", "create")).toBe(true);
-    console.log("âœ… C5. support: notes visÃ­vel");
+    console.log("âœ… C5. support: notes visível");
   });
 
   test("C6. settings: view permitido (edit bloqueado)", () => {
@@ -298,23 +298,23 @@ describePg("C) Perfil 'support' â€” mesma visÃ£o do lider_tc + tickets vi
   test("C7. audit: view permitido (adicionado ao perfil support)", () => {
     expect(hasPermissionAccess(p, "audit", "view")).toBe(true);
     expect(hasPermissionAccess(p, "audit", "export")).toBe(false);
-    console.log("âœ… C7. support: mÃ³dulo audit com view");
+    console.log("âœ… C7. support: módulo audit com view");
   });
 
   test("C8. permissions: somente view (sem edit)", () => {
     expect(hasPermissionAccess(p, "permissions", "view")).toBe(true);
     expect(hasPermissionAccess(p, "permissions", "edit")).toBe(false);
-    console.log("âœ… C8. support: permissions somente view (gestÃ£o exclusiva lider_tc)");
+    console.log("âœ… C8. support: permissions somente view (gestão exclusiva lider_tc)");
   });
 
-  test("C9. support possui tickets/suporte com permissÃµes corretas + view_all", () => {
+  test("C9. support possui tickets/suporte com permissões corretas + view_all", () => {
     // O que support DEVE ter
     expect(hasPermissionAccess(p, "tickets", "view")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "assign")).toBe(true);
     expect(hasPermissionAccess(p, "tickets", "status")).toBe(true);
     expect(hasPermissionAccess(p, "support", "assign")).toBe(true);
     expect(hasPermissionAccess(p, "support", "status")).toBe(true);
-    // Support vÃª TODOS os tickets (view_all)
+    // Support vê TODOS os tickets (view_all)
     expect(hasPermissionAccess(p, "tickets", "view_all")).toBe(true);
     // O que support NÃƒO deve ter em tickets
     expect(hasPermissionAccess(p, "tickets", "delete")).toBe(false);
@@ -338,11 +338,11 @@ describePg("C) Perfil 'support' â€” mesma visÃ£o do lider_tc + tickets vi
 });
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// D) Overrides de permissÃ£o (deny / allow)
+// D) Overrides de permissão (deny / allow)
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("D) Overrides de permissÃ£o (deny/allow)", () => {
-  test("D1. effectivePermissions com deny remove aÃ§Ã£o disponÃ­vel do leader_tc", () => {
+describePg("D) Overrides de permissão (deny/allow)", () => {
+  test("D1. effectivePermissions com deny remove ação disponível do leader_tc", () => {
     const override = { userId: "test", deny: { users: ["edit"] } };
     const effective = effectivePermissions("leader_tc", override);
     const userActions = Array.from(effective["users"] ?? new Set());
@@ -351,7 +351,7 @@ describePg("D) Overrides de permissÃ£o (deny/allow)", () => {
     console.log(`D1. leader_tc: users.edit removido via deny | restantes=${userActions.join(",")}`);
   });
 
-  test("D2. effectivePermissions com allow adiciona aÃ§Ã£o ao 'user'", () => {
+  test("D2. effectivePermissions com allow adiciona ação ao 'user'", () => {
     const override = { userId: "test", allow: { releases: ["view"] } };
     const effective = effectivePermissions("testing_company_user", override);
     const releaseActions = Array.from(effective["releases"] ?? new Set());
@@ -359,15 +359,15 @@ describePg("D) Overrides de permissÃ£o (deny/allow)", () => {
     console.log(`âœ… D2. user: releases.view adicionado via allow`);
   });
 
-  test("D3. deny nÃ£o afeta outros mÃ³dulos", () => {
+  test("D3. deny não afeta outros módulos", () => {
     const override = { userId: "test", deny: { audit: ["view", "export"] } };
     const effective = effectivePermissions("leader_tc", override);
-    // applications nÃ£o deve ser afetado
+    // applications não deve ser afetado
     const appActions = Array.from(effective["applications"] ?? new Set());
     expect(appActions).toContain("view");
     expect(appActions).toContain("create");
     expect(appActions).toContain("edit");
-    console.log(`âœ… D3. deny em audit nÃ£o afeta applications`);
+    console.log(`âœ… D3. deny em audit não afeta applications`);
   });
 
   test("D4. applyPermissionOverride: deny remove, allow adiciona na mesma chamada", () => {
@@ -384,7 +384,7 @@ describePg("D) Overrides de permissÃ£o (deny/allow)", () => {
     console.log(`âœ… D4. applyPermissionOverride: releases.view negado + releases.create adicionado`);
   });
 
-  test("D5. effectivePermissions mÃºltiplos deny no mesmo mÃ³dulo", () => {
+  test("D5. effectivePermissions múltiplos deny no mesmo módulo", () => {
     const override = {
       userId: "test",
       deny: { tickets: ["delete", "assign", "status"] },
@@ -399,7 +399,7 @@ describePg("D) Overrides de permissÃ£o (deny/allow)", () => {
     console.log(`D5. technical_support: tickets.delete/assign/status negados | restantes=${ticketActions.join(",")}`);
   });
 
-  test("D6. toVisibilityMap retorna false para mÃ³dulos sem view", () => {
+  test("D6. toVisibilityMap retorna false para módulos sem view", () => {
     const userPerms = perm("testing_company_user");
     const visibility = toVisibilityMap(userPerms);
     expect(visibility["releases"]).toBe(true);
@@ -409,13 +409,13 @@ describePg("D) Overrides de permissÃ£o (deny/allow)", () => {
     expect(visibility["documents"]).toBe(true);
     expect(visibility["dashboard"]).toBe(true);
     expect(visibility["applications"]).toBe(true);
-    console.log(`âœ… D6. toVisibilityMap: user TC com operaÃ§Ã£o visÃ­vel no escopo da empresa`);
+    console.log(`âœ… D6. toVisibilityMap: user TC com operação visível no escopo da empresa`);
   });
 
   test("D7. getTicketViewScope retorna 'own' para perfil user", () => {
     const userPerms = perm("testing_company_user");
     expect(getTicketViewScope(userPerms)).toBe("own");
-    console.log(`âœ… D7. getTicketViewScope: user â†’ 'own'`);
+    console.log(`âœ… D7. getTicketViewScope: user → 'own'`);
   });
 
   test("D8. getTicketViewScope retorna 'all' para suporte tecnico", () => {
@@ -429,50 +429,50 @@ describePg("D) Overrides de permissÃ£o (deny/allow)", () => {
 // E) Mapeamento de role (resolvePermissionRoleForUser)
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("E) Mapeamento de role â€” resolvePermissionRoleForUser", () => {
-  test("E1. UsuÃ¡rio viewer legado â†’ permissionRole 'testing_company_user'", () => {
+describePg("E) Mapeamento de role — resolvePermissionRoleForUser", () => {
+  test("E1. Usuário viewer legado → permissionRole 'testing_company_user'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "viewer" }];
     expect(resolvePermissionRoleForUser(user, links)).toBe("testing_company_user");
     console.log(`E1. viewer legado -> permissionRole='testing_company_user'`);
   });
 
-  test("E2. Membership company_admin legado â†’ permissionRole 'empresa'", () => {
+  test("E2. Membership company_admin legado → permissionRole 'empresa'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "company_admin" }];
     expect(resolvePermissionRoleForUser(user, links)).toBe("empresa");
     console.log(`E2. company_admin legado -> permissionRole='empresa'`);
   });
 
-  test("E3. Membership it_dev legado â†’ permissionRole 'technical_support'", () => {
+  test("E3. Membership it_dev legado → permissionRole 'technical_support'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "it_dev" }];
     expect(resolvePermissionRoleForUser(user, links)).toBe("technical_support");
     console.log(`E3. it_dev legado -> permissionRole='technical_support'`);
   });
 
-  test("E4. UsuÃ¡rio global_admin legado â†’ permissionRole 'leader_tc'", () => {
+  test("E4. Usuário global_admin legado → permissionRole 'leader_tc'", () => {
     const user = { globalRole: "global_admin" as const, is_global_admin: true, role: null };
     const links: Array<{ role: string }> = [];
     expect(resolvePermissionRoleForUser(user, links)).toBe("leader_tc");
     console.log(`E4. global_admin legado -> permissionRole='leader_tc'`);
   });
 
-  test("E5. Sem links e sem role â†’ permissionRole 'testing_company_user'", () => {
+  test("E5. Sem links e sem role → permissionRole 'testing_company_user'", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links: Array<{ role: string }> = [];
     expect(resolvePermissionRoleForUser(user, links)).toBe("testing_company_user");
     console.log(`E5. sem links nem role -> permissionRole='testing_company_user'`);
   });
 
-  test("E6. it_dev legado tem precedÃªncia sobre company_admin legado", () => {
+  test("E6. it_dev legado tem precedência sobre company_admin legado", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "company_admin" }, { role: "it_dev" }];
     expect(resolvePermissionRoleForUser(user, links)).toBe("technical_support");
     console.log(`E6. it_dev legado > company_admin legado -> permissionRole='technical_support'`);
   });
 
-  test("E7. company_admin legado tem precedÃªncia sobre viewer legado", () => {
+  test("E7. company_admin legado tem precedência sobre viewer legado", () => {
     const user = { globalRole: null, is_global_admin: false, role: null };
     const links = [{ role: "viewer" }, { role: "company_admin" }];
     expect(resolvePermissionRoleForUser(user, links)).toBe("empresa");
@@ -481,10 +481,10 @@ describePg("E) Mapeamento de role â€” resolvePermissionRoleForUser", () => 
 });
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser com usuÃ¡rios reais
+// F) Integração DB — resolvePermissionAccessForUser com usuários reais
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describeDb("F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser", () => {
+describeDb("F) Integração DB — resolvePermissionAccessForUser", () => {
   function uid() {
     return randomUUID().slice(0, 8);
   }
@@ -510,7 +510,7 @@ describeDb("F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser", () 
     return c;
   }
 
-  test("F1. UsuÃ¡rio viewer/TC â†’ roleKey='testing_company_user', operaÃ§Ã£o visÃ­vel por empresa", async () => {
+  test("F1. Usuário viewer/TC → roleKey='testing_company_user', operação visível por empresa", async () => {
     const tag = uid();
     const user = await makeUser(`viewer-${tag}`);
     const company = await makeCompany(tag);
@@ -528,10 +528,10 @@ describeDb("F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser", () 
     expect(hasPermissionAccess(access.permissions, "dashboard", "view")).toBe(true);
     expect(hasPermissionAccess(access.permissions, "applications", "view")).toBe(true);
 
-    console.log(`âœ… F1. viewer (DB) â†’ roleKey=${access.roleKey} | releases=${hasPermissionAccess(access.permissions,"releases","view")} | dashboard=${hasPermissionAccess(access.permissions,"dashboard","view")}`);
+    console.log(`âœ… F1. viewer (DB) → roleKey=${access.roleKey} | releases=${hasPermissionAccess(access.permissions,"releases","view")} | dashboard=${hasPermissionAccess(access.permissions,"dashboard","view")}`);
   });
 
-  test("F2. UsuÃ¡rio company_admin â†’ roleKey='company', users liberados e permissÃµes/audit bloqueados", async () => {
+  test("F2. Usuário company_admin → roleKey='company', users liberados e permissões/audit bloqueados", async () => {
     const tag = uid();
     const user = await makeUser(`cadmin-${tag}`);
     const company = await makeCompany(`ca-${tag}`);
@@ -544,14 +544,14 @@ describeDb("F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser", () 
     expect(hasPermissionAccess(access.permissions, "permissions", "edit")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "audit", "view")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "access_requests", "view")).toBe(false);
-    // Tem releases view mas nÃ£o create
+    // Tem releases view mas não create
     expect(hasPermissionAccess(access.permissions, "releases", "view")).toBe(true);
     expect(hasPermissionAccess(access.permissions, "releases", "create")).toBe(false);
 
-    console.log(`âœ… F2. company_admin (DB) â†’ roleKey=${access.roleKey} | users=${hasPermissionAccess(access.permissions,"users","view")} | releases.view=${hasPermissionAccess(access.permissions,"releases","view")}`);
+    console.log(`âœ… F2. company_admin (DB) → roleKey=${access.roleKey} | users=${hasPermissionAccess(access.permissions,"users","view")} | releases.view=${hasPermissionAccess(access.permissions,"releases","view")}`);
   });
 
-  test("F3. UsuÃ¡rio it_dev â†’ roleKey='technical_support', mesma visÃ£o lider_tc + tickets view_all", async () => {
+  test("F3. Usuário it_dev → roleKey='technical_support', mesma visão lider_tc + tickets view_all", async () => {
     const tag = uid();
     const user = await makeUser(`itdev-${tag}`, { role: "it_dev" });
     const company = await makeCompany(`dev-${tag}`);
@@ -560,7 +560,7 @@ describeDb("F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser", () 
     const access = await resolvePermissionAccessForUser(user.id);
 
     expect(access.roleKey).toBe("technical_support");
-    // Tickets com view_all (vÃª todos os tickets)
+    // Tickets com view_all (vê todos os tickets)
     expect(hasPermissionAccess(access.permissions, "tickets", "view_all")).toBe(true);
     // M\u00f3dulos vis\u00edveis: applications, releases, runs, defects, users (view)
     expect(hasPermissionAccess(access.permissions, "applications", "view")).toBe(true);
@@ -573,16 +573,16 @@ describeDb("F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser", () 
     expect(hasPermissionAccess(access.permissions, "access_requests", "view")).toBe(true);
     expect(hasPermissionAccess(access.permissions, "access_requests", "approve")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "access_requests", "reject")).toBe(false);
-    // Sem aÃ§Ãµes destrutivas
+    // Sem ações destrutivas
     expect(hasPermissionAccess(access.permissions, "releases", "delete")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "runs", "export")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "defects", "delete")).toBe(false);
     expect(hasPermissionAccess(access.permissions, "audit", "export")).toBe(false);
 
-    console.log(`âœ… F3. it_dev (DB) â†’ roleKey=${access.roleKey} | tickets.view_all=${hasPermissionAccess(access.permissions,"tickets","view_all")} | users.view=${hasPermissionAccess(access.permissions,"users","view")}`);
+    console.log(`âœ… F3. it_dev (DB) → roleKey=${access.roleKey} | tickets.view_all=${hasPermissionAccess(access.permissions,"tickets","view_all")} | users.view=${hasPermissionAccess(access.permissions,"users","view")}`);
   });
 
-  test("F4. UsuÃ¡rio global_admin â†’ roleKey='admin', permissÃµes completas", async () => {
+  test("F4. Usuário global_admin → roleKey='admin', permissões completas", async () => {
     const tag = uid();
     const user = await makeUser(`gadmin-${tag}`, { globalRole: "global_admin", is_global_admin: true });
 
@@ -597,7 +597,7 @@ describeDb("F) IntegraÃ§Ã£o DB â€” resolvePermissionAccessForUser", () 
     expect(hasPermissionAccess(access.permissions, "settings", "edit")).toBe(true);
     expect(hasPermissionAccess(access.permissions, "applications", "export")).toBe(true);
 
-    console.log(`âœ… F4. global_admin (DB) â†’ roleKey=${access.roleKey} | permissions.reset=${hasPermissionAccess(access.permissions,"permissions","reset")}`);
+    console.log(`âœ… F4. global_admin (DB) → roleKey=${access.roleKey} | permissions.reset=${hasPermissionAccess(access.permissions,"permissions","reset")}`);
   });
 });
 

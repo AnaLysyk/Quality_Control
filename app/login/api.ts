@@ -11,7 +11,7 @@
     const message =
       data?.error ||
       data?.message ||
-      "NÃ£o foi possÃ­vel entrar. Verifique usuÃ¡rio e senha.";
+      "Não foi possível entrar. Verifique usuário e senha.";
     throw new Error(message);
   }
 

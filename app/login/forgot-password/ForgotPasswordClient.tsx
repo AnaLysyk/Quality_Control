@@ -49,7 +49,7 @@ export default function ForgotPasswordClient() {
         throw new Error(data?.error || t("forgotPassword.requestFailed"));
       }
 
-      setSuccess(typeof data?.message === "string" ? data.message : "Se o e-mail informado estiver cadastrado, enviaremos as instruÃ§Ãµes para redefinir sua senha.");
+      setSuccess(typeof data?.message === "string" ? data.message : "Se o e-mail informado estiver cadastrado, enviaremos as instruções para redefinir sua senha.");
       setEmail("");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("forgotPassword.unknownError"));

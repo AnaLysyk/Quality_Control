@@ -38,25 +38,25 @@ type Props = {
 const STATUS_META = {
   automated: { label: "Automatizado", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   ready: { label: "Pronto", tone: "border-sky-200 bg-sky-50 text-sky-700" },
-  review: { label: "RevisÃ£o", tone: "border-amber-200 bg-amber-50 text-amber-700" },
+  review: { label: "Revisão", tone: "border-amber-200 bg-amber-50 text-amber-700" },
   draft: { label: "Rascunho", tone: "border-slate-200 bg-slate-50 text-slate-700" },
 } as const;
 
 const PRIORITY_META = {
-  critical: { label: "CrÃ­tico", tone: "border-rose-200 bg-rose-50 text-rose-700" },
+  critical: { label: "Crítico", tone: "border-rose-200 bg-rose-50 text-rose-700" },
   high: { label: "Alta", tone: "border-orange-200 bg-orange-50 text-orange-700" },
-  medium: { label: "MÃ©dia", tone: "border-violet-200 bg-violet-50 text-violet-700" },
+  medium: { label: "Média", tone: "border-violet-200 bg-violet-50 text-violet-700" },
 } as const;
 
 const SOURCE_META = {
   manual: { label: "Manual", tone: "border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]" },
   qase: { label: "Qase", tone: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700" },
-  catalog: { label: "CatÃ¡logo", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+  catalog: { label: "Catálogo", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
 } as const;
 
 const COVERAGE_META = {
-  automation: "AutomaÃ§Ã£o",
-  hybrid: "Manual + automaÃ§Ã£o",
+  automation: "Automação",
+  hybrid: "Manual + automação",
   manual: "Manual",
 } as const;
 
@@ -142,7 +142,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
 
   const metrics = useMemo(
     () => [
-      { label: "Casos", value: `${AUTOMATION_CASES.length}`, hint: "catÃ¡logo inicial", icon: FiClipboard },
+      { label: "Casos", value: `${AUTOMATION_CASES.length}`, hint: "catálogo inicial", icon: FiClipboard },
       {
         label: "Automatizados",
         value: `${AUTOMATION_CASES.filter((testCase) => testCase.status === "automated").length}`,
@@ -150,7 +150,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
         icon: FiCheckCircle,
       },
       {
-        label: "CrÃ­ticos",
+        label: "Críticos",
         value: `${AUTOMATION_CASES.filter((testCase) => testCase.priority === "critical").length}`,
         hint: "prioridade alta",
         icon: FiShield,
@@ -192,7 +192,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
             <FiLayers className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
             {access.profileLabel}
           </span>
-          <span className="text-[var(--tc-text-muted,#6b7280)]">â€º</span>
+          <span className="text-[var(--tc-text-muted,#6b7280)]">›</span>
           <span className="text-[var(--tc-text-muted,#6b7280)]">Casos</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -233,7 +233,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="TÃ­tulo, tag, domÃ­nio ou referÃªncia"
+                placeholder="Título, tag, domínio ou referência"
                 className="min-h-11 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white pr-4 pl-11 text-sm outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
               />
             </span>
@@ -250,7 +250,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
               <option value="draft">Rascunho</option>
               <option value="ready">Pronto</option>
               <option value="automated">Automatizado</option>
-              <option value="review">RevisÃ£o</option>
+              <option value="review">Revisão</option>
             </select>
           </label>
 
@@ -264,12 +264,12 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
               <option value="all">Todas</option>
               <option value="manual">Manual</option>
               <option value="qase">Qase</option>
-              <option value="catalog">CatÃ¡logo</option>
+              <option value="catalog">Catálogo</option>
             </select>
           </label>
 
           <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-            AplicaÃ§Ã£o
+            Aplicação
             <select
               value={applicationFilter}
               onChange={(event) => setApplicationFilter(event.target.value)}
@@ -402,7 +402,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                   <section>
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                       <FiLayers className="h-4 w-4" />
-                      PrÃ©-condiÃ§Ãµes
+                      Pré-condições
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {selectedCase.preconditions.map((item) => (
@@ -470,17 +470,17 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                       Script
                     </div>
                     <p className="mt-2 text-lg font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{selectedScriptTemplate?.title ?? "Sem template"}</p>
-                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">{selectedScriptTemplate?.summary ?? "Caso ainda sem estratÃ©gia de script."}</p>
+                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">{selectedScriptTemplate?.summary ?? "Caso ainda sem estratégia de script."}</p>
                   </section>
 
                   <section className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                     <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">
                       <FiFileText className="h-4 w-4" />
-                      VÃ­nculo QA
+                      Vínculo QA
                     </div>
                     <div className="mt-3 space-y-2 text-sm text-[var(--tc-text,#0b1a3c)]">
-                      <p>Plano: {selectedCase.linkedPlanName ?? "NÃ£o vinculado"}</p>
-                      <p>ReferÃªncia: {selectedCase.externalCaseRef ?? "Interno"}</p>
+                      <p>Plano: {selectedCase.linkedPlanName ?? "Não vinculado"}</p>
+                      <p>Referência: {selectedCase.externalCaseRef ?? "Interno"}</p>
                       <p>Run: {selectedCase.linkedRunName ?? "Nao vinculado"}</p>
                       <p>Spec: {selectedCase.playwrightSpecPath ?? "Sem spec vinculada"}</p>
                       <p>
@@ -519,7 +519,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
                 >
                   <FiActivity className="h-4 w-4" />
-                  ExecuÃ§Ãµes
+                  Execuções
                 </Link>
                 {selectedCase.linkedRunName ? (
                   <Link
@@ -559,7 +559,7 @@ export default function AutomationCasesBoard({ access, activeCompanySlug, compan
             </>
           ) : (
             <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-6 text-sm text-[var(--tc-text-muted,#6b7280)]">
-              Nenhum caso disponÃ­vel.
+              Nenhum caso disponível.
             </div>
           )}
         </article>

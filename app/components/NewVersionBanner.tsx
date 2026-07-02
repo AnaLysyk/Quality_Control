@@ -39,7 +39,7 @@ export default function NewVersionBanner() {
 
         const currentBuildId = (await res.text()).trim();
         if (!previousBuildId) {
-          // First visit â€” store and don't show
+          // First visit — store and don't show
           localStorage.setItem(BUILD_ID_KEY, currentBuildId);
           return;
         }
@@ -49,7 +49,7 @@ export default function NewVersionBanner() {
           setVisible(true);
         }
       } catch {
-        // Silent fail â€” don't break the app for a banner
+        // Silent fail — don't break the app for a banner
       }
     }
 
@@ -72,8 +72,8 @@ export default function NewVersionBanner() {
     >
       <FiInfo className="shrink-0" size={18} />
       <p className="flex-1 text-center font-medium">
-        Uma nova versÃ£o do sistema foi publicada. Pode ser necessÃ¡rio fazer login novamente.
-        Isso Ã© normal e serÃ¡ resolvido em instantes.
+        Uma nova versão do sistema foi publicada. Pode ser necessário fazer login novamente.
+        Isso é normal e será resolvido em instantes.
       </p>
       <button
         type="button"

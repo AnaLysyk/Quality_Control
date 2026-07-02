@@ -30,10 +30,10 @@ function describeChangedSummary(allow: PermissionMatrix, deny: PermissionMatrix)
   const allowCount = countPermissionActions(allow);
   const denyCount = countPermissionActions(deny);
   const parts = [
-    allowCount ? `${allowCount} permissÃ£o(Ãµes) liberada(s)` : null,
-    denyCount ? `${denyCount} permissÃ£o(Ãµes) bloqueada(s)` : null,
+    allowCount ? `${allowCount} permissão(ões) liberada(s)` : null,
+    denyCount ? `${denyCount} permissão(ões) bloqueada(s)` : null,
   ].filter(Boolean);
-  return parts.length ? parts.join(" e ") : "perfil restaurado para o padrÃ£o do sistema";
+  return parts.length ? parts.join(" e ") : "perfil restaurado para o padrão do sistema";
 }
 
 async function resolveRole(params: Promise<{ role: string }>) {
@@ -48,7 +48,7 @@ async function requirePermissionManager(req: NextRequest) {
       admin: null,
       access: null,
       response: NextResponse.json(
-        { error: status === 401 ? "VocÃª precisa estar autenticado para acessar a GestÃ£o de Perfis." : "VocÃª nÃ£o tem permissÃ£o para acessar a GestÃ£o de Perfis." },
+        { error: status === 401 ? "Você precisa estar autenticado para acessar a Gestão de Perfis." : "Você não tem permissão para acessar a Gestão de Perfis." },
         { status },
       ),
     };
@@ -68,7 +68,7 @@ async function requirePermissionManager(req: NextRequest) {
     return {
       admin,
       access,
-      response: NextResponse.json({ error: "VocÃª nÃ£o tem permissÃ£o para visualizar a matriz de perfis." }, { status: 403 }),
+      response: NextResponse.json({ error: "Você não tem permissão para visualizar a matriz de perfis." }, { status: 403 }),
     };
   }
 
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
     if (guard.response) return guard.response;
 
     const role = await resolveRole(params);
-    if (!role) return NextResponse.json({ error: "Perfil invÃ¡lido." }, { status: 400 });
+    if (!role) return NextResponse.json({ error: "Perfil inválido." }, { status: 400 });
 
     const systemDefaults = normalizePermissionMatrix(resolveRoleDefaults(role));
     const override = await getProfilePermissionOverride(role);
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ role
     });
   } catch (error) {
     console.error("[admin.profile-permissions.get]", error);
-    return NextResponse.json({ error: "NÃ£o foi possÃ­vel carregar este perfil agora. Tente novamente." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível carregar este perfil agora. Tente novamente." }, { status: 500 });
   }
 }
 
@@ -112,11 +112,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
     const guard = await requirePermissionManager(req);
     if (guard.response) return guard.response;
     if (guard.access?.canEditPermissions !== true) {
-      return NextResponse.json({ error: "VocÃª pode visualizar, mas nÃ£o pode editar esta matriz." }, { status: 403 });
+      return NextResponse.json({ error: "Você pode visualizar, mas não pode editar esta matriz." }, { status: 403 });
     }
 
     const role = await resolveRole(params);
-    if (!role) return NextResponse.json({ error: "Perfil invÃ¡lido." }, { status: 400 });
+    if (!role) return NextResponse.json({ error: "Perfil inválido." }, { status: 400 });
 
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     const allow = normalizePermissionMatrix(body?.allow);
@@ -158,7 +158,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
     return NextResponse.json({ ok: true, saved, permissions });
   } catch (error) {
     console.error("[admin.profile-permissions.patch]", error);
-    return NextResponse.json({ error: "NÃ£o foi possÃ­vel salvar o perfil agora. Revise as permissÃµes e tente novamente." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível salvar o perfil agora. Revise as permissões e tente novamente." }, { status: 500 });
   }
 }
 
@@ -167,11 +167,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     const guard = await requirePermissionManager(req);
     if (guard.response) return guard.response;
     if (guard.access?.canResetPermissions !== true) {
-      return NextResponse.json({ error: "VocÃª nÃ£o tem permissÃ£o para restaurar o padrÃ£o deste perfil." }, { status: 403 });
+      return NextResponse.json({ error: "Você não tem permissão para restaurar o padrão deste perfil." }, { status: 403 });
     }
 
     const role = await resolveRole(params);
-    if (!role) return NextResponse.json({ error: "Perfil invÃ¡lido." }, { status: 400 });
+    if (!role) return NextResponse.json({ error: "Perfil inválido." }, { status: 400 });
 
     await deleteProfilePermissionOverride(role);
     const permissions = await resolveProfilePermissionDefaults(role);
@@ -194,7 +194,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     await notifyProfilePermissionsChanged({
       profileRole: role,
       actorEmail: guard.admin?.email ?? null,
-      changedSummary: "perfil restaurado para o padrÃ£o do sistema",
+      changedSummary: "perfil restaurado para o padrão do sistema",
       updatedAt,
     });
     invalidateBrainCache("profile.permissions.reset");
@@ -202,7 +202,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     return NextResponse.json({ ok: true, permissions });
   } catch (error) {
     console.error("[admin.profile-permissions.delete]", error);
-    return NextResponse.json({ error: "NÃ£o foi possÃ­vel restaurar o perfil agora." }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível restaurar o perfil agora." }, { status: 500 });
   }
 }
 

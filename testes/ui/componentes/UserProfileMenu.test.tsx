@@ -31,7 +31,7 @@ describe("UserProfileMenu - Componente de Frontend e Fluxo Auth", () => {
   const mockReplace = jest.fn();
   const mockLogout = jest.fn();
   const mockRefresh = jest.fn();
-  const tMock = (key: string) => key; // Retorna a prÃ³pria chave pro test match
+  const tMock = (key: string) => key; // Retorna a própria chave pro test match
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -61,8 +61,8 @@ describe("UserProfileMenu - Componente de Frontend e Fluxo Auth", () => {
     });
   });
 
-  describe("Rede de ExibiÃ§Ã£o via Perfis", () => {
-    it("deve renderizar fallback e ocultar credenciais se as keys do usuÃ¡rio estiverem corrompidas no JWT", () => {
+  describe("Rede de Exibição via Perfis", () => {
+    it("deve renderizar fallback e ocultar credenciais se as keys do usuário estiverem corrompidas no JWT", () => {
       (useAuthUser as jest.Mock).mockReturnValue({
         user: { id: "1" }, // Faltando email, role, etc
         loading: false,
@@ -79,14 +79,14 @@ describe("UserProfileMenu - Componente de Frontend e Fluxo Auth", () => {
 
     it("deve exibir e-mail e Role com tag uppercase quando presente", () => {
       (useAuthUser as jest.Mock).mockReturnValue({
-        user: { id: "1", name: "JoÃ£o QA", email: "joao@tc.com", role: "company_user" },
+        user: { id: "1", name: "João QA", email: "joao@tc.com", role: "company_user" },
         loading: false,
       });
 
       render(<UserProfileMenu />);
       fireEvent.click(screen.getByRole("button", { name: "profileMenu.menuAria" }));
 
-      expect(screen.getAllByText("JoÃ£o QA").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("João QA").length).toBeGreaterThan(0);
       expect(screen.getByText("joao@tc.com")).toBeInTheDocument();
       expect(screen.getByText("company_user")).toBeInTheDocument();
     });
@@ -103,13 +103,13 @@ describe("UserProfileMenu - Componente de Frontend e Fluxo Auth", () => {
       render(<UserProfileMenu />);
       fireEvent.click(screen.getByRole("button", { name: "profileMenu.menuAria" })); // Abre menu
       
-      // Agora tem que achar o botÃ£o e clicar 
+      // Agora tem que achar o botão e clicar 
       // Tem que buscar via getAllByRole pra evitar ambiguidade ou pegar pelo container do menu
       // No arquivo: <button onClick={handleLogout}> Log out </button>
-      // Na vdd nÃ³s vemos no UserProfileMenu q nÃ£o mockamos a parte de baixo
-      // Assumindo que a continuaÃ§Ã£o do UserProfileMenu (linhas omitidas na varredura) tem o handleLogout:
+      // Na vdd nós vemos no UserProfileMenu q não mockamos a parte de baixo
+      // Assumindo que a continuação do UserProfileMenu (linhas omitidas na varredura) tem o handleLogout:
       // Vamos simular a chamada interna, porque nao mockamos a view inteira do UserProfileMenu.
-      // O behavior garante que a prop logout foi passada pelo hook e handleLogout() estÃ¡ no doc.
+      // O behavior garante que a prop logout foi passada pelo hook e handleLogout() está no doc.
     });
 
     it("deve ocultar admin links para company users mortais", () => {
@@ -123,7 +123,7 @@ describe("UserProfileMenu - Componente de Frontend e Fluxo Auth", () => {
       render(<UserProfileMenu activeClientName="Empresa B" onEditCompany={mockOnEditCompany} />);
       fireEvent.click(screen.getByRole("button", { name: "profileMenu.menuAria" }));
 
-      // Nome da empresa Ã© span font-semibold text-white, botÃ£o Ã© underline
+      // Nome da empresa é span font-semibold text-white, botão é underline
       const editButton = screen.queryByRole("button", { name: "Empresa B" });
       expect(editButton).not.toBeInTheDocument();
       expect(screen.getByText("Empresa B")).toBeInTheDocument();

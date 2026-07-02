@@ -1,32 +1,32 @@
 ﻿/**
- * Fluxo completo de SolicitaÃ§Ã£o de Acesso â€” perspectiva de quem manda e de quem recebe.
- * âœ… cleanup total em afterAll â€” nenhum dado permanece.
+ * Fluxo completo de Solicitação de Acesso — perspectiva de quem manda e de quem recebe.
+ * âœ… cleanup total em afterAll — nenhum dado permanece.
  *
  * QUEM MANDA (Solicitante):
  *  1.  Solicitante abre pedido de acesso com e-mail e mensagem
- *  2.  Solicitante pode abrir mais de uma solicitaÃ§Ã£o (sem trava de duplicata)
- *  3.  Solicitante consulta sua solicitaÃ§Ã£o por id
- *  4.  Solicitante adiciona um comentÃ¡rio explicando o motivo
- *  5.  Solicitante responde comentÃ¡rio do admin (segunda rodada)
+ *  2.  Solicitante pode abrir mais de uma solicitação (sem trava de duplicata)
+ *  3.  Solicitante consulta sua solicitação por id
+ *  4.  Solicitante adiciona um comentário explicando o motivo
+ *  5.  Solicitante responde comentário do admin (segunda rodada)
  *
  * QUEM RECEBE (Admin):
- *  6.  Admin visualiza todas as solicitaÃ§Ãµes abertas
- *  7.  Admin lÃª a mensagem e os comentÃ¡rios do solicitante
- *  8.  Admin adiciona comentÃ¡rio pedindo mais informaÃ§Ãµes
- *  9.  Admin aceita a solicitaÃ§Ã£o (status â†’ closed) e vincula ao usuÃ¡rio criado
- * 10. Admin rejeita outra solicitaÃ§Ã£o (status â†’ rejected) com justificativa
+ *  6.  Admin visualiza todas as solicitações abertas
+ *  7.  Admin lê a mensagem e os comentários do solicitante
+ *  8.  Admin adiciona comentário pedindo mais informações
+ *  9.  Admin aceita a solicitação (status → closed) e vincula ao usuário criado
+ * 10. Admin rejeita outra solicitação (status → rejected) com justificativa
  *
  * FLUXO ACEITE completo (ida e volta):
- * 11. Solicitante abre pedido â†’ Admin comenta â†’ Solicitante responde â†’ Admin aceita
- * 12. ApÃ³s aceite: status Ã© closed, user_id estÃ¡ vinculado, histÃ³rico de comentÃ¡rios completo
+ * 11. Solicitante abre pedido → Admin comenta → Solicitante responde → Admin aceita
+ * 12. Após aceite: status é closed, user_id está vinculado, histórico de comentários completo
  *
  * FLUXO RECUSA completo (ida e volta):
- * 13. Solicitante abre pedido â†’ Admin comenta pedindo justificativa â†’ Solicitante responde â†’ Admin rejeita
- * 14. ApÃ³s recusa: status Ã© rejected, comentÃ¡rios de ambos os lados estÃ£o gravados em ordem
+ * 13. Solicitante abre pedido → Admin comenta pedindo justificativa → Solicitante responde → Admin rejeita
+ * 14. Após recusa: status é rejected, comentários de ambos os lados estão gravados em ordem
  *
  * ISOLAMENTO:
- * 15. ComentÃ¡rios de uma solicitaÃ§Ã£o nÃ£o aparecem em outra
- * 16. SolicitaÃ§Ãµes de e-mails diferentes nÃ£o se misturam na listagem
+ * 15. Comentários de uma solicitação não aparecem em outra
+ * 16. Solicitações de e-mails diferentes não se misturam na listagem
  */
 
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
@@ -61,7 +61,7 @@ const createdUserIds: string[] = [];
 // Personas
 const ADMIN = { id: `usr_adm_flow_${UID}`, name: "Admin QA", email: `admin-flow-${UID}@qa.local` };
 const SOLICITANTE_A = { name: "Maria Souza", email: solicitanteEmail("maria") };
-const SOLICITANTE_B = { name: "JoÃ£o Neto", email: solicitanteEmail("joao") };
+const SOLICITANTE_B = { name: "João Neto", email: solicitanteEmail("joao") };
 
 beforeAll(async () => {
   const admin = await pgCreateLocalUser({
@@ -103,10 +103,10 @@ describePg("Perspectiva do Solicitante", () => {
     expect(req.user_id).toBeNull();
   });
 
-  test("2. solicitante pode abrir mais de uma solicitaÃ§Ã£o (sem trava de duplicata)", async () => {
+  test("2. solicitante pode abrir mais de uma solicitação (sem trava de duplicata)", async () => {
     const req = await createAccessRequest({
       email: SOLICITANTE_A.email,
-      message: "Segunda tentativa, nÃ£o recebi resposta",
+      message: "Segunda tentativa, não recebi resposta",
     });
     createdRequestIds.push(req.id);
 
@@ -114,7 +114,7 @@ describePg("Perspectiva do Solicitante", () => {
     expect(req.email).toBe(SOLICITANTE_A.email);
   });
 
-  test("3. solicitante consulta sua solicitaÃ§Ã£o por id", async () => {
+  test("3. solicitante consulta sua solicitação por id", async () => {
     const id = createdRequestIds[0];
     const found = await getAccessRequestById(id);
 
@@ -123,32 +123,32 @@ describePg("Perspectiva do Solicitante", () => {
     expect(found!.status).toBe("open");
   });
 
-  test("4. solicitante adiciona comentÃ¡rio explicando o motivo", async () => {
+  test("4. solicitante adiciona comentário explicando o motivo", async () => {
     const id = createdRequestIds[0];
     const comment = await createAccessRequestComment({
       requestId: id,
       authorRole: "requester",
       authorName: SOLICITANTE_A.name,
       authorEmail: SOLICITANTE_A.email,
-      body: "FaÃ§o parte do time de QA e preciso acompanhar os relatÃ³rios de execuÃ§Ã£o.",
+      body: "Faço parte do time de QA e preciso acompanhar os relatórios de execução.",
     });
 
     expect(comment.id).toBeTruthy();
     expect(comment.requestId).toBe(id);
     expect(comment.authorRole).toBe("requester");
     expect(comment.authorName).toBe(SOLICITANTE_A.name);
-    expect(comment.body).toContain("relatÃ³rios de execuÃ§Ã£o");
+    expect(comment.body).toContain("relatórios de execução");
   });
 
-  test("5. solicitante responde comentÃ¡rio do admin (segunda rodada)", async () => {
+  test("5. solicitante responde comentário do admin (segunda rodada)", async () => {
     const id = createdRequestIds[0];
-    // Simulando que admin jÃ¡ comentou; solicitante responde
+    // Simulando que admin já comentou; solicitante responde
     const response = await createAccessRequestComment({
       requestId: id,
       authorRole: "requester",
       authorName: SOLICITANTE_A.name,
       authorEmail: SOLICITANTE_A.email,
-      body: "Confirmo: meu gestor Ã© Carlos Lima, cc: carlos@empresa.com",
+      body: "Confirmo: meu gestor é Carlos Lima, cc: carlos@empresa.com",
     });
 
     const allComments = await listAccessRequestComments(id);
@@ -161,15 +161,15 @@ describePg("Perspectiva do Solicitante", () => {
 // â”€â”€ QUEM RECEBE (Admin) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describePg("Perspectiva do Admin", () => {
-  test("6. admin visualiza todas as solicitaÃ§Ãµes abertas", async () => {
+  test("6. admin visualiza todas as solicitações abertas", async () => {
     const all = await listAccessRequests();
     const mine = all.filter((r) => createdRequestIds.includes(r.id));
-    // As solicitaÃ§Ãµes de A estÃ£o no topo (mais recentes)
+    // As solicitações de A estão no topo (mais recentes)
     expect(mine.length).toBeGreaterThanOrEqual(2);
     mine.forEach((r) => expect(r.status).toBeTruthy());
   });
 
-  test("7. admin lÃª a mensagem e os comentÃ¡rios do solicitante", async () => {
+  test("7. admin lê a mensagem e os comentários do solicitante", async () => {
     const id = createdRequestIds[0];
     const req = await getAccessRequestById(id);
     const comments = await listAccessRequestComments(id);
@@ -177,11 +177,11 @@ describePg("Perspectiva do Admin", () => {
     expect(req!.message).toContain("projeto X");
     expect(comments.length).toBeGreaterThanOrEqual(2);
     expect(comments.every((c) => c.requestId === id)).toBe(true);
-    // Ordenados por createdAt asc â€” primeiro comentÃ¡rio Ã© do solicitante
+    // Ordenados por createdAt asc — primeiro comentário é do solicitante
     expect(comments[0].authorRole).toBe("requester");
   });
 
-  test("8. admin adiciona comentÃ¡rio pedindo mais informaÃ§Ãµes", async () => {
+  test("8. admin adiciona comentário pedindo mais informações", async () => {
     const id = createdRequestIds[0];
     const comment = await createAccessRequestComment({
       requestId: id,
@@ -189,7 +189,7 @@ describePg("Perspectiva do Admin", () => {
       authorName: ADMIN.name,
       authorEmail: ADMIN.email,
       authorId: ADMIN.id,
-      body: "Por favor, informe o nome do seu gestor para prosseguir com a aprovaÃ§Ã£o.",
+      body: "Por favor, informe o nome do seu gestor para prosseguir com a aprovação.",
     });
 
     expect(comment.authorRole).toBe("admin");
@@ -201,7 +201,7 @@ describePg("Perspectiva do Admin", () => {
     expect(adminComments.length).toBeGreaterThanOrEqual(1);
   });
 
-  test("9. admin aceita a solicitaÃ§Ã£o e vincula ao usuÃ¡rio criado", async () => {
+  test("9. admin aceita a solicitação e vincula ao usuário criado", async () => {
     const id = createdRequestIds[0];
     // Cria conta para o solicitante aceito
     const newUser = await pgCreateLocalUser({
@@ -221,8 +221,8 @@ describePg("Perspectiva do Admin", () => {
     expect(updated!.user_id).toBe(newUser.id);
   });
 
-  test("10. admin rejeita outra solicitaÃ§Ã£o com justificativa no comentÃ¡rio", async () => {
-    const id = createdRequestIds[1]; // segunda solicitaÃ§Ã£o de A ("Segunda tentativa")
+  test("10. admin rejeita outra solicitação com justificativa no comentário", async () => {
+    const id = createdRequestIds[1]; // segunda solicitação de A ("Segunda tentativa")
 
     await createAccessRequestComment({
       requestId: id,
@@ -230,7 +230,7 @@ describePg("Perspectiva do Admin", () => {
       authorName: ADMIN.name,
       authorEmail: ADMIN.email,
       authorId: ADMIN.id,
-      body: "SolicitaÃ§Ã£o duplicada. A primeira jÃ¡ foi processada.",
+      body: "Solicitação duplicada. A primeira já foi processada.",
     });
 
     const updated = await updateAccessRequest(id, { status: "rejected" });
@@ -247,7 +247,7 @@ describePg("Fluxo de Aceite completo (ida e volta)", () => {
   let reqId: string;
   let solicitanteUserId: string;
 
-  test("11. solicitante abre â†’ admin comenta â†’ solicitante responde â†’ admin aceita", async () => {
+  test("11. solicitante abre → admin comenta → solicitante responde → admin aceita", async () => {
     // Passo 1: solicitante abre
     const req = await createAccessRequest({
       email: SOLICITANTE_B.email,
@@ -263,7 +263,7 @@ describePg("Fluxo de Aceite completo (ida e volta)", () => {
       authorRole: "admin",
       authorName: ADMIN.name,
       authorId: ADMIN.id,
-      body: "Qual Ã© o seu cargo e empresa?",
+      body: "Qual é o seu cargo e empresa?",
     });
 
     // Passo 3: solicitante responde
@@ -275,7 +275,7 @@ describePg("Fluxo de Aceite completo (ida e volta)", () => {
       body: "Sou analista de QA na Empresa ABC.",
     });
 
-    // Passo 4: admin cria usuÃ¡rio e aceita
+    // Passo 4: admin cria usuário e aceita
     const newUser = await pgCreateLocalUser({
       email: SOLICITANTE_B.email,
       name: SOLICITANTE_B.name,
@@ -294,7 +294,7 @@ describePg("Fluxo de Aceite completo (ida e volta)", () => {
     expect(accepted!.user_id).toBe(newUser.id);
   });
 
-  test("12. apÃ³s aceite: status Ã© closed, user_id vinculado, histÃ³rico completo", async () => {
+  test("12. após aceite: status é closed, user_id vinculado, histórico completo", async () => {
     const req = await getAccessRequestById(reqId);
     expect(req!.status).toBe("closed");
     expect(req!.user_id).toBe(solicitanteUserId);
@@ -302,11 +302,11 @@ describePg("Fluxo de Aceite completo (ida e volta)", () => {
     const comments = await listAccessRequestComments(reqId);
     expect(comments.length).toBe(2);
 
-    // Primeiro comentÃ¡rio: admin
+    // Primeiro comentário: admin
     expect(comments[0].authorRole).toBe("admin");
     expect(comments[0].body).toContain("cargo");
 
-    // Segundo comentÃ¡rio: solicitante
+    // Segundo comentário: solicitante
     expect(comments[1].authorRole).toBe("requester");
     expect(comments[1].body).toContain("analista de QA");
   });
@@ -317,7 +317,7 @@ describePg("Fluxo de Aceite completo (ida e volta)", () => {
 describePg("Fluxo de Recusa completo (ida e volta)", () => {
   let reqId: string;
 
-  test("13. solicitante abre â†’ admin pede justificativa â†’ solicitante responde â†’ admin rejeita", async () => {
+  test("13. solicitante abre → admin pede justificativa → solicitante responde → admin rejeita", async () => {
     // Passo 1: solicitante abre
     const req = await createAccessRequest({
       email: solicitanteEmail("recusado"),
@@ -327,7 +327,7 @@ describePg("Fluxo de Recusa completo (ida e volta)", () => {
     reqId = req.id;
     expect(req.status).toBe("open");
 
-    // MudanÃ§a para in_progress enquanto analisa
+    // Mudança para in_progress enquanto analisa
     await updateAccessRequest(reqId, { status: "in_progress" });
     const inProg = await getAccessRequestById(reqId);
     expect(inProg!.status).toBe("in_progress");
@@ -338,15 +338,15 @@ describePg("Fluxo de Recusa completo (ida e volta)", () => {
       authorRole: "admin",
       authorName: ADMIN.name,
       authorId: ADMIN.id,
-      body: "Por favor, detalhe o motivo do acesso urgente e qual sistema serÃ¡ utilizado.",
+      body: "Por favor, detalhe o motivo do acesso urgente e qual sistema será utilizado.",
     });
 
     // Passo 3: solicitante responde de forma insuficiente
     await createAccessRequestComment({
       requestId: reqId,
       authorRole: "requester",
-      authorName: "AnÃ´nimo",
-      body: "SÃ³ preciso entrar.",
+      authorName: "Anônimo",
+      body: "Só preciso entrar.",
     });
 
     // Passo 4: admin rejeita com justificativa
@@ -355,14 +355,14 @@ describePg("Fluxo de Recusa completo (ida e volta)", () => {
       authorRole: "admin",
       authorName: ADMIN.name,
       authorId: ADMIN.id,
-      body: "InformaÃ§Ãµes insuficientes. SolicitaÃ§Ã£o encerrada.",
+      body: "Informações insuficientes. Solicitação encerrada.",
     });
 
     const rejected = await updateAccessRequest(reqId, { status: "rejected" });
     expect(rejected!.status).toBe("rejected");
   });
 
-  test("14. apÃ³s recusa: comentÃ¡rios de ambos os lados gravados em ordem", async () => {
+  test("14. após recusa: comentários de ambos os lados gravados em ordem", async () => {
     const req = await getAccessRequestById(reqId);
     expect(req!.status).toBe("rejected");
 
@@ -372,25 +372,25 @@ describePg("Fluxo de Recusa completo (ida e volta)", () => {
     expect(comments[0].authorRole).toBe("admin");     // pedido de justificativa
     expect(comments[1].authorRole).toBe("requester"); // resposta insuficiente
     expect(comments[2].authorRole).toBe("admin");     // justificativa de recusa
-    expect(comments[2].body).toContain("InformaÃ§Ãµes insuficientes");
+    expect(comments[2].body).toContain("Informações insuficientes");
   });
 });
 
 // â”€â”€ ISOLAMENTO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("Isolamento entre solicitaÃ§Ãµes", () => {
-  test("15. comentÃ¡rios de uma solicitaÃ§Ã£o nÃ£o aparecem em outra", async () => {
+describePg("Isolamento entre solicitações", () => {
+  test("15. comentários de uma solicitação não aparecem em outra", async () => {
     const [idA, idB] = createdRequestIds;
     const commentsA = await listAccessRequestComments(idA);
     const commentsB = await listAccessRequestComments(idB);
 
     commentsA.forEach((c) => expect(c.requestId).toBe(idA));
     commentsB.forEach((c) => expect(c.requestId).toBe(idB));
-    // B foi rejeitada com 1 comentÃ¡rio do admin â€” nÃ£o pode ter comentÃ¡rios de A
+    // B foi rejeitada com 1 comentário do admin — não pode ter comentários de A
     expect(commentsB.every((c) => commentsA.every((ca) => ca.id !== c.id))).toBe(true);
   });
 
-  test("16. solicitaÃ§Ãµes de e-mails diferentes nÃ£o se misturam na listagem", async () => {
+  test("16. solicitações de e-mails diferentes não se misturam na listagem", async () => {
     const all = await listAccessRequests();
     const mariaReqs = all.filter((r) => r.email === SOLICITANTE_A.email);
     const joaoReqs = all.filter((r) => r.email === SOLICITANTE_B.email);

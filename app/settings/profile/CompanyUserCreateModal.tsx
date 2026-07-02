@@ -29,11 +29,11 @@ function suggestUsername(value?: string | null) {
     .replace(/^\.+|\.+$/g, "")
     .replace(/\.{2,}/g, ".");
 
-  return normalized || "usuÃ¡rio";
+  return normalized || "usuário";
 }
 
 const ROLE_OPTIONS = [
-  { value: "company_user", label: "UsuÃ¡rio da empresa" },
+  { value: "company_user", label: "Usuário da empresa" },
   { value: "empresa", label: "Admin da empresa" },
 ];
 
@@ -102,7 +102,7 @@ export function CompanyUserCreateModal({
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(extractApiError(payload) || "NÃ£o foi possÃ­vel gerar o login.");
+        setError(extractApiError(payload) || "Não foi possível gerar o login.");
         return;
       }
       const nextUsername =
@@ -110,12 +110,12 @@ export function CompanyUserCreateModal({
           ? (payload as { username: string }).username.trim().toLowerCase()
           : "";
       if (!nextUsername) {
-        setError("NÃ£o foi possÃ­vel gerar o login.");
+        setError("Não foi possível gerar o login.");
         return;
       }
       setUsername(nextUsername);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "NÃ£o foi possÃ­vel gerar o login.");
+      setError(nextError instanceof Error ? nextError.message : "Não foi possível gerar o login.");
     } finally {
       setGenerating(false);
     }
@@ -147,14 +147,14 @@ export function CompanyUserCreateModal({
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(extractApiError(payload) || "NÃ£o foi possÃ­vel criar o usuÃ¡rio.");
+        setError(extractApiError(payload) || "Não foi possível criar o usuário.");
         return;
       }
 
       await onCreated?.();
       onClose();
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "NÃ£o foi possÃ­vel criar o usuÃ¡rio.");
+      setError(nextError instanceof Error ? nextError.message : "Não foi possível criar o usuário.");
     } finally {
       setLoading(false);
     }
@@ -165,10 +165,10 @@ export function CompanyUserCreateModal({
       <div className="my-auto w-full max-w-2xl rounded-[28px] border border-[var(--tc-border)] bg-[var(--tc-surface)] p-5 shadow-[0_24px_60px_rgba(15,23,42,0.28)] sm:p-6">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--tc-border)] pb-4">
           <div className="space-y-1">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--tc-accent)]">UsuÃ¡rios</p>
-            <h2 className="text-xl font-semibold text-[var(--tc-text-primary)]">Criar usuÃ¡rio da empresa</h2>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--tc-accent)]">Usuários</p>
+            <h2 className="text-xl font-semibold text-[var(--tc-text-primary)]">Criar usuário da empresa</h2>
             <p className="text-sm font-medium text-[#0b1f52] dark:text-[#d7e5ff]">
-              O usuÃ¡rio nasce com escopo fechado para {companyName}.
+              O usuário nasce com escopo fechado para {companyName}.
             </p>
           </div>
           <button
@@ -194,7 +194,7 @@ export function CompanyUserCreateModal({
             </label>
 
             <label className="flex flex-col gap-2.5 text-sm text-[var(--tc-text-primary)]">
-              <span className="text-[12px] font-extrabold uppercase tracking-[0.2em] text-[var(--tc-accent)]">UsuÃ¡rio</span>
+              <span className="text-[12px] font-extrabold uppercase tracking-[0.2em] text-[var(--tc-accent)]">Usuário</span>
               <input
                 className="h-14 w-full rounded-xl border border-slate-500 bg-[#f5f7fb] px-4 text-base font-semibold text-[#0b1f52] shadow-[0_3px_10px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.82)] outline-none transition placeholder:text-[#4b6697] hover:border-[#0b1f52] focus:border-[var(--tc-accent)] focus:bg-white focus:ring-2 focus:ring-(--tc-accent)/26 dark:border-slate-400 dark:bg-[#13213a] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:hover:border-[#d7e5ff] dark:focus:border-[var(--tc-accent)] dark:focus:bg-[#182742]"
                 value={username}
@@ -202,7 +202,7 @@ export function CompanyUserCreateModal({
                 placeholder={`Ex.: ${usernameHint}`}
               />
               <div className="flex items-center justify-between gap-2 text-[12px] font-semibold text-[var(--tc-accent)]">
-                <span>Ãšnico no sistema. Em branco, gera automaticamente.</span>
+                <span>Único no sistema. Em branco, gera automaticamente.</span>
                 <button
                   type="button"
                   className="rounded-full border border-[#0b1f52] bg-[#0b1f52] px-3 py-1 text-white transition hover:border-[var(--tc-accent)] hover:bg-[var(--tc-accent)] disabled:opacity-60"
@@ -236,7 +236,7 @@ export function CompanyUserCreateModal({
                 className="h-14 w-full rounded-xl border border-slate-500 bg-[#f5f7fb] px-4 text-base font-semibold text-[#0b1f52] shadow-[0_3px_10px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.82)] outline-none transition placeholder:text-[#4b6697] hover:border-[#0b1f52] focus:border-[var(--tc-accent)] focus:bg-white focus:ring-2 focus:ring-(--tc-accent)/26 dark:border-slate-400 dark:bg-[#13213a] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:hover:border-[#d7e5ff] dark:focus:border-[var(--tc-accent)] dark:focus:bg-[#182742]"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="usuÃ¡rio@empresa.com"
+                placeholder="usuário@empresa.com"
                 required
               />
             </label>
@@ -249,7 +249,7 @@ export function CompanyUserCreateModal({
                 className="h-14 w-full rounded-xl border border-slate-500 bg-[#f5f7fb] px-4 text-base font-semibold text-[#0b1f52] shadow-[0_3px_10px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.82)] outline-none transition placeholder:text-[#4b6697] hover:border-[#0b1f52] focus:border-[var(--tc-accent)] focus:bg-white focus:ring-2 focus:ring-(--tc-accent)/26 dark:border-slate-400 dark:bg-[#13213a] dark:text-[#d7e5ff] dark:placeholder:text-[#b4cbff] dark:hover:border-[#d7e5ff] dark:focus:border-[var(--tc-accent)] dark:focus:bg-[#182742]"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="MÃ­nimo 8 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 required
               />
             </label>
@@ -320,7 +320,7 @@ export function CompanyUserCreateModal({
               className="inline-flex h-11 items-center justify-center rounded-xl bg-linear-to-b from-(--tc-accent,#ff4b4b) to-(--tc-accent-dark,#c30000) px-5 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 disabled:opacity-60"
               disabled={loading}
             >
-              {loading ? "Criando..." : "Criar usuÃ¡rio"}
+              {loading ? "Criando..." : "Criar usuário"}
             </button>
           </div>
         </form>

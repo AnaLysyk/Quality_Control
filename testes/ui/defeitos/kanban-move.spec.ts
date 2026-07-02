@@ -1,7 +1,7 @@
 ﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
-test.describe("kanban - movimentaÃƒÂ§ÃƒÂ£o", () => {
+test.describe("kanban - movimentação", () => {
   test("admin move card para outra coluna", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "admin",

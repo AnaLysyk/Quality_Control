@@ -71,7 +71,7 @@ export default function BrainChatUtilities({ text, onUseText }: Props) {
         const dataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result ?? ""));
-          reader.onerror = () => reject(new Error("NÃ£o foi possÃ­vel ler o arquivo."));
+          reader.onerror = () => reject(new Error("Não foi possível ler o arquivo."));
           reader.readAsDataURL(selectedFile);
         });
         payload = {
@@ -111,7 +111,7 @@ export default function BrainChatUtilities({ text, onUseText }: Props) {
     <div data-testid="brain-chat-utilities" className="border-t border-(--border-clr) px-3.5 py-2 text-[11px] text-(--muted-clr)">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-(--border-clr) px-2 py-1">{metrics.charsWithSpaces} caracteres</span>
-        <span className="rounded-full border border-(--border-clr) px-2 py-1">{metrics.charsWithoutSpaces} sem espaÃ§os</span>
+        <span className="rounded-full border border-(--border-clr) px-2 py-1">{metrics.charsWithoutSpaces} sem espaços</span>
         <span className="rounded-full border border-(--border-clr) px-2 py-1">{metrics.words} palavras</span>
         <span className="rounded-full border border-(--border-clr) px-2 py-1">{metrics.lines} linhas</span>
         <span className="rounded-full border border-(--border-clr) px-2 py-1">~{metrics.approxTokens} tokens</span>
@@ -142,7 +142,7 @@ export default function BrainChatUtilities({ text, onUseText }: Props) {
         </button>
         {selectedFile ? (
           <span className="max-w-56 truncate rounded-xl border border-(--border-clr) px-2.5 py-1.5">
-            {selectedFile.name} Â· {(selectedFile.size / 1024).toFixed(1)} KB
+            {selectedFile.name} · {(selectedFile.size / 1024).toFixed(1)} KB
           </span>
         ) : null}
         <select

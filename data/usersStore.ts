@@ -11,7 +11,7 @@
 const USERS: Record<string, UserRecord> = {
   usr_001: {
     id: "usr_001",
-    name: "UsuÃ¡rio",
+    name: "Usuário",
     email: "user@example.com",
     role: "user",
     companyId: "cmp_001",

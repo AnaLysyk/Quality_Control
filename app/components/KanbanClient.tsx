@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -253,7 +253,7 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
   async function handleCreate(e?: React.FormEvent) {
     e?.preventDefault();
     if (!newTitle.trim()) {
-      setError("TÃ­tulo Ã© obrigatÃ³rio");
+      setError("Título é obrigatório");
       return;
     }
     setError(null);
@@ -318,7 +318,7 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
 
   async function handleDelete(id: number) {
     if (!editable) return;
-    if (!confirm("Confirma remoÃ§Ã£o do card?")) return;
+    if (!confirm("Confirma remoção do card?")) return;
     if (busyIds[id]) return;
     const snapshot = cards.slice();
     setCards((prev) => prev.filter((c) => c.id !== id));
@@ -369,7 +369,7 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
           try {
             await importKanbanFile(file);
             await loadCards();
-            toast.success("ImportaÃ§Ã£o concluÃ­da");
+            toast.success("Importação concluída");
           } catch (err) {
             const message = err instanceof Error ? err.message : "Erro ao importar";
             setError(message);
@@ -382,7 +382,7 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
 
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <h2 className="text-xl font-semibold">
-          Kanban â€” {project} / run {runId}
+          Kanban — {project} / run {runId}
           {slug ? ` (${slug})` : ""}
         </h2>
 
@@ -398,7 +398,7 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
             disabled={loading || importing}
             onClick={() => fileInputRef.current?.click()}
           >
-            {importing ? "Importandoâ€¦" : "Importar (CSV/JSON)"}
+            {importing ? "Importando…" : "Importar (CSV/JSON)"}
           </TcButton>
 
           <TcButton
@@ -446,13 +446,13 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
       {editable && (
         <form className="mb-6 flex flex-wrap gap-3 items-end" onSubmit={handleCreate}>
           <div className="flex-1 min-w-50">
-            <label className="block text-sm text-muted" htmlFor="new-title">TÃ­tulo</label>
+            <label className="block text-sm text-muted" htmlFor="new-title">Título</label>
             <input
               id="new-title"
               className="tc-input w-full px-3 py-2"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="TÃ­tulo do case"
+              placeholder="Título do case"
               required
             />
           </div>
@@ -530,9 +530,9 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <div className="text-sm font-semibold text-text">{card.title ?? "â€”"}</div>
+                      <div className="text-sm font-semibold text-text">{card.title ?? "—"}</div>
                       <div className="text-xs text-muted">
-                        case: {card.case_id ?? "-"} â€¢ created: {card.created_at ? new Date(card.created_at).toLocaleString() : "-"}
+                        case: {card.case_id ?? "-"} • created: {card.created_at ? new Date(card.created_at).toLocaleString() : "-"}
                       </div>
                       {card.bug && <div className="text-xs text-danger">Bug: {card.bug}</div>}
                       {card.link && (
@@ -582,13 +582,13 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
             <h4 className="text-lg font-medium">Editar card</h4>
             <div className="space-y-2">
               <div>
-                <label className="block text-sm text-muted" htmlFor="edit-title">TÃ­tulo</label>
+                <label className="block text-sm text-muted" htmlFor="edit-title">Título</label>
                 <input
                   id="edit-title"
                   className="tc-input w-full px-3 py-2"
                   value={editingTitle}
                   onChange={(e) => setEditingTitle(e.target.value)}
-                  placeholder="TÃ­tulo do card"
+                  placeholder="Título do card"
                 />
               </div>
               <div>
@@ -608,7 +608,7 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
                   className="tc-input w-full px-3 py-2"
                   value={editingLink}
                   onChange={(e) => setEditingLink(e.target.value)}
-                  placeholder="Link ou evidÃªncia"
+                  placeholder="Link ou evidência"
                 />
               </div>
             </div>
@@ -626,4 +626,3 @@ export default function KanbanClient({ project, runId, slug, editable = true, au
     </div>
   );
 }
-

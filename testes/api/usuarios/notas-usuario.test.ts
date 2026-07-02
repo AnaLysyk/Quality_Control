@@ -1,6 +1,6 @@
 ﻿/**
- * CenÃ¡rios de notas de usuÃ¡rio no banco PostgreSQL.
- * âœ… cleanup total em afterAll â€” nenhum dado permanece.
+ * Cenários de notas de usuário no banco PostgreSQL.
+ * âœ… cleanup total em afterAll — nenhum dado permanece.
  *
  * Fluxo:
  *  1. Cria nota 1 (rascunho, prioridade baixa)
@@ -8,8 +8,8 @@
  *  3. Cria nota 3 (urgente, cor sky)
  *  4. Deleta nota 2
  *  5. Confirma que nota 2 foi removida e notas 1 e 3 permanecem
- *  6. Edita nota 1 (tÃ­tulo, conteÃºdo, status, prioridade)
- *  7. Confirma ediÃ§Ã£o persistida no banco
+ *  6. Edita nota 1 (título, conteúdo, status, prioridade)
+ *  7. Confirma edição persistida no banco
  */
 
 import { prisma } from "@/lib/prismaClient";
@@ -41,12 +41,12 @@ afterAll(async () => {
   await prisma.$disconnect();
 }, 30000);
 
-describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
+describePg("Notas de usuário — criar 3, deletar 1, editar 1", () => {
 
-  // â”€â”€ Setup: cria usuÃ¡rio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ Setup: cria usuário â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   beforeAll(async () => {
     const user = await pgCreateLocalUser({
-      name: `UsuÃ¡rio Notas ${UID}`,
+      name: `Usuário Notas ${UID}`,
       email: `notas-${UID}@notas-test.local`,
       password_hash: PASSWORD,
       role: "user",
@@ -57,10 +57,10 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
   }, 20000);
 
   // â”€â”€ 1. Criar nota 1 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("cria nota 1 â€” rascunho, prioridade baixa", async () => {
+  it("cria nota 1 — rascunho, prioridade baixa", async () => {
     const nota = await createUserNote(userId, {
       title: `Nota Um ${UID}`,
-      content: "ConteÃºdo da primeira nota de teste do usuÃ¡rio.",
+      content: "Conteúdo da primeira nota de teste do usuário.",
       color: "amber",
       status: "Rascunho",
       priority: "Baixa",
@@ -83,10 +83,10 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
   });
 
   // â”€â”€ 2. Criar nota 2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("cria nota 2 â€” em andamento, prioridade alta, com tags", async () => {
+  it("cria nota 2 — em andamento, prioridade alta, com tags", async () => {
     const nota = await createUserNote(userId, {
       title: `Nota Dois ${UID}`,
-      content: "ConteÃºdo da segunda nota, em andamento com alta prioridade.",
+      content: "Conteúdo da segunda nota, em andamento com alta prioridade.",
       color: "rose",
       status: "Em andamento",
       priority: "Alta",
@@ -107,9 +107,9 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
   });
 
   // â”€â”€ 3. Criar nota 3 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("cria nota 3 â€” urgente, cor sky", async () => {
+  it("cria nota 3 — urgente, cor sky", async () => {
     const nota = await createUserNote(userId, {
-      title: `Nota TrÃªs ${UID}`,
+      title: `Nota Três ${UID}`,
       content: "Terceira nota com prioridade urgente e cor sky.",
       color: "sky",
       status: "Em andamento",
@@ -129,7 +129,7 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
   });
 
   // â”€â”€ Confirma que as 3 notas existem â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("confirma que as 3 notas foram criadas para o usuÃ¡rio", async () => {
+  it("confirma que as 3 notas foram criadas para o usuário", async () => {
     const notas = await listUserNotes(userId);
     const ids = notas.map((n) => n.id);
 
@@ -138,7 +138,7 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
     expect(ids).toContain(nota3Id);
     expect(notas.length).toBeGreaterThanOrEqual(3);
 
-    console.log(`\nâœ… ${notas.length} notas listadas para o usuÃ¡rio`);
+    console.log(`\nâœ… ${notas.length} notas listadas para o usuário`);
   });
 
   // â”€â”€ 4. Deletar nota 2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -154,7 +154,7 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
   });
 
   // â”€â”€ 5. Confirma que notas 1 e 3 permanecem â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("confirma que nota 1 e nota 3 permanecem apÃ³s deletar nota 2", async () => {
+  it("confirma que nota 1 e nota 3 permanecem após deletar nota 2", async () => {
     const notas = await listUserNotes(userId);
     const ids = notas.map((n) => n.id);
 
@@ -166,10 +166,10 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
   });
 
   // â”€â”€ 6. Editar nota 1 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("edita nota 1 â€” altera tÃ­tulo, conteÃºdo, status e prioridade", async () => {
+  it("edita nota 1 — altera título, conteúdo, status e prioridade", async () => {
     const updated = await updateUserNote(userId, nota1Id, {
       title: `Nota Um Editada ${UID}`,
-      content: "ConteÃºdo atualizado com informaÃ§Ãµes mais detalhadas sobre o item.",
+      content: "Conteúdo atualizado com informações mais detalhadas sobre o item.",
       status: "Concluido",
       priority: "Media",
       color: "emerald",
@@ -178,7 +178,7 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
 
     expect(updated).not.toBeNull();
     expect(updated!.title).toBe(`Nota Um Editada ${UID}`);
-    expect(updated!.content).toBe("ConteÃºdo atualizado com informaÃ§Ãµes mais detalhadas sobre o item.");
+    expect(updated!.content).toBe("Conteúdo atualizado com informações mais detalhadas sobre o item.");
     expect(updated!.status).toBe("Concluido");
     expect(updated!.priority).toBe("Media");
     expect(updated!.color).toBe("emerald");
@@ -187,8 +187,8 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
     console.log(`\nâœ… Nota 1 editada: "${updated!.title}" | status=${updated!.status} | priority=${updated!.priority}`);
   });
 
-  // â”€â”€ 7. Confirma persistÃªncia da ediÃ§Ã£o no banco â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("confirma que a ediÃ§Ã£o da nota 1 foi persistida no banco", async () => {
+  // â”€â”€ 7. Confirma persistência da edição no banco â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("confirma que a edição da nota 1 foi persistida no banco", async () => {
     const row = await prisma.userNote.findUnique({ where: { id: nota1Id } });
 
     expect(row).not.toBeNull();
@@ -197,7 +197,7 @@ describePg("Notas de usuÃ¡rio â€” criar 3, deletar 1, editar 1", () => {
     expect(row!.priority).toBe("Media");
     expect(row!.color).toBe("emerald");
 
-    console.log(`\nâœ… PersistÃªncia confirmada: title="${row!.title}" | status=${row!.status}`);
+    console.log(`\nâœ… Persistência confirmada: title="${row!.title}" | status=${row!.status}`);
   });
 });
 

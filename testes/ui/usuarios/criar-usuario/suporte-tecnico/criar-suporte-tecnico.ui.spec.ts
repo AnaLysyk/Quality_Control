@@ -11,7 +11,7 @@ import { validarMeuPerfilUsuarioCriado } from "../../../../../support/functions/
 
 test.setTimeout(180000);
 
-test.describe("Criar usuÃ¡rio - Suporte TÃ©cnico", () => {
+test.describe("Criar usuário - Suporte Técnico", () => {
   const createdUserIds: string[] = [];
 
   test.afterAll(async ({ request }) => {
@@ -20,10 +20,10 @@ test.describe("Criar usuÃ¡rio - Suporte TÃ©cnico", () => {
     }
   });
 
-  test("cria Suporte TÃ©cnico, lista o usuÃ¡rio e valida login com acesso administrativo", async ({ page }) => {
+  test("cria Suporte Técnico, lista o usuário e valida login com acesso administrativo", async ({ page }) => {
     const suffix = `${Date.now().toString().slice(-6)}-${Math.random().toString(36).slice(2, 5)}`;
     const email = `e2e-suporte-tecnico-${suffix}@demo.test`;
-    const name = `Teste Suporte TÃ©cnico ${suffix}`;
+    const name = `Teste Suporte Técnico ${suffix}`;
 
     await autenticarAdminParaCriacaoUsuario(page);
 

@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const message =
       error instanceof Error
         ? error.message
-        : "NÃ£o foi possÃ­vel consultar o CNPJ.";
+        : "Não foi possível consultar o CNPJ.";
 
     console.error("[COMPANY LOOKUP][CNPJ]", {
       cnpj,

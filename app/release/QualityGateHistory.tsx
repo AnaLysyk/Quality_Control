@@ -55,7 +55,7 @@ export function QualityGateHistory({
         onClick={() => setOpen((v) => !v)}
         className="rounded border px-3 py-1 text-xs font-semibold"
       >
-        Ver histÃ³rico
+        Ver histórico
       </button>
       {open && (
         <div
@@ -63,7 +63,7 @@ export function QualityGateHistory({
           data-testid="quality-gate-history-list"
           data-run-timeline="true"
         >
-          {events.length === 0 && <div className="text-xs text-gray-500">Nenhum histÃ³rico encontrado.</div>}
+          {events.length === 0 && <div className="text-xs text-gray-500">Nenhum histórico encontrado.</div>}
           <ul className="space-y-2" data-testid="run-timeline">
             {events.map((item, i) => {
               const reasons = Array.isArray(item.meta?.reasons)

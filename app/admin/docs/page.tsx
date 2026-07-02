@@ -10,9 +10,9 @@ export default function AdminDocsPage() {
         <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-10 space-y-6">
           <header className="rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] p-5">
             <p className="text-xs uppercase tracking-[0.35em] text-[var(--tc-text-muted)]">Admin</p>
-            <h1 className="mt-1 text-2xl font-bold text-[var(--tc-text)]">DocumentaÃ§Ã£o do sistema</h1>
+            <h1 className="mt-1 text-2xl font-bold text-[var(--tc-text)]">Documentação do sistema</h1>
             <p className="mt-2 text-sm text-[var(--tc-text-muted)]">
-              Atalhos para documentos internos e referÃªncia rÃ¡pida de como as integraÃ§Ãµes funcionam.
+              Atalhos para documentos internos e referência rápida de como as integrações funcionam.
             </p>
           </header>
 
@@ -20,7 +20,7 @@ export default function AdminDocsPage() {
             <div className="rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] p-5">
               <h2 className="text-lg font-semibold text-[var(--tc-text)]">Docs internas</h2>
               <p className="mt-1 text-sm text-[var(--tc-text-muted)]">
-                As pÃ¡ginas em <span className="font-medium">/docs</span> renderizam arquivos Markdown/SQL do repositÃ³rio.
+                As páginas em <span className="font-medium">/docs</span> renderizam arquivos Markdown/SQL do repositório.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
@@ -51,9 +51,9 @@ export default function AdminDocsPage() {
             </div>
 
             <div className="rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] p-5">
-              <h2 className="text-lg font-semibold text-[var(--tc-text)]">IntegraÃ§Ãµes por empresa</h2>
+              <h2 className="text-lg font-semibold text-[var(--tc-text)]">Integrações por empresa</h2>
               <p className="mt-1 text-sm text-[var(--tc-text-muted)]">
-                No cadastro de empresa, vocÃª pode escolher:
+                No cadastro de empresa, você pode escolher:
               </p>
               <ul className="mt-3 list-disc pl-5 text-sm text-[var(--tc-text-muted)] space-y-2">
                 <li>
@@ -61,23 +61,23 @@ export default function AdminDocsPage() {
                   consultas.
                 </li>
                 <li>
-                  <span className="font-medium text-[var(--tc-text)]">Sem integraÃ§Ã£o</span>: modo manual (entrada de runs / kanban
+                  <span className="font-medium text-[var(--tc-text)]">Sem integração</span>: modo manual (entrada de runs / kanban
                   manual).
                 </li>
               </ul>
               <p className="mt-4 text-xs text-[var(--tc-text-muted)]">
-                ObservaÃ§Ã£o: tokens devem ser tratados como segredo e nÃ£o devem ser exibidos em telas pÃºblicas.
+                Observação: tokens devem ser tratados como segredo e não devem ser exibidos em telas públicas.
               </p>
             </div>
           </section>
 
           <section className="rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] p-5">
-            <h2 className="text-lg font-semibold text-[var(--tc-text)]">ReferÃªncia rÃ¡pida</h2>
+            <h2 className="text-lg font-semibold text-[var(--tc-text)]">Referência rápida</h2>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-4">
-                <p className="text-sm font-semibold text-[var(--tc-text)]">Empresa Ã¢â€ â€™ Qase</p>
+                <p className="text-sm font-semibold text-[var(--tc-text)]">Empresa → Qase</p>
                 <p className="mt-1 text-sm text-[var(--tc-text-muted)]">
-                  Campos usados pela app para resolver configuraÃ§Ã£o: token + project code (ver helper de config).
+                  Campos usados pela app para resolver configuração: token + project code (ver helper de config).
                 </p>
                 <Link
                   href="/docs/arquitetura_api"

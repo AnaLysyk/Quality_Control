@@ -1,8 +1,8 @@
 ﻿/**
  * cleanup-test-data.ts
  *
- * Remove do banco todos os artefatos deixados pelos testes de integraÃ§Ã£o.
- * Identifica dados de teste pelos padrÃµes de e-mail e slug usados nos arquivos
+ * Remove do banco todos os artefatos deixados pelos testes de integração.
+ * Identifica dados de teste pelos padrões de e-mail e slug usados nos arquivos
  * tests/user-creation-profiles.test.ts e tests/user-delete-profiles.test.ts.
  *
  * Uso:
@@ -12,7 +12,7 @@
 
 import { prisma } from "@/lib/prismaClient";
 
-/** DomÃ­nios de e-mail usados exclusivamente pelos testes */
+/** Domínios de e-mail usados exclusivamente pelos testes */
 const TEST_EMAIL_DOMAINS = ["@test-profile.local", "@test-del.local"];
 
 /** Prefixos de slug de empresa criados pelos testes */
@@ -32,13 +32,13 @@ const TEST_COMPANY_NAME_PREFIXES = [
   "Empresa CompAdmin Del ",
   "Empresa Teste Viewer ",
   "Empresa Teste CompAdmin ",
-  "InstituiÃ§Ã£o Teste ",
+  "Instituição Teste ",
 ];
 
 async function main() {
   console.log("ðŸ§¹ Iniciando limpeza de dados de teste...\n");
 
-  // â”€â”€ 1. UsuÃ¡rios de teste â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ 1. Usuários de teste â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const testUsers = await prisma.user.findMany({
     where: {
       OR: TEST_EMAIL_DOMAINS.map((domain) => ({
@@ -49,7 +49,7 @@ async function main() {
   });
 
   if (testUsers.length === 0) {
-    console.log("âœ… Nenhum usuÃ¡rio de teste encontrado.");
+    console.log("âœ… Nenhum usuário de teste encontrado.");
   } else {
     const userIds = testUsers.map((u) => u.id);
 
@@ -61,7 +61,7 @@ async function main() {
     const delUsers = await prisma.user.deleteMany({
       where: { id: { in: userIds } },
     });
-    console.log(`   usuÃ¡rios removidos    : ${delUsers.count}`);
+    console.log(`   usuários removidos    : ${delUsers.count}`);
     testUsers.forEach((u) => console.log(`     - ${u.email}`));
   }
 
@@ -97,7 +97,7 @@ async function main() {
     testCompanies.forEach((c) => console.log(`     - ${c.name} (${c.slug})`));
   }
 
-  console.log("\nâœ… Limpeza concluÃ­da.");
+  console.log("\nâœ… Limpeza concluída.");
 }
 
 main()

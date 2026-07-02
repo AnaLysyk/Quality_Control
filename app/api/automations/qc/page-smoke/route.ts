@@ -26,12 +26,12 @@ function resolveAccess(user: Awaited<ReturnType<typeof authenticateRequest>>) {
 
 function resolveTargetUrl(targetPath: string, requestUrl: string) {
   if (!targetPath.startsWith("/")) {
-    throw new Error("A tela precisa ser interna e comeÃ§ar com '/'.");
+    throw new Error("A tela precisa ser interna e começar com '/'.");
   }
 
   // Reject protocol-relative paths (e.g. //evil.com) to avoid external fetches.
   if (targetPath.startsWith("//")) {
-    throw new Error("A tela precisa ser interna e nÃ£o pode ser protocol-relative.");
+    throw new Error("A tela precisa ser interna e não pode ser protocol-relative.");
   }
 
   return new URL(targetPath, requestUrl);
@@ -46,31 +46,31 @@ export async function POST(request: Request) {
   const user = await authenticateRequest(request);
 
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { access, allowedCompanySlugs } = resolveAccess(user);
 
   if (!access.canOpen) {
-    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const rawBody = await request.json().catch(() => null);
   const validation = RequestSchema.safeParse(rawBody);
 
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues[0]?.message || "Payload invÃ¡lido" }, { status: 400 });
+    return NextResponse.json({ error: validation.error.issues[0]?.message || "Payload inválido" }, { status: 400 });
   }
 
   const payload = validation.data;
   const companySlug = payload.companySlug?.trim() || allowedCompanySlugs[0] || null;
 
   if (normalizeAutomationCompanyScope(companySlug) !== "testing-company") {
-    return NextResponse.json({ error: "Runner interno disponÃ­vel somente para o perfil da Testing Company." }, { status: 403 });
+    return NextResponse.json({ error: "Runner interno disponível somente para o perfil da Testing Company." }, { status: 403 });
   }
 
   if (!access.hasGlobalCompanyVisibility && companySlug && !allowedCompanySlugs.includes(companySlug)) {
-    return NextResponse.json({ error: "Empresa fora do escopo da sessÃ£o." }, { status: 403 });
+    return NextResponse.json({ error: "Empresa fora do escopo da sessão." }, { status: 403 });
   }
 
   let targetUrl: URL;

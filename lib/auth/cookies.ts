@@ -1,5 +1,5 @@
 ﻿export function shouldUseSecureCookies(req: Request): boolean {
-  // Sempre retorna false exceto produÃ§Ã£o explÃ­cita
+  // Sempre retorna false exceto produção explícita
   if (process.env.NODE_ENV === "production") {
     const override = process.env.AUTH_COOKIE_SECURE;
     if (override === "true") return true;

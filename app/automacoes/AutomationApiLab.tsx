@@ -200,8 +200,8 @@ function authLabel(auth: AutomationRequestAuth) {
   if (auth.type === "bearer") return "Bearer";
   if (auth.type === "basic") return "Basic";
   if (auth.type === "api-key") return "API Key";
-  if (auth.type === "session") return "SessÃ£o atual";
-  return "Sem autenticaÃ§Ã£o";
+  if (auth.type === "session") return "Sessão atual";
+  return "Sem autenticação";
 }
 
 export default function AutomationApiLab({ activeCompanySlug, companies }: Props) {
@@ -406,7 +406,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
     persistSavedRequests([snapshot, ...savedRequests]);
     setSelectedPresetId(snapshot.id);
-    setCopyFeedback("Request salvo com auth, params e variÃ¡veis");
+    setCopyFeedback("Request salvo com auth, params e variáveis");
     window.setTimeout(() => setCopyFeedback(null), 1400);
   }
 
@@ -424,7 +424,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
     try {
       if (missingVariableKeys.length > 0) {
-        throw new Error(`Defina as variÃ¡veis: ${missingVariableKeys.join(", ")}.`);
+        throw new Error(`Defina as variáveis: ${missingVariableKeys.join(", ")}.`);
       }
 
       const headers = sanitizeKeyValueRows(headerRows).reduce<Record<string, string>>((accumulator, row) => {
@@ -444,7 +444,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
         const username = resolveTemplate(auth.username ?? "", resolvedVariables);
         const password = resolveTemplate(auth.password ?? "", resolvedVariables);
         if (!username && !password) {
-          throw new Error("Informe usuÃ¡rio e senha para Basic Auth.");
+          throw new Error("Informe usuário e senha para Basic Auth.");
         }
         headers.Authorization = encodeBasicAuth(username, password);
       }
@@ -473,7 +473,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
       const payload = await execution.json();
 
       if (!execution.ok || !payload?.response) {
-        throw new Error(payload?.error || "NÃƒÂ£o foi possÃƒÂ­vel executar a chamada.");
+        throw new Error(payload?.error || "Não foi possível executar a chamada.");
       }
 
       setResponse(payload.response as HttpResponseState);
@@ -538,7 +538,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
       <div className="grid items-start gap-4 xl:grid-cols-12">
         <aside className="rounded-[18px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3 xl:col-span-4 xl:sticky xl:top-6 2xl:col-span-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">ColeÃƒÂ§ÃƒÂ£o</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Coleção</p>
             <span className="inline-flex rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
               {visiblePresets.length}
             </span>
@@ -554,7 +554,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{preset.title}</p>
                         <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
-                          {preset.method} {preset.tags.join(" Ã¢â‚¬Â¢ ")}
+                          {preset.method} {preset.tags.join(" • ")}
                         </p>
                       </div>
                       {isSaved ? <FiDatabase className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tc-accent,#ef0001)]" /> : null}
@@ -589,7 +589,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-              MÃƒÂ©todo
+              Método
               <select
                 value={method}
                 onChange={(event) => setMethod(event.target.value as AutomationHttpMethod)}
@@ -639,7 +639,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
           {missingVariableKeys.length > 0 ? (
             <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-700">
-              VariÃƒÂ¡veis pendentes: {missingVariableKeys.join(", ")}
+              Variáveis pendentes: {missingVariableKeys.join(", ")}
             </div>
           ) : null}
 
@@ -647,7 +647,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             {[
               { id: "params" as const, label: "Params", icon: FiSliders },
               { id: "auth" as const, label: "Auth", icon: FiLock },
-              { id: "variables" as const, label: "VariÃƒÂ¡veis", icon: FiDatabase },
+              { id: "variables" as const, label: "Variáveis", icon: FiDatabase },
               { id: "headers" as const, label: "Headers", icon: FiKey },
               { id: "body" as const, label: "Body", icon: FiServer },
             ].map((tab) => {
@@ -722,7 +722,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
             <section className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  Tipo de autenticaÃƒÂ§ÃƒÂ£o
+                  Tipo de autenticação
                   <select
                     value={auth.type}
                     onChange={(event) =>
@@ -738,20 +738,20 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                     <option value="bearer">Bearer</option>
                     <option value="basic">Basic</option>
                     <option value="api-key">API Key</option>
-                    <option value="session">SessÃƒÂ£o atual</option>
+                    <option value="session">Sessão atual</option>
                   </select>
                 </label>
 
                 <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                   {auth.type === "session"
-                    ? "Reaproveita os cookies da sessÃƒÂ£o atual para chamadas internas do prÃƒÂ³prio painel."
+                    ? "Reaproveita os cookies da sessão atual para chamadas internas do próprio painel."
                     : auth.type === "api-key"
                       ? "A chave pode entrar em header ou query string."
                       : auth.type === "basic"
                         ? "Monta automaticamente o header Authorization Basic."
                         : auth.type === "bearer"
                           ? "Monta automaticamente o header Authorization Bearer."
-                          : "A request segue sem autenticaÃƒÂ§ÃƒÂ£o adicional."}
+                          : "A request segue sem autenticação adicional."}
                 </div>
               </div>
 
@@ -770,7 +770,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               {auth.type === "basic" ? (
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                    UsuÃƒÂ¡rio
+                    Usuário
                     <input
                       value={auth.username ?? ""}
                       onChange={(event) => setAuth((current) => ({ ...current, username: event.target.value }))}
@@ -831,14 +831,14 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">VariÃƒÂ¡veis do ambiente</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Variáveis do ambiente</p>
                     <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Persistidas por empresa + ambiente selecionado.</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => appendKeyValueRow(setEnvironmentVariableRows)}
-                    aria-label="Adicionar variÃ¡vel de ambiente"
-                    title="Adicionar variÃ¡vel de ambiente"
+                    aria-label="Adicionar variável de ambiente"
+                    title="Adicionar variável de ambiente"
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                   >
                     <FiPlus className="h-4 w-4" />
@@ -862,8 +862,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       <button
                         type="button"
                         onClick={() => removeKeyValueRow(setEnvironmentVariableRows, row.id)}
-                        aria-label="Remover variÃ¡vel de ambiente"
-                        title="Remover variÃ¡vel de ambiente"
+                        aria-label="Remover variável de ambiente"
+                        title="Remover variável de ambiente"
                         className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
                       >
                         <FiTrash2 className="h-4 w-4" />
@@ -876,14 +876,14 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">VariÃƒÂ¡veis do request</p>
-                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Sobrescrevem o ambiente sÃƒÂ³ nessa request.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Variáveis do request</p>
+                    <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Sobrescrevem o ambiente só nessa request.</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => appendKeyValueRow(setLocalVariableRows)}
-                    aria-label="Adicionar variÃ¡vel da request"
-                    title="Adicionar variÃ¡vel da request"
+                    aria-label="Adicionar variável da request"
+                    title="Adicionar variável da request"
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                   >
                     <FiPlus className="h-4 w-4" />
@@ -907,8 +907,8 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
                       <button
                         type="button"
                         onClick={() => removeKeyValueRow(setLocalVariableRows, row.id)}
-                        aria-label="Remover variÃ¡vel da request"
-                        title="Remover variÃ¡vel da request"
+                        aria-label="Remover variável da request"
+                        title="Remover variável da request"
                         className="inline-flex h-10 w-9 items-center justify-center rounded-lg border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text-muted,#6b7280)]"
                       >
                         <FiTrash2 className="h-4 w-4" />
@@ -919,7 +919,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               </article>
 
               <article className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3 xl:col-span-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">VariÃƒÂ¡veis de sistema</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Variáveis de sistema</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {systemVariables.map((item) => (
                     <span
@@ -1018,7 +1018,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
               <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{response ? `${response.status} ${response.statusText}` : "--"}</p>
             </div>
             <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">DuraÃƒÂ§ÃƒÂ£o</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Duração</p>
               <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{response ? `${response.durationMs} ms` : "--"}</p>
             </div>
             <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
@@ -1063,7 +1063,7 @@ export default function AutomationApiLab({ activeCompanySlug, companies }: Props
 
           <div className="mt-3 flex items-center gap-2 text-xs text-[var(--tc-text-muted,#6b7280)]">
             <FiClock className="h-4 w-4" />
-            BFF interno para request com auth, params e variÃƒÂ¡veis sem abrir Postman.
+            BFF interno para request com auth, params e variáveis sem abrir Postman.
           </div>
         </aside>
       </div>

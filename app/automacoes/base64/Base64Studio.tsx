@@ -22,7 +22,7 @@ import {
 
 import { useAutomationModuleContext } from "../_components/AutomationModuleContext";
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Types Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Types
 
 type AssetKind = "image" | "video" | "document" | "other";
 
@@ -57,7 +57,7 @@ type HistoryEntry = {
   base64_data?: string;
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”â‚¬â”â‚¬ Helpers â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 
 function detectKind(name: string): AssetKind {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
@@ -107,7 +107,7 @@ async function urlToDataURL(url: string): Promise<string> {
   });
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ TruncatedCode: expandable base64 block Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”â‚¬â”â‚¬ TruncatedCode: expandable base64 block â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 
 function TruncatedCode({ code, copiedId, id, onCopy }: {
   code: string;
@@ -116,13 +116,13 @@ function TruncatedCode({ code, copiedId, id, onCopy }: {
   onCopy: (id: string, code: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const displayCode = expanded ? code : `${code.slice(0, 120)}Ã¢â‚¬Â¦`;
+  const displayCode = expanded ? code : `${code.slice(0, 120)}ââ‚¬¦`;
 
   return (
     <div className="rounded-xl border border-zinc-700 bg-zinc-950">
       <div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
         <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-          Base64 Â· {formatBytes(Math.round(code.length * 0.75))}
+          Base64 · {formatBytes(Math.round(code.length * 0.75))}
         </span>
         <div className="flex items-center gap-2">
           <button
@@ -134,7 +134,7 @@ function TruncatedCode({ code, copiedId, id, onCopy }: {
           </button>
           <button
             type="button"
-            aria-label="Copiar cÃ³digo base64"
+            aria-label="Copiar código base64"
             onClick={() => onCopy(id, code)}
             className="flex h-6 w-6 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
           >
@@ -149,7 +149,7 @@ function TruncatedCode({ code, copiedId, id, onCopy }: {
   );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ HistoryRow Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”â‚¬â”â‚¬ HistoryRow â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 
 function HistoryRow({
   entry,
@@ -277,7 +277,7 @@ export default function Base64Studio() {
   // Output textarea ref (for auto-select on copy)
   const outputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Load library assets Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”â‚¬â”â‚¬ Load library assets â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 
   const loadLibrary = useCallback(() => {
     if (!companySlug) {
@@ -295,7 +295,7 @@ export default function Base64Studio() {
       .finally(() => setLibraryLoading(false));
   }, [companySlug]);
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Load history Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”â‚¬â”â‚¬ Load history â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 
   const loadHistory = useCallback(() => {
     if (!companySlug) {
@@ -432,7 +432,7 @@ export default function Base64Studio() {
     librarySearch.trim() === "" || a.name.toLowerCase().includes(librarySearch.toLowerCase())
   );
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Progress bar for large base64 Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // â”â‚¬â”â‚¬ Progress bar for large base64 â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬
 
   const statsRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -447,7 +447,7 @@ export default function Base64Studio() {
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-6 py-4">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
-            Base64 Â· {companyLabel}
+            Base64 · {companyLabel}
           </p>
           <h1 className="mt-0.5 text-xl font-black tracking-tight text-[var(--tc-text,#0b1a3c)]">
             Conversor Base64
@@ -455,7 +455,7 @@ export default function Base64Studio() {
         </div>
         <button
           type="button"
-          aria-label="Atualizar histÃ³rico"
+          aria-label="Atualizar histórico"
           onClick={loadHistory}
           disabled={historyLoading}
           className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] text-[var(--tc-text-muted,#6b7280)] hover:border-[var(--tc-accent,#ef0001)] disabled:opacity-40 transition-colors"
@@ -467,7 +467,7 @@ export default function Base64Studio() {
       {/* Body */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Left: Source picker Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* â”â‚¬â”â‚¬ Left: Source picker â”â‚¬â”â‚¬ */}
         <div className="flex w-80 shrink-0 flex-col border-r border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)]">
 
           {/* Tabs */}
@@ -590,7 +590,7 @@ export default function Base64Studio() {
           )}
         </div>
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Center: Output Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* â”â‚¬â”â‚¬ Center: Output â”â‚¬â”â‚¬ */}
         <div className="flex flex-1 min-w-0 flex-col min-h-0">
 
           {/* Current result */}
@@ -633,15 +633,15 @@ export default function Base64Studio() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{result.name}</p>
                     <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">
-                      {formatBytes(result.sizeBytes)} Â· {result.kind} Â· {result.source === "library" ? "Biblioteca" : "Upload direto"}
+                      {formatBytes(result.sizeBytes)} · {result.kind} · {result.source === "library" ? "Biblioteca" : "Upload direto"}
                     </p>
                     <p className="mt-0.5 text-[11px] text-emerald-600 font-semibold">
-                      Base64: {formatBytes(Math.round(result.base64.length * 0.75))} Â· {result.base64.length.toLocaleString()} caracteres
+                      Base64: {formatBytes(Math.round(result.base64.length * 0.75))} · {result.base64.length.toLocaleString()} caracteres
                     </p>
                   </div>
                   <button
                     type="button"
-                    aria-label="Salvar cÃ³digo base64 no histÃ³rico"
+                    aria-label="Salvar código base64 no histórico"
                     onClick={() => void handleSaveCurrent()}
                     disabled={savingCurrent}
                     className="shrink-0 flex items-center gap-1.5 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-2 text-xs font-semibold text-[var(--tc-text,#0b1a3c)] hover:border-[var(--tc-accent,#ef0001)] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
@@ -666,11 +666,11 @@ export default function Base64Studio() {
                 <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] overflow-hidden">
                   <div className="flex items-center justify-between border-b border-[var(--tc-border,#d7deea)] px-4 py-2.5">
                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--tc-text-muted,#6b7280)]">
-                      CÃ³digo Base64
+                      Código Base64
                     </span>
                     <button
                       type="button"
-                      aria-label="Copiar cÃ³digo base64"
+                      aria-label="Copiar código base64"
                       onClick={() => handleCopy("current", result.base64)}
                       className="flex items-center gap-1.5 rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-3 py-1.5 text-xs font-semibold text-[var(--tc-text,#0b1a3c)] hover:border-[var(--tc-accent,#ef0001)] transition-colors"
                     >
@@ -685,7 +685,7 @@ export default function Base64Studio() {
                     ref={outputRef}
                     readOnly
                     value={result.base64}
-                    aria-label="CÃ³digo base64 gerado"
+                    aria-label="Código base64 gerado"
                     rows={5}
                     className="w-full resize-none bg-transparent px-4 py-3 font-mono text-[11px] text-[var(--tc-text,#0b1a3c)] leading-5 outline-none"
                     onClick={(e) => (e.target as HTMLTextAreaElement).select()}
@@ -695,11 +695,11 @@ export default function Base64Studio() {
             )}
           </div>
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬ History Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* â”â‚¬â”â‚¬ History â”â‚¬â”â‚¬ */}
           <div className="flex flex-1 min-h-0 flex-col bg-(--page-bg,#f3f6fb)">
             <div className="flex shrink-0 items-center justify-between px-5 py-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
-                HistÃ³rico de conversÃµes
+                Histórico de conversões
               </p>
               <span className="text-[10px] text-[var(--tc-text-muted,#6b7280)]">{history.length} registros</span>
             </div>
@@ -708,13 +708,13 @@ export default function Base64Studio() {
               {historyLoading ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-zinc-500">
                   <FiLoader className="h-4 w-4 animate-spin" />
-                  Carregando histÃ³rico...
+                  Carregando histórico...
                 </div>
               ) : history.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <span className="mb-2 text-3xl opacity-20">â—»</span>
-                  <p className="text-xs text-zinc-500">Nenhuma conversÃ£o ainda.</p>
-                  <p className="mt-1 text-[10px] text-zinc-600">As conversÃµes salvas aparecem aqui.</p>
+                  <p className="text-xs text-zinc-500">Nenhuma conversão ainda.</p>
+                  <p className="mt-1 text-[10px] text-zinc-600">As conversões salvas aparecem aqui.</p>
                 </div>
               ) : (
                 history.map((entry) => (

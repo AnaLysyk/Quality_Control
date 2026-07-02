@@ -79,7 +79,7 @@ const STATUS_OPTIONS = ["", "draft", "scheduled", "in_progress", "paused", "comp
 const STATUS_LABEL: Record<string, string> = {
   draft: "Rascunho",
   scheduled: "Agendada",
-  in_progress: "Em execuÃ§Ã£o",
+  in_progress: "Em execução",
   paused: "Pausada",
   completed: "Finalizada",
   cancelled: "Cancelada",
@@ -145,7 +145,7 @@ export default function RunsListClient() {
     companyId: "testing-company",
     projectId: "cidadao-smart",
     planId: "plan-regressao-001",
-    title: "Run RegressÃ£o CidadÃ£o Smart",
+    title: "Run Regressão Cidadão Smart",
     environment: "homologacao",
     buildVersion: "2.3.0",
     casesText: DEFAULT_CASES,
@@ -196,7 +196,7 @@ export default function RunsListClient() {
   const createRun = async () => {
     const cases = parseCases(form.casesText);
     if (!form.companyId.trim() || !form.projectId.trim() || !form.planId.trim() || !form.title.trim() || cases.length === 0) {
-      setError("Preencha empresa, projeto, plano, tÃ­tulo e ao menos um caso.");
+      setError("Preencha empresa, projeto, plano, título e ao menos um caso.");
       return;
     }
     setCreating(true);
@@ -239,8 +239,8 @@ export default function RunsListClient() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-orange-300"><FiPlayCircle /> Runs</p>
-              <h1 className="mt-2 text-3xl font-black text-white">ExecuÃ§Ãµes de teste</h1>
-              <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/62">Listagem operacional de Runs locais, criadas a partir de plano, com progresso, falhas, bloqueios e link direto para execuÃ§Ã£o por item.</p>
+              <h1 className="mt-2 text-3xl font-black text-white">Execuções de teste</h1>
+              <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/62">Listagem operacional de Runs locais, criadas a partir de plano, com progresso, falhas, bloqueios e link direto para execução por item.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => setShowCreate((value) => !value)} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-orange-100">
@@ -289,8 +289,8 @@ export default function RunsListClient() {
           <section className="rounded-3xl border border-orange-300/25 bg-orange-400/10 p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-xl font-black">Criar Run rÃ¡pida</h2>
-                <p className="mt-1 text-sm font-semibold text-white/60">Formato dos casos: chave | tÃ­tulo | suite | prioridade | minutos</p>
+                <h2 className="text-xl font-black">Criar Run rápida</h2>
+                <p className="mt-1 text-sm font-semibold text-white/60">Formato dos casos: chave | título | suite | prioridade | minutos</p>
               </div>
               <button type="button" onClick={() => setShowCreate(false)} className="rounded-xl border border-white/15 px-3 py-2 text-xs font-black text-white/70 hover:bg-white/10">Fechar</button>
             </div>
@@ -298,7 +298,7 @@ export default function RunsListClient() {
               <Input label="Empresa" value={form.companyId} onChange={(value) => setForm((current) => ({ ...current, companyId: value }))} />
               <Input label="Projeto" value={form.projectId} onChange={(value) => setForm((current) => ({ ...current, projectId: value }))} />
               <Input label="Plano" value={form.planId} onChange={(value) => setForm((current) => ({ ...current, planId: value }))} />
-              <Input label="TÃ­tulo" value={form.title} onChange={(value) => setForm((current) => ({ ...current, title: value }))} />
+              <Input label="Título" value={form.title} onChange={(value) => setForm((current) => ({ ...current, title: value }))} />
               <Input label="Ambiente" value={form.environment} onChange={(value) => setForm((current) => ({ ...current, environment: value }))} />
               <Input label="Build" value={form.buildVersion} onChange={(value) => setForm((current) => ({ ...current, buildVersion: value }))} />
             </div>
@@ -323,7 +323,7 @@ export default function RunsListClient() {
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-300">{run.projectId}</p>
                     <h2 className="mt-1 text-xl font-black text-white">{run.title}</h2>
-                    <p className="mt-1 text-xs font-semibold text-white/50">Plano {run.planId} â€¢ Snapshot {run.planSnapshotId}</p>
+                    <p className="mt-1 text-xs font-semibold text-white/50">Plano {run.planId} • Snapshot {run.planSnapshotId}</p>
                   </div>
                   <StatusPill status={run.status} />
                 </div>
@@ -340,7 +340,7 @@ export default function RunsListClient() {
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link href={`/runs/${encodeURIComponent(run.id)}`} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-orange-100">
-                    Abrir execuÃ§Ã£o
+                    Abrir execução
                   </Link>
                   <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-white/55">{run.source}</span>
                 </div>

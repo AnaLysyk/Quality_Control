@@ -1,7 +1,7 @@
 ﻿"use client";
 
 /**
- * Company Identity Section â€” Dados bÃ¡sicos da empresa
+ * Company Identity Section — Dados básicos da empresa
  */
 
 import { useProfileContext } from "@/lib/profile/useProfileContext";

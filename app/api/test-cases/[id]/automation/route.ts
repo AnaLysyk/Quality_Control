@@ -30,13 +30,13 @@ function normalizeBody(body: Record<string, unknown>): CreateTestAutomationLinkI
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const { id } = await params;
   const record = await getTestCaseRecord(id);
-  if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, record)) {
-    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }
 
   return NextResponse.json({
@@ -49,21 +49,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const { id } = await params;
   const record = await getTestCaseRecord(id);
-  if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, record)) {
-    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body) return NextResponse.json({ message: "Payload invÃ¡lido" }, { status: 400 });
+  if (!body) return NextResponse.json({ message: "Payload inválido" }, { status: 400 });
 
   try {
     const updated = await saveTestCaseAutomationLink(id, normalizeBody(body), user.id);
-    if (!updated) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+    if (!updated) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
 
     return NextResponse.json(
       {
@@ -76,13 +76,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     );
   } catch (error) {
     if (error instanceof Error && error.message === "SPEC_FILE_REQUIRED") {
-      return NextResponse.json({ message: "Spec file Ã© obrigatÃ³rio" }, { status: 400 });
+      return NextResponse.json({ message: "Spec file é obrigatório" }, { status: 400 });
     }
     if (error instanceof Error && error.message === "AUTOMATION_LINK_DUPLICATE") {
       const duplicate = (error as Error & { duplicate?: unknown }).duplicate;
       return NextResponse.json(
         {
-          message: "JÃ¡ existe um vÃ­nculo com o mesmo par spec/tag",
+          message: "Já existe um vínculo com o mesmo par spec/tag",
           duplicate,
         },
         { status: 409 },

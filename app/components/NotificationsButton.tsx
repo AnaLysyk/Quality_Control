@@ -106,14 +106,14 @@ export default function NotificationsButton({
       const json = (await res.json().catch(() => ({}))) as { items?: NotificationItem[]; error?: string };
       if (!res.ok) {
         setItems([]);
-        setError(json?.error || "Erro ao carregar notificaÃ§Ãµes");
+        setError(json?.error || "Erro ao carregar notificações");
         return;
       }
       const nextItems = Array.isArray(json.items) ? json.items : [];
       setItems(nextItems);
       setFallbackUnreadCount(nextItems.filter((item) => item.status !== "closed").length);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar notificaÃ§Ãµes";
+      const msg = err instanceof Error ? err.message : "Erro ao carregar notificações";
       setItems([]);
       setError(msg);
     } finally {
@@ -213,7 +213,7 @@ export default function NotificationsButton({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json?.error || "Erro ao atualizar notificaÃ§Ã£o");
+        setError(json?.error || "Erro ao atualizar notificação");
         return;
       }
       setItems((prev) =>
@@ -230,7 +230,7 @@ export default function NotificationsButton({
       );
       listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao atualizar notificaÃ§Ã£o";
+      const msg = err instanceof Error ? err.message : "Erro ao atualizar notificação";
       setError(msg);
     }
   }
@@ -267,7 +267,7 @@ export default function NotificationsButton({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Abrir notificaÃ§Ãµes"
+        aria-label="Abrir notificações"
         className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white text-[var(--tc-primary,#011848)] shadow-[0_12px_30px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-[var(--tc-accent,#ef0001)]/60 hover:text-[var(--tc-accent,#ef0001)]"
       >
         <FiBell size={18} />
@@ -283,10 +283,10 @@ export default function NotificationsButton({
           <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-[linear-gradient(135deg,var(--tc-primary,#011848)_0%,#071a44_52%,rgba(239,0,1,0.78)_150%)] px-4 py-4 text-white">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-white/65">
-                NotificaÃ§Ãµes
+                Notificações
               </p>
               <p className="text-sm font-semibold text-white">
-                {unreadCount > 0 ? `${unreadCount} nÃ£o lida(s)` : "Tudo em dia"}
+                {unreadCount > 0 ? `${unreadCount} não lida(s)` : "Tudo em dia"}
               </p>
             </div>
             <button
@@ -305,7 +305,7 @@ export default function NotificationsButton({
           >
             {loading && <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Carregando...</p>}
             {!loading && items.length === 0 && (
-              <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma notificaÃ§Ã£o por aqui.</p>
+              <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma notificação por aqui.</p>
             )}
 
             {items.map((item) => (
@@ -356,7 +356,7 @@ export default function NotificationsButton({
           <div className="w-full max-w-2xl overflow-hidden rounded-[30px] border border-white/80 bg-[var(--tc-surface,#ffffff)] shadow-[0_34px_90px_rgba(15,23,42,0.36)]">
             <div className="flex items-start justify-between gap-4 border-b border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(239,0,1,0.34),transparent_34%),linear-gradient(135deg,var(--tc-primary,#011848)_0%,#071a44_58%,rgba(239,0,1,0.82)_150%)] px-5 py-5 text-white">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted,#6b7280)]">NotificaÃ§Ã£o</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted,#6b7280)]">Notificação</p>
                 <p className="text-lg font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{selected.title}</p>
               </div>
               <button
@@ -441,7 +441,7 @@ export default function NotificationsButton({
                         </p>
                       </div>
                       <p className="text-sm whitespace-pre-wrap text-[var(--tc-text-secondary,#4b5563)]">
-                        {ticketInfo.description || "Sem descriÃ§Ã£o."}
+                        {ticketInfo.description || "Sem descrição."}
                       </p>
                       <div className="flex flex-wrap items-center gap-2">
                         <label
@@ -470,7 +470,7 @@ export default function NotificationsButton({
                     </>
                   )}
                   {!ticketLoading && !ticketInfo && !ticketError && (
-                    <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Chamado nÃ£o encontrado.</p>
+                    <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Chamado não encontrado.</p>
                   )}
                   {ticketError && <p className="text-sm text-red-600">{ticketError}</p>}
                 </div>
@@ -483,7 +483,7 @@ export default function NotificationsButton({
                   disabled={selected.status === "closed"}
                   className="rounded-lg border border-[var(--tc-border,#e5e7eb)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] disabled:opacity-60"
                 >
-                  {selected.status === "closed" ? "JÃ¡ marcada" : "Marcar como lida"}
+                  {selected.status === "closed" ? "Já marcada" : "Marcar como lida"}
                 </button>
                 <button
                   type="button"

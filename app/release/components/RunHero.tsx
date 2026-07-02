@@ -28,7 +28,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
     <>
       {/* â”€â”€ Header row: title + metadata â”€â”€ */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-5">
-        {/* Left â€” identity */}
+        {/* Left — identity */}
         <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-3">
             <div
@@ -38,7 +38,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
               <span className="leading-none">{vm.appMeta.label}</span>
             </div>
             <span className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-              {vm.source === "API" ? "IntegraÃ§Ã£o Qase" : "Manual"}
+              {vm.source === "API" ? "Integração Qase" : "Manual"}
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">
@@ -49,7 +49,7 @@ export function RunHero({ vm }: { vm: RunDetailViewModel }) {
           )}
         </div>
 
-        {/* Right â€” key indicators */}
+        {/* Right — key indicators */}
         <div className="flex items-start gap-3 shrink-0">
           {/* Gate badge */}
           <div

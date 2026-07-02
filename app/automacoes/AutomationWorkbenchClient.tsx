@@ -116,8 +116,8 @@ function DeferredRunnerPlaceholder({ onLoad }: { onLoad: () => void }) {
         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Runner sob demanda</p>
         <h3 className="mt-2 text-3xl font-black tracking-[-0.04em] text-[var(--tc-text,#0b1a3c)]">Biometria Griaule</h3>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-          O runner foi movido para carga tardia para nÃ£o disputar renderizaÃ§Ã£o com a abertura da tela. Ele sobe automaticamente
-          quando a seÃ§Ã£o entra na Ã¡rea Ãºtil ou pode ser carregado agora.
+          O runner foi movido para carga tardia para não disputar renderização com a abertura da tela. Ele sobe automaticamente
+          quando a seção entra na área útil ou pode ser carregado agora.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <button
@@ -129,7 +129,7 @@ function DeferredRunnerPlaceholder({ onLoad }: { onLoad: () => void }) {
             <FiArrowRight className="h-4 w-4" />
           </button>
           <div className="inline-flex min-h-11 items-center justify-center rounded-full border border-[var(--tc-border,#d7deea)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">
-            Metadata e chunk do runner sÃ³ entram quando necessÃ¡rio
+            Metadata e chunk do runner só entram quando necessário
           </div>
         </div>
       </article>
@@ -213,7 +213,7 @@ export default function AutomationWorkbenchClient() {
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 py-2 text-center text-sm font-bold text-[#011848] shadow-[0_2px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-[#f0f4ff] sm:justify-start"
         >
           <FiBookOpen className="h-4 w-4 shrink-0" />
-          Abrir documentaÃ§Ã£o do cÃ³digo
+          Abrir documentação do código
         </Link>
         <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-[#f8fafc] dark:bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-[#011848] dark:text-white/92">
           <FiShield className="h-4 w-4 shrink-0" />
@@ -223,7 +223,7 @@ export default function AutomationWorkbenchClient() {
         </div>
         <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-[#f8fafc] dark:bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-[#011848] dark:text-white/92">
           <FiLayers className="h-4 w-4 shrink-0" />
-          <span>{clients.length} empresa{clients.length === 1 ? "" : "s"} visÃ­veis</span>
+          <span>{clients.length} empresa{clients.length === 1 ? "" : "s"} visíveis</span>
         </div>
       </div>
     ),
@@ -253,10 +253,10 @@ export default function AutomationWorkbenchClient() {
                 <FiLock className="h-6 w-6" />
               </div>
               <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-accent,#ef0001)]">Acesso restrito</p>
-              <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">MÃ³dulo interno de automaÃ§Ãµes</h2>
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">Módulo interno de automações</h2>
               <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-                Esse workspace foi desenhado para operaÃ§Ã£o tÃ©cnica da Testing Company. Perfis de empresa e usuÃ¡rio da empresa
-                continuam usando os prÃ³prios documentos, repositÃ³rios e telas da organizaÃ§Ã£o sem acesso aos fluxos internos.
+                Esse workspace foi desenhado para operação técnica da Testing Company. Perfis de empresa e usuário da empresa
+                continuam usando os próprios documentos, repositórios e telas da organização sem acesso aos fluxos internos.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -279,10 +279,10 @@ export default function AutomationWorkbenchClient() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Perfis habilitados</p>
               <div className="mt-4 space-y-3">
                 {[
-                  "LÃ­der TC: gestÃ£o completa de ambientes, presets e histÃ³rico.",
-                  "Suporte tÃ©cnico: operaÃ§Ã£o completa e leitura global.",
-                  "UsuÃ¡rio TC: leitura operacional apenas das empresas vinculadas.",
-                  "Empresa e usuÃ¡rio da empresa: mesma visÃ£o operacional, restrita Ã  prÃ³pria empresa.",
+                  "Líder TC: gestão completa de ambientes, presets e histórico.",
+                  "Suporte técnico: operação completa e leitura global.",
+                  "Usuário TC: leitura operacional apenas das empresas vinculadas.",
+                  "Empresa e usuário da empresa: mesma visão operacional, restrita à própria empresa.",
                 ].map((item) => (
                   <div
                     key={item}
@@ -300,18 +300,18 @@ export default function AutomationWorkbenchClient() {
               <section className="rounded-[30px] bg-[linear-gradient(135deg,#011848_0%,#1b2563_54%,#ef0001_100%)] p-6 text-[#011848] dark:text-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/72">Quality Control â€¢ automaÃ§Ãµes</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/72">Quality Control • automações</p>
                     <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
                       Orquestrador visual por empresa para API, navegador e fluxos guiados
                     </h2>
                     <p className="mt-4 max-w-3xl text-sm leading-7 text-[#011848] dark:text-white/82">
-                      O mÃ³dulo deixa de ser um agrupador de requests e passa a virar studio operacional. O front recebe fluxo,
-                      assets e script editÃ¡vel; o backend executa com seguranÃ§a; e cada perfil enxerga a mesma identidade visual
-                      respeitando o escopo de empresa, vÃ­nculo e operaÃ§Ã£o tÃ©cnica.
+                      O módulo deixa de ser um agrupador de requests e passa a virar studio operacional. O front recebe fluxo,
+                      assets e script editável; o backend executa com segurança; e cada perfil enxerga a mesma identidade visual
+                      respeitando o escopo de empresa, vínculo e operação técnica.
                     </p>
 
                     <div className="mt-5 flex flex-wrap gap-2">
-                      {["Front em React", "Studio low-code", "Script editÃ¡vel no front", "Playwright sÃ³ onde houver browser"].map((item) => (
+                      {["Front em React", "Studio low-code", "Script editável no front", "Playwright só onde houver browser"].map((item) => (
                         <span
                           key={item}
                           className="inline-flex items-center rounded-full border border-white/16 bg-[#f8fafc] dark:bg-white/10 px-3 py-1 text-xs font-semibold text-[#011848] dark:text-slate-900 dark:text-white/90"
@@ -328,7 +328,7 @@ export default function AutomationWorkbenchClient() {
                                 source: "automacoes",
                                 agentMode: "playwright",
                                 panelMode: "side",
-                                initialMessage: "Analise o mÃ³dulo de automaÃ§Ãµes: cobertura atual, lacunas, requests prioritÃ¡rios para automatizar e estratÃ©gia de expansÃ£o.",
+                                initialMessage: "Analise o módulo de automações: cobertura atual, lacunas, requests prioritários para automatizar e estratégia de expansão.",
                               },
                             }));
                           }
@@ -343,7 +343,7 @@ export default function AutomationWorkbenchClient() {
                       <div className="rounded-2xl border border-white/14 bg-white/8 p-4 backdrop-blur">
                         <FiTarget className="h-5 w-5 text-[#011848] dark:text-white/88" />
                         <h3 className="mt-3 text-sm font-bold">Entrada simplificada</h3>
-                        <p className="mt-2 text-xs leading-6 text-[#011848] dark:text-white/72">O operador preenche sÃ³ o essencial e o sistema monta o fluxo.</p>
+                        <p className="mt-2 text-xs leading-6 text-[#011848] dark:text-white/72">O operador preenche só o essencial e o sistema monta o fluxo.</p>
                       </div>
                       <div className="rounded-2xl border border-white/14 bg-white/8 p-4 backdrop-blur">
                         <FiServer className="h-5 w-5 text-[#011848] dark:text-white/88" />
@@ -352,8 +352,8 @@ export default function AutomationWorkbenchClient() {
                       </div>
                       <div className="rounded-2xl border border-white/14 bg-white/8 p-4 backdrop-blur">
                         <FiActivity className="h-5 w-5 text-[#011848] dark:text-white/88" />
-                        <h3 className="mt-3 text-sm font-bold">HistÃ³rico rastreÃ¡vel</h3>
-                        <p className="mt-2 text-xs leading-6 text-[#011848] dark:text-white/72">Cada execuÃ§Ã£o deixa rastro suficiente para auditoria e onboarding.</p>
+                        <h3 className="mt-3 text-sm font-bold">Histórico rastreável</h3>
+                        <p className="mt-2 text-xs leading-6 text-[#011848] dark:text-white/72">Cada execução deixa rastro suficiente para auditoria e onboarding.</p>
                       </div>
                     </div>
                   </div>
@@ -362,18 +362,18 @@ export default function AutomationWorkbenchClient() {
                     <div className="rounded-3xl border border-white/14 bg-[#f8fafc] dark:bg-white/10 p-4 backdrop-blur">
                       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/68">
                         <FiLayers className="h-4 w-4" />
-                        ColeÃ§Ã£o atual
+                        Coleção atual
                       </div>
                       <div className="mt-3 text-4xl font-black">{AUTOMATION_REQUEST_TOTAL}</div>
-                      <p className="mt-2 text-sm text-[#011848] dark:text-white/76">requests mapeados para virar catÃ¡logo profissional.</p>
+                      <p className="mt-2 text-sm text-[#011848] dark:text-white/76">requests mapeados para virar catálogo profissional.</p>
                     </div>
                     <div className="rounded-3xl border border-white/14 bg-[#f8fafc] dark:bg-white/10 p-4 backdrop-blur">
                       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/68">
                         <FiZap className="h-4 w-4" />
-                        DomÃ­nios
+                        Domínios
                       </div>
                       <div className="mt-3 text-4xl font-black">{AUTOMATION_DOMAIN_TOTAL}</div>
-                      <p className="mt-2 text-sm text-[#011848] dark:text-white/76">blocos separados para priorizar MVP, expansÃ£o e observabilidade.</p>
+                      <p className="mt-2 text-sm text-[#011848] dark:text-white/76">blocos separados para priorizar MVP, expansão e observabilidade.</p>
                     </div>
                     <div className="rounded-3xl border border-white/14 bg-[#f8fafc] dark:bg-white/10 p-4 backdrop-blur">
                       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#011848] dark:text-white/68">
@@ -396,8 +396,8 @@ export default function AutomationWorkbenchClient() {
                   <h3 className="mt-3 text-2xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{access.scopeLabel}</h3>
                   <p className="mt-3 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
                     {activeClient?.name
-                      ? `Empresa ativa da sessÃ£o: ${activeClient.name}.`
-                      : "Nenhuma empresa ativa foi fixada na sessÃ£o atÃ© agora."}
+                      ? `Empresa ativa da sessão: ${activeClient.name}.`
+                      : "Nenhuma empresa ativa foi fixada na sessão até agora."}
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     {visibleCompanies.length > 0 ? (
@@ -411,7 +411,7 @@ export default function AutomationWorkbenchClient() {
                       ))
                     ) : (
                       <span className="inline-flex items-center rounded-full border border-dashed border-[var(--tc-border,#d7deea)] px-3 py-1 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]">
-                        Nenhuma empresa visÃ­vel na sessÃ£o
+                        Nenhuma empresa visível na sessão
                       </span>
                     )}
                   </div>
@@ -426,25 +426,25 @@ export default function AutomationWorkbenchClient() {
                     <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
                       <p className="text-sm font-bold text-[var(--tc-text,#0b1a3c)]">Mesmo layout interno</p>
                       <p className="mt-1 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                        LÃ­der TC, suporte, usuÃ¡rio TC, empresa e usuÃ¡rio da empresa usam a mesma identidade visual do mÃ³dulo.
+                        Líder TC, suporte, usuário TC, empresa e usuário da empresa usam a mesma identidade visual do módulo.
                       </p>
                     </div>
                     <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
-                      <p className="text-sm font-bold text-[var(--tc-text,#0b1a3c)]">Escopo controlado por vÃ­nculo</p>
+                      <p className="text-sm font-bold text-[var(--tc-text,#0b1a3c)]">Escopo controlado por vínculo</p>
                       <p className="mt-1 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                        LÃ­der TC e suporte veem tudo. UsuÃ¡rio TC vÃª apenas empresas vinculadas. Empresa e usuÃ¡rio da empresa veem apenas a prÃ³pria automaÃ§Ã£o.
+                        Líder TC e suporte veem tudo. Usuário TC vê apenas empresas vinculadas. Empresa e usuário da empresa veem apenas a própria automação.
                       </p>
                     </div>
                     <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
                       <p className="text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
-                        {access.canConfigure ? "ConfiguraÃ§Ã£o global liberada" : access.canManageFlows ? "EdiÃ§Ã£o da prÃ³pria empresa" : "ExecuÃ§Ã£o sem ediÃ§Ã£o"}
+                        {access.canConfigure ? "Configuração global liberada" : access.canManageFlows ? "Edição da própria empresa" : "Execução sem edição"}
                       </p>
                       <p className="mt-1 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
                         {access.canConfigure
-                          ? "Ambientes, presets, logs tÃ©cnicos e segredos operacionais podem ser administrados por este perfil."
+                          ? "Ambientes, presets, logs técnicos e segredos operacionais podem ser administrados por este perfil."
                           : access.canManageFlows
-                            ? "Esse perfil edita, inativa e executa apenas automaÃ§Ãµes do prÃ³prio escopo, sem mexer em segredos globais."
-                            : "Esse perfil executa e acompanha fluxos do prÃ³prio escopo, mas nÃ£o altera blueprint, ambiente nem segredos."}
+                            ? "Esse perfil edita, inativa e executa apenas automações do próprio escopo, sem mexer em segredos globais."
+                            : "Esse perfil executa e acompanha fluxos do próprio escopo, mas não altera blueprint, ambiente nem segredos."}
                       </p>
                     </div>
                   </div>

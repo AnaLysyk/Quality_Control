@@ -49,7 +49,7 @@ const MEMORY_KEYWORDS = [
   "plano",
   "run",
   "automacao",
-  "automaÃ§Ã£o",
+  "automação",
   "reprovar",
   "aprovar",
 ];

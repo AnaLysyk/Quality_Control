@@ -23,7 +23,7 @@ jest.mock("../../../lib/supportAccess", () => ({
   isSupportDeveloperUser: jest.fn(),
 }));
 
-describe("rbac/tickets - Controles RÃ­gidos do RepositÃ³rio de Suporte (Tickets)", () => {
+describe("rbac/tickets - Controles Rígidos do Repositório de Suporte (Tickets)", () => {
   const mockUser = { id: "u123", role: "empresa" } as AuthUser;
   const mockTicket = { id: "t1", createdBy: "u123", status: "backlog" } as TicketRecord;
   const otherTicket = { id: "t2", createdBy: "u999", status: "in_progress" } as TicketRecord;
@@ -32,7 +32,7 @@ describe("rbac/tickets - Controles RÃ­gidos do RepositÃ³rio de Suporte (Tick
     jest.resetAllMocks();
   });
 
-  describe("DelegaÃ§Ãµes Diretas (Admin & IT Dev)", () => {
+  describe("Delegações Diretas (Admin & IT Dev)", () => {
     it("deve delegar checagens nominais para supportAccess.ts rigidamente", () => {
       (supportAccess.isSupportAdminUser as jest.Mock).mockReturnValue(true);
       (supportAccess.isSupportDeveloperUser as jest.Mock).mockReturnValue(false);
@@ -46,7 +46,7 @@ describe("rbac/tickets - Controles RÃ­gidos do RepositÃ³rio de Suporte (Tick
   });
 
   describe("canManageAllTickets & canAccessGlobalTicketWorkspace", () => {
-    it("bloqueia Null users e repassa validaÃ§Ã£o dos globais para funÃ§Ãµes do supportAccess de workflow e scope", () => {
+    it("bloqueia Null users e repassa validação dos globais para funções do supportAccess de workflow e scope", () => {
       expect(canManageAllTickets(null)).toBe(false);
       expect(canAccessGlobalTicketWorkspace(null)).toBe(false); // is technical handler fallback
 
@@ -64,7 +64,7 @@ describe("rbac/tickets - Controles RÃ­gidos do RepositÃ³rio de Suporte (Tick
         expect(hasTicketEnteredSupportFlow(otherTicket)).toBe(true); // status in_progress
       });
 
-      it("reconhece entrada em fluxo MESMO sendo 'backlog' SE jÃ¡ hÃ¡ assignee (assignedToUserId)", () => {
+      it("reconhece entrada em fluxo MESMO sendo 'backlog' SE já há assignee (assignedToUserId)", () => {
         const backComDono = { ...mockTicket, assignedToUserId: "dev1" } as TicketRecord;
         expect(hasTicketEnteredSupportFlow(backComDono)).toBe(true);
       });
@@ -77,7 +77,7 @@ describe("rbac/tickets - Controles RÃ­gidos do RepositÃ³rio de Suporte (Tick
     });
 
     describe("canViewTicket", () => {
-      it("bloqueia instaneamente caso o User nÃ£o possua View Global Board permissÃ£o (canViewSupportBoard)", () => {
+      it("bloqueia instaneamente caso o User não possua View Global Board permissão (canViewSupportBoard)", () => {
         (supportAccess.canViewSupportBoard as jest.Mock).mockReturnValue(false);
         expect(canViewTicket(mockUser, mockTicket)).toBe(false);
       });
@@ -85,7 +85,7 @@ describe("rbac/tickets - Controles RÃ­gidos do RepositÃ³rio de Suporte (Tick
       it("libera se possuir Scope Workspace Global total da listagem (Admin/TI Operator)", () => {
         (supportAccess.canViewSupportBoard as jest.Mock).mockReturnValue(true);
         (supportAccess.canAccessGlobalSupportScope as jest.Mock).mockReturnValue(true);
-        // Mesmo lendo o ticket criado por outro, deve liberar pois Ã© Global
+        // Mesmo lendo o ticket criado por outro, deve liberar pois é Global
         expect(canViewTicket(mockUser, otherTicket)).toBe(true);
       });
 
@@ -101,7 +101,7 @@ describe("rbac/tickets - Controles RÃ­gidos do RepositÃ³rio de Suporte (Tick
     });
 
     describe("canCommentTicket & canEditTicketContent", () => {
-      it("comentÃ¡rio depende de canViewTicket AND canCommentSupportTickets (perm do modulo)", () => {
+      it("comentário depende de canViewTicket AND canCommentSupportTickets (perm do modulo)", () => {
         // Setup viewTicket success = own ticket e view board permission OK
         (supportAccess.canViewSupportBoard as jest.Mock).mockReturnValue(true);
         (supportAccess.canAccessGlobalSupportScope as jest.Mock).mockReturnValue(false);
@@ -110,7 +110,7 @@ describe("rbac/tickets - Controles RÃ­gidos do RepositÃ³rio de Suporte (Tick
         expect(canCommentTicket(mockUser, mockTicket)).toBe(true); // can views it and can comment on globals
       });
 
-      it("ediÃ§Ã£o pesada exige ManageSupportWorkflow ou ser o autor material do ticket via Id", () => {
+      it("edição pesada exige ManageSupportWorkflow ou ser o autor material do ticket via Id", () => {
         (supportAccess.canManageSupportWorkflow as jest.Mock).mockReturnValue(false);
 
         // Own Ticket author -> true edit (mesmo n sendo Support Admin)

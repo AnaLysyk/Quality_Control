@@ -6,7 +6,7 @@ import { syncNoteToBrain } from "@/lib/brain-sync";
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const items = await listUserNotes(user.id);
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   });
 
   if (!note) {
-    return NextResponse.json({ error: "Informe tÃ­tulo ou conteudo" }, { status: 400 });
+    return NextResponse.json({ error: "Informe título ou conteudo" }, { status: 400 });
   }
 
   syncNoteToBrain({

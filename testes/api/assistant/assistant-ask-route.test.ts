@@ -77,7 +77,7 @@ const FULL_CONTEXT = {
 
 const MOCK_REPLY = {
   tool: "get_screen_context",
-  reply: "Pronto, aqui estÃ¡ o contexto.",
+  reply: "Pronto, aqui está o contexto.",
   actions: [] as unknown[],
   context: FULL_CONTEXT,
 };
@@ -191,7 +191,7 @@ describe("brain-first flow", () => {
   });
 
   it("uses Brain when brainContext.source is 'brain'", async () => {
-    const res = await POST(makeRequest({ message: "analisar nÃ³", brainContext: { source: "brain" } }));
+    const res = await POST(makeRequest({ message: "analisar nó", brainContext: { source: "brain" } }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.reply).toBe("Resposta do Brain.");
@@ -294,7 +294,7 @@ describe("buildMessagesFromHistory", () => {
   it("skips empty-content turns from history", async () => {
     await POST(
       makeRequest({
-        message: "vÃ¡lida",
+        message: "válida",
         history: [{ from: "user", text: "" }, { from: "assistant", text: "" }],
         brainContext: { source: "brain" },
       }),
@@ -302,7 +302,7 @@ describe("buildMessagesFromHistory", () => {
     const engine = (InternalBrainEngine as jest.Mock).mock.results[0].value;
     const { messages } = (engine.run as jest.Mock).mock.calls[0][0];
     expect(messages).toHaveLength(1);
-    expect(messages[0].content).toBe("vÃ¡lida");
+    expect(messages[0].content).toBe("válida");
   });
 
   it("maps from=assistant to role=assistant", async () => {

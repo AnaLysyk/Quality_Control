@@ -37,13 +37,13 @@ function assertAccess(user: Awaited<ReturnType<typeof authenticateRequest>>, com
 // GET /api/automations/regions?assetId=xxx&companySlug=xxx
 export async function GET(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const url = new URL(request.url);
   const assetId = url.searchParams.get("assetId") ?? "";
   const companySlug = url.searchParams.get("companySlug") ?? "";
-  if (!assetId || !companySlug) return NextResponse.json({ error: "assetId e companySlug obrigatÃ³rios" }, { status: 400 });
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+  if (!assetId || !companySlug) return NextResponse.json({ error: "assetId e companySlug obrigatórios" }, { status: 400 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   await ensureAutomationTables();
 
@@ -64,14 +64,14 @@ export async function GET(request: Request) {
 // POST /api/automations/regions
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
   const { assetId, companySlug, name, x, y, w, h, notes, color } = parsed.data;
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   await ensureAutomationTables();
 
@@ -88,14 +88,14 @@ export async function POST(request: Request) {
 // DELETE /api/automations/regions
 export async function DELETE(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = DeleteSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
   const { id, companySlug } = parsed.data;
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   await ensureAutomationTables();
   await automationPool.query(`DELETE FROM automation_asset_regions WHERE id = $1 AND company_slug = $2`, [id, companySlug]);

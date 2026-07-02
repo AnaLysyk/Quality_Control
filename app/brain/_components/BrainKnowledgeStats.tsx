@@ -10,11 +10,11 @@ type BrainKnowledgeStatsProps = {
 
 export function BrainKnowledgeStats({ summary }: BrainKnowledgeStatsProps) {
   const stats = [
-    { label: "Conhecimentos", description: "nÃ³s visÃ­veis no contexto", value: summary.totalNodes, icon: FiRadio, tone: "text-cyan-100" },
-    { label: "ConexÃµes", description: "relaÃ§Ãµes que formam informaÃ§Ã£o", value: summary.totalEdges, icon: FiGitMerge, tone: "text-emerald-100" },
-    { label: "MÃ³dulos", description: "nÃºcleos do sistema", value: summary.modules ?? summary.totalModules, icon: FiLayers, tone: "text-sky-100" },
-    { label: "PendÃªncias", description: "pontos que faltam mapear", value: summary.pendingNodes ?? summary.pendingMappings.length, icon: FiAlertTriangle, tone: "text-yellow-100" },
-    { label: "Ã“rfÃ£os", description: "conhecimentos isolados", value: summary.orphanNodes, icon: FiBox, tone: "text-rose-100" },
+    { label: "Conhecimentos", description: "nós visíveis no contexto", value: summary.totalNodes, icon: FiRadio, tone: "text-cyan-100" },
+    { label: "Conexões", description: "relações que formam informação", value: summary.totalEdges, icon: FiGitMerge, tone: "text-emerald-100" },
+    { label: "Módulos", description: "núcleos do sistema", value: summary.modules ?? summary.totalModules, icon: FiLayers, tone: "text-sky-100" },
+    { label: "Pendências", description: "pontos que faltam mapear", value: summary.pendingNodes ?? summary.pendingMappings.length, icon: FiAlertTriangle, tone: "text-yellow-100" },
+    { label: "Ã“rfãos", description: "conhecimentos isolados", value: summary.orphanNodes, icon: FiBox, tone: "text-rose-100" },
     { label: "Criado hoje", description: "eventos novos no contexto", value: summary.eventsToday ?? 0, icon: FiRadio, tone: "text-cyan-100" },
   ];
 

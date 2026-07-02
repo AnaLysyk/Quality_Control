@@ -1,24 +1,24 @@
 ﻿/**
- * CenÃ¡rios do fluxo de SolicitaÃ§Ãµes de Acesso (accessRequestsStore) no banco PostgreSQL.
- * âœ… cleanup total em afterAll â€” nenhum dado permanece.
+ * Cenários do fluxo de Solicitações de Acesso (accessRequestsStore) no banco PostgreSQL.
+ * âœ… cleanup total em afterAll — nenhum dado permanece.
  *
- * CriaÃ§Ã£o (4 cenÃ¡rios):
- *  1. Cria solicitaÃ§Ã£o de acesso com status padrÃ£o "open"
- *  2. Cria solicitaÃ§Ã£o com status explÃ­cito "in_progress"
- *  3. Cria solicitaÃ§Ã£o com ip_address, user_agent e user_id
- *  4. Cria mÃºltiplas solicitaÃ§Ãµes para o mesmo e-mail (sem unicidade)
+ * Criação (4 cenários):
+ *  1. Cria solicitação de acesso com status padrão "open"
+ *  2. Cria solicitação com status explícito "in_progress"
+ *  3. Cria solicitação com ip_address, user_agent e user_id
+ *  4. Cria múltiplas solicitações para o mesmo e-mail (sem unicidade)
  *
- * Consultas (5 cenÃ¡rios):
- *  5. listAccessRequests retorna todas as solicitaÃ§Ãµes
+ * Consultas (5 cenários):
+ *  5. listAccessRequests retorna todas as solicitações
  *  6. listAccessRequests ordena por createdAt desc (mais recente primeiro)
  *  7. getAccessRequestById retorna registro existente
  *  8. getAccessRequestById retorna null para id inexistente
- *  9. Campos opcionais (ip_address, user_agent) sÃ£o preservados
+ *  9. Campos opcionais (ip_address, user_agent) são preservados
  *
- * AtualizaÃ§Ã£o (6 cenÃ¡rios):
+ * Atualização (6 cenários):
  * 10. updateAccessRequest altera status para in_progress
- * 11. updateAccessRequest fecha a solicitaÃ§Ã£o (closed)
- * 12. updateAccessRequest rejeita a solicitaÃ§Ã£o
+ * 11. updateAccessRequest fecha a solicitação (closed)
+ * 12. updateAccessRequest rejeita a solicitação
  * 13. updateAccessRequest atualiza o e-mail
  * 14. updateAccessRequest atualiza a mensagem
  * 15. updateAccessRequest vincula user_id
@@ -63,10 +63,10 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-// â”€â”€ CriaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Criação â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
-  test("1. cria solicitaÃ§Ã£o com status padrÃ£o open", async () => {
+describePg("Criação de solicitações de acesso", () => {
+  test("1. cria solicitação com status padrão open", async () => {
     const req = await createAccessRequest({
       email: testEmail("solicit1"),
       message: "Preciso de acesso ao painel de QA",
@@ -80,7 +80,7 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
     expect(req.created_at).toBeTruthy();
   });
 
-  test("2. cria solicitaÃ§Ã£o com status explÃ­cito in_progress", async () => {
+  test("2. cria solicitação com status explícito in_progress", async () => {
     const req = await createAccessRequest({
       email: testEmail("solicit2"),
       message: "Em processamento",
@@ -91,7 +91,7 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
     expect(req.status).toBe("in_progress");
   });
 
-  test("3. cria solicitaÃ§Ã£o com ip_address, user_agent e user_id", async () => {
+  test("3. cria solicitação com ip_address, user_agent e user_id", async () => {
     const user = await pgCreateLocalUser({
       email: testEmail("linked-user"),
       name: "User Vinculado",
@@ -114,7 +114,7 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
     expect(req.user_agent).toBe("Mozilla/5.0 (TestAgent)");
   });
 
-  test("4. permite mÃºltiplas solicitaÃ§Ãµes para o mesmo e-mail", async () => {
+  test("4. permite múltiplas solicitações para o mesmo e-mail", async () => {
     const email = testEmail("multi");
     const req1 = await createAccessRequest({ email, message: "Primeira" });
     const req2 = await createAccessRequest({ email, message: "Segunda" });
@@ -128,8 +128,8 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
 
 // â”€â”€ Consultas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("Consultas de solicitaÃ§Ãµes de acesso", () => {
-  test("5. listAccessRequests retorna as solicitaÃ§Ãµes criadas", async () => {
+describePg("Consultas de solicitações de acesso", () => {
+  test("5. listAccessRequests retorna as solicitações criadas", async () => {
     const all = await listAccessRequests();
     const mine = all.filter((r) => r.id && createdIds.includes(r.id));
     expect(mine.length).toBeGreaterThanOrEqual(4);
@@ -156,17 +156,17 @@ describePg("Consultas de solicitaÃ§Ãµes de acesso", () => {
     expect(result).toBeNull();
   });
 
-  test("9. campos opcionais sÃ£o preservados apÃ³s criaÃ§Ã£o", async () => {
-    const id = createdIds[2]; // solicitaÃ§Ã£o com ip_address e user_agent (teste 3)
+  test("9. campos opcionais são preservados após criação", async () => {
+    const id = createdIds[2]; // solicitação com ip_address e user_agent (teste 3)
     const found = await getAccessRequestById(id);
     expect(found!.ip_address).toBe("192.168.1.100");
     expect(found!.user_agent).toBe("Mozilla/5.0 (TestAgent)");
   });
 });
 
-// â”€â”€ AtualizaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Atualização â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("AtualizaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
+describePg("Atualização de solicitações de acesso", () => {
   let targetId: string;
 
   beforeAll(async () => {
@@ -184,12 +184,12 @@ describePg("AtualizaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
     expect(updated!.status).toBe("in_progress");
   });
 
-  test("11. fecha a solicitaÃ§Ã£o (closed)", async () => {
+  test("11. fecha a solicitação (closed)", async () => {
     const updated = await updateAccessRequest(targetId, { status: "closed" });
     expect(updated!.status).toBe("closed");
   });
 
-  test("12. rejeita solicitaÃ§Ã£o", async () => {
+  test("12. rejeita solicitação", async () => {
     const req = await createAccessRequest({
       email: testEmail("rejected"),
       message: "Para ser rejeitada",
@@ -199,10 +199,10 @@ describePg("AtualizaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
     expect(updated!.status).toBe("rejected");
   });
 
-  test("13. atualiza o e-mail da solicitaÃ§Ã£o", async () => {
+  test("13. atualiza o e-mail da solicitação", async () => {
     const req = await createAccessRequest({
       email: testEmail("old-email"),
-      message: "AtualizaÃ§Ã£o de e-mail",
+      message: "Atualização de e-mail",
     });
     createdIds.push(req.id);
     const newEmail = testEmail("new-email");
@@ -210,7 +210,7 @@ describePg("AtualizaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
     expect(updated!.email).toBe(newEmail);
   });
 
-  test("14. atualiza a mensagem da solicitaÃ§Ã£o", async () => {
+  test("14. atualiza a mensagem da solicitação", async () => {
     const req = await createAccessRequest({
       email: testEmail("msg-upd"),
       message: "Mensagem original",
@@ -220,10 +220,10 @@ describePg("AtualizaÃ§Ã£o de solicitaÃ§Ãµes de acesso", () => {
     expect(updated!.message).toBe("Mensagem atualizada pelo admin");
   });
 
-  test("15. vincula user_id a uma solicitaÃ§Ã£o existente", async () => {
+  test("15. vincula user_id a uma solicitação existente", async () => {
     const req = await createAccessRequest({
       email: testEmail("link-user"),
-      message: "Vincular usuÃ¡rio",
+      message: "Vincular usuário",
     });
     createdIds.push(req.id);
 

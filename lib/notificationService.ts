@@ -239,9 +239,9 @@ function buildWikiDocNotificationDescription(input: {
   event: "created" | "published";
 }) {
   if (input.event === "created") {
-    return `${input.title} foi criado e publicado no repositÃ³rio ${input.scopeLabel}.`;
+    return `${input.title} foi criado e publicado no repositório ${input.scopeLabel}.`;
   }
-  return `${input.title} foi publicado no repositÃ³rio ${input.scopeLabel}.`;
+  return `${input.title} foi publicado no repositório ${input.scopeLabel}.`;
 }
 
 export async function notifyPlatformWikiDocPublished(input: {
@@ -575,8 +575,8 @@ export async function notifyIntegrationRunCreated(input: {
 
   await createNotificationsForUsers(recipients, {
     type: "RUN_CREATED",
-    title: "Nova run via integraÃ§Ã£o",
-    description: `${runName} foi registrada via integraÃ§Ã£o.`,
+    title: "Nova run via integração",
+    description: `${runName} foi registrada via integração.`,
     companySlug,
     link,
     dedupeKey: `run:${runSlug}:created`,

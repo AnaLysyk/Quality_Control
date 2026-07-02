@@ -28,7 +28,7 @@ function resolveTargetUrl(rawUrl: string, requestUrl: string) {
 
   const parsed = new URL(rawUrl);
   if (!["http:", "https:"].includes(parsed.protocol)) {
-    throw new Error("Apenas URLs http/https sÃ£o suportadas.");
+    throw new Error("Apenas URLs http/https são suportadas.");
   }
 
   return parsed.toString();
@@ -38,20 +38,20 @@ export async function POST(request: Request) {
   const user = await authenticateRequest(request);
 
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const access = resolveAccess(user);
 
   if (!access.canOpen) {
-    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const rawBody = await request.json().catch(() => null);
   const validation = RequestSchema.safeParse(rawBody);
 
   if (!validation.success) {
-    return NextResponse.json({ error: validation.error.issues[0]?.message || "Payload invÃ¡lido" }, { status: 400 });
+    return NextResponse.json({ error: validation.error.issues[0]?.message || "Payload inválido" }, { status: 400 });
   }
 
   const payload = validation.data;
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 
     if (payload.forwardCookies) {
       if (targetOrigin !== requestOrigin) {
-        throw new Error("A sessÃ£o atual sÃ³ pode ser reutilizada em endpoints internos do mesmo domÃ­nio.");
+        throw new Error("A sessão atual só pode ser reutilizada em endpoints internos do mesmo domínio.");
       }
 
       const cookieHeader = request.headers.get("cookie");

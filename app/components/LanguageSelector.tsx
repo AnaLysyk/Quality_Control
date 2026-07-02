@@ -18,8 +18,8 @@ export function LanguageSelector({ variant = "icon", className = "" }: LanguageS
         type="button"
         onClick={toggleLocale}
         className={`${styles.iconButton} ${className}`}
-        title={locale === "pt" ? "Switch to English" : "Mudar para PortuguÃªs"}
-        aria-label={locale === "pt" ? "Switch to English" : "Mudar para PortuguÃªs"}
+        title={locale === "pt" ? "Switch to English" : "Mudar para Português"}
+        aria-label={locale === "pt" ? "Switch to English" : "Mudar para Português"}
       >
         <span className={styles.flagIcon}>
           {locale === "pt" ? "ðŸ‡§ðŸ‡·" : "ðŸ‡ºðŸ‡¸"}
@@ -35,7 +35,7 @@ export function LanguageSelector({ variant = "icon", className = "" }: LanguageS
         type="button"
         onClick={toggleLocale}
         className={`${styles.textButton} ${className}`}
-        title={locale === "pt" ? "Switch to English" : "Mudar para PortuguÃªs"}
+        title={locale === "pt" ? "Switch to English" : "Mudar para Português"}
       >
         {locale === "pt" ? "EN" : "PT"}
       </button>

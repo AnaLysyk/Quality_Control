@@ -78,7 +78,7 @@ function resolveCompanyStatus(company: ReturnType<typeof mapCompanyRecord>): Sta
 
   return {
     title: "Empresa ativa",
-    detail: "Contexto institucional liberado para operaÃ§Ã£o.",
+    detail: "Contexto institucional liberado para operação.",
     tone: "positive",
   };
 }
@@ -87,26 +87,26 @@ function resolveIntegrationStatus(company: ReturnType<typeof mapCompanyRecord>):
   if (company.qase_is_active === true && company.qase_is_valid === true) {
     return {
       title: "Qase ativa",
-      detail: `${company.qase_project_codes?.length ?? 0} projeto(s) disponÃ­veis para sincronizacao.`,
+      detail: `${company.qase_project_codes?.length ?? 0} projeto(s) disponíveis para sincronizacao.`,
       tone: "positive",
     };
   }
   if (company.jira_is_active === true && company.jira_is_valid === true) {
     return {
       title: "Jira ativa",
-      detail: "IntegraÃ§Ã£o pronta para sincronizacao institucional.",
+      detail: "Integração pronta para sincronizacao institucional.",
       tone: "positive",
     };
   }
   if ((company.qase_project_codes?.length ?? 0) > 0 || company.has_qase_token || company.has_jira_api_token) {
     return {
-      title: "IntegraÃ§Ã£o pendente",
-      detail: "Existe configuraÃ§Ã£o salva, mas ela ainda nÃ£o esta ativa.",
+      title: "Integração pendente",
+      detail: "Existe configuração salva, mas ela ainda não esta ativa.",
       tone: "warning",
     };
   }
   return {
-    title: "Sem integraÃ§Ã£o",
+    title: "Sem integração",
     detail: "A empresa segue apenas com contexto manual neste momento.",
     tone: "neutral",
   };
@@ -185,14 +185,14 @@ export default async function CompanyHomePage({ params }: PageProps) {
   const quickLinks = [
     {
       title: "Dashboard",
-      detail: "VisÃ£o estrategica da qualidade, tendencia, regressao e risco da empresa.",
+      detail: "Visão estrategica da qualidade, tendencia, regressao e risco da empresa.",
       href: "dashboard",
       icon: FiGrid,
       note: "Leitura executiva",
     },
     {
-      title: "MÃ©tricas",
-      detail: "Painel operacional por run, origem, status e leitura detalhada da execuÃ§Ã£o.",
+      title: "Métricas",
+      detail: "Painel operacional por run, origem, status e leitura detalhada da execução.",
       href: "metrics",
       icon: FiActivity,
       note: `${totalRuns} runs no contexto`,
@@ -212,25 +212,25 @@ export default async function CompanyHomePage({ params }: PageProps) {
       note: `${openDefects} aberto(s)`,
     },
     {
-      title: "AplicaÃ§Ãµes",
-      detail: "Catalogo das aplicaÃ§Ãµes e projetos vinculados a empresa.",
+      title: "Aplicações",
+      detail: "Catalogo das aplicações e projetos vinculados a empresa.",
       href: "aplicacoes",
       icon: FiBriefcase,
-      note: `${applications.length} aplicaÃ§Ã£o(oes)`,
+      note: `${applications.length} aplicação(oes)`,
     },
     {
       title: "Planos de teste",
-      detail: "Planos vinculados as aplicaÃ§Ãµes integradas e campanhas da empresa.",
+      detail: "Planos vinculados as aplicações integradas e campanhas da empresa.",
       href: "planos-de-teste",
       icon: FiClipboard,
       note: `${applications.filter((app) => Boolean(app.qaseProjectCode)).length} com Qase`,
     },
     {
       title: "Perfil da empresa",
-      detail: "Cadastro institucional, logo, integraÃ§Ãµes e usuÃ¡rios.",
+      detail: "Cadastro institucional, logo, integrações e usuários.",
       href: "/settings/profile",
       icon: FiShield,
-      note: "ConfiguraÃ§Ãµes da empresa",
+      note: "Configurações da empresa",
     },
   ];
 
@@ -268,9 +268,9 @@ export default async function CompanyHomePage({ params }: PageProps) {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)]">
           <section className="rounded-[30px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm sm:p-7">
             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--tc-accent,#ef0001)]">Contexto salvo</p>
-            <h2 className="mt-2 text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Projetos e aplicaÃ§Ãµes da empresa</h2>
+            <h2 className="mt-2 text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Projetos e aplicações da empresa</h2>
             <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-              Bloco institucional da home. Aqui ficam os vÃ­nculos salvos que contextualizam a empresa, sem misturar com o painel operacional.
+              Bloco institucional da home. Aqui ficam os vínculos salvos que contextualizam a empresa, sem misturar com o painel operacional.
             </p>
 
             <div className={`mt-5 rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.subtleSurface}`}>
@@ -289,7 +289,7 @@ export default async function CompanyHomePage({ params }: PageProps) {
             </div>
 
             <div className={`mt-4 rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.subtleSurface}`}>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">AplicaÃ§Ãµes cadastradas</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Aplicações cadastradas</div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {applications.length > 0 ? (
                   applications.map((app) => (
@@ -301,14 +301,14 @@ export default async function CompanyHomePage({ params }: PageProps) {
                     </div>
                   ))
                 ) : (
-                  <span className="text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhuma aplicaÃ§Ã£o cadastrada ainda.</span>
+                  <span className="text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhuma aplicação cadastrada ainda.</span>
                 )}
               </div>
             </div>
           </section>
 
           <section className="rounded-[30px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-6 shadow-sm sm:p-7">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--tc-accent,#ef0001)]">Leitura rÃ¡pida</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--tc-accent,#ef0001)]">Leitura rápida</p>
             <h2 className="mt-2 text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Estado atual da empresa</h2>
             <div className="mt-5 grid gap-4">
               <div className={`rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.elevatedSurface}`}>
@@ -317,26 +317,26 @@ export default async function CompanyHomePage({ params }: PageProps) {
                 <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{companyStatus.detail}</div>
               </div>
               <div className={`rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.elevatedSurface}`}>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">IntegraÃ§Ã£o</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Integração</div>
                 <div className="mt-3 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{integrationStatus.title}</div>
                 <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">{integrationStatus.detail}</div>
               </div>
               <div className={`rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.elevatedSurface}`}>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Proximo passo recomendado</div>
                 <div className="mt-3 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">
-                  {totalRuns > 0 ? "Abrir dashboard inteligente" : "Configurar primeira operaÃ§Ã£o"}
+                  {totalRuns > 0 ? "Abrir dashboard inteligente" : "Configurar primeira operação"}
                 </div>
                 <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
                   {totalRuns > 0
-                    ? "Use o dashboard para leitura estrategica e as mÃ©tricas para o acompanhamento operacional das runs."
-                    : "Comece por perfil, integraÃ§Ãµes ou criaÃ§Ã£o da primeira run manual."}
+                    ? "Use o dashboard para leitura estrategica e as métricas para o acompanhamento operacional das runs."
+                    : "Comece por perfil, integrações ou criação da primeira run manual."}
                 </div>
               </div>
               <div className={`rounded-3xl border border-[var(--tc-border,#e5e7eb)] p-5 ${styles.elevatedSurface}`}>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Ãšltima execuÃ§Ã£o</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Última execução</div>
                 <div className="mt-3 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{formatDate(latestExecutionAt)}</div>
                 <div className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-                  Referencia rÃ¡pida da operaÃ§Ã£o, sem transformar a home em dashboard.
+                  Referencia rápida da operação, sem transformar a home em dashboard.
                 </div>
               </div>
             </div>
@@ -349,7 +349,7 @@ export default async function CompanyHomePage({ params }: PageProps) {
               <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--tc-accent,#ef0001)]">Fechamento da home</p>
               <h2 className="mt-2 text-2xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Home institucional separada do dashboard</h2>
               <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-                A home volta a ser entrada de contexto e navegacao. O dashboard fica estrategico e a area de mÃ©tricas concentra a leitura operacional.
+                A home volta a ser entrada de contexto e navegacao. O dashboard fica estrategico e a area de métricas concentra a leitura operacional.
               </p>
             </div>
             <Link

@@ -1,5 +1,5 @@
 ﻿/**
- * Profile Engine Components â€” exports
+ * Profile Engine Components — exports
  */
 
 // Forms

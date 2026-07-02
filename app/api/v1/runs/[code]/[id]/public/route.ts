@@ -49,10 +49,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
 
   if (!effectiveAuth) {
-    return apiFail(request, "NÃ£o autorizado", {
+    return apiFail(request, "Não autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "NÃ£o autorizado" } },
+      extra: { error: { message: "Não autorizado" } },
     });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {

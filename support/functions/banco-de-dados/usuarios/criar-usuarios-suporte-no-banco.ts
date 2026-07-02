@@ -59,7 +59,7 @@ function generateTempPassword() {
 }
 
 async function upsertSupportUsersAndSendWelcomeEmails() {
-  log(colors.bright + colors.blue, "\nðŸš€ Criando/atualizando usuÃ¡rios de suporte tÃ©cnico\n");
+  log(colors.bright + colors.blue, "\nðŸš€ Criando/atualizando usuários de suporte técnico\n");
 
   for (const seed of supportUsers) {
     const email = seed.email.trim().toLowerCase();

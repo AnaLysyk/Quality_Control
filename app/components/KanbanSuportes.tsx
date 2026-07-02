@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { useClientContext } from "@/context/ClientContext";
@@ -13,8 +13,8 @@ interface KanbanColumn {
 const initialColumns: KanbanColumn[] = [
   { id: "backlog", name: "Backlog" },
   { id: "doing", name: "Em Progresso" },
-  { id: "review", name: "Em RevisÃ£o" },
-  { id: "done", name: "ConcluÃ­do" },
+  { id: "review", name: "Em Revisão" },
+  { id: "done", name: "Concluído" },
 ];
 
 export default function KanbanSuportes() {
@@ -105,7 +105,7 @@ export default function KanbanSuportes() {
 
   return (
     <div className="flex gap-8 overflow-x-auto py-4">
-      {loading && <div className="text-sm text-[var(--tc-text-muted,#6b7280)]">Carregando chamados...</div>}
+      {loading && <div className="text-sm text-(--tc-text-muted,#6b7280)">Carregando chamados...</div>}
       {error && <div className="text-sm text-red-600" role="alert">{error}</div>}
       {columns.map((col) => (
         <div key={col.id} className="min-w-85 bg-(--page-surface,#fff) border rounded-lg p-4 flex flex-col items-center">
@@ -125,7 +125,7 @@ export default function KanbanSuportes() {
               {items
                 .filter((it) => (it.status || "todo") === col.id)
                 .map((it) => (
-                  <div key={it.id} className="p-2 border rounded bg-[var(--tc-surface,#fff)] flex justify-between items-start">
+                  <div key={it.id} className="p-2 border rounded bg-(--tc-surface,#fff) flex justify-between items-start">
                     <button
                       className="text-sm text-left flex-1"
                       onClick={() => {
@@ -176,4 +176,3 @@ export default function KanbanSuportes() {
     </div>
   );
 }
-

@@ -15,47 +15,47 @@ export function statusLabel(status: string) {
   if (status === "rejected") return "Rejeitada";
   if (status === "in_progress") return "Aguardando ajuste";
   if (status === "open") return "Aberta";
-  return status || "NÃ£o informado";
+  return status || "Não informado";
 }
 
 export function nodeTypeLabel(type: BrainNodeType) {
   const labels: Record<BrainNodeType, string> = {
-    module: "MÃ³dulo",
+    module: "Módulo",
     company: "Empresa",
     project: "Projeto",
     screen: "Tela",
     entity: "Entidade",
     person: "Pessoa",
-    access_request: "SolicitaÃ§Ã£o",
+    access_request: "Solicitação",
     requester: "Solicitante",
     profile: "Perfil",
     status: "Status",
-    action: "AÃ§Ã£o",
-    integration: "IntegraÃ§Ã£o",
+    action: "Ação",
+    integration: "Integração",
     event: "Evento",
-    permission: "PermissÃ£o",
+    permission: "Permissão",
     log: "Log",
     email: "E-mail",
-    comment: "ComentÃ¡rio",
+    comment: "Comentário",
     document: "Documento",
     defect: "Defeito",
-    automation: "AutomaÃ§Ã£o",
+    automation: "Automação",
     test_case: "Caso de teste",
-    execution: "ExecuÃ§Ã£o",
+    execution: "Execução",
     pdf: "PDF",
     adjustment: "Ajuste",
-    decision: "DecisÃ£o",
+    decision: "Decisão",
   };
   return labels[type] ?? type;
 }
 
 export function nodeStatusLabel(status?: BrainNodeStatus) {
   if (status === "ok") return "ok";
-  if (status === "warning") return "atenÃ§Ã£o";
-  if (status === "missing") return "nÃ£o encontrado";
+  if (status === "warning") return "atenção";
+  if (status === "missing") return "não encontrado";
   if (status === "pending") return "pendente";
   if (status === "error") return "erro";
-  if (status === "orphan") return "Ã³rfÃ£o";
+  if (status === "orphan") return "órfão";
   return "ok";
 }
 
@@ -64,7 +64,7 @@ export function formatCounter(value: number) {
 }
 
 export function formatDateTime(value: string | null | undefined) {
-  if (!value) return "NÃ£o informado";
+  if (!value) return "Não informado";
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return value;
   return date.toLocaleString("pt-BR");

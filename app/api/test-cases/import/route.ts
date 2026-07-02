@@ -59,25 +59,25 @@ function normalizeCase(input: CreateTestCaseInput & { companySlug?: string | nul
 
 function mapImportError(error: unknown) {
   if (!(error instanceof Error)) return "Erro desconhecido ao importar caso.";
-  if (error.message === "TITLE_REQUIRED") return "TÃ­tulo Ã© obrigatÃ³rio.";
-  if (error.message === "STEP_ACTION_REQUIRED") return "Cada passo precisa de aÃ§Ã£o.";
+  if (error.message === "TITLE_REQUIRED") return "Título é obrigatório.";
+  if (error.message === "STEP_ACTION_REQUIRED") return "Cada passo precisa de ação.";
   if (error.message === "STEP_EXPECTED_RESULT_REQUIRED") return "Cada passo precisa de resultado esperado.";
-  if (error.message.startsWith("INVALID_TEST_CASE_")) return "Campo de classificaÃ§Ã£o invÃ¡lido. Verifique source, type, status, priority ou automation.";
+  if (error.message.startsWith("INVALID_TEST_CASE_")) return "Campo de classificação inválido. Verifique source, type, status, priority ou automation.";
   return error.message || "Erro ao importar caso.";
 }
 
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const payload = (await req.json().catch(() => null)) as ImportPayload | null;
   const inputCases = Array.isArray(payload?.cases) ? payload.cases : [];
   if (!inputCases.length) {
-    return NextResponse.json({ message: "Nenhum caso enviado para importaÃ§Ã£o" }, { status: 400 });
+    return NextResponse.json({ message: "Nenhum caso enviado para importação" }, { status: 400 });
   }
 
   if (inputCases.length > 500) {
-    return NextResponse.json({ message: "Limite de 500 casos por importaÃ§Ã£o" }, { status: 400 });
+    return NextResponse.json({ message: "Limite de 500 casos por importação" }, { status: 400 });
   }
 
   const created = [];
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     const companySlug = normalized.companyId ?? null;
 
     if (!canCreateTestCaseForCompany(user, companySlug)) {
-      errors.push({ index: index + 1, title: normalized.title, message: "Sem permissÃ£o para criar caso neste contexto" });
+      errors.push({ index: index + 1, title: normalized.title, message: "Sem permissão para criar caso neste contexto" });
       continue;
     }
 

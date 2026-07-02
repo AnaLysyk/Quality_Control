@@ -7,12 +7,12 @@ export async function POST(req: Request) {
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
 
   if (!login || !email) {
-    return NextResponse.json({ error: "UsuÃ¡rio e email obrigatorios." }, { status: 400 });
+    return NextResponse.json({ error: "Usuário e email obrigatorios." }, { status: 400 });
   }
 
   const user = await findLocalUserByEmailOrId(login);
   if (!user || (user.email ?? "").toLowerCase() !== email) {
-    return NextResponse.json({ error: "UsuÃ¡rio e email nÃ£o conferem." }, { status: 400 });
+    return NextResponse.json({ error: "Usuário e email não conferem." }, { status: 400 });
   }
 
   return NextResponse.json({ ok: true });

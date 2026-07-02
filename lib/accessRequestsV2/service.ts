@@ -340,7 +340,7 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
   }
 
   if (!requesterEmail) {
-    return { status: 400 as const, body: { message: "E-mail Ã© obrigatÃ³rio" } };
+    return { status: 400 as const, body: { message: "E-mail é obrigatório" } };
   }
   if (!requestedRole) {
     return { status: 400 as const, body: { message: "Perfil solicitado invalido" } };
@@ -388,7 +388,7 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
 
       const duplicatedFields = [
         duplicatedByEmail ? "e-mail" : null,
-        duplicatedByUser ? "usuÃ¡rio" : null,
+        duplicatedByUser ? "usuário" : null,
       ].filter(Boolean).join(" e ");
 
       return {
@@ -396,7 +396,7 @@ export async function createAccessRequestFromPayload(payload: Record<string, unk
         body: {
           ok: false,
           code: "DUPLICATE_ACCESS_REQUEST",
-          message: `JÃ¡ existe uma solicitaÃ§Ã£o de acesso aberta ou em anÃ¡lise para este ${duplicatedFields}. Consulte a solicitaÃ§Ã£o existente antes de criar uma nova.`,
+          message: `Já existe uma solicitação de acesso aberta ou em análise para este ${duplicatedFields}. Consulte a solicitação existente antes de criar uma nova.`,
           item: {
             id: duplicate.id,
             accessKey: duplicate.accessKey ?? null,
@@ -866,7 +866,7 @@ export async function transitionAccessRequest(
     return "invalid-transition" as const;
   }
 
-  // Para approve: valida e captura credenciais em uma ÃƒÂºnica chamada
+  // Para approve: valida e captura credenciais em uma única chamada
   let approvalCredentials: {
     userId: string;
     tempPassword: string | null;
@@ -998,7 +998,7 @@ export async function transitionAccessRequest(
     });
   }
 
-  // Enviar e-mails conforme aÃƒÂ§ÃƒÂ£o
+  // Enviar e-mails conforme ação
   const recipientEmail = request.requesterEmail;
   const recipientName = request.requesterName || null;
 
@@ -1311,7 +1311,7 @@ export async function getPublicAccessRequestByKey(accessKey: string) {
     if (canTransitionAccessRequest(request.status, "expired")) {
       await updateAccessRequestV2(request.id, {
         status: "expired",
-        reviewComment: "CÃ³digo de consulta expirado.",
+        reviewComment: "Código de consulta expirado.",
         adjustmentFields: [],
       });
     }
@@ -1331,7 +1331,7 @@ export async function cancelAccessRequestByKey(accessKey: string) {
 
   const updated = await updateAccessRequestV2(request.id, {
     status: "cancelled",
-    reviewComment: "SolicitaÃ§Ã£o cancelada pelo solicitante.",
+    reviewComment: "Solicitação cancelada pelo solicitante.",
     adjustmentFields: [],
   });
   if (!updated) return null;
@@ -1341,7 +1341,7 @@ export async function cancelAccessRequestByKey(accessKey: string) {
     authorRole: "requester",
     authorName: request.requesterName ?? request.requesterEmail,
     authorEmail: request.requesterEmail,
-    body: "SolicitaÃ§Ã£o cancelada pelo solicitante.",
+    body: "Solicitação cancelada pelo solicitante.",
   });
 
   addAuditLogSafe({
@@ -1378,7 +1378,7 @@ export async function resendAccessRequestCode(input: { name: string; email: stri
     ...(request.status === "expired"
       ? {
           status: "under_review" as const,
-          reviewComment: "Novo cÃ³digo de consulta enviado ao solicitante.",
+          reviewComment: "Novo código de consulta enviado ao solicitante.",
           adjustmentFields: [],
         }
       : {}),

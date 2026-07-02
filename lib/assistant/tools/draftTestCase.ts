@@ -134,12 +134,12 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
       reply: compactMultiline([
         "## ðŸ§ª Gerador de Caso de Teste",
         "",
-        "âš ï¸ **Preciso de mais informaÃ§Ãµes** antes de montar o caso de teste.",
+        "âš ï¸ **Preciso de mais informações** antes de montar o caso de teste.",
         "",
         "Envie:",
-        "- ðŸ› Um **bug** com descriÃ§Ã£o do erro",
-        "- ðŸŽ« Um **ticket** ou cÃ³digo (ex: SP-000001)",
-        "- ðŸ“‹ Uma **descriÃ§Ã£o do fluxo** a ser testado",
+        "- ðŸ› Um **bug** com descrição do erro",
+        "- ðŸŽ« Um **ticket** ou código (ex: SP-000001)",
+        "- ðŸ“‹ Uma **descrição do fluxo** a ser testado",
         "",
         "---",
         "",
@@ -154,13 +154,13 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
   const sourceDescription = ticket?.description ?? message;
   const suggestedPriority: TicketPriority = ticket?.priority ?? inferTicketPriority(message);
   const structuredDraft = parseStructuredTicketDraft(sourceDescription);
-  const severity = suggestedPriority === "high" ? "Alta" : suggestedPriority === "low" ? "Baixa" : "MÃ©dia";
+  const severity = suggestedPriority === "high" ? "Alta" : suggestedPriority === "low" ? "Baixa" : "Média";
   const ticketType: TicketType = ticket?.type ?? structuredDraft?.type ?? "tarefa";
 
   const objective = structuredDraft?.impact
     ? `Validar o fluxo e confirmar que o impacto relatado foi resolvido: ${structuredDraft.impact}.`
     : ticketType === "bug"
-      ? `Validar que o erro descrito em "${sourceTitle}" nÃ£o ocorre mais.`
+      ? `Validar que o erro descrito em "${sourceTitle}" não ocorre mais.`
       : ticketType === "melhoria"
         ? `Validar a melhoria entregue em "${sourceTitle}" e o comportamento esperado.`
         : `Validar o comportamento relacionado a "${sourceTitle}".`;
@@ -174,12 +174,12 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
     return {
       tool: "draft_test_case",
       success: true,
-      summary: "pendÃªncias para gerar caso de teste",
+      summary: "pendências para gerar caso de teste",
       actions: [{ kind: "prompt", label: "ðŸ“ Preencher modelo", prompt: buildTestCaseTemplate() }],
       reply: compactMultiline([
-        "## ðŸ§ª Caso de Teste â€” ValidaÃ§Ã£o",
+        "## ðŸ§ª Caso de Teste — Validação",
         "",
-        "âš ï¸ **PendÃªncias encontradas:**",
+        "âš ï¸ **Pendências encontradas:**",
         "",
         formatValidationIssues(validation.issues),
         "",
@@ -232,21 +232,21 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
       `| **Tipo** | ${typeEmoji} ${ticketType} |`,
       `| **Severidade** | ${severityEmoji} ${severity} |`,
       ticket ? `| **Ticket Base** | ${ticket.code} |` : "",
-      `| **MÃ³dulo** | ${context.screenLabel} |`,
+      `| **Módulo** | ${context.screenLabel} |`,
       "",
       "### ðŸŽ¯ Objetivo:",
       "",
       validation.objective,
       "",
-      "### âœ… PrÃ©-condiÃ§Ãµes:",
+      "### âœ… Pré-condições:",
       "",
-      `1. âœ… UsuÃ¡rio autenticado com acesso ao mÃ³dulo **${context.screenLabel}**`,
-      "2. âœ… Ambiente com dados necessÃ¡rios carregados",
+      `1. âœ… Usuário autenticado com acesso ao módulo **${context.screenLabel}**`,
+      "2. âœ… Ambiente com dados necessários carregados",
       ticket?.companySlug ? `3. âœ… Contexto ativo da empresa **${ticket.companySlug}**` : "",
       "",
       "### ðŸ“ Passos:",
       "",
-      `| # | AÃ§Ã£o |`,
+      `| # | Ação |`,
       `|---|------|`,
       `| 1 | Acessar \`${context.route}\` |`,
       ticketType === "bug"
@@ -256,9 +256,9 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
           : `| 2 | Executar o fluxo: ${validation.reproductionBase.slice(0, 150)}${validation.reproductionBase.length > 150 ? "..." : ""} |`,
       `| 3 | Registrar resposta visual, funcional e dados apresentados |`,
       ticketType === "bug"
-        ? `| 4 | Confirmar que o erro anterior nÃ£o volta a ocorrer |`
+        ? `| 4 | Confirmar que o erro anterior não volta a ocorrer |`
         : ticketType === "melhoria"
-          ? `| 4 | Confirmar que a melhoria estÃ¡ disponÃ­vel e coerente |`
+          ? `| 4 | Confirmar que a melhoria está disponível e coerente |`
           : `| 4 | Confirmar comportamento final esperado |`,
       "",
       "### âœ¨ Resultado Esperado:",
@@ -267,7 +267,7 @@ export async function toolDraftTestCase(user: AuthUser, context: AssistantScreen
       "",
       "---",
       "",
-      "ðŸ’¡ **Dica:** Use este caso como base e ajuste conforme necessÃ¡rio.",
+      "ðŸ’¡ **Dica:** Use este caso como base e ajuste conforme necessário.",
     ].join("\n")),
   };
 }

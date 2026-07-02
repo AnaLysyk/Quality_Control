@@ -36,7 +36,7 @@ describe("chatContacts", () => {
       status: "active",
       job_title: "Analista",
       linkedin_url: null,
-      origin_label: "UsuÃ¡rio",
+      origin_label: "Usuário",
     },
     {
       id: "u-beta",
@@ -54,7 +54,7 @@ describe("chatContacts", () => {
       status: "active",
       job_title: "QA",
       linkedin_url: null,
-      origin_label: "UsuÃ¡rio",
+      origin_label: "Usuário",
     },
     {
       id: "u-gamma",
@@ -72,7 +72,7 @@ describe("chatContacts", () => {
       status: "active",
       job_title: "Produto",
       linkedin_url: null,
-      origin_label: "UsuÃ¡rio",
+      origin_label: "Usuário",
     },
     {
       id: "u-multi",
@@ -88,9 +88,9 @@ describe("chatContacts", () => {
       company_ids: ["company-alpha-id", "company-beta-id"],
       active: true,
       status: "active",
-      job_title: "OperaÃ§Ãµes",
+      job_title: "Operações",
       linkedin_url: null,
-      origin_label: "UsuÃ¡rio",
+      origin_label: "Usuário",
     },
   ];
 

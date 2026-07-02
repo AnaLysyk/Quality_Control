@@ -104,7 +104,7 @@ function inferFlowNeuron(impulse: BrianImpulseEnvelope, evidences: BrianEvidence
     { needle: "login", label: "Fluxo de login" },
     { needle: "email", label: "Fluxo de e-mail" },
     { needle: "pagamento", label: "Fluxo de pagamento" },
-    { needle: "regress", label: "Fluxo de regressÃ£o" },
+    { needle: "regress", label: "Fluxo de regressão" },
   ];
   const match = candidates.find((candidate) => description.includes(candidate.needle));
   if (!match) return null;
@@ -116,7 +116,7 @@ function inferFlowNeuron(impulse: BrianImpulseEnvelope, evidences: BrianEvidence
     evidences,
     context: {
       summary: `Fluxo inferido do texto do impulso ${impulse.type}.`,
-      technicalImpact: "InferÃªncia textual com confianÃ§a mÃ©dia; precisa de evidÃªncia explÃ­cita para virar fato forte.",
+      technicalImpact: "Inferência textual com confiança média; precisa de evidência explícita para virar fato forte.",
     },
   });
 }
@@ -134,11 +134,11 @@ function createSynapse(input: {
 }): BrianSynapse | null {
   const allowed = findAllowedRelation(input.from.kind, input.relation, input.to.kind);
   if (!allowed) {
-    input.warnings.push(`RelaÃ§Ã£o nÃ£o permitida pela ontologia: ${input.from.kind}.${input.relation}.${input.to.kind}`);
+    input.warnings.push(`Relação não permitida pela ontologia: ${input.from.kind}.${input.relation}.${input.to.kind}`);
     return null;
   }
   if (allowed.requiredEvidence && !input.evidence) {
-    input.warnings.push(`Sinapse bloqueada por falta de evidÃªncia: ${input.from.label} ${input.relation} ${input.to.label}`);
+    input.warnings.push(`Sinapse bloqueada por falta de evidência: ${input.from.label} ${input.relation} ${input.to.label}`);
     return null;
   }
   const confidence = Math.max(0, Math.min(1, input.confidence ?? evidenceConfidence(input.evidence)));
@@ -237,7 +237,7 @@ export function buildNeuralActivationFromImpulse(impulse: BrianImpulseEnvelope) 
       entityId: impulse.context.applicationKey,
       impulse,
       evidences,
-      context: { summary: `AplicaÃ§Ã£o contextual da rota ${impulse.context.pathname}.` },
+      context: { summary: `Aplicação contextual da rota ${impulse.context.pathname}.` },
     }));
   }
 
@@ -248,7 +248,7 @@ export function buildNeuralActivationFromImpulse(impulse: BrianImpulseEnvelope) 
       entityId: impulse.context.moduleKey,
       impulse,
       evidences,
-      context: { summary: `MÃ³dulo contextual da rota ${impulse.context.pathname}.` },
+      context: { summary: `Módulo contextual da rota ${impulse.context.pathname}.` },
     }));
   }
 
@@ -294,10 +294,10 @@ export function buildNeuralActivationFromImpulse(impulse: BrianImpulseEnvelope) 
     if (synapse) synapses.push(synapse);
   };
 
-  add(entityNeuron, "belongs_to", findKind("company"), sourceEvidence, `${entityNeuron.label} pertence Ã  empresa contextual do impulso.`, 0.9);
-  add(entityNeuron, "belongs_to", findKind("module"), sourceEvidence, `${entityNeuron.label} pertence ao mÃ³dulo atual.`, 0.82);
-  add(findKind("module"), "belongs_to", findKind("application"), sourceEvidence, "MÃ³dulo inferido da rota pertence Ã  aplicaÃ§Ã£o atual.", 0.76);
-  add(findKind("application"), "belongs_to", findKind("company"), sourceEvidence, "AplicaÃ§Ã£o inferida da rota pertence Ã  empresa atual.", 0.76);
+  add(entityNeuron, "belongs_to", findKind("company"), sourceEvidence, `${entityNeuron.label} pertence à empresa contextual do impulso.`, 0.9);
+  add(entityNeuron, "belongs_to", findKind("module"), sourceEvidence, `${entityNeuron.label} pertence ao módulo atual.`, 0.82);
+  add(findKind("module"), "belongs_to", findKind("application"), sourceEvidence, "Módulo inferido da rota pertence à aplicação atual.", 0.76);
+  add(findKind("application"), "belongs_to", findKind("company"), sourceEvidence, "Aplicação inferida da rota pertence à empresa atual.", 0.76);
 
   const actorRelation: BrianSynapseRelation =
     impulse.type.includes("reopened") ? "reopened_by"
@@ -305,9 +305,9 @@ export function buildNeuralActivationFromImpulse(impulse: BrianImpulseEnvelope) 
         : impulse.type.includes("updated") || impulse.type.includes("status_changed") ? "updated_by"
           : "created_by";
   add(entityNeuron, actorRelation, actorNeuron, actorEvidence, `${impulse.actor.name} ativou ${entityNeuron.label} via ${impulse.type}.`, 0.9);
-  add(entityNeuron, "linked_to", findKind("release"), releaseEvidence, `${entityNeuron.label} foi vinculado Ã  release informada.`, 0.78);
+  add(entityNeuron, "linked_to", findKind("release"), releaseEvidence, `${entityNeuron.label} foi vinculado à release informada.`, 0.78);
   add(entityNeuron, "failed_in", findKind("environment"), environmentEvidence, `${entityNeuron.label} falhou no ambiente informado.`, 0.78);
-  add(entityNeuron, "impacts", findKind("flow"), descriptionEvidence, `${entityNeuron.label} impacta o fluxo inferido da descriÃ§Ã£o.`, 0.68);
+  add(entityNeuron, "impacts", findKind("flow"), descriptionEvidence, `${entityNeuron.label} impacta o fluxo inferido da descrição.`, 0.68);
 
   const policy = resolveActivationPolicy(impulse.context.role);
   const criticalTypes = new Set<BrianImpulseEnvelope["type"]>(["test_run.failed", "release.blocked"]);
@@ -320,8 +320,8 @@ export function buildNeuralActivationFromImpulse(impulse: BrianImpulseEnvelope) 
       neuronId: neuron.id,
       activationScore: Math.min(1, base + preferred + direct),
       reason: neuron.id === entityNeuron.id
-        ? `NeurÃ´nio principal ativado pelo impulso ${impulse.type}.`
-        : `NeurÃ´nio conectado ativado por ${impulse.type}.`,
+        ? `Neurônio principal ativado pelo impulso ${impulse.type}.`
+        : `Neurônio conectado ativado por ${impulse.type}.`,
       impulseId: impulse.id,
       userId: impulse.context.userId,
       sessionId: impulse.context.sessionId,

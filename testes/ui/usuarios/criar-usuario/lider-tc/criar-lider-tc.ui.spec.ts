@@ -11,7 +11,7 @@ import { validarMeuPerfilUsuarioCriado } from "../../../../../support/functions/
 
 test.setTimeout(180000);
 
-test.describe("Criar usuÃ¡rio - LÃ­der TC", () => {
+test.describe("Criar usuário - Líder TC", () => {
   const createdUserIds: string[] = [];
 
   test.afterAll(async ({ request }) => {
@@ -20,10 +20,10 @@ test.describe("Criar usuÃ¡rio - LÃ­der TC", () => {
     }
   });
 
-  test("cria LÃ­der TC, lista o usuÃ¡rio e valida login com acesso administrativo", async ({ page }) => {
+  test("cria Líder TC, lista o usuário e valida login com acesso administrativo", async ({ page }) => {
     const suffix = `${Date.now().toString().slice(-6)}-${Math.random().toString(36).slice(2, 5)}`;
     const email = `e2e-lider-tc-${suffix}@demo.test`;
-    const name = `Teste LÃ­der TC ${suffix}`;
+    const name = `Teste Líder TC ${suffix}`;
 
     await autenticarAdminParaCriacaoUsuario(page);
 

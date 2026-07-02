@@ -8,7 +8,7 @@ function firstName(user: unknown) {
 
 function countBy(values: string[]) {
   return values.reduce<Record<string, number>>((acc, value) => {
-    const key = value || "NÃ£o informado";
+    const key = value || "Não informado";
     acc[key] = (acc[key] ?? 0) + 1;
     return acc;
   }, {});
@@ -28,10 +28,10 @@ export function readAccessRequestsBrainRows(): AccessRequestsBrainVisibleRow[] {
     id: row.dataset.brainId ?? "",
     name: row.dataset.brainName ?? "Solicitante",
     email: row.dataset.brainEmail ?? "",
-    status: row.dataset.brainStatus ?? "Status nÃ£o informado",
+    status: row.dataset.brainStatus ?? "Status não informado",
     statusValue: (row.dataset.brainStatusValue ?? "") as AccessRequestsBrainVisibleRow["statusValue"],
-    profile: row.dataset.brainProfile ?? "Perfil nÃ£o informado",
-    company: row.dataset.brainCompany ?? "NÃ£o informada",
+    profile: row.dataset.brainProfile ?? "Perfil não informado",
+    company: row.dataset.brainCompany ?? "Não informada",
     changes: Number(row.dataset.brainChanges ?? "0") || 0,
   }));
 }
@@ -77,34 +77,34 @@ export function buildAccessRequestsBrainSummary(actionText: string, user: unknow
     return [
       `Oi, tudo bem, ${name}?`,
       "",
-      `Realizei uma busca aqui pra vocÃª: ${actionText}.`,
+      `Realizei uma busca aqui pra você: ${actionText}.`,
       "",
-      "Olha aqui no painel de solicitaÃ§Ãµes: nÃ£o encontrei nenhum resultado visÃ­vel com esse filtro agora.",
+      "Olha aqui no painel de solicitações: não encontrei nenhum resultado visível com esse filtro agora.",
       "",
       "Minha leitura:",
       "- Pode ser que a busca esteja com algum termo errado ou que os filtros combinados estejam restringindo demais.",
-      "- Tenta limpar filtros ou buscar sÃ³ pelo nome/perfil principal.",
+      "- Tenta limpar filtros ou buscar só pelo nome/perfil principal.",
     ].join("\n");
   }
 
   const statusCounter = countBy(rows.map((row) => row.status));
   const profileCounter = countBy(rows.map((row) => row.profile));
-  const withoutCompany = rows.filter((row) => /nÃ£o informada|nao informada|nÃ£o informado|nao informado/i.test(row.company)).length;
+  const withoutCompany = rows.filter((row) => /não informada|nao informada|não informado|nao informado/i.test(row.company)).length;
   const withChanges = rows.filter((row) => row.changes > 0).length;
-  const examples = rows.slice(0, 5).map((row) => `- ${row.name}${row.email ? ` â€” ${row.email}` : ""}: ${row.status}, perfil ${row.profile}, empresa ${row.company}.`);
+  const examples = rows.slice(0, 5).map((row) => `- ${row.name}${row.email ? ` — ${row.email}` : ""}: ${row.status}, perfil ${row.profile}, empresa ${row.company}.`);
   const attention = [
-    withoutCompany > 0 ? `${withoutCompany} solicitaÃ§Ã£o(Ãµes) sem empresa informada.` : "",
-    withChanges > 0 ? `${withChanges} solicitaÃ§Ã£o(Ãµes) com alteraÃ§Ã£o marcada.` : "",
-    rows.some((row) => /rejeitad|recusad/i.test(row.status)) ? "Existem solicitaÃ§Ãµes recusadas/rejeitadas; para elas o melhor Ã© consultar histÃ³rico ou PDF." : "",
-    rows.some((row) => /abert|nova/i.test(row.status)) ? "Existem solicitaÃ§Ãµes abertas; boas para testar aprovar, recusar e pedir ajuste." : "",
+    withoutCompany > 0 ? `${withoutCompany} solicitação(ões) sem empresa informada.` : "",
+    withChanges > 0 ? `${withChanges} solicitação(ões) com alteração marcada.` : "",
+    rows.some((row) => /rejeitad|recusad/i.test(row.status)) ? "Existem solicitações recusadas/rejeitadas; para elas o melhor é consultar histórico ou PDF." : "",
+    rows.some((row) => /abert|nova/i.test(row.status)) ? "Existem solicitações abertas; boas para testar aprovar, recusar e pedir ajuste." : "",
   ].filter(Boolean);
 
   return [
     `Oi, tudo bem, ${name}?`,
     "",
-    `Realizei uma busca aqui pra vocÃª: ${actionText}.`,
+    `Realizei uma busca aqui pra você: ${actionText}.`,
     "",
-    `Olha aqui no painel de solicitaÃ§Ãµes: encontrei ${rows.length} resultado(s) visÃ­veis agora.`,
+    `Olha aqui no painel de solicitações: encontrei ${rows.length} resultado(s) visíveis agora.`,
     "",
     `Status encontrados: ${formatCounter(statusCounter)}.`,
     `Perfis encontrados: ${formatCounter(profileCounter)}.`,
@@ -113,9 +113,9 @@ export function buildAccessRequestsBrainSummary(actionText: string, user: unknow
     ...examples,
     "",
     "Minha leitura:",
-    ...(attention.length ? attention.map((item) => `- ${item}`) : ["- A listagem estÃ¡ coerente para seguir com a conferÃªncia."]),
+    ...(attention.length ? attention.map((item) => `- ${item}`) : ["- A listagem está coerente para seguir com a conferência."]),
     "",
-    "PrÃ³ximo passo: abra uma solicitaÃ§Ã£o visÃ­vel para conferir dados, histÃ³rico, ajustes e PDF.",
+    "Próximo passo: abra uma solicitação visível para conferir dados, histórico, ajustes e PDF.",
   ].join("\n");
 }
 

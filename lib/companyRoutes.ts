@@ -108,7 +108,7 @@ const COMPANY_SECTION_ROOTS = new Set([
   "dashboard",
   "metrics",
   "aplicacoes",
-  "aplicaÃ§Ãµes",
+  "aplicações",
   "planos-de-teste",
   "runs",
   "defeitos",

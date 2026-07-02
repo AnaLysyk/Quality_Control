@@ -6,10 +6,10 @@
  * Rodar visualmente:
  * npx playwright test testes/ui/login/solicitar-acesso/suporte-tecnico/criar-solicitacao.ui.spec.ts --project=chromium --headed --workers=1
  *
- * Rodar sÃ³ no terminal:
+ * Rodar só no terminal:
  * npx playwright test testes/ui/login/solicitar-acesso/suporte-tecnico/criar-solicitacao.ui.spec.ts --project=chromium --workers=1 --reporter=line
  *
- * Abrir relatÃ³rio HTML:
+ * Abrir relatório HTML:
  * npx playwright show-report
  */
 

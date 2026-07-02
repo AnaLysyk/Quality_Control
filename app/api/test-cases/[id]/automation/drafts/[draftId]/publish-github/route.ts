@@ -45,7 +45,7 @@ async function ensureBranch(
   const baseRefUrl = `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(baseBranch)}`;
   const baseRefResponse = await githubRequest<{ object?: { sha?: string } }>(token, baseRefUrl);
   if (!baseRefResponse.ok || !baseRefResponse.data?.object?.sha) {
-    throw new Error(`NÃ£o foi possÃ­vel ler branch base ${baseBranch} no repositÃ³rio ${owner}/${repo}.`);
+    throw new Error(`Não foi possível ler branch base ${baseBranch} no repositório ${owner}/${repo}.`);
   }
 
   const targetRefUrl = `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(targetBranch)}`;
@@ -67,7 +67,7 @@ async function ensureBranch(
   );
 
   if (!createRefResponse.ok || !createRefResponse.data?.object?.sha) {
-    throw new Error(`NÃ£o foi possÃ­vel criar branch ${targetBranch} em ${owner}/${repo}.`);
+    throw new Error(`Não foi possível criar branch ${targetBranch} em ${owner}/${repo}.`);
   }
 
   return createRefResponse.data.object.sha;
@@ -103,7 +103,7 @@ async function upsertFileInBranch(
   });
 
   if (!putResult.ok || !putResult.data?.commit?.sha) {
-    throw new Error(`NÃ£o foi possÃ­vel publicar arquivo ${path} em ${owner}/${repo}.`);
+    throw new Error(`Não foi possível publicar arquivo ${path} em ${owner}/${repo}.`);
   }
 
   return {
@@ -137,7 +137,7 @@ async function createOrReusePullRequest(
 
   if (create.ok && create.data?.html_url) return create.data.html_url;
   if (create.status !== 422) {
-    throw new Error("NÃ£o foi possÃ­vel abrir Pull Request no GitHub.");
+    throw new Error("Não foi possível abrir Pull Request no GitHub.");
   }
 
   const list = await githubRequest<Array<{ html_url?: string }>>(
@@ -147,7 +147,7 @@ async function createOrReusePullRequest(
 
   const existingPr = list.ok && Array.isArray(list.data) ? list.data[0]?.html_url : null;
   if (!existingPr) {
-    throw new Error("NÃ£o foi possÃ­vel reutilizar Pull Request existente.");
+    throw new Error("Não foi possível reutilizar Pull Request existente.");
   }
 
   return existingPr;
@@ -158,31 +158,31 @@ export async function POST(
   { params }: { params: Promise<{ id: string; draftId: string }> },
 ) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const { id, draftId } = await params;
   const record = await getTestCaseRecord(id);
-  if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, record)) {
-    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const confirmed = body?.confirm === true;
   if (!confirmed) {
-    return NextResponse.json({ message: "ConfirmaÃ§Ã£o explÃ­cita Ã© obrigatÃ³ria para publicar no GitHub." }, { status: 400 });
+    return NextResponse.json({ message: "Confirmação explícita é obrigatória para publicar no GitHub." }, { status: 400 });
   }
 
   const draft = await getAutomationDraft(record.testCase.id, draftId);
-  if (!draft) return NextResponse.json({ message: "Draft nÃ£o encontrado" }, { status: 404 });
-  if (!draft.specFile) return NextResponse.json({ message: "Draft sem specFile nÃ£o pode ser publicado." }, { status: 400 });
+  if (!draft) return NextResponse.json({ message: "Draft não encontrado" }, { status: 404 });
+  if (!draft.specFile) return NextResponse.json({ message: "Draft sem specFile não pode ser publicado." }, { status: 400 });
   if (draft.status !== "linked") {
     return NextResponse.json({ message: "Apenas drafts com status linked podem ser publicados no GitHub." }, { status: 400 });
   }
 
   const token = process.env.GITHUB_TOKEN?.trim();
   if (!token) {
-    return NextResponse.json({ message: "GITHUB_TOKEN nÃ£o configurado no servidor." }, { status: 500 });
+    return NextResponse.json({ message: "GITHUB_TOKEN não configurado no servidor." }, { status: 500 });
   }
 
   const repository =
@@ -191,7 +191,7 @@ export async function POST(
       : "testing-company/quality-control";
   const parsedRepository = parseRepository(repository);
   if (!parsedRepository) {
-    return NextResponse.json({ message: "RepositÃ³rio invÃ¡lido. Use owner/repo." }, { status: 400 });
+    return NextResponse.json({ message: "Repositório inválido. Use owner/repo." }, { status: 400 });
   }
 
   const baseBranch =
@@ -216,7 +216,7 @@ export async function POST(
       repo,
       branch,
       draft.specFile,
-      draft.specCode ?? "// spec code indisponÃ­vel no draft\n",
+      draft.specCode ?? "// spec code indisponível no draft\n",
       `[automation] ${record.testCase.key || record.testCase.id} - publish spec`,
     );
     publishedFiles.push(specResult);
@@ -256,7 +256,7 @@ export async function POST(
       branch,
       baseBranch,
       `[Automation] ${record.testCase.key || record.testCase.id} - Playwright draft`,
-      `PublicaÃ§Ã£o automÃ¡tica do draft ${draft.id} para o caso ${record.testCase.key || record.testCase.id}.`,
+      `Publicação automática do draft ${draft.id} para o caso ${record.testCase.key || record.testCase.id}.`,
     );
 
     const latestCommitSha = publishedFiles[publishedFiles.length - 1]?.commitSha ?? null;
@@ -300,10 +300,10 @@ export async function POST(
       testCaseId: record.testCase.id,
       draft: updated,
       publication: updated?.githubPublication,
-      message: "PublicaÃ§Ã£o GitHub concluÃ­da com confirmaÃ§Ã£o explÃ­cita.",
+      message: "Publicação GitHub concluída com confirmação explícita.",
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Falha na publicaÃ§Ã£o GitHub.";
+    const errorMessage = error instanceof Error ? error.message : "Falha na publicação GitHub.";
 
     const failedDraft = await updateAutomationDraft(record.testCase.id, draftId, {
       githubPublication: {

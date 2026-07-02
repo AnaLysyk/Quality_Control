@@ -9,47 +9,47 @@ import type { AssistantToolName } from "./types";
 
 export const REPEATED_REPLY_MESSAGES: Record<AssistantToolName, string> = {
   get_screen_context:
-    "ðŸ“ Acabei de mostrar esse contexto. Quer que eu aprofunde em **permissÃµes**, **chamados** ou **empresa**?",
+    "ðŸ“ Acabei de mostrar esse contexto. Quer que eu aprofunde em **permissões**, **chamados** ou **empresa**?",
   list_available_actions:
-    "âœ… JÃ¡ listei as aÃ§Ãµes disponÃ­veis. Qual delas vocÃª quer executar?",
+    "âœ… Já listei as ações disponíveis. Qual delas você quer executar?",
   search_internal_records:
-    "ðŸ” Acabei de fazer essa busca. Quer refinar por **ID**, **status**, **prioridade** ou **responsÃ¡vel**?",
+    "ðŸ” Acabei de fazer essa busca. Quer refinar por **ID**, **status**, **prioridade** ou **responsável**?",
   summarize_entity:
-    "ðŸ“‹ JÃ¡ fiz esse resumo. Posso detalhar algum ponto especÃ­fico ou resumir outra entidade.",
+    "ðŸ“‹ Já fiz esse resumo. Posso detalhar algum ponto específico ou resumir outra entidade.",
   draft_test_case:
-    "ðŸ§ª JÃ¡ gerei um caso de teste com esse contexto. Quer ajustar para **bug**, **melhoria** ou outro cenÃ¡rio?",
+    "ðŸ§ª Já gerei um caso de teste com esse contexto. Quer ajustar para **bug**, **melhoria** ou outro cenário?",
   create_test_case:
     "Ja preparei esse caso para criacao. Revise o rascunho ou envie novos dados antes de criar outro.",
   explain_permission:
-    "ðŸ” JÃ¡ expliquei esse escopo. Quer comparar com outra tela, perfil ou mÃ³dulo?",
+    "ðŸ” Já expliquei esse escopo. Quer comparar com outra tela, perfil ou módulo?",
   create_ticket:
-    "ðŸŽ« JÃ¡ analisei esse pedido. Me envie **dados novos** ou o **modelo preenchido** para continuar.",
+    "ðŸŽ« Já analisei esse pedido. Me envie **dados novos** ou o **modelo preenchido** para continuar.",
   create_comment:
-    "ðŸ’¬ JÃ¡ tratei esse comentÃ¡rio. Quer fazer uma atualizaÃ§Ã£o diferente?",
+    "ðŸ’¬ Já tratei esse comentário. Quer fazer uma atualização diferente?",
   suggest_next_step:
-    "ðŸ’¡ JÃ¡ sugeri os prÃ³ximos passos. Escolha uma das opÃ§Ãµes ou descreva o que precisa fazer.",
+    "ðŸ’¡ Já sugeri os próximos passos. Escolha uma das opções ou descreva o que precisa fazer.",
   use_brain:
-    "ðŸ§  JÃ¡ usamos o Brain para esse mesmo assunto. Quer que eu aprofunde em impacto, riscos ou prÃ³ximos passos?",
+    "ðŸ§  Já usamos o Brain para esse mesmo assunto. Quer que eu aprofunde em impacto, riscos ou próximos passos?",
 };
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Clarify / low-signal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export const CLARIFY_REPLY = [
-  "Quero te ajudar, mas nÃ£o consegui entender completamente sua solicitaÃ§Ã£o.",
+  "Quero te ajudar, mas não consegui entender completamente sua solicitação.",
   "",
   "**Posso ajudar com:**",
-  "â€¢ Resumir o contexto desta tela",
-  "â€¢ Explicar seu escopo de acesso",
-  "â€¢ Criar um chamado a partir de uma descriÃ§Ã£o",
-  "â€¢ Buscar tickets, usuÃ¡rios ou empresas",
-  "â€¢ Gerar casos de teste",
+  "• Resumir o contexto desta tela",
+  "• Explicar seu escopo de acesso",
+  "• Criar um chamado a partir de uma descrição",
+  "• Buscar tickets, usuários ou empresas",
+  "• Gerar casos de teste",
   "",
-  "Para continuarmos o fluxo, me diga qual dessas opÃ§Ãµes vocÃª quer agora (ou descreva em 1 frase).",
+  "Para continuarmos o fluxo, me diga qual dessas opções você quer agora (ou descreva em 1 frase).",
   "",
-  "**Dica:** Seja especÃ­fico! Por exemplo:",
+  "**Dica:** Seja específico! Por exemplo:",
   "  - \"buscar tickets de alta prioridade\"",
   "  - \"criar chamado sobre erro no login\"",
-  "  - \"explicar por que nÃ£o vejo o mÃ³dulo X\"",
+  "  - \"explicar por que não vejo o módulo X\"",
 ].join("\n");
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Ticket template â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -57,13 +57,13 @@ export const CLARIFY_REPLY = [
 export const TICKET_TEMPLATE_LINES = [
   "Use este modelo para eu estruturar melhor o chamado:",
   "",
-  "TÃ­tulo:",
-  "DescriÃ§Ã£o:",
+  "Título:",
+  "Descrição:",
   "Impacto:",
   "Comportamento esperado:",
   "Comportamento atual:",
   "Tipo: bug | tarefa | melhoria",
-  "Prioridade: baixa | mÃ©dia | alta",
+  "Prioridade: baixa | média | alta",
 ];
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Test case template â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -71,9 +71,9 @@ export const TICKET_TEMPLATE_LINES = [
 export const TEST_CASE_TEMPLATE_LINES = [
   "Use este modelo para eu validar o caso de teste antes de montar:",
   "",
-  "TÃ­tulo:",
+  "Título:",
   "Objetivo:",
-  "PrÃ©-condiÃ§Ãµes:",
+  "Pré-condições:",
   "Passos:",
   "Resultado esperado:",
   "Severidade/Prioridade:",

@@ -19,7 +19,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
     authUser ??
     (mockRole ? { id: "mock-user", email: "mock@local", isGlobalAdmin: mockRole === "leader_tc" } : null);
   if (!effectiveAuthUser) {
-    return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
   const { slug } = await context.params;
@@ -27,7 +27,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug: strin
   const releases = await readManualReleases();
   const release = releases.find((r) => r.slug === targetSlug) ?? null;
   if (!release) {
-    return NextResponse.json({ message: "NÃ£o encontrado", items: [] }, { status: 404 });
+    return NextResponse.json({ message: "Não encontrado", items: [] }, { status: 404 });
   }
 
   if (!effectiveAuthUser.isGlobalAdmin) {

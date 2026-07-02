@@ -119,7 +119,7 @@ export function BrainQaCenter() {
     { label: "Evals prontos", value: data?.summary.readyEvals ?? 0, icon: FiCheckCircle },
     { label: "Prompts", value: data?.summary.prompts ?? 0, icon: FiFileText },
     { label: "Prompts ativos", value: data?.summary.activePrompts ?? 0, icon: FiDatabase },
-    { label: "AÃ§Ãµes", value: data?.summary.quickActions ?? 0, icon: FiZap },
+    { label: "Ações", value: data?.summary.quickActions ?? 0, icon: FiZap },
   ];
 
   const activeItems = useMemo(() => {
@@ -135,7 +135,7 @@ export function BrainQaCenter() {
         <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
           <FiShield className="h-4 w-4" /> Brain QA Command Center
         </span>
-        <h1 className="mt-3 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">ValidaÃ§Ãµes, prompts e aÃ§Ãµes rÃ¡pidas do Brain</h1>
+        <h1 className="mt-3 text-2xl font-black text-[var(--tc-text,#0b1a3c)]">Validações, prompts e ações rápidas do Brain</h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
           Central para transformar o chat em ferramenta operacional de QA: valida fluxo, gera ticket, cria caso Qase, controla prompt e mede se a resposta do Brain presta.
         </p>
@@ -160,7 +160,7 @@ export function BrainQaCenter() {
 
       <div className="mt-5 flex flex-wrap gap-2">
         {[
-          { id: "actions" as const, label: "AÃ§Ãµes rÃ¡pidas" },
+          { id: "actions" as const, label: "Ações rápidas" },
           { id: "evals" as const, label: "Eval Center" },
           { id: "prompts" as const, label: "Prompt Registry" },
         ].map((item) => (
@@ -214,11 +214,11 @@ export function BrainQaCenter() {
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div>
                     <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">Esperado</p>
-                    <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{evalCase.expectedBehavior.map((line) => <li key={line}>â€¢ {line}</li>)}</ul>
+                    <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{evalCase.expectedBehavior.map((line) => <li key={line}>• {line}</li>)}</ul>
                   </div>
                   <div>
-                    <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">EvidÃªncia</p>
-                    <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{evalCase.evidenceRequired.map((line) => <li key={line}>â€¢ {line}</li>)}</ul>
+                    <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">Evidência</p>
+                    <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{evalCase.evidenceRequired.map((line) => <li key={line}>• {line}</li>)}</ul>
                   </div>
                 </div>
                 {renderCopyButton("Copiar eval", () => copyToClipboard(buildEvalText(evalCase)))}
@@ -240,14 +240,14 @@ export function BrainQaCenter() {
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div>
                   <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">Guardrails</p>
-                  <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{prompt.guardrails.map((line) => <li key={line}>â€¢ {line}</li>)}</ul>
+                  <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{prompt.guardrails.map((line) => <li key={line}>• {line}</li>)}</ul>
                 </div>
                 <div>
-                  <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">SaÃ­da esperada</p>
-                  <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{prompt.expectedOutput.map((line) => <li key={line}>â€¢ {line}</li>)}</ul>
+                  <p className="text-xs font-extrabold text-[var(--tc-text,#0b1a3c)]">Saída esperada</p>
+                  <ul className="mt-2 space-y-1 text-xs leading-5 text-[var(--tc-text-secondary,#4b5563)]">{prompt.expectedOutput.map((line) => <li key={line}>• {line}</li>)}</ul>
                 </div>
               </div>
-              {renderCopyButton("Copiar definiÃ§Ã£o", () => copyToClipboard(buildPromptText(prompt)))}
+              {renderCopyButton("Copiar definição", () => copyToClipboard(buildPromptText(prompt)))}
             </article>
           );
         })}

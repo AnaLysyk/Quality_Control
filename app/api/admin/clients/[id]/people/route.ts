@@ -9,33 +9,33 @@ import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const { id: companyId } = await params;
   const company = await findLocalCompanyById(companyId);
   if (!company) {
-    return NextResponse.json({ error: "Empresa nÃ£o encontrada" }, { status: 404 });
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
   }
 
   const body = await req.json().catch(() => null);
   const userId = typeof body?.userId === "string" ? body.userId : "";
   if (!userId) {
-    return NextResponse.json({ error: "UsuÃ¡rio obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "Usuário obrigatório" }, { status: 400 });
   }
 
   const user = await getAdminUserItem(userId);
   if (!user) {
-    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const allowedRoles = new Set(["testing_company_user", "company_user", "empresa", "leader_tc", "technical_support"]);
   if (!allowedRoles.has(user.permission_role ?? "")) {
-    return NextResponse.json({ error: "Apenas usuÃ¡rios permitidos podem ser vinculados por esta aba" }, { status: 400 });
+    return NextResponse.json({ error: "Apenas usuários permitidos podem ser vinculados por esta aba" }, { status: 400 });
   }
 
   if ((user.companyIds ?? user.company_ids ?? []).includes(companyId)) {
-    return NextResponse.json({ error: "Esse usuÃ¡rio jÃ¡ esta vinculado a esta empresa" }, { status: 409 });
+    return NextResponse.json({ error: "Esse usuário já esta vinculado a esta empresa" }, { status: 409 });
   }
 
   try {

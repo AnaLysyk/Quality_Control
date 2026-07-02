@@ -3,8 +3,8 @@
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Brain - AÃ§Ãµes rÃ¡pidas",
-  description: "AÃ§Ãµes rÃ¡pidas de QA do Brain",
+  title: "Brain - Ações rápidas",
+  description: "Ações rápidas de QA do Brain",
 };
 
 export default function BrainAcoesPage() {

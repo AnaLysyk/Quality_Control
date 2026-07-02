@@ -29,7 +29,7 @@ const NATURAL_COMMAND_MAPPINGS: Array<{
   build: (input: string) => ParsedBrainCommand;
 }> = [
   {
-    test: /ligad[oa].*caso|expandir|vizinhan[cÃ§]a/i,
+    test: /ligad[oa].*caso|expandir|vizinhan[cç]a/i,
     command: "/expandir",
     build: (input) => {
       const match = input.match(/(TC-[A-Za-z0-9_-]+)/i);
@@ -172,7 +172,7 @@ export async function executeBrainCommand(input: {
       command: input.parsed,
       requiresConfirmation: false,
       actionType: "read_only",
-      error: "Comando nÃ£o reconhecido no catÃ¡logo oficial do Brain.",
+      error: "Comando não reconhecido no catálogo oficial do Brain.",
     };
   }
 
@@ -183,7 +183,7 @@ export async function executeBrainCommand(input: {
       command: input.parsed,
       requiresConfirmation: false,
       actionType: resolveActionType(definition.command),
-      error: `PermissÃ£o insuficiente: ${definition.requiredPermission}`,
+      error: `Permissão insuficiente: ${definition.requiredPermission}`,
     };
   }
 
@@ -209,7 +209,7 @@ export async function executeBrainCommand(input: {
       ok: true,
       command: input.parsed,
       requiresConfirmation: true,
-      confirmationMessage: `Confirme execuÃ§Ã£o de ${definition.command} (risco ${definition.risk}).`,
+      confirmationMessage: `Confirme execução de ${definition.command} (risco ${definition.risk}).`,
       actionType: resolveActionType(definition.command),
       result: { preview: true },
     };
@@ -235,7 +235,7 @@ export async function executeBrainCommand(input: {
       const query = input.parsed.args[0];
       const depth = Math.min(4, Math.max(1, Number(input.parsed.params.depth ?? "2")));
       const node = (await searchNodes({ query, limit: 1 }))[0];
-      if (!node) throw new Error("Entidade nÃ£o encontrada para expansÃ£o.");
+      if (!node) throw new Error("Entidade não encontrada para expansão.");
       const graph = await getSubgraph(node.id, depth);
       return {
         ok: true,
@@ -249,7 +249,7 @@ export async function executeBrainCommand(input: {
     if (command === "/explicar-relacao") {
       const from = (await searchNodes({ query: input.parsed.args[0], limit: 1 }))[0];
       const to = (await searchNodes({ query: input.parsed.args[1], limit: 1 }))[0];
-      if (!from || !to) throw new Error("Entidades nÃ£o encontradas para explicaÃ§Ã£o de relaÃ§Ã£o.");
+      if (!from || !to) throw new Error("Entidades não encontradas para explicação de relação.");
       const path = await analytics.calculatePath(from.id, to.id);
       return { ok: true, command: input.parsed, requiresConfirmation: false, actionType: "read_only", result: path };
     }
@@ -268,7 +268,7 @@ export async function executeBrainCommand(input: {
 
     if (command === "/impacto") {
       const node = (await searchNodes({ query: input.parsed.args[0], limit: 1 }))[0];
-      if (!node) throw new Error("Entidade nÃ£o encontrada para impacto.");
+      if (!node) throw new Error("Entidade não encontrada para impacto.");
       const impact = await traceImpact(node.id, 3);
       return { ok: true, command: input.parsed, requiresConfirmation: false, actionType: "read_only", result: impact };
     }
@@ -286,12 +286,12 @@ export async function executeBrainCommand(input: {
         command: input.parsed,
         requiresConfirmation: false,
         actionType: "destructive",
-        result: { message: "ReindexaÃ§Ã£o lÃ³gica executada (recalcular scores).", updated: result.updated },
+        result: { message: "Reindexação lógica executada (recalcular scores).", updated: result.updated },
       };
     }
 
     if (command === "/memorizar") {
-      const title = input.rawInput.replace(/^\/memorizar\s*/i, "").trim() || "MemÃ³ria operacional";
+      const title = input.rawInput.replace(/^\/memorizar\s*/i, "").trim() || "Memória operacional";
       const memory = await prisma.brainMemory.create({
         data: {
           title,
@@ -316,12 +316,12 @@ export async function executeBrainCommand(input: {
       const [nodeA, nodeB] = input.parsed.args;
       const a = (await searchNodes({ query: nodeA, limit: 1 }))[0];
       const b = (await searchNodes({ query: nodeB, limit: 1 }))[0];
-      if (!a || !b) throw new Error("NÃ³s nÃ£o encontrados para mesclagem.");
+      if (!a || !b) throw new Error("Nós não encontrados para mesclagem.");
       const suggestion = await prisma.brainInboxItem.create({
         data: {
           kind: "duplicate",
           status: "pending",
-          title: "SolicitaÃ§Ã£o de mesclagem de nÃ³s",
+          title: "Solicitação de mesclagem de nós",
           summary: `Mesclar ${a.label} (${a.id}) com ${b.label} (${b.id})`,
           payload: { nodeA: a.id, nodeB: b.id, requestedBy: input.access.user.id },
         },

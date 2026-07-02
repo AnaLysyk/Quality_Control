@@ -18,7 +18,7 @@ function setUserFavorites(userId: string, items: FavoriteItem[]) {
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const userId = String(user.id ?? user.email ?? "unknown");
 
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const userId = String(user.id ?? user.email ?? "unknown");
 
@@ -60,11 +60,11 @@ export async function POST(req: Request) {
   try {
     body = (await req.json()) as CreateFavoriteInput;
   } catch {
-    return NextResponse.json({ message: "Corpo invÃ¡lido" }, { status: 400 });
+    return NextResponse.json({ message: "Corpo inválido" }, { status: 400 });
   }
 
   if (!body.label?.trim() || !body.href?.trim()) {
-    return NextResponse.json({ message: "label e href sÃ£o obrigatÃ³rios" }, { status: 400 });
+    return NextResponse.json({ message: "label e href são obrigatórios" }, { status: 400 });
   }
 
   // Try Prisma

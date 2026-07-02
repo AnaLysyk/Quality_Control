@@ -82,7 +82,7 @@ export function normalizeRequestProfileType(value: string | null | undefined): R
   if (
     normalized === "global" ||
     normalized === "suporte tecnico" ||
-    normalized === "suporte tÃƒÂ©cnico" ||
+    normalized === "suporte técnico" ||
     normalized === "technical support" ||
     normalized === "technical_support"
   ) {

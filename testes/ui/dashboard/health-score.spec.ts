@@ -12,6 +12,6 @@ test("health score attention aparece no dashboard", async ({ page, context }) =>
   await page.goto("/empresas/demo/dashboard", { waitUntil: "networkidle" });
 
   await validarDashboardAtualPronto(page);
-  await expect(page.getByText(/Risco elevado|AtenÃ§Ã£o|EstÃ¡vel|melhorou|piorou|ficou estÃ¡vel/i).first()).toBeVisible();
+  await expect(page.getByText(/Risco elevado|Atenção|Estável|melhorou|piorou|ficou estável/i).first()).toBeVisible();
 });
 

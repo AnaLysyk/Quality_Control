@@ -17,7 +17,7 @@ type ModuleHeaderProps = {
  * Usage:
  * ```tsx
  * <ModuleHeader
- *   title="RepositÃ³rio de Casos"
+ *   title="Repositório de Casos"
  *   subtitle="Gerencie casos de teste"
  *   actions={<button>Novo caso</button>}
  * />

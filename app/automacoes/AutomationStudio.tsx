@@ -283,7 +283,7 @@ function buildVersionSnapshot(actor: string, draft: FlowDraft, note: string): Fl
 function defaultVariables(): FlowVariable[] {
   return [
     {
-      description: "Empresa ativa da sessÃ£o.",
+      description: "Empresa ativa da sessão.",
       id: createClientId(),
       key: "companySlug",
       scope: "global",
@@ -291,7 +291,7 @@ function defaultVariables(): FlowVariable[] {
       value: "session.companySlug",
     },
     {
-      description: "Ambiente selecionado para a execuÃ§Ã£o.",
+      description: "Ambiente selecionado para a execução.",
       id: createClientId(),
       key: "environmentId",
       scope: "global",
@@ -327,7 +327,7 @@ function toDraftStep(step: AutomationStudioStepTemplate): DraftStep {
 
 function createBlankStep(): DraftStep {
   return toDraftStep({
-    description: "Etapa em branco para comeÃ§ar um novo fluxo do zero.",
+    description: "Etapa em branco para começar um novo fluxo do zero.",
     expectedResult: "Resultado esperado definido pelo analista.",
     inputBinding: "payload.value",
     kind: "custom_script",
@@ -374,7 +374,7 @@ function readStoredDraft(companySlug: string, flow: FlowDefinition, access: Auto
               actor: readString(entry.actor, access.profileLabel),
               createdAt: readString(entry.createdAt, nowLabel()),
               id: readString(entry.id, createClientId()),
-              summary: readString(entry.summary, "AtualizaÃ§Ã£o registrada."),
+              summary: readString(entry.summary, "Atualização registrada."),
             }))
         : base.auditTrail,
       base64Sample: readString(parsed.base64Sample),
@@ -515,7 +515,7 @@ function readCustomFlows(companySlug: string): FlowDefinition[] {
         defaultStatus: readString(flow.defaultStatus, "active") === "inactive" ? "inactive" : "active",
         description: readString(flow.description, "Fluxo customizado"),
         id: readString(flow.id, createClientId()),
-        objective: readString(flow.objective, "AutomaÃ§Ã£o configurÃ¡vel por empresa."),
+        objective: readString(flow.objective, "Automação configurável por empresa."),
         realRunnerId: readString(flow.realRunnerId) || null,
         runnerType: (readString(flow.runnerType, "hybrid") as AutomationStudioRunnerType) || "hybrid",
         source: "custom" as const,
@@ -613,9 +613,9 @@ function buildRunPreview(input: {
     `[${generatedAt}] Empresa ${input.companyName} carregada no studio.`,
     `[${generatedAt}] Fluxo "${input.flow.title}" preparado no ambiente ${input.environmentTitle}.`,
     `[${generatedAt}] Trigger ${input.draft.trigger.mode} ${input.draft.trigger.enabled ? "habilitado" : "desligado"} e modo ${input.draft.runtime.simulationMode}.`,
-    `[${generatedAt}] ${enabledSteps.length} etapa(s) habilitada(s), ${input.draft.variables.length} variÃ¡vel(is) e ${input.draft.boundAssetIds.length + input.draft.uploads.length} recurso(s).`,
+    `[${generatedAt}] ${enabledSteps.length} etapa(s) habilitada(s), ${input.draft.variables.length} variável(is) e ${input.draft.boundAssetIds.length + input.draft.uploads.length} recurso(s).`,
     `[${generatedAt}] Retry global ${input.draft.runtime.retryAttempts}x com backoff ${input.draft.runtime.retryBackoffMs} ms.`,
-    `[${generatedAt}] Perfil ${input.access.profileLabel} pronto para ${input.draft.status === "active" ? "execuÃ§Ã£o" : "revisÃ£o"} do fluxo.`,
+    `[${generatedAt}] Perfil ${input.access.profileLabel} pronto para ${input.draft.status === "active" ? "execução" : "revisão"} do fluxo.`,
   ];
   const technicalLines = enabledSteps.map(
     (step, index) =>
@@ -623,23 +623,23 @@ function buildRunPreview(input: {
   );
   const metrics: RunPreviewMetric[] = [
     {
-      detail: "Etapas habilitadas para a prÃ³xima execuÃ§Ã£o",
+      detail: "Etapas habilitadas para a próxima execução",
       label: "Pipeline",
       value: `${enabledSteps.length} passos`,
     },
     {
-      detail: "CondiÃ§Ãµes, loops e fallbacks modelados no front",
+      detail: "Condições, loops e fallbacks modelados no front",
       label: "Controle",
       value: `${conditionalCount} regras`,
     },
     {
-      detail: "Blocos de paralelismo e componentes reutilizÃ¡veis",
+      detail: "Blocos de paralelismo e componentes reutilizáveis",
       label: "Reuso",
       value: `${parallelCount + subflowCount} blocos`,
     },
     {
-      detail: "Snapshots versionados desta definiÃ§Ã£o",
-      label: "VersÃµes",
+      detail: "Snapshots versionados desta definição",
+      label: "Versões",
       value: `${input.draft.versions.length}`,
     },
   ];
@@ -748,7 +748,7 @@ export default function AutomationStudio({
   const selectedTemplate = findTemplate(selectedTemplateId);
   const boundAssetCount = draft.boundAssetIds.length + draft.uploads.length + (draft.base64Sample.trim() ? 1 : 0);
   const debugStep = enabledSteps[Math.min(debugCursor, Math.max(enabledSteps.length - 1, 0))] || null;
-  const flowStatusLabel = draft.status === "active" ? "Ativo" : "Em revisÃ£o";
+  const flowStatusLabel = draft.status === "active" ? "Ativo" : "Em revisão";
   const flowStatusTone =
     draft.status === "active"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -762,8 +762,8 @@ export default function AutomationStudio({
       tone: flowStatusTone,
     },
     {
-      label: "EdiÃ§Ã£o",
-      value: canEditFlow ? "Liberada" : "ExecuÃ§Ã£o",
+      label: "Edição",
+      value: canEditFlow ? "Liberada" : "Execução",
       hint: access.profileLabel,
       icon: FiCode,
       tone: metricTone(canEditFlow),
@@ -778,12 +778,12 @@ export default function AutomationStudio({
     {
       label: "Arquivos",
       value: `${boundAssetCount}`,
-      hint: "vÃ­nculos",
+      hint: "vínculos",
       icon: FiFolderPlus,
       tone: "border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]",
     },
     {
-      label: "VersÃµes",
+      label: "Versões",
       value: `${draft.versions.length}`,
       hint: lastSavedAt ? `salvo ${lastSavedAt}` : "sem salvar",
       icon: FiClock,
@@ -893,7 +893,7 @@ export default function AutomationStudio({
       variables: [
         ...current.variables,
         {
-          description: "Nova variÃ¡vel configurada no studio.",
+          description: "Nova variável configurada no studio.",
           id: createClientId(),
           key: `var_${current.variables.length + 1}`,
           scope: "local",
@@ -927,7 +927,7 @@ export default function AutomationStudio({
       const copy = {
         ...current.steps[index],
         id: createClientId(),
-        title: `${current.steps[index].title} (cÃ³pia)`,
+        title: `${current.steps[index].title} (cópia)`,
       };
       const steps = [...current.steps];
       steps.splice(index + 1, 0, copy);
@@ -1006,7 +1006,7 @@ export default function AutomationStudio({
       const nextVersion = buildVersionSnapshot(access.profileLabel, current, versionNote.trim() || "Snapshot manual");
       return {
         ...current,
-        auditTrail: [buildAuditEntry(access.profileLabel, `VersÃ£o ${nextVersion.label} salva.`), ...current.auditTrail].slice(0, 20),
+        auditTrail: [buildAuditEntry(access.profileLabel, `Versão ${nextVersion.label} salva.`), ...current.auditTrail].slice(0, 20),
         versions: [nextVersion, ...current.versions].slice(0, MAX_STORED_VERSIONS),
       };
     });
@@ -1018,7 +1018,7 @@ export default function AutomationStudio({
     if (!version) return;
     updateDraft((current) => ({
       ...current,
-      auditTrail: [buildAuditEntry(access.profileLabel, `VersÃ£o ${version.label} restaurada no editor.`), ...current.auditTrail].slice(0, 20),
+      auditTrail: [buildAuditEntry(access.profileLabel, `Versão ${version.label} restaurada no editor.`), ...current.auditTrail].slice(0, 20),
       script: version.script,
       status: version.status,
     }));
@@ -1066,18 +1066,18 @@ export default function AutomationStudio({
       defaultNotes:
         mode === "clone"
           ? `Clone criado a partir de ${selectedFlow.title}.`
-          : "Fluxo criado do zero no studio com script editÃ¡vel e versionamento.",
+          : "Fluxo criado do zero no studio com script editável e versionamento.",
       defaultScript: mode === "clone" ? draft.script : template.code,
       defaultStatus: "active",
       description:
         mode === "clone"
           ? `Clone do fluxo ${selectedFlow.title} adaptado para a empresa ${selectedCompany?.name ?? selectedCompanySlug}.`
-          : "Fluxo criado do zero para cenÃ¡rios complexos, com passos, variÃ¡veis, triggers e scripts editÃ¡veis.",
+          : "Fluxo criado do zero para cenários complexos, com passos, variáveis, triggers e scripts editáveis.",
       id: flowId,
       objective:
         mode === "clone"
           ? `Customizar o fluxo ${selectedFlow.title} sem mexer na base global.`
-          : "Permitir automaÃ§Ã£o low-code + pro-code editÃ¡vel no front sem depender do repositÃ³rio.",
+          : "Permitir automação low-code + pro-code editável no front sem depender do repositório.",
       realRunnerId: null,
       runnerType: mode === "clone" ? selectedFlow.runnerType : "hybrid",
       source: "custom",
@@ -1095,7 +1095,7 @@ export default function AutomationStudio({
           : [
               {
                 description: "Ponto inicial do novo fluxo.",
-                expectedResult: "Contexto preparado para evoluir a automaÃ§Ã£o.",
+                expectedResult: "Contexto preparado para evoluir a automação.",
                 inputBinding: "payload.input",
                 kind: "custom_script",
                 selector: "stepContext",
@@ -1223,11 +1223,11 @@ export default function AutomationStudio({
               <FiShield className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
               {breadcrumbCompany}
             </span>
-            <span className="text-[var(--tc-text-muted,#6b7280)]">â€º</span>
+            <span className="text-[var(--tc-text-muted,#6b7280)]">›</span>
             <span className="truncate font-black">{selectedFlow.title}</span>
-            <span className="text-[var(--tc-text-muted,#6b7280)]">â€º</span>
+            <span className="text-[var(--tc-text-muted,#6b7280)]">›</span>
             <span className="text-[var(--tc-text-muted,#6b7280)]">Scripts</span>
-            <span className="text-[var(--tc-text-muted,#6b7280)]">â€º</span>
+            <span className="text-[var(--tc-text-muted,#6b7280)]">›</span>
             <span className="text-[var(--tc-text-muted,#6b7280)]">Editor</span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1299,7 +1299,7 @@ export default function AutomationStudio({
               >
                 {flowCatalog.map((flow) => (
                   <option key={flow.id} value={flow.id}>
-                    {flow.title} {flow.source === "custom" ? "â€¢ custom" : ""}
+                    {flow.title} {flow.source === "custom" ? "• custom" : ""}
                   </option>
                 ))}
               </select>
@@ -1312,7 +1312,7 @@ export default function AutomationStudio({
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--tc-primary,#011848)] px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
               >
                 <FiPlay className="h-4 w-4" />
-                Preparar execuÃ§Ã£o
+                Preparar execução
               </button>
               {selectedFlow.realRunnerId ? (
                 <button
@@ -1398,7 +1398,7 @@ export default function AutomationStudio({
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <FiSave className="h-4 w-4" />
-                  Salvar versÃ£o
+                  Salvar versão
                 </button>
               </div>
             </div>
@@ -1478,7 +1478,7 @@ export default function AutomationStudio({
                 </div>
 
                 <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
-                  <p className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">Biblioteca de funÃ§Ãµes</p>
+                  <p className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">Biblioteca de funções</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {AUTOMATION_STUDIO_SCRIPT_API.map((item) => (
                       <span
@@ -1494,7 +1494,7 @@ export default function AutomationStudio({
                 <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                   <p className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">Versionamento</p>
                   <label className="mt-3 grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                    Nota da versÃ£o
+                    Nota da versão
                     <input
                       value={versionNote}
                       onChange={(event) => setVersionNote(event.target.value)}
@@ -1530,7 +1530,7 @@ export default function AutomationStudio({
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Biblioteca de arquivos</p>
                   <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">Selecionar asset</h2>
                   <p className="mt-2 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-                    Busque e insira referÃªncias de `assets.resolve()` diretamente no editor, sem poluir a tela principal.
+                    Busque e insira referências de `assets.resolve()` diretamente no editor, sem poluir a tela principal.
                   </p>
                 </div>
                 <button
@@ -1563,7 +1563,7 @@ export default function AutomationStudio({
                     <div className="min-w-0">
                       <p className="truncate text-sm font-black text-[var(--tc-text,#0b1a3c)]">{asset.title}</p>
                       <p className="mt-1 truncate text-xs text-[var(--tc-text-muted,#6b7280)]">
-                        {asset.type} â€¢ {asset.id}
+                        {asset.type} • {asset.id}
                       </p>
                     </div>
                     <button
@@ -1634,14 +1634,14 @@ export default function AutomationStudio({
             <FiShield className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
             {selectedCompany?.name || selectedCompanySlug || "Empresa"}
           </span>
-          <span className="text-[var(--tc-text-muted,#6b7280)]">â€º</span>
+          <span className="text-[var(--tc-text-muted,#6b7280)]">›</span>
           <span className="truncate font-black">{selectedFlow.title}</span>
-          <span className="text-[var(--tc-text-muted,#6b7280)]">â€º</span>
+          <span className="text-[var(--tc-text-muted,#6b7280)]">›</span>
           <span className="text-[var(--tc-text-muted,#6b7280)]">
             {mode === "files"
               ? "Biblioteca de arquivos"
               : activePanel === "overview"
-                ? "VisÃ£o geral"
+                ? "Visão geral"
                 : activePanel === "steps"
                   ? "Etapas"
                   : activePanel === "mappings"
@@ -1664,7 +1664,7 @@ export default function AutomationStudio({
           <article className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Resumo rÃ¡pido</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Resumo rápido</p>
                 <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">{selectedFlow.title}</h2>
                 <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">{selectedFlow.objective}</p>
               </div>
@@ -1673,7 +1673,7 @@ export default function AutomationStudio({
                   access.profileLabel,
                   access.scopeLabel,
                   selectedEnvironment.title,
-                  canSeeLogs ? "Log tÃ©cnico" : "Sem log tÃ©cnico",
+                  canSeeLogs ? "Log técnico" : "Sem log técnico",
                 ].map((item) => (
                   <span
                     key={item}
@@ -1710,10 +1710,10 @@ export default function AutomationStudio({
             <div className="mt-4 grid gap-3">
               <div className={`rounded-2xl border px-4 py-3 ${metricTone(canEditFlow)}`}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">Fluxo</p>
-                <p className="mt-2 text-base font-black">{canEditFlow ? "EditÃ¡vel" : "ExecuÃ§Ã£o assistida"}</p>
+                <p className="mt-2 text-base font-black">{canEditFlow ? "Editável" : "Execução assistida"}</p>
               </div>
               <div className={`rounded-2xl border px-4 py-3 ${metricTone(access.canConfigure)}`}>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">ConfiguraÃ§Ã£o</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">Configuração</p>
                 <p className="mt-2 text-base font-black">{access.canConfigure ? "Global liberada" : "Somente empresa"}</p>
               </div>
               <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
@@ -1767,7 +1767,7 @@ export default function AutomationStudio({
             >
               {flowCatalog.map((flow) => (
                 <option key={flow.id} value={flow.id}>
-                  {flow.title} {flow.source === "custom" ? "â€¢ custom" : ""}
+                  {flow.title} {flow.source === "custom" ? "• custom" : ""}
                 </option>
               ))}
             </select>
@@ -1780,7 +1780,7 @@ export default function AutomationStudio({
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--tc-primary,#011848)] px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
             >
               <FiPlay className="h-4 w-4" />
-              Preparar execuÃ§Ã£o
+              Preparar execução
             </button>
             {selectedFlow.realRunnerId ? (
               <button
@@ -1799,7 +1799,7 @@ export default function AutomationStudio({
       {mode === "flows" ? (
         <div className="flex flex-wrap gap-2 rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-2">
           {[
-            { id: "overview" as const, label: "VisÃ£o geral", icon: FiLayers },
+            { id: "overview" as const, label: "Visão geral", icon: FiLayers },
             { id: "steps" as const, label: "Etapas", icon: FiGitBranch },
             { id: "mappings" as const, label: "Mapeamentos", icon: FiDatabase },
             { id: "results" as const, label: "Resultados", icon: FiActivity },
@@ -1847,7 +1847,7 @@ export default function AutomationStudio({
                 {selectedFlow.runnerType}
               </span>
               <span className="inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
-                {selectedFlow.source === "custom" ? "Custom" : "CatÃ¡logo"}
+                {selectedFlow.source === "custom" ? "Custom" : "Catálogo"}
               </span>
               <span className="inline-flex items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-xs font-semibold text-[var(--tc-text,#0b1a3c)]">
                 {lastSavedAt ? `Salvo ${lastSavedAt}` : "Sem salvar"}
@@ -1885,7 +1885,7 @@ export default function AutomationStudio({
               {activePanel === "overview" ? (
                 <div className="grid gap-3 lg:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  TÃ­tulo
+                  Título
                   <input
                     value={selectedFlow.title}
                     onChange={(event) => updateSelectedFlowMeta("title", event.target.value)}
@@ -1907,7 +1907,7 @@ export default function AutomationStudio({
                   </select>
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] sm:col-span-2">
-                  DescriÃ§Ã£o
+                  Descrição
                   <textarea
                     value={selectedFlow.description}
                     onChange={(event) => updateSelectedFlowMeta("description", event.target.value)}
@@ -1961,7 +1961,7 @@ export default function AutomationStudio({
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
                           <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-2">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Binding</p>
-                            <p className="mt-1 wrap-break-word text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{step.inputBinding || "NÃ£o definido"}</p>
+                            <p className="mt-1 wrap-break-word text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{step.inputBinding || "Não definido"}</p>
                           </div>
                           <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-2">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Controle</p>
@@ -2098,7 +2098,7 @@ export default function AutomationStudio({
                 <article className="rounded-[22px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Biblioteca de aÃ§Ãµes</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Biblioteca de ações</p>
                     <h4 className="mt-2 text-lg font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">Adicionar etapa</h4>
                   </div>
                   <FiLayers className="h-5 w-5 text-[var(--tc-accent,#ef0001)]" />
@@ -2164,7 +2164,7 @@ export default function AutomationStudio({
             </div>
 
             <label className="mt-4 block text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-              Upload rÃ¡pido
+              Upload rápido
               <input
                 type="file"
                 multiple
@@ -2187,7 +2187,7 @@ export default function AutomationStudio({
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{upload.name}</p>
                       <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">
-                        {upload.type} â€¢ {formatBytes(upload.size)}
+                        {upload.type} • {formatBytes(upload.size)}
                       </p>
                     </div>
                     <button
@@ -2215,13 +2215,13 @@ export default function AutomationStudio({
           <article className="min-w-0 rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">
             <FiCode className="h-4 w-4" />
-            ConfiguraÃ§Ã£o da etapa e do fluxo
+            Configuração da etapa e do fluxo
           </div>
           {selectedStep ? (
             <>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  TÃ­tulo
+                  Título
                   <input
                     value={selectedStep.title}
                     onChange={(event) => updateDraftStep(selectedStep.id, (step) => ({ ...step, title: event.target.value }))}
@@ -2268,7 +2268,7 @@ export default function AutomationStudio({
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  CondiÃ§Ã£o / if
+                  Condição / if
                   <input
                     value={selectedStep.condition}
                     onChange={(event) => updateDraftStep(selectedStep.id, (step) => ({ ...step, condition: event.target.value }))}
@@ -2278,7 +2278,7 @@ export default function AutomationStudio({
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  Output para variÃ¡vel
+                  Output para variável
                   <input
                     value={selectedStep.outputVariable}
                     onChange={(event) => updateDraftStep(selectedStep.id, (step) => ({ ...step, outputVariable: event.target.value }))}
@@ -2314,7 +2314,7 @@ export default function AutomationStudio({
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  Loop mÃ¡ximo
+                  Loop máximo
                   <input
                     type="number"
                     min={1}
@@ -2378,7 +2378,7 @@ export default function AutomationStudio({
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  AprovaÃ§Ã£o
+                  Aprovação
                   <input
                     value={selectedStep.approvalRole}
                     onChange={(event) => updateDraftStep(selectedStep.id, (step) => ({ ...step, approvalRole: event.target.value }))}
@@ -2410,7 +2410,7 @@ export default function AutomationStudio({
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] md:col-span-2">
-                  DescriÃ§Ã£o operacional
+                  Descrição operacional
                   <textarea
                     value={selectedStep.description}
                     onChange={(event) => updateDraftStep(selectedStep.id, (step) => ({ ...step, description: event.target.value }))}
@@ -2424,9 +2424,9 @@ export default function AutomationStudio({
               <div className="mt-5 rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">EdiÃ§Ã£o de script</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Edição de script</p>
                     <p className="mt-2 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-                      Para nÃ£o misturar configuraÃ§Ã£o, mapeamentos e cÃ³digo, o editor completo fica na Ã¡rea Scripts.
+                      Para não misturar configuração, mapeamentos e código, o editor completo fica na área Scripts.
                     </p>
                   </div>
                   <Link
@@ -2442,7 +2442,7 @@ export default function AutomationStudio({
             </>
           ) : (
             <div className="mt-4 rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-6 text-sm text-[var(--tc-text-muted,#6b7280)]">
-              Nenhuma etapa disponÃ­vel no fluxo atual.
+              Nenhuma etapa disponível no fluxo atual.
             </div>
           )}
           </article>
@@ -2519,7 +2519,7 @@ export default function AutomationStudio({
                 </label>
               ) : null}
               <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
-                <span className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Exigir aprovaÃ§Ã£o humana no trigger</span>
+                <span className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Exigir aprovação humana no trigger</span>
                 <input
                   type="checkbox"
                   checked={draft.trigger.requireApproval}
@@ -2553,7 +2553,7 @@ export default function AutomationStudio({
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  Paralelismo mÃ¡ximo
+                  Paralelismo máximo
                   <input
                     type="number"
                     min={1}
@@ -2600,7 +2600,7 @@ export default function AutomationStudio({
                   />
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
-                  SimulaÃ§Ã£o
+                  Simulação
                   <select
                     value={draft.runtime.simulationMode}
                     onChange={(event) => updateRuntime("simulationMode", event.target.value)}
@@ -2613,7 +2613,7 @@ export default function AutomationStudio({
                   </select>
                 </label>
                 <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3">
-                  <span className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Permitir escrita em produÃ§Ã£o</span>
+                  <span className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Permitir escrita em produção</span>
                   <input
                     type="checkbox"
                     checked={draft.runtime.allowProductionWrite}
@@ -2631,14 +2631,14 @@ export default function AutomationStudio({
             <article className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">VariÃ¡veis e subfluxos</p>
-                <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">ParÃ¢metros dinÃ¢micos</h3>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Variáveis e subfluxos</p>
+                <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">Parâmetros dinâmicos</h3>
               </div>
               <button
                 type="button"
                 onClick={appendVariable}
-                aria-label="Adicionar variÃ¡vel"
-                title="Adicionar variÃ¡vel"
+                aria-label="Adicionar variável"
+                title="Adicionar variável"
                 disabled={!canEditFlow}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-primary,#011848)] disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -2653,8 +2653,8 @@ export default function AutomationStudio({
                       <input
                         value={variable.key}
                         onChange={(event) => updateVariable(variable.id, "key", event.target.value)}
-                        aria-label="Chave da variÃ¡vel"
-                        title="Chave da variÃ¡vel"
+                        aria-label="Chave da variável"
+                        title="Chave da variável"
                         placeholder="ex: usuario_id"
                         readOnly={!canEditFlow}
                         className="min-h-11 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
@@ -2662,8 +2662,8 @@ export default function AutomationStudio({
                       <input
                         value={variable.value}
                         onChange={(event) => updateVariable(variable.id, "value", event.target.value)}
-                        aria-label="Valor da variÃ¡vel"
-                        title="Valor da variÃ¡vel"
+                        aria-label="Valor da variável"
+                        title="Valor da variável"
                         placeholder="ex: 12345"
                         readOnly={!canEditFlow}
                         className="min-h-11 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
@@ -2673,8 +2673,8 @@ export default function AutomationStudio({
                       <select
                         value={variable.scope}
                         onChange={(event) => updateVariable(variable.id, "scope", event.target.value)}
-                        aria-label="Escopo da variÃ¡vel"
-                        title="Escopo da variÃ¡vel"
+                        aria-label="Escopo da variável"
+                        title="Escopo da variável"
                         disabled={!canEditFlow}
                         className="min-h-11 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                       >
@@ -2684,8 +2684,8 @@ export default function AutomationStudio({
                       <select
                         value={variable.source}
                         onChange={(event) => updateVariable(variable.id, "source", event.target.value)}
-                        aria-label="Origem da variÃ¡vel"
-                        title="Origem da variÃ¡vel"
+                        aria-label="Origem da variável"
+                        title="Origem da variável"
                         disabled={!canEditFlow}
                         className="min-h-11 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
                       >
@@ -2700,9 +2700,9 @@ export default function AutomationStudio({
                     <textarea
                       value={variable.description}
                       onChange={(event) => updateVariable(variable.id, "description", event.target.value)}
-                      aria-label="DescriÃ§Ã£o da variÃ¡vel"
-                      title="DescriÃ§Ã£o da variÃ¡vel"
-                      placeholder="Descreva quando e como usar esta variÃ¡vel"
+                      aria-label="Descrição da variável"
+                      title="Descrição da variável"
+                      placeholder="Descreva quando e como usar esta variável"
                       readOnly={!canEditFlow}
                       rows={2}
                       className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm leading-6 outline-none"
@@ -2714,7 +2714,7 @@ export default function AutomationStudio({
                       className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <FiTrash2 className="h-4 w-4" />
-                      Remover variÃ¡vel
+                      Remover variável
                     </button>
                   </div>
                 </div>
@@ -2741,7 +2741,7 @@ export default function AutomationStudio({
             <article className="rounded-3xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">DepuraÃ§Ã£o e histÃ³rico</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Depuração e histórico</p>
                 <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-[var(--tc-text,#0b1a3c)]">Preview operacional</h3>
               </div>
               <button
@@ -2768,8 +2768,8 @@ export default function AutomationStudio({
 
             <div className="mt-4 space-y-2 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[#071227] p-4 text-white">
               {(runPreview?.lines || [
-                "Clique em Preparar execuÃ§Ã£o para gerar um preview do fluxo atual.",
-                "O preview usa empresa, ambiente, etapas habilitadas, variÃ¡veis, trigger e runtime configurados.",
+                "Clique em Preparar execução para gerar um preview do fluxo atual.",
+                "O preview usa empresa, ambiente, etapas habilitadas, variáveis, trigger e runtime configurados.",
               ]).map((line) => (
                 <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
                   <FiCheckCircle className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
@@ -2801,8 +2801,8 @@ export default function AutomationStudio({
                 <button
                   type="button"
                   onClick={() => setDebugCursor((current) => Math.min(current + 1, Math.max(enabledSteps.length - 1, 0)))}
-                  aria-label="PrÃ³xima etapa"
-                  title="PrÃ³xima etapa"
+                  aria-label="Próxima etapa"
+                  title="Próxima etapa"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-white text-[var(--tc-text,#0b1a3c)]"
                 >
                   <FiArrowDown className="h-4 w-4" />
@@ -2843,7 +2843,7 @@ export default function AutomationStudio({
               <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                 <div className="flex items-center gap-2 text-sm font-black text-[var(--tc-text,#0b1a3c)]">
                   <FiClock className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
-                  VersÃµes salvas
+                  Versões salvas
                 </div>
                 <div className="mt-3 space-y-2">
                   {draft.versions.length > 0 ? (
@@ -2853,7 +2853,7 @@ export default function AutomationStudio({
                           <div>
                             <p className="text-sm font-black text-[var(--tc-text,#0b1a3c)]">{version.label}</p>
                             <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">
-                              {version.savedAt} â€¢ {version.author}
+                              {version.savedAt} • {version.author}
                             </p>
                           </div>
                           <button
@@ -2871,7 +2871,7 @@ export default function AutomationStudio({
                     ))
                   ) : (
                     <div className="rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-4 text-sm text-[var(--tc-text-muted,#6b7280)]">
-                      Nenhuma versÃ£o manual salva ainda.
+                      Nenhuma versão manual salva ainda.
                     </div>
                   )}
                 </div>
@@ -2887,7 +2887,7 @@ export default function AutomationStudio({
                     <div key={entry.id} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3">
                       <p className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{entry.summary}</p>
                       <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">
-                        {entry.createdAt} â€¢ {entry.actor}
+                        {entry.createdAt} • {entry.actor}
                       </p>
                     </div>
                   ))}
@@ -2897,19 +2897,19 @@ export default function AutomationStudio({
               <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
                 <div className="flex items-center gap-2 text-sm font-black text-[var(--tc-text,#0b1a3c)]">
                   <FiPauseCircle className="h-4 w-4 text-[var(--tc-accent,#ef0001)]" />
-                  Regras crÃ­ticas
+                  Regras críticas
                 </div>
                 <div className="mt-3 space-y-2">
                   {[
                     draft.trigger.requireApproval
-                      ? "O trigger exige aprovaÃ§Ã£o humana antes de continuar o fluxo."
+                      ? "O trigger exige aprovação humana antes de continuar o fluxo."
                       : "O trigger pode seguir automaticamente conforme o runtime.",
                     draft.runtime.uploadStrategy === "base64-stream"
-                      ? "Uploads grandes estÃ£o configurados para estratÃ©gia base64-stream."
-                      : `Uploads usam estratÃ©gia ${draft.runtime.uploadStrategy}.`,
+                      ? "Uploads grandes estão configurados para estratégia base64-stream."
+                      : `Uploads usam estratégia ${draft.runtime.uploadStrategy}.`,
                     draft.runtime.allowProductionWrite
-                      ? "Escrita em produÃ§Ã£o estÃ¡ habilitada e exige revisÃ£o de escopo."
-                      : "ProduÃ§Ã£o segue protegida para evitar escrita destrutiva.",
+                      ? "Escrita em produção está habilitada e exige revisão de escopo."
+                      : "Produção segue protegida para evitar escrita destrutiva.",
                   ].map((item) => (
                     <div key={item} className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm leading-7 text-[var(--tc-text,#0b1a3c)]">
                       {item}
@@ -2923,12 +2923,12 @@ export default function AutomationStudio({
               <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-[#071227] p-4 text-white">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/58">
                   <FiEye className="h-4 w-4" />
-                  Observabilidade avanÃ§ada
+                  Observabilidade avançada
                 </div>
                 <div className="mt-3 space-y-2">
                   {(runPreview?.technicalLines || [
-                    "Aguardando preview para gerar log tÃ©cnico detalhado.",
-                    "Suporte tÃ©cnico e lÃ­der TC recebem selectors, bindings, timeout e retries por etapa.",
+                    "Aguardando preview para gerar log técnico detalhado.",
+                    "Suporte técnico e líder TC recebem selectors, bindings, timeout e retries por etapa.",
                   ]).map((line) => (
                     <div key={line} className="flex items-start gap-2 text-sm leading-7 text-white/80">
                       <FiZap className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
@@ -2939,9 +2939,9 @@ export default function AutomationStudio({
               </div>
             ) : (
               <div className="rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-4">
-                <p className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Logs tÃ©cnicos, selectors internos e brain operacional ficam restritos a suporte tÃ©cnico e lÃ­der TC.</p>
+                <p className="text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">Logs técnicos, selectors internos e brain operacional ficam restritos a suporte técnico e líder TC.</p>
                 <p className="mt-2 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">
-                  A identidade do studio permanece igual, mas a telemetria avanÃ§ada nÃ£o Ã© exibida fora do escopo tÃ©cnico.
+                  A identidade do studio permanece igual, mas a telemetria avançada não é exibida fora do escopo técnico.
                 </p>
               </div>
             )}

@@ -89,9 +89,9 @@ function buildDescription(input: SystemEntityInput) {
   const entity = normalizeText(input.entityType) || "Sistema";
   const company = pickText(input.metadata, ["companySlug", "companyId", "clientSlug"]);
   const project = pickText(input.metadata, ["projectSlug", "projectId", "projectCode", "testProjectCode"]);
-  const parts = [`${entity} "${label}" registrado por aÃ§Ã£o ${action}.`];
+  const parts = [`${entity} "${label}" registrado por ação ${action}.`];
   if (company) parts.push(`Empresa/contexto: ${company}.`);
-  if (project) parts.push(`Projeto/operaÃ§Ã£o: ${project}.`);
+  if (project) parts.push(`Projeto/operação: ${project}.`);
   if (input.actorEmail) parts.push(`Ator: ${input.actorEmail}.`);
   return parts.join(" ");
 }
@@ -124,7 +124,7 @@ async function connectContextNodes(args: {
       label: pickText(args.metadata, ["projectName", "testProjectName"]) || projectId,
       refType: "Project",
       refId: projectId,
-      description: `Projeto/operaÃ§Ã£o ${projectId} conectado automaticamente pelo Brain.`,
+      description: `Projeto/operação ${projectId} conectado automaticamente pelo Brain.`,
       metadata: { companySlug: companySlug || null, projectId, source: "system-audit-ingest" } as Prisma.InputJsonValue,
       userId: args.input.actorUserId ?? undefined,
     });
@@ -137,7 +137,7 @@ async function connectContextNodes(args: {
       label: pickText(args.metadata, ["applicationName"]) || applicationId,
       refType: "Application",
       refId: applicationId,
-      description: `AplicaÃ§Ã£o ${applicationId} conectada automaticamente pelo Brain.`,
+      description: `Aplicação ${applicationId} conectada automaticamente pelo Brain.`,
       metadata: { companySlug: companySlug || null, applicationId, source: "system-audit-ingest" } as Prisma.InputJsonValue,
       userId: args.input.actorUserId ?? undefined,
     });

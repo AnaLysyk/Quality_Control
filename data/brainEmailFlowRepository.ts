@@ -6,16 +6,16 @@ import { dirname, join } from "path";
 
 const STORE_PATH = process.env.BRAIN_EMAIL_FLOW_FILE || join(process.cwd(), "data", "brain-email-flow.jsonl");
 const ACCESS_REQUEST_SUBJECT_HINTS = [
-  "solicitaÃ§Ã£o de acesso",
+  "solicitação de acesso",
   "solicitacao de acesso",
   "acesso empresarial",
-  "usuÃ¡rio da empresa",
+  "usuário da empresa",
   "usuario da empresa",
-  "usuÃ¡rio tc",
+  "usuário tc",
   "usuario tc",
-  "lÃ­der tc",
+  "líder tc",
   "lider tc",
-  "suporte tÃ©cnico",
+  "suporte técnico",
   "suporte tecnico",
 ];
 
@@ -99,7 +99,7 @@ function extractAccessKey(html: string, text?: string | null) {
   }
 
   const content = `${html}\n${text ?? ""}`;
-  const explicitCode = content.match(/CÃ³digo de consulta[^\w]{1,80}([a-f0-9]{16,80})/i)?.[1];
+  const explicitCode = content.match(/Código de consulta[^\w]{1,80}([a-f0-9]{16,80})/i)?.[1];
   if (explicitCode) return explicitCode;
   return content.match(/\b[a-f0-9]{32,80}\b/i)?.[0] ?? null;
 }

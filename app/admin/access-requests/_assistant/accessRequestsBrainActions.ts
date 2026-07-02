@@ -37,21 +37,21 @@ function dispatchRowAction(action: AccessRequestsBrainActionType, row: AccessReq
 
 function explainAccessRequestsScreen() {
   return [
-    "Estou contigo nessa central de SolicitaÃ§Ãµes de acesso.",
+    "Estou contigo nessa central de Solicitações de acesso.",
     "",
-    "Consigo buscar por pessoa, e-mail, empresa, perfil ou cargo; filtrar status e perÃ­odo; abrir a conferÃªncia; gerar PDF; e preparar aÃ§Ãµes sensÃ­veis como remover, aprovar, recusar ou pedir ajuste.",
+    "Consigo buscar por pessoa, e-mail, empresa, perfil ou cargo; filtrar status e período; abrir a conferência; gerar PDF; e preparar ações sensíveis como remover, aprovar, recusar ou pedir ajuste.",
     "",
-    "Para aÃ§Ãµes decisÃ³rias eu nÃ£o executo direto. Primeiro localizo a solicitaÃ§Ã£o, abro a conferÃªncia, explico o impacto e peÃ§o confirmaÃ§Ã£o.",
+    "Para ações decisórias eu não executo direto. Primeiro localizo a solicitação, abro a conferência, explico o impacto e peço confirmação.",
   ].join("\n");
 }
 
 function buildAccessRequestsGreetingReply() {
   return [
-    "Oi, tudo bem? Estou contigo na tela de SolicitaÃ§Ãµes de acesso.",
+    "Oi, tudo bem? Estou contigo na tela de Solicitações de acesso.",
     "",
-    "Pode pedir do seu jeito. Eu consigo buscar nomes ou perfis, filtrar por status/perÃ­odo, abrir uma solicitaÃ§Ã£o, gerar PDF e preparar aÃ§Ãµes como aprovar, recusar, remover ou pedir ajuste.",
+    "Pode pedir do seu jeito. Eu consigo buscar nomes ou perfis, filtrar por status/período, abrir uma solicitação, gerar PDF e preparar ações como aprovar, recusar, remover ou pedir ajuste.",
     "",
-    "Exemplos rÃ¡pidos: buscar Barbara, recusadas, abrir primeira, pdf da primeira, ou o que tem aqui.",
+    "Exemplos rápidos: buscar Barbara, recusadas, abrir primeira, pdf da primeira, ou o que tem aqui.",
   ].join("\n");
 }
 
@@ -59,7 +59,7 @@ function buildAccessRequestsFollowUpReply() {
   return [
     "Perfeito. Continuo acompanhando esta tela.",
     "",
-    "Me diga o que vocÃª quer fazer na fila: buscar, filtrar, abrir, gerar PDF ou analisar o que estÃ¡ visÃ­vel agora.",
+    "Me diga o que você quer fazer na fila: buscar, filtrar, abrir, gerar PDF ou analisar o que está visível agora.",
   ].join("\n");
 }
 
@@ -75,23 +75,23 @@ async function findTarget(term: string) {
 function buildNoTargetReply(term: string) {
   const suggestion = suggestAccessRequestsBrainTerm(term);
   if (suggestion) {
-    return `NÃ£o encontrei "${term}" na listagem visÃ­vel. Encontrei termos parecidos com ${suggestion}. Quer buscar por ${suggestion}?`;
+    return `Não encontrei "${term}" na listagem visível. Encontrei termos parecidos com ${suggestion}. Quer buscar por ${suggestion}?`;
   }
-  return "NÃ£o encontrei uma solicitaÃ§Ã£o visÃ­vel para esse pedido. Tenta limpar filtros ou buscar sÃ³ pelo nome/perfil principal.";
+  return "Não encontrei uma solicitação visível para esse pedido. Tenta limpar filtros ou buscar só pelo nome/perfil principal.";
 }
 
 function pendingReply(action: AccessRequestsBrainActionType, row: AccessRequestsBrainVisibleRow, extra?: string) {
   if (action === "remove") {
     return [
-      `Encontrei ${row.name}${row.email ? ` â€” ${row.email}` : ""}.`,
+      `Encontrei ${row.name}${row.email ? ` — ${row.email}` : ""}.`,
       "",
-      "Essa solicitaÃ§Ã£o serÃ¡ removida da listagem e a movimentaÃ§Ã£o ficarÃ¡ registrada em logs.",
-      "Confirma remover essa solicitaÃ§Ã£o?",
+      "Essa solicitação será removida da listagem e a movimentação ficará registrada em logs.",
+      "Confirma remover essa solicitação?",
     ].join("\n");
   }
-  if (action === "approve") return `Encontrei ${row.name}. Abri a conferÃªncia para vocÃª. Confirma aprovar essa solicitaÃ§Ã£o?`;
-  if (action === "reject") return extra ? `Encontrei ${row.name}. Abri a conferÃªncia. Confirma recusar com este motivo: ${extra}?` : "Qual motivo da recusa?";
-  return extra ? `Encontrei ${row.name}. Abri a conferÃªncia. Confirma devolver para ajuste os campos informados?` : "Qual campo vocÃª quer devolver para ajuste e qual comentÃ¡rio devo usar?";
+  if (action === "approve") return `Encontrei ${row.name}. Abri a conferência para você. Confirma aprovar essa solicitação?`;
+  if (action === "reject") return extra ? `Encontrei ${row.name}. Abri a conferência. Confirma recusar com este motivo: ${extra}?` : "Qual motivo da recusa?";
+  return extra ? `Encontrei ${row.name}. Abri a conferência. Confirma devolver para ajuste os campos informados?` : "Qual campo você quer devolver para ajuste e qual comentário devo usar?";
 }
 
 export async function runAccessRequestsBrainCommand(input: RunInput): Promise<AccessRequestsBrainResult> {
@@ -103,28 +103,28 @@ export async function runAccessRequestsBrainCommand(input: RunInput): Promise<Ac
   if (command.kind === "follow_up") return { handled: true, reply: buildAccessRequestsFollowUpReply() };
 
   if (command.kind === "cancel_pending") {
-    return { handled: true, pendingAction: null, reply: "Tudo bem, cancelei a aÃ§Ã£o pendente. Nada foi executado." };
+    return { handled: true, pendingAction: null, reply: "Tudo bem, cancelei a ação pendente. Nada foi executado." };
   }
 
   if (command.kind === "confirm_pending") {
     const pending = input.pendingAction;
     if (!pending || Date.now() - pending.createdAt > 5 * 60 * 1000) {
-      return { handled: true, pendingAction: null, reply: "NÃ£o encontrei uma aÃ§Ã£o pendente vÃ¡lida para confirmar. Me diga novamente o que vocÃª quer fazer." };
+      return { handled: true, pendingAction: null, reply: "Não encontrei uma ação pendente válida para confirmar. Me diga novamente o que você quer fazer." };
     }
     const row = readAccessRequestsBrainRows().find((item) => item.id === pending.targetRequestId);
-    if (!row) return { handled: true, pendingAction: null, reply: "A solicitaÃ§Ã£o pendente nÃ£o estÃ¡ mais visÃ­vel. NÃ£o executei nada." };
+    if (!row) return { handled: true, pendingAction: null, reply: "A solicitação pendente não está mais visível. Não executei nada." };
     dispatchRowAction(pending.type, row, "edit");
     return {
       handled: true,
       pendingAction: null,
       reply: pending.type === "remove"
-        ? "Perfeito, abri a confirmaÃ§Ã£o visual de remoÃ§Ã£o. Revise o aviso e confirme no modal para concluir."
-        : "Perfeito, mantive a solicitaÃ§Ã£o aberta em modo de anÃ¡lise. Revise os dados no modal e use o botÃ£o de decisÃ£o da tela para concluir.",
+        ? "Perfeito, abri a confirmação visual de remoção. Revise o aviso e confirme no modal para concluir."
+        : "Perfeito, mantive a solicitação aberta em modo de análise. Revise os dados no modal e use o botão de decisão da tela para concluir.",
     };
   }
 
   if (command.kind === "explain") return { handled: true, reply: explainAccessRequestsScreen() };
-  if (command.kind === "analyze") return { handled: true, reply: buildAccessRequestsBrainSummary("analisei a tabela visÃ­vel", input.user) };
+  if (command.kind === "analyze") return { handled: true, reply: buildAccessRequestsBrainSummary("analisei a tabela visível", input.user) };
 
   if (command.kind === "filter") {
     const rowsBeforeFilter = readAccessRequestsBrainRows();
@@ -136,7 +136,7 @@ export async function runAccessRequestsBrainCommand(input: RunInput): Promise<Ac
       const suggestion = suggestAccessRequestsBrainTerm(command.filters.searchTerm, rowsBeforeFilter);
       return {
         handled: true,
-        reply: suggestion ? `${reply}\n\nSugestÃ£o: encontrei termo parecido com ${suggestion}. Quer buscar por ${suggestion}?` : reply,
+        reply: suggestion ? `${reply}\n\nSugestão: encontrei termo parecido com ${suggestion}. Quer buscar por ${suggestion}?` : reply,
       };
     }
     return { handled: true, reply };
@@ -151,12 +151,12 @@ export async function runAccessRequestsBrainCommand(input: RunInput): Promise<Ac
 
   if (command.action === "view") {
     dispatchRowAction("view", row, "view");
-    return { handled: true, reply: `Abri a conferÃªncia de ${row.name}${row.email ? ` â€” ${row.email}` : ""}. Usei a primeira solicitaÃ§Ã£o visÃ­vel que bateu com o pedido.` };
+    return { handled: true, reply: `Abri a conferência de ${row.name}${row.email ? ` — ${row.email}` : ""}. Usei a primeira solicitação visível que bateu com o pedido.` };
   }
 
   if (command.action === "pdf") {
     dispatchRowAction("pdf", row, "view");
-    return { handled: true, reply: `Gerei o PDF da solicitaÃ§Ã£o de ${row.name}${row.email ? ` â€” ${row.email}` : ""}.` };
+    return { handled: true, reply: `Gerei o PDF da solicitação de ${row.name}${row.email ? ` — ${row.email}` : ""}.` };
   }
 
   dispatchRowAction(command.action, row, "edit");

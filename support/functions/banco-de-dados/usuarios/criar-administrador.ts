@@ -8,7 +8,7 @@ async function createAdmin() {
   const hashedPassword = hashPasswordSha256(password);
 
   try {
-    // Criar empresa se nÃ£o existir
+    // Criar empresa se não existir
     const company = await prisma.company.upsert({
       where: { slug: 'testing-company' },
       update: {},
@@ -18,7 +18,7 @@ async function createAdmin() {
       },
     });
 
-    // Criar usuÃ¡rio
+    // Criar usuário
     const user = await prisma.user.upsert({
       where: { email },
       update: {},
@@ -30,7 +30,7 @@ async function createAdmin() {
       },
     });
 
-    // Associar usuÃ¡rio Ã  empresa
+    // Associar usuário à empresa
     await prisma.userCompany.upsert({
       where: {
         user_id_company_id: {

@@ -17,7 +17,7 @@ export function getJwtSecret(): string | null {
     process.env.NEXTAUTH_SECRET ||
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
-    // Render injects RENDER_SERVICE_ID â€” constant for the lifetime of the service.
+    // Render injects RENDER_SERVICE_ID — constant for the lifetime of the service.
     // Using it as last-resort means JWT works out-of-the-box on Render without manual config.
     process.env.RENDER_SERVICE_ID ||
     "";

@@ -64,7 +64,7 @@ export default function UserProfileMenu({ activeClientName, onEditCompany, onOpe
 
   const displayName = loading ? t("profileMenu.loading") : user?.name || t("profileMenu.userFallback");
 
-  // Universal session fallback: redireciona para login se nÃ£o hÃ¡ usuÃ¡rio e nÃ£o estÃ¡ carregando
+  // Universal session fallback: redireciona para login se não há usuário e não está carregando
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");

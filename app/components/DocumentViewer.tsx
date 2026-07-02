@@ -135,7 +135,7 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
                 {blobUrl ? (
                   <img src={blobUrl} alt={item.title} className={`${styles.viewerImage} ${zoomClassName}`} />
                 ) : blobError ? (
-                  <p className="text-sm text-red-600">NÃ£o foi possÃ­vel carregar o arquivo.</p>
+                  <p className="text-sm text-red-600">Não foi possível carregar o arquivo.</p>
                 ) : (
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--tc-border)] border-t-(--tc-accent,#ef0001)" />
                 )}
@@ -153,7 +153,7 @@ export default function DocumentViewer({ open, item, slug, onClose, copy }: Docu
                 />
               ) : blobError ? (
                 <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-                  <p className="text-sm text-red-600">NÃ£o foi possÃ­vel carregar o PDF.</p>
+                  <p className="text-sm text-red-600">Não foi possível carregar o PDF.</p>
                   <a href={downloadUrl} className="inline-flex items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] transition hover:border-[var(--tc-accent,#ef0001)] hover:text-[var(--tc-accent,#ef0001)]">
                     <FiDownload className="h-4 w-4" /> {copy.viewerDownload ?? "Baixar"}
                   </a>

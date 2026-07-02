@@ -51,13 +51,13 @@ type DashboardClientProps = {
 
 const GATE_LABEL: Record<ManualRun["gateStatus"], string> = {
   approved: "Ok",
-  warning: "AtenÃ§Ã£o",
+  warning: "Atenção",
   failed: "Risco",
   no_data: "Sem dados",
 };
 
 function formatHours(value: number | null) {
-  if (value == null || Number.isNaN(value)) return "â€”";
+  if (value == null || Number.isNaN(value)) return "—";
   return `${value}h`;
 }
 
@@ -125,7 +125,7 @@ export default function DashboardClient({
             <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent,#ef0001)]">Dashboard</p>
             <h1 className="mt-2 text-3xl font-extrabold">Qualidade da empresa</h1>
             <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-              VisÃ£o geral de risco, SLA e execuÃ§Ãµes recentes.
+              Visão geral de risco, SLA e execuções recentes.
             </p>
           </div>
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
@@ -179,12 +179,12 @@ export default function DashboardClient({
               data-testid={healthTestId}
               className="mt-2 inline-flex rounded-full border border-[var(--tc-border,#e5e7eb)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
             >
-              {healthStatus === "healthy" ? "SaudÃ¡vel" : healthStatus === "attention" ? "AtenÃ§Ã£o" : "CrÃ­tico"}
+              {healthStatus === "healthy" ? "Saudável" : healthStatus === "attention" ? "Atenção" : "Crítico"}
             </div>
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm" data-testid="mttr-card">
-            <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">MTTR mÃ©dio</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-[var(--tc-text-muted)]">MTTR médio</p>
             <div className="mt-2 text-3xl font-extrabold" data-testid="mttr">
               {mttrDisplay}
             </div>
@@ -192,7 +192,7 @@ export default function DashboardClient({
               {mttrDisplay}
             </div>
             <div className="mt-1 text-xs text-[var(--tc-text-muted)]" data-testid="mttr-trend">
-              TendÃªncia: {trendDirection === "up" ? "melhora" : trendDirection === "down" ? "piora" : "estÃ¡vel"}
+              Tendência: {trendDirection === "up" ? "melhora" : trendDirection === "down" ? "piora" : "estável"}
             </div>
           </div>
 
@@ -219,7 +219,7 @@ export default function DashboardClient({
                 data-testid={trendDirection === "up" ? "quality-trend-improving" : "quality-trend-stable"}
                 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]"
               >
-                {trendDirection === "up" ? "Melhorando" : trendDirection === "down" ? "Piorando" : "EstÃ¡vel"}
+                {trendDirection === "up" ? "Melhorando" : trendDirection === "down" ? "Piorando" : "Estável"}
               </div>
             </div>
             <div className="mt-4 overflow-x-auto">
@@ -243,7 +243,7 @@ export default function DashboardClient({
                           {run.name}
                         </Link>
                       </td>
-                      <td className="py-2">{run.passRate ?? "â€”"}%</td>
+                      <td className="py-2">{run.passRate ?? "—"}%</td>
                       <td className="py-2">{GATE_LABEL[run.gateStatus]}</td>
                     </tr>
                   ))}
@@ -267,7 +267,7 @@ export default function DashboardClient({
                 <strong>{gateCounts.approved}</strong>
               </div>
               <div className="flex items-center justify-between">
-                <span>Em atenÃ§Ã£o</span>
+                <span>Em atenção</span>
                 <strong>{gateCounts.warning}</strong>
               </div>
               <div className="flex items-center justify-between">
@@ -343,7 +343,7 @@ export default function DashboardClient({
                     </span>
                   </div>
                   <div className="text-xs text-[var(--tc-text-muted)]">
-                    {goal.value ?? "â€”"} / {goal.target ?? "â€”"}
+                    {goal.value ?? "—"} / {goal.target ?? "—"}
                   </div>
                 </div>
               ))}

@@ -70,7 +70,7 @@ async function writeStore(items: ManualRelease[]) {
 export async function POST(req: NextRequest) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   if (!canWrite(user)) {
     return NextResponse.json({ error: "Acesso proibido" }, { status: 403 });
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   if (!canRead(user)) {
     return NextResponse.json({ error: "Acesso proibido" }, { status: 403 });
@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
 
   const companyId = req.nextUrl.searchParams.get("companyId");
   if (!companyId) {
-    return NextResponse.json({ error: "companyId e obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "companyId e obrigatório" }, { status: 400 });
   }
   if (!ensureCompanyAccess(user, companyId)) {
     return NextResponse.json({ error: "Acesso proibido" }, { status: 403 });

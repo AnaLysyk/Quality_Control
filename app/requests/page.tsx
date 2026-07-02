@@ -144,7 +144,7 @@ export default function RequestsPage() {
       return;
     }
 
-    const msg = language === "en-US" ? "Password reset request sent." : "SolicitaÃ§Ã£o de reset de senha enviada.";
+    const msg = language === "en-US" ? "Password reset request sent." : "Solicitação de reset de senha enviada.";
     setMessage(msg);
     toast.success(msg);
     void refetch();
@@ -175,7 +175,7 @@ export default function RequestsPage() {
     }
 
     setDeletionReason("");
-    const msg = language === "en-US" ? "Profile deletion request sent." : "SolicitaÃ§Ã£o de exclusÃ£o de perfil enviada.";
+    const msg = language === "en-US" ? "Profile deletion request sent." : "Solicitação de exclusão de perfil enviada.";
     setMessage(msg);
     toast.success(msg);
     void refetch();
@@ -204,7 +204,7 @@ export default function RequestsPage() {
       return;
     }
 
-    const msg = language === "en-US" ? "Request resubmitted." : "SolicitaÃ§Ã£o reenviada.";
+    const msg = language === "en-US" ? "Request resubmitted." : "Solicitação reenviada.";
     setMessage(msg);
     toast.success(msg);
     void refetch();
@@ -317,7 +317,7 @@ export default function RequestsPage() {
               <div>
                 <p className="tc-panel-kicker">{language === "en-US" ? "Password" : "Senha"}</p>
                 <h2 className="tc-panel-title">{language === "en-US" ? "Request password reset" : "Solicitar reset de senha"}</h2>
-                <p className="tc-panel-description">{language === "en-US" ? "A reset link will be sent to your email after approval." : "Um link de reset serÃ¡ enviado ao seu e-mail apÃ³s aprovaÃ§Ã£o."}</p>
+                <p className="tc-panel-description">{language === "en-US" ? "A reset link will be sent to your email after approval." : "Um link de reset será enviado ao seu e-mail após aprovação."}</p>
               </div>
             </div>
 
@@ -332,8 +332,8 @@ export default function RequestsPage() {
             <div className="tc-panel-header">
               <div>
                 <p className="tc-panel-kicker">{language === "en-US" ? "Account" : "Conta"}</p>
-                <h2 className="tc-panel-title">{language === "en-US" ? "Request profile deletion" : "Solicitar exclusÃ£o de perfil"}</h2>
-                <p className="tc-panel-description">{language === "en-US" ? "Your account will be deactivated after administrative approval." : "Sua conta serÃ¡ desativada apÃ³s aprovaÃ§Ã£o administrativa."}</p>
+                <h2 className="tc-panel-title">{language === "en-US" ? "Request profile deletion" : "Solicitar exclusão de perfil"}</h2>
+                <p className="tc-panel-description">{language === "en-US" ? "Your account will be deactivated after administrative approval." : "Sua conta será desativada após aprovação administrativa."}</p>
               </div>
             </div>
 
@@ -401,10 +401,10 @@ export default function RequestsPage() {
                         onClick={() => void resubmitRequest(request.id, request.payload)}
                         className="tc-button-primary text-xs"
                       >
-                        {language === "en-US" ? "Resubmit" : "Reenviar solicitaÃ§Ã£o"}
+                        {language === "en-US" ? "Resubmit" : "Reenviar solicitação"}
                       </button>
                       <span className="text-xs text-[var(--tc-text-muted,#6b7280)]">
-                        {language === "en-US" ? "Adjust and resubmit for review" : "Ajuste e reenvie para anÃ¡lise"}
+                        {language === "en-US" ? "Adjust and resubmit for review" : "Ajuste e reenvie para análise"}
                       </span>
                     </div>
                   ) : null}

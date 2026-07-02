@@ -57,7 +57,7 @@ export async function ensureAutomationTables(): Promise<void> {
     const pool = getAutomationPool();
     const client = await pool.connect();
     try {
-      // Serializa o bootstrap entre processos/nÃ³s para evitar corrida de CREATE TABLE.
+      // Serializa o bootstrap entre processos/nós para evitar corrida de CREATE TABLE.
       await client.query("SELECT pg_advisory_lock($1)", [8_274_221]);
 
       await client.query(`

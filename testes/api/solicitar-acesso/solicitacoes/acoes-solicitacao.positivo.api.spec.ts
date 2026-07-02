@@ -52,7 +52,7 @@ test.describe("Solicitacoes de acesso - ciclos por perfil revisor", () => {
         const approvalEmail = await esperarEmailCapturado({
           to: email,
           subject: /aprovad[ao]|aprovada|aprovado/i,
-          contains: ["Login cadastrado", "Senha cadastrada", "Suporte tÃ©cnico"],
+          contains: ["Login cadastrado", "Senha cadastrada", "Suporte técnico"],
         });
         expect(`${approvalEmail.text ?? ""}\n${approvalEmail.html}`).toContain(
           payload.password,
@@ -97,7 +97,7 @@ test.describe("Solicitacoes de acesso - ciclos por perfil revisor", () => {
         const adjustmentEmail = await esperarEmailCapturado({
           to: email,
           subject: /Ajuste necess.rio na sua solicita..o - Quality Control/i,
-          contains: ["Telefone", "DescriÃ§Ã£o", created.accessKey],
+          contains: ["Telefone", "Descrição", created.accessKey],
         });
         expect(`${adjustmentEmail.text ?? ""}\n${adjustmentEmail.html}`).not.toContain(
           payload.password,
@@ -170,7 +170,7 @@ test.describe("Solicitacoes de acesso - ciclos por perfil revisor", () => {
         const rejectionEmail = await esperarEmailCapturado({
           to: email,
           subject: /Solicita..o de acesso rejeitada - Quality Control/i,
-          contains: ["Recusado por dados incompatÃ­veis", created.accessKey],
+          contains: ["Recusado por dados incompatíveis", created.accessKey],
         });
         expect(`${rejectionEmail.text ?? ""}\n${rejectionEmail.html}`).not.toContain(
           payload.password,

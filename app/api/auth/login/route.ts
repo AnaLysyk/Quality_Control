@@ -117,7 +117,7 @@ export async function POST(req: Request) {
       },
     });
     setCookie(res, "session_id", sessionId, refreshToken ? accessTtlSeconds : SESSION_TTL_SECONDS, secureCookies);
-    // Sempre expÃµe um token para manter compatibilidade no middleware.
+    // Sempre expõe um token para manter compatibilidade no middleware.
     setCookie(res, "access_token", tokenToExpose, accessTtlSeconds, secureCookies);
     setCookie(res, "auth_token", tokenToExpose, accessTtlSeconds, secureCookies);
     if (refreshToken) {
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
         secureCookies,
       );
     } else {
-      // Limpa o contexto salvo quando o login nÃ£o especifica empresa.
+      // Limpa o contexto salvo quando o login não especifica empresa.
       res.cookies.set("active_company_slug", "", {
         httpOnly: true,
         sameSite: "lax",

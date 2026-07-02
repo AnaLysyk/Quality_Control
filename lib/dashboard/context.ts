@@ -98,12 +98,12 @@ export function formatDashboardContextLabel(context: Pick<DashboardContextValue,
   );
   const parts = [
     companyLabel,
-    context.labels.applicationLabel?.trim() || "Todas as aplicaÃ§Ãµes",
+    context.labels.applicationLabel?.trim() || "Todas as aplicações",
     context.labels.moduleLabel?.trim() || null,
-    context.labels.periodLabel?.trim() || "Ãšltimos 30 dias",
+    context.labels.periodLabel?.trim() || "Últimos 30 dias",
   ].filter((value): value is string => Boolean(value));
 
-  return parts.join(" Â· ");
+  return parts.join(" · ");
 }
 
 export function resolveDashboardContext({

@@ -2,7 +2,7 @@
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
-test("tendÃƒÂªncia improving aparece no dashboard", async ({ page, context }) => {
+test("tendÃƒªncia improving aparece no dashboard", async ({ page, context }) => {
   await simularAutenticacao(context, {
     role: "company",
     companies: ["DEMO"],
@@ -12,6 +12,6 @@ test("tendÃƒÂªncia improving aparece no dashboard", async ({ page, context }
   await page.goto("/empresas/demo/dashboard", { waitUntil: "networkidle" });
 
   await validarDashboardAtualPronto(page);
-  await expect(page.getByText(/Risco elevado|qualidade melhorou|qualidade piorou|qualidade ficou estÃ¡vel/i).first()).toBeVisible();
+  await expect(page.getByText(/Risco elevado|qualidade melhorou|qualidade piorou|qualidade ficou estável/i).first()).toBeVisible();
 });
 

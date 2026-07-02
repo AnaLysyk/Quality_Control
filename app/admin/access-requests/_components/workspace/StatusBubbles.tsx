@@ -51,17 +51,17 @@ export function StatusBubbles({
           tone={profile.passwordProvided ? "ok" : "warn"}
         />
         <ValidationItem
-          label="ObrigatÃ³rios"
+          label="Obrigatórios"
           value={missingRequiredFields ? "Pendentes" : "OK"}
           tone={missingRequiredFields ? "warn" : "ok"}
         />
         <ValidationItem
           label="Empresa"
-          value={companyPending ? "ObrigatÃ³ria" : "Validada"}
+          value={companyPending ? "Obrigatória" : "Validada"}
           tone={companyPending ? "warn" : "ok"}
         />
         <ValidationItem
-          label="AlteraÃ§Ãµes"
+          label="Alterações"
           value={`${changedCount} campo(s)`}
           tone={commentsLocked ? "neutral" : changedCount > 0 ? "warn" : "neutral"}
         />

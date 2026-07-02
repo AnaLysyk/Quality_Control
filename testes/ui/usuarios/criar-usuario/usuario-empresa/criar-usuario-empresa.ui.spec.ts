@@ -14,7 +14,7 @@ import { validarMeuPerfilUsuarioCriado } from "../../../../../support/functions/
 
 test.setTimeout(180000);
 
-test.describe("Criar usuÃ¡rio - UsuÃ¡rio da empresa", () => {
+test.describe("Criar usuário - Usuário da empresa", () => {
   const createdUserIds: string[] = [];
 
   test.afterAll(async ({ request }) => {
@@ -23,10 +23,10 @@ test.describe("Criar usuÃ¡rio - UsuÃ¡rio da empresa", () => {
     }
   });
 
-  test("cria UsuÃ¡rio da empresa, lista o usuÃ¡rio, valida login, empresa e bloqueio administrativo", async ({ page }) => {
+  test("cria Usuário da empresa, lista o usuário, valida login, empresa e bloqueio administrativo", async ({ page }) => {
     const suffix = `${Date.now().toString().slice(-6)}-${Math.random().toString(36).slice(2, 5)}`;
     const email = `e2e-usuario-empresa-${suffix}@demo.test`;
-    const name = `Teste UsuÃ¡rio Empresa ${suffix}`;
+    const name = `Teste Usuário Empresa ${suffix}`;
 
     await autenticarAdminParaCriacaoUsuario(page);
 

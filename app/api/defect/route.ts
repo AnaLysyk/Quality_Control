@@ -1,4 +1,4 @@
-﻿// Importa utilitÃ¡rios do Next.js para lidar com requisiÃ§Ãµes e respostas
+﻿// Importa utilitários do Next.js para lidar com requisições e respostas
 import { NextRequest, NextResponse } from "next/server";
 // Importa o cliente Prisma para acesso ao banco de dados
 import { prisma } from "../../../lib/prismaClient";
@@ -18,10 +18,10 @@ function hasGlobalDefectWriteAccess(user: AuthUser) {
 async function requireDefectCompanyAccess(req: NextRequest, companyId: string | null, mode: "read" | "write") {
   const user = await authenticateRequest(req);
   if (!user) {
-    return { response: NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 }) };
+    return { response: NextResponse.json({ error: "Não autorizado" }, { status: 401 }) };
   }
   if (!companyId) {
-    return { response: NextResponse.json({ error: "companyId Ã© obrigatÃ³rio" }, { status: 400 }) };
+    return { response: NextResponse.json({ error: "companyId é obrigatório" }, { status: 400 }) };
   }
   if (mode === "read" && hasGlobalCompanyVisibility(user)) {
     return { user };
@@ -39,7 +39,7 @@ async function requireDefectCompanyAccess(req: NextRequest, companyId: string | 
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     const status = message === "MISSING_COMPANY_ID" ? 400 : 403;
-    const errorMessage = status === 400 ? "companyId Ã© obrigatÃ³rio" : "Acesso proibido";
+    const errorMessage = status === 400 ? "companyId é obrigatório" : "Acesso proibido";
     return { response: NextResponse.json({ error: errorMessage }, { status }) };
   }
 }
@@ -47,12 +47,12 @@ async function requireDefectCompanyAccess(req: NextRequest, companyId: string | 
 // POST: Cria um novo defeito para uma empresa e release manual
 // Espera receber no corpo: title, description, companyId, releaseManualId
 export async function POST(req: NextRequest) {
-  // LÃª os dados enviados na requisiÃ§Ã£o
+  // Lê os dados enviados na requisição
   const data = await req.json();
   const { title, description, companyId, releaseManualId } = data;
-  // VÃ¡lida se os campos obrigatÃ³rios foram enviados
+  // Válida se os campos obrigatórios foram enviados
   if (!title || !companyId) {
-    return NextResponse.json({ error: "title e companyId sÃ£o obrigatÃ³rios" }, { status: 400 });
+    return NextResponse.json({ error: "title e companyId são obrigatórios" }, { status: 400 });
   }
   const access = await requireDefectCompanyAccess(req, companyId, "write");
   if ("response" in access) return access.response;
@@ -76,14 +76,14 @@ export async function POST(req: NextRequest) {
 }
 
 // GET: Lista todos os defeitos de uma empresa (e opcionalmente de um release manual)
-// ParÃ¢metros de busca: companyId (obrigatÃ³rio), releaseManualId (opcional)
+// Parâmetros de busca: companyId (obrigatório), releaseManualId (opcional)
 export async function GET(req: NextRequest) {
-  // ObtÃ©m o companyId e releaseManualId dos parÃ¢metros da URL
+  // Obtém o companyId e releaseManualId dos parâmetros da URL
   const companyId = req.nextUrl.searchParams.get("companyId");
   const releaseManualId = req.nextUrl.searchParams.get("releaseManualId");
-  // VÃ¡lida se o companyId foi informado
+  // Válida se o companyId foi informado
   if (!companyId) {
-    return NextResponse.json({ error: "companyId Ã© obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "companyId é obrigatório" }, { status: 400 });
   }
   const access = await requireDefectCompanyAccess(req, companyId, "read");
   if ("response" in access) return access.response;

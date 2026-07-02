@@ -124,7 +124,7 @@ export async function writeAlertsStore(alerts: QualityAlert[]): Promise<void> {
   }
 
   if (USE_POSTGRES) {
-    // Replace is handled incrementally via sendQualityAlert â€” this path is only called from tests
+    // Replace is handled incrementally via sendQualityAlert — this path is only called from tests
     // For safety, upsert all by (companySlug, type, timestamp)
     const prisma = await getPrisma();
     await prisma.qualityAlert.deleteMany({});

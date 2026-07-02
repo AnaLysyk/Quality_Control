@@ -103,7 +103,7 @@ function mapCompany(company: LocalAuthCompany) {
 
 export async function GET(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return jsonError(status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o", status);
+  if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const companies = await listLocalCompanies();
   const payload = ClientListResponseSchema.parse({ items: companies.map(mapCompany) });
@@ -112,15 +112,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const { admin, status } = await requireGlobalAdminWithStatus(req);
-  if (!admin) return jsonError(status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o", status);
+  if (!admin) return jsonError(status === 401 ? "Não autenticado" : "Sem permissão", status);
 
   const body = await req.json().catch(() => null);
   // Loga o payload recebido
   console.error('[CLIENTS][POST] Payload recebido:', JSON.stringify(body));
   const parsed = ClientCreateRequestSchema.safeParse(body);
   if (!parsed.success) {
-    // Loga o erro de vÃ¡lidaÃ§Ã£o do Zod
-    console.error('[CLIENTS][POST] Erro de vÃ¡lidaÃ§Ã£o Zod:', JSON.stringify(parsed.error, null, 2));
+    // Loga o erro de válidação do Zod
+    console.error('[CLIENTS][POST] Erro de válidação Zod:', JSON.stringify(parsed.error, null, 2));
     return jsonError("Payload invalido", 400);
   }
 
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
   try {
   const name = (input.company_name || input.name || "").trim();
   if (!name) {
-    return jsonError("Campo 'name' ou 'company_name' e obrigatÃ³rio", 400);
+    return jsonError("Campo 'name' ou 'company_name' e obrigatório", 400);
   }
 
   const desiredSlug = (input.slug || "").trim();

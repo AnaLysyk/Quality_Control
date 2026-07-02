@@ -7,7 +7,7 @@ import { autenticarSolicitacaoAcessoNaInterface } from "../../../../../../suppor
 import { verificarAcessibilidadeDaPagina } from "../../../../../../support/functions/ui/acessibilidade/verificar-acessibilidade";
 import { localizarElementosTelaSolicitacoes } from "../../../../../../support/functions/ui/login/solicitar-acesso/elementos/solicitacoes.elementos";
 
-test("tela administrativa nÃ£o possui violaÃ§Ãµes graves de acessibilidade", async ({
+test("tela administrativa não possui violações graves de acessibilidade", async ({
   context,
   page,
 }) => {

@@ -1,8 +1,8 @@
 ﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
-test.describe("defeitos - permissÃƒÂµes", () => {
-  test("user nÃƒÂ£o vÃƒÂª botÃƒÂ£o de ediÃƒÂ§ÃƒÂ£o de defeito manual", async ({ page, context }) => {
+test.describe("defeitos - permissÃƒµes", () => {
+  test("user não vÃƒª botão de edição de defeito manual", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "user",
       companies: ["DEMO"],
@@ -14,7 +14,7 @@ test.describe("defeitos - permissÃƒÂµes", () => {
     await expect(page.getByTestId("defect-edit")).toBeHidden();
   });
 
-  test("admin acessa pÃƒÂ¡gina de defeitos", async ({ page, context }) => {
+  test("admin acessa página de defeitos", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "admin",
       companies: ["DEMO", "testing-company"],

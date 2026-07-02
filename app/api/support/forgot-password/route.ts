@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-// Importa prisma sÃ³ em ambiente Node/server
+// Importa prisma só em ambiente Node/server
 let prisma: typeof import("@/lib/prismaClient").prisma | undefined;
 if (typeof process !== "undefined" && process.release?.name === "node") {
   prisma = require("@/lib/prismaClient").prisma;
@@ -28,18 +28,18 @@ export async function POST(req: Request) {
   }
 
   const message = [
-    "SolicitaÃ§Ã£o de acesso ao admin",
+    "Solicitação de acesso ao admin",
     `Empresa: ${company}`,
     `Cargo: ${role}`,
     `Nome: ${name}`,
     `Email: ${email}`,
   ].join("\n");
 
-  // Identifica usuÃ¡rio autenticado (se houver) para preencher user_id
+  // Identifica usuário autenticado (se houver) para preencher user_id
   const authUser = await authenticateRequest(req);
   const userId = authUser?.id ?? null;
 
-  // Contexto tÃ©cnico (audit)
+  // Contexto técnico (audit)
   const ip_address = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
   const user_agent = req.headers.get("user-agent") || null;
 
@@ -58,13 +58,13 @@ export async function POST(req: Request) {
       });
     }
   } catch (err) {
-    // NÃ£o vaza detalhes; apenas loga no servidor
+    // Não vaza detalhes; apenas loga no servidor
     console.error("Erro ao registrar support_request:", err);
   }
 
   return NextResponse.json({
     ok: true,
-    message: "SolicitaÃ§Ã£o enviada. O administrador serÃ¡ notificado.",
+    message: "Solicitação enviada. O administrador será notificado.",
   });
 }
 

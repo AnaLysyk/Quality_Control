@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
   const name = String(body.name ?? "").trim();
   if (!name) {
-    return NextResponse.json({ error: "Nome do workspace Ã© obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "Nome do workspace é obrigatório" }, { status: 400 });
   }
 
   const workspace = await prisma.brainWorkspace.create({
@@ -101,14 +101,14 @@ export async function PATCH(req: Request) {
 
   const workspaceId = String(body.workspaceId ?? "").trim();
   if (!workspaceId) {
-    return NextResponse.json({ error: "workspaceId Ã© obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "workspaceId é obrigatório" }, { status: 400 });
   }
 
   const existing = await prisma.brainWorkspace.findFirst({
     where: { id: workspaceId, userId: accessResult.context.user.id },
   });
   if (!existing) {
-    return NextResponse.json({ error: "Workspace nÃ£o encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Workspace não encontrado" }, { status: 404 });
   }
 
   if (body.action === "archive") {
@@ -123,7 +123,7 @@ export async function PATCH(req: Request) {
     const savedView = await prisma.brainSavedView.create({
       data: {
         workspaceId,
-        name: body.name?.trim() || "VisÃ£o sem nome",
+        name: body.name?.trim() || "Visão sem nome",
         description: body.description?.trim() || null,
         mode: body.mode?.trim() || "graph",
         filters: (body.filters ?? {}) as Prisma.InputJsonValue,
@@ -134,6 +134,6 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ savedView }, { status: 201 });
   }
 
-  return NextResponse.json({ error: "AÃ§Ã£o invÃ¡lida" }, { status: 400 });
+  return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
 }
 

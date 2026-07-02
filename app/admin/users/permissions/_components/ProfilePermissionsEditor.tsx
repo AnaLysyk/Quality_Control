@@ -980,10 +980,10 @@ export default function ProfilePermissionsEditor({
                       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <h4 className="text-xs font-black uppercase text-slate-500">O que muda?</h4>
                         <ul className="mt-3 space-y-1.5 text-xs font-semibold text-slate-700">
-                          <li>â€¢ {hiddenScreenCount} tela{hiddenScreenCount !== 1 ? "s" : ""} fica{hiddenScreenCount !== 1 ? "m" : ""} oculta{hiddenScreenCount !== 1 ? "s" : ""}</li>
-                          <li>â€¢ {partialModuleCount} módulo{partialModuleCount !== 1 ? "s" : ""} parcial{partialModuleCount !== 1 ? "is" : ""}</li>
-                          <li>â€¢ {adjustedModuleCount} módulo{adjustedModuleCount !== 1 ? "s" : ""} alterado{adjustedModuleCount !== 1 ? "s" : ""}</li>
-                          <li>â€¢ {overriddenCount} ajuste{overriddenCount !== 1 ? "s" : ""} direto{overriddenCount !== 1 ? "s" : ""}</li>
+                          <li>• {hiddenScreenCount} tela{hiddenScreenCount !== 1 ? "s" : ""} fica{hiddenScreenCount !== 1 ? "m" : ""} oculta{hiddenScreenCount !== 1 ? "s" : ""}</li>
+                          <li>• {partialModuleCount} módulo{partialModuleCount !== 1 ? "s" : ""} parcial{partialModuleCount !== 1 ? "is" : ""}</li>
+                          <li>• {adjustedModuleCount} módulo{adjustedModuleCount !== 1 ? "s" : ""} alterado{adjustedModuleCount !== 1 ? "s" : ""}</li>
+                          <li>• {overriddenCount} ajuste{overriddenCount !== 1 ? "s" : ""} direto{overriddenCount !== 1 ? "s" : ""}</li>
                         </ul>
                       </div>
                     </div>

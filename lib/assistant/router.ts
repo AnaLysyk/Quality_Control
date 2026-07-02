@@ -62,7 +62,7 @@ function looksLikeFreeformContent(message: string) {
 }
 
 function isGreetingPrompt(message: string) {
-  return /^(oi|ola|olÃ¡|bom dia|boa tarde|boa noite|e ai|e aÃ­)\b/.test(normalizeSearch(message));
+  return /^(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí)\b/.test(normalizeSearch(message));
 }
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Scoring rules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -73,7 +73,7 @@ type ScoringRule = {
 };
 
 const SCORING_RULES: ScoringRule[] = [
-  /* â”€â”€ greeting â†’ screen context â”€â”€ */
+  /* â”€â”€ greeting → screen context â”€â”€ */
   {
     tool: "get_screen_context",
     score: (n, _ctx, _h, raw, intent) => {
@@ -89,9 +89,9 @@ const SCORING_RULES: ScoringRule[] = [
   {
     tool: "summarize_entity",
     score: (n, _ctx, _h, _raw, intent) => {
-      if (/(perfil|meus dados|meu usuario|meu usuÃ¡rio)/.test(n)) return 75;
-      if (/(resum|sumario|sumÃ¡rio)/.test(n)) return 60;
-      // Boost se o intent Ã© analysis e menciona entidade
+      if (/(perfil|meus dados|meu usuario|meu usuário)/.test(n)) return 75;
+      if (/(resum|sumario|sumário)/.test(n)) return 60;
+      // Boost se o intent é analysis e menciona entidade
       if (intent.primary === "analysis" && intent.entities.length > 0) return 55;
       return 0;
     },
@@ -102,7 +102,7 @@ const SCORING_RULES: ScoringRule[] = [
     tool: "explain_permission",
     score: (n, _ctx, _h, _raw, intent) => {
       if (/(escopo de acesso|meu acesso|explicar meu acesso|explicar meu escopo)/.test(n)) return 75;
-      if (/(por que|porque).*(nao ve|nao acessa|nÃ£o vÃª|nÃ£o acessa)/.test(n)) return 70;
+      if (/(por que|porque).*(nao ve|nao acessa|não vê|não acessa)/.test(n)) return 70;
       if (/permiss/.test(n)) return 55;
       // Boost para troubleshooting sobre acesso
       if (intent.primary === "troubleshooting" && intent.topics.includes("users")) return 50;
@@ -114,8 +114,8 @@ const SCORING_RULES: ScoringRule[] = [
   {
     tool: "list_available_actions",
     score: (n, _ctx, _h, _raw, intent) => {
-      if (/(acoes disponiveis|aÃ§Ãµes disponÃ­veis|o que voce pode fazer|o que vocÃª pode fazer|o que posso fazer)/.test(n)) return 70;
-      // Boost para quem estÃ¡ curioso sobre capabilities
+      if (/(acoes disponiveis|ações disponíveis|o que voce pode fazer|o que você pode fazer|o que posso fazer)/.test(n)) return 70;
+      // Boost para quem está curioso sobre capabilities
       if (intent.primary === "information_seeking" && intent.isQuestion && /(fazer|posso|pode)/.test(n)) return 45;
       return 0;
     },
@@ -127,7 +127,7 @@ const SCORING_RULES: ScoringRule[] = [
     score: (n, _ctx, history, raw, intent) => {
       if (/(caso de teste|teste).*(gera|gerar|monta|montar|cria|criar)|gera.*caso de teste/.test(n)) return 75;
       if (isAwaitingTestCasePayload(history) && looksLikeFreeformContent(raw)) return 65;
-      // Boost para criaÃ§Ã£o no contexto de QA
+      // Boost para criação no contexto de QA
       if (intent.primary === "creation" && intent.topics.includes("testing")) return 60;
       return 0;
     },
@@ -137,7 +137,7 @@ const SCORING_RULES: ScoringRule[] = [
   {
     tool: "create_comment",
     score: (n, _ctx, _h, _raw, intent) => {
-      if (/(coment|responde|responder|comentario|comentÃ¡rio)/.test(n) && /(ticket|chamado|sp-|\b\d{2,8}\b)/.test(n)) return 75;
+      if (/(coment|responde|responder|comentario|comentário)/.test(n) && /(ticket|chamado|sp-|\b\d{2,8}\b)/.test(n)) return 75;
       // Se menciona responder e tem entidade ticket
       if (intent.primary === "action_request" && intent.entities.some(e => e.type === "ticket") && /respond/.test(n)) return 60;
       return 0;
@@ -148,12 +148,12 @@ const SCORING_RULES: ScoringRule[] = [
   {
     tool: "create_ticket",
     score: (n, ctx, history, raw, intent) => {
-      if (/(modelo).*(ticket|chamado)|\b(titulo|tÃ­tulo).*(descricao|descriÃ§Ã£o).*(impacto)/.test(n)) return 75;
+      if (/(modelo).*(ticket|chamado)|\b(titulo|título).*(descricao|descrição).*(impacto)/.test(n)) return 75;
       if (/(cria|criar|abre|abrir|transforma|transformar|monta|montar|converte|converter).*(ticket|chamado|suporte|nota)/.test(n)) return 70;
       if (isAwaitingTicketPayload(history) && (looksLikeFreeformContent(raw) || Boolean(parseStructuredTicketDraft(raw)) || Boolean(extractNarrativePayload(raw)))) return 65;
-      // Boost inteligente para criaÃ§Ã£o de ticket
+      // Boost inteligente para criação de ticket
       if (intent.primary === "creation" && intent.topics.includes("tickets")) return 65;
-      // Boost para troubleshooting no mÃ³dulo de suporte (pode virar ticket)
+      // Boost para troubleshooting no módulo de suporte (pode virar ticket)
       if (intent.primary === "troubleshooting" && ctx.module === "support" && intent.sentiment === "frustrated") return 50;
       return 0;
     },
@@ -167,7 +167,7 @@ const SCORING_RULES: ScoringRule[] = [
       if (Boolean(extractTicketReference(raw))) return 50;
       // Boost para information_seeking com entidades
       if (intent.primary === "information_seeking" && intent.entities.length > 0) return 45;
-      // Boost se menciona nÃºmero que pode ser ticket
+      // Boost se menciona número que pode ser ticket
       if (intent.entities.some(e => e.type === "number" || e.type === "ticket")) return 40;
       if (ctx.module === "support") return 30; // fallback for support module
       return 0;
@@ -178,10 +178,10 @@ const SCORING_RULES: ScoringRule[] = [
   {
     tool: "suggest_next_step",
     score: (n, _ctx, _h, _raw, intent) => {
-      if (/(proximo passo|prÃ³ximo passo|o que faco agora|o que faÃ§o agora|sugere)/.test(n)) return 60;
-      // Boost para confirmaÃ§Ã£o (continuar fluxo)
+      if (/(proximo passo|próximo passo|o que faco agora|o que faço agora|sugere)/.test(n)) return 60;
+      // Boost para confirmação (continuar fluxo)
       if (intent.primary === "confirmation") return 40;
-      // Boost para clarificaÃ§Ã£o
+      // Boost para clarificação
       if (intent.primary === "clarification") return 35;
       return 10; // always a fallback candidate
     },
@@ -197,7 +197,7 @@ export function chooseTool(
 ): AssistantToolName {
   const n = normalizeSearch(message);
 
-  // Analisar intenÃ§Ã£o do usuÃ¡rio para scoring mais inteligente
+  // Analisar intenção do usuário para scoring mais inteligente
   const intent = analyzeIntent(message, context, history);
   const momentum = getConversationMomentum(history);
 
@@ -217,7 +217,7 @@ export function chooseTool(
       s += 5;
     }
 
-    // Ajustar baseado na confianÃ§a do intent
+    // Ajustar baseado na confiança do intent
     if (intent.confidence > 0.7 && s > 30) {
       s += Math.floor(intent.confidence * 10);
     }
@@ -228,7 +228,7 @@ export function chooseTool(
     }
   }
 
-  // Threshold real: sÃ³ aceita tool se score >= 10
+  // Threshold real: só aceita tool se score >= 10
   if (bestScore < 10) {
     return "suggest_next_step";
   }

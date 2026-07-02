@@ -1,7 +1,7 @@
 ﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
-test("histÃƒÂ³rico de quality gate ÃƒÂ© registrado", async ({ page, context }) => {
+test("histórico de quality gate é registrado", async ({ page, context }) => {
   await simularAutenticacao(context, {
     role: "admin",
     companies: ["DEMO"],
@@ -17,7 +17,7 @@ test("histÃƒÂ³rico de quality gate ÃƒÂ© registrado", async ({ page, cont
   await releaseCard.locator('a').click();
   await page.waitForLoadState("networkidle");
 
-  // Abre o histÃƒÂ³rico do quality gate
+  // Abre o histórico do quality gate
   await page.getByTestId("quality-gate-history").click();
 
   await expect(page.getByTestId("run-timeline").or(page.getByTestId("quality-gate-history-list")).first()).toBeVisible();

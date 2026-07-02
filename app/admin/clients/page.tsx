@@ -453,9 +453,9 @@ function UserCard({
               {user.name}
             </p>
             <div className="mt-3 space-y-1">
-              <UserInlineField label="UsuÃ¡rio" value={getUserHandle(user)} valueClassName="break-all" />
+              <UserInlineField label="Usuário" value={getUserHandle(user)} valueClassName="break-all" />
               <UserInlineField label="E-mail" value={user.email} valueClassName="break-all" />
-              <UserInlineField label="Cargo" value={user.job_title || "NÃ£o informado"} valueClassName="break-words" />
+              <UserInlineField label="Cargo" value={user.job_title || "Não informado"} valueClassName="break-words" />
               {showCompanyField && companyLabel ? <UserInlineField label="Empresa" value={companyLabel} valueClassName="break-words" /> : null}
             </div>
           </div>
@@ -785,15 +785,15 @@ function CompanyManagementQueueExperience({
           </select>
 
           <select
-            aria-label="Filtrar empresas por integraÃ§Ã£o"
-            title="Filtrar empresas por integraÃ§Ã£o"
+            aria-label="Filtrar empresas por integração"
+            title="Filtrar empresas por integração"
             value={integrationFilter}
             onChange={(event) => setIntegrationFilter(event.target.value as CompanyIntegrationFilter)}
             className="h-12 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
           >
-            <option value="all">Todas integraÃ§Ãµes</option>
-            <option value="integrated">Com integraÃ§Ã£o</option>
-            <option value="manual">Manual / sem integraÃ§Ã£o</option>
+            <option value="all">Todas integrações</option>
+            <option value="integrated">Com integração</option>
+            <option value="manual">Manual / sem integração</option>
           </select>
         </div>
 
@@ -849,7 +849,7 @@ function CompanyManagementQueueExperience({
             <table className="w-full min-w-230 border-separate border-spacing-0">
               <thead className="sticky top-0 z-10 bg-[var(--tc-surface,#ffffff)] shadow-[0_1px_0_var(--tc-border,#d7deea)]">
                 <tr>
-                  {["Empresa", "CNPJ", "Contato", "IntegraÃ§Ã£o", "Status", "AÃ§Ã£o"].map((column) => (
+                  {["Empresa", "CNPJ", "Contato", "Integração", "Status", "Ação"].map((column) => (
                     <th key={column} className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                       {column}
                     </th>
@@ -891,10 +891,10 @@ function CompanyManagementQueueExperience({
                       </div>
                     </td>
                     <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] align-middle">
-                      {company.taxId || "NÃ£o informado"}
+                      {company.taxId || "Não informado"}
                     </td>
                     <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] align-middle">
-                      <div className="max-w-60 truncate">{company.website || company.phone || "NÃ£o informado"}</div>
+                      <div className="max-w-60 truncate">{company.website || company.phone || "Não informado"}</div>
                     </td>
                     <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 align-middle">
                       <div className="flex max-w-72 flex-wrap gap-1.5">
@@ -948,7 +948,7 @@ function CompanyManagementQueueExperience({
                       </span>
                     </div>
                     <p className="mt-1 truncate text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">{company.slug ? `@${company.slug}` : company.taxId || "Sem slug"}</p>
-                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{company.website || company.phone || "Contato nÃ£o informado"}</p>
+                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{company.website || company.phone || "Contato não informado"}</p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {integrationBadges.map((badge) => (
                         <span key={`mobile-${company.id}-${badge.key}`} className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black ${companyIntegrationBadgeClass(badge.tone)}`}>
@@ -965,13 +965,13 @@ function CompanyManagementQueueExperience({
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-5 py-4">
             <p className="text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)]">
-              PÃ¡gina {pageIndex + 1} de {pageCount} Â· {filteredCompanies.length} resultado(s) Â· {companySortLabel(sortMode)}
+              Página {pageIndex + 1} de {pageCount} · {filteredCompanies.length} resultado(s) · {companySortLabel(sortMode)}
             </p>
 
             <div className="flex items-center gap-2">
               <select
-                aria-label="Quantidade de empresas por pÃ¡gina"
-                title="Quantidade de empresas por pÃ¡gina"
+                aria-label="Quantidade de empresas por página"
+                title="Quantidade de empresas por página"
                 value={pageSize}
                 onChange={(event) => {
                   setPageSize(Number(event.target.value));
@@ -981,7 +981,7 @@ function CompanyManagementQueueExperience({
               >
                 {[10, 12, 20, 50].map((size) => (
                   <option key={size} value={size}>
-                    {size}/pÃ¡gina
+                    {size}/página
                   </option>
                 ))}
               </select>
@@ -991,7 +991,7 @@ function CompanyManagementQueueExperience({
                 onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
                 disabled={pageIndex === 0}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-40"
-                aria-label="PÃ¡gina anterior"
+                aria-label="Página anterior"
               >
                 <FiChevronLeft />
               </button>
@@ -1001,7 +1001,7 @@ function CompanyManagementQueueExperience({
                 onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
                 disabled={pageIndex >= pageCount - 1}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-40"
-                aria-label="PrÃ³xima pÃ¡gina"
+                aria-label="Próxima página"
               >
                 <FiChevronRight />
               </button>
@@ -1072,7 +1072,7 @@ export default function AdminConsolidatedPage() {
     try {
       const res = await fetchApi("/api/clients");
       if (res.status === 401) {
-        setCompaniesMessage("SessÃ£o expirada. FaÃ§a login novamente.");
+        setCompaniesMessage("Sessão expirada. Faça login novamente.");
         router.replace("/login");
         setCompanies([]);
         return;
@@ -1132,17 +1132,17 @@ export default function AdminConsolidatedPage() {
     });
 
     if (res.status === 409) {
-      toast.error("Empresa criada, mas jÃ¡ existe usuÃ¡rio com esse e-mail/login.");
+      toast.error("Empresa criada, mas já existe usuário com esse e-mail/login.");
       return;
     }
 
     if (!res.ok) {
-      const err = await readApiError(res, "Empresa criada, mas nÃ£o foi possÃ­vel criar o usuÃ¡rio institucional.");
+      const err = await readApiError(res, "Empresa criada, mas não foi possível criar o usuário institucional.");
       toast.error(err.displayMessage);
       return;
     }
 
-    toast.success("UsuÃ¡rio institucional da empresa criado e convite enviado.");
+    toast.success("Usuário institucional da empresa criado e convite enviado.");
   }
 
   const handleUpdateCompany = useCallback(
@@ -1179,7 +1179,7 @@ export default function AdminConsolidatedPage() {
           body: JSON.stringify(payload),
         });
         if (res.status === 401) {
-          toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
+          toast.error("Sessão expirada. Faça login novamente.");
           router.replace("/login");
           return;
         }
@@ -1214,7 +1214,7 @@ export default function AdminConsolidatedPage() {
       const [usersRes, companiesRes] = await Promise.all([fetchApi("/api/admin/users"), fetchApi("/api/companies")]);
 
       if (usersRes.status === 401 || companiesRes.status === 401) {
-        toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
+        toast.error("Sessão expirada. Faça login novamente.");
         router.replace("/login");
         return;
       }
@@ -1223,7 +1223,7 @@ export default function AdminConsolidatedPage() {
       const companiesJson = (await companiesRes.json().catch(() => ([]))) as CompanyOption[] | { error?: string };
 
       if (!usersRes.ok) {
-        setUsersError(usersJson.error || "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
+        setUsersError(usersJson.error || "Não foi possível carregar os usuários.");
         setUsers([]);
       } else {
         const items = Array.isArray(usersJson.items) ? usersJson.items : [];
@@ -1238,7 +1238,7 @@ export default function AdminConsolidatedPage() {
     } catch (err) {
       setUsers([]);
       setUsersCompanies([]);
-      setUsersError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
+      setUsersError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
     } finally {
       setUsersLoading(false);
     }
@@ -1247,7 +1247,7 @@ export default function AdminConsolidatedPage() {
   const loadCurrentTab = useCallback(() => {
     const loader = mainTab === "companies" ? loadCompanies : loadUsers;
     loader().catch((error) => {
-      const message = error instanceof Error ? error.message : "NÃ£o foi possÃ­vel carregar os dados.";
+      const message = error instanceof Error ? error.message : "Não foi possível carregar os dados.";
       if (mainTab === "companies") {
         setCompaniesMessage(message);
       } else {
@@ -1419,9 +1419,9 @@ export default function AdminConsolidatedPage() {
   const createModalConfig = useMemo<CreateModalConfig>(() => {
     if (activeUserTab === "company") {
       return {
-        title: "Criar usuÃ¡rio da empresa",
-        subtitle: "Selecione a empresa e cadastre o responsÃ¡vel jÃ¡ no contexto dela.",
-        submitLabel: "Criar usuÃ¡rio da empresa",
+        title: "Criar usuário da empresa",
+        subtitle: "Selecione a empresa e cadastre o responsável já no contexto dela.",
+        submitLabel: "Criar usuário da empresa",
         initialRole: "company_user",
         lockRole: true,
         showCompanyField: true,
@@ -1445,9 +1445,9 @@ export default function AdminConsolidatedPage() {
 
     if (activeUserTab === "support") {
       return {
-        title: "Criar Suporte TÃ©cnico",
+        title: "Criar Suporte Técnico",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte TÃ©cnico",
+        submitLabel: "Criar Suporte Técnico",
         initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
@@ -1457,9 +1457,9 @@ export default function AdminConsolidatedPage() {
     }
 
     return {
-      title: "Criar usuÃ¡rio TC",
-      subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessÃ¡rio.",
-      submitLabel: "Criar usuÃ¡rio TC",
+      title: "Criar usuário TC",
+      subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessário.",
+      submitLabel: "Criar usuário TC",
       initialRole: "testing_company_user",
       lockRole: true,
       showCompanyField: true,
@@ -1501,7 +1501,7 @@ export default function AdminConsolidatedPage() {
         <Breadcrumb
           items={[
             { label: "Admin", href: "/admin/dashboard" },
-            { label: "GestÃ£o de empresas" },
+            { label: "Gestão de empresas" },
           ]}
         />
 
@@ -1509,7 +1509,7 @@ export default function AdminConsolidatedPage() {
         <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
           <div className="flex flex-col gap-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">GestÃ£o de empresas</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestão de empresas</p>
               <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Empresas</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
                 Gerencie o cadastro, listagem e identidade institucional das empresas.
@@ -1709,20 +1709,20 @@ export default function AdminConsolidatedPage() {
           <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
             <Tabs value={activeUserTab} onValueChange={(value) => setActiveUserTab(value as UserTab)}>
               <div className="border-b border-[var(--tc-border,#d7deea)] pb-5">
-                <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">GestÃ£o por contexto</h2>
+                <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Gestão por contexto</h2>
                 <div className="mt-4">
                   <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-[var(--tc-surface-alt,#f8fafc)] p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                     <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
                       Empresa
                     </TabsTrigger>
                     <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                      UsuÃ¡rios TC
+                      Usuários TC
                     </TabsTrigger>
                     <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                      LÃ­der TC
+                      Líder TC
                     </TabsTrigger>
                     <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                      Suporte TÃ©cnico
+                      Suporte Técnico
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -1734,7 +1734,7 @@ export default function AdminConsolidatedPage() {
                     ref={usersSearchInputRef}
                     value={usersSearch}
                     onChange={(event) => setUsersSearch(event.target.value)}
-                    placeholder="Buscar por nome, usuÃ¡rio, e-mail ou empresa"
+                    placeholder="Buscar por nome, usuário, e-mail ou empresa"
                     className="w-full bg-transparent outline-none placeholder:text-[var(--tc-text-muted,#94a3b8)]"
                     data-testid="users-search-input"
                   />
@@ -1782,7 +1782,7 @@ export default function AdminConsolidatedPage() {
                         <FiUsers className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
                           <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum perfil encontrado</h3>
-                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhuma empresa ou usuÃ¡rios da empresa encontrados.</p>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhuma empresa ou usuários da empresa encontrados.</p>
                         </div>
                       </div>
                     ) : (
@@ -1799,7 +1799,7 @@ export default function AdminConsolidatedPage() {
                         )}
                         {companySections.length > 0 && (
                           <div>
-                            <h3 className="mb-3 text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">UsuÃ¡rios da Empresa</h3>
+                            <h3 className="mb-3 text-lg font-bold text-[var(--tc-text-primary,#0b1a3c)]">Usuários da Empresa</h3>
                             <div className="space-y-3">
                               {companySections.map((company) => (
                                 <CompanyUsersSection key={`company-${company.id}`} company={company} onSelect={handleOpenUserDetail} />
@@ -1816,14 +1816,14 @@ export default function AdminConsolidatedPage() {
                       <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                         <FiUser className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuÃ¡rio TC</h3>
-                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">NÃ£o hÃ¡ usuÃ¡rios TC com os filtros atuais.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuário TC</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Não há usuários TC com os filtros atuais.</p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {testingActiveUsers.length > 0 && (
-                          <UserStatusSection title="Ativos" count={testingActiveUsers.length} emptyMessage="Nenhum usuÃ¡rio ativo.">
+                          <UserStatusSection title="Ativos" count={testingActiveUsers.length} emptyMessage="Nenhum usuário ativo.">
                             <UserCardGrid>
                               {testingActiveUsers.map((user) => (
                                 <UserCard key={user.id} user={user} onSelect={handleOpenUserDetail} companyLabel={user.company_names?.[0] || "Testing Company"} />
@@ -1832,7 +1832,7 @@ export default function AdminConsolidatedPage() {
                           </UserStatusSection>
                         )}
                         {testingInactiveUsers.length > 0 && (
-                          <UserStatusSection title="Inativos" count={testingInactiveUsers.length} emptyMessage="Nenhum usuÃ¡rio inativo.">
+                          <UserStatusSection title="Inativos" count={testingInactiveUsers.length} emptyMessage="Nenhum usuário inativo.">
                             <UserCardGrid>
                               {testingInactiveUsers.map((user) => (
                                 <UserCard key={user.id} user={user} onSelect={handleOpenUserDetail} companyLabel={user.company_names?.[0] || "Testing Company"} />
@@ -1849,14 +1849,14 @@ export default function AdminConsolidatedPage() {
                       <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                         <FiShield className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum LÃ­der TC encontrado</h3>
-                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum LÃ­der TC com os filtros atuais.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum Líder TC encontrado</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum Líder TC com os filtros atuais.</p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {adminActiveUsers.length > 0 && (
-                          <UserStatusSection title="Ativos" count={adminActiveUsers.length} emptyMessage="Nenhum LÃ­der ativo.">
+                          <UserStatusSection title="Ativos" count={adminActiveUsers.length} emptyMessage="Nenhum Líder ativo.">
                             <UserCardGrid>
                               {adminActiveUsers.map((user) => (
                                 <UserCard key={user.id} user={user} onSelect={handleOpenUserDetail} companyLabel={null} />
@@ -1865,7 +1865,7 @@ export default function AdminConsolidatedPage() {
                           </UserStatusSection>
                         )}
                         {adminInactiveUsers.length > 0 && (
-                          <UserStatusSection title="Inativos" count={adminInactiveUsers.length} emptyMessage="Nenhum LÃ­der inativo.">
+                          <UserStatusSection title="Inativos" count={adminInactiveUsers.length} emptyMessage="Nenhum Líder inativo.">
                             <UserCardGrid>
                               {adminInactiveUsers.map((user) => (
                                 <UserCard key={user.id} user={user} onSelect={handleOpenUserDetail} companyLabel={null} />
@@ -1882,8 +1882,8 @@ export default function AdminConsolidatedPage() {
                       <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                         <FiTool className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                         <div>
-                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte tÃ©cnico encontrado</h3>
-                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum suporte tÃ©cnico com os filtros atuais.</p>
+                          <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte técnico encontrado</h3>
+                          <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Nenhum suporte técnico com os filtros atuais.</p>
                         </div>
                       </div>
                     ) : (
@@ -1969,7 +1969,7 @@ export default function AdminConsolidatedPage() {
               body: JSON.stringify(payload),
             });
             if (res.status === 401) {
-              toast.error("SessÃ£o expirada. FaÃ§a login novamente.");
+              toast.error("Sessão expirada. Faça login novamente.");
               router.replace("/login");
               return null;
             }

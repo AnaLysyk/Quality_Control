@@ -55,7 +55,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
 
         const mapped: AppInfo[] = rawList.map((app) => ({
           slug: app.slug ?? app.name?.toLowerCase()?.replace(/\s+/g, "-") ?? "",
-          name: app.name ?? "AplicaÃ§Ã£o",
+          name: app.name ?? "Aplicação",
           tag: app.tag ?? app.name?.toUpperCase() ?? "APP",
         }));
 
@@ -79,7 +79,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
         <FiSearch className="absolute left-3 top-3 text-gray-500 text-lg" />
         <input
           type="text"
-          placeholder="Buscar aplicaÃ§Ã£o..."
+          placeholder="Buscar aplicação..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full rounded-xl bg-white border border-(--surface-border,#e5e7eb) py-2 pl-10 pr-4 text-sm text-(--page-text,#0b1a3c) placeholder-gray-500 shadow-sm focus:outline-none focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-(--tc-accent)/20"
@@ -88,7 +88,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
 
       {filteredApps.length === 0 && (
         <div className="mt-6 rounded-2xl border border-(--surface-border,#e5e7eb) bg-white p-6 md:p-10 text-center text-(--page-text,#0b1a3c) space-y-4 shadow-sm">
-          <p className="text-lg font-semibold">Nenhuma aplicaÃ§Ã£o encontrada.</p>
+          <p className="text-lg font-semibold">Nenhuma aplicação encontrada.</p>
         </div>
       )}
 
@@ -109,7 +109,7 @@ export function ApplicationsList({ className }: ApplicationsListProps) {
                   </span>
                   <p className="text-lg font-semibold">{app.name}</p>
                   <p className="text-sm font-semibold text-[var(--tc-accent)] flex items-center gap-2">
-                    Ver runs <span aria-hidden="true">â†’</span>
+                    Ver runs <span aria-hidden="true">→</span>
                   </p>
                 </div>
               </Link>

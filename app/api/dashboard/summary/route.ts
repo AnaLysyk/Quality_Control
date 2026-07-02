@@ -15,7 +15,7 @@ export async function GET(req: Request, context: { params: Promise<{ slug?: stri
   const params = await context.params;
   const slug = url.searchParams.get("slug") || params.slug || null;
   if (!slug) {
-    return NextResponse.json({ error: "Empresa nÃ£o informada" }, { status: 400 });
+    return NextResponse.json({ error: "Empresa não informada" }, { status: 400 });
   }
   const period = url.searchParams.get("period") || "30d";
   const cacheKey = `dash:${slug}:${period}`;

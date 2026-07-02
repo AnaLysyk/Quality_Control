@@ -41,7 +41,7 @@ async function writeColumns(columns: KanbanColumn[]): Promise<void> {
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const columns = await readColumns();
   return NextResponse.json({ columns }, { status: 200 });
@@ -50,10 +50,10 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   if (!isDevRole(user.role) && !user.isGlobalAdmin) {
-    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => ({}));

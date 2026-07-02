@@ -2,7 +2,7 @@
 import { autenticarPerfilRuns, rotaRunsEmpresa } from "../../../support/functions/ui/runs/rotas-runs";
 
 test.describe("runs - lista", () => {
-  test("user vÃƒÂª runs da empresa ativa", async ({ page, context }) => {
+  test("user vÃƒª runs da empresa ativa", async ({ page, context }) => {
     await autenticarPerfilRuns(context, "company_user");
 
     await page.goto(rotaRunsEmpresa(), { waitUntil: "networkidle" });

@@ -6,7 +6,7 @@ export function buildBrianContextSummary(result: BrianProcessingResult) {
     .slice(0, 6)
     .map((activation) => {
       const neuron = result.neurons.find((item) => item.id === activation.neuronId);
-      return neuron ? `- ${neuron.label} (${neuron.kind}) Â· score ${activation.activationScore.toFixed(2)}` : null;
+      return neuron ? `- ${neuron.label} (${neuron.kind}) · score ${activation.activationScore.toFixed(2)}` : null;
     })
     .filter(Boolean);
 
@@ -19,10 +19,10 @@ export function buildBrianContextSummary(result: BrianProcessingResult) {
     "## Contexto Brian",
     result.narrative,
     "",
-    topNeurons.length ? "NeurÃ´nios ativados:" : "",
+    topNeurons.length ? "Neurônios ativados:" : "",
     ...topNeurons,
     "",
-    evidenceLines.length ? "EvidÃªncias:" : "",
+    evidenceLines.length ? "Evidências:" : "",
     ...evidenceLines,
     "",
     result.warnings.length ? "Avisos:" : "",

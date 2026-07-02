@@ -403,7 +403,7 @@ export async function GET(request: NextRequest) {
     const scopedByCompany = Boolean(filters.company || filters.gate || filters.query);
     const { admin, status } = await requireGlobalAdminWithStatus(request);
     if (!admin) {
-      const msg = status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o";
+      const msg = status === 401 ? "Não autenticado" : "Sem permissão";
       return apiFail(request, msg, { status, code: status === 401 ? "UNAUTHENTICATED" : "FORBIDDEN" });
     }
 

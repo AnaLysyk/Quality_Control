@@ -245,9 +245,9 @@ export function DeferredNotificationsButton() {
     return (
       <span className="relative shrink-0">
         <ToolbarGhostButton
-          ariaLabel="Abrir notificaÃ§Ãµes"
+          ariaLabel="Abrir notificações"
           icon={FiBell}
-          loadingLabel="Carregando notificaÃ§Ãµes"
+          loadingLabel="Carregando notificações"
           mounted
           onOpen={() => {}}
           onPrime={() => {}}
@@ -264,9 +264,9 @@ export function DeferredNotificationsButton() {
   return (
     <span className="relative shrink-0">
       <ToolbarGhostButton
-        ariaLabel="Abrir notificaÃ§Ãµes"
+        ariaLabel="Abrir notificações"
         icon={FiBell}
-        loadingLabel="Carregando notificaÃ§Ãµes"
+        loadingLabel="Carregando notificações"
         mounted={mounted}
         onOpen={open}
         onPrime={prime}

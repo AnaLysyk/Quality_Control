@@ -468,12 +468,12 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
             route: pathname,
             module: "brain",
             screenLabel: "Brain",
-            screenSummary: "Brain Ã© o cÃ©rebro visual da plataforma Quality Control e fornece contexto vivo para o chat global.",
+            screenSummary: "Brain é o cérebro visual da plataforma Quality Control e fornece contexto vivo para o chat global.",
             suggestedPrompts: [
               "O que estou vendo?",
-              "Me explica esse nÃ³",
-              "Mostra sÃ³ pendÃªncias",
-              "Abre o nÃºcleo de defeitos",
+              "Me explica esse nó",
+              "Mostra só pendências",
+              "Abre o núcleo de defeitos",
             ],
             metadata: metadata as Record<string, unknown>,
           }),
@@ -636,7 +636,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     if (payload.message) setInput("");
 
-    // Usa endpoint unificado para garantir memÃ³ria persistente de todas as conversas.
+    // Usa endpoint unificado para garantir memória persistente de todas as conversas.
     // Usa endpoint unificado para garantir memória persistente de todas as conversas.
     const apiRoute = "/api/assistente/ask";
     const shouldSendBrainContext =
@@ -674,7 +674,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
       const data = (await response.json().catch(() => ({}))) as AssistantReplyPayload & { error?: string };
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error("Sua sessÃ£o expirou. FaÃ§a login novamente para o brain acessar o Brain.");
+          throw new Error("Sua sessão expirou. Faça login novamente para o brain acessar o Brain.");
         }
         throw new Error(data?.error || response.statusText || `Erro ${response.status}`);
       }
@@ -744,7 +744,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     }
 
     if (/\b(abrir|abre|ir|vai|entrar|entra|mostrar|mostra)\b.*\b(solicitacoes|solicitacao|acessos?|acesso)\b/.test(normalized)) {
-      return go("/admin/access-requests", "Pronto, estou abrindo SolicitaÃ§Ãµes de acesso.");
+      return go("/admin/access-requests", "Pronto, estou abrindo Solicitações de acesso.");
     }
 
     if (/\b(abrir|abre|ir|vai|entrar|entra|mostrar|mostra)\b.*\b(perfil|meu perfil|configuracoes|configuracao)\b/.test(normalized)) {
@@ -752,7 +752,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
     }
 
     if (/\b(trocar|alterar|mudar|atualizar)\b.*\b(senha)\b/.test(normalized)) {
-      return go("/settings/profile", "Pronto, abri seu perfil. Por seguranÃ§a, a troca de senha precisa confirmar a senha atual e a nova senha na Ã¡rea do perfil.");
+      return go("/settings/profile", "Pronto, abri seu perfil. Por segurança, a troca de senha precisa confirmar a senha atual e a nova senha na área do perfil.");
     }
 
     return null;
@@ -777,17 +777,17 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     if (/\b(mostra|mostrar|filtra|filtrar|exibe|exibir)\b.*\b(pendencias|pendentes|falta|faltando)\b/.test(normalized)) {
       dispatchBrainCommand("show_pending");
-      return "Pronto. Filtrei o Brain para destacar pendÃªncias e lacunas de conhecimento.";
+      return "Pronto. Filtrei o Brain para destacar pendências e lacunas de conhecimento.";
     }
 
     if (/\b(mostra|mostrar|filtra|filtrar|exibe|exibir)\b.*\b(orfaos|orfao|isolados|isolado)\b/.test(normalized)) {
       dispatchBrainCommand("show_orphans");
-      return "Pronto. Estou mostrando os conhecimentos Ã³rfÃ£os ou isolados no mapa.";
+      return "Pronto. Estou mostrando os conhecimentos órfãos ou isolados no mapa.";
     }
 
     if (/\b(volta|voltar|limpa|limpar|principal|geral|raiz|root)\b/.test(normalized)) {
       dispatchBrainCommand("clear_filters");
-      return "Voltei para a visÃ£o geral do Brain.";
+      return "Voltei para a visão geral do Brain.";
     }
 
     if (/\b(centraliza|centralizar|recentraliza|foca|focar)\b/.test(normalized)) {
@@ -797,26 +797,26 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
 
     if (/\b(expande|expandir|detalhes|detalhar)\b/.test(normalized)) {
       dispatchBrainCommand("expand_node_details");
-      return "Expandi os detalhes do nÃ³ selecionado no overlay.";
+      return "Expandi os detalhes do nó selecionado no overlay.";
     }
 
     const moduleAliases: Array<[RegExp, string]> = [
       [/\b(defeitos|bugs?|qualidade)\b/, "Defeitos"],
       [/\b(logs?|auditoria|eventos?)\b/, "Logs"],
       [/\b(suporte|chamados?)\b/, "Suporte"],
-      [/\b(solicitacoes|solicitacao|acessos?|acesso)\b/, "SolicitaÃ§Ãµes"],
+      [/\b(solicitacoes|solicitacao|acessos?|acesso)\b/, "Solicitações"],
       [/\b(documentos?|evidencias?|anexos?)\b/, "Documentos"],
-      [/\b(automacao|automacoes|scripts?|execucoes?)\b/, "AutomaÃ§Ã£o"],
-      [/\b(repositorio|casos? de teste|testes?)\b/, "RepositÃ³rio de Testes"],
+      [/\b(automacao|automacoes|scripts?|execucoes?)\b/, "Automação"],
+      [/\b(repositorio|casos? de teste|testes?)\b/, "Repositório de Testes"],
       [/\b(planos? de teste|plano)\b/, "Plano de Teste"],
-      [/\b(usuarios?|permissoes?|perfis?)\b/, "UsuÃ¡rios / PermissÃµes"],
+      [/\b(usuarios?|permissoes?|perfis?)\b/, "Usuários / Permissões"],
     ];
 
     if (/\b(abre|abrir|mostra|mostrar|foca|focar|expande|expandir|filtra|filtrar)\b/.test(normalized)) {
       const moduleMatch = moduleAliases.find(([pattern]) => pattern.test(normalized));
       if (moduleMatch) {
         dispatchBrainCommand("select_module", moduleMatch[1]);
-        return `Abri o nÃºcleo ${moduleMatch[1]} no Brain.`;
+        return `Abri o núcleo ${moduleMatch[1]} no Brain.`;
       }
     }
 
@@ -837,7 +837,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
         {
           id: assistantMessageId,
           from: "assistant",
-          text: "Estou olhando o painel de solicitaÃ§Ãµes e interpretando seu pedido...",
+          text: "Estou olhando o painel de solicitações e interpretando seu pedido...",
           ts: now + 1,
           tool: "use_brain",
         },
@@ -1075,7 +1075,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                           {brainOpenContext?.source === "brain" ? "Brain" : "Brain"}
                         </h3>
                         <p className={`max-w-[20rem] truncate ${compactConversationChrome ? "text-[0.74rem] leading-4.5" : denseViewport ? "text-[0.76rem] leading-5" : "text-sm leading-6"} text-white/82`}>
-                          {brainOpenContext?.nodeLabel ? `${brainOpenContext.nodeLabel} â€” ${brainOpenContext.nodeType ?? "nÃ³"}` : activeScreenLabel}
+                          {brainOpenContext?.nodeLabel ? `${brainOpenContext.nodeLabel} — ${brainOpenContext.nodeType ?? "nó"}` : activeScreenLabel}
                         </p>
                       </div>
                       <div className={`pt-1 text-[0.72rem] leading-5 text-white/70 ${compactConversationChrome ? "hidden" : ""}`}>
@@ -1192,10 +1192,10 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                     {brainOpenContext?.nodeId ? (
                       <>
                         <p className="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-[#ef0001] dark:text-[#ff8a8a]">
-                          Contexto do Brain â€” {brainOpenContext.nodeType ?? "NÃ³"}
+                          Contexto do Brain — {brainOpenContext.nodeType ?? "Nó"}
                         </p>
                         <p className="mt-1 text-base font-bold text-[#011848] dark:text-[#f2f7ff]">
-                          {brainOpenContext.nodeLabel ?? "NÃ³ selecionado"}
+                          {brainOpenContext.nodeLabel ?? "Nó selecionado"}
                         </p>
                         <p className="mt-1 text-sm text-[#4a5568] dark:text-[#a0b4d0]">
                           Agente: {activeAgentMode ?? brainOpenContext.agentMode ?? "qa"} | escopo {brainOpenContext.companySlug ?? "global"}
@@ -1295,7 +1295,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
                         void sendMessage();
                       }
                     }}
-                    placeholder={`Escreva o que vocÃª precisa em ${assistantContext.screenLabel.toLowerCase()}...`}
+                    placeholder={`Escreva o que você precisa em ${assistantContext.screenLabel.toLowerCase()}...`}
                     className={`w-full resize-none rounded-[1.1rem] border border-[var(--tc-border,#d7dff1)] bg-[#ffffff] px-4 text-sm leading-6 text-[#20304f] outline-none placeholder:text-[#8b98b1] focus:border-[var(--tc-accent,#ef0001)] dark:border-[#36507f] dark:bg-[#0f192d] dark:text-[#e6efff] dark:placeholder:text-[#94abd6] dark:focus:border-[#ff8a8a] ${denseViewport ? "min-h-[2.7rem] py-1.5" : hasConversation ? "min-h-[2.85rem] py-1.5" : "min-h-[5.6rem] py-3"}`}
                   />
                   <div className={`flex items-center justify-between gap-3 ${denseViewport ? "mt-1.5" : hasConversation ? "mt-2" : "mt-3"}`}>
@@ -1338,7 +1338,7 @@ export default function ChatButton({ defaultOpen = false, defaultPanelMode }: Ch
               setOpen(true);
             }}
             aria-label="Abrir brain da plataforma"
-            title="Brain Testing Company â€” clique para abrir"
+            title="Brain Testing Company — clique para abrir"
             className="group relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_18px_35px_rgba(1,24,72,0.22)] transition hover:scale-105"
           >
             {/* spinning logo with gradient background */}

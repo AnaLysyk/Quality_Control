@@ -303,7 +303,7 @@ export default function BrainReactFlowView() {
         {
           id: `${Date.now()}-${Math.random()}`,
           role: "system",
-          text: payload.confirmationMessage ?? "Esse comando exige confirmaÃ§Ã£o.",
+          text: payload.confirmationMessage ?? "Esse comando exige confirmação.",
         },
       ]);
       return;
@@ -400,15 +400,15 @@ export default function BrainReactFlowView() {
             <option value="4">Profundidade 4</option>
           </select>
 
-          <div className={styles.viewTabs} role="tablist" aria-label="Modo de visualizaÃ§Ã£o do Brain">
+          <div className={styles.viewTabs} role="tablist" aria-label="Modo de visualização do Brain">
             {([
               ["graph", "Grafo", FiShare2],
               ["list", "Lista", FiList],
               ["table", "Tabela", FiTable],
-              ["tree", "Ãrvore", FiGitBranch],
+              ["tree", "Árvore", FiGitBranch],
               ["communities", "Comunidades", FiUsers],
-              ["pending", "PendÃªncias", FiCommand],
-              ["replay", "Estado vs HistÃ³rico", FiCommand],
+              ["pending", "Pendências", FiCommand],
+              ["replay", "Estado vs Histórico", FiCommand],
               ["agents", "Agentes", FiMessageCircle],
             ] as Array<[ViewMode, string, typeof FiList]>).map(([mode, label, Icon]) => (
               <button
@@ -453,7 +453,7 @@ export default function BrainReactFlowView() {
 
         {viewMode === "list" ? (
           <div className="h-full overflow-auto p-4">
-            <div className={styles.surfaceCard} role="region" aria-label="Lista de nÃ³s">
+            <div className={styles.surfaceCard} role="region" aria-label="Lista de nós">
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Lista</h2>
               <ul className="mt-3 space-y-2" role="list">
                 {visibleNodesSorted.map((node) => (
@@ -477,7 +477,7 @@ export default function BrainReactFlowView() {
           <div className="h-full overflow-auto p-4">
             <div className={styles.surfaceCard}>
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Tabela</h2>
-              <table className="mt-3 w-full border-collapse text-sm" aria-label="Tabela de nÃ³s do Brain">
+              <table className="mt-3 w-full border-collapse text-sm" aria-label="Tabela de nós do Brain">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-[0.16em] text-slate-500">
                     <th className="border-b border-slate-200 py-2">Nome</th>
@@ -510,8 +510,8 @@ export default function BrainReactFlowView() {
         {viewMode === "tree" ? (
           <div className="h-full overflow-auto p-4">
             <div className={styles.surfaceCard}>
-              <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Ãrvore</h2>
-              <div className="mt-3 space-y-3" role="tree" aria-label="Ãrvore de tipos e nÃ³s">
+              <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Árvore</h2>
+              <div className="mt-3 space-y-3" role="tree" aria-label="Árvore de tipos e nós">
                 {groupedTree.map(([type, typeNodes]) => (
                   <div key={type} role="treeitem" aria-expanded={true} aria-selected={false} className="rounded-xl border border-slate-200 p-3">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">{type}</p>
@@ -539,16 +539,16 @@ export default function BrainReactFlowView() {
           <div className="h-full overflow-auto p-4">
             <div className={styles.surfaceCard}>
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Modo Comunidades</h2>
-              <p className="mt-1 text-xs text-slate-500">Clusters conectados para anÃ¡lise de domÃ­nio e dependÃªncias.</p>
+              <p className="mt-1 text-xs text-slate-500">Clusters conectados para análise de domínio e dependências.</p>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {(communitiesData?.communities ?? []).map((community) => (
                   <article key={community.communityId} className={styles.miniCard}>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{community.communityId}</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-800">{community.size} nÃ³s</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">{community.size} nós</p>
                     <p className="mt-1 text-xs text-slate-600">
                       Dominantes: {community.dominantTypes.map((item) => `${item.type} (${item.count})`).join(", ") || "-"}
                     </p>
-                    <p className="mt-2 text-xs text-slate-600">{community.labels.slice(0, 6).join(" â€¢ ")}</p>
+                    <p className="mt-2 text-xs text-slate-600">{community.labels.slice(0, 6).join(" • ")}</p>
                   </article>
                 ))}
               </div>
@@ -560,11 +560,11 @@ export default function BrainReactFlowView() {
           <div className="h-full overflow-auto p-4">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
               <div className={styles.surfaceCard}>
-                <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">PendÃªncias do Brain</h2>
+                <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Pendências do Brain</h2>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <StatPill label="RelaÃ§Ãµes sugeridas" value={pendingData?.pending?.suggestedRelations ?? 0} />
+                  <StatPill label="Relações sugeridas" value={pendingData?.pending?.suggestedRelations ?? 0} />
                   <StatPill label="Duplicidades" value={pendingData?.pending?.possibleDuplicates ?? 0} />
-                  <StatPill label="NÃ³s Ã³rfÃ£os" value={pendingData?.pending?.orphanNodes ?? 0} />
+                  <StatPill label="Nós órfãos" value={pendingData?.pending?.orphanNodes ?? 0} />
                   <StatPill label="Inbox pendente" value={pendingData?.pending?.inboxPending ?? 0} />
                 </div>
                 <div className="mt-4 space-y-2">
@@ -641,11 +641,11 @@ export default function BrainReactFlowView() {
         {viewMode === "replay" ? (
           <div className="h-full overflow-auto p-4">
             <div className={styles.surfaceCard}>
-              <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Estado atual vs HistÃ³rico</h2>
-              <p className="mt-1 text-xs text-slate-500">Selecione um nÃ³ e acompanhe trilha de eventos.</p>
+              <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-600">Estado atual vs Histórico</h2>
+              <p className="mt-1 text-xs text-slate-500">Selecione um nó e acompanhe trilha de eventos.</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <StatPill label="NÃ³s visÃ­veis" value={replayData?.currentState?.nodeCount ?? 0} />
-                <StatPill label="Arestas visÃ­veis" value={replayData?.currentState?.edgeCount ?? 0} />
+                <StatPill label="Nós visíveis" value={replayData?.currentState?.nodeCount ?? 0} />
+                <StatPill label="Arestas visíveis" value={replayData?.currentState?.edgeCount ?? 0} />
               </div>
               <div className="mt-3 space-y-2">
                 {(replayData?.replay ?? []).slice(0, 80).map((entry) => (
@@ -667,16 +667,16 @@ export default function BrainReactFlowView() {
                 <p className="text-lg font-black text-slate-200">Agentes Brain</p>
                 <p className="mt-1 text-sm text-slate-400">
                   {selectedNodeId
-                    ? `NÃ³: ${nodeDetails?.node?.label ?? selectedNodeId} â€” escolha um agente`
-                    : "Selecione um nÃ³ no grafo ou escolha um agente para comeÃ§ar"}
+                    ? `Nó: ${nodeDetails?.node?.label ?? selectedNodeId} — escolha um agente`
+                    : "Selecione um nó no grafo ou escolha um agente para começar"}
                 </p>
               </div>
               <div className="grid w-full max-w-sm grid-cols-2 gap-3">
                 {[
                   { mode: "qa", icon: "ðŸ”", name: "QA Analyst", label: "Riscos e cobertura", borderCls: "border-[#5b92ff44]" },
-                  { mode: "debug", icon: "ðŸ›", name: "Debug Agent", label: "DiagnÃ³stico e causa raiz", borderCls: "border-[#f59e0b44]" },
-                  { mode: "playwright", icon: "ðŸŽ­", name: "Playwright", label: "Specs e automaÃ§Ã£o", borderCls: "border-[#10b98144]" },
-                  { mode: "memory", icon: "ðŸ§ ", name: "Memory Agent", label: "Conhecimento e decisÃµes", borderCls: "border-[#a78bfa44]" },
+                  { mode: "debug", icon: "ðŸ›", name: "Debug Agent", label: "Diagnóstico e causa raiz", borderCls: "border-[#f59e0b44]" },
+                  { mode: "playwright", icon: "ðŸŽ­", name: "Playwright", label: "Specs e automação", borderCls: "border-[#10b98144]" },
+                  { mode: "memory", icon: "ðŸ§ ", name: "Memory Agent", label: "Conhecimento e decisões", borderCls: "border-[#a78bfa44]" },
                 ].map(({ mode, icon, name, label, borderCls }) => (
                   <button
                     key={mode}
@@ -693,7 +693,7 @@ export default function BrainReactFlowView() {
                               agentMode: mode,
                               panelMode: "side",
                               initialMessage: selectedNodeId
-                                ? `Analise o nÃ³ "${nodeDetails?.node?.label ?? selectedNodeId}" com o agente ${name}.`
+                                ? `Analise o nó "${nodeDetails?.node?.label ?? selectedNodeId}" com o agente ${name}.`
                                 : undefined,
                             },
                           }),
@@ -771,7 +771,7 @@ export default function BrainReactFlowView() {
                         nodeType: nodeDetails?.node?.type ?? undefined,
                         agentMode: "qa",
                         panelMode: "side",
-                        initialMessage: `Analise o nÃ³ "${nodeDetails?.node?.label ?? selectedNodeId}" (${nodeDetails?.node?.type ?? "Brain"}): resumo, conexÃµes, impacto e prÃ³ximos passos.`,
+                        initialMessage: `Analise o nó "${nodeDetails?.node?.label ?? selectedNodeId}" (${nodeDetails?.node?.type ?? "Brain"}): resumo, conexões, impacto e próximos passos.`,
                       },
                     }),
                   );
@@ -779,7 +779,7 @@ export default function BrainReactFlowView() {
               }}
               className="mb-3 w-full rounded-lg border border-[rgba(1,24,72,0.14)] bg-[linear-gradient(135deg,#011848_0%,#1f4aa3_100%)] px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 active:scale-[0.98]"
             >
-              ðŸ§  Perguntar IA sobre este nÃ³
+              ðŸ§  Perguntar IA sobre este nó
             </button>
 
             <div>
@@ -806,8 +806,8 @@ export default function BrainReactFlowView() {
 
         <div className={styles.legendPanel}>
           <p className="font-semibold">Legenda Viva</p>
-          <p>Azul empresa/usuÃ¡rio â€¢ Verde caso/plano/run â€¢ Roxo automaÃ§Ã£o â€¢ Vermelho defeito/falha</p>
-          <p>Linha cheia confirmada â€¢ Linha tracejada sugerida</p>
+          <p>Azul empresa/usuário • Verde caso/plano/run • Roxo automação • Vermelho defeito/falha</p>
+          <p>Linha cheia confirmada • Linha tracejada sugerida</p>
         </div>
       </div>
     </div>

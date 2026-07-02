@@ -38,8 +38,8 @@ describe("normalizeTicketPriorityInput", () => {
     ["baixa", "low"],
     ["medium", "medium"],
     ["media", "medium"],
-    ["mÃ©dia", "medium"],
-  ] as const)("maps '%s' â†’ '%s'", (input, expected) => {
+    ["média", "medium"],
+  ] as const)("maps '%s' → '%s'", (input, expected) => {
     expect(normalizeTicketPriorityInput(input)).toBe(expected);
   });
 
@@ -69,7 +69,7 @@ describe("looksLikeInstructionOnly", () => {
   });
 
   it("returns false for real content", () => {
-    expect(looksLikeInstructionOnly("O botÃ£o de login nÃ£o funciona no Safari")).toBe(false);
+    expect(looksLikeInstructionOnly("O botão de login não funciona no Safari")).toBe(false);
   });
 
   it("returns false for descriptive text", () => {
@@ -100,7 +100,7 @@ describe("validateAssistantTicketDraft", () => {
   it("rejects missing title", () => {
     const result = validateAssistantTicketDraft({ ...VALID_DRAFT, title: "" });
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("TÃ­tulo"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("Título"))).toBe(true);
   });
 
   it("rejects title that is too short", () => {
@@ -111,13 +111,13 @@ describe("validateAssistantTicketDraft", () => {
   it("rejects missing description", () => {
     const result = validateAssistantTicketDraft({ ...VALID_DRAFT, description: "" });
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("DescriÃ§Ã£o"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("Descrição"))).toBe(true);
   });
 
   it("rejects instruction-only title", () => {
     const result = validateAssistantTicketDraft({ ...VALID_DRAFT, title: "criar chamado" });
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("instruÃ§Ã£o"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("instrução"))).toBe(true);
   });
 
   it("rejects invalid type", () => {
@@ -162,7 +162,7 @@ describe("validateAssistantCommentBody", () => {
   it("rejects instruction-only comment", () => {
     const result = validateAssistantCommentBody("publicar comentario");
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("instruÃ§Ã£o"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("instrução"))).toBe(true);
   });
 
   it("normalizes non-string input", () => {
@@ -178,10 +178,10 @@ describe("validateAssistantCommentBody", () => {
 
 describe("validateAssistantTestCaseDraft", () => {
   const VALID_TC = {
-    sourceTitle: "Bug no formulÃ¡rio de cadastro",
-    objective: "Validar que o cadastro funciona corretamente apÃ³s correÃ§Ã£o",
+    sourceTitle: "Bug no formulário de cadastro",
+    objective: "Validar que o cadastro funciona corretamente após correção",
     reproductionBase: "Acessar a tela de cadastro, preencher os campos e submeter",
-    expectedResult: "FormulÃ¡rio salva sem erros e exibe mensagem de sucesso",
+    expectedResult: "Formulário salva sem erros e exibe mensagem de sucesso",
   };
 
   it("accepts a valid test case draft", () => {
@@ -193,7 +193,7 @@ describe("validateAssistantTestCaseDraft", () => {
   it("rejects missing sourceTitle", () => {
     const result = validateAssistantTestCaseDraft({ ...VALID_TC, sourceTitle: "" });
     expect(result.ok).toBe(false);
-    expect(result.issues.some((i) => i.includes("TÃ­tulo"))).toBe(true);
+    expect(result.issues.some((i) => i.includes("Título"))).toBe(true);
   });
 
   it("rejects short objective", () => {

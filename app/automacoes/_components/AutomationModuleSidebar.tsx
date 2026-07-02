@@ -54,10 +54,10 @@ export default function AutomationModuleSidebar() {
       <div className="flex flex-wrap items-center justify-between gap-3 2xl:block">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">QA IDE</p>
-          <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Troca rÃ¡pida entre mÃ³dulos sem sair do workspace.</p>
+          <p className="mt-1 text-sm text-[var(--tc-text-secondary,#4b5563)]">Troca rápida entre módulos sem sair do workspace.</p>
         </div>
         <span className="inline-flex min-h-9 items-center rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
-          {NAV_ITEMS.length} Ã¡reas
+          {NAV_ITEMS.length} áreas
         </span>
       </div>
 

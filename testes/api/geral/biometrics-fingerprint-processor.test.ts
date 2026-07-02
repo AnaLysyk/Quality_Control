@@ -70,7 +70,7 @@ describe("fingerprintProcessor", () => {
     expect(estimateBase64Length(0)).toBe(0);
   });
 
-  test("calcula bytes mÃ¡ximos para um limite base64", () => {
+  test("calcula bytes máximos para um limite base64", () => {
     const maxChars = 500_000;
     const maxBytes = maxBytesForBase64Limit(maxChars);
     expect(estimateBase64Length(maxBytes)).toBeLessThanOrEqual(maxChars);
@@ -84,7 +84,7 @@ describe("fingerprintProcessor", () => {
     expect(isWsqFormat(null)).toBe(false);
   });
 
-  test("preserva imagem jÃ¡ dentro do limite", async () => {
+  test("preserva imagem já dentro do limite", async () => {
     const smallPng = await generateTestPng(320, 300, false);
     const result = await ensureFingerprintBase64WithinLimit(smallPng);
 
@@ -102,7 +102,7 @@ describe("fingerprintProcessor", () => {
     expect(result.originalLength).toBeGreaterThanOrEqual(result.finalLength);
   });
 
-  test("falha quando o limite Ã© impossÃ­vel", async () => {
+  test("falha quando o limite é impossível", async () => {
     const noisyPng = await generateTestPng(640, 600, true);
 
     await expect(
@@ -126,14 +126,14 @@ describe("fingerprintProcessor", () => {
     await expect(ensureFingerprintBase64WithinLimit(wsq)).rejects.toBeInstanceOf(FingerprintBase64ExceededError);
   });
 
-  test("rejeita input invÃ¡lido", async () => {
+  test("rejeita input inválido", async () => {
     await expect(ensureFingerprintBase64WithinLimit(Buffer.alloc(0))).rejects.toBeInstanceOf(InvalidFingerprintImageError);
     await expect(
       ensureFingerprintBase64WithinLimit("invalid" as unknown as Buffer),
     ).rejects.toBeInstanceOf(InvalidFingerprintImageError);
   });
 
-  test("infla imagem para cenÃ¡rio above", async () => {
+  test("infla imagem para cenário above", async () => {
     const png = await generateTestPng(320, 300, true);
     const result = await inflateImageToTarget(png, 320, 300, 500_001, 10);
 
@@ -150,14 +150,14 @@ describe("fingerprintProcessor com fixtures locais", () => {
   );
 
   if (localFingerprints.length === 0) {
-    test("sem fixtures locais disponÃ­veis", () => {
+    test("sem fixtures locais disponíveis", () => {
       expect(localFingerprints).toHaveLength(0);
     });
     return;
   }
 
   test.each(localFingerprints.map((fixture) => [fixture.slug, fixture.path]))(
-    "mantÃ©m %s dentro do limite",
+    "mantém %s dentro do limite",
     async (_slug, fixturePath) => {
       const buffer = fs.readFileSync(fixturePath);
       const result = await ensureFingerprintBase64WithinLimit(buffer, {

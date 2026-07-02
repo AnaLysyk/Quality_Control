@@ -50,7 +50,7 @@ export function RunCasePanel({ item, columnKey, projectCode, onClose }: RunCaseP
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Caso de teste</p>
             <h3 className="mt-1 text-lg font-bold text-slate-900 leading-snug wrap-break-word">
-              {item.title || "Sem tÃ­tulo"}
+              {item.title || "Sem título"}
             </h3>
           </div>
           <button
@@ -102,10 +102,10 @@ export function RunCasePanel({ item, columnKey, projectCode, onClose }: RunCaseP
               className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-[var(--tc-accent,#ef0001)] transition"
             >
               <FiExternalLink size={14} className="shrink-0" />
-              EvidÃªncia
+              Evidência
             </a>
           ) : (
-            <p className="text-sm text-slate-400 italic">Sem evidÃªncia vinculada</p>
+            <p className="text-sm text-slate-400 italic">Sem evidência vinculada</p>
           )}
 
           {bugLink ? (

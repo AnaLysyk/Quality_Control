@@ -59,8 +59,8 @@ type RankedCompanyRow = RankingResponse["companies"][number] & {
 };
 
 const GATE_META: Record<QualityGateStatus, { label: string; tone: "positive" | "warning" | "danger" | "neutral" }> = {
-  approved: { label: "SaudÃ¡vel", tone: "positive" },
-  warning: { label: "AtenÃ§Ã£o", tone: "warning" },
+  approved: { label: "Saudável", tone: "positive" },
+  warning: { label: "Atenção", tone: "warning" },
   failed: { label: "Em risco", tone: "danger" },
   no_data: { label: "Sem dados", tone: "neutral" },
 };
@@ -69,13 +69,13 @@ const DEFECT_LABELS: Record<string, string> = {
   fail: "Falha aberta",
   blocked: "Bloqueado",
   pending: "Pendente",
-  done: "ConcluÃ­do",
+  done: "Concluído",
 };
 
 const RANKING_STATUS_META: Record<RankingResponse["companies"][number]["status"], { label: string; summary: string; tone: "positive" | "warning" | "danger" }> = {
-  healthy: { label: "Elite", summary: "OperaÃ§Ã£o estÃ¡vel e consistente", tone: "positive" },
-  attention: { label: "Sob observaÃ§Ã£o", summary: "OscilaÃ§Ã£o controlada na janela", tone: "warning" },
-  risk: { label: "PressÃ£o crÃ­tica", summary: "Resposta prioritÃ¡ria recomendada", tone: "danger" },
+  healthy: { label: "Elite", summary: "Operação estável e consistente", tone: "positive" },
+  attention: { label: "Sob observação", summary: "Oscilação controlada na janela", tone: "warning" },
+  risk: { label: "Pressão crítica", summary: "Resposta prioritária recomendada", tone: "danger" },
 };
 
 function normalizeText(value?: string | null) {
@@ -194,10 +194,10 @@ function progressWidth(value: number, total: number) {
 }
 
 function formatTrend(summary?: { direction: "up" | "down" | "flat"; delta: number } | null) {
-  if (!summary) return "Sem tendÃªncia recente";
-  if (summary.direction === "flat") return "EstÃ¡vel na janela atual";
+  if (!summary) return "Sem tendência recente";
+  if (summary.direction === "flat") return "Estável na janela atual";
   const prefix = summary.direction === "up" ? "+" : "-";
-  return `${prefix}${Math.abs(summary.delta)} pts na comparaÃ§Ã£o recente`;
+  return `${prefix}${Math.abs(summary.delta)} pts na comparação recente`;
 }
 
 function gateRank(status: QualityGateStatus) {
@@ -229,7 +229,7 @@ function getEventMeta(action: string) {
   const normalized = normalizeText(action);
   if (normalized.includes("permissions")) {
     return {
-      label: "PermissÃµes",
+      label: "Permissões",
       icon: FiShield,
       toneClass: "border-[rgba(1,24,72,0.14)] bg-[rgba(1,24,72,0.05)] text-[var(--tc-primary)]",
     };
@@ -269,11 +269,11 @@ function buildCompanyAttention(company: CompanyRow | null, defects: DefectItem[]
   const blockedCount = defects.filter((item) => item.status === "blocked").length;
   const staleHours = hoursSince(company.latestRelease?.createdAt);
   const items: AttentionItem[] = [];
-  if (company.gate.status === "failed") items.push({ id: "gate", title: "SaÃºde da empresa em risco", detail: "O pass rate e a distribuiÃ§Ã£o de falhas exigem aÃ§Ã£o imediata.", tone: "danger", href: "/admin/runs" });
-  if (company.passRate != null && company.passRate < 85) items.push({ id: "pass-rate", title: "Pass rate abaixo do esperado", detail: `A empresa estÃ¡ com ${company.passRate}% de aprovaÃ§Ã£o na janela atual.`, tone: "warning", href: "/admin/runs" });
+  if (company.gate.status === "failed") items.push({ id: "gate", title: "Saúde da empresa em risco", detail: "O pass rate e a distribuição de falhas exigem ação imediata.", tone: "danger", href: "/admin/runs" });
+  if (company.passRate != null && company.passRate < 85) items.push({ id: "pass-rate", title: "Pass rate abaixo do esperado", detail: `A empresa está com ${company.passRate}% de aprovação na janela atual.`, tone: "warning", href: "/admin/runs" });
   if (failCount > 0) items.push({ id: "fail", title: `${failCount} defeitos em falha`, detail: "Existem defeitos abertos com impacto direto no fluxo de qualidade.", tone: "danger", href: "/admin/defeitos" });
-  if (blockedCount > 0) items.push({ id: "blocked", title: `${blockedCount} itens bloqueados`, detail: "HÃ¡ bloqueios impedindo fechamento rÃ¡pido do ciclo de validaÃ§Ã£o.", tone: "warning", href: "/admin/defeitos" });
-  if (staleHours != null && staleHours > 72) items.push({ id: "stale", title: "Sem execuÃ§Ã£o recente", detail: `A Ãºltima execuÃ§Ã£o registrada foi hÃ¡ ${staleHours}h.`, tone: "warning", href: "/admin/runs" });
+  if (blockedCount > 0) items.push({ id: "blocked", title: `${blockedCount} itens bloqueados`, detail: "Há bloqueios impedindo fechamento rápido do ciclo de validação.", tone: "warning", href: "/admin/defeitos" });
+  if (staleHours != null && staleHours > 72) items.push({ id: "stale", title: "Sem execução recente", detail: `A última execução registrada foi há ${staleHours}h.`, tone: "warning", href: "/admin/runs" });
   if (!company.releases.length) items.push({ id: "no-runs", title: "Sem runs monitoradas", detail: "Nenhuma release com telemetria de qualidade foi encontrada para esta empresa.", tone: "neutral" });
   return items.slice(0, 5);
 }
@@ -285,12 +285,12 @@ function buildGlobalAttention(companies: CompanyRow[], defects: DefectItem[], ov
   const failDefects = defects.filter((item) => item.status === "fail").length;
   const blockedDefects = defects.filter((item) => item.status === "blocked").length;
   const items: AttentionItem[] = [];
-  if (riskCompanies > 0) items.push({ id: "risk-companies", title: `${riskCompanies} empresas em risco`, detail: "A visÃ£o global mostra empresas com qualidade fora da faixa saudÃ¡vel.", tone: "danger", href: "/admin/runs" });
-  if ((overview?.riskCount ?? 0) > 0) items.push({ id: "risk-releases", title: `${overview?.riskCount ?? 0} releases em risco`, detail: "Existem releases com comportamento sensÃ­vel na janela monitorada.", tone: "warning", href: "/admin/runs" });
-  if (failDefects > 0) items.push({ id: "fail-defects", title: `${failDefects} defeitos em falha`, detail: "Itens em falha precisam de leitura imediata no backlog tÃ©cnico.", tone: "danger", href: "/admin/defeitos" });
-  if (blockedDefects > 0) items.push({ id: "blocked-defects", title: `${blockedDefects} bloqueios ativos`, detail: "Os bloqueios atuais podem atrasar estabilizaÃ§Ã£o e aprovaÃ§Ã£o.", tone: "warning", href: "/admin/defeitos" });
-  if (staleCompanies > 0) items.push({ id: "stale-companies", title: `${staleCompanies} empresas sem execuÃ§Ã£o recente`, detail: "HÃ¡ empresas sem telemetria recente na janela de decisÃ£o.", tone: "neutral", href: "/admin/runs" });
-  if (warningCompanies > 0) items.push({ id: "warning-companies", title: `${warningCompanies} empresas em atenÃ§Ã£o`, detail: "Empresas com degradaÃ§Ã£o leve podem virar risco se nÃ£o forem tratadas.", tone: "neutral", href: "/admin/runs" });
+  if (riskCompanies > 0) items.push({ id: "risk-companies", title: `${riskCompanies} empresas em risco`, detail: "A visão global mostra empresas com qualidade fora da faixa saudável.", tone: "danger", href: "/admin/runs" });
+  if ((overview?.riskCount ?? 0) > 0) items.push({ id: "risk-releases", title: `${overview?.riskCount ?? 0} releases em risco`, detail: "Existem releases com comportamento sensível na janela monitorada.", tone: "warning", href: "/admin/runs" });
+  if (failDefects > 0) items.push({ id: "fail-defects", title: `${failDefects} defeitos em falha`, detail: "Itens em falha precisam de leitura imediata no backlog técnico.", tone: "danger", href: "/admin/defeitos" });
+  if (blockedDefects > 0) items.push({ id: "blocked-defects", title: `${blockedDefects} bloqueios ativos`, detail: "Os bloqueios atuais podem atrasar estabilização e aprovação.", tone: "warning", href: "/admin/defeitos" });
+  if (staleCompanies > 0) items.push({ id: "stale-companies", title: `${staleCompanies} empresas sem execução recente`, detail: "Há empresas sem telemetria recente na janela de decisão.", tone: "neutral", href: "/admin/runs" });
+  if (warningCompanies > 0) items.push({ id: "warning-companies", title: `${warningCompanies} empresas em atenção`, detail: "Empresas com degradação leve podem virar risco se não forem tratadas.", tone: "neutral", href: "/admin/runs" });
   return items.slice(0, 5);
 }
 
@@ -405,14 +405,14 @@ export default function AdminHomePage() {
         const raw = await response.json().catch(() => null);
         if (!response.ok) {
           if (!canceled) setAuditLogs([]);
-          if (!canceled) setAuditError(extractMessageFromJson(raw) || "Erro ao carregar histÃ³rico");
+          if (!canceled) setAuditError(extractMessageFromJson(raw) || "Erro ao carregar histórico");
           return;
         }
         const payload = unwrapEnvelopeData<{ items?: AuditLogItem[] }>(raw) ?? null;
         if (!canceled) setAuditLogs(payload?.items ?? []);
       } catch {
         if (!canceled) setAuditLogs([]);
-        if (!canceled) setAuditError("Erro ao carregar histÃ³rico");
+        if (!canceled) setAuditError("Erro ao carregar histórico");
       } finally {
         if (!canceled) setLoadingAudit(false);
       }
@@ -579,11 +579,11 @@ export default function AdminHomePage() {
 
   const heroCards = [
     { id: "companies", label: "Cobertura com telemetria", value: companiesWithTelemetry, note: `${overview?.coverage.total ?? companies.length} empresas no escopo global` },
-    { id: "runs", label: "ExecuÃ§Ãµes consolidadas", value: totalRuns, note: `Janela analÃ­tica de ${overview?.period ?? 30} dias` },
-    { id: "pass-rate", label: "Taxa mÃ©dia de aprovaÃ§Ã£o", value: formatPercent(overview?.globalPassRate), note: formatTrend(overview?.trendSummary) },
-    { id: "risk", label: "Gate crÃ­tico por empresa", value: companiesAtRisk, note: `${companiesWithoutRecentRun} sem execuÃ§Ã£o acima de 72h` },
+    { id: "runs", label: "Execuções consolidadas", value: totalRuns, note: `Janela analítica de ${overview?.period ?? 30} dias` },
+    { id: "pass-rate", label: "Taxa média de aprovação", value: formatPercent(overview?.globalPassRate), note: formatTrend(overview?.trendSummary) },
+    { id: "risk", label: "Gate crítico por empresa", value: companiesAtRisk, note: `${companiesWithoutRecentRun} sem execução acima de 72h` },
     { id: "defects", label: "Defeitos ativos", value: openDefects, note: `${failingDefects} com falha aberta` },
-    { id: "releases", label: "Releases sob risco", value: overview?.riskCount ?? "--", note: `${overview?.warningCount ?? 0} em observaÃ§Ã£o` },
+    { id: "releases", label: "Releases sob risco", value: overview?.riskCount ?? "--", note: `${overview?.warningCount ?? 0} em observação` },
   ];
   const rankingRows = useMemo<RankedCompanyRow[]>(
     () =>
@@ -687,7 +687,7 @@ export default function AdminHomePage() {
               <div className="min-w-0 space-y-3">
                 <div className="space-y-2">
                   <h2 className="text-[1.3rem] sm:text-[1.65rem] font-black tracking-[-0.04em] text-[var(--tc-text-primary)]">
-                    SeleÃ§Ã£o rÃ¡pida de empresa
+                    Seleção rápida de empresa
                   </h2>
                   <p className="max-w-160 text-[0.98rem] leading-7 text-[var(--tc-text-muted)]">
                     Busque por nome ou slug, troque o contexto ativo e siga no painel sem quebrar o fluxo.
@@ -723,13 +723,13 @@ export default function AdminHomePage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted)]">VisÃ£o global</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted)]">Visão global</div>
                       <div className="text-[1rem] font-black tracking-[-0.03em] text-[var(--tc-text-primary)]">Ambiente inteiro</div>
                     </div>
                     <span className="tc-status-pill" data-tone="neutral"><span className="tc-status-dot" />Geral</span>
                   </div>
                   <p className="text-[0.82rem] leading-6 text-[var(--tc-text-muted)]">
-                    Compare empresas e leia o ranking sem travar em um Ãºnico cliente.
+                    Compare empresas e leia o ranking sem travar em um único cliente.
                   </p>
                   <div className="grid grid-cols-2 gap-4 border-t border-[var(--tc-border)] pt-3">
                     <QuickCompanyStat label="Empresas" value={companies.length} />
@@ -774,7 +774,7 @@ export default function AdminHomePage() {
                       </div>
                       <div className="grid grid-cols-2 gap-4 border-t border-[var(--tc-border)] pt-3">
                         <QuickCompanyMeta label="Alertas" value={`${countRuns(company, ["failed", "warning"])} em alerta`} />
-                        <QuickCompanyMeta label="Ãšltima execuÃ§Ã£o" value={formatShortDate(company.latestRelease?.createdAt)} align="right" />
+                        <QuickCompanyMeta label="Última execução" value={formatShortDate(company.latestRelease?.createdAt)} align="right" />
                       </div>
                     </button>
                   );
@@ -793,9 +793,9 @@ export default function AdminHomePage() {
                         <FiShield size={24} />
                       </div>
                       <div className="space-y-2">
-                        <p className="text-lg font-bold text-[var(--tc-text-primary)]">Radar automÃ¡tico do ambiente</p>
+                        <p className="text-lg font-bold text-[var(--tc-text-primary)]">Radar automático do ambiente</p>
                         <p className="max-w-2xl text-sm leading-6 text-[var(--tc-text-muted)]">
-                          Mesmo sem empresa focada, o painel aponta o que merece leitura imediata: contexto mais crÃ­tico, melhor operaÃ§Ã£o, Ãºltima empresa aberta e aÃ§Ã£o global sugerida.
+                          Mesmo sem empresa focada, o painel aponta o que merece leitura imediata: contexto mais crítico, melhor operação, última empresa aberta e ação global sugerida.
                         </p>
                       </div>
                     </div>
@@ -821,8 +821,8 @@ export default function AdminHomePage() {
                       <div className="mt-3 text-lg font-black tracking-[-0.03em] text-[var(--tc-text-primary)]">{mostCriticalCompany?.name ?? "Sem empresa critica"}</div>
                       <div className="mt-2 text-sm text-[var(--tc-text-muted)]">
                         {mostCriticalCompany
-                          ? `${countRuns(mostCriticalCompany, ["failed", "warning"])} alertas | ${formatPercent(mostCriticalCompany.passRate)} de aprovaÃ§Ã£o`
-                          : "O ambiente nÃ£o exibiu empresa crÃ­tica na janela atual."}
+                          ? `${countRuns(mostCriticalCompany, ["failed", "warning"])} alertas | ${formatPercent(mostCriticalCompany.passRate)} de aprovação`
+                          : "O ambiente não exibiu empresa crítica na janela atual."}
                       </div>
                     </div>
                     <div className="tc-panel-muted">
@@ -833,12 +833,12 @@ export default function AdminHomePage() {
                       </div>
                     </div>
                     <div className="tc-panel-muted">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Ãšltimo contexto acessado</div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Último contexto acessado</div>
                       <div className="mt-3 text-lg font-black tracking-[-0.03em] text-[var(--tc-text-primary)]">{lastViewedCompany?.name ?? "Nenhuma empresa recente"}</div>
                       <div className="mt-2 text-sm text-[var(--tc-text-muted)]">
                         {lastViewedCompany
-                          ? `${formatShortDate(lastViewedCompany.latestRelease?.createdAt)} na Ãºltima execuÃ§Ã£o | ${countRuns(lastViewedCompany, ["failed", "warning"])} alertas`
-                          : "O dashboard ainda nÃ£o recebeu um foco manual recente."}
+                          ? `${formatShortDate(lastViewedCompany.latestRelease?.createdAt)} na última execução | ${countRuns(lastViewedCompany, ["failed", "warning"])} alertas`
+                          : "O dashboard ainda não recebeu um foco manual recente."}
                       </div>
                     </div>
                   </div>
@@ -846,7 +846,7 @@ export default function AdminHomePage() {
                   <div className="flex flex-1 flex-col rounded-2xl sm:rounded-3xl border border-[var(--tc-border)] bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] p-3 sm:p-5 shadow-[0_14px_28px_rgba(15,23,42,0.04)] dark:shadow-[0_14px_28px_rgba(0,0,0,0.28)]">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="space-y-2">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted)]">VisÃ£o util sem clique</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted)]">Visão util sem clique</div>
                         <h3 className="text-[1.2rem] font-extrabold tracking-[-0.03em] text-[var(--tc-text-primary)]">Prioridades automaticas do ambiente</h3>
                         <p className="max-w-2xl text-sm leading-6 text-[var(--tc-text-muted)]">
                           Use o painel para decidir onde entrar primeiro, sem depender de selecionar empresa para ter uma leitura operacional inicial.
@@ -854,7 +854,7 @@ export default function AdminHomePage() {
                       </div>
                       {staleCompany ? (
                         <button type="button" onClick={() => focusRankingCompany(staleCompany.slug ?? "", staleCompany.name)} className="tc-button-secondary">
-                          Abrir empresa sem execuÃ§Ã£o recente
+                          Abrir empresa sem execução recente
                         </button>
                       ) : null}
                     </div>
@@ -886,7 +886,7 @@ export default function AdminHomePage() {
                         <h2 className="tc-panel-title">{selectedCompany.name}</h2>
                         <span className="tc-status-pill" data-tone={GATE_META[selectedCompany.gate.status].tone}><span className="tc-status-dot" />{GATE_META[selectedCompany.gate.status].label}</span>
                       </div>
-                      <p className="tc-panel-description max-w-3xl">Monitorando saÃºde operacional, distribuicao das runs, defeitos em aberto e sinais de degradacao na empresa selecionada.</p>
+                      <p className="tc-panel-description max-w-3xl">Monitorando saúde operacional, distribuicao das runs, defeitos em aberto e sinais de degradacao na empresa selecionada.</p>
                       </div>
                     </div>
                     <div className="grid min-w-0 sm:min-w-[16rem] gap-2 sm:gap-3 grid-cols-2">
@@ -895,53 +895,53 @@ export default function AdminHomePage() {
                         <div className="mt-2 flex items-center gap-2 text-base font-semibold text-[var(--tc-text-primary)]">{selectedCompany.trend.direction === "down" ? <FiTrendingDown className="text-[var(--tc-accent)]" /> : <FiTrendingUp className="text-emerald-600" />}{formatTrend(selectedCompany.trend)}</div>
                       </div>
                       <div className="tc-panel-muted">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Ãšltima execuÃ§Ã£o</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Última execução</div>
                         <div className="mt-2 text-base font-semibold text-[var(--tc-text-primary)]">{formatDate(selectedCompany.latestRelease?.createdAt)}</div>
                       </div>
                     </div>
                   </div>
                   <div className="tc-data-grid">
                     <div className="tc-kv"><div className="tc-kv-label">Pass rate</div><div className="tc-kv-value">{formatPercent(selectedCompany.passRate)}</div><div className="tc-kv-note">Indicador principal de qualidade da empresa.</div></div>
-                    <div className="tc-kv"><div className="tc-kv-label">Runs monitoradas</div><div className="tc-kv-value">{selectedCompany.releases.length}</div><div className="tc-kv-note">ExecuÃ§Ãµes consideradas na janela atual.</div></div>
-                    <div className="tc-kv"><div className="tc-kv-label">Runs aprovadas</div><div className="tc-kv-value">{countRuns(selectedCompany, "approved")}</div><div className="tc-kv-note">Releases que permaneceram saudÃ¡veis.</div></div>
+                    <div className="tc-kv"><div className="tc-kv-label">Runs monitoradas</div><div className="tc-kv-value">{selectedCompany.releases.length}</div><div className="tc-kv-note">Execuções consideradas na janela atual.</div></div>
+                    <div className="tc-kv"><div className="tc-kv-label">Runs aprovadas</div><div className="tc-kv-value">{countRuns(selectedCompany, "approved")}</div><div className="tc-kv-note">Releases que permaneceram saudáveis.</div></div>
                     <div className="tc-kv"><div className="tc-kv-label">Runs falhadas</div><div className="tc-kv-value">{countRuns(selectedCompany, "failed")}</div><div className="tc-kv-note">Releases em risco alto ou falha aberta.</div></div>
-                    <div className="tc-kv"><div className="tc-kv-label">Defeitos abertos</div><div className="tc-kv-value">{selectedCompanyDefects.filter((item) => item.status !== "done").length}</div><div className="tc-kv-note">VisÃ£o resumida dos itens que ainda exigem aÃ§Ã£o.</div></div>
-                    <div className="tc-kv"><div className="tc-kv-label">CrÃ­ticos e bloqueios</div><div className="tc-kv-value">{criticalDefects}</div><div className="tc-kv-note">Falhas ou bloqueios que travam o fluxo operacional.</div></div>
+                    <div className="tc-kv"><div className="tc-kv-label">Defeitos abertos</div><div className="tc-kv-value">{selectedCompanyDefects.filter((item) => item.status !== "done").length}</div><div className="tc-kv-note">Visão resumida dos itens que ainda exigem ação.</div></div>
+                    <div className="tc-kv"><div className="tc-kv-label">Críticos e bloqueios</div><div className="tc-kv-value">{criticalDefects}</div><div className="tc-kv-note">Falhas ou bloqueios que travam o fluxo operacional.</div></div>
                     <div className="tc-kv"><div className="tc-kv-label">Releases em risco</div><div className="tc-kv-value">{countRuns(selectedCompany, ["failed", "warning"])}</div><div className="tc-kv-note">Soma de releases com status warning ou failed.</div></div>
-                    <div className="tc-kv"><div className="tc-kv-label">Sem telemetria</div><div className="tc-kv-value">{countRuns(selectedCompany, "no_data")}</div><div className="tc-kv-note">Runs sem base suficiente para decisÃ£o automÃ¡tica.</div></div>
+                    <div className="tc-kv"><div className="tc-kv-label">Sem telemetria</div><div className="tc-kv-value">{countRuns(selectedCompany, "no_data")}</div><div className="tc-kv-note">Runs sem base suficiente para decisão automática.</div></div>
                   </div>
                   <div className="grid gap-2 sm:gap-3 rounded-2xl sm:rounded-3xl border border-[var(--tc-border)] bg-[linear-gradient(180deg,var(--tc-surface)_0%,var(--tc-surface-2)_100%)] p-3 sm:p-4 shadow-[0_12px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_12px_24px_rgba(0,0,0,0.28)] lg:grid-cols-3">
                     <div className="space-y-1">
-                      <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">AÃ§Ã£o sugerida</div>
+                      <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">Ação sugerida</div>
                       <div className="text-sm font-bold text-[var(--tc-text-primary)]">
                         {criticalDefects > 0 || selectedCompany.gate.status === "failed"
-                          ? "Priorizar triagem tÃ©cnica imediata"
+                          ? "Priorizar triagem técnica imediata"
                           : countRuns(selectedCompany, ["warning"]) > 0
-                            ? "Validar releases sob observaÃ§Ã£o"
-                            : "Manter cadÃªncia e monitorar contexto"}
+                            ? "Validar releases sob observação"
+                            : "Manter cadência e monitorar contexto"}
                       </div>
                       <div className="text-sm leading-6 text-[var(--tc-text-muted)]">
                         {criticalDefects > 0 || selectedCompany.gate.status === "failed"
-                          ? "HÃ¡ sinal de risco real na empresa e o bloco de defeitos precisa de leitura rÃ¡pida."
+                          ? "Há sinal de risco real na empresa e o bloco de defeitos precisa de leitura rápida."
                           : countRuns(selectedCompany, ["warning"]) > 0
-                            ? "A empresa nÃ£o estÃ¡ em falha aberta, mas jÃ¡ mostra oscilaÃ§Ã£o que merece antecipaÃ§Ã£o."
-                            : "Sem alertas relevantes na janela atual; foco em consistÃªncia e Ãºltima execuÃ§Ã£o."}
+                            ? "A empresa não está em falha aberta, mas já mostra oscilação que merece antecipação."
+                            : "Sem alertas relevantes na janela atual; foco em consistência e última execução."}
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">Ponto sensÃ­vel</div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">Ponto sensível</div>
                       <div className="text-sm font-bold text-[var(--tc-text-primary)]">
                         {(hoursSince(selectedCompany.latestRelease?.createdAt) ?? 0) > 72
-                          ? "ExecuÃ§Ã£o desatualizada"
+                          ? "Execução desatualizada"
                           : countRuns(selectedCompany, "no_data") > 0
                             ? "Runs sem telemetria completa"
                             : "Telemetria em dia"}
                       </div>
                       <div className="text-sm leading-6 text-[var(--tc-text-muted)]">
                         {(hoursSince(selectedCompany.latestRelease?.createdAt) ?? 0) > 72
-                          ? `A Ãºltima execuÃ§Ã£o vÃ¡lida jÃ¡ passou de ${hoursSince(selectedCompany.latestRelease?.createdAt)}h.`
+                          ? `A última execução válida já passou de ${hoursSince(selectedCompany.latestRelease?.createdAt)}h.`
                           : countRuns(selectedCompany, "no_data") > 0
-                            ? `${countRuns(selectedCompany, "no_data")} runs ainda nÃ£o entregam sinal suficiente para score confiÃ¡vel.`
+                            ? `${countRuns(selectedCompany, "no_data")} runs ainda não entregam sinal suficiente para score confiável.`
                             : "A cobertura atual permite leitura mais segura do pass rate e do ranking."}
                       </div>
                     </div>
@@ -950,12 +950,12 @@ export default function AdminHomePage() {
                       <div className="text-sm font-bold text-[var(--tc-text-primary)]">
                         {countRuns(selectedCompany, "approved") > 0
                           ? `${countRuns(selectedCompany, "approved")} runs aprovadas`
-                          : "Sem aprovaÃ§Ã£o recente"}
+                          : "Sem aprovação recente"}
                       </div>
                       <div className="text-sm leading-6 text-[var(--tc-text-muted)]">
                         {countRuns(selectedCompany, "approved") > 0
-                          ? "A operaÃ§Ã£o jÃ¡ mostrou estabilidade suficiente para apoiar a tomada de decisÃ£o."
-                          : "Se nÃ£o houver aprovaÃ§Ã£o recente, vale cruzar eventos e run em foco antes de agir."}
+                          ? "A operação já mostrou estabilidade suficiente para apoiar a tomada de decisão."
+                          : "Se não houver aprovação recente, vale cruzar eventos e run em foco antes de agir."}
                       </div>
                     </div>
                   </div>
@@ -981,13 +981,13 @@ export default function AdminHomePage() {
               <section className="tc-panel">
                 <div className="tc-panel-header">
                   <div className="space-y-2">
-                    <p className="tc-panel-kicker">AtenÃ§Ã£o agora</p>
+                    <p className="tc-panel-kicker">Atenção agora</p>
                     <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[var(--tc-text-primary)]">{selectedCompany ? `Prioridades de ${selectedCompany.name}` : "Prioridades do ambiente"}</h3>
-                    <p className="tc-panel-description">Itens que merecem aÃ§Ã£o imediata para manter qualidade, estabilidade e cadencia de execuÃ§Ã£o.</p>
+                    <p className="tc-panel-description">Itens que merecem ação imediata para manter qualidade, estabilidade e cadencia de execução.</p>
                   </div>
                 </div>
                 <div className="mt-5 space-y-3">
-                  {attentionItems.length === 0 ? <div className="tc-empty-state">Nenhum alerta crÃ­tico ativo agora. O ambiente estÃ¡ estÃ¡vel na leitura atual.</div> : attentionItems.map((item) => {
+                  {attentionItems.length === 0 ? <div className="tc-empty-state">Nenhum alerta crítico ativo agora. O ambiente está estável na leitura atual.</div> : attentionItems.map((item) => {
                     const content = (
                       <div className={`rounded-2xl sm:rounded-[22px] border px-3 py-3 sm:px-4 sm:py-4 ${attentionToneClass(item.tone)}`}>
                         <div className="flex items-start gap-2 sm:gap-3">
@@ -1008,13 +1008,13 @@ export default function AdminHomePage() {
                 <div className="tc-panel-header">
                   <div className="space-y-2">
                     <p className="tc-panel-kicker">Eventos recentes</p>
-                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[var(--tc-text-primary)]">Movimentos que impactam a saÃºde</h3>
-                    <p className="tc-panel-description">HistÃ³rico curto do contexto atual para entender o que mudou antes de agir.</p>
+                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[var(--tc-text-primary)]">Movimentos que impactam a saúde</h3>
+                    <p className="tc-panel-description">Histórico curto do contexto atual para entender o que mudou antes de agir.</p>
                   </div>
                 </div>
                   <div className="mt-5 space-y-3">
                   {loadingAudit ? (
-                    <div className="tc-empty-state">Carregando histÃ³rico...</div>
+                    <div className="tc-empty-state">Carregando histórico...</div>
                   ) : selectedHistory.length === 0 ? (
                     <div className="tc-empty-state">Nenhum evento relevante encontrado nesta janela.</div>
                   ) : (
@@ -1038,7 +1038,7 @@ export default function AdminHomePage() {
                                   </span>
                                 </div>
                                 <div className="truncate text-sm font-semibold text-[var(--tc-text-primary)]">{item.entity_label ?? "Registro da plataforma"}</div>
-                                <div className="text-xs text-[var(--tc-text-muted)]">ResponsÃ¡vel: {item.actor_email ?? "Sistema"}</div>
+                                <div className="text-xs text-[var(--tc-text-muted)]">Responsável: {item.actor_email ?? "Sistema"}</div>
                               </div>
                             </div>
                             <div className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">
@@ -1060,7 +1060,7 @@ export default function AdminHomePage() {
                 <div className="space-y-2">
                   <p className="tc-panel-kicker">Defeitos abertos</p>
                   <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[var(--tc-text-primary)]">{selectedCompany ? `Defeitos relevantes de ${selectedCompany.name}` : "Resumo executivo de defeitos"}</h3>
-                  <p className="tc-panel-description">VisÃ£o curta dos itens mais importantes para triagem, decisÃ£o e acompanhamento rÃ¡pido.</p>
+                  <p className="tc-panel-description">Visão curta dos itens mais importantes para triagem, decisão e acompanhamento rápido.</p>
                 </div>
               </div>
               <div className="mt-4 sm:mt-5 grid gap-2 sm:gap-3 grid-cols-3">
@@ -1074,8 +1074,8 @@ export default function AdminHomePage() {
                 ) : relevantDefects.length === 0 ? (
                   <div className="tc-empty-state flex min-h-41 flex-1 items-center justify-center">
                     {selectedCompany
-                      ? `Nenhum defeito relevante encontrado para ${selectedCompany.name}. O foco imediato segue na saÃºde das runs e no histÃ³rico recente.`
-                      : "Nenhum defeito relevante no ambiente agora. Use o ranking ou o radar automÃ¡tico para abrir a empresa que mais merece leitura."}
+                      ? `Nenhum defeito relevante encontrado para ${selectedCompany.name}. O foco imediato segue na saúde das runs e no histórico recente.`
+                      : "Nenhum defeito relevante no ambiente agora. Use o ranking ou o radar automático para abrir a empresa que mais merece leitura."}
                   </div>
                 ) : (
                   relevantDefects.map((defect) => (
@@ -1102,7 +1102,7 @@ export default function AdminHomePage() {
                 <div className="tc-panel-header">
                   <div className="space-y-2">
                     <p className="tc-panel-kicker">Run em foco</p>
-                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[var(--tc-text-primary)]">{runInFocus?.title ?? "Foco sugerido de execuÃ§Ã£o"}</h3>
+                    <h3 className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-[var(--tc-text-primary)]">{runInFocus?.title ?? "Foco sugerido de execução"}</h3>
                   </div>
                   {selectedCompany?.releases.length ? (
                     <select value={selectedRun?.slug ?? ""} onChange={(event) => setSelectedRunSlug(event.target.value || null)} className="rounded-full border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-2 text-sm font-semibold text-[var(--tc-text-primary)] outline-none" aria-label="Selecionar run em foco">
@@ -1133,7 +1133,7 @@ export default function AdminHomePage() {
                       </div>
                       <div className="mt-4 grid gap-3 sm:grid-cols-2">
                         <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Pass rate</div><div className="mt-2 text-2xl font-extrabold text-[var(--tc-text-primary)]">{formatPercent(runInFocus.passRate)}</div></div>
-                        <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Data da execuÃ§Ã£o</div><div className="mt-2 text-base font-bold text-[var(--tc-text-primary)]">{formatDate(runInFocus.createdAt ?? runInFocus.created_at)}</div></div>
+                        <div className="tc-panel-muted"><div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--tc-text-muted)]">Data da execução</div><div className="mt-2 text-base font-bold text-[var(--tc-text-primary)]">{formatDate(runInFocus.createdAt ?? runInFocus.created_at)}</div></div>
                       </div>
                     </div>
                     {!selectedCompany && suggestedRunCompany ? (
@@ -1161,7 +1161,7 @@ export default function AdminHomePage() {
               <div className="space-y-2">
                 <p className="tc-panel-kicker">Ranking de qualidade por empresa</p>
                 <h2 className="tc-panel-title">Comparativo operacional do ambiente</h2>
-                <p className="tc-panel-description">Score, status, pass rate, alertas e Ãºltima execuÃ§Ã£o para decidir rapidamente onde agir.</p>
+                <p className="tc-panel-description">Score, status, pass rate, alertas e última execução para decidir rapidamente onde agir.</p>
               </div>
             </div>
             <div className="mt-4 sm:mt-6 space-y-5">
@@ -1178,8 +1178,8 @@ export default function AdminHomePage() {
                       <span>Status</span>
                       <span>Pass rate</span>
                       <span>Alertas</span>
-                      <span>Ãšltima execuÃ§Ã£o</span>
-                      <span className="text-right">AÃ§Ã£o</span>
+                      <span>Última execução</span>
+                      <span className="text-right">Ação</span>
                     </div>
                     <div className="divide-y divide-(--tc-border)">
                       {pagedRankingRows.map((company) => (
@@ -1277,7 +1277,7 @@ export default function AdminHomePage() {
                   {rankingTotalPages > 1 && (
                     <div className="flex items-center justify-between gap-3 pt-2">
                       <p className="text-sm font-medium text-[var(--tc-text-muted)]">
-                        {rankingPage * RANKING_PAGE_SIZE + 1}â€“{Math.min((rankingPage + 1) * RANKING_PAGE_SIZE, rankingRows.length)} de {rankingRows.length} empresas
+                        {rankingPage * RANKING_PAGE_SIZE + 1}–{Math.min((rankingPage + 1) * RANKING_PAGE_SIZE, rankingRows.length)} de {rankingRows.length} empresas
                       </p>
                       <div className="flex items-center gap-2">
                         <button

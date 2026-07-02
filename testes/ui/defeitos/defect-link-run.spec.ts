@@ -25,10 +25,10 @@ test("vincula defeito manual a uma run", async ({ page, context }) => {
 
   await page.getByTestId("defect-save").click();
 
-  // garante persistÃƒÂªncia visual
+  // garante persistÃƒªncia visual
   await expect(defect).toContainText("run-001");
 
-  // reload prova persistÃƒÂªncia real
+  // reload prova persistÃƒªncia real
   await page.reload({ waitUntil: "networkidle" });
 
   const defectAfter = page.locator('[data-testid^="defect-item-"]').first();

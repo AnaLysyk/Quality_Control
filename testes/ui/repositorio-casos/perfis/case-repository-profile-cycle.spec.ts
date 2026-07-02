@@ -30,7 +30,7 @@ const profiles: ProfileScenario[] = [
   },
   {
     key: "suporte-tecnico",
-    label: "Suporte TÃ©cnico",
+    label: "Suporte Técnico",
     role: "technical_support",
     permissionRole: "technical_support",
     companyRole: "technical_support",
@@ -40,7 +40,7 @@ const profiles: ProfileScenario[] = [
   },
   {
     key: "lider-tc",
-    label: "LÃ­der TC",
+    label: "Líder TC",
     role: "leader_tc",
     permissionRole: "leader_tc",
     companyRole: "leader_tc",
@@ -50,7 +50,7 @@ const profiles: ProfileScenario[] = [
   },
   {
     key: "usuario-tc",
-    label: "UsuÃ¡rio TC",
+    label: "Usuário TC",
     role: "testing_company_user",
     permissionRole: "testing_company_user",
     companyRole: "testing_company_user",
@@ -60,7 +60,7 @@ const profiles: ProfileScenario[] = [
   },
   {
     key: "usuario-empresa",
-    label: "UsuÃ¡rio da Empresa",
+    label: "Usuário da Empresa",
     role: "company_user",
     permissionRole: "company_user",
     companyRole: "company_user",
@@ -140,13 +140,13 @@ async function createCase(page: Page, context: BrowserContext, profile: ProfileS
 
   await page
     .getByTestId("test-case-preconditions-input")
-    .fill("UsuÃ¡rio autenticado e contexto correto carregado.");
+    .fill("Usuário autenticado e contexto correto carregado.");
 
   await page.getByTestId("test-case-add-step-button").click();
 
   await page
     .getByTestId("test-case-step-action-input")
-    .fill("Acessar o RepositÃ³rio Central de Casos de Teste.");
+    .fill("Acessar o Repositório Central de Casos de Teste.");
 
   await page
     .getByTestId("test-case-step-expected-input")
@@ -192,7 +192,7 @@ async function createPlanAndLinkCase(
   await page.getByTestId("test-plan-title-input").fill(title);
   await page
     .getByTestId("test-plan-description-input")
-    .fill(`Plano criado no Playwright para validar vÃ­nculo com caso do perfil ${profile.label}.`);
+    .fill(`Plano criado no Playwright para validar vínculo com caso do perfil ${profile.label}.`);
 
   const caseIdInput = page.getByLabel(/ID do caso|Case ID/i).first();
   await caseIdInput.fill(testCase.id);
@@ -282,9 +282,9 @@ async function assertProfileCannotSwitchContext(page: Page, profile: ProfileScen
   await expect(page.getByTestId("test-case-company-filter")).toBeHidden();
 }
 
-test.describe("RepositÃ³rio Central - ciclo completo por perfil", () => {
+test.describe("Repositório Central - ciclo completo por perfil", () => {
   for (const profile of profiles) {
-    test(`@case=TC-PROFILE-CYCLE-${profile.key} ${profile.label} cria caso, plano e run no prÃ³prio contexto`, async ({
+    test(`@case=TC-PROFILE-CYCLE-${profile.key} ${profile.label} cria caso, plano e run no próprio contexto`, async ({
       context,
       page,
     }) => {

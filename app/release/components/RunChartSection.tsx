@@ -42,12 +42,12 @@ export function RunChartSection({ vm }: { vm: RunDetailViewModel }) {
 
         {/* â”€â”€ Chart + Stat cards â”€â”€ */}
         <div className="flex flex-col xl:flex-row items-center xl:items-stretch gap-8">
-          {/* Donut chart â€” large presence */}
+          {/* Donut chart — large presence */}
           <div className="w-full max-w-md xl:max-w-sm">
-            <StatusChart stats={vm.stats} hasData={vm.hasData} emptyLabel="Sem execuÃ§Ãµes" />
+            <StatusChart stats={vm.stats} hasData={vm.hasData} emptyLabel="Sem execuções" />
           </div>
 
-          {/* Stat cards â€” right side */}
+          {/* Stat cards — right side */}
           <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-3 content-center">
             {STATUS_ITEMS.map((item) => {
               const val = vm.stats[item.key];

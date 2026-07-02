@@ -86,7 +86,7 @@ async function sincronizarCookiesLogin(page: Page, setCookie: string | undefined
       } => Boolean(cookie),
     );
 
-  expect(cookies.some((cookie) => cookie.name === "session_id"), "Login via /api/auth/login nÃ£o retornou session_id.").toBeTruthy();
+  expect(cookies.some((cookie) => cookie.name === "session_id"), "Login via /api/auth/login não retornou session_id.").toBeTruthy();
   await page.context().addCookies(cookies);
 }
 
@@ -117,7 +117,7 @@ async function selecionarPrimeiraOpcaoValida(select: Locator) {
     return Array.from(element.options).find((option) => option.value.trim())?.value ?? "";
   });
 
-  expect(value, "Select obrigatÃ³rio nÃ£o possui opÃ§Ã£o vÃ¡lida.").toBeTruthy();
+  expect(value, "Select obrigatório não possui opção válida.").toBeTruthy();
   await select.selectOption(value);
 }
 
@@ -194,7 +194,7 @@ async function aguardarSolicitacaoNaApi(page: Page, email: string) {
       {
         timeout: 120000,
         intervals: [1000, 2000, 5000],
-        message: `Aguardando solicitaÃ§Ã£o ${email} aparecer na fila administrativa.`,
+        message: `Aguardando solicitação ${email} aparecer na fila administrativa.`,
       },
     )
     .toBe(true);
@@ -209,7 +209,7 @@ export async function aprovarSolicitacaoPelaTela(
   await aguardarSolicitacaoNaApi(page, dados.email);
 
   await page.goto("/admin/access-requests", { waitUntil: "domcontentloaded", timeout: 60000 });
-  await expect(page.getByRole("heading", { name: /solicita[cÃ§][oÃµ]es de acesso/i })).toBeVisible({
+  await expect(page.getByRole("heading", { name: /solicita[cç][oõ]es de acesso/i })).toBeVisible({
     timeout: 30000,
   });
 
@@ -218,14 +218,14 @@ export async function aprovarSolicitacaoPelaTela(
     await page.getByPlaceholder(/buscar nome, email ou empresa/i).fill(dados.email);
     item = page.locator("button").filter({ hasText: dados.email }).first();
     try {
-      await expect(item, `SolicitaÃ§Ã£o criada para ${dados.email}`).toBeVisible({ timeout: 60000 });
+      await expect(item, `Solicitação criada para ${dados.email}`).toBeVisible({ timeout: 60000 });
       break;
     } catch (error) {
       if (tentativa === 2) throw error;
       await page.getByRole("button", { name: /atualizar/i }).click().catch(() => undefined);
       await page.waitForTimeout(1500);
       await page.reload({ waitUntil: "domcontentloaded" });
-      await expect(page.getByRole("heading", { name: /solicita[cÃ§][oÃµ]es de acesso/i })).toBeVisible({
+      await expect(page.getByRole("heading", { name: /solicita[cç][oõ]es de acesso/i })).toBeVisible({
         timeout: 60000,
       });
     }
@@ -235,23 +235,23 @@ export async function aprovarSolicitacaoPelaTela(
   const username = normalizarLogin(dados.usuario || dados.email.split("@")[0] || dados.nomeCompleto);
 
   await selecionarPerfilSeDisponivel(page, perfil);
-  await preencherCampoObrigatorio(page.getByLabel(/usu[aÃ¡]rio gerado/i).last(), username);
+  await preencherCampoObrigatorio(page.getByLabel(/usu[aá]rio gerado/i).last(), username);
   await preencherCampoObrigatorio(page.getByLabel(/nome completo/i).last(), dados.nomeCompleto);
   await preencherCampoObrigatorio(page.getByLabel(/^e-?mail$/i).last(), dados.email);
   await preencherCampoObrigatorio(page.getByLabel(/^telefone$/i).last(), dados.telefone);
   await preencherEmpresaObrigatoriaSeExistir(page);
   await preencherCampoObrigatorio(page.getByLabel(/^cargo$/i).last(), dados.cargo);
-  await preencherCampoObrigatorio(page.getByLabel(/t[iÃ­]tulo da solicita/i).last(), dados.titulo);
-  await preencherCampoObrigatorio(page.getByLabel(/descri[cÃ§][aÃ£]o final/i).last(), dados.descricao);
+  await preencherCampoObrigatorio(page.getByLabel(/t[ií]tulo da solicita/i).last(), dados.titulo);
+  await preencherCampoObrigatorio(page.getByLabel(/descri[cç][aã]o final/i).last(), dados.descricao);
 
-  const observacao = page.getByLabel(/observa[cÃ§][aÃ£]o interna/i).first();
+  const observacao = page.getByLabel(/observa[cç][aã]o interna/i).first();
   if (await observacao.isVisible().catch(() => false)) {
-    await observacao.fill(dados.comentario ?? "Aprovado apÃ³s validaÃ§Ã£o automatizada ponta a ponta.");
+    await observacao.fill(dados.comentario ?? "Aprovado após validação automatizada ponta a ponta.");
   }
 
-  const comentario = page.getByPlaceholder(/descreva o ajuste|observa[cÃ§][aÃ£]o interna|motivo da decis/i).first();
+  const comentario = page.getByPlaceholder(/descreva o ajuste|observa[cç][aã]o interna|motivo da decis/i).first();
   if (await comentario.isVisible().catch(() => false)) {
-    await comentario.fill(dados.comentario ?? "Aprovado apÃ³s validaÃ§Ã£o automatizada ponta a ponta.");
+    await comentario.fill(dados.comentario ?? "Aprovado após validação automatizada ponta a ponta.");
   }
 
   const approvalResponsePromise = page.waitForResponse(
@@ -268,7 +268,7 @@ export async function aprovarSolicitacaoPelaTela(
 
   const response = await approvalResponsePromise;
   const text = await response.text().catch(() => "");
-  expect(response.ok(), `Falha ao aprovar solicitaÃ§Ã£o: ${response.status()} ${text}`).toBeTruthy();
+  expect(response.ok(), `Falha ao aprovar solicitação: ${response.status()} ${text}`).toBeTruthy();
 
   const body = JSON.parse(text) as {
     item?: {
@@ -277,7 +277,7 @@ export async function aprovarSolicitacaoPelaTela(
     };
   };
 
-  await expect(page.getByText(/solicita[cÃ§][aÃ£]o aprovada/i).first())
+  await expect(page.getByText(/solicita[cç][aã]o aprovada/i).first())
     .toBeVisible({ timeout: 5000 })
     .catch(() => {});
 

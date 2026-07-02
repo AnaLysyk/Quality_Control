@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { listLocalUsers, updateLocalUser } from "@/lib/auth/localStore";
 import { requireGlobalAdminWithStatus } from "@/lib/rbac/requireGlobalAdmin";
 
-// PATCH: Edita um usuÃ¡rio existente
+// PATCH: Edita um usuário existente
 export async function PATCH(req: NextRequest, context: { params: any }) {
-  // Permite autenticaÃ§Ã£o fake para testes E2E
+  // Permite autenticação fake para testes E2E
   let testAdmin = false;
   let testRole = 'leader_tc';
   if (req.headers) {
@@ -31,19 +31,19 @@ export async function PATCH(req: NextRequest, context: { params: any }) {
     const { admin, status } = await requireGlobalAdminWithStatus(req);
     console.error('[PATCH][user][id] admin:', JSON.stringify(admin));
     if (!admin) {
-      return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
+      return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
     }
   }
   const params = typeof context.params.then === "function" ? await context.params : context.params;
   const { id } = params;
   const data = await req.json().catch(() => null);
   if (!id) {
-    return NextResponse.json({ error: "ID obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
   }
   const users = await listLocalUsers();
   const user = users.find((u: any) => u.id === id);
   if (!user) {
-    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
   const update: any = {};
   if (typeof data?.name === "string") {
@@ -52,22 +52,22 @@ export async function PATCH(req: NextRequest, context: { params: any }) {
   }
   if (typeof data?.email === "string") update.email = data.email;
   if (typeof data?.user === "string") update.user = data.user;
-  // Adicione outros campos conforme necessÃ¡rio
+  // Adicione outros campos conforme necessário
   let updated = null;
   try {
     updated = await updateLocalUser(id, update);
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     throw err;
   }
   if (!updated) {
-    return NextResponse.json({ error: "Falha ao atualizar usuÃ¡rio" }, { status: 500 });
+    return NextResponse.json({ error: "Falha ao atualizar usuário" }, { status: 500 });
   }
   return NextResponse.json(updated, { status: 200 });
 }

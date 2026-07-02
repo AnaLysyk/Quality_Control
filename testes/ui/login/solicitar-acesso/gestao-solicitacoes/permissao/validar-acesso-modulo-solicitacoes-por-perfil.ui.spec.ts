@@ -16,9 +16,9 @@ import {
   validarTelaSolicitacoes,
 } from "../../../../../../support/functions/ui/login/solicitar-acesso/solicitacoes/operar-tela-solicitacoes";
 
-test.describe("SolicitaÃ§Ãµes - acesso por perfil - UI", () => {
+test.describe("Solicitações - acesso por perfil - UI", () => {
   for (const perfil of perfisAutorizadosSolicitacoes) {
-    test(`${perfil.label} deve fazer login e visualizar o mÃ³dulo SolicitaÃ§Ãµes`, async ({
+    test(`${perfil.label} deve fazer login e visualizar o módulo Solicitações`, async ({
       context,
       page,
     }) => {
@@ -34,7 +34,7 @@ test.describe("SolicitaÃ§Ãµes - acesso por perfil - UI", () => {
   }
 
   for (const perfil of perfisNegadosSolicitacoes) {
-    test(`${perfil.label} deve fazer login sem acessar o mÃ³dulo SolicitaÃ§Ãµes`, async ({
+    test(`${perfil.label} deve fazer login sem acessar o módulo Solicitações`, async ({
       context,
       page,
     }) => {
@@ -45,7 +45,7 @@ test.describe("SolicitaÃ§Ãµes - acesso por perfil - UI", () => {
     });
   }
 
-  test("Empresa deve acessar somente a tela SolicitaÃ§Ãµes dentro do admin", async ({
+  test("Empresa deve acessar somente a tela Solicitações dentro do admin", async ({
     context,
     page,
   }) => {
@@ -67,12 +67,12 @@ test.describe("SolicitaÃ§Ãµes - acesso por perfil - UI", () => {
       return;
     }
     await expect(adminPage).not.toHaveURL(/\/admin\/users/);
-    await expect(adminPage.getByRole("heading", { name: /UsuÃ¡rios|Usuarios/i })).not.toBeVisible({
+    await expect(adminPage.getByRole("heading", { name: /Usuários|Usuarios/i })).not.toBeVisible({
       timeout: 3000,
     });
   });
 
-  test("rota antiga /admin/requests deve redirecionar para SolicitaÃ§Ãµes", async ({
+  test("rota antiga /admin/requests deve redirecionar para Solicitações", async ({
     context,
     page,
   }) => {

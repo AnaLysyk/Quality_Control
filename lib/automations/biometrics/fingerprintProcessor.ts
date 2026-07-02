@@ -31,8 +31,8 @@ export class FingerprintBase64ExceededError extends Error {
     public readonly attempts: number,
   ) {
     super(
-      `Imagem de digital excede o limite apÃ³s ${attempts} tentativa(s). ` +
-        `Tamanho final Base64: ${finalBase64Length}, mÃ¡ximo permitido: ${maxAllowed}.`,
+      `Imagem de digital excede o limite após ${attempts} tentativa(s). ` +
+        `Tamanho final Base64: ${finalBase64Length}, máximo permitido: ${maxAllowed}.`,
     );
     this.name = "FingerprintBase64ExceededError";
   }
@@ -42,7 +42,7 @@ export class InvalidFingerprintImageError extends Error {
   readonly code = "INVALID_FINGERPRINT_IMAGE";
 
   constructor(reason: string) {
-    super(`Imagem de digital invÃ¡lida: ${reason}`);
+    super(`Imagem de digital inválida: ${reason}`);
     this.name = "InvalidFingerprintImageError";
   }
 }
@@ -180,7 +180,7 @@ export async function ensureFingerprintBase64WithinLimit(
   const maxAttempts = options.maxAttempts ?? DEFAULT_MAX_SHRINK_ATTEMPTS;
 
   if (!Buffer.isBuffer(imageBuffer) || imageBuffer.length === 0) {
-    throw new InvalidFingerprintImageError("o conteÃºdo precisa ser um Buffer nÃ£o vazio");
+    throw new InvalidFingerprintImageError("o conteúdo precisa ser um Buffer não vazio");
   }
 
   if (isWsqFormat(imageBuffer)) {
@@ -203,7 +203,7 @@ export async function ensureFingerprintBase64WithinLimit(
   try {
     metadata = await sharp(imageBuffer).metadata();
   } catch (error) {
-    const reason = error instanceof Error ? error.message : "metadados nÃ£o puderam ser lidos";
+    const reason = error instanceof Error ? error.message : "metadados não puderam ser lidos";
     throw new InvalidFingerprintImageError(reason);
   }
 

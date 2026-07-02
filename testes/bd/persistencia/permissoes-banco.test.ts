@@ -1,20 +1,20 @@
 ﻿/**
  * Testes: Tabela user_permission_overrides no banco de dados
  *
- * Valida que as operaÃ§Ãµes de override de permissÃµes (allow/deny)
- * sÃ£o persistidas e lidas corretamente da tabela user_permission_overrides.
+ * Valida que as operações de override de permissões (allow/deny)
+ * são persistidas e lidas corretamente da tabela user_permission_overrides.
  *
- * CenÃ¡rios:
- *  1. Criar override (allow) para usuÃ¡rio â†’ persistido no banco
- *  2. Criar override (deny) para usuÃ¡rio â†’ persistido no banco
- *  3. Atualizar override existente via upsert â†’ nÃ£o duplica linha
- *  4. Deletar override â†’ linha removida do banco
- *  5. UsuÃ¡rio sem override â†’ getUserOverride retorna null
+ * Cenários:
+ *  1. Criar override (allow) para usuário → persistido no banco
+ *  2. Criar override (deny) para usuário → persistido no banco
+ *  3. Atualizar override existente via upsert → não duplica linha
+ *  4. Deletar override → linha removida do banco
+ *  5. Usuário sem override → getUserOverride retorna null
  *  6. listUserOverrides retorna todos os overrides cadastrados
- *  7. Allow + Deny na mesma linha â†’ effectivePermissions aplica ambos
+ *  7. Allow + Deny na mesma linha → effectivePermissions aplica ambos
  *  8. updatedBy gravado corretamente
- *  9. Override persiste apÃ³s leitura independente (isolamento)
- * 10. Deletar override â†’ usuÃ¡rio volta Ã s permissÃµes padrÃ£o do perfil
+ *  9. Override persiste após leitura independente (isolamento)
+ * 10. Deletar override → usuário volta às permissões padrão do perfil
  */
 
 jest.setTimeout(30000);
@@ -33,7 +33,7 @@ import { getUserOverride, setUserOverride, deleteUserOverride, listUserOverrides
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { createLocalUser } from "@/lib/core/auth/localStore";
 
-// ForÃ§ar uso do Postgres para estes testes
+// Forçar uso do Postgres para estes testes
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
 
 // â”€â”€ Cleanup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -67,9 +67,9 @@ async function makeUser(tag: string) {
 
 // â”€â”€ Testes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes via DB", () => {
+describeDb("Tabela user_permission_overrides — gestão de permissões via DB", () => {
 
-  test("1. Criar override allow â†’ persistido no banco", async () => {
+  test("1. Criar override allow → persistido no banco", async () => {
     const user = await makeUser(`allow-${uid()}`);
 
     await setUserOverride(user.id, { allow: { releases: ["view", "create"] } });
@@ -84,7 +84,7 @@ describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes
     console.log(`âœ… 1. allow persistido | userId=${user.id} | releases.allow=${JSON.stringify(override?.allow?.releases)}`);
   });
 
-  test("2. Criar override deny â†’ persistido no banco", async () => {
+  test("2. Criar override deny → persistido no banco", async () => {
     const user = await makeUser(`deny-${uid()}`);
 
     await setUserOverride(user.id, { deny: { audit: ["view", "export"] } });
@@ -99,7 +99,7 @@ describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes
     console.log(`âœ… 2. deny persistido | userId=${user.id} | audit.deny=${JSON.stringify(override?.deny?.audit)}`);
   });
 
-  test("3. Atualizar override via upsert â†’ sem duplicaÃ§Ã£o de linha", async () => {
+  test("3. Atualizar override via upsert → sem duplicação de linha", async () => {
     const user = await makeUser(`upsert-${uid()}`);
 
     await setUserOverride(user.id, { allow: { releases: ["view"] } });
@@ -111,10 +111,10 @@ describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes
     const override = await getUserOverride(user.id);
     expect(override?.allow?.releases).toEqual(expect.arrayContaining(["view", "create", "edit"]));
 
-    console.log(`âœ… 3. upsert sem duplicaÃ§Ã£o | linhas=${count} | allow=${JSON.stringify(override?.allow?.releases)}`);
+    console.log(`âœ… 3. upsert sem duplicação | linhas=${count} | allow=${JSON.stringify(override?.allow?.releases)}`);
   });
 
-  test("4. Deletar override â†’ linha removida do banco", async () => {
+  test("4. Deletar override → linha removida do banco", async () => {
     const user = await makeUser(`delete-${uid()}`);
 
     await setUserOverride(user.id, { allow: { runs: ["view"] } });
@@ -132,13 +132,13 @@ describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes
     console.log(`âœ… 4. override deletado | userId=${user.id} | after=${after}`);
   });
 
-  test("5. UsuÃ¡rio sem override â†’ getUserOverride retorna null", async () => {
+  test("5. Usuário sem override → getUserOverride retorna null", async () => {
     const user = await makeUser(`nooverride-${uid()}`);
 
     const override = await getUserOverride(user.id);
     expect(override).toBeNull();
 
-    console.log(`âœ… 5. usuÃ¡rio sem override â†’ null | userId=${user.id}`);
+    console.log(`âœ… 5. usuário sem override → null | userId=${user.id}`);
   });
 
   test("6. listUserOverrides retorna todos os overrides cadastrados", async () => {
@@ -156,11 +156,11 @@ describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes
     console.log(`âœ… 6. listUserOverrides retornou ${all.length} overrides (inclui userA e userB)`);
   });
 
-  test("7. Allow + Deny na mesma linha â†’ effectivePermissions aplica ambos", async () => {
+  test("7. Allow + Deny na mesma linha → effectivePermissions aplica ambos", async () => {
     const user = await makeUser(`mixed-${uid()}`);
 
-    // Para perfil 'admin' (â†’ leader_tc): releases tem apenas view
-    // Vamos adicionar releases.export via allow e vetar delete (que jÃ¡ nÃ£o existe)
+    // Para perfil 'admin' (→ leader_tc): releases tem apenas view
+    // Vamos adicionar releases.export via allow e vetar delete (que já não existe)
     await setUserOverride(user.id, {
       allow: { releases: ["export"] },
       deny: { releases: ["delete"] },
@@ -194,7 +194,7 @@ describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes
     console.log(`âœ… 8. updatedBy gravado | updatedBy=${row?.updatedBy}`);
   });
 
-  test("9. Override mantÃ©m isolamento â€” outro usuÃ¡rio nÃ£o Ã© afetado", async () => {
+  test("9. Override mantém isolamento — outro usuário não é afetado", async () => {
     const userA = await makeUser(`iso-a-${uid()}`);
     const userB = await makeUser(`iso-b-${uid()}`);
 
@@ -204,16 +204,16 @@ describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes
     const overrideB = await getUserOverride(userB.id);
 
     expect(overrideA?.deny?.runs).toEqual(expect.arrayContaining(["view"]));
-    expect(overrideB).toBeNull(); // userB nÃ£o deve ser afetado
+    expect(overrideB).toBeNull(); // userB não deve ser afetado
 
     console.log(`âœ… 9. isolamento confirmado | userA.deny.runs=${JSON.stringify(overrideA?.deny?.runs)} | userB=${overrideB}`);
   });
 
-  test("10. ApÃ³s deletar override, usuÃ¡rio volta Ã s permissÃµes padrÃ£o do perfil", async () => {
+  test("10. Após deletar override, usuário volta às permissões padrão do perfil", async () => {
     const user = await makeUser(`reset-${uid()}`);
 
-    // Perfil 'user' nÃ£o tem releases.view por padrÃ£o
-    // Adicionamos via allow, depois deletamos â†’ deve voltar a nÃ£o ter
+    // Perfil 'user' não tem releases.view por padrão
+    // Adicionamos via allow, depois deletamos → deve voltar a não ter
     await setUserOverride(user.id, { allow: { releases: ["view"] } });
 
     const withOverride = await getUserOverride(user.id);
@@ -226,13 +226,13 @@ describeDb("Tabela user_permission_overrides â€” gestÃ£o de permissÃµes
     const effectiveWithout = effectivePermissions("user", afterDelete ?? undefined);
     expect(Array.from(effectiveWithout["releases"] ?? new Set())).not.toContain("view");
 
-    // Verifica que hasPermissionAccess retorna false com objeto de permissÃµes normalizado
+    // Verifica que hasPermissionAccess retorna false com objeto de permissões normalizado
     const normalized: Record<string, string[]> = Object.fromEntries(
       Object.entries(effectiveWithout).map(([mod, acts]) => [mod, Array.from(acts)])
     );
     expect(hasPermissionAccess(normalized, "releases", "view")).toBe(false);
 
-    console.log(`âœ… 10. apÃ³s delete, releases.view=${hasPermissionAccess(normalized,"releases","view")} (padrÃ£o perfil 'user')`);
+    console.log(`âœ… 10. após delete, releases.view=${hasPermissionAccess(normalized,"releases","view")} (padrão perfil 'user')`);
   });
 });
 

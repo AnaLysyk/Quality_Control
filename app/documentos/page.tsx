@@ -53,7 +53,7 @@ export default function DocumentosPage() {
   const { user } = useAuthUser();
   const { clients, activeClientSlug, loading, setActiveClientSlug } = useClientContext();
 
-  // Wiki docs state â€” company-scoped for company users, platform for others
+  // Wiki docs state — company-scoped for company users, platform for others
   const isCompanyUser = ((): boolean => {
     const roles = [user?.permissionRole, user?.role, user?.companyRole].map((v) => (v ?? "").trim().toLowerCase());
     const isLeader = roles.includes("leader_tc") || user?.isGlobalAdmin === true || user?.is_global_admin === true;
@@ -103,11 +103,11 @@ export default function DocumentosPage() {
   const hasWikiContent = wikiDocCount !== null && wikiDocCount > 0;
   const wikiButtonLabel = isCompanyUser
     ? wikiDocCount === null
-      ? "RepositÃ³rio da empresa"
+      ? "Repositório da empresa"
       : hasWikiContent
-      ? `RepositÃ³rio  â€¢  ${wikiDocCount} doc${wikiDocCount === 1 ? "" : "s"}`
-      : "Criar documentaÃ§Ã£o"
-    : "RepositÃ³rios das empresas";
+      ? `Repositório  •  ${wikiDocCount} doc${wikiDocCount === 1 ? "" : "s"}`
+      : "Criar documentação"
+    : "Repositórios das empresas";
 
   const coverContent = useMemo(
     () => (
@@ -145,7 +145,7 @@ export default function DocumentosPage() {
         ) : (
           <div className="grid w-full auto-rows-fr grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
 
-            {/* â”€â”€ Card fixo: RepositÃ³rio de DocumentaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* â”€â”€ Card fixo: Repositório de Documentação â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <article className="relative flex min-w-0 flex-col rounded-[26px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
               <div className="h-1.5 w-full rounded-t-[26px] bg-[linear-gradient(90deg,#011848_0%,#6366f1_100%)]" />
               <div className="flex flex-1 flex-col gap-5 p-5">
@@ -159,7 +159,7 @@ export default function DocumentosPage() {
                         {isCompanyUser ? "Empresa" : "Plataforma"}
                       </p>
                       <h3 className="text-lg leading-7 font-extrabold text-[var(--tc-text,#0b1a3c)]">
-                        {isCompanyUser ? "RepositÃ³rio da Empresa" : "RepositÃ³rios das Empresas"}
+                        {isCompanyUser ? "Repositório da Empresa" : "Repositórios das Empresas"}
                       </h3>
                     </div>
                   </div>
@@ -170,7 +170,7 @@ export default function DocumentosPage() {
 
                 <div className="grid grid-cols-1 gap-3">
                   <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">ConteÃºdo</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Conteúdo</p>
                     <p className="mt-1.5 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
                       {isCompanyUser
                         ? wikiDocCount === null
@@ -194,9 +194,9 @@ export default function DocumentosPage() {
                   >
                     {isCompanyUser
                       ? hasWikiContent
-                        ? <><FiBookOpen className="h-4 w-4" /> Acessar repositÃ³rio</>
-                        : <><FiEdit3 className="h-4 w-4" /> Criar documentaÃ§Ã£o</>
-                      : <><FiBookOpen className="h-4 w-4" /> Ver repositÃ³rios</>
+                        ? <><FiBookOpen className="h-4 w-4" /> Acessar repositório</>
+                        : <><FiEdit3 className="h-4 w-4" /> Criar documentação</>
+                      : <><FiBookOpen className="h-4 w-4" /> Ver repositórios</>
                     }
                     <FiArrowRight className="h-4 w-4" />
                   </Link>
@@ -213,7 +213,7 @@ export default function DocumentosPage() {
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhuma empresa vinculada</h3>
                   <p className="max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                    Quando houver vÃ­nculos ativos, os repositÃ³rios aparecerÃ£o aqui automaticamente.
+                    Quando houver vínculos ativos, os repositórios aparecerão aqui automaticamente.
                   </p>
                 </div>
               </div>

@@ -9,8 +9,8 @@ import type { AssistantExecutorResult } from "./types";
 
 function firstName(value: string) {
   const cleaned = value.trim();
-  if (!cleaned) return "usuÃ¡rio";
-  return cleaned.split(/\s+/)[0] ?? "usuÃ¡rio";
+  if (!cleaned) return "usuário";
+  return cleaned.split(/\s+/)[0] ?? "usuário";
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -41,7 +41,7 @@ function getOperationsSnapshot(context: AssistantScreenContext) {
     ? filters.companyNames.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
     : [];
 
-  const periodLabel = asString(filters?.periodLabel, asString(filters?.period, "nas Ãºltimas 24h"));
+  const periodLabel = asString(filters?.periodLabel, asString(filters?.period, "nas últimas 24h"));
   const roleLabel = asString(permissions?.role, "operador");
 
   return {
@@ -59,7 +59,7 @@ function getOperationsSnapshot(context: AssistantScreenContext) {
       .filter((item): item is Record<string, unknown> => Boolean(item))
       .slice(0, 3)
       .map((item) => ({
-        severity: asString(item.severity, "atenÃ§Ã£o"),
+        severity: asString(item.severity, "atenção"),
         title: asString(item.title, "Risco operacional"),
         description: asString(item.description),
       })),
@@ -84,14 +84,14 @@ function buildImmediateActions(context: AssistantScreenContext, user: AuthUser):
   switch (context.module) {
     case "support":
       return [
-        { emoji: "ðŸ”", text: "Localizar chamados por cÃ³digo, status, prioridade ou responsÃ¡vel" },
+        { emoji: "ðŸ”", text: "Localizar chamados por código, status, prioridade ou responsável" },
         { emoji: "ðŸ“‹", text: "Resumir um ticket antes de mover ou comentar" },
         { emoji: "âœï¸", text: "Transformar um relato em chamado estruturado" },
         { emoji: "ðŸ§ª", text: "Gerar caso de teste a partir de um bug" },
       ];
     case "permissions":
       return [
-        { emoji: "ðŸ”", text: "Explicar por que um perfil nÃ£o acessa determinada tela" },
+        { emoji: "ðŸ”", text: "Explicar por que um perfil não acessa determinada tela" },
         { emoji: "ðŸ“Š", text: "Comparar escopos entre perfis diferentes" },
         { emoji: "âš™ï¸", text: "Apontar ajustes para liberar ou restringir acesso" },
       ];
@@ -101,44 +101,44 @@ function buildImmediateActions(context: AssistantScreenContext, user: AuthUser):
           { emoji: "ðŸ¢", text: "Resumir status atual da empresa" },
           { emoji: "ðŸ›", text: "Ver defeitos e bugs ativos no projeto" },
           { emoji: "ðŸ§ª", text: "Consultar planos de teste em andamento" },
-          { emoji: "ðŸ“Š", text: "Analisar mÃ©tricas de qualidade dos testes" },
+          { emoji: "ðŸ“Š", text: "Analisar métricas de qualidade dos testes" },
         ];
       }
       return [
         { emoji: "ðŸ“‹", text: "Resumir a empresa atual e registros vinculados" },
-        { emoji: "ðŸ”", text: "Buscar chamados ou usuÃ¡rios desta empresa" },
-        { emoji: "ðŸ“Š", text: "Analisar mÃ©tricas de atendimento" },
-        { emoji: "ðŸ”—", text: "Listar integraÃ§Ãµes ativas" },
+        { emoji: "ðŸ”", text: "Buscar chamados ou usuários desta empresa" },
+        { emoji: "ðŸ“Š", text: "Analisar métricas de atendimento" },
+        { emoji: "ðŸ”—", text: "Listar integrações ativas" },
       ];
     case "test_plans":
       return [
         { emoji: "ðŸ§ª", text: "Gerar casos de teste a partir de bug ou fluxo" },
-        { emoji: "ðŸ“‹", text: "Organizar prÃ©-condiÃ§Ãµes, passos e resultado esperado" },
+        { emoji: "ðŸ“‹", text: "Organizar pré-condições, passos e resultado esperado" },
         { emoji: "âœ…", text: "Validar cobertura de testes existente" },
       ];
     case "dashboard":
       return [
-        { emoji: "ðŸ“Š", text: "Analisar mÃ©tricas de qualidade do perÃ­odo" },
-        { emoji: "ðŸŽ¯", text: "Identificar tendÃªncias nos indicadores" },
-        { emoji: "âš ï¸", text: "Listar Ã¡reas que precisam de atenÃ§Ã£o" },
+        { emoji: "ðŸ“Š", text: "Analisar métricas de qualidade do período" },
+        { emoji: "ðŸŽ¯", text: "Identificar tendências nos indicadores" },
+        { emoji: "âš ï¸", text: "Listar áreas que precisam de atenção" },
       ];
     case "releases":
       return [
-        { emoji: "ðŸš€", text: "Verificar status do Ãºltimo deploy" },
+        { emoji: "ðŸš€", text: "Verificar status do último deploy" },
         { emoji: "ðŸ“¦", text: "Analisar testes pendentes para release" },
-        { emoji: "ðŸ“‹", text: "Gerar relatÃ³rio de qualidade da versÃ£o" },
+        { emoji: "ðŸ“‹", text: "Gerar relatório de qualidade da versão" },
       ];
     default:
       return [
-        { emoji: "ðŸ“", text: "Entender o contexto atual e prÃ³ximos passos" },
+        { emoji: "ðŸ“", text: "Entender o contexto atual e próximos passos" },
         { emoji: "ðŸ”", text: "Buscar registros por palavra-chave ou contexto" },
-        { emoji: "ðŸ’¡", text: "Transformar um pedido em aÃ§Ã£o objetiva" },
+        { emoji: "ðŸ’¡", text: "Transformar um pedido em ação objetiva" },
       ];
   }
 }
 
 function stripScreenLead(context: AssistantScreenContext) {
-  const lead = `VocÃª estÃ¡ em: ${context.screenLabel}.`;
+  const lead = `Você está em: ${context.screenLabel}.`;
   if (context.screenSummary.startsWith(lead)) {
     return context.screenSummary.slice(lead.length).trim();
   }
@@ -151,10 +151,10 @@ function buildScopeLabel(user: AuthUser, context: AssistantScreenContext) {
 
 function buildPermissionLine(user: AuthUser) {
   const summary = summarizePermissionMatrix(user.permissions);
-  if (summary === "sem mÃ³dulos liberados") {
-    return "âš ï¸ **PermissÃµes:** Nenhum mÃ³dulo liberado para o perfil atual";
+  if (summary === "sem módulos liberados") {
+    return "âš ï¸ **Permissões:** Nenhum módulo liberado para o perfil atual";
   }
-  return `ðŸ” **PermissÃµes:** ${summary}`;
+  return `ðŸ” **Permissões:** ${summary}`;
 }
 
 export async function toolGetScreenContext(user: AuthUser, context: AssistantScreenContext): Promise<AssistantExecutorResult> {
@@ -196,8 +196,8 @@ export async function toolGetScreenContext(user: AuthUser, context: AssistantScr
       : `${operations.companyCount} empresas selecionadas`;
 
     const riskLines = operations.risks.length > 0
-      ? operations.risks.map((risk, index) => `${index + 1}. ${risk.title}${risk.description ? ` â€” ${risk.description}` : ""}`)
-      : ["1. Sem riscos crÃ­ticos destacados no recorte atual."];
+      ? operations.risks.map((risk, index) => `${index + 1}. ${risk.title}${risk.description ? ` — ${risk.description}` : ""}`)
+      : ["1. Sem riscos críticos destacados no recorte atual."];
 
     return {
       tool: "get_screen_context",
@@ -207,10 +207,10 @@ export async function toolGetScreenContext(user: AuthUser, context: AssistantScr
       reply: compactMultiline([
         `Oi, ${userName}. Estou com a ${context.screenLabel} carregada.`,
         "",
-        `No contexto atual, hÃ¡ ${scopeLabel} ${operations.periodLabel}, com ${operations.failedRuns} runs com falha, ${operations.blockedRuns} runs bloqueadas, ${operations.openDefects} defeitos abertos e ${operations.itemsWithoutOwner} itens sem responsÃ¡vel.`,
-        operations.healthScore > 0 ? `SaÃºde operacional atual: ${operations.healthScore}%.` : "SaÃºde operacional atual em nÃ­vel crÃ­tico e precisa de atenÃ§Ã£o imediata.",
+        `No contexto atual, há ${scopeLabel} ${operations.periodLabel}, com ${operations.failedRuns} runs com falha, ${operations.blockedRuns} runs bloqueadas, ${operations.openDefects} defeitos abertos e ${operations.itemsWithoutOwner} itens sem responsável.`,
+        operations.healthScore > 0 ? `Saúde operacional atual: ${operations.healthScore}%.` : "Saúde operacional atual em nível crítico e precisa de atenção imediata.",
         "",
-        "### Pontos de atenÃ§Ã£o",
+        "### Pontos de atenção",
         ...riskLines,
         "",
         "### Posso ajudar com:",
@@ -230,7 +230,7 @@ export async function toolGetScreenContext(user: AuthUser, context: AssistantScr
     "",
     ...actions.map((a) => `- ${a.emoji} ${a.text}`),
     "",
-    "### ðŸ’¡ SugestÃµes rÃ¡pidas:",
+    "### ðŸ’¡ Sugestões rápidas:",
     "",
     ...prompts.map((p, i) => `${i + 1}. ${p}`),
     "",
@@ -240,10 +240,10 @@ export async function toolGetScreenContext(user: AuthUser, context: AssistantScr
     "",
     `| Campo | Valor |`,
     `|-------|-------|`,
-    `| **MÃ³dulo** | ${context.module} |`,
+    `| **Módulo** | ${context.module} |`,
     `| **Escopo** | ${buildScopeLabel(user, context)} |`,
     `| **Perfil** | ${displayRole(user)} |`,
-    `| **UsuÃ¡rio** | ${displayName(currentUser)} |`,
+    `| **Usuário** | ${displayName(currentUser)} |`,
     "",
     buildPermissionLine(user),
   ];

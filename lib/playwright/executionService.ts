@@ -191,7 +191,7 @@ async function upsertSpecSnapshots(
   }
 }
 
-// â”€â”€ Line parser â€” parses Playwright's list reporter output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Line parser — parses Playwright's list reporter output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const PASSED_RE = /âœ“\s+\[.*?\]\s+(.+?)\s+\((\d+(?:\.\d+)?)(ms|s)\)/;
 const FAILED_RE = /âœ˜\s+\[.*?\]\s+(.+?)\s+\((\d+(?:\.\d+)?)(ms|s)\)/;
@@ -292,7 +292,7 @@ export async function startPlaywrightRun(opts: StartRunOptions): Promise<string>
   emitter.finished = false;
   runBus.set(runId, emitter);
 
-  // Execute asynchronously â€” do NOT await
+  // Execute asynchronously — do NOT await
   void executeRun(runId, opts, emitter);
 
   return runId;
@@ -306,7 +306,7 @@ async function executeRun(
   const emit = (line: string) => emitter.emit("line", line);
 
   try {
-    emit(`[system] Preparando workspace para ${opts.companySlug}â€¦`);
+    emit(`[system] Preparando workspace para ${opts.companySlug}…`);
     const workDir = await prepareWorkspace(
       opts.companySlug,
       runId,
@@ -315,7 +315,7 @@ async function executeRun(
     );
     emit(`[system] Workspace: ${workDir}`);
     const runBrowsers = resolvedBrowsers(opts.config);
-    emit(`[system] Iniciando Playwright (${runBrowsers.join(", ")}, headless=${opts.config.headless})â€¦`);
+    emit(`[system] Iniciando Playwright (${runBrowsers.join(", ")}, headless=${opts.config.headless})…`);
 
     await updateRunStatus(runId, "running");
 
@@ -383,7 +383,7 @@ async function executeRun(
       // Snapshot update is best-effort and should not break the run status.
     }
 
-    emit(`[system] ExecuÃ§Ã£o concluÃ­da â€” status=${finalStatus} (exit code ${exitCode})`);
+    emit(`[system] Execução concluída — status=${finalStatus} (exit code ${exitCode})`);
     await updateRunStatus(runId, finalStatus, exitCode);
 
     // Emit Brian event for run completion

@@ -93,7 +93,7 @@ describe("buildTicketCreationAction", () => {
     (hasPermissionAccess as jest.Mock).mockReturnValue(false);
     const result = await buildTicketCreationAction(makeUser(), makeContext(), "criar chamado");
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nÃ£o pode criar chamados");
+    expect(result.reply).toContain("não pode criar chamados");
   });
 
   /* â”€â”€ Generic prompt (instruction-only) â”€â”€ */
@@ -101,34 +101,34 @@ describe("buildTicketCreationAction", () => {
   it("asks for content on generic prompt", async () => {
     const result = await buildTicketCreationAction(makeUser(), makeContext(), "transformar texto em chamado");
     expect(result.tool).toBe("create_ticket");
-    expect(result.reply).toContain("conteÃºdo real");
+    expect(result.reply).toContain("conteúdo real");
     expect(result.actions).toBeDefined();
     expect(result.actions!.length).toBeGreaterThan(0);
   });
 
-  /* â”€â”€ Structured draft â€” incomplete â”€â”€ */
+  /* â”€â”€ Structured draft — incomplete â”€â”€ */
 
   it("returns pending issues for incomplete structured draft", async () => {
     const message = "Titulo: \nDescricao: ";
     const result = await buildTicketCreationAction(makeUser(), makeContext(), message);
     expect(result.tool).toBe("create_ticket");
-    expect(result.reply).toContain("PendÃªncias");
+    expect(result.reply).toContain("Pendências");
   });
 
-  /* â”€â”€ Structured draft â€” valid â”€â”€ */
+  /* â”€â”€ Structured draft — valid â”€â”€ */
 
   it("prepares a valid structured draft with create action", async () => {
     const message = [
       "Titulo: Erro no dashboard ao exportar CSV",
-      "Descricao: Ao clicar em exportar, o sistema retorna 500 e nÃ£o gera o arquivo",
-      "Impacto: Gerentes nÃ£o conseguem extrair relatÃ³rios semanais",
+      "Descricao: Ao clicar em exportar, o sistema retorna 500 e não gera o arquivo",
+      "Impacto: Gerentes não conseguem extrair relatórios semanais",
       "Tipo: bug",
       "Prioridade: alta",
     ].join("\n");
 
     const result = await buildTicketCreationAction(makeUser(), makeContext(), message);
     expect(result.success).toBe(true);
-    expect(result.reply).toContain("TÃ­tulo:");
+    expect(result.reply).toContain("Título:");
     expect(result.actions).toBeDefined();
 
     const toolAction = result.actions?.find((a) => a.kind === "tool");
@@ -136,30 +136,30 @@ describe("buildTicketCreationAction", () => {
     expect((toolAction as AssistantToolAction).input.title).toContain("Erro no dashboard");
   });
 
-  /* â”€â”€ Structured draft â€” validation failures â”€â”€ */
+  /* â”€â”€ Structured draft — validation failures â”€â”€ */
 
   it("rejects structured draft with instruction-only title", async () => {
     const message = [
       "Titulo: criar chamado",
-      "Descricao: Ao clicar em exportar, o sistema retorna 500 e nÃ£o gera o arquivo",
+      "Descricao: Ao clicar em exportar, o sistema retorna 500 e não gera o arquivo",
       "Tipo: bug",
     ].join("\n");
 
     const result = await buildTicketCreationAction(makeUser(), makeContext(), message);
-    expect(result.reply).toContain("validaÃ§Ãµes");
+    expect(result.reply).toContain("validações");
   });
 
   /* â”€â”€ Narrative too short â”€â”€ */
 
   it("asks for more content when narrative is too short", async () => {
     const result = await buildTicketCreationAction(makeUser(), makeContext(), "criar ticket xyz");
-    expect(result.reply).toContain("validaÃ§Ãµes");
+    expect(result.reply).toContain("validações");
   });
 
   /* â”€â”€ Narrative with enough content â”€â”€ */
 
   it("builds a draft from a narrative with enough content", async () => {
-    const message = "criar chamado: o relatÃ³rio financeiro mostra valores duplicados e os totais estÃ£o errados desde a ultima atualizaÃ§Ã£o";
+    const message = "criar chamado: o relatório financeiro mostra valores duplicados e os totais estão errados desde a ultima atualização";
     const result = await buildTicketCreationAction(makeUser(), makeContext(), message);
     expect(result.success).toBe(true);
     expect(result.actions).toBeDefined();
@@ -191,13 +191,13 @@ describe("executeCreateTicket", () => {
     (hasPermissionAccess as jest.Mock).mockReturnValue(false);
     const result = await executeCreateTicket(makeUser(), makeContext(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nÃ£o pode criar chamados");
+    expect(result.reply).toContain("não pode criar chamados");
   });
 
   it("rejects invalid draft data", async () => {
     const result = await executeCreateTicket(makeUser(), makeContext(), makeAction({ title: "ab" }));
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("validaÃ§Ãµes");
+    expect(result.reply).toContain("validações");
   });
 
   it("creates ticket successfully", async () => {
@@ -211,7 +211,7 @@ describe("executeCreateTicket", () => {
     (createTicket as jest.Mock).mockResolvedValueOnce(null);
     const result = await executeCreateTicket(makeUser(), makeContext(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("NÃ£o consegui criar");
+    expect(result.reply).toContain("Não consegui criar");
   });
 });
 

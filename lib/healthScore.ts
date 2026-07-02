@@ -38,17 +38,17 @@ export function calculateHealthScore(input: HealthInput): HealthOutput {
   // Trend
   if (input.trend === "degrading") {
     score -= 20;
-    reasons.push("TendÃªncia degradando");
+    reasons.push("Tendência degradando");
   }
 
-  // Releases (Ãºltima release conta)
+  // Releases (última release conta)
   const lastRelease = input.releases[0];
   if (lastRelease === "violated") {
     score -= 25;
-    reasons.push("Ãšltima release violada");
+    reasons.push("Última release violada");
   } else if (lastRelease === "risk") {
     score -= 10;
-    reasons.push("Ãšltima release em risco");
+    reasons.push("Última release em risco");
   }
 
   const finalScore = Math.max(0, score);

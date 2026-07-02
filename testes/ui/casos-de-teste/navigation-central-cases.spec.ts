@@ -45,14 +45,14 @@ async function assertCanonicalCasesLink(link: ReturnType<Page["locator"]>) {
   await expect(link).not.toHaveAttribute("href", /\/automacoes\/casos(?:[/?#]|$)/);
 }
 
-test.describe("NavegaÃ§Ã£o central de casos", () => {
-  test("@case=TC-NAV-001 Sidebar Casos navega para rota canÃ´nica", async ({ context, page }) => {
+test.describe("Navegação central de casos", () => {
+  test("@case=TC-NAV-001 Sidebar Casos navega para rota canônica", async ({ context, page }) => {
     await authenticateAutomationAccess(context);
     const { sidebarCasosLink } = await openAutomationAreaWithSidebar(page);
     await assertCanonicalCasesLink(sidebarCasosLink);
   });
 
-  test("@case=TC-NAV-002 Atalho Casos do UI Studio navega para rota canÃ´nica", async ({ context, page }) => {
+  test("@case=TC-NAV-002 Atalho Casos do UI Studio navega para rota canônica", async ({ context, page }) => {
     await authenticateAutomationAccess(context);
     const { shortcutCasosLink } = await openUiStudioWithShortcuts(page);
     await assertCanonicalCasesLink(shortcutCasosLink);

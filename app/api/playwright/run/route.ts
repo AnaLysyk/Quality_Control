@@ -13,10 +13,10 @@ const RunSchema = z.object({
   companySlug: z.string().trim().min(1),
   projectId: z.string().trim().optional(),
   planId: z.string().trim().optional(),
-  title: z.string().trim().default("ExecuÃ§Ã£o manual"),
+  title: z.string().trim().default("Execução manual"),
   runMode: z.enum(["all", "changed", "failed"]).default("all"),
   sourceRunId: z.string().trim().optional(),
-  /** Array of { path, content } â€“ scripts to include in the run */
+  /** Array of { path, content } – scripts to include in the run */
   scripts: z.array(z.object({ path: z.string(), content: z.string() })).default([]),
   config: z.object({
     baseURL: z.string().default("http://localhost:3000"),
@@ -104,7 +104,7 @@ async function resolveSelectedSpecs(opts: {
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = RunSchema.safeParse(body);
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
   const { companySlug, projectId, planId, title, scripts, config, runMode, sourceRunId } = parsed.data;
   if (!assertAccess(user, companySlug))
-    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   await ensureAutomationTables();
   const selectedSpecs = await resolveSelectedSpecs({
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     scripts,
   });
   if (!selectedSpecs.length) {
-    const modeLabel = runMode === "changed" ? "alterados" : runMode === "failed" ? "falhos" : "executÃ¡veis";
+    const modeLabel = runMode === "changed" ? "alterados" : runMode === "failed" ? "falhos" : "executáveis";
     return NextResponse.json({ error: `Nenhum spec ${modeLabel} encontrado para executar` }, { status: 400 });
   }
 
@@ -156,14 +156,14 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const url = new URL(request.url);
   const companySlug = url.searchParams.get("companySlug") ?? "";
   const projectId = (url.searchParams.get("projectId") ?? "").trim();
-  if (!companySlug) return NextResponse.json({ error: "companySlug obrigatÃ³rio" }, { status: 400 });
+  if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
   if (!assertAccess(user, companySlug))
-    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   await ensureAutomationTables();
 

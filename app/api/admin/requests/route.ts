@@ -21,7 +21,7 @@ function isSort(value: string | null): value is "createdAt_desc" | "createdAt_as
 export async function GET(request: NextRequest) {
   const authUser = await authenticateRequest(request);
   if (!authUser) {
-    return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   if (!canReviewSelfServiceRequests(authUser)) {
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   const sort = isSort(sortParam) ? sortParam : "createdAt_desc";
   const scope = resolveSelfServiceRequestScope(authUser);
   if (!scope) {
-    return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const items = await listAllRequests({ status, type, companyId, sort });

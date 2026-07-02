@@ -49,11 +49,11 @@ const OPERATION_MODULES: Array<{
   icon: typeof FiBarChart2;
 }> = [
   { id: "dashboard", label: "Dashboard", description: "Indicadores do projeto", icon: FiBarChart2 },
-  { id: "casos", label: "Casos", description: "RepositÃ³rio de casos", icon: FiClipboard },
-  { id: "defeitos", label: "Defeitos", description: "Bugs e pendÃªncias", icon: FiAlertCircle },
+  { id: "casos", label: "Casos", description: "Repositório de casos", icon: FiClipboard },
+  { id: "defeitos", label: "Defeitos", description: "Bugs e pendências", icon: FiAlertCircle },
   { id: "planos", label: "Planos", description: "Planos de teste", icon: FiBookOpen },
-  { id: "runs", label: "Runs", description: "ExecuÃ§Ãµes", icon: FiPlayCircle },
-  { id: "documentos", label: "Docs", description: "DocumentaÃ§Ã£o", icon: FiFileText },
+  { id: "runs", label: "Runs", description: "Execuções", icon: FiPlayCircle },
+  { id: "documentos", label: "Docs", description: "Documentação", icon: FiFileText },
 ];
 
 function normalizeSlug(value: string) {
@@ -168,7 +168,7 @@ export default function CompanyProjectsPage() {
       );
     } catch {
       setProjects([]);
-      setError("NÃ£o foi possÃ­vel carregar os projetos da empresa.");
+      setError("Não foi possível carregar os projetos da empresa.");
     } finally {
       setLoading(false);
       setSyncing(false);
@@ -252,9 +252,9 @@ export default function CompanyProjectsPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-4xl">
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Operacional da empresa</p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">Projetos e operaÃ§Ãµes</h1>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">Projetos e operações</h1>
               <p className="mt-3 text-sm leading-6 text-white/82 sm:text-base">
-                Cada aplicaÃ§Ã£o vira uma operaÃ§Ã£o independente de qualidade. Ao abrir um projeto, dashboard, casos, defeitos, planos, runs e documentos passam a usar o mesmo escopo.
+                Cada aplicação vira uma operação independente de qualidade. Ao abrir um projeto, dashboard, casos, defeitos, planos, runs e documentos passam a usar o mesmo escopo.
               </p>
             </div>
             <div className="grid min-w-full grid-cols-3 gap-2 sm:min-w-[440px]">
@@ -277,9 +277,9 @@ export default function CompanyProjectsPage() {
         <section className="rounded-[30px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <h2 className="text-xl font-black tracking-[-0.03em] text-[var(--tc-text-primary,#0b1a3c)]">OperaÃ§Ãµes disponÃ­veis</h2>
+              <h2 className="text-xl font-black tracking-[-0.03em] text-[var(--tc-text-primary,#0b1a3c)]">Operações disponíveis</h2>
               <p className="mt-1 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                Cadastre manualmente ou sincronize com o Qase. Depois entre na operaÃ§Ã£o para controlar qualidade por projeto.
+                Cadastre manualmente ou sincronize com o Qase. Depois entre na operação para controlar qualidade por projeto.
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -295,7 +295,7 @@ export default function CompanyProjectsPage() {
           <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
             <label className="relative flex-1">
               <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted,#6b7280)]" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, slug ou cÃ³digo Qase" className="h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, slug ou código Qase" className="h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10" />
             </label>
             <div className="flex flex-wrap gap-2">
               {([
@@ -367,11 +367,11 @@ export default function CompanyProjectsPage() {
                       </div>
 
                       <p className="mt-4 min-h-12 text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                        {project.description || "OperaÃ§Ã£o de qualidade pronta para receber casos, defeitos, planos, runs, documentos e mÃ©tricas do projeto."}
+                        {project.description || "Operação de qualidade pronta para receber casos, defeitos, planos, runs, documentos e métricas do projeto."}
                       </p>
 
                       <div className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white p-3">
-                        <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#64748b)]">MÃ³dulos da operaÃ§Ã£o</p>
+                        <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted,#64748b)]">Módulos da operação</p>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                           {OPERATION_MODULES.map((module) => {
                             const Icon = module.icon;
@@ -399,7 +399,7 @@ export default function CompanyProjectsPage() {
                         Escopo: <strong>{companySlug}</strong> + <strong>{project.slug}</strong>
                       </div>
                       <button type="button" onClick={() => void openOperation(project, "dashboard")} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-white transition hover:opacity-90">
-                        Abrir operaÃ§Ã£o <FiArrowRight className="h-4 w-4" />
+                        Abrir operação <FiArrowRight className="h-4 w-4" />
                       </button>
                     </div>
                   </article>
@@ -417,7 +417,7 @@ export default function CompanyProjectsPage() {
               <p className="text-xs font-black uppercase tracking-[0.22em] text-white/60">Cadastro manual</p>
               <h2 className="mt-1 text-2xl font-black">Novo projeto</h2>
               <p className="mt-1 text-sm leading-6 text-white/72">
-                Crie uma operaÃ§Ã£o manual para empresas sem Qase ou para aplicaÃ§Ãµes que precisam de controle prÃ³prio dentro da qualidade.
+                Crie uma operação manual para empresas sem Qase ou para aplicações que precisam de controle próprio dentro da qualidade.
               </p>
             </div>
             <div className="space-y-4 p-6">
@@ -433,7 +433,7 @@ export default function CompanyProjectsPage() {
                     }))
                   }
                   className="mt-1 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-                  placeholder="Ex.: CidadÃ£o Smart"
+                  placeholder="Ex.: Cidadão Smart"
                 />
               </label>
               <label className="block text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
@@ -449,7 +449,7 @@ export default function CompanyProjectsPage() {
                 </span>
               </label>
               <label className="block text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
-                DescriÃ§Ã£o
+                Descrição
                 <textarea
                   value={draft.description}
                   onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}

@@ -46,7 +46,7 @@ async function getServerAccessToken() {
   }
 }
 
-// fetch helper que adiciona Authorization: Bearer <jwt> quando disponÃ­vel
+// fetch helper que adiciona Authorization: Bearer <jwt> quando disponível
 export async function fetchApi(path: string, init: RequestInit = {}) {
   const url = apiUrl(path);
   const buildHeaders = async () => {

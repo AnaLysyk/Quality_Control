@@ -51,13 +51,13 @@ export default function EmpresasIndexPage() {
           <p className="text-xs uppercase tracking-[0.5em] text-[var(--tc-accent,#ef0001)]">Empresas</p>
           <h1 className="text-3xl font-bold">Selecione a empresa ativa</h1>
           <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">
-            Os mÃ³dulos do painel sÃ³ carregam dados para empresas vinculadas. Escolha uma empresa para continuar.
+            Os módulos do painel só carregam dados para empresas vinculadas. Escolha uma empresa para continuar.
           </p>
         </header>
 
         <div className="rounded-[28px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#ffffff)] p-8 shadow-[0_20px_55px_rgba(15,23,42,0.12)]">
           <CompanySelector
-            title="Empresas disponÃ­veis"
+            title="Empresas disponíveis"
             description="Acesse o hub completo de cada empresa, incluindo releases, runs e defeitos."
             buildHref={(company) =>
               buildCompanyPathForAccess(company.clientSlug, "home", {

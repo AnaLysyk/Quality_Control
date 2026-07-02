@@ -10,7 +10,7 @@ type MenuProfileCase = {
 
 const profileCases: MenuProfileCase[] = [
   {
-    title: "leader_tc visualiza menus administrativos sem operaÃ§Ãµes",
+    title: "leader_tc visualiza menus administrativos sem operações",
     auth: {
       role: "leader_tc",
       permissionRole: "leader_tc",
@@ -35,7 +35,7 @@ const profileCases: MenuProfileCase[] = [
     hidden: ["nav-operations"],
   },
   {
-    title: "technical_support visualiza menus de suporte sem operaÃ§Ãµes e aÃ§Ãµes internas de lÃ­der",
+    title: "technical_support visualiza menus de suporte sem operações e ações internas de líder",
     auth: {
       role: "technical_support",
       permissionRole: "technical_support",
@@ -64,7 +64,7 @@ const profileCases: MenuProfileCase[] = [
     ],
   },
   {
-    title: "testing_company_user nÃ£o visualiza operaÃ§Ãµes, usuÃ¡rios, admin e solicitaÃ§Ãµes",
+    title: "testing_company_user não visualiza operações, usuários, admin e solicitações",
     auth: {
       role: "testing_company_user",
       permissionRole: "testing_company_user",
@@ -91,7 +91,7 @@ const profileCases: MenuProfileCase[] = [
     ],
   },
   {
-    title: "empresa visualiza apenas mÃ³dulos de cliente",
+    title: "empresa visualiza apenas módulos de cliente",
     auth: {
       role: "empresa",
       permissionRole: "empresa",
@@ -117,7 +117,7 @@ const profileCases: MenuProfileCase[] = [
     ],
   },
   {
-    title: "company_user visualiza apenas menus permitidos para usuÃ¡rio de empresa",
+    title: "company_user visualiza apenas menus permitidos para usuário de empresa",
     auth: {
       role: "company_user",
       permissionRole: "company_user",
@@ -159,7 +159,7 @@ test.describe("Menu lateral por perfil", () => {
       }
 
       for (const testId of profileCase.hidden) {
-        await expect(page.getByTestId(testId), `${testId} nÃ£o deveria aparecer`).toHaveCount(0);
+        await expect(page.getByTestId(testId), `${testId} não deveria aparecer`).toHaveCount(0);
       }
     });
   }

@@ -159,23 +159,12 @@ body::after {
   color: var(--shell-sidebar-text-muted) !important;
 }
 
-.sidebar-operational-shell .sidebar-nav-item {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-  color: var(--shell-sidebar-text-muted) !important;
-}
-
-.sidebar-operational-shell .sidebar-nav-item:is(:hover, :focus-visible),
-.sidebar-operational-shell .sidebar-nav-item.sidebar-nav-active {
+.sidebar-operational-shell [class*="bg-white/14"],
+.sidebar-operational-shell [class*="bg-white/16"],
+.sidebar-operational-shell [class*="bg-white/10"],
+.sidebar-operational-shell [class*="bg-white/8"] {
   background: var(--shell-menu-gradient) !important;
   border-color: var(--shell-menu-border) !important;
-  border-left-color: var(--tc-accent) !important;
-  color: var(--shell-sidebar-text-strong) !important;
-}
-
-.sidebar-operational-shell .sidebar-nav-item:is(:hover, :focus-visible) svg,
-.sidebar-operational-shell .sidebar-nav-item.sidebar-nav-active svg {
   color: var(--shell-sidebar-text-strong) !important;
 }
 

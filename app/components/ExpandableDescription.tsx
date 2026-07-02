@@ -20,7 +20,7 @@ export default function ExpandableDescription({ html, limit = 150 }: ExpandableD
       return { truncated: plainText, shouldTruncate: false };
     }
     return {
-      truncated: `${plainText.slice(0, limit)}â€¦`,
+      truncated: `${plainText.slice(0, limit)}…`,
       shouldTruncate: true,
     };
   }, [html, limit]);

@@ -31,7 +31,7 @@ async function readCompanyDefects(_companyId: string): Promise<DefectRecord[]> {
 export async function GET(req: Request) {
   const access = await getAccessContext(req);
   if (!access) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const [user, companies, links, notes] = await Promise.all([
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
   ]);
 
   if (!user) {
-    return NextResponse.json({ error: "UsuÃ¡rio nÃ£o encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const visibleCompanies = resolveVisibleCompanies(companies, {

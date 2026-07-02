@@ -1,7 +1,7 @@
 ﻿import { test, expect } from "@playwright/test";
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
-test("empresa ativa persiste apÃƒÂ³s reload", async ({ page, context }) => {
+test("empresa ativa persiste após reload", async ({ page, context }) => {
   await simularAutenticacao(context, {
     role: "admin",
     companies: ["empresa-e2e", "testing-company"],

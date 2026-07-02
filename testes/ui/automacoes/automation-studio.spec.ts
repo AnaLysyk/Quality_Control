@@ -25,7 +25,7 @@ test.describe("Tela de Automacao", () => {
     await page.goto("/automacoes/tools");
 
     await expect(page.getByText(/^Tools$/)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByLabel(/Ambiente de execuÃ§Ã£o/i)).toBeVisible();
+    await expect(page.getByLabel(/Ambiente de execução/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /Rodar/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Consultar RFB/i })).toBeVisible();
   });
@@ -62,7 +62,7 @@ test.describe("Tela de Automacao", () => {
 
     await expect(page).toHaveURL(/\/automacoes\/api-lab/);
     await expect(page.locator("body")).not.toContainText("Application error");
-    await expect(page.getByLabel(/MÃ©todo HTTP/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByLabel(/Método HTTP/i)).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole("button", { name: /Executar/i })).toBeVisible();
   });
 
@@ -118,9 +118,9 @@ test.describe("Tela de Automacao", () => {
 
     await expect(page).toHaveURL(/\/automacoes\/fluxos/);
     await expect(page.locator("body")).not.toContainText("Application error");
-    await expect(page.getByRole("button", { name: /VisÃ£o geral/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /Visão geral/i })).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole("button", { name: /Etapas/i })).toBeVisible({ timeout: 15000 });
-    await expect(page.getByRole("button", { name: /Preparar execuÃ§Ã£o/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /Preparar execução/i })).toBeVisible({ timeout: 15000 });
   });
 
   test("@case=TC-AUTO-012 ambiente exige URL base e token no Studio", async ({ page, context }) => {
@@ -130,9 +130,9 @@ test.describe("Tela de Automacao", () => {
     await expect(page).toHaveURL(/\/automacoes\/tools/);
     await expect(page.locator("body")).not.toContainText("Application error");
 
-    const environmentSelect = page.getByLabel(/Ambiente de execuÃ§Ã£o/i);
+    const environmentSelect = page.getByLabel(/Ambiente de execução/i);
     await expect(environmentSelect).toBeVisible({ timeout: 15000 });
-    await environmentSelect.selectOption({ label: "ProduÃ§Ã£o segura" });
+    await environmentSelect.selectOption({ label: "Produção segura" });
 
     await expect(page.getByLabel(/URL base/i)).toBeVisible({ timeout: 15000 });
     await expect(page.getByPlaceholder("Cole o token", { exact: true })).toBeVisible({ timeout: 15000 });

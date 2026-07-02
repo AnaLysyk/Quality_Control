@@ -76,9 +76,9 @@ describe("ChatButton API routing", () => {
           detail: {
             source: "brain",
             nodeId: "node-123",
-            nodeLabel: "NÃ³ QA",
+            nodeLabel: "Nó QA",
             agentMode: "qa",
-            initialMessage: "analisa esse nÃ³",
+            initialMessage: "analisa esse nó",
           },
         }),
       );

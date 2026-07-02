@@ -138,7 +138,7 @@ export class BrainGraphAnalyticsService {
       inDegree.set(edge.toId, (inDegree.get(edge.toId) ?? 0) + 1);
     }
 
-    // PageRank simplificado em memÃ³ria (damping padrÃ£o 0.85).
+    // PageRank simplificado em memória (damping padrão 0.85).
     const damping = 0.85;
     const count = Math.max(1, nodes.length);
     const ranks = new Map<string, number>(nodes.map((node) => [node.id, 1 / count]));

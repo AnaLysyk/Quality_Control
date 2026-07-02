@@ -20,7 +20,7 @@ export default function PainelReleasesManuaisAutenticado() {
   if (!user || !companyId) {
     return (
       <div className="p-6 text-red-600">
-        VocÃª precisa estar autenticado e vinculado a uma empresa para acessar este painel.
+        Você precisa estar autenticado e vinculado a uma empresa para acessar este painel.
       </div>
     );
   }

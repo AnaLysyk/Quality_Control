@@ -3,7 +3,7 @@
 const mockTicket = {
   id: "t1",
   code: "SP-000042",
-  title: "Bug no formulÃ¡rio",
+  title: "Bug no formulário",
   description: "Ao salvar, perde dados",
   type: "bug" as const,
   priority: "high" as const,
@@ -104,7 +104,7 @@ describe("buildCommentCreationAction", () => {
     (findVisibleTicket as jest.Mock).mockResolvedValue(null);
     const result = await buildCommentCreationAction(makeUser(), makeContext(), "comentar no chamado SP-999");
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("ID/cÃ³digo");
+    expect(result.reply).toContain("ID/código");
   });
 
   /* â”€â”€ No permission â”€â”€ */
@@ -113,10 +113,10 @@ describe("buildCommentCreationAction", () => {
     (canCommentTicket as jest.Mock).mockReturnValue(false);
     const result = await buildCommentCreationAction(makeUser(), makeContext(), "comentar no chamado SP-000042");
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nÃ£o pode comentar");
+    expect(result.reply).toContain("não pode comentar");
   });
 
-  /* â”€â”€ Generic comment request â†’ builds draft from ticket â”€â”€ */
+  /* â”€â”€ Generic comment request → builds draft from ticket â”€â”€ */
 
   it("generates a technical draft for generic comment request", async () => {
     const result = await buildCommentCreationAction(makeUser(), makeContext(), "montar comentario tecnico para SP-000042");
@@ -134,7 +134,7 @@ describe("buildCommentCreationAction", () => {
     const result = await buildCommentCreationAction(
       makeUser(),
       makeContext(),
-      "comentar no chamado SP-000042 com atualizaÃ§Ã£o: reproduzi o bug no Chrome 120 e confirmo o problema",
+      "comentar no chamado SP-000042 com atualização: reproduzi o bug no Chrome 120 e confirmo o problema",
     );
     expect(result.success).toBe(true);
     expect(result.actions).toBeDefined();
@@ -166,7 +166,7 @@ describe("buildCommentCreationAction", () => {
       makeContext(),
       "comentar no chamado SP-000042",
     );
-    // short body â†’ generic request â†’ builds draft from ticket context
+    // short body → generic request → builds draft from ticket context
     expect(result.success).toBe(true);
   });
 });
@@ -197,14 +197,14 @@ describe("executeCreateComment", () => {
   it("rejects invalid body", async () => {
     const result = await executeCreateComment(makeUser(), makeAction({ body: "" }));
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("validaÃ§Ãµes");
+    expect(result.reply).toContain("validações");
   });
 
   it("rejects when ticket not found", async () => {
     (getTicketById as jest.Mock).mockResolvedValue(null);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nÃ£o estÃ¡ disponÃ­vel");
+    expect(result.reply).toContain("não está disponível");
   });
 
   it("rejects when user can't view ticket", async () => {
@@ -217,7 +217,7 @@ describe("executeCreateComment", () => {
     (canCommentTicket as jest.Mock).mockReturnValue(false);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("nÃ£o pode comentar");
+    expect(result.reply).toContain("não pode comentar");
   });
 
   it("rejects duplicate comment", async () => {
@@ -240,7 +240,7 @@ describe("executeCreateComment", () => {
     (createTicketComment as jest.Mock).mockResolvedValueOnce(null);
     const result = await executeCreateComment(makeUser(), makeAction());
     expect(result.success).toBe(false);
-    expect(result.reply).toContain("NÃ£o consegui publicar");
+    expect(result.reply).toContain("Não consegui publicar");
   });
 });
 

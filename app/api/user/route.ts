@@ -4,7 +4,7 @@ import { createLocalUser, listLocalUsers, upsertLocalLink } from "@/lib/auth/loc
 import { isUserScopeLockedError } from "@/lib/companyUserScope";
 import { readSyncedUserProfileFields } from "@/lib/userProfileData";
 
-// POST: Cria um novo usuÃ¡rio e vincula a uma empresa
+// POST: Cria um novo usuário e vincula a uma empresa
 export async function POST(req: NextRequest) {
   const data = await req.json().catch(() => null);
   const profileFields = readSyncedUserProfileFields(data);
@@ -20,10 +20,10 @@ export async function POST(req: NextRequest) {
 
   const users = await listLocalUsers();
   if (users.some((user) => user.email.toLowerCase() === email)) {
-    return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
   }
   if (users.some((user) => (user.user ?? user.email).toLowerCase() === login)) {
-    return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
+    return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
   }
 
   const hash = hashPasswordSha256(password);
@@ -45,10 +45,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const code = err && typeof err === "object" ? (err as { code?: string }).code : null;
     if (code === "DUPLICATE_EMAIL") {
-      return NextResponse.json({ error: "E-mail jÃ¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
     }
     if (code === "DUPLICATE_USER") {
-      return NextResponse.json({ error: "UsuÃ¡rio jÃ¡ cadastrado" }, { status: 409 });
+      return NextResponse.json({ error: "Usuário já cadastrado" }, { status: 409 });
     }
     throw err;
   }

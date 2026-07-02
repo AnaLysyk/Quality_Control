@@ -11,7 +11,7 @@ export default function Error500Page() {
         <p className="text-xs uppercase tracking-[0.4em] text-[var(--tc-accent,#ef0001)]">Erro 500</p>
         <h1 className="text-3xl md:text-4xl font-extrabold">Ops! Algo deu errado.</h1>
         <p className="text-[var(--tc-text-secondary,#4b5563)]">
-          Encontramos um problema ao carregar esta pÃ¡gina. Tente novamente em instantes ou volte para a pÃ¡gina inicial.
+          Encontramos um problema ao carregar esta página. Tente novamente em instantes ou volte para a página inicial.
         </p>
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link

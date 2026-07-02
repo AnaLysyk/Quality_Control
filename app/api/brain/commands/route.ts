@@ -28,14 +28,14 @@ export async function POST(req: Request) {
 
     const rawInput = String(body.input ?? "").trim();
     if (!rawInput) {
-      return NextResponse.json({ error: "Comando obrigatÃ³rio" }, { status: 400 });
+      return NextResponse.json({ error: "Comando obrigatório" }, { status: 400 });
     }
 
     const parsed = interpretBrainCommand(rawInput);
     if (!parsed.command) {
       return NextResponse.json({
         ok: false,
-        error: "NÃ£o foi possÃ­vel interpretar o comando informado.",
+        error: "Não foi possível interpretar o comando informado.",
       }, { status: 400 });
     }
 

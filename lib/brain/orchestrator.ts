@@ -30,10 +30,10 @@ export type OrchestratorContext = {
 /**
  * BrainOrchestrator: monta contexto completo para o agente IA.
  * 1. Detecta ou confirma o agente certo para a pergunta
- * 2. Busca mÃ©tricas do grafo
- * 3. Busca contexto do nÃ³ selecionado (se houver)
+ * 2. Busca métricas do grafo
+ * 3. Busca contexto do nó selecionado (se houver)
  * 4. Busca contexto da empresa (se houver)
- * 5. ConstrÃ³i system prompt personalizado
+ * 5. Constrói system prompt personalizado
  */
 export async function buildOrchestratorContext(
   input: OrchestratorInput,
@@ -41,7 +41,7 @@ export async function buildOrchestratorContext(
   const lastUserMessage =
     [...input.messages].reverse().find((m) => m.role === "user")?.content ?? "";
 
-  // 1. Detectar agente â€” usa o informado ou detecta automaticamente
+  // 1. Detectar agente — usa o informado ou detecta automaticamente
   const agentMode: AgentMode =
     input.agentMode && AGENT_REGISTRY[input.agentMode]
       ? input.agentMode
@@ -49,15 +49,15 @@ export async function buildOrchestratorContext(
 
   const agent = AGENT_REGISTRY[agentMode];
 
-  // 2. MÃ©tricas do grafo
+  // 2. Métricas do grafo
   const metrics = await getGraphMetrics();
   const metricsText = [
-    `- NÃ³s: ${metrics.nodeCount} | ConexÃµes: ${metrics.edgeCount} | MemÃ³rias: ${metrics.memoryCount}`,
-    `- Grau mÃ©dio: ${metrics.averageDegree} | Densidade: ${metrics.density?.toFixed(4) ?? "n/a"}`,
-    `- NÃ³s Ã³rfÃ£os: ${metrics.orphanedNodes ?? 0}`,
+    `- Nós: ${metrics.nodeCount} | Conexões: ${metrics.edgeCount} | Memórias: ${metrics.memoryCount}`,
+    `- Grau médio: ${metrics.averageDegree} | Densidade: ${metrics.density?.toFixed(4) ?? "n/a"}`,
+    `- Nós órfãos: ${metrics.orphanedNodes ?? 0}`,
   ].join("\n");
 
-  // 3. Contexto do nÃ³ selecionado
+  // 3. Contexto do nó selecionado
   let nodeContext = "";
   if (input.nodeId) {
     try {
@@ -69,11 +69,11 @@ export async function buildOrchestratorContext(
           .map((n: { label: string }) => n.label)
           .join(", ");
         nodeContext = [
-          `\n## NÃ³ em foco: "${ctx.node.label}" (${ctx.node.type})`,
+          `\n## Nó em foco: "${ctx.node.label}" (${ctx.node.type})`,
           ctx.node.description ?? "",
           neighborLabels ? `Vizinhos: ${neighborLabels}` : "",
           memories.length > 0
-            ? `MemÃ³rias:\n${memories
+            ? `Memórias:\n${memories
                 .slice(0, 4)
                 .map(
                   (m: { memoryType: string; title: string; summary: string }) =>
@@ -86,11 +86,11 @@ export async function buildOrchestratorContext(
           .join("\n");
       }
     } catch {
-      // contexto do nÃ³ Ã© opcional â€” nÃ£o bloqueia
+      // contexto do nó é opcional — não bloqueia
     }
   }
 
-  // 4. Contexto da empresa (se nÃ£o veio nodeId mas veio companySlug)
+  // 4. Contexto da empresa (se não veio nodeId mas veio companySlug)
   if (!nodeContext && input.companySlug) {
     try {
       const company = await prisma.company.findFirst({
@@ -141,7 +141,7 @@ export async function buildOrchestratorContext(
 }
 
 /**
- * Registra execuÃ§Ã£o do agente no BrainAuditLog.
+ * Registra execução do agente no BrainAuditLog.
  */
 export async function logAgentExecution(opts: {
   agentMode: AgentMode;
@@ -168,7 +168,7 @@ export async function logAgentExecution(opts: {
       },
     });
   } catch {
-    // log Ã© best-effort â€” nÃ£o bloqueia resposta
+    // log é best-effort — não bloqueia resposta
   }
 }
 

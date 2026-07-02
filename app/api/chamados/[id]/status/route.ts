@@ -3,7 +3,7 @@ import { getTicketById, updateTicketStatus } from "@/lib/ticketsStore";
 import { appendTicketEvent } from "@/lib/ticketEventsStore";
 import { getTicketStatusLabel } from "@/lib/ticketsStatus";
 
-// MÃ¡quina de estados: define transiÃ§Ãµes permitidas
+// Máquina de estados: define transições permitidas
 const TICKET_STATE_MACHINE: Record<string, string[]> = {
   backlog: ["doing"],
   doing: ["review", "backlog"],
@@ -11,7 +11,7 @@ const TICKET_STATE_MACHINE: Record<string, string[]> = {
   done: [],
 };
 
-// FunÃ§Ã£o para validar transiÃ§Ã£o
+// Função para validar transição
 function isValidTransition(from: string, to: string) {
   return Array.isArray(TICKET_STATE_MACHINE[from]) && TICKET_STATE_MACHINE[from].includes(to);
 }
@@ -26,7 +26,7 @@ export async function PATCH(
 ) {
   const user = await authenticateRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const { id } = await context.params;
   const body = await req.json().catch(() => ({}));
@@ -35,34 +35,34 @@ export async function PATCH(
 
   const current = await getTicketById(id);
   if (!current) {
-    return NextResponse.json({ error: "Chamado nÃ£o encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Chamado não encontrado" }, { status: 404 });
   }
   if (!canMoveTicket(user, current)) {
-    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
   if (canAccessGlobalTicketWorkspace(user) && !current.assignedToUserId) {
     return NextResponse.json(
-      { error: "Selecione e salve um responsÃ¡vel antes de mover o ticket" },
+      { error: "Selecione e salve um responsável antes de mover o ticket" },
       { status: 400 },
     );
   }
 
 
-  // VÃ¡lida transiÃ§Ã£o de status
+  // Válida transição de status
   const fromStatus = String(current.status);
   const toStatus = String(nextStatus);
   if (!isValidTransition(fromStatus, toStatus)) {
-    return NextResponse.json({ error: `TransiÃ§Ã£o nÃ£o permitida: ${getTicketStatusLabel(fromStatus)} â†’ ${getTicketStatusLabel(toStatus)}` }, { status: 400 });
+    return NextResponse.json({ error: `Transição não permitida: ${getTicketStatusLabel(fromStatus)} → ${getTicketStatusLabel(toStatus)}` }, { status: 400 });
   }
 
-  // Regra: nÃ£o pode ir para DONE sem comentÃ¡rio do operador responsÃ¡vel.
+  // Regra: não pode ir para DONE sem comentário do operador responsável.
   if (toStatus === "done") {
-    // Busca comentÃ¡rios do ticket
+    // Busca comentários do ticket
     const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/chamados/${id}/comments`, { headers: { "Content-Type": "application/json" }, credentials: "include" });
     const commentsJson = await commentsRes.json().catch(() => ({}));
     const hasOperatorComment = Array.isArray(commentsJson.items) && commentsJson.items.some((c: any) => c.authorUserId === user.id && !c.deletedAt);
     if (!hasOperatorComment) {
-      return NextResponse.json({ error: "Para concluir (DONE), Ã© obrigatÃ³rio pelo menos 1 comentÃ¡rio seu neste chamado." }, { status: 400 });
+      return NextResponse.json({ error: "Para concluir (DONE), é obrigatório pelo menos 1 comentário seu neste chamado." }, { status: 400 });
     }
   }
 

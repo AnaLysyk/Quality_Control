@@ -1,15 +1,15 @@
 ﻿/**
- * Fluxo completo de "Esqueci a senha" aprovado por um LÃ­der TC ou Suporte TÃ©cnico.
+ * Fluxo completo de "Esqueci a senha" aprovado por um Líder TC ou Suporte Técnico.
  *
- * CenÃ¡rios (6):
- *  1. UsuÃ¡rio cria solicitaÃ§Ã£o de PASSWORD_RESET via API
- *  2. SolicitaÃ§Ã£o fica PENDING no requestsStore
- *  3. LÃ­der TC (role admin) aprova a solicitaÃ§Ã£o e token Ã© gerado no Redis
- *  4. UsuÃ¡rio redefine a senha usando o token
- *  5. Token Ã© invalidado apÃ³s uso (nÃ£o pode ser reutilizado)
- *  6. Suporte TÃ©cnico (role it_dev) tambÃ©m consegue aprovar PASSWORD_RESET
+ * Cenários (6):
+ *  1. Usuário cria solicitação de PASSWORD_RESET via API
+ *  2. Solicitação fica PENDING no requestsStore
+ *  3. Líder TC (role admin) aprova a solicitação e token é gerado no Redis
+ *  4. Usuário redefine a senha usando o token
+ *  5. Token é invalidado após uso (não pode ser reutilizado)
+ *  6. Suporte Técnico (role it_dev) também consegue aprovar PASSWORD_RESET
  *
- * âœ… Cleanup total em afterAll â€” nenhum dado permanece.
+ * âœ… Cleanup total em afterAll — nenhum dado permanece.
  */
 
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
@@ -134,10 +134,10 @@ afterAll(async () => {
 
 // â”€â”€ Fluxo completo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("Esqueci a senha â€” aprovaÃ§Ã£o por LÃ­der TC / Suporte TÃ©cnico", () => {
+describePg("Esqueci a senha — aprovação por Líder TC / Suporte Técnico", () => {
   let resetRequestId: string;
 
-  test("1. usuÃ¡rio cria solicitaÃ§Ã£o PASSWORD_RESET", async () => {
+  test("1. usuário cria solicitação PASSWORD_RESET", async () => {
     const req = await addRequest(normalUser, "PASSWORD_RESET", {
       reason: "forgot_password",
       profileType: "testing_company_user",
@@ -153,7 +153,7 @@ describePg("Esqueci a senha â€” aprovaÃ§Ã£o por LÃ­der TC / Suporte T
     expect(req.userEmail).toBe(normalUser.email);
   });
 
-  test("2. solicitaÃ§Ã£o estÃ¡ PENDING no requestsStore", async () => {
+  test("2. solicitação está PENDING no requestsStore", async () => {
     const requests = await listUserRequests(normalUser.id, {
       type: "PASSWORD_RESET",
       status: "PENDING",
@@ -164,7 +164,7 @@ describePg("Esqueci a senha â€” aprovaÃ§Ã£o por LÃ­der TC / Suporte T
     expect(found!.status).toBe("PENDING");
   });
 
-  test("3. LÃ­der TC aprova a solicitaÃ§Ã£o e token Ã© gerado no Redis", async () => {
+  test("3. Líder TC aprova a solicitação e token é gerado no Redis", async () => {
     // Simulate what the approval endpoint does: generate token, store in Redis
     const { randomUUID } = await import("crypto");
     const token = randomUUID();
@@ -194,7 +194,7 @@ describePg("Esqueci a senha â€” aprovaÃ§Ã£o por LÃ­der TC / Suporte T
     (globalThis as Record<string, unknown>).__resetToken = token;
   });
 
-  test("4. usuÃ¡rio redefine a senha usando o token", async () => {
+  test("4. usuário redefine a senha usando o token", async () => {
     const token = (globalThis as Record<string, unknown>).__resetToken as string;
     expect(token).toBeTruthy();
 
@@ -216,7 +216,7 @@ describePg("Esqueci a senha â€” aprovaÃ§Ã£o por LÃ­der TC / Suporte T
     expect(updatedUser!.password_hash).not.toBe(PASSWORD);
   });
 
-  test("5. token Ã© invalidado apÃ³s uso (nÃ£o pode ser reutilizado)", async () => {
+  test("5. token é invalidado após uso (não pode ser reutilizado)", async () => {
     const token = (globalThis as Record<string, unknown>).__resetToken as string;
     const redis = getRedis();
 
@@ -224,7 +224,7 @@ describePg("Esqueci a senha â€” aprovaÃ§Ã£o por LÃ­der TC / Suporte T
     expect(storedUserId).toBeNull();
   });
 
-  test("6. Suporte TÃ©cnico (it_dev) tambÃ©m aprova PASSWORD_RESET", async () => {
+  test("6. Suporte Técnico (it_dev) também aprova PASSWORD_RESET", async () => {
     // Create a new request for a different flow
     const req = await addRequest(normalUser, "PASSWORD_RESET", {
       reason: "forgot_password",

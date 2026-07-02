@@ -16,29 +16,29 @@ type BrainNodeOverlayProps = {
 };
 
 const ACTION_LABELS: Record<string, string> = {
-  integration: "Abrir empresa relacionada, revisar token, projeto e status da integraÃ§Ã£o",
-  profile: "Abrir usuÃ¡rios por perfil e conferir origem correta do cadastro",
+  integration: "Abrir empresa relacionada, revisar token, projeto e status da integração",
+  profile: "Abrir usuários por perfil e conferir origem correta do cadastro",
   screen: "Abrir tela relacionada e revisar a fila operacional",
   status: "Filtrar a fila por este status",
-  access_request: "Abrir solicitaÃ§Ã£o, revisar perfil, solicitar ajuste, aprovar ou recusar",
-  automation: "Abrir automaÃ§Ã£o, conferir execuÃ§Ã£o, evidÃªncias e falhas",
-  company: "Ver empresas, usuÃ¡rios vinculados, projetos, permissÃµes e chamados",
-  defect: "Abrir defeito, checar responsÃ¡vel, status, severidade e testes relacionados",
-  document: "Abrir documento, evidÃªncia ou PDF vinculado",
+  access_request: "Abrir solicitação, revisar perfil, solicitar ajuste, aprovar ou recusar",
+  automation: "Abrir automação, conferir execução, evidências e falhas",
+  company: "Ver empresas, usuários vinculados, projetos, permissões e chamados",
+  defect: "Abrir defeito, checar responsável, status, severidade e testes relacionados",
+  document: "Abrir documento, evidência ou PDF vinculado",
   log: "Consultar trilha, auditoria e origem do evento",
-  module: "Expandir Ã¡rea e listar nÃ³s conectados",
-  permission: "Revisar permissÃ£o efetiva e impacto por perfil",
-  person: "Ver usuÃ¡rio, empresa, permissÃµes, solicitaÃ§Ãµes e aÃ§Ãµes recentes",
+  module: "Expandir área e listar nós conectados",
+  permission: "Revisar permissão efetiva e impacto por perfil",
+  person: "Ver usuário, empresa, permissões, solicitações e ações recentes",
   project: "Ver projeto, planos, casos, defeitos, runs e documentos",
-  requester: "Ver solicitante, pedidos, comentÃ¡rios e pendÃªncias",
-  test_case: "Abrir caso, automaÃ§Ã£o, execuÃ§Ã£o e defeitos associados",
+  requester: "Ver solicitante, pedidos, comentários e pendências",
+  test_case: "Abrir caso, automação, execução e defeitos associados",
 };
 
 function memoryText(node: BrainNode) {
   return (
     node.information ||
     node.description ||
-    "Este nÃ³ representa uma memÃ³ria do Brain dentro do contexto selecionado."
+    "Este nó representa uma memória do Brain dentro do contexto selecionado."
   );
 }
 
@@ -64,7 +64,7 @@ function relationRows(node: BrainNode, nodes: BrainNode[], edges: BrainEdge[]) {
     .map((edge) => {
       const relatedId = edge.source === node.id ? edge.target : edge.source;
       const related = nodes.find((item) => item.id === relatedId);
-      return related ? { edge, related, direction: edge.source === node.id ? "saÃ­da" : "entrada" } : null;
+      return related ? { edge, related, direction: edge.source === node.id ? "saída" : "entrada" } : null;
     })
     .filter((item): item is { edge: BrainEdge; related: BrainNode; direction: string } => Boolean(item));
 }
@@ -82,9 +82,9 @@ function inferActions(node: BrainNode, relations: ReturnType<typeof relationRows
       ACTION_LABELS[node.type],
       relations.some((item) => item.related.type === "defect") ? "Investigar defeitos conectados" : null,
       relations.some((item) => item.related.type === "test_case") ? "Abrir casos de teste relacionados" : null,
-      relations.some((item) => item.related.type === "person" || item.related.type === "requester") ? "Ver usuÃ¡rios e solicitantes relacionados" : null,
+      relations.some((item) => item.related.type === "person" || item.related.type === "requester") ? "Ver usuários e solicitantes relacionados" : null,
       relations.some((item) => item.related.module === "Suporte") ? "Abrir chamados de suporte relacionados" : null,
-      relations.some((item) => item.related.type === "document" || item.related.type === "pdf") ? "Abrir documentos e evidÃªncias" : null,
+      relations.some((item) => item.related.type === "document" || item.related.type === "pdf") ? "Abrir documentos e evidências" : null,
     ].filter((item): item is string => Boolean(item))),
   ).slice(0, 8);
 }
@@ -135,7 +135,7 @@ export function BrainNodeOverlay({
                 </span>
               </div>
 
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100/55">MemÃ³ria do nÃ³</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-100/55">Memória do nó</p>
               <h2 className="mt-1 text-2xl font-black leading-tight text-white">{node.label}</h2>
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-200/82">{memoryText(node)}</p>
             </div>
@@ -144,7 +144,7 @@ export function BrainNodeOverlay({
               type="button"
               onClick={onClose}
               className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 hover:border-rose-200/40 hover:text-white"
-              aria-label="Fechar memÃ³ria"
+              aria-label="Fechar memória"
             >
               <FiX className="h-4 w-4" />
             </button>
@@ -154,15 +154,15 @@ export function BrainNodeOverlay({
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">ConexÃµes</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Conexões</p>
               <p className="mt-1 text-2xl font-black text-white">{relations.length}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">PendÃªncias</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Pendências</p>
               <p className="mt-1 text-2xl font-black text-white">{pendingItems.length}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-slate-950/46 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Ãreas</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/45">Áreas</p>
               <p className="mt-1 text-2xl font-black text-white">{areaCounts.length}</p>
             </div>
           </div>
@@ -205,7 +205,7 @@ export function BrainNodeOverlay({
           ) : null}
 
           <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">AÃ§Ãµes disponÃ­veis</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Ações disponíveis</p>
             <div className="mt-2 grid gap-2">
               {actions.map((action) => (
                 <button key={action} type="button" onClick={() => onOpenRelatedModule(node.module)} className="flex items-center gap-2 rounded-xl border border-cyan-100/12 bg-cyan-100/[0.06] px-3 py-2 text-left text-xs font-bold text-cyan-50 hover:border-cyan-100/35">
@@ -218,11 +218,11 @@ export function BrainNodeOverlay({
 
           {areaCounts.length ? (
             <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Ãreas relacionadas</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Áreas relacionadas</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {areaCounts.map(([module, count]) => (
                   <button key={module} type="button" onClick={() => onOpenRelatedModule(module)} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/78 hover:border-cyan-100/40 hover:text-cyan-50">
-                    {module} Â· {count}
+                    {module} · {count}
                   </button>
                 ))}
               </div>
@@ -230,14 +230,14 @@ export function BrainNodeOverlay({
           ) : null}
 
           <section className="mt-3 rounded-2xl border border-white/10 bg-slate-950/40 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">RelaÃ§Ãµes principais</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/45">Relações principais</p>
             <div className="mt-2 grid gap-2">
               {relations.slice(0, 12).map(({ edge, related, direction }) => (
                 <button key={edge.id} type="button" onClick={() => onOpenRelatedModule(related.module)} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-left hover:border-cyan-100/32">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-black text-white">{related.label}</p>
-                      <p className="mt-1 text-xs font-semibold text-slate-400">{edge.label} Â· {direction} Â· {related.module}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-400">{edge.label} · {direction} · {related.module}</p>
                     </div>
                     <span className="shrink-0 rounded-full border border-white/10 px-2 py-1 text-[10px] font-black uppercase text-slate-300">
                       {nodeStatusLabel(related.status)}
@@ -245,7 +245,7 @@ export function BrainNodeOverlay({
                   </div>
                 </button>
               ))}
-              {!relations.length ? <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">Nenhuma relaÃ§Ã£o disponÃ­vel neste recorte.</p> : null}
+              {!relations.length ? <p className="rounded-xl border border-dashed border-white/10 p-3 text-xs font-bold text-slate-400">Nenhuma relação disponível neste recorte.</p> : null}
             </div>
           </section>
 
@@ -271,7 +271,7 @@ export function BrainNodeOverlay({
 
           <button type="button" onClick={() => onOpenRelatedModule(node.module)} className="inline-flex items-center gap-2 rounded-xl border border-cyan-100/25 bg-cyan-100/10 px-3 py-2 text-xs font-black text-cyan-50 hover:border-cyan-100/60">
             <FiActivity className="h-3.5 w-3.5" />
-            Ver Ã¡rea
+            Ver área
             <FiExternalLink className="h-3.5 w-3.5" />
           </button>
         </footer>

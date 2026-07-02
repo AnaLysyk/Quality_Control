@@ -1,7 +1,7 @@
 ﻿"use client";
 
 /**
- * User Identity Section â€” Dados bÃ¡sicos do usuÃ¡rio
+ * User Identity Section — Dados básicos do usuário
  */
 
 import { useProfileContext } from "@/lib/profile/useProfileContext";

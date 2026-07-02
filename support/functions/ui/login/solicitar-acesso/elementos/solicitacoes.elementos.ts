@@ -2,9 +2,9 @@
 
 export function localizarElementosTelaSolicitacoes(page: Page) {
   return {
-    titulo: page.getByRole("heading", { name: /SolicitaÃ§Ãµes de acesso/i }),
+    titulo: page.getByRole("heading", { name: /Solicitações de acesso/i }),
     busca: page.getByRole("textbox").first(),
-    lista: page.getByText(/SolicitaÃ§Ãµes/i).first(),
+    lista: page.getByText(/Solicitações/i).first(),
   };
 }
 

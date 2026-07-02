@@ -40,10 +40,10 @@ export async function POST(request: Request, { params }: RouteParams) {
     auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
 
   if (!effectiveAuth) {
-    return apiFail(request, "NÃ£o autorizado", {
+    return apiFail(request, "Não autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "NÃ£o autorizado" } },
+      extra: { error: { message: "Não autorizado" } },
     });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
@@ -65,17 +65,17 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const body = await request.json().catch(() => null);
   if (!body || !Array.isArray(body?.results) || body.results.length === 0) {
-    return apiFail(request, "Body invÃ¡lido: 'results' deve ser array nÃ£o vazio", {
+    return apiFail(request, "Body inválido: 'results' deve ser array não vazio", {
       status: 400,
       code: "VALIDATION_ERROR",
-      extra: { error: { message: "Body invÃ¡lido: 'results' deve ser array nÃ£o vazio" } },
+      extra: { error: { message: "Body inválido: 'results' deve ser array não vazio" } },
     });
   }
   if (body.results.length > 2000) {
-    return apiFail(request, "Payload muito grande: mÃ¡ximo 2000 resultados por requisiÃ§Ã£o", {
+    return apiFail(request, "Payload muito grande: máximo 2000 resultados por requisição", {
       status: 413,
       code: "PAYLOAD_TOO_LARGE",
-      extra: { error: { message: "MÃ¡ximo 2000 resultados por requisiÃ§Ã£o" } },
+      extra: { error: { message: "Máximo 2000 resultados por requisição" } },
     });
   }
 

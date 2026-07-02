@@ -197,9 +197,9 @@ function UserCard({
               {user.name}
             </p>
             <div className="mt-3 space-y-1">
-              <UserInlineField label="UsuÃ¡rio" value={getUserHandle(user)} valueClassName="break-all" />
+              <UserInlineField label="Usuário" value={getUserHandle(user)} valueClassName="break-all" />
               <UserInlineField label="E-mail" value={user.email} valueClassName="break-all" />
-              <UserInlineField label="Cargo" value={user.job_title || "NÃ£o informado"} valueClassName="break-words" />
+              <UserInlineField label="Cargo" value={user.job_title || "Não informado"} valueClassName="break-words" />
               {showCompanyField && companyLabel ? <UserInlineField label="Empresa" value={companyLabel} valueClassName="break-words" /> : null}
             </div>
           </div>
@@ -428,15 +428,15 @@ function UserManagementQueueExperience({
               ref={searchInputRef}
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Buscar por nome, usuÃ¡rio, e-mail ou empresa"
+              placeholder="Buscar por nome, usuário, e-mail ou empresa"
               className="h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] pl-11 pr-4 text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)] outline-none transition placeholder:text-[var(--tc-text-muted,#94a3b8)] focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
               data-testid="users-search-input"
             />
           </label>
 
           <select
-            aria-label="Filtrar usuÃ¡rios por status"
-            title="Filtrar usuÃ¡rios por status"
+            aria-label="Filtrar usuários por status"
+            title="Filtrar usuários por status"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as UserStatusFilter)}
             className="h-12 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
@@ -449,8 +449,8 @@ function UserManagementQueueExperience({
           </select>
 
           <select
-            aria-label="Ordenar usuÃ¡rios"
-            title="Ordenar usuÃ¡rios"
+            aria-label="Ordenar usuários"
+            title="Ordenar usuários"
             value={sortMode}
             onChange={(event) => setSortMode(event.target.value as UserSortMode)}
             className="h-12 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
@@ -485,7 +485,7 @@ function UserManagementQueueExperience({
       </div>
 
       {loading ? (
-        <div className="p-8 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Carregando usuÃ¡rios...</div>
+        <div className="p-8 text-sm font-semibold text-[var(--tc-text-muted,#6b7280)]">Carregando usuários...</div>
       ) : filteredUsers.length === 0 ? (
         <div className="flex min-h-90 items-center justify-center p-8 text-center">
           <div className="max-w-md">
@@ -502,7 +502,7 @@ function UserManagementQueueExperience({
             <table className="w-full min-w-230 border-separate border-spacing-0">
               <thead className="sticky top-0 z-10 bg-[var(--tc-surface,#ffffff)] shadow-[0_1px_0_var(--tc-border,#d7deea)]">
                 <tr>
-                  {["UsuÃ¡rio", "Perfil", "Empresa", "Cargo", "Status", "AÃ§Ã£o"].map((column) => (
+                  {["Usuário", "Perfil", "Empresa", "Cargo", "Status", "Ação"].map((column) => (
                     <th key={column} className="whitespace-nowrap border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                       {column}
                     </th>
@@ -536,7 +536,7 @@ function UserManagementQueueExperience({
                         <UserAvatar user={user} />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-black text-[var(--tc-text-primary,#0b1a3c)]">{user.name}</p>
-                          <p className="mt-0.5 truncate text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">{getUserHandle(user)} Â· {user.email}</p>
+                          <p className="mt-0.5 truncate text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">{getUserHandle(user)} · {user.email}</p>
                         </div>
                       </div>
                     </td>
@@ -549,7 +549,7 @@ function UserManagementQueueExperience({
                       {user.company_names?.[0] || "Sem empresa"}
                     </td>
                     <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)] align-middle">
-                      {user.job_title || "NÃ£o informado"}
+                      {user.job_title || "Não informado"}
                     </td>
                     <td className="border-b border-[var(--tc-border,#d7deea)] px-4 py-3 align-middle">
                       <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ${statusTone(user)}`}>{statusLabel(user)}</span>
@@ -585,7 +585,7 @@ function UserManagementQueueExperience({
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${statusTone(user)}`}>{statusLabel(user)}</span>
                     </div>
                     <p className="mt-1 truncate text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">{user.email}</p>
-                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{profileBadgeMode === "company" ? user.company_names?.[0] || "Sem empresa" : profileLabel(user)} Â· {user.company_names?.[0] || "Sem empresa"}</p>
+                    <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{profileBadgeMode === "company" ? user.company_names?.[0] || "Sem empresa" : profileLabel(user)} · {user.company_names?.[0] || "Sem empresa"}</p>
                   </div>
                 </div>
               </button>
@@ -594,13 +594,13 @@ function UserManagementQueueExperience({
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-5 py-4">
             <p className="text-sm font-semibold text-[var(--tc-text-secondary,#4b5563)]">
-              PÃ¡gina {pageIndex + 1} de {pageCount} Â· {filteredUsers.length} resultado(s) Â· {userStatusFilterLabel(statusFilter)} Â· {userSortLabel(sortMode)}
+              Página {pageIndex + 1} de {pageCount} · {filteredUsers.length} resultado(s) · {userStatusFilterLabel(statusFilter)} · {userSortLabel(sortMode)}
             </p>
 
             <div className="flex items-center gap-2">
               <select
-                aria-label="Quantidade de usuÃ¡rios por pÃ¡gina"
-                title="Quantidade de usuÃ¡rios por pÃ¡gina"
+                aria-label="Quantidade de usuários por página"
+                title="Quantidade de usuários por página"
                 value={pageSize}
                 onChange={(event) => {
                   setPageSize(Number(event.target.value));
@@ -610,7 +610,7 @@ function UserManagementQueueExperience({
               >
                 {[10, 12, 20, 50].map((size) => (
                   <option key={size} value={size}>
-                    {size}/pÃ¡gina
+                    {size}/página
                   </option>
                 ))}
               </select>
@@ -620,7 +620,7 @@ function UserManagementQueueExperience({
                 onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
                 disabled={pageIndex === 0}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-40"
-                aria-label="PÃ¡gina anterior"
+                aria-label="Página anterior"
               >
                 <FiChevronLeft />
               </button>
@@ -630,7 +630,7 @@ function UserManagementQueueExperience({
                 onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
                 disabled={pageIndex >= pageCount - 1}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] text-[var(--tc-text-primary,#0b1a3c)] transition hover:bg-[var(--tc-surface-2,#f8fafc)] disabled:opacity-40"
-                aria-label="PrÃ³xima pÃ¡gina"
+                aria-label="Próxima página"
               >
                 <FiChevronRight />
               </button>
@@ -688,7 +688,7 @@ export default function AdminUsersPage() {
       const companiesJson = (await companiesRes.json().catch(() => ([]))) as CompanyOption[] | { error?: string };
 
       if (!usersRes.ok) {
-        setError(usersJson.error || "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
+        setError(usersJson.error || "Não foi possível carregar os usuários.");
         setUsers([]);
       } else {
         const items = Array.isArray(usersJson.items) ? usersJson.items : [];
@@ -703,7 +703,7 @@ export default function AdminUsersPage() {
     } catch (err) {
       setUsers([]);
       setCompanies([]);
-      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
+      setError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
     } finally {
       setLoading(false);
     }
@@ -713,7 +713,7 @@ export default function AdminUsersPage() {
     load().catch((err) => {
       setUsers([]);
       setCompanies([]);
-      setError(err instanceof Error ? err.message : "NÃ£o foi possÃ­vel carregar os usuÃ¡rios.");
+      setError(err instanceof Error ? err.message : "Não foi possível carregar os usuários.");
       setLoading(false);
     });
   }, [load]);
@@ -925,9 +925,9 @@ export default function AdminUsersPage() {
   const createModalConfig = useMemo<CreateModalConfig>(() => {
     if (activeTab === "company") {
       return {
-        title: "Criar usuÃ¡rio da empresa",
-        subtitle: "Selecione a empresa e cadastre o responsÃ¡vel jÃ¡ no contexto dela.",
-        submitLabel: "Criar usuÃ¡rio da empresa",
+        title: "Criar usuário da empresa",
+        subtitle: "Selecione a empresa e cadastre o responsável já no contexto dela.",
+        submitLabel: "Criar usuário da empresa",
         initialRole: "company_user",
         lockRole: true,
         showCompanyField: true,
@@ -951,9 +951,9 @@ export default function AdminUsersPage() {
 
     if (activeTab === "support") {
       return {
-        title: "Criar Suporte TÃ©cnico",
+        title: "Criar Suporte Técnico",
         subtitle: "Cadastre contas tecnicas internas da Testing Company.",
-        submitLabel: "Criar Suporte TÃ©cnico",
+        submitLabel: "Criar Suporte Técnico",
         initialRole: "technical_support",
         lockRole: true,
         showCompanyField: false,
@@ -963,9 +963,9 @@ export default function AdminUsersPage() {
     }
 
     return {
-        title: "Criar usuÃ¡rio TC",
-        subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessÃ¡rio.",
-        submitLabel: "Criar usuÃ¡rio TC",
+        title: "Criar usuário TC",
+        subtitle: "Cadastre a pessoa da Testing Company e vincule a uma empresa quando necessário.",
+        submitLabel: "Criar usuário TC",
       initialRole: "testing_company_user",
       lockRole: true,
       showCompanyField: true,
@@ -995,33 +995,33 @@ export default function AdminUsersPage() {
   const currentTabCopy = useMemo(() => {
     if (activeTab === "testing") {
       return {
-        title: "Fila de usuÃ¡rios TC",
-        description: "Listagem operacional dos usuÃ¡rios internos vinculados Ã s empresas.",
-        emptyTitle: "Nenhum usuÃ¡rio TC encontrado",
-        emptyDescription: "Ajuste os filtros ou crie um novo usuÃ¡rio TC direto nesta tela.",
+        title: "Fila de usuários TC",
+        description: "Listagem operacional dos usuários internos vinculados às empresas.",
+        emptyTitle: "Nenhum usuário TC encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo usuário TC direto nesta tela.",
       };
     }
     if (activeTab === "admin") {
       return {
-        title: "Fila de LÃ­deres TC",
-        description: "Listagem dos perfis de lideranÃ§a com acesso administrativo.",
-        emptyTitle: "Nenhum LÃ­der TC encontrado",
-        emptyDescription: "Ajuste os filtros ou crie um novo LÃ­der TC direto nesta tela.",
+        title: "Fila de Líderes TC",
+        description: "Listagem dos perfis de liderança com acesso administrativo.",
+        emptyTitle: "Nenhum Líder TC encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo Líder TC direto nesta tela.",
       };
     }
     if (activeTab === "support") {
       return {
-        title: "Fila de suporte tÃ©cnico",
-        description: "Listagem dos perfis tÃ©cnicos internos da Testing Company.",
-        emptyTitle: "Nenhum suporte tÃ©cnico encontrado",
-        emptyDescription: "Ajuste os filtros ou crie um novo suporte tÃ©cnico direto nesta tela.",
+        title: "Fila de suporte técnico",
+        description: "Listagem dos perfis técnicos internos da Testing Company.",
+        emptyTitle: "Nenhum suporte técnico encontrado",
+        emptyDescription: "Ajuste os filtros ou crie um novo suporte técnico direto nesta tela.",
       };
     }
     return {
-      title: "Fila de usuÃ¡rios da empresa",
-      description: "Listagem apenas dos usuÃ¡rios vinculados Ã s empresas. Empresas institucionais ficam em GestÃ£o de Empresas.",
-      emptyTitle: "Nenhum usuÃ¡rio da empresa encontrado",
-      emptyDescription: "Ajuste os filtros ou crie um usuÃ¡rio da empresa direto nesta tela.",
+      title: "Fila de usuários da empresa",
+      description: "Listagem apenas dos usuários vinculados às empresas. Empresas institucionais ficam em Gestão de Empresas.",
+      emptyTitle: "Nenhum usuário da empresa encontrado",
+      emptyDescription: "Ajuste os filtros ou crie um usuário da empresa direto nesta tela.",
     };
   }, [activeTab]);
 
@@ -1032,10 +1032,10 @@ export default function AdminUsersPage() {
   if (!userAccess.canViewUsers) {
     return (
       <AccessDeniedState
-        moduleName="UsuÃ¡rios"
+        moduleName="Usuários"
         requiredPermission="users.view"
-        title="Acesso Ã  gestÃ£o de usuÃ¡rios negado"
-        description="Seu perfil nÃ£o possui permissÃ£o para consultar os usuÃ¡rios da plataforma."
+        title="Acesso à gestão de usuários negado"
+        description="Seu perfil não possui permissão para consultar os usuários da plataforma."
       />
     );
   }
@@ -1046,34 +1046,34 @@ export default function AdminUsersPage() {
         <Breadcrumb
           items={[
             { label: "Admin", href: "/admin/dashboard" },
-            { label: "GestÃ£o de usuÃ¡rios" },
+            { label: "Gestão de usuários" },
           ]}
         />
 
         <section className="overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(135deg,#011848_0%,#082457_38%,#4b0f2f_72%,#ef0001_100%)] px-6 py-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:px-8">
           <div className="flex flex-col gap-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuÃ¡rios</p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">UsuÃ¡rios da plataforma</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">Gestao de usuários</p>
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white">Usuários da plataforma</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/82">
-                Gerencie usuÃ¡rios por contexto: usuÃ¡rios da empresa, usuÃ¡rios TC, lideranÃ§a e suporte tÃ©cnico.
+                Gerencie usuários por contexto: usuários da empresa, usuários TC, liderança e suporte técnico.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visÃ­veis
+                <FiUsers className="h-4 w-4" /> {totalUsersCount} contas visíveis
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiUsers className="h-4 w-4" /> {companyUsersCount} UsuÃ¡rio da empresa
+                <FiUsers className="h-4 w-4" /> {companyUsersCount} Usuário da empresa
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
                 <FiUser className="h-4 w-4" /> {testingUsersCount} Usuario TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiShield className="h-4 w-4" /> {adminUsersCount} LÃ­der TC
+                <FiShield className="h-4 w-4" /> {adminUsersCount} Líder TC
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white/92">
-                <FiTool className="h-4 w-4" /> {supportUsersCount} Suporte TÃ©cnico
+                <FiTool className="h-4 w-4" /> {supportUsersCount} Suporte Técnico
               </span>
             </div>
           </div>
@@ -1088,20 +1088,20 @@ export default function AdminUsersPage() {
             }}
           >
             <div className="border-b border-[var(--tc-border,#d7deea)] pb-5">
-              <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">GestÃ£o por contexto</h2>
+              <h2 className="text-2xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Gestão por contexto</h2>
               <div className="mt-4">
                 <TabsList className="grid w-full grid-cols-1 gap-2 rounded-[22px] bg-[var(--tc-surface-alt,#f8fafc)] p-1.5 sm:grid-cols-2 xl:grid-cols-4">
                   <TabsTrigger value="company" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    UsuÃ¡rios da empresa
+                    Usuários da empresa
                   </TabsTrigger>
                   <TabsTrigger value="testing" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    UsuÃ¡rios TC
+                    Usuários TC
                   </TabsTrigger>
                   <TabsTrigger value="admin" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    LÃ­der TC
+                    Líder TC
                   </TabsTrigger>
                   <TabsTrigger value="support" className="min-h-15 rounded-[18px] px-4 text-sm font-semibold leading-5">
-                    Suporte TÃ©cnico
+                    Suporte Técnico
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -1111,7 +1111,7 @@ export default function AdminUsersPage() {
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar por nome, usuÃ¡rio, e-mail ou empresa"
+                    placeholder="Buscar por nome, usuário, e-mail ou empresa"
                     className="w-full bg-transparent outline-none placeholder:text-[var(--tc-text-muted,#94a3b8)]"
                   />
                 </label>
@@ -1137,14 +1137,14 @@ export default function AdminUsersPage() {
             {activeTab === "company" ? (
               <div className="mt-5 rounded-[22px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] p-4">
                 <label className="block text-xs font-black uppercase tracking-[0.18em] text-[var(--tc-accent,#ef0001)]">
-                  Empresa do usuÃ¡rio
+                  Empresa do usuário
                 </label>
                 <select
                   value={companyUserCompanyFilter}
                   onChange={(event) => setCompanyUserCompanyFilter(event.target.value)}
                   className="mt-2 h-12 w-full rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-4 text-sm font-black text-[var(--tc-text-primary,#0b1a3c)] outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
                   data-testid="company-user-company-filter"
-                  aria-label="Filtrar usuÃ¡rios da empresa por empresa"
+                  aria-label="Filtrar usuários da empresa por empresa"
                 >
                   {companyUserCompanyFilterOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1153,7 +1153,7 @@ export default function AdminUsersPage() {
                   ))}
                 </select>
                 <p className="mt-2 text-xs font-semibold text-[var(--tc-text-secondary,#4b5563)]">
-                  UsuÃ¡rios da empresa precisam ficar separados pela empresa onde trabalham. Empresa institucional fica em GestÃ£o de Empresas.
+                  Usuários da empresa precisam ficar separados pela empresa onde trabalham. Empresa institucional fica em Gestão de Empresas.
                 </p>
               </div>
             ) : null}
@@ -1206,8 +1206,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                       <FiUsers className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
-                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuÃ¡rio da empresa encontrado</h3>
-                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual nÃ£o encontrou usuÃ¡rios da empresa.</p>
+                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuário da empresa encontrado</h3>
+                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual não encontrou usuários da empresa.</p>
                       </div>
                     </div>
                   ) : (
@@ -1261,14 +1261,14 @@ export default function AdminUsersPage() {
                             </section>
                             <section className="space-y-4">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-base font-bold text-[var(--tc-text-primary,#0b1a3c)]">UsuÃ¡rios da empresa</h4>
+                                <h4 className="text-base font-bold text-[var(--tc-text-primary,#0b1a3c)]">Usuários da empresa</h4>
                                 <span className="rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-3 py-1 text-xs font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
                                   {group.sections.reduce((total, section) => total + section.users.length, 0)}
                                 </span>
                               </div>
                               {group.sections.length === 0 ? (
                                 <div className="rounded-[18px] border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-4 py-6 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-                                  Nenhum usuÃ¡rio da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
+                                  Nenhum usuário da empresa {group.id === "active" ? "ativo" : "inativo"} neste recorte.
                                 </div>
                               ) : (
                                 group.sections.map((company) => (
@@ -1292,8 +1292,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                       <FiUsers className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
-                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuÃ¡rio TC</h3>
-                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">NÃ£o hÃ¡ usuÃ¡rios TC com os filtros atuais.</p>
+                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum usuário TC</h3>
+                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">Não há usuários TC com os filtros atuais.</p>
                       </div>
                     </div>
                   ) : (
@@ -1303,13 +1303,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: testingActiveUsers,
-                          emptyMessage: "Nenhum usuÃ¡rio ativo neste recorte.",
+                          emptyMessage: "Nenhum usuário ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: testingInactiveUsers,
-                          emptyMessage: "Nenhum usuÃ¡rio inativo neste recorte.",
+                          emptyMessage: "Nenhum usuário inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -1340,7 +1340,7 @@ export default function AdminUsersPage() {
                       <FiShield className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
                         <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum Lider TC encontrado</h3>
-                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual nÃ£o encontrou Lider TC com esse status.</p>
+                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual não encontrou Lider TC com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -1350,13 +1350,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: adminActiveUsers,
-                          emptyMessage: "Nenhum LÃ­der TC ativo neste recorte.",
+                          emptyMessage: "Nenhum Líder TC ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: adminInactiveUsers,
-                          emptyMessage: "Nenhum LÃ­der TC inativo neste recorte.",
+                          emptyMessage: "Nenhum Líder TC inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection
@@ -1386,8 +1386,8 @@ export default function AdminUsersPage() {
                     <div className="flex min-h-65 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-alt,#f8fafc)] px-6 text-center">
                       <FiTool className="h-8 w-8 text-[var(--tc-text-muted,#6b7280)]" />
                       <div>
-                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte tÃ©cnico encontrado</h3>
-                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual nÃ£o encontrou usuÃ¡rios tÃ©cnicos com esse status.</p>
+                        <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum suporte técnico encontrado</h3>
+                        <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">A busca atual não encontrou usuários técnicos com esse status.</p>
                       </div>
                     </div>
                   ) : (
@@ -1397,13 +1397,13 @@ export default function AdminUsersPage() {
                           id: "active",
                           title: "Ativos",
                           users: supportActiveUsers,
-                          emptyMessage: "Nenhum suporte tÃ©cnico ativo neste recorte.",
+                          emptyMessage: "Nenhum suporte técnico ativo neste recorte.",
                         },
                         {
                           id: "inactive",
                           title: "Inativos",
                           users: supportInactiveUsers,
-                          emptyMessage: "Nenhum suporte tÃ©cnico inativo neste recorte.",
+                          emptyMessage: "Nenhum suporte técnico inativo neste recorte.",
                         },
                       ].map((group) => (
                         <UserStatusSection

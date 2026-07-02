@@ -11,7 +11,7 @@ function normalizeCompanySlug(value: string | null) {
 
 export async function GET(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ message: "NÃƒÂ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const url = new URL(request.url);
   const requestedCompanySlug = normalizeCompanySlug(url.searchParams.get("companySlug") ?? url.searchParams.get("companyId"));
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         : allowedSlugs[0] ?? user.companySlug ?? null;
 
   if (!companySlug) {
-    return NextResponse.json({ message: "Empresa obrigatÃƒÂ³ria" }, { status: 400 });
+    return NextResponse.json({ message: "Empresa obrigatória" }, { status: 400 });
   }
 
   if (!hasGlobalCompanyVisibility(user) && !allowedSlugs.includes(companySlug)) {

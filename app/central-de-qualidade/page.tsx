@@ -84,7 +84,7 @@ type QualityOverview = {
 const GATE_FILTERS = [
   { value: "all", label: "Todos os gates" },
   { value: "approved", label: "Aprovado" },
-  { value: "warning", label: "AtenÃ§Ã£o" },
+  { value: "warning", label: "Atenção" },
   { value: "failed", label: "Bloqueado" },
   { value: "none", label: "Sem dados" },
 ];
@@ -100,15 +100,15 @@ function percent(value: number | null | undefined) {
 
 function scoreLabel(score: number | null) {
   if (score == null) return "Sem dados suficientes";
-  if (score >= 90) return "SaudÃ¡vel";
-  if (score >= 75) return "AtenÃ§Ã£o leve";
-  if (score >= 60) return "AtenÃ§Ã£o";
+  if (score >= 90) return "Saudável";
+  if (score >= 75) return "Atenção leve";
+  if (score >= 60) return "Atenção";
   return "Risco alto";
 }
 
 function gateLabel(status?: string | null) {
   if (status === "approved") return "Aprovado";
-  if (status === "warning") return "AtenÃ§Ã£o";
+  if (status === "warning") return "Atenção";
   if (status === "failed") return "Bloqueado";
   return "Sem dados";
 }
@@ -149,12 +149,12 @@ function buildExecutiveNote(data: QualityOverview | null, visibleCompanies?: Qua
   const warningProjects = data.projectRows?.filter((project) => project.gateStatus === "warning").length ?? 0;
   const riskText = riskyCompanies || data.releaseRiskCount || riskyProjects
     ? `Existem ${riskyCompanies} empresa(s), ${riskyProjects} projeto(s) e ${data.releaseRiskCount} release(s) em risco.`
-    : "NÃ£o hÃ¡ risco bloqueante consolidado no recorte atual.";
+    : "Não há risco bloqueante consolidado no recorte atual.";
   const warningText = warningCompanies || data.releaseWarningCount || warningProjects
-    ? `HÃ¡ ${warningCompanies} empresa(s), ${warningProjects} projeto(s) e ${data.releaseWarningCount} release(s) em atenÃ§Ã£o.`
-    : "Os alertas do recorte atual estÃ£o controlados.";
+    ? `Há ${warningCompanies} empresa(s), ${warningProjects} projeto(s) e ${data.releaseWarningCount} release(s) em atenção.`
+    : "Os alertas do recorte atual estão controlados.";
 
-  return `No perÃ­odo de ${data.period} dias, a Central de Qualidade estÃ¡ com ${scoreText}. ${riskText} ${warningText} Recomenda-se priorizar projetos com gate bloqueado, revisar falhas recorrentes e atualizar as runs sem cobertura estatÃ­stica.`;
+  return `No período de ${data.period} dias, a Central de Qualidade está com ${scoreText}. ${riskText} ${warningText} Recomenda-se priorizar projetos com gate bloqueado, revisar falhas recorrentes e atualizar as runs sem cobertura estatística.`;
 }
 
 function downloadExecutiveNote(data: QualityOverview | null, companies: QualityCompany[]) {
@@ -199,7 +199,7 @@ export default function CentralDeQualidadePage() {
         const payload = await response.json().catch(() => null);
         const root = payload?.data ?? payload;
         if (!response.ok || !root) {
-          throw new Error(payload?.message || payload?.error || "NÃ£o foi possÃ­vel carregar a Central de Qualidade.");
+          throw new Error(payload?.message || payload?.error || "Não foi possível carregar a Central de Qualidade.");
         }
         if (!cancelled) {
           const overview = root as QualityOverview;
@@ -271,9 +271,9 @@ export default function CentralDeQualidadePage() {
               <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
                 <FiShield className="h-4 w-4" /> Central de Qualidade
               </span>
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-[var(--tc-text,#0b1a3c)]">Qualidade por empresa, projeto e visÃ£o executiva</h1>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-[var(--tc-text,#0b1a3c)]">Qualidade por empresa, projeto e visão executiva</h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                Consolida runs, releases, gates, score e riscos para apoiar decisÃ£o de QA, lideranÃ§a e suporte tÃ©cnico.
+                Consolida runs, releases, gates, score e riscos para apoiar decisão de QA, liderança e suporte técnico.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -307,7 +307,7 @@ export default function CentralDeQualidadePage() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Ex.: cliente crÃ­tico, homologaÃ§Ã£o, bloqueado..."
+                  placeholder="Ex.: cliente crítico, homologação, bloqueado..."
                   className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--tc-text-muted,#6b7280)]"
                 />
               </span>
@@ -355,7 +355,7 @@ export default function CentralDeQualidadePage() {
             { label: "Score consolidado", value: percent(data?.globalPassRate), icon: FiTrendingUp, note: scoreLabel(data?.globalPassRate ?? null) },
             { label: "Runs/Releases", value: loading ? "..." : String(data?.releaseCount ?? 0), icon: FiBarChart2, note: `${totalTests} testes consolidados` },
             { label: "Projetos priorizados", value: loading ? "..." : String(priorityProjects.length), icon: FiAlertTriangle, note: `${priorityProjects.filter((project) => project.gateStatus === "failed").length} projeto(s) bloqueado(s)` },
-            { label: "Cobertura", value: loading ? "..." : percent(data?.coverage?.percent), icon: FiBriefcase, note: `${data?.coverage?.withStats ?? 0}/${data?.coverage?.total ?? 0} com estatÃ­stica` },
+            { label: "Cobertura", value: loading ? "..." : percent(data?.coverage?.percent), icon: FiBriefcase, note: `${data?.coverage?.withStats ?? 0}/${data?.coverage?.total ?? 0} com estatística` },
           ].map((card) => {
             const Icon = card.icon;
             return (
@@ -373,7 +373,7 @@ export default function CentralDeQualidadePage() {
 
         <section className="rounded-[24px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Projetos prioritÃ¡rios</h2>
+            <h2 className="text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Projetos prioritários</h2>
             <span className="rounded-full border border-[var(--tc-border,#d7deea)] px-3 py-1 text-xs font-bold text-[var(--tc-text-muted,#6b7280)]">{priorityProjects.length} projeto(s)</span>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -430,7 +430,7 @@ export default function CentralDeQualidadePage() {
                       <td className="px-4 py-3 font-bold text-[var(--tc-text,#0b1a3c)]">{company.name}</td>
                       <td className="px-4 py-3">
                         <p className="font-semibold text-[var(--tc-text,#0b1a3c)]">{releaseLabel(company)}</p>
-                        <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">{company.releases?.length ?? 0} release(s) no perÃ­odo</p>
+                        <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">{company.releases?.length ?? 0} release(s) no período</p>
                       </td>
                       <td className="px-4 py-3">{percent(company.passRate)}</td>
                       <td className="px-4 py-3">{gateLabel(company.gate?.status)}</td>
@@ -458,7 +458,7 @@ export default function CentralDeQualidadePage() {
             <p className="mt-3 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-4 py-3 text-sm leading-7 text-[var(--tc-text-secondary,#4b5563)]">{executiveNote}</p>
             <div className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
               <p className="font-bold text-[var(--tc-text,#0b1a3c)]">Quality Gates</p>
-              <p className="mt-1">Aprovado, AtenÃ§Ã£o, Bloqueado ou Sem dados. A leitura usa os gates jÃ¡ calculados no overview administrativo e respeita os filtros combinados da pÃ¡gina.</p>
+              <p className="mt-1">Aprovado, Atenção, Bloqueado ou Sem dados. A leitura usa os gates já calculados no overview administrativo e respeita os filtros combinados da página.</p>
             </div>
           </aside>
         </section>

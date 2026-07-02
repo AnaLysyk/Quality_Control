@@ -227,7 +227,7 @@ async function syncLegacyCompanyUsersInternal(): Promise<LegacySyncResult> {
 
 export async function syncLegacyCompanyUsersToLocalStore() {
   if (USE_POSTGRES) {
-    // Data already managed in Postgres â€” skip legacy JSON migration
+    // Data already managed in Postgres — skip legacy JSON migration
     return { changed: false, companiesAdded: 0, usersImported: 0, membershipsLinked: 0 };
   }
   const now = Date.now();

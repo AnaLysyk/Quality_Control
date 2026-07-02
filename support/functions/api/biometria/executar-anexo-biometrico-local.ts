@@ -21,22 +21,22 @@ function printUsage() {
   console.log("  npm run biometrics:attach -- --process-id=84 --fixture=anelar-esquerdo --mode=below");
   console.log("  npm run biometrics:attach -- --protocol=220260000084 --fixture=anelar-esquerdo --mode=above --target=520000");
   console.log("");
-  console.log("ParÃ¢metros:");
+  console.log("Parâmetros:");
   console.log("  --process-id=ID          ID do processo");
   console.log("  --protocol=PROTOCOLO     Protocolo do processo");
   console.log("  --fixture=SLUG           Fixture local de digital");
   console.log("  --finger-file=CAMINHO    Caminho absoluto da digital");
-  console.log("  --index=NUMERO           Ãndice do dedo");
+  console.log("  --index=NUMERO           Índice do dedo");
   console.log("  --format=PNG|WSQ|JPEG    Formato enviado");
   console.log("  --mode=below|above       Reduz abaixo do limite ou infla acima do alvo");
   console.log("  --target=NUMERO          Limite/alvo Base64");
   console.log("  --face-file=CAMINHO      Arquivo de face");
   console.log("  --face-fixture=SLUG      Fixture local de face");
   console.log("  --no-face=true           Envia apenas digital");
-  console.log("  --host=HOST              Host da API biomÃ©trica");
-  console.log("  --port=PORTA             Porta da API biomÃ©trica");
-  console.log("  --user=USUARIO           UsuÃ¡rio da API biomÃ©trica");
-  console.log("  --password=SENHA         Senha da API biomÃ©trica");
+  console.log("  --host=HOST              Host da API biométrica");
+  console.log("  --port=PORTA             Porta da API biométrica");
+  console.log("  --user=USUARIO           Usuário da API biométrica");
+  console.log("  --password=SENHA         Senha da API biométrica");
 }
 
 async function main() {
@@ -68,19 +68,19 @@ async function main() {
     target: args.target ? Number(args.target) : undefined,
   });
 
-  console.log("ExecuÃ§Ã£o biomÃ©trica concluÃ­da.");
+  console.log("Execução biométrica concluída.");
   console.log(`Processo: ${result.processId}`);
   console.log(`Digital: ${result.fingerprintLabel}`);
   console.log(`Modo: ${result.mode}`);
   console.log(`Base64 final: ${result.fingerprintBase64Length}`);
   console.log(`PUT status: ${result.putStatus}`);
-  console.log(`SaÃ­da: ${result.outputPath}`);
-  console.log(`Limite de referÃªncia: ${MAX_FINGERPRINT_BASE64_LENGTH} | Wallet observada: ${DEFAULT_WALLET_LIMIT}`);
+  console.log(`Saída: ${result.outputPath}`);
+  console.log(`Limite de referência: ${MAX_FINGERPRINT_BASE64_LENGTH} | Wallet observada: ${DEFAULT_WALLET_LIMIT}`);
 }
 
 main().catch((error) => {
   const message = error instanceof Error ? error.message : "erro desconhecido";
-  console.error(`Falha no fluxo biomÃ©trico: ${message}`);
+  console.error(`Falha no fluxo biométrico: ${message}`);
   process.exitCode = 1;
 });
 

@@ -30,7 +30,7 @@ registerScreen({
 });
 
 export const metadata = {
-  title: "Brain â€” CÃ©rebro do QA",
+  title: "Brain — Cérebro do QA",
 };
 
 export default function BrainPage() {

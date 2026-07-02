@@ -143,7 +143,7 @@ export function applyProjectDashboardScope(
           id: projectCode ? `qase_${projectCode.toLowerCase()}` : `project_${projectSlug}`,
           name: projectName,
           slug: projectSlug,
-          description: "OperaÃ§Ã£o de qualidade do projeto selecionado.",
+          description: "Operação de qualidade do projeto selecionado.",
           imageUrl: null,
           qaseProjectCode: projectCode,
           source: projectCode ? "qase" : "manual",
@@ -157,9 +157,9 @@ export function applyProjectDashboardScope(
 
   return {
     ...data,
-    companyName: `${data.companyName} Â· ${projectName}`,
+    companyName: `${data.companyName} · ${projectName}`,
     companyInitials: initials(projectName),
-    subtitle: `Dashboard do projeto ${projectName}. MÃ©tricas, runs, defeitos e indicadores filtrados pela operaÃ§Ã£o deste projeto dentro da empresa ${data.companyName}.`,
+    subtitle: `Dashboard do projeto ${projectName}. Métricas, runs, defeitos e indicadores filtrados pela operação deste projeto dentro da empresa ${data.companyName}.`,
     heroStats: {
       ...data.heroStats,
       total: runs.length,

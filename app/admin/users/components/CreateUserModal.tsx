@@ -56,10 +56,10 @@ type Props = {
 
 const ROLE_OPTIONS: Array<{ value: FixedProfileKind; label: string }> = [
   { value: "empresa", label: "Admin da empresa" },
-  { value: "company_user", label: "UsuÃ¡rio da empresa" },
-  { value: "testing_company_user", label: "UsuÃ¡rio TC" },
-  { value: "leader_tc", label: "LÃ­der TC" },
-  { value: "technical_support", label: "Suporte TÃ©cnico" },
+  { value: "company_user", label: "Usuário da empresa" },
+  { value: "testing_company_user", label: "Usuário TC" },
+  { value: "leader_tc", label: "Líder TC" },
+  { value: "technical_support", label: "Suporte Técnico" },
 ];
 const EMPTY_JOB_TITLE = "__empty_job_title__";
 type RoleValue = FixedProfileKind;
@@ -98,9 +98,9 @@ export function CreateUserModal({
   lockRole = false,
   showCompanyField = true,
   requireCompanySelection = false,
-  title = "Criar usuÃ¡rio",
+  title = "Criar usuário",
   subtitle = "O acesso sera confirmado por e-mail com senha temporaria.",
-  submitLabel = "Criar usuÃ¡rio",
+  submitLabel = "Criar usuário",
   allowedRoles,
 }: Props) {
   const router = useRouter();
@@ -191,7 +191,7 @@ export function CreateUserModal({
   );
 
   const avatarKind = useMemo(() => resolveAvatarLibraryKind(avatarUrl), [avatarUrl]);
-  const avatarPreviewName = name || email || login || "UsuÃ¡rio";
+  const avatarPreviewName = name || email || login || "Usuário";
 
   useEffect(() => {
     if (!open) return;
@@ -259,7 +259,7 @@ export function CreateUserModal({
   if (!open) return null;
 
   function handleUnauthorized() {
-    const msg = "SessÃ£o expirada. FaÃ§a login novamente.";
+    const msg = "Sessão expirada. Faça login novamente.";
     setError(msg);
     toast.error(msg);
     router.push("/login");
@@ -277,11 +277,11 @@ export function CreateUserModal({
         body: JSON.stringify({ seed, avoid: login ? [login] : [] }),
       });
       const payload = (await response.json().catch(() => null)) as { username?: string; error?: string } | null;
-      if (!response.ok) throw new Error(payload?.error || "NÃ£o foi possÃ­vel gerar o usuÃ¡rio.");
+      if (!response.ok) throw new Error(payload?.error || "Não foi possível gerar o usuário.");
       const generated = (payload?.username ?? "").trim().toLowerCase();
       if (generated) setLogin(generated);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "NÃ£o foi possÃ­vel gerar o usuÃ¡rio.";
+      const message = err instanceof Error ? err.message : "Não foi possível gerar o usuário.";
       toast.error(message);
     } finally {
       setGeneratingLogin(false);
@@ -306,7 +306,7 @@ export function CreateUserModal({
     setError(null);
 
     if (choice.avatarValue.startsWith("data:image/") && choice.avatarValue.length > 1800) {
-      setError("Imagem muito grande para salvar direto no cadastro. Use GIF por URL, emoji, Ã­cone ou uma imagem menor.");
+      setError("Imagem muito grande para salvar direto no cadastro. Use GIF por URL, emoji, ícone ou uma imagem menor.");
       return;
     }
 
@@ -317,7 +317,7 @@ export function CreateUserModal({
     }
 
     setAvatarUrl(choice.avatarValue);
-    setAvatarLabel(choice.avatarLabel || "Avatar do usuÃ¡rio");
+    setAvatarLabel(choice.avatarLabel || "Avatar do usuário");
   }
 
   function clearAvatarLibraryChoice() {
@@ -420,7 +420,7 @@ export function CreateUserModal({
           return;
         }
         if (!res.ok) {
-          const err = await readApiError(res, "Erro ao salvar usuÃ¡rio");
+          const err = await readApiError(res, "Erro ao salvar usuário");
           setError(err.message);
           toast.error(err.displayMessage);
           return;
@@ -440,7 +440,7 @@ export function CreateUserModal({
         await onCreated?.();
       } else {
         if (!userId) {
-          setError("UsuÃ¡rio invÃ¡lido para atualizaÃ§Ã£o");
+          setError("Usuário inválido para atualização");
           return;
         }
         if (onUpdate) {
@@ -457,19 +457,19 @@ export function CreateUserModal({
             return;
           }
           if (!res.ok) {
-            const err = await readApiError(res, "Erro ao atualizar usuÃ¡rio");
+            const err = await readApiError(res, "Erro ao atualizar usuário");
             setError(err.message);
             toast.error(err.displayMessage);
             return;
           }
         }
         await syncUserSettings(userId ?? "");
-        toast.success("UsuÃ¡rio atualizado com sucesso.");
+        toast.success("Usuário atualizado com sucesso.");
         onClose();
         await onUpdated?.();
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao salvar usuÃ¡rio";
+      const msg = err instanceof Error ? err.message : "Erro ao salvar usuário";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -483,7 +483,7 @@ export function CreateUserModal({
         <div className="flex items-start justify-between gap-4 bg-[linear-gradient(135deg,#011848_0%,#102f6e_58%,rgba(239,0,1,0.82)_160%)] px-6 py-5 text-white">
           <div className="min-w-0">
             <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/60">Acesso e identidade</p>
-            <h3 className="mt-1 text-2xl font-black tracking-tight text-white">{isViewMode ? "Visualizar usuÃ¡rio" : title}</h3>
+            <h3 className="mt-1 text-2xl font-black tracking-tight text-white">{isViewMode ? "Visualizar usuário" : title}</h3>
             <p className="mt-1 max-w-2xl text-sm font-semibold leading-6 text-white/75">{isCreateMode ? "Cadastre o perfil. O sistema gera senha temporaria e envia a confirmacao de acesso para o e-mail informado." : subtitle}</p>
           </div>
           <button type="button" className="inline-flex h-10 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-white/20" onClick={handleCloseOrCancel}>
@@ -508,9 +508,9 @@ export function CreateUserModal({
                 <div className="block text-sm sm:col-span-2" data-testid="create-user-company-fixed">
                   Empresa vinculada
                   <div className="mt-1 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-950">
-                    <p className="text-sm font-black">{selectedCompany?.name ?? "Empresa da instituiÃ§Ã£o"}</p>
+                    <p className="text-sm font-black">{selectedCompany?.name ?? "Empresa da instituição"}</p>
                     <p className="mt-1 text-xs font-semibold leading-5 text-emerald-800">
-                      Perfil Empresa cria usuÃ¡rios diretamente na prÃ³pria instituiÃ§Ã£o. A empresa fica fixa e nÃ£o pode ser alterada neste fluxo.
+                      Perfil Empresa cria usuários diretamente na própria instituição. A empresa fica fixa e não pode ser alterada neste fluxo.
                     </p>
                   </div>
                 </div>
@@ -521,7 +521,7 @@ export function CreateUserModal({
                     className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                     value={localClientId ?? ""}
                     onChange={(e) => setLocalClientId(e.target.value || null)}
-                    aria-label="Empresa vinculada ao usuÃ¡rio"
+                    aria-label="Empresa vinculada ao usuário"
                     data-testid="create-user-company"
                     disabled={isViewMode}
                   >
@@ -542,13 +542,13 @@ export function CreateUserModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 data-testid="create-user-name"
-                placeholder="Nome do usuÃ¡rio"
+                placeholder="Nome do usuário"
                 required
                 disabled={isViewMode}
               />
             </label>
             <label className="block text-sm sm:col-span-2">
-              UsuÃ¡rio (login)
+              Usuário (login)
               <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
                 <input
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
@@ -567,7 +567,7 @@ export function CreateUserModal({
                   {generatingLogin ? "Gerando..." : "Gerar login"}
                 </button>
               </div>
-              <span className="mt-1 block text-xs text-gray-500">Ãšnico no sistema. Deixe em branco para o sistema gerar automaticamente.</span>
+              <span className="mt-1 block text-xs text-gray-500">Único no sistema. Deixe em branco para o sistema gerar automaticamente.</span>
             </label>
             {isCreateMode ? (
               <label className="block text-sm">
@@ -615,10 +615,10 @@ export function CreateUserModal({
                   }}
                 >
                   <SelectTrigger className="h-10.5 rounded-lg border-gray-200 bg-white px-3 py-2 text-sm focus-visible:ring-indigo-500/30" disabled={isViewMode}>
-                    <SelectValue placeholder="Selecione uma profissÃ£o" />
+                    <SelectValue placeholder="Selecione uma profissão" />
                   </SelectTrigger>
                   <SelectContent className="max-h-80">
-                    <SelectItem value={EMPTY_JOB_TITLE}>NÃ£o informado</SelectItem>
+                    <SelectItem value={EMPTY_JOB_TITLE}>Não informado</SelectItem>
                     {JOB_TITLE_OPTIONS.map((jobTitleOption) => (
                       <SelectItem key={jobTitleOption} value={jobTitleOption}>
                         {jobTitleOption}
@@ -652,7 +652,7 @@ export function CreateUserModal({
                 className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
                 value={linkedin}
                 onChange={(e) => setLinkedin(e.target.value)}
-                placeholder="https://www.linkedin.com/in/usuÃ¡rio"
+                placeholder="https://www.linkedin.com/in/usuário"
                 disabled={isViewMode}
               />
             </label>
@@ -667,14 +667,14 @@ export function CreateUserModal({
                   frameClassName="border-4 border-white bg-slate-100 shadow-[0_16px_34px_rgba(15,23,42,0.14)] ring-1 ring-slate-200"
                   fallbackClassName="text-xl font-black tracking-[0.18em] text-slate-600"
                   buttonClassName="bg-indigo-600 text-white hover:bg-indigo-700"
-                  buttonLabel="Escolher foto, GIF ou emoji do usuÃ¡rio"
+                  buttonLabel="Escolher foto, GIF ou emoji do usuário"
                 />
 
                 <div className="min-w-0 flex-1 space-y-3">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Foto do perfil</p>
                     <p className="mt-1 text-xs leading-5 text-gray-500">
-                      Use o mesmo padrÃ£o do Meu Perfil e das SolicitaÃ§Ãµes: imagem, GIF, emoji, Ã­cone ou URL.
+                      Use o mesmo padrão do Meu Perfil e das Solicitações: imagem, GIF, emoji, ícone ou URL.
                     </p>
                   </div>
 
@@ -752,7 +752,7 @@ export function CreateUserModal({
                 onChange={(e) => setLanguage(e.target.value as Language)}
                 disabled={isViewMode}
               >
-                <option value="pt-BR">PortuguÃªs (Brasil)</option>
+                <option value="pt-BR">Português (Brasil)</option>
                 <option value="en-US">English (USA)</option>
               </select>
             </label>
@@ -784,7 +784,7 @@ export function CreateUserModal({
                 className="rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                 disabled={!canSubmit || loading}
               >
-                {loading ? (isCreateMode ? "Criando e enviando..." : "Salvando...") : (isCreateMode ? submitLabel : "Salvar mudanÃ§as")}
+                {loading ? (isCreateMode ? "Criando e enviando..." : "Salvando...") : (isCreateMode ? submitLabel : "Salvar mudanças")}
               </button>
             )}
           </div>

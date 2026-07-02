@@ -364,16 +364,16 @@ function buildRunItem(run: Pick<QualityRunRecord, "id" | "companyId" | "projectI
 }
 
 function validateResultInput(item: QualityRunItemRecord, input: UpdateRunItemResultInput): string | null {
-  if (!isRunItemStatus(input.status)) return "Status invÃ¡lido para item da run.";
+  if (!isRunItemStatus(input.status)) return "Status inválido para item da run.";
   if (input.status === "failed") {
     const hasFailureContext = Boolean(text(input.failureReason, 1000) || text(input.actualResult, 2000) || normalizeStringArray(input.evidenceIds).length || input.evidences?.length);
-    if (!hasFailureContext) return "Failed exige motivo, resultado atual ou evidÃªncia.";
+    if (!hasFailureContext) return "Failed exige motivo, resultado atual ou evidência.";
   }
   if (input.status === "blocked" && !text(input.blockedReason, 1000)) {
     return "Blocked exige motivo do bloqueio.";
   }
   if (input.status === "skipped" && item.isRequired && !text(input.skipReason, 1000)) {
-    return "Skipped em item obrigatÃ³rio exige justificativa.";
+    return "Skipped em item obrigatório exige justificativa.";
   }
   return null;
 }
@@ -406,7 +406,7 @@ export async function createQualityRun(input: CreateQualityRunInput) {
   const title = text(input.title, 300);
   const actorId = text(input.actorId, 160) || "system";
   if (!companyId || !projectId || !planId || !title) {
-    return { ok: false as const, error: "companyId, projectId, planId e title sÃ£o obrigatÃ³rios." };
+    return { ok: false as const, error: "companyId, projectId, planId e title são obrigatórios." };
   }
   if (!Array.isArray(input.cases) || input.cases.length === 0) {
     return { ok: false as const, error: "Run precisa receber ao menos um caso do snapshot do plano." };
@@ -455,11 +455,11 @@ export async function createQualityRun(input: CreateQualityRunInput) {
 export async function updateRunItemResult(input: UpdateRunItemResultInput) {
   const store = await readStore();
   const runIndex = store.runs.findIndex((run) => run.id === input.runId);
-  if (runIndex < 0) return { ok: false as const, status: 404, error: "Run nÃ£o encontrada." };
+  if (runIndex < 0) return { ok: false as const, status: 404, error: "Run não encontrada." };
 
   const run = store.runs[runIndex];
   const itemIndex = run.items.findIndex((item) => item.id === input.runItemId);
-  if (itemIndex < 0) return { ok: false as const, status: 404, error: "Item da run nÃ£o encontrado." };
+  if (itemIndex < 0) return { ok: false as const, status: 404, error: "Item da run não encontrado." };
 
   const item = run.items[itemIndex];
   const validation = validateResultInput(item, input);
@@ -533,14 +533,14 @@ export async function updateRunItemResult(input: UpdateRunItemResultInput) {
 }
 
 export async function updateQualityRunStatus(runId: string, status: TestRunStatus, actorId: string, reason?: string | null) {
-  if (!isRunStatus(status)) return { ok: false as const, status: 400, error: "Status invÃ¡lido para run." };
+  if (!isRunStatus(status)) return { ok: false as const, status: 400, error: "Status inválido para run." };
   const store = await readStore();
   const runIndex = store.runs.findIndex((run) => run.id === runId);
-  if (runIndex < 0) return { ok: false as const, status: 404, error: "Run nÃ£o encontrada." };
+  if (runIndex < 0) return { ok: false as const, status: 404, error: "Run não encontrada." };
   const run = store.runs[runIndex];
   if (status === "completed") {
     const hasOpenRequired = run.items.some((item) => item.isRequired && (item.status === "not_run" || item.status === "in_progress"));
-    if (hasOpenRequired) return { ok: false as const, status: 400, error: "Run nÃ£o pode finalizar com item obrigatÃ³rio aberto." };
+    if (hasOpenRequired) return { ok: false as const, status: 400, error: "Run não pode finalizar com item obrigatório aberto." };
   }
   const timestamp = now();
   const nextRun = refreshRun({

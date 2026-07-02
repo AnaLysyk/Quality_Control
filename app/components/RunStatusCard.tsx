@@ -20,7 +20,7 @@ export default function RunStatusCard({ label, value, percent = 0, tone = "accen
     >
       <div className="flex items-center gap-3">
         <div className={`h-10 w-10 rounded-xl flex items-center justify-center text-lg font-bold ${styles.icon}`} aria-hidden>
-          {icon ?? "Æ’?Â½"}
+          {icon ?? "Æ’?½"}
         </div>
         <div className="flex flex-col leading-tight">
           <span className={`text-xs font-semibold uppercase tracking-wide ${styles.label}`}>{label}</span>

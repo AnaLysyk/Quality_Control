@@ -1,6 +1,6 @@
 ﻿/**
  * Shared utility functions used across assistant modules.
- * Pure functions â€” no side-effects, no imports beyond types.
+ * Pure functions — no side-effects, no imports beyond types.
  */
 
 export function stripAccents(value: string) {

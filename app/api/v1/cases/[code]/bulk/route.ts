@@ -33,7 +33,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
 
   if (!effectiveAuth) {
-    return apiFail(request, "NÃ£o autorizado", { status: 401, code: "AUTH_REQUIRED", extra: { error: { message: "NÃ£o autorizado" } } });
+    return apiFail(request, "Não autorizado", { status: 401, code: "AUTH_REQUIRED", extra: { error: { message: "Não autorizado" } } });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {
     return apiFail(request, "Acesso proibido", { status: 403, code: "FORBIDDEN", extra: { error: { message: "Acesso proibido" } } });
@@ -46,10 +46,10 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const body = await request.json().catch(() => null);
   if (!body || !Array.isArray(body?.cases) || body.cases.length === 0) {
-    return apiFail(request, "Body invÃ¡lido: 'cases' deve ser array nÃ£o vazio", {
+    return apiFail(request, "Body inválido: 'cases' deve ser array não vazio", {
       status: 400,
       code: "VALIDATION_ERROR",
-      extra: { error: { message: "Body invÃ¡lido: 'cases' deve ser array nÃ£o vazio" } },
+      extra: { error: { message: "Body inválido: 'cases' deve ser array não vazio" } },
     });
   }
 

@@ -5,7 +5,7 @@ import { filterTestCasesByPermission } from "@/lib/test-cases/testCasePermission
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const records = await listTestCaseRecords();
   const visibleRecords = filterTestCasesByPermission(records, user);

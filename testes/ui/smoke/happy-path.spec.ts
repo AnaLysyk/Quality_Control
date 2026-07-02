@@ -2,7 +2,7 @@
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 
 test.describe("happy path mocks", () => {
-  test("admin ÃƒÂ© redirecionado para /admin", async ({ page, context }) => {
+  test("admin é redirecionado para /admin", async ({ page, context }) => {
     await simularAutenticacao(context, {
       role: "admin",
     });

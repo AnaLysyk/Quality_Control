@@ -22,14 +22,14 @@ export default function AdminDashboardPrintShell({ children }: { children: React
         }
       `}</style>
       <header className="hidden border-b border-slate-200 pb-4 print:mb-5 print:block">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">RelatÃ³rio executivo</p>
-        <h1 className="mt-1 text-2xl font-black text-slate-950">VisÃ£o Geral</h1>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Relatório executivo</p>
+        <h1 className="mt-1 text-2xl font-black text-slate-950">Visão Geral</h1>
       </header>
       <section className="mx-auto mt-4 w-full max-w-[1480px] rounded-2xl border border-slate-200 bg-white px-5 py-4 text-slate-900 shadow-sm print:mt-0 print:shadow-none">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Leitura executiva</p>
-        <h2 className="mt-1 text-lg font-black">O que acompanhar nesta visÃ£o geral</h2>
+        <h2 className="mt-1 text-lg font-black">O que acompanhar nesta visão geral</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Use esta visÃ£o para cruzar saÃºde global, empresas em risco, defeitos ativos, histÃ³rico recente e ranking operacional antes de decidir a prÃ³xima aÃ§Ã£o de suporte ou qualidade.
+          Use esta visão para cruzar saúde global, empresas em risco, defeitos ativos, histórico recente e ranking operacional antes de decidir a próxima ação de suporte ou qualidade.
         </p>
       </section>
       <div className="fixed bottom-6 right-6 z-50 print:hidden">

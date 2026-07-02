@@ -18,7 +18,7 @@ const BROAD_ROLES = new Set(["admin", "global_admin", "leader_tc", "lider_tc", "
 
 const SECRET_FIELD_PATTERN = /(api[_-]?key|token|secret|password|senha|cookie|authorization|client[_-]?secret|private[_-]?key)/i;
 const SENSITIVE_FIELD_PATTERN = /(cpf|cnpj|document|telefone|phone|email|birth|nascimento)/i;
-const PROMPT_INJECTION_PATTERN = /(ignore|ignorar|desconsidere|bypass|revele|mostre todos|show all|system prompt|developer message|sem permissÃ£o|without permission)/i;
+const PROMPT_INJECTION_PATTERN = /(ignore|ignorar|desconsidere|bypass|revele|mostre todos|show all|system prompt|developer message|sem permissão|without permission)/i;
 
 export const BRIAN_DOMAIN_MAP: BrianDomainDefinition[] = [
   {
@@ -38,35 +38,35 @@ export const BRIAN_DOMAIN_MAP: BrianDomainDefinition[] = [
   {
     id: "support",
     label: "Suporte",
-    description: "Chamados, comentÃ¡rios, reaberturas e relaÃ§Ã£o com defeitos.",
+    description: "Chamados, comentários, reaberturas e relação com defeitos.",
     ownsNeuronTypes: ["ticket", "comment", "attachment", "user"],
     emitsImpulseTypes: ["ticket.created", "ticket.updated", "ticket.reopened", "comment.added", "file.attached"],
   },
   {
     id: "test_repository",
-    label: "RepositÃ³rio de testes",
-    description: "Casos de teste, planos, execuÃ§Ãµes e evidÃªncias de qualidade.",
+    label: "Repositório de testes",
+    description: "Casos de teste, planos, execuções e evidências de qualidade.",
     ownsNeuronTypes: ["test_case", "test_run", "flow", "environment"],
     emitsImpulseTypes: ["test_case.created", "test_case.updated", "test_run.started", "test_run.failed"],
   },
   {
     id: "automation",
-    label: "AutomaÃ§Ã£o",
-    description: "GeraÃ§Ã£o, revisÃ£o e vÃ­nculo de automaÃ§Ãµes com casos de teste.",
+    label: "Automação",
+    description: "Geração, revisão e vínculo de automações com casos de teste.",
     ownsNeuronTypes: ["automation", "test_case", "integration"],
     emitsImpulseTypes: ["automation.generated"],
   },
   {
     id: "release",
     label: "Release",
-    description: "AprovaÃ§Ãµes, bloqueios, regressÃµes e risco de entrega.",
+    description: "Aprovações, bloqueios, regressões e risco de entrega.",
     ownsNeuronTypes: ["release", "risk", "blocker", "test_run"],
     emitsImpulseTypes: ["release.approved", "release.blocked", "test_run.failed"],
   },
   {
     id: "brian",
     label: "Brian",
-    description: "Feedback, revisÃ£o, replay, polÃ­ticas e saÃºde do cÃ©rebro contextual.",
+    description: "Feedback, revisão, replay, políticas e saúde do cérebro contextual.",
     ownsNeuronTypes: ["decision", "risk", "integration"],
     emitsImpulseTypes: ["neuron.feedback_created"],
   },
@@ -163,8 +163,8 @@ export const BRIAN_CAPABILITIES: BrianCapability[] = [
   },
   {
     id: "explain_node",
-    label: "Explicar neurÃ´nio",
-    description: "Explica por que um neurÃ´nio existe e por que estÃ¡ visÃ­vel.",
+    label: "Explicar neurônio",
+    description: "Explica por que um neurônio existe e por que está visível.",
     module: "brian",
     requiredPermissions: ["brain:read"],
     allowedRoles: ["admin", "leader_tc", "technical_support", "testing_company_user", "company_user"],
@@ -177,7 +177,7 @@ export const BRIAN_CAPABILITIES: BrianCapability[] = [
   {
     id: "create_defect",
     label: "Criar defeito",
-    description: "Cria um defeito apÃ³s validaÃ§Ã£o de empresa, mÃ³dulo e confirmaÃ§Ã£o humana.",
+    description: "Cria um defeito após validação de empresa, módulo e confirmação humana.",
     module: "defects",
     requiredPermissions: ["defects:create"],
     allowedRoles: ["admin", "leader_tc", "technical_support", "testing_company_user"],
@@ -189,8 +189,8 @@ export const BRIAN_CAPABILITIES: BrianCapability[] = [
   },
   {
     id: "generate_automation",
-    label: "Gerar automaÃ§Ã£o",
-    description: "Gera automaÃ§Ã£o a partir de caso de teste autorizado.",
+    label: "Gerar automação",
+    description: "Gera automação a partir de caso de teste autorizado.",
     module: "automation",
     requiredPermissions: ["automation:create"],
     allowedRoles: ["admin", "leader_tc", "testing_company_user"],
@@ -203,7 +203,7 @@ export const BRIAN_CAPABILITIES: BrianCapability[] = [
   {
     id: "replay_context",
     label: "Reprocessar contexto",
-    description: "Reprocessa impulsos antigos e reconstrÃ³i projeÃ§Ãµes.",
+    description: "Reprocessa impulsos antigos e reconstrói projeções.",
     module: "brian",
     requiredPermissions: ["brain:admin", "brain:replay"],
     allowedRoles: ["admin", "global_admin"],
@@ -268,20 +268,20 @@ export function getBrianEventSchema(type: string, version = 1) {
 
 export function validateBrianImpulseContract(impulse: BrianImpulseEnvelope): BrianPolicyDecision {
   if (impulse.specversion !== BRIAN_SPEC_VERSION) {
-    return { allowed: false, reason: `VersÃ£o de envelope invÃ¡lida: ${impulse.specversion}` };
+    return { allowed: false, reason: `Versão de envelope inválida: ${impulse.specversion}` };
   }
   if (!isBrianImpulseType(impulse.type)) {
-    return { allowed: false, reason: `Tipo de impulso nÃ£o registrado: ${impulse.type}` };
+    return { allowed: false, reason: `Tipo de impulso não registrado: ${impulse.type}` };
   }
   const schema = getBrianEventSchema(impulse.type, impulse.schemaVersion);
   if (!schema) {
-    return { allowed: false, reason: `Schema nÃ£o registrado para ${impulse.type}.v${impulse.schemaVersion}` };
+    return { allowed: false, reason: `Schema não registrado para ${impulse.type}.v${impulse.schemaVersion}` };
   }
   const missing = schema.requiredFields.filter((field) => impulse.data[field] == null || impulse.data[field] === "");
   if (missing.length) {
     return {
       allowed: false,
-      reason: `Payload sem campos obrigatÃ³rios: ${missing.join(", ")}`,
+      reason: `Payload sem campos obrigatórios: ${missing.join(", ")}`,
       requiredPermissions: missing,
     };
   }
@@ -294,18 +294,18 @@ export function resolveBrianCapability(id: string) {
 
 export function decideBrianCapabilityAccess(context: BrianContextCarrier, capabilityId: string): BrianPolicyDecision {
   const capability = resolveBrianCapability(capabilityId);
-  if (!capability) return { allowed: false, reason: `Capacidade nÃ£o registrada: ${capabilityId}` };
+  if (!capability) return { allowed: false, reason: `Capacidade não registrada: ${capabilityId}` };
   if (!roleAllowed(context.role, capability.allowedRoles)) {
     return {
       allowed: false,
-      reason: `Perfil ${context.role} nÃ£o pode executar ${capabilityId}.`,
+      reason: `Perfil ${context.role} não pode executar ${capabilityId}.`,
       requiredPermissions: capability.requiredPermissions,
     };
   }
   if (!hasPermission(context, capability.requiredPermissions)) {
     return {
       allowed: false,
-      reason: `PermissÃµes insuficientes para ${capabilityId}.`,
+      reason: `Permissões insuficientes para ${capabilityId}.`,
       requiredPermissions: capability.requiredPermissions,
     };
   }
@@ -323,7 +323,7 @@ export function decideBrianVisibility(context: BrianContextCarrier, scope: Brian
     return { allowed: false, reason: "Perfil fora do escopo de visibilidade.", requiredPermissions: scope.requiredPermissions };
   }
   if (!hasPermission(context, scope.requiredPermissions)) {
-    return { allowed: false, reason: "PermissÃµes insuficientes para ativar contexto.", requiredPermissions: scope.requiredPermissions };
+    return { allowed: false, reason: "Permissões insuficientes para ativar contexto.", requiredPermissions: scope.requiredPermissions };
   }
   const contextCompany = normalize(context.companyId ?? context.companySlug);
   const scopeCompany = normalize(scope.companyId ?? scope.companySlug);

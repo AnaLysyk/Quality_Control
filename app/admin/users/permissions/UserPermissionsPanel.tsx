@@ -29,7 +29,7 @@ export default function UserPermissionsPanel({ user }: { user: any }) {
     load();
   }, [user]);
 
-  if (!user) return <div className={styles.panelPlaceholder}>{isPt ? 'Selecione um usuÃ¡rio Ã  esquerda.' : 'Select a user on the left.'}</div>;
+  if (!user) return <div className={styles.panelPlaceholder}>{isPt ? 'Selecione um usuário à esquerda.' : 'Select a user on the left.'}</div>;
 
   async function handleSave() {
     setPending(true);
@@ -50,7 +50,7 @@ export default function UserPermissionsPanel({ user }: { user: any }) {
       <div className={styles.header}>
         <div>
           <div className={styles.userName}>{displayName}</div>
-          <div className={styles.userMeta}>{user.email} â€¢ {user.role}</div>
+          <div className={styles.userMeta}>{user.email} • {user.role}</div>
         </div>
         <div className={styles.buttons}>
           <button onClick={() => window.location.reload()}>{isPt ? 'Cancelar' : 'Cancel'}</button>

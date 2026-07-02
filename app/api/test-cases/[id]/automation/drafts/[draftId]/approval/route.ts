@@ -38,23 +38,23 @@ function resolveMaturity(nextState: AutomationApprovalState, currentMaturity: Te
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string; draftId: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const { id, draftId } = await params;
   const record = await getTestCaseRecord(id);
-  if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, record)) {
-    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }
 
   const draft = await getAutomationDraft(record.testCase.id, draftId);
-  if (!draft) return NextResponse.json({ message: "Draft nÃ£o encontrado" }, { status: 404 });
+  if (!draft) return NextResponse.json({ message: "Draft não encontrado" }, { status: 404 });
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const action = typeof body?.action === "string" ? (body.action as ApprovalAction) : null;
   if (!action || !["request_qa_review", "approve_publish", "approve_execution", "approve_healing", "reset"].includes(action)) {
     return NextResponse.json(
-      { message: "AÃ§Ã£o invÃ¡lida. Use request_qa_review, approve_publish, approve_execution, approve_healing ou reset." },
+      { message: "Ação inválida. Use request_qa_review, approve_publish, approve_execution, approve_healing ou reset." },
       { status: 400 },
     );
   }
@@ -63,7 +63,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const nextState = toNextState(action);
   if (!canTransition(currentState, nextState)) {
     return NextResponse.json(
-      { message: `TransiÃ§Ã£o invÃ¡lida: ${currentState} -> ${nextState}.` },
+      { message: `Transição inválida: ${currentState} -> ${nextState}.` },
       { status: 409 },
     );
   }

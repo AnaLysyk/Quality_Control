@@ -1,10 +1,10 @@
 ﻿/**
- * Teste de integraÃ§Ã£o: criaÃ§Ã£o de usuÃ¡rios de todos os perfis â€” PERSISTÃŠNCIA PERMANENTE.
+ * Teste de integração: criação de usuários de todos os perfis — PERSISTÃŠNCIA PERMANENTE.
  *
  * âš ï¸  Este teste NÃƒO remove os dados do banco ao final (sem afterAll de cleanup).
- * Objetivo: validar o backend e deixar os dados visÃ­veis no Beekeeper Studio.
+ * Objetivo: validar o backend e deixar os dados visíveis no Beekeeper Studio.
  *
- * Requer conexÃ£o com PostgreSQL (DATABASE_URL configurado).
+ * Requer conexão com PostgreSQL (DATABASE_URL configurado).
  */
 
 import { randomUUID } from "crypto";
@@ -27,15 +27,15 @@ function testEmail(label: string) {
 }
 
 afterAll(async () => {
-  // âœ… SEM CLEANUP â€” dados permanecem no banco para inspeÃ§Ã£o no Beekeeper
+  // âœ… SEM CLEANUP — dados permanecem no banco para inspeção no Beekeeper
   await prisma.$disconnect();
 });
 
-describePg("Perfis de usuÃ¡rio â€” dados persistidos permanentemente no banco", () => {
+describePg("Perfis de usuário — dados persistidos permanentemente no banco", () => {
 
-  // â”€â”€ 1. UsuÃ¡rio Regular â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  describe("Perfil: UsuÃ¡rio Regular", () => {
-    it("cria e persiste no banco (sem remoÃ§Ã£o)", async () => {
+  // â”€â”€ 1. Usuário Regular â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  describe("Perfil: Usuário Regular", () => {
+    it("cria e persiste no banco (sem remoção)", async () => {
       const email = testEmail("regular");
       const user = await pgCreateLocalUser({ name: "Regular Persist", email, password_hash: TEST_PASSWORD, role: "user", is_global_admin: false, status: "active" });
 
@@ -53,7 +53,7 @@ describePg("Perfis de usuÃ¡rio â€” dados persistidos permanentemente no b
 
   // â”€â”€ 2. IT Developer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: IT Developer", () => {
-    it("cria e persiste no banco (sem remoÃ§Ã£o)", async () => {
+    it("cria e persiste no banco (sem remoção)", async () => {
       const email = testEmail("itdev");
       const user = await pgCreateLocalUser({ name: "IT Dev Persist", email, password_hash: TEST_PASSWORD, role: "it_dev", globalRole: "global_admin", is_global_admin: true, status: "active" });
 
@@ -71,7 +71,7 @@ describePg("Perfis de usuÃ¡rio â€” dados persistidos permanentemente no b
 
   // â”€â”€ 3. Admin Global â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Admin Global", () => {
-    it("cria e persiste no banco (sem remoÃ§Ã£o)", async () => {
+    it("cria e persiste no banco (sem remoção)", async () => {
       const email = testEmail("globaladmin");
       const user = await pgCreateLocalUser({ name: "Admin Global Persist", email, password_hash: TEST_PASSWORD, role: "user", globalRole: "global_admin", is_global_admin: true, status: "active" });
 
@@ -87,7 +87,7 @@ describePg("Perfis de usuÃ¡rio â€” dados persistidos permanentemente no b
 
   // â”€â”€ 4. Viewer (vinculado a empresa) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Viewer", () => {
-    it("cria usuÃ¡rio + empresa + membership viewer, tudo persiste no banco", async () => {
+    it("cria usuário + empresa + membership viewer, tudo persiste no banco", async () => {
       const company = await pgCreateLocalCompany({ name: `Empresa Viewer Persist ${uid}`, slug: `empresa-viewer-persist-${uid}`, status: "active" });
       const email = testEmail("viewer");
       const user = await pgCreateLocalUser({ name: "Viewer Persist", email, password_hash: TEST_PASSWORD, role: "user", is_global_admin: false });
@@ -104,7 +104,7 @@ describePg("Perfis de usuÃ¡rio â€” dados persistidos permanentemente no b
 
   // â”€â”€ 5. Company Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Company Admin", () => {
-    it("cria usuÃ¡rio + empresa + membership company_admin, tudo persiste no banco", async () => {
+    it("cria usuário + empresa + membership company_admin, tudo persiste no banco", async () => {
       const company = await pgCreateLocalCompany({ name: `Empresa Admin Persist ${uid}`, slug: `empresa-admin-persist-${uid}`, status: "active" });
       const email = testEmail("compadmin");
       const user = await pgCreateLocalUser({ name: "CompAdmin Persist", email, password_hash: TEST_PASSWORD, role: "user", is_global_admin: false });
@@ -121,7 +121,7 @@ describePg("Perfis de usuÃ¡rio â€” dados persistidos permanentemente no b
 
   // â”€â”€ 6. Convidado (invited) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   describe("Perfil: Convidado (invited)", () => {
-    it("cria e persiste no banco com status=invited (sem remoÃ§Ã£o)", async () => {
+    it("cria e persiste no banco com status=invited (sem remoção)", async () => {
       const email = testEmail("invited");
       const user = await pgCreateLocalUser({ name: "Convidado Persist", email, password_hash: TEST_PASSWORD, role: "user", is_global_admin: false, status: "invited" });
 
@@ -134,9 +134,9 @@ describePg("Perfis de usuÃ¡rio â€” dados persistidos permanentemente no b
     });
   });
 
-  // â”€â”€ 7. RestriÃ§Ã£o: e-mail duplicado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  describe("RestriÃ§Ã£o: e-mail duplicado", () => {
-    it("lanÃ§a DUPLICATE_EMAIL ao tentar criar dois usuÃ¡rios com o mesmo e-mail", async () => {
+  // â”€â”€ 7. Restrição: e-mail duplicado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  describe("Restrição: e-mail duplicado", () => {
+    it("lança DUPLICATE_EMAIL ao tentar criar dois usuários com o mesmo e-mail", async () => {
       const email = testEmail("dup-check");
       await pgCreateLocalUser({ name: "Dup A", email, password_hash: TEST_PASSWORD, role: "user", is_global_admin: false });
 

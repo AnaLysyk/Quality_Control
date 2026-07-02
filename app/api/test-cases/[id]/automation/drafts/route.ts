@@ -6,13 +6,13 @@ import { createAutomationDraft, listAutomationDrafts } from "@/lib/test-cases/au
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const { id } = await params;
   const record = await getTestCaseRecord(id);
-  if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, record)) {
-    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }
 
   const drafts = await listAutomationDrafts(record.testCase.id);
@@ -21,17 +21,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const { id } = await params;
   const record = await getTestCaseRecord(id);
-  if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, record)) {
-    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body) return NextResponse.json({ message: "Payload invÃ¡lido" }, { status: 400 });
+  if (!body) return NextResponse.json({ message: "Payload inválido" }, { status: 400 });
 
   const draft = await createAutomationDraft(record.testCase.id, user.id, {
     generatedBy: body.generatedBy === "user" ? "user" : "ai",

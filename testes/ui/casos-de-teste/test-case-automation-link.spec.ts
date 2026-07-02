@@ -13,14 +13,14 @@ type Scenario = {
 
 const SCENARIOS: Scenario[] = [
   {
-    label: "Suporte TÃ©cnico",
+    label: "Suporte Técnico",
     role: "technical_support",
     permissionRole: "technical_support",
     companySlug: "testing-company",
     companySlugs: ["testing-company", "griaule"],
   },
   {
-    label: "LÃ­der TC",
+    label: "Líder TC",
     role: "leader_tc",
     permissionRole: "leader_tc",
     companySlug: "testing-company",
@@ -71,12 +71,12 @@ async function createCase(page: Page, title: string) {
   await expect(page.getByTestId("test-case-create-modal")).toBeVisible();
 
   await page.getByTestId("test-case-title-input").fill(title);
-  await page.getByTestId("test-case-description-input").fill("Caso criado para validar vÃ­nculo de automaÃ§Ã£o Playwright.");
-  await page.getByTestId("test-case-preconditions-input").fill("Caso disponÃ­vel no repositÃ³rio central.");
+  await page.getByTestId("test-case-description-input").fill("Caso criado para validar vínculo de automação Playwright.");
+  await page.getByTestId("test-case-preconditions-input").fill("Caso disponível no repositório central.");
 
   await page.getByTestId("test-case-add-step-button").click();
   await page.getByTestId("test-case-step-action-input").fill("Clicar em Automatizar no detalhe do caso.");
-  await page.getByTestId("test-case-step-expected-input").fill("Abrir contexto de automaÃ§Ã£o sem criar outro caso.");
+  await page.getByTestId("test-case-step-expected-input").fill("Abrir contexto de automação sem criar outro caso.");
 
   await page.getByTestId("test-case-save-button").click();
   await expect(page.getByTestId("test-case-list")).toContainText(title);
@@ -87,9 +87,9 @@ async function createCase(page: Page, title: string) {
   await expect(page.getByTestId("test-case-detail-title")).toContainText(title);
 }
 
-test.describe("AutomaÃ§Ã£o Playwright vinculada ao caso existente", () => {
+test.describe("Automação Playwright vinculada ao caso existente", () => {
   for (const scenario of SCENARIOS) {
-    test(`@case=TC-AUTOMATION-LINK-${scenario.role} ${scenario.label} vincula automaÃ§Ã£o sem duplicar caso`, async ({ page, context }) => {
+    test(`@case=TC-AUTOMATION-LINK-${scenario.role} ${scenario.label} vincula automação sem duplicar caso`, async ({ page, context }) => {
       const title = `Caso automacao ${uniqueSuffix(scenario.label)}`;
 
       await authenticateAs(page, context, scenario);
@@ -110,7 +110,7 @@ test.describe("AutomaÃ§Ã£o Playwright vinculada ao caso existente", () => {
       await page.getByTestId("automation-test-title-input").fill(`Fluxo Playwright ${scenario.label}`);
       await page.getByTestId("automation-save-link-button").click();
 
-      await page.getByRole("link", { name: /Voltar ao repositÃ³rio/i }).click();
+      await page.getByRole("link", { name: /Voltar ao repositório/i }).click();
       await expect(page).toHaveURL(/\/casos-de-teste/);
 
       await page.getByTestId("test-case-search").fill(title);

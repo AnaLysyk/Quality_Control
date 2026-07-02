@@ -47,7 +47,7 @@ export function RequireAccessRequestReviewer({ children, fallback }: RequireAcce
       router.replace(`/login?next=${encodeURIComponent(pathname || "/")}`);
       return;
     }
-    // usuÃ¡rio autenticado, mas sem permissÃ£o, permanece na pÃ¡gina com aviso de acesso restrito
+    // usuário autenticado, mas sem permissão, permanece na página com aviso de acesso restrito
     if (!allowed) {
       return;
     }

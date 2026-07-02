@@ -11,20 +11,20 @@ const cases: Case[] = [
   {
     name: "greeting",
     message: "oi",
-    expects: ["O que vocÃª quer resolver agora", "Tudo certo"],
-    rejects: ["###", "Defeitos", "MemÃ³rias"],
+    expects: ["O que você quer resolver agora", "Tudo certo"],
+    rejects: ["###", "Defeitos", "Memórias"],
   },
   {
     name: "thanks",
     message: "valeu",
-    expects: ["Disponha", "prÃ³ximo passo"],
-    rejects: ["###", "DiagnÃ³stico"],
+    expects: ["Disponha", "próximo passo"],
+    rejects: ["###", "Diagnóstico"],
   },
   {
     name: "help",
     message: "me ajuda",
     expects: ["Claro", "uma frase"],
-    rejects: ["###", "AnÃ¡lise"],
+    rejects: ["###", "Análise"],
   },
 ];
 

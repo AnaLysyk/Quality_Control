@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
   if (!user || !password) {
     const response = NextResponse.json(
-      { error: "Login e senha sÃ£o obrigatÃ³rios" },
+      { error: "Login e senha são obrigatórios" },
       { status: 400 }
     );
 

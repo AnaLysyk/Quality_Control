@@ -113,7 +113,7 @@ export default function AdminRunsPage() {
             : typeof r.summary === "string"
               ? r.summary
               : isOperationalContext
-                ? "OperaÃ§Ã£o manual"
+                ? "Operação manual"
                 : "Run manual";
         const app = typeof r.app === "string" ? r.app : "SMART";
         const runId = typeof r.runId === "number" ? r.runId : undefined;
@@ -201,7 +201,7 @@ export default function AdminRunsPage() {
     const cleanedTitle = stripRunPrefix(trimmedTitle);
 
     if (!cleanedTitle || !trimmedRun || Number.isNaN(runNumber) || runNumber <= 0 || !trimmedApp) {
-      const msg = "Preencha nome, runId (nÃºmero) e selecione a aplicaÃ§Ã£o.";
+      const msg = "Preencha nome, runId (número) e selecione a aplicação.";
       setFeedback(msg);
       setFeedbackType("error");
       setToast({ message: msg, type: "error" });
@@ -217,7 +217,7 @@ export default function AdminRunsPage() {
           runId: runNumber,
           app: selectedApplication?.slug || trimmedApp,
           qaseProject: selectedApplication?.qaseProjectCode || trimmedApp.toUpperCase(),
-          summary: summary.trim() || (isOperationalContext ? "OperaÃ§Ã£o cadastrada pelo painel." : "Run cadastrada pelo painel."),
+          summary: summary.trim() || (isOperationalContext ? "Operação cadastrada pelo painel." : "Run cadastrada pelo painel."),
           radis: trimmedRadis,
           clientSlug: selectedCompany || undefined,
           clientId: selectedCompany || undefined,
@@ -238,7 +238,7 @@ export default function AdminRunsPage() {
       setRunId("");
       setSummary("");
       setRadis("");
-      const okMsg = isOperationalContext ? "Tudo certinho. OperaÃ§Ã£o salva." : "Tudo certinho. Run salva.";
+      const okMsg = isOperationalContext ? "Tudo certinho. Operação salva." : "Tudo certinho. Run salva.";
       setFeedback(okMsg);
       setFeedbackType("ok");
       setToast({ message: okMsg, type: "ok" });
@@ -276,7 +276,7 @@ export default function AdminRunsPage() {
       });
     }
     setItems((prev) => prev.filter((item) => item.slug !== slug));
-    setToast({ message: isOperationalContext ? "OperaÃ§Ã£o removida." : "Run removida.", type: "ok" });
+    setToast({ message: isOperationalContext ? "Operação removida." : "Run removida.", type: "ok" });
   };
 
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.slug.localeCompare(b.slug)), [items]);
@@ -300,14 +300,14 @@ export default function AdminRunsPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.45em] text-[var(--tc-accent,#ef0001)]">
-                {isOperationalContext ? "GestÃ£o da OperaÃ§Ã£o" : "GestÃ£o de Runs"}
+                {isOperationalContext ? "Gestão da Operação" : "Gestão de Runs"}
               </p>
               <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--tc-text-primary,#0b1a3c)]">
                 {isOperationalContext ? "Central Operacional" : "Gerenciar Runs"}
               </h1>
               <p className="text-[var(--tc-text-secondary,#4b5563)] max-w-3xl">
-                Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicaÃ§Ã£o
-                para gerar a URL e permitir buscar estatÃ­sticas automaticamente.
+                Cadastre runs salvando em arquivo JSON do painel. Informe o nome, o ID da run no Qase e a aplicação
+                para gerar a URL e permitir buscar estatísticas automaticamente.
               </p>
             </div>
             <div className="flex items-center">
@@ -358,7 +358,7 @@ export default function AdminRunsPage() {
         >
           <div className="flex flex-col gap-2">
             <label className="text-sm text-[var(--tc-text-secondary,#4b5563)]">
-              {isOperationalContext ? "Nome da operaÃ§Ã£o" : "Nome da run"}
+              {isOperationalContext ? "Nome da operação" : "Nome da run"}
             </label>
             <input
               value={title}
@@ -386,14 +386,14 @@ export default function AdminRunsPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-[var(--tc-text-secondary,#4b5563)]">AplicaÃ§Ã£o</label>
+            <label className="text-sm text-[var(--tc-text-secondary,#4b5563)]">Aplicação</label>
             <select
-              aria-label="Selecionar aplicaÃ§Ã£o"
+              aria-label="Selecionar aplicação"
               value={app}
               onChange={(e) => setApp(e.target.value)}
               className="w-full rounded-lg border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-[var(--tc-text-primary,#011848)] focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
             >
-              <option value="">Selecione a aplicaÃ§Ã£o</option>
+              <option value="">Selecione a aplicação</option>
               {applications.length > 0
                 ? applications.map((application) => (
                     <option key={application.id} value={application.slug}>
@@ -460,11 +460,11 @@ export default function AdminRunsPage() {
         <div className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">
-              {isOperationalContext ? "OperaÃ§Ãµes cadastradas" : "Runs cadastradas"}
+              {isOperationalContext ? "Operações cadastradas" : "Runs cadastradas"}
             </h2>
             <div className="flex items-center gap-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
               <label className="flex items-center gap-1">
-                <span className="text-xs">por pÃ¡gina</span>
+                <span className="text-xs">por página</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
@@ -506,7 +506,7 @@ export default function AdminRunsPage() {
           <p className="text-[var(--tc-text-muted,#6b7280)]">Carregando...</p>
         ) : sortedItems.length === 0 ? (
           <p className="text-[var(--tc-text-muted,#6b7280)]">
-            {isOperationalContext ? "Nenhuma operaÃ§Ã£o salva ainda." : "Nenhuma run salva ainda."}
+            {isOperationalContext ? "Nenhuma operação salva ainda." : "Nenhuma run salva ainda."}
           </p>
         ) : (
           <div className="grid gap-4">
@@ -537,7 +537,7 @@ export default function AdminRunsPage() {
                       )}
                       {item.runId ? (
                         <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-1 text-(--page-text,#0b1a3c)">
-                          {isOperationalContext ? `OperaÃ§Ã£o ${item.runId}` : `Run ${item.runId}`}
+                          {isOperationalContext ? `Operação ${item.runId}` : `Run ${item.runId}`}
                         </span>
                       ) : (
                         <span className="rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-input-bg,#eef4ff)] px-3 py-1 text-(--page-text,#0b1a3c)">
@@ -551,7 +551,7 @@ export default function AdminRunsPage() {
                     <div className="flex flex-wrap gap-2">
                       <a
                         href={`/release/${item.slug}`}
-                        aria-label={`Abrir ${isOperationalContext ? "operaÃ§Ã£o" : "run"} ${titleClean || item.slug}`}
+                        aria-label={`Abrir ${isOperationalContext ? "operação" : "run"} ${titleClean || item.slug}`}
                         className="rounded-lg border border-[var(--tc-accent,#ef0001)]/70 px-4 py-2 text-sm font-semibold text-[var(--tc-accent,#ef0001)] transition hover:bg-[var(--tc-accent-soft,rgba(239,0,1,0.12)]) focus:outline-none focus:ring-2 focus:ring-(--tc-accent,#ef0001)/40"
                       >
                         Abrir
@@ -561,7 +561,7 @@ export default function AdminRunsPage() {
                           data-testid="run-delete"
                           type="button"
                           onClick={() => handleDelete(item.slug, item.source)}
-                          aria-label={`Deletar ${isOperationalContext ? "operaÃ§Ã£o" : "run"} ${titleClean || item.slug}`}
+                          aria-label={`Deletar ${isOperationalContext ? "operação" : "run"} ${titleClean || item.slug}`}
                           className="rounded-lg border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-300"
                         >
                           Deletar

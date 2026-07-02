@@ -91,10 +91,10 @@ type UnifiedRun = {
 
 const PROFILE_LABEL: Record<string, string> = {
   empresa: "Empresa",
-  technical_support: "Suporte TÃ©cnico",
-  leader_tc: "LÃ­der TC",
-  testing_company_user: "UsuÃ¡rio TC",
-  company_user: "UsuÃ¡rio da Empresa",
+  technical_support: "Suporte Técnico",
+  leader_tc: "Líder TC",
+  testing_company_user: "Usuário TC",
+  company_user: "Usuário da Empresa",
 };
 
 function normalizeKey(value: unknown) {
@@ -361,7 +361,7 @@ function passRateColor(rate: number | null) {
 
 function statusColor(label: string) {
   const l = label.toLowerCase();
-  if (["concluÃ­da", "completed"].some((s) => l.includes(s))) return "bg-emerald-500/20 text-emerald-800 border-emerald-500/40";
+  if (["concluída", "completed"].some((s) => l.includes(s))) return "bg-emerald-500/20 text-emerald-800 border-emerald-500/40";
   if (["andamento", "progress"].some((s) => l.includes(s))) return "bg-blue-500/20 text-blue-800 border-blue-500/40";
   if (["risco", "risk", "falha", "fail"].some((s) => l.includes(s))) return "bg-rose-500/20 text-rose-800 border-rose-500/40";
   if (["bloqueada", "blocked"].some((s) => l.includes(s))) return "bg-amber-500/20 text-amber-800 border-amber-500/40";
@@ -414,7 +414,7 @@ export default function CompanyRunsPage() {
           if (toTs > 0) timeParams += `&to_start_time=${encodeURIComponent(String(toTs))}`;
         }
 
-        // Fetch scoped sources in parallel first â€” fallbacks are lazy
+        // Fetch scoped sources in parallel first — fallbacks are lazy
         const [manualScopedResult, integratedScopedResult, applicationsResult, releasesAllResult] = await Promise.allSettled([
           fetchApi(`/api/releases-manual?clientSlug=${encodeURIComponent(currentCompanySlug)}&kind=run`)
             .then((r) => {
@@ -618,7 +618,7 @@ export default function CompanyRunsPage() {
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#ffffff] px-5 py-2 text-center text-sm font-bold text-[#011848] shadow-[0_2px_12px_rgba(0,0,0,0.18)] transition-colors hover:bg-[#f0f4ff] sm:justify-start"
         >
           <FiBookOpen className="h-4 w-4 shrink-0" />
-          Abrir documentaÃ§Ã£o do cÃ³digo
+          Abrir documentação do código
         </Link>
         <div className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-center text-sm font-semibold leading-5 text-white/92">
           <FiShield className="h-4 w-4 shrink-0" />
@@ -644,7 +644,7 @@ export default function CompanyRunsPage() {
 
   return (
     <div className="w-full space-y-4 py-4 sm:py-6" data-testid="test-run-repository">
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Header Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* â”â‚¬â”â‚¬ Header â”â‚¬â”â‚¬ */}
         <header className="rounded-[28px] border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface-2,#f8fafc)] p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
@@ -677,7 +677,7 @@ export default function CompanyRunsPage() {
           ) : null}
 
         </header>
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Runs list Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* â”â‚¬â”â‚¬ Runs list â”â‚¬â”â‚¬ */}
         <div className="rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-white p-4 shadow-sm sm:p-5" data-testid="test-run-list">
           {/* Filters */}
           <div className="flex flex-col gap-3 pb-3 md:flex-row md:items-center">
@@ -696,7 +696,7 @@ export default function CompanyRunsPage() {
             <div className="flex flex-1 flex-wrap items-center gap-2">
               <select
                 id="runs-application-filter"
-                aria-label="Filtrar por aplicaÃ§Ã£o"
+                aria-label="Filtrar por aplicação"
                 value={applicationFilter}
                 onChange={(e) => setApplicationFilter(e.target.value)}
                 className="flex-1 rounded-full border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#f9fafb)] px-4 py-2.5 text-sm font-medium text-[var(--tc-text,#0b1a3c)] outline-none transition focus:border-[var(--tc-accent,#ef0001)]"
@@ -710,7 +710,7 @@ export default function CompanyRunsPage() {
               </select>
               <input
                 id="runs-date-from"
-                aria-label="Data inÃ­cio"
+                aria-label="Data início"
                 title="De"
                 type="date"
                 value={dateFrom}
@@ -721,7 +721,7 @@ export default function CompanyRunsPage() {
               <input
                 id="runs-date-to"
                 aria-label="Data fim"
-                title="AtÃ©"
+                title="Até"
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
@@ -831,7 +831,7 @@ export default function CompanyRunsPage() {
                             </span>
                           ) : null}
                           {run.responsibleLabel ? (
-                            <span>Â· {run.responsibleLabel}</span>
+                            <span>· {run.responsibleLabel}</span>
                           ) : null}
                           <span className="flex items-center gap-1">
                             <FiCalendar className="h-3.5 w-3.5" />
@@ -874,7 +874,7 @@ export default function CompanyRunsPage() {
                               />
                             </svg>
                             <span className={`absolute text-sm font-black ${prColor.text}`}>
-                              {run.passRate !== null ? `${run.passRate}%` : "â€”"}
+                              {run.passRate !== null ? `${run.passRate}%` : "—"}
                             </span>
                           </div>
                           <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--tc-text-muted,#6b7280)]">

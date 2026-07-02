@@ -58,7 +58,7 @@ export type AuditAction =
   | "ticket.status.changed"
   | "ticket.closed"
   | "ticket.commented"
-  // Access requests / SolicitaÃ§Ãµes
+  // Access requests / Solicitações
   | "access_request.created"
   | "access_request.accepted"
   | "access_request.rejected"
@@ -251,7 +251,7 @@ export async function addAuditLog(input: {
   };
   const items = Array.isArray(store.items) ? store.items : [];
   items.unshift(entry);
-  // Persist ALL entries â€” never auto-prune. Use manual purge (purgeAuditLogs) for cleanup.
+  // Persist ALL entries — never auto-prune. Use manual purge (purgeAuditLogs) for cleanup.
   await writeStore({ items });
 }
 
@@ -334,7 +334,7 @@ export async function listAuditLogs(params?: AuditLogListParams) {
   const store = await readStore();
 
   const items = (store.items ?? []).filter((log) => {
-    // Show all entries â€” no retention filter. Manual purge only.
+    // Show all entries — no retention filter. Manual purge only.
     if (action && log.action !== action) return false;
     if (entityType && log.entity_type !== entityType) return false;
     if (actor) {

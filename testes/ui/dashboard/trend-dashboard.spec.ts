@@ -2,7 +2,7 @@
 import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular-autenticacao";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
-test("dashboard mostra tendÃƒÂªncia de MTTR", async ({ page, context }) => {
+test("dashboard mostra tendÃƒªncia de MTTR", async ({ page, context }) => {
   await simularAutenticacao(context, {
     role: "company",
     companies: ["DEMO"],
@@ -14,6 +14,6 @@ test("dashboard mostra tendÃƒÂªncia de MTTR", async ({ page, context }) => {
   });
 
   await validarDashboardAtualPronto(page);
-  await expect(page.getByText(/TendÃªncia|Risco elevado|qualidade/i).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/Tendência|Risco elevado|qualidade/i).first()).toBeVisible({ timeout: 10000 });
 });
 

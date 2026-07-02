@@ -33,12 +33,12 @@ function assertAccess(user: Awaited<ReturnType<typeof authenticateRequest>>, com
 
 export async function GET(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const url = new URL(request.url);
   const companySlug = url.searchParams.get("companySlug") ?? "";
-  if (!companySlug) return NextResponse.json({ error: "companySlug obrigatÃ³rio" }, { status: 400 });
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+  if (!companySlug) return NextResponse.json({ error: "companySlug obrigatório" }, { status: 400 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   await ensureAutomationTables();
 
@@ -57,18 +57,18 @@ export async function GET(request: Request) {
   return NextResponse.json({ scripts: rows });
 }
 
-// â”€â”€ POST /api/automations/scripts â€” upsert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ POST /api/automations/scripts — upsert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = UpsertSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
   const { companySlug, path, content, status } = parsed.data;
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   await ensureAutomationTables();
 
@@ -92,14 +92,14 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = DeleteSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
   const { companySlug, path } = parsed.data;
-  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+  if (!assertAccess(user, companySlug)) return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   await ensureAutomationTables();
 

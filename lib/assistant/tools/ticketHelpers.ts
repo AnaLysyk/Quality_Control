@@ -40,8 +40,8 @@ export function parseStructuredTicketDraft(message: string): StructuredTicketDra
     }
 
     const matchers: Array<[keyof typeof buckets, RegExp]> = [
-      ["title", /^(titulo|tÃ­tulo)\s*:\s*(.*)$/i],
-      ["description", /^(descricao|descriÃ§Ã£o)\s*:\s*(.*)$/i],
+      ["title", /^(titulo|título)\s*:\s*(.*)$/i],
+      ["description", /^(descricao|descrição)\s*:\s*(.*)$/i],
       ["impact", /^(impacto)\s*:\s*(.*)$/i],
       ["expectedBehavior", /^(comportamento esperado|resultado esperado)\s*:\s*(.*)$/i],
       ["currentBehavior", /^(comportamento atual|resultado atual)\s*:\s*(.*)$/i],
@@ -85,7 +85,7 @@ export function parseStructuredTicketDraft(message: string): StructuredTicketDra
   const parsedPriority: TicketPriority | null =
     (priorityRaw.includes("urgente") || priorityRaw.includes("alta") || priorityRaw.includes("high")) ? "high"
     : (priorityRaw.includes("baixa") || priorityRaw.includes("low")) ? "low"
-    : (priorityRaw.includes("media") || priorityRaw.includes("mÃ©dia") || priorityRaw.includes("medium")) ? "medium"
+    : (priorityRaw.includes("media") || priorityRaw.includes("média") || priorityRaw.includes("medium")) ? "medium"
     : null;
 
   if (!hasNamedFields && !title && !description && !impact && !expectedBehavior && !currentBehavior && !parsedType && !parsedPriority) {
@@ -107,7 +107,7 @@ export function inferTicketType(message: string, context: AssistantScreenContext
 
 export function inferTicketPriority(message: string): TicketPriority {
   const n = normalizeSearch(message);
-  if (n.includes("urgente") || n.includes("critico") || n.includes("crÃ­tico") || n.includes("bloqueia") || n.includes("nao abre") || n.includes("nÃ£o abre")) return "high";
+  if (n.includes("urgente") || n.includes("critico") || n.includes("crítico") || n.includes("bloqueia") || n.includes("nao abre") || n.includes("não abre")) return "high";
   if (n.includes("baixa") || n.includes("simples")) return "low";
   return "medium";
 }
@@ -131,7 +131,7 @@ export function buildTicketDescription(message: string, context: AssistantScreen
     `Tela atual: ${context.screenLabel}`,
     `Rota: ${context.route}`,
     "",
-    "DescriÃ§Ã£o:",
+    "Descrição:",
     message.trim(),
   ].join("\n")).slice(0, 1900);
 }
@@ -143,8 +143,8 @@ export function buildStructuredTicketDescription(draft: StructuredTicketDraft, c
     `Tela atual: ${context.screenLabel}`,
     `Rota: ${context.route}`,
     "",
-    "DescriÃ§Ã£o:",
-    draft.description || "NÃ£o informado.",
+    "Descrição:",
+    draft.description || "Não informado.",
     draft.impact ? `\nImpacto:\n${draft.impact}` : "",
     draft.currentBehavior ? `\nComportamento atual:\n${draft.currentBehavior}` : "",
     draft.expectedBehavior ? `\nComportamento esperado:\n${draft.expectedBehavior}` : "",
@@ -160,8 +160,8 @@ export function buildStructuredTicketTemplate() {
 export function extractNarrativePayload(message: string) {
   const directPayloadPatterns = [
     /(?:converter|transformar)\s+(?:esta|essa|a)?\s*nota\s+(.+?)\s+em\s+(?:chamado|ticket)\b/i,
-    /(?:criar|montar|abrir)\s+(?:um\s+)?(?:chamado|ticket)\s+com\s+base\s+(?:neste|nesse|nesta|nessa)\s+(?:relato|texto|conteudo|conteÃºdo)\s*:\s*(.+)$/i,
-    /(?:converter|transformar)\s+(?:este|esse|esta|essa)\s+(?:texto|relato|conteudo|conteÃºdo)\s+em\s+(?:chamado|ticket)\s*:\s*(.+)$/i,
+    /(?:criar|montar|abrir)\s+(?:um\s+)?(?:chamado|ticket)\s+com\s+base\s+(?:neste|nesse|nesta|nessa)\s+(?:relato|texto|conteudo|conteúdo)\s*:\s*(.+)$/i,
+    /(?:converter|transformar)\s+(?:este|esse|esta|essa)\s+(?:texto|relato|conteudo|conteúdo)\s+em\s+(?:chamado|ticket)\s*:\s*(.+)$/i,
   ];
 
   for (const pattern of directPayloadPatterns) {
@@ -169,7 +169,7 @@ export function extractNarrativePayload(message: string) {
     if (match?.[1]) return compactMultiline(match[1]).trim();
   }
 
-  const colonMatch = message.match(/(?:nota|relato|texto|conteudo|conteÃºdo)\s*:\s*(.+)$/i);
+  const colonMatch = message.match(/(?:nota|relato|texto|conteudo|conteúdo)\s*:\s*(.+)$/i);
   if (colonMatch?.[1]) return compactMultiline(colonMatch[1]).trim();
 
   return "";

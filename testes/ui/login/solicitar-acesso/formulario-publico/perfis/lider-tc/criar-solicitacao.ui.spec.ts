@@ -6,10 +6,10 @@
  * Rodar visualmente:
  * npx playwright test testes/ui/login/solicitar-acesso/lider-tc/criar-solicitacao.ui.spec.ts --project=chromium --headed --workers=1
  *
- * Rodar sÃ³ no terminal:
+ * Rodar só no terminal:
  * npx playwright test testes/ui/login/solicitar-acesso/lider-tc/criar-solicitacao.ui.spec.ts --project=chromium --workers=1 --reporter=line
  *
- * Abrir relatÃ³rio HTML:
+ * Abrir relatório HTML:
  * npx playwright show-report
  */
 
@@ -44,7 +44,7 @@ test.describe("UI - Login - Solicitar acesso - Líder TC", () => {
       password: "SenhaVisual@123",
       phone: "+55 11 4000-0000",
       title: "Solicitação de acesso Líder TC",
-      reason: "ValidaÃ§Ã£o automatizada do fluxo pÃºblico de solicitação de acesso para Líder TC.",
+      reason: "Validação automatizada do fluxo público de solicitação de acesso para Líder TC.",
     };
 
     const response = await criarSolicitacaoPublica(page, dados);
@@ -62,12 +62,12 @@ test.describe("UI - Login - Solicitar acesso - Líder TC", () => {
     await validarEmailRecebido(email, dados);
 
     const emailPage = await abrirEmailParaConferencia(page, email, dados.profile + "-" + suffix + "-email-recebido.html");
-    await aguardarConferenciaVisual(emailPage, "E-mail recebido aberto para conferÃªncia");
+    await aguardarConferenciaVisual(emailPage, "E-mail recebido aberto para conferência");
 
     const statusUrl = extrairUrlConsulta(email);
 
     await validarConsultaPublicaPendente(page, statusUrl, dados);
-    await aguardarConferenciaVisual(page, "Consulta pública pendente aberta para conferÃªncia");
+    await aguardarConferenciaVisual(page, "Consulta pública pendente aberta para conferência");
   });
 });
 

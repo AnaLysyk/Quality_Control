@@ -196,7 +196,7 @@ function slugifyUsernamePart(value: string) {
 }
 
 function buildUniqueUsername(source: string, existingLogins: string[], currentValue?: string | null) {
-  const base = slugifyUsernamePart(source) || "usuÃ¡rio";
+  const base = slugifyUsernamePart(source) || "usuário";
   const current = (currentValue ?? "").trim().toLowerCase();
   const taken = new Set(
     existingLogins.map((item) => item.trim().toLowerCase()).filter((item) => item && item !== current),
@@ -253,7 +253,7 @@ function formatDateTime(value: string) {
   return new Date(value).toLocaleString("pt-BR");
 }
 
-function textOrFallback(value: string | null | undefined, fallback = "NÃ£o informado") {
+function textOrFallback(value: string | null | undefined, fallback = "Não informado") {
   return value && value.trim() ? value : fallback;
 }
 
@@ -271,9 +271,9 @@ function getPersonDisplayName(item: Pick<AccessRequestItem, "fullName" | "name" 
 }
 
 function getRequestPersonaSubtitle(item: Pick<AccessRequestItem, "accessType" | "company" | "jobRole">) {
-  return [item.accessType, item.company || "Sem empresa", item.jobRole || "Cargo nÃ£o informado"]
+  return [item.accessType, item.company || "Sem empresa", item.jobRole || "Cargo não informado"]
     .filter(Boolean)
-    .join(" Â· ");
+    .join(" · ");
 }
 
 function getStatusTone(status: string) {
@@ -283,7 +283,7 @@ function getStatusTone(status: string) {
   return "bg-sky-50 text-sky-700 border-sky-200";
 }
 
-function normalizeComparisonText(value: unknown, fallback = "NÃ£o informado") {
+function normalizeComparisonText(value: unknown, fallback = "Não informado") {
   const text = String(value ?? "").trim();
   return text || fallback;
 }
@@ -311,7 +311,7 @@ function buildAccessRequestComparisonRows(input: {
     },
     {
       field: "username",
-      label: "UsuÃ¡rio",
+      label: "Usuário",
       original: original?.username || selected.username || "",
       current: draft.username ?? selected.username ?? "",
     },
@@ -341,19 +341,19 @@ function buildAccessRequestComparisonRows(input: {
     },
     {
       field: "title",
-      label: "TÃ­tulo",
+      label: "Título",
       original: original?.title || selected.title,
       current: draft.title ?? selected.title,
     },
     {
       field: "description",
-      label: "DescriÃ§Ã£o",
+      label: "Descrição",
       original: original?.description || selected.description,
       current: draft.description ?? selected.description,
     },
     {
       field: "notes",
-      label: "ObservaÃ§Ãµes",
+      label: "Observações",
       original: original?.notes || selected.notes,
       current: draft.notes ?? selected.notes,
     },
@@ -390,13 +390,13 @@ function adjustmentFieldLabel(field: AccessRequestAdjustmentEntry["field"], fall
   if (field === "companyNotes") return "Observacoes da empresa";
   if (field === "fullName") return "Nome completo";
   if (field === "name") return "Nome";
-  if (field === "username") return "UsuÃ¡rio";
+  if (field === "username") return "Usuário";
   if (field === "email") return "E-mail";
   if (field === "phone") return "Telefone";
   if (field === "jobRole") return "Cargo";
-  if (field === "title") return "TÃ­tulo";
-  if (field === "description") return "DescriÃ§Ã£o";
-  if (field === "notes") return "ObservaÃ§Ãµes";
+  if (field === "title") return "Título";
+  if (field === "description") return "Descrição";
+  if (field === "notes") return "Observações";
   if (field === "password") return "Senha";
   return fallback || "Campo";
 }
@@ -415,7 +415,7 @@ const sectionCard =
 const sectionMuted =
   "rounded-3xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]";
 
-const PROFILE_EMOJI_OPTIONS = ["ðŸ‘¤", "ðŸ§‘â€ðŸ’»", "ðŸ§ª", "ðŸ›¡ï¸", "ðŸ¢", "ðŸ“Š", "ðŸš€", "â­"] as const;
+const PROFILE_EMOJI_OPTIONS = ["\u{1F464}", "\u{1F9D1}\u200D\u{1F4BB}", "\u{1F9EA}", "\u{1F6E1}\uFE0F", "\u{1F3E2}", "\u{1F4CA}", "\u{1F680}", "\u2B50"] as const;
 const ADJUSTABLE_PROFILE_FIELDS = new Set<AccessRequestAdjustmentField>([
   "profileType",
   "company",
@@ -451,10 +451,10 @@ function resolveViewerProfileLabel(user: ReturnType<typeof useAuthUser>["user"])
     normalizeRequestProfileType(role) ??
     normalizeRequestProfileType(companyRole);
 
-  if (normalizedRole === "technical_support") return "Suporte tÃ©cnico";
+  if (normalizedRole === "technical_support") return "Suporte técnico";
   if (normalizedRole === "leader_tc") return "Lider TC";
   if (normalizedRole === "empresa") return "Empresa";
-  if (normalizedRole === "company_user") return "UsuÃ¡rio da empresa";
+  if (normalizedRole === "company_user") return "Usuário da empresa";
   return "Painel institucional";
 }
 
@@ -618,7 +618,7 @@ function mapAccessRequestItem(r: RawSupportRequest): AccessRequestItem {
     username: typeof parsedMsg.username === "string" ? parsedMsg.username : null,
     phone: String(parsedMsg.phone ?? ""),
     jobRole: String(parsedMsg.jobRole ?? ""),
-    accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "UsuÃ¡rio Testing Company",
+    accessType: (parsedMsg.accessType as AccessTypeLabel) ?? "Usuário Testing Company",
     clientId: parsedMsg.clientId ?? null,
     company: String(parsedMsg.company ?? ""),
     companyProfile: parsedMsg.companyProfile ?? null,
@@ -696,7 +696,7 @@ async function loadAccessRequestsData() {
 
   const reqRaw = await readJsonBody(reqRes);
   if (!reqRes.ok) {
-    throw new Error(getResponseErrorMessage(reqRaw, reqRes, "Falha ao carregar solicitaÃ§Ãµes"));
+    throw new Error(getResponseErrorMessage(reqRaw, reqRes, "Falha ao carregar solicitações"));
   }
 
   const clientsRaw = await readJsonBody(clientsRes);
@@ -766,7 +766,7 @@ function AccessRequestsPage() {
   const draftIsPasswordReset = draft?.requestKind === "password_reset";
   const selectedIsPasswordReset = selected?.requestKind === "password_reset";
   const draftProfileType =
-    normalizeRequestProfileType((draft?.accessType ?? "UsuÃ¡rio Testing Company") as string) ?? "company_user";
+    normalizeRequestProfileType((draft?.accessType ?? "Usuário Testing Company") as string) ?? "company_user";
   const requiresCompany = requestProfileTypeNeedsCompany(draftProfileType);
   const commentsLocked = selected?.status === "closed" || selected?.status === "rejected";
   const missingRequiredFields = hasMissingRequiredFields(draft, draftIsPasswordReset);
@@ -836,13 +836,13 @@ function AccessRequestsPage() {
         const res = await fetchWithToken(`/api/admin/access-requests/${id}/comments`);
         const json = (await res.json().catch(() => ({}))) as { items?: AccessRequestComment[]; error?: string };
         if (!res.ok) {
-          setCommentError(json?.error || "Falha ao carregar comentÃ¡rios");
+          setCommentError(json?.error || "Falha ao carregar comentários");
           setComments([]);
           return;
         }
         setComments(Array.isArray(json.items) ? json.items : []);
       } catch (err) {
-        setCommentError(err instanceof Error ? err.message : "Erro ao carregar comentÃ¡rios");
+        setCommentError(err instanceof Error ? err.message : "Erro ao carregar comentários");
         setComments([]);
       } finally {
         setCommentLoading(false);
@@ -861,7 +861,7 @@ function AccessRequestsPage() {
     const json = await readJsonBody(res);
 
     if (!res.ok || getEnvelopeRecord(json)?.ok === false) {
-      const message = getResponseErrorMessage(json, res, "Falha ao remover solicitaÃ§Ã£o");
+      const message = getResponseErrorMessage(json, res, "Falha ao remover solicitação");
       setError(message);
       throw new Error(message);
     }
@@ -871,7 +871,7 @@ function AccessRequestsPage() {
       setSelectedId((previous) => getNextSelectedAccessRequestId(previous === id ? null : previous, next));
       return next;
     });
-    setSuccessMessage("SolicitaÃ§Ã£o removida e registrada nos logs do sistema.");
+    setSuccessMessage("Solicitação removida e registrada nos logs do sistema.");
   }, []);
 
   useEffect(() => {
@@ -897,7 +897,7 @@ function AccessRequestsPage() {
     }
   }, [existingLogins, selected]);
 
-  // Reset the touched flag when the user picks a different row sÃ³
+  // Reset the touched flag when the user picks a different row só
   // the draft initializes fresh for the new selection.
   useEffect(() => {
     draftTouchedRef.current = false;
@@ -926,7 +926,7 @@ function AccessRequestsPage() {
   async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
-      setSuccessMessage("ConteÃºdo copiado.");
+      setSuccessMessage("Conteúdo copiado.");
     } catch {
       // ignore
     }
@@ -966,12 +966,12 @@ function AccessRequestsPage() {
 
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (!res.ok) {
-        setError((json.error as string) || (json.message as string) || "Falha ao salvar anÃ¡lise");
+        setError((json.error as string) || (json.message as string) || "Falha ao salvar análise");
         return;
       }
 
       draftTouchedRef.current = false;
-      setSuccessMessage("AnÃ¡lise salva com sucesso.");
+      setSuccessMessage("Análise salva com sucesso.");
       await load();
       await loadComments(selected.id);
     } finally {
@@ -1115,7 +1115,7 @@ function AccessRequestsPage() {
       setAdjustmentFieldsDraft([]);
       setAdjustmentFieldComments({});
       draftTouchedRef.current = false;
-      setSuccessMessage("SolicitaÃ§Ã£o enviada para ajuste.");
+      setSuccessMessage("Solicitação enviada para ajuste.");
       await load();
       await loadComments(selected.id);
     } finally {
@@ -1142,7 +1142,7 @@ function AccessRequestsPage() {
           client_id: draft.clientId,
           comment: commentDraft.trim(),
           admin_notes: commentDraft.trim(),
-          access_type: toAcceptAccessType((draft.accessType ?? "UsuÃ¡rio Testing Company") as AccessTypeLabel),
+          access_type: toAcceptAccessType((draft.accessType ?? "Usuário Testing Company") as AccessTypeLabel),
         }),
       });
 
@@ -1152,10 +1152,10 @@ function AccessRequestsPage() {
         return;
       }
 
-      // Reset before reload sÃ³ the [selected] effect can set draft from fresh data.
+      // Reset before reload só the [selected] effect can set draft from fresh data.
       draftTouchedRef.current = false;
       setCommentDraft("");
-      setSuccessMessage("SolicitaÃ§Ã£o aprovada.");
+      setSuccessMessage("Solicitação aprovada.");
       await load();
       await loadComments(selected.id);
     } finally {
@@ -1169,7 +1169,7 @@ function AccessRequestsPage() {
       (item) => item.value === rejectionReasonDraft,
     );
     if (!rejectionReason && !commentDraft.trim()) {
-      setError("Informe um motivo da rejeiÃ§Ã£o ou escreva um comentÃ¡rio antes de recusar.");
+      setError("Informe um motivo da rejeição ou escreva um comentário antes de recusar.");
       return;
     }
     const rejectionText = [rejectionReason?.label, commentDraft.trim()]
@@ -1195,11 +1195,11 @@ function AccessRequestsPage() {
         return;
       }
 
-      // Reset before reload sÃ³ the [selected] effect can set draft from fresh data.
+      // Reset before reload só the [selected] effect can set draft from fresh data.
       draftTouchedRef.current = false;
       setCommentDraft("");
       setRejectionReasonDraft("");
-      setSuccessMessage("SolicitaÃ§Ã£o recusada.");
+      setSuccessMessage("Solicitação recusada.");
       await load();
       await loadComments(selected.id);
     } finally {
@@ -1229,10 +1229,10 @@ function AccessRequestsPage() {
               </div>
 
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500 dark:text-white/72">Central de aprovaÃ§Ã£o</p>
-                <h1 className="mt-1 text-2xl font-black text-slate-950 sm:text-3xl dark:text-white">SolicitaÃ§Ãµes de acesso</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500 dark:text-white/72">Central de aprovação</p>
+                <h1 className="mt-1 text-2xl font-black text-slate-950 sm:text-3xl dark:text-white">Solicitações de acesso</h1>
                 <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-white/84">
-                  Revise solicitaÃ§Ãµes, acompanhe ajustes e aprove novos perfis de usuÃ¡rio.
+                  Revise solicitações, acompanhe ajustes e aprove novos perfis de usuário.
                 </p>
               </div>
             </div>
@@ -1252,7 +1252,7 @@ function AccessRequestsPage() {
 
             <div className="rounded-[18px] border border-slate-200 bg-transparent p-3 shadow-none dark:border-white/12 dark:bg-white/10 dark:backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-white/72">Em anÃ¡lise</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-white/72">Em análise</span>
                 <FiRefreshCw className="h-4 w-4 text-slate-500 dark:text-white/72" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{statusCounters.inReview}</div>
@@ -1265,7 +1265,7 @@ function AccessRequestsPage() {
                 <FiRefreshCw className="h-4 w-4 text-slate-500 dark:text-white/72" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{statusCounters.inProgress}</div>
-              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Solicitante reenviou a solicitaÃ§Ã£o para nova anÃ¡lise.</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Solicitante reenviou a solicitação para nova análise.</p>
             </div>
 
             <div className="rounded-[18px] border border-slate-200 bg-transparent p-3 shadow-none dark:border-white/12 dark:bg-white/10 dark:backdrop-blur-sm">
@@ -1283,7 +1283,7 @@ function AccessRequestsPage() {
                 <FiSlash className="h-4 w-4 text-slate-500 dark:text-white/72" />
               </div>
               <div className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">{statusCounters.rejected}</div>
-              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Encerradas sem liberaÃ§Ã£o.</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-white/76">Encerradas sem liberação.</p>
             </div>
           </div>
         </section>
@@ -1295,7 +1295,7 @@ function AccessRequestsPage() {
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-base">!</div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-black text-rose-900">AtenÃ§Ã£o</p>
+                    <p className="font-black text-rose-900">Atenção</p>
                     <p className="mt-1 leading-6">{error}</p>
                   </div>
                   <button

@@ -3,7 +3,7 @@
   | "Chamados e suporte"
   | "Usuários e administração"
   | "Produtividade"
-  | "OperaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o"
+  | "OperaÃƒÆ’Ã‚§ÃƒÆ’Ã‚£o"
   | "Operação";
 
 export type PermissionModule = {

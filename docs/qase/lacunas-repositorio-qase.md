@@ -1,103 +1,103 @@
-# Lacunas repositÃ³rio x Qase
+# Lacunas repositório x Qase
 
 ## Resumo
 
-- Testes inventariados ainda sem execuÃ§Ã£o real nesta run: 452
-- Testes UI que nÃ£o abriram navegador nesta etapa: 213
-- Testes com dependÃªncia de e-mail/outbox: 52
-- Testes com dependÃªncia de banco/seed: 36
+- Testes inventariados ainda sem execução real nesta run: 452
+- Testes UI que não abriram navegador nesta etapa: 213
+- Testes com dependência de e-mail/outbox: 52
+- Testes com dependência de banco/seed: 36
 - Cases no Qase sem marcador `AUTO_DOC_ID` direto: 123
 - Entradas `--list`: 526
-- DefiniÃ§Ãµes Ãºnicas documentadas: 456
+- Definições únicas documentadas: 456
 
 ## Principais lacunas
 
-- O `--list` retornou entradas por project; a documentaÃ§Ã£o usa um case por definiÃ§Ã£o de cÃ³digo e registra os projects no case.
-- A maior parte da suÃ­te ainda estÃ¡ Untested na run criada porque executar 100% com navegador/banco/e-mail nesta etapa teria alto custo e risco operacional.
-- Casos antigos #52-#174 continuam vÃ¡lidos como regressÃ£o manual funcional, mas nem todos possuem `AUTO_DOC_ID`; os novos cases tÃ©cnicos fecham a rastreabilidade com `testes/`.
-- Empresa em SolicitaÃ§Ãµes teve regra oficial confirmada e implementada neste complemento: Empresa acessa somente SolicitaÃ§Ãµes e atua apenas em solicitaÃ§Ãµes vinculadas Ã  prÃ³pria empresa; solicitaÃ§Ãµes de outras empresas sÃ£o bloqueadas por lista, URL direta e API.
-- RejeiÃ§Ã£o e recusa continuam documentadas como risco quando a UI/API nÃ£o separa claramente aÃ§Ãµes distintas.
+- O `--list` retornou entradas por project; a documentação usa um case por definição de código e registra os projects no case.
+- A maior parte da suíte ainda está Untested na run criada porque executar 100% com navegador/banco/e-mail nesta etapa teria alto custo e risco operacional.
+- Casos antigos #52-#174 continuam válidos como regressão manual funcional, mas nem todos possuem `AUTO_DOC_ID`; os novos cases técnicos fecham a rastreabilidade com `testes/`.
+- Empresa em Solicitações teve regra oficial confirmada e implementada neste complemento: Empresa acessa somente Solicitações e atua apenas em solicitações vinculadas à própria empresa; solicitações de outras empresas são bloqueadas por lista, URL direta e API.
+- Rejeição e recusa continuam documentadas como risco quando a UI/API não separa claramente ações distintas.
 
-## Testes sem execuÃ§Ã£o real nesta run
+## Testes sem execução real nesta run
 
-- AUTO-B8A54D28EC0B - testes/api/defeitos/rbac-defects-api.spec.ts:6 - rbac - api defeitos manuais â€º company nÃƒÂ£o consegue deletar defeito manual via API (403)
-- AUTO-461222CE58D7 - testes/api/geral/chamados-suporte.test.ts:98 - cria chamado bÃ¡sico com tÃ­tulo e descriÃ§Ã£o
+- AUTO-B8A54D28EC0B - testes/api/defeitos/rbac-defects-api.spec.ts:6 - rbac - api defeitos manuais › company não consegue deletar defeito manual via API (403)
+- AUTO-461222CE58D7 - testes/api/geral/chamados-suporte.test.ts:98 - cria chamado básico com título e descrição
 - AUTO-85557CBE35A6 - testes/api/geral/chamados-suporte.test.ts:113 - cria chamado do tipo bug com prioridade high
 - AUTO-70D713576B24 - testes/api/geral/chamados-suporte.test.ts:123 - cria chamado do tipo melhoria com tags
 - AUTO-DC29019630E8 - testes/api/geral/chamados-suporte.test.ts:139 - cria chamado vinculado a empresa e com assignee
-- AUTO-EE37F4451C5A - testes/api/geral/chamados-suporte.test.ts:169 - retorna null ao criar chamado sem tÃ­tulo e sem descriÃ§Ã£o
-- AUTO-1D278AC0DB58 - testes/api/geral/chamados-suporte.test.ts:182 - gera cÃ³digo SP-XXXXXX automaticamente
-- AUTO-A5F197A94263 - testes/api/geral/chamados-suporte.test.ts:191 - status padrÃ£o do chamado criado Ã© backlog
-- AUTO-ED6E9E622AEE - testes/api/geral/chamados-suporte.test.ts:200 - criador edita tÃ­tulo e descriÃ§Ã£o do prÃ³prio chamado
+- AUTO-EE37F4451C5A - testes/api/geral/chamados-suporte.test.ts:169 - retorna null ao criar chamado sem título e sem descrição
+- AUTO-1D278AC0DB58 - testes/api/geral/chamados-suporte.test.ts:182 - gera código SP-XXXXXX automaticamente
+- AUTO-A5F197A94263 - testes/api/geral/chamados-suporte.test.ts:191 - status padrão do chamado criado é backlog
+- AUTO-ED6E9E622AEE - testes/api/geral/chamados-suporte.test.ts:200 - criador edita título e descrição do próprio chamado
 - AUTO-65F26FF499CD - testes/api/geral/chamados-suporte.test.ts:220 - admin edita tipo e prioridade do chamado
 - AUTO-73980E8A392E - testes/api/geral/chamados-suporte.test.ts:238 - edita as tags do chamado
 - AUTO-EC709D2C7A4C - testes/api/geral/chamados-suporte.test.ts:255 - atribui assignee ao chamado
-- AUTO-6B1441549D94 - testes/api/geral/chamados-suporte.test.ts:274 - altera status do chamado: backlog â†’ doing â†’ review â†’ done
+- AUTO-6B1441549D94 - testes/api/geral/chamados-suporte.test.ts:274 - altera status do chamado: backlog → doing → review → done
 - AUTO-EB4EF35F7EFD - testes/api/geral/chamados-suporte.test.ts:306 - retorna null ao editar chamado com id inexistente
-- AUTO-E5749F5CD733 - testes/api/geral/chamados-suporte.test.ts:317 - updateSuporteForUser nÃ£o permite editar chamado de outro usuÃ¡rio
-- AUTO-8CA9797C6248 - testes/api/geral/chamados-suporte.test.ts:335 - lista apenas os chamados do usuÃ¡rio criador
+- AUTO-E5749F5CD733 - testes/api/geral/chamados-suporte.test.ts:317 - updateSuporteForUser não permite editar chamado de outro usuário
+- AUTO-8CA9797C6248 - testes/api/geral/chamados-suporte.test.ts:335 - lista apenas os chamados do usuário criador
 - AUTO-54485726DC0D - testes/api/geral/edit-company.test.ts:52 - edita o nome da empresa e persiste no banco
-- AUTO-2132A2C5D540 - testes/api/geral/edit-company.test.ts:67 - altera status active â†’ inactive â†’ active
+- AUTO-2132A2C5D540 - testes/api/geral/edit-company.test.ts:67 - altera status active → inactive → active
 - AUTO-1994EFFD74B1 - testes/api/geral/edit-company.test.ts:82 - edita phone, address, website e cep
 - AUTO-2314B4176C11 - testes/api/geral/edit-company.test.ts:104 - edita o tax_id (CNPJ) da empresa
 - AUTO-8663E6CB0F30 - testes/api/geral/edit-company.test.ts:116 - edita short_description e notes
-- AUTO-CDF3BD88E343 - testes/api/geral/edit-company.test.ts:130 - edita campos de integraÃ§Ã£o (jira, qase_project_code)
+- AUTO-CDF3BD88E343 - testes/api/geral/edit-company.test.ts:130 - edita campos de integração (jira, qase_project_code)
 - AUTO-94AF31E92787 - testes/api/geral/edit-company.test.ts:149 - limpa campos opcionais definindo como null
 - AUTO-4C232C2E6BC5 - testes/api/geral/edit-company.test.ts:169 - retorna null ao tentar editar empresa com id inexistente
 - AUTO-96985EE82A0B - testes/api/geral/edit-company.test.ts:176 - edita linkedin_url da empresa
-- AUTO-83391A382D05 - testes/api/geral/edit-company.test.ts:188 - edita mÃºltiplos campos em uma Ãºnica operaÃ§Ã£o
+- AUTO-83391A382D05 - testes/api/geral/edit-company.test.ts:188 - edita múltiplos campos em uma única operação
 - AUTO-D1588D0C0BF8 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:92 - 1. solicitante abre pedido de acesso com e-mail e mensagem
-- AUTO-E95DE3B4E6EA - testes/api/geral/fluxo-solicitacao-acesso.test.ts:106 - 2. solicitante pode abrir mais de uma solicitaÃ§Ã£o (sem trava de duplicata)
-- AUTO-2ABCAC13F891 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:117 - 3. solicitante consulta sua solicitaÃ§Ã£o por id
-- AUTO-17824845C1D9 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:126 - 4. solicitante adiciona comentÃ¡rio explicando o motivo
-- AUTO-DE8D5907D6BF - testes/api/geral/fluxo-solicitacao-acesso.test.ts:143 - 5. solicitante responde comentÃ¡rio do admin (segunda rodada)
-- AUTO-D2483DA6659A - testes/api/geral/fluxo-solicitacao-acesso.test.ts:164 - 6. admin visualiza todas as solicitaÃ§Ãµes abertas
-- AUTO-36246F5CB244 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:172 - 7. admin lÃª a mensagem e os comentÃ¡rios do solicitante
-- AUTO-B89364110A04 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:184 - 8. admin adiciona comentÃ¡rio pedindo mais informaÃ§Ãµes
-- AUTO-BD3DF514C90B - testes/api/geral/fluxo-solicitacao-acesso.test.ts:204 - 9. admin aceita a solicitaÃ§Ã£o e vincula ao usuÃ¡rio criado
-- AUTO-A84DC4B1B088 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:224 - 10. admin rejeita outra solicitaÃ§Ã£o com justificativa no comentÃ¡rio
-- AUTO-1D71BE103913 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:250 - 11. solicitante abre â†’ admin comenta â†’ solicitante responde â†’ admin aceita
-- AUTO-A3FDA07ACEDB - testes/api/geral/fluxo-solicitacao-acesso.test.ts:297 - 12. apÃ³s aceite: status Ã© closed, user_id vinculado, histÃ³rico completo
-- AUTO-76CEC146D29E - testes/api/geral/fluxo-solicitacao-acesso.test.ts:320 - 13. solicitante abre â†’ admin pede justificativa â†’ solicitante responde â†’ admin rejeita
-- AUTO-42F7CBE146FE - testes/api/geral/fluxo-solicitacao-acesso.test.ts:365 - 14. apÃ³s recusa: comentÃ¡rios de ambos os lados gravados em ordem
-- AUTO-9FDE3E14426A - testes/api/geral/fluxo-solicitacao-acesso.test.ts:382 - 15. comentÃ¡rios de uma solicitaÃ§Ã£o nÃ£o aparecem em outra
-- AUTO-73E3B552CCDB - testes/api/geral/fluxo-solicitacao-acesso.test.ts:393 - 16. solicitaÃ§Ãµes de e-mails diferentes nÃ£o se misturam na listagem
-- AUTO-3228A55D3A00 - testes/api/geral/solicitacoes-acesso.test.ts:69 - 1. cria solicitaÃ§Ã£o com status padrÃ£o open
-- AUTO-ABE5FB18368E - testes/api/geral/solicitacoes-acesso.test.ts:83 - 2. cria solicitaÃ§Ã£o com status explÃ­cito in_progress
-- AUTO-C0327BA1DF9A - testes/api/geral/solicitacoes-acesso.test.ts:94 - 3. cria solicitaÃ§Ã£o com ip_address, user_agent e user_id
-- AUTO-3A76842F1BC0 - testes/api/geral/solicitacoes-acesso.test.ts:117 - 4. permite mÃºltiplas solicitaÃ§Ãµes para o mesmo e-mail
-- AUTO-F7124834FCD7 - testes/api/geral/solicitacoes-acesso.test.ts:132 - 5. listAccessRequests retorna as solicitaÃ§Ãµes criadas
+- AUTO-E95DE3B4E6EA - testes/api/geral/fluxo-solicitacao-acesso.test.ts:106 - 2. solicitante pode abrir mais de uma solicitação (sem trava de duplicata)
+- AUTO-2ABCAC13F891 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:117 - 3. solicitante consulta sua solicitação por id
+- AUTO-17824845C1D9 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:126 - 4. solicitante adiciona comentário explicando o motivo
+- AUTO-DE8D5907D6BF - testes/api/geral/fluxo-solicitacao-acesso.test.ts:143 - 5. solicitante responde comentário do admin (segunda rodada)
+- AUTO-D2483DA6659A - testes/api/geral/fluxo-solicitacao-acesso.test.ts:164 - 6. admin visualiza todas as solicitações abertas
+- AUTO-36246F5CB244 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:172 - 7. admin lê a mensagem e os comentários do solicitante
+- AUTO-B89364110A04 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:184 - 8. admin adiciona comentário pedindo mais informações
+- AUTO-BD3DF514C90B - testes/api/geral/fluxo-solicitacao-acesso.test.ts:204 - 9. admin aceita a solicitação e vincula ao usuário criado
+- AUTO-A84DC4B1B088 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:224 - 10. admin rejeita outra solicitação com justificativa no comentário
+- AUTO-1D71BE103913 - testes/api/geral/fluxo-solicitacao-acesso.test.ts:250 - 11. solicitante abre → admin comenta → solicitante responde → admin aceita
+- AUTO-A3FDA07ACEDB - testes/api/geral/fluxo-solicitacao-acesso.test.ts:297 - 12. após aceite: status é closed, user_id vinculado, histórico completo
+- AUTO-76CEC146D29E - testes/api/geral/fluxo-solicitacao-acesso.test.ts:320 - 13. solicitante abre → admin pede justificativa → solicitante responde → admin rejeita
+- AUTO-42F7CBE146FE - testes/api/geral/fluxo-solicitacao-acesso.test.ts:365 - 14. após recusa: comentários de ambos os lados gravados em ordem
+- AUTO-9FDE3E14426A - testes/api/geral/fluxo-solicitacao-acesso.test.ts:382 - 15. comentários de uma solicitação não aparecem em outra
+- AUTO-73E3B552CCDB - testes/api/geral/fluxo-solicitacao-acesso.test.ts:393 - 16. solicitações de e-mails diferentes não se misturam na listagem
+- AUTO-3228A55D3A00 - testes/api/geral/solicitacoes-acesso.test.ts:69 - 1. cria solicitação com status padrão open
+- AUTO-ABE5FB18368E - testes/api/geral/solicitacoes-acesso.test.ts:83 - 2. cria solicitação com status explícito in_progress
+- AUTO-C0327BA1DF9A - testes/api/geral/solicitacoes-acesso.test.ts:94 - 3. cria solicitação com ip_address, user_agent e user_id
+- AUTO-3A76842F1BC0 - testes/api/geral/solicitacoes-acesso.test.ts:117 - 4. permite múltiplas solicitações para o mesmo e-mail
+- AUTO-F7124834FCD7 - testes/api/geral/solicitacoes-acesso.test.ts:132 - 5. listAccessRequests retorna as solicitações criadas
 - AUTO-EA9A63B2CF5F - testes/api/geral/solicitacoes-acesso.test.ts:138 - 6. listAccessRequests retorna ordenado por createdAt desc
 - AUTO-2866D0AA4B95 - testes/api/geral/solicitacoes-acesso.test.ts:147 - 7. getAccessRequestById retorna registro existente
 - AUTO-9E17775B01C0 - testes/api/geral/solicitacoes-acesso.test.ts:154 - 8. getAccessRequestById retorna null para id inexistente
-- AUTO-F9D8ACF78C2D - testes/api/geral/solicitacoes-acesso.test.ts:159 - 9. campos opcionais sÃ£o preservados apÃ³s criaÃ§Ã£o
+- AUTO-F9D8ACF78C2D - testes/api/geral/solicitacoes-acesso.test.ts:159 - 9. campos opcionais são preservados após criação
 - AUTO-412239FDCA36 - testes/api/geral/solicitacoes-acesso.test.ts:181 - 10. altera status para in_progress
-- AUTO-49E013029768 - testes/api/geral/solicitacoes-acesso.test.ts:187 - 11. fecha a solicitaÃ§Ã£o (closed)
-- AUTO-226B5D8F8574 - testes/api/geral/solicitacoes-acesso.test.ts:192 - 12. rejeita solicitaÃ§Ã£o
-- AUTO-86CC495497D2 - testes/api/geral/solicitacoes-acesso.test.ts:202 - 13. atualiza o e-mail da solicitaÃ§Ã£o
-- AUTO-6499626957EE - testes/api/geral/solicitacoes-acesso.test.ts:213 - 14. atualiza a mensagem da solicitaÃ§Ã£o
-- AUTO-3F2185ECFBA2 - testes/api/geral/solicitacoes-acesso.test.ts:223 - 15. vincula user_id a uma solicitaÃ§Ã£o existente
-- AUTO-0520714E9AC7 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:133 - 1. solicitaÃ§Ã£o Ã© criada com status open
-- AUTO-B3EF53B9D1F3 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:140 - 2. mensagem contÃ©m marcador ACCESS_REQUEST_V1
+- AUTO-49E013029768 - testes/api/geral/solicitacoes-acesso.test.ts:187 - 11. fecha a solicitação (closed)
+- AUTO-226B5D8F8574 - testes/api/geral/solicitacoes-acesso.test.ts:192 - 12. rejeita solicitação
+- AUTO-86CC495497D2 - testes/api/geral/solicitacoes-acesso.test.ts:202 - 13. atualiza o e-mail da solicitação
+- AUTO-6499626957EE - testes/api/geral/solicitacoes-acesso.test.ts:213 - 14. atualiza a mensagem da solicitação
+- AUTO-3F2185ECFBA2 - testes/api/geral/solicitacoes-acesso.test.ts:223 - 15. vincula user_id a uma solicitação existente
+- AUTO-0520714E9AC7 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:133 - 1. solicitação é criada com status open
+- AUTO-B3EF53B9D1F3 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:140 - 2. mensagem contém marcador ACCESS_REQUEST_V1
 - AUTO-894E66A74962 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:146 - 3. parseAccessRequestMessage extrai campos corretamente
-- AUTO-2F554589962D - testes/api/geral/solicitar-acesso-lifecycle.test.ts:235 - 4. usuÃ¡rio Ã© criado com campos corretos
-- AUTO-F03D204846F4 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:242 - 5. membership vincula usuÃ¡rio Ã  empresa
-- AUTO-0D2DA581DFE2 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:250 - 6. solicitaÃ§Ã£o aceita tem status closed e user_id
-- AUTO-4B2AA1D62554 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:299 - 7. solicitaÃ§Ã£o rejeitada tem status rejected
-- AUTO-E727A757C5D0 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:305 - 8. solicitaÃ§Ã£o rejeitada nÃ£o possui user_id
-- AUTO-587BFEE35F2A - testes/api/geral/vinculo-empresa-visibilidade.test.ts:77 - 1. Vincular usuÃ¡rio como viewer â†’ membership retornada
-- AUTO-03822E39BDAF - testes/api/geral/vinculo-empresa-visibilidade.test.ts:95 - 2. Vincular usuÃ¡rio como company_admin â†’ role normalizado
-- AUTO-AEE2681027A9 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:111 - 3. Vincular usuÃ¡rio como it_dev â†’ role it_dev confirmado
+- AUTO-2F554589962D - testes/api/geral/solicitar-acesso-lifecycle.test.ts:235 - 4. usuário é criado com campos corretos
+- AUTO-F03D204846F4 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:242 - 5. membership vincula usuário à empresa
+- AUTO-0D2DA581DFE2 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:250 - 6. solicitação aceita tem status closed e user_id
+- AUTO-4B2AA1D62554 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:299 - 7. solicitação rejeitada tem status rejected
+- AUTO-E727A757C5D0 - testes/api/geral/solicitar-acesso-lifecycle.test.ts:305 - 8. solicitação rejeitada não possui user_id
+- AUTO-587BFEE35F2A - testes/api/geral/vinculo-empresa-visibilidade.test.ts:77 - 1. Vincular usuário como viewer → membership retornada
+- AUTO-03822E39BDAF - testes/api/geral/vinculo-empresa-visibilidade.test.ts:95 - 2. Vincular usuário como company_admin → role normalizado
+- AUTO-AEE2681027A9 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:111 - 3. Vincular usuário como it_dev → role it_dev confirmado
 - AUTO-68CDCA058CA6 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:127 - 4. resolveUserCompanies retorna empresa vinculada com dados completos
-- AUTO-BBB376121979 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:145 - 5. UsuÃ¡rio sem vÃ­nculo â†’ resolveUserCompanies vazio (visibilidade zero)
-- AUTO-C8899EA1BFA1 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:159 - 6. Desvincular usuÃ¡rio â†’ links vazios, empresa some da visibilidade
+- AUTO-BBB376121979 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:145 - 5. Usuário sem vínculo → resolveUserCompanies vazio (visibilidade zero)
+- AUTO-C8899EA1BFA1 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:159 - 6. Desvincular usuário → links vazios, empresa some da visibilidade
 - AUTO-C699F15590D9 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:182 - 7. listLocalLinksForCompany lista todos os membros da empresa
-- AUTO-AC1CA1515B3D - testes/api/geral/vinculo-empresa-visibilidade.test.ts:205 - 8. Dois usuÃ¡rios vinculados Ã  mesma empresa â†’ ambos visualizam a empresa
-- AUTO-437354815018 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:225 - 9. Atualizar role via upsert (viewer â†’ company_admin)
-- AUTO-9A1B66DF0D4E - testes/api/geral/vinculo-empresa-visibilidade.test.ts:244 - 10. VÃ­nculo com capabilities personalizadas â†’ capabilities persistidas
-- AUTO-B9DD40B521F4 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:261 - 11. UsuÃ¡rio vinculado a mÃºltiplas empresas â†’ resolveUserCompanies retorna todas
-- AUTO-5E4001B1EBE5 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:286 - 12. Remover vÃ­nculo de uma empresa mantÃ©m vÃ­nculo nas demais
-- AUTO-AF3CA98D4FF9 - testes/api/login/esqueci-senha/redefinir-senha-email.positivo.api.spec.ts:21 - RedefiniÃ§Ã£o de senha - identidade e fluxo real â€º deve enviar e-mail com identidade, validar token, redefinir e preservar o perfil
+- AUTO-AC1CA1515B3D - testes/api/geral/vinculo-empresa-visibilidade.test.ts:205 - 8. Dois usuários vinculados à mesma empresa → ambos visualizam a empresa
+- AUTO-437354815018 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:225 - 9. Atualizar role via upsert (viewer → company_admin)
+- AUTO-9A1B66DF0D4E - testes/api/geral/vinculo-empresa-visibilidade.test.ts:244 - 10. Vínculo com capabilities personalizadas → capabilities persistidas
+- AUTO-B9DD40B521F4 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:261 - 11. Usuário vinculado a múltiplas empresas → resolveUserCompanies retorna todas
+- AUTO-5E4001B1EBE5 - testes/api/geral/vinculo-empresa-visibilidade.test.ts:286 - 12. Remover vínculo de uma empresa mantém vínculo nas demais
+- AUTO-AF3CA98D4FF9 - testes/api/login/esqueci-senha/redefinir-senha-email.positivo.api.spec.ts:21 - Redefinição de senha - identidade e fluxo real › deve enviar e-mail com identidade, validar token, redefinir e preservar o perfil
 - AUTO-8AA835AFFBCE - testes/api/permissoes/gestao-permissoes.test.ts:75 - A1. releases: view permitido; escrita bloqueada
 - AUTO-2552F62FF283 - testes/api/permissoes/gestao-permissoes.test.ts:83 - A2. runs: view permitido; escrita/export bloqueados
 - AUTO-40632BE52E09 - testes/api/permissoes/gestao-permissoes.test.ts:92 - A3. defects: view permitido; escrita bloqueada
@@ -105,10 +105,10 @@
 - AUTO-FE2B78A9E47D - testes/api/permissoes/gestao-permissoes.test.ts:110 - A5. permissions: view/edit/reset/clone todos bloqueados
 - AUTO-04544588BB64 - testes/api/permissoes/gestao-permissoes.test.ts:118 - A6. audit: view/export bloqueados
 - AUTO-2D217C7299A1 - testes/api/permissoes/gestao-permissoes.test.ts:124 - A7. access_requests: view bloqueado
-- AUTO-EC6380AEDAC3 - testes/api/permissoes/gestao-permissoes.test.ts:129 - A8. tickets: aÃ§Ãµes privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)
+- AUTO-EC6380AEDAC3 - testes/api/permissoes/gestao-permissoes.test.ts:129 - A8. tickets: ações privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)
 - AUTO-4829A1E8BB9C - testes/api/permissoes/gestao-permissoes.test.ts:145 - A9. notes: edit/delete bloqueados (view/create permitidos)
 - AUTO-1BBB455A27A2 - testes/api/permissoes/gestao-permissoes.test.ts:161 - B1. users: view/create liberados; edit/delete bloqueados
-- AUTO-FC70611D5951 - testes/api/permissoes/gestao-permissoes.test.ts:169 - B1b. company_user tambÃ©m pode ver e criar usuÃ¡rios
+- AUTO-FC70611D5951 - testes/api/permissoes/gestao-permissoes.test.ts:169 - B1b. company_user também pode ver e criar usuários
 - AUTO-910885799C87 - testes/api/permissoes/gestao-permissoes.test.ts:178 - B2. permissions: view/edit/reset/clone todos bloqueados
 - AUTO-0BED9C4E8689 - testes/api/permissoes/gestao-permissoes.test.ts:186 - B3. access_requests: view/comment/approve/reject todos bloqueados
 - AUTO-BBCAD648529F - testes/api/permissoes/gestao-permissoes.test.ts:194 - B4. audit: view/export bloqueados
@@ -116,9 +116,9 @@
 - AUTO-50112FEA6F2C - testes/api/permissoes/gestao-permissoes.test.ts:208 - B6. runs: apenas view (create/edit/delete/export bloqueados)
 - AUTO-597FA53F4B76 - testes/api/permissoes/gestao-permissoes.test.ts:217 - B7. defects: apenas view (create/edit/delete bloqueados)
 - AUTO-0C4FAC702BA1 - testes/api/permissoes/gestao-permissoes.test.ts:225 - B8. applications: delete/export bloqueados (view/create/edit permitidos)
-- AUTO-3E326116C277 - testes/api/permissoes/gestao-permissoes.test.ts:234 - B9. tickets: aÃ§Ãµes privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)
+- AUTO-3E326116C277 - testes/api/permissoes/gestao-permissoes.test.ts:234 - B9. tickets: ações privilegiadas bloqueadas (edit/delete/assign/status/view_all/view_company)
 - AUTO-B08BAEB2B154 - testes/api/permissoes/gestao-permissoes.test.ts:248 - B10. notes: edit/delete bloqueados (view/create permitidos)
-- AUTO-555607338289 - testes/api/permissoes/gestao-permissoes.test.ts:264 - C1. applications: mesma visÃ£o do lider_tc
+- AUTO-555607338289 - testes/api/permissoes/gestao-permissoes.test.ts:264 - C1. applications: mesma visão do lider_tc
 - AUTO-BDE714198E99 - testes/api/permissoes/gestao-permissoes.test.ts:271 - C2. releases: view permitido
 - AUTO-E159DF2B1A33 - testes/api/permissoes/gestao-permissoes.test.ts:276 - C3. runs: view permitido
 - AUTO-3FF6C7DFBB19 - testes/api/permissoes/gestao-permissoes.test.ts:281 - C4. defects: view permitido
@@ -126,162 +126,162 @@
 - AUTO-1467A07F7358 - testes/api/permissoes/gestao-permissoes.test.ts:292 - C6. settings: view permitido (edit bloqueado)
 - AUTO-AAD51651FE33 - testes/api/permissoes/gestao-permissoes.test.ts:298 - C7. audit: view permitido (adicionado ao perfil support)
 - AUTO-2CAD05E8D2CE - testes/api/permissoes/gestao-permissoes.test.ts:304 - C8. permissions: somente view (sem edit)
-- AUTO-133D407EEE54 - testes/api/permissoes/gestao-permissoes.test.ts:310 - C9. support possui tickets/suporte com permissÃµes corretas + view_all
-- AUTO-BE29411F37A2 - testes/api/permissoes/gestao-permissoes.test.ts:324 - C10. support vÃª access_requests mas nÃ£o pode aprovar/rejeitar
+- AUTO-133D407EEE54 - testes/api/permissoes/gestao-permissoes.test.ts:310 - C9. support possui tickets/suporte com permissões corretas + view_all
+- AUTO-BE29411F37A2 - testes/api/permissoes/gestao-permissoes.test.ts:324 - C10. support vê access_requests mas não pode aprovar/rejeitar
 - AUTO-75066F18C31F - testes/api/permissoes/gestao-permissoes.test.ts:332 - C11. users: somente view (sem create/edit)
-- AUTO-FEE0AECBA154 - testes/api/permissoes/gestao-permissoes.test.ts:345 - D1. effectivePermissions com deny remove aÃ§Ã£o disponÃ­vel do leader_tc
-- AUTO-3C6A3AE2593B - testes/api/permissoes/gestao-permissoes.test.ts:354 - D2. effectivePermissions com allow adiciona aÃ§Ã£o ao 'user'
-- AUTO-141B554EAF49 - testes/api/permissoes/gestao-permissoes.test.ts:362 - D3. deny nÃ£o afeta outros mÃ³dulos
+- AUTO-FEE0AECBA154 - testes/api/permissoes/gestao-permissoes.test.ts:345 - D1. effectivePermissions com deny remove ação disponível do leader_tc
+- AUTO-3C6A3AE2593B - testes/api/permissoes/gestao-permissoes.test.ts:354 - D2. effectivePermissions com allow adiciona ação ao 'user'
+- AUTO-141B554EAF49 - testes/api/permissoes/gestao-permissoes.test.ts:362 - D3. deny não afeta outros módulos
 - AUTO-0B823295526F - testes/api/permissoes/gestao-permissoes.test.ts:373 - D4. applyPermissionOverride: deny remove, allow adiciona na mesma chamada
-- AUTO-E2BA61FCC7A2 - testes/api/permissoes/gestao-permissoes.test.ts:387 - D5. effectivePermissions mÃºltiplos deny no mesmo mÃ³dulo
-- AUTO-6FC81FCBCE8B - testes/api/permissoes/gestao-permissoes.test.ts:402 - D6. toVisibilityMap retorna false para mÃ³dulos sem view
+- AUTO-E2BA61FCC7A2 - testes/api/permissoes/gestao-permissoes.test.ts:387 - D5. effectivePermissions múltiplos deny no mesmo módulo
+- AUTO-6FC81FCBCE8B - testes/api/permissoes/gestao-permissoes.test.ts:402 - D6. toVisibilityMap retorna false para módulos sem view
 - AUTO-1DB6073C0A07 - testes/api/permissoes/gestao-permissoes.test.ts:415 - D7. getTicketViewScope retorna 'own' para perfil user
-- AUTO-0EB398B3D50D - testes/api/permissoes/gestao-permissoes.test.ts:421 - D8. getTicketViewScope retorna 'all' para Suporte TÃ©cnico
-- AUTO-35A82910B2AD - testes/api/permissoes/gestao-permissoes.test.ts:433 - E1. UsuÃ¡rio viewer legado â†’ permissionRole 'testing_company_user'
-- AUTO-E0719745AC5F - testes/api/permissoes/gestao-permissoes.test.ts:440 - E2. Membership company_admin legado â†’ permissionRole 'empresa'
-- AUTO-B9F12BE7D189 - testes/api/permissoes/gestao-permissoes.test.ts:447 - E3. Membership it_dev legado â†’ permissionRole 'technical_support'
-- AUTO-49C2F1E1E667 - testes/api/permissoes/gestao-permissoes.test.ts:454 - E4. UsuÃ¡rio global_admin legado â†’ permissionRole 'leader_tc'
-- AUTO-E0EB391EEBA7 - testes/api/permissoes/gestao-permissoes.test.ts:461 - E5. Sem links e sem role â†’ permissionRole 'testing_company_user'
-- AUTO-D11111D85225 - testes/api/permissoes/gestao-permissoes.test.ts:468 - E6. it_dev legado tem precedÃªncia sobre company_admin legado
-- AUTO-56DFD47DB9A2 - testes/api/permissoes/gestao-permissoes.test.ts:475 - E7. company_admin legado tem precedÃªncia sobre viewer legado
-- AUTO-747B084010B5 - testes/api/permissoes/gestao-permissoes.test.ts:513 - F1. UsuÃ¡rio viewer/TC â†’ roleKey='testing_company_user', operaÃ§Ã£o visÃ­vel por empresa
-- AUTO-C6FA6F748593 - testes/api/permissoes/gestao-permissoes.test.ts:534 - F2. UsuÃ¡rio company_admin â†’ roleKey='company', users liberados e permissÃµes/audit bloqueados
-- AUTO-B50D84A71CBB - testes/api/permissoes/gestao-permissoes.test.ts:554 - F3. UsuÃ¡rio it_dev â†’ roleKey='technical_support', mesma visÃ£o lider_tc + tickets view_all
-- AUTO-5FD37493E9FF - testes/api/permissoes/gestao-permissoes.test.ts:585 - F4. UsuÃ¡rio global_admin â†’ roleKey='admin', permissÃµes completas
+- AUTO-0EB398B3D50D - testes/api/permissoes/gestao-permissoes.test.ts:421 - D8. getTicketViewScope retorna 'all' para Suporte Técnico
+- AUTO-35A82910B2AD - testes/api/permissoes/gestao-permissoes.test.ts:433 - E1. Usuário viewer legado → permissionRole 'testing_company_user'
+- AUTO-E0719745AC5F - testes/api/permissoes/gestao-permissoes.test.ts:440 - E2. Membership company_admin legado → permissionRole 'empresa'
+- AUTO-B9F12BE7D189 - testes/api/permissoes/gestao-permissoes.test.ts:447 - E3. Membership it_dev legado → permissionRole 'technical_support'
+- AUTO-49C2F1E1E667 - testes/api/permissoes/gestao-permissoes.test.ts:454 - E4. Usuário global_admin legado → permissionRole 'leader_tc'
+- AUTO-E0EB391EEBA7 - testes/api/permissoes/gestao-permissoes.test.ts:461 - E5. Sem links e sem role → permissionRole 'testing_company_user'
+- AUTO-D11111D85225 - testes/api/permissoes/gestao-permissoes.test.ts:468 - E6. it_dev legado tem precedência sobre company_admin legado
+- AUTO-56DFD47DB9A2 - testes/api/permissoes/gestao-permissoes.test.ts:475 - E7. company_admin legado tem precedência sobre viewer legado
+- AUTO-747B084010B5 - testes/api/permissoes/gestao-permissoes.test.ts:513 - F1. Usuário viewer/TC → roleKey='testing_company_user', operação visível por empresa
+- AUTO-C6FA6F748593 - testes/api/permissoes/gestao-permissoes.test.ts:534 - F2. Usuário company_admin → roleKey='company', users liberados e permissões/audit bloqueados
+- AUTO-B50D84A71CBB - testes/api/permissoes/gestao-permissoes.test.ts:554 - F3. Usuário it_dev → roleKey='technical_support', mesma visão lider_tc + tickets view_all
+- AUTO-5FD37493E9FF - testes/api/permissoes/gestao-permissoes.test.ts:585 - F4. Usuário global_admin → roleKey='admin', permissões completas
 - AUTO-35FED6DD813B - testes/api/rotas/access-request-accept-route.test.ts:52 - links company_user requests to the selected company instead of creating another company
 - AUTO-2667DEE1A026 - testes/api/rotas/jira-sync.test.ts:10 - upserts applications for returned JIRA issues
-- AUTO-D02D07B15C83 - testes/api/runs/rbac-runs-api.spec.ts:5 - rbac - runs API â€º user nao consegue criar run via API
-- AUTO-BC061BC456A8 - testes/api/runs/rbac-runs-api.spec.ts:19 - rbac - runs API â€º company nao consegue deletar run via API
-- AUTO-9949BCFC671F - testes/api/solicitacoes/solicitacoes-usuario.test.ts:142 - 1. cria solicitaÃ§Ã£o EMAIL_CHANGE com status PENDING
-- AUTO-472E900CBA25 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:154 - 2. cria solicitaÃ§Ã£o COMPANY_CHANGE com companyId e companyName
-- AUTO-1B81AB209334 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:163 - 3. cria solicitaÃ§Ã£o PASSWORD_RESET
-- AUTO-238A1E522C94 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:171 - 4. cria solicitaÃ§Ã£o PROFILE_DELETION com motivo no payload
-- AUTO-0EDE9526D34E - testes/api/solicitacoes/solicitacoes-usuario.test.ts:181 - 5. bloqueia duplicata PENDING do mesmo usuÃ¡rio+tipo
-- AUTO-CE3FE497BB5F - testes/api/solicitacoes/solicitacoes-usuario.test.ts:192 - 6. listUserRequests retorna apenas solicitaÃ§Ãµes do usuÃ¡rio
+- AUTO-D02D07B15C83 - testes/api/runs/rbac-runs-api.spec.ts:5 - rbac - runs API › user nao consegue criar run via API
+- AUTO-BC061BC456A8 - testes/api/runs/rbac-runs-api.spec.ts:19 - rbac - runs API › company nao consegue deletar run via API
+- AUTO-9949BCFC671F - testes/api/solicitacoes/solicitacoes-usuario.test.ts:142 - 1. cria solicitação EMAIL_CHANGE com status PENDING
+- AUTO-472E900CBA25 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:154 - 2. cria solicitação COMPANY_CHANGE com companyId e companyName
+- AUTO-1B81AB209334 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:163 - 3. cria solicitação PASSWORD_RESET
+- AUTO-238A1E522C94 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:171 - 4. cria solicitação PROFILE_DELETION com motivo no payload
+- AUTO-0EDE9526D34E - testes/api/solicitacoes/solicitacoes-usuario.test.ts:181 - 5. bloqueia duplicata PENDING do mesmo usuário+tipo
+- AUTO-CE3FE497BB5F - testes/api/solicitacoes/solicitacoes-usuario.test.ts:192 - 6. listUserRequests retorna apenas solicitações do usuário
 - AUTO-6B5DF24145FC - testes/api/solicitacoes/solicitacoes-usuario.test.ts:198 - 7. listUserRequests filtra por status PENDING
 - AUTO-E62E277CF1EA - testes/api/solicitacoes/solicitacoes-usuario.test.ts:203 - 8. listUserRequests filtra por tipo PASSWORD_RESET
-- AUTO-9B197B4E5CED - testes/api/solicitacoes/solicitacoes-usuario.test.ts:209 - 9. listAllRequests retorna solicitaÃ§Ãµes de mÃºltiplos usuÃ¡rios
+- AUTO-9B197B4E5CED - testes/api/solicitacoes/solicitacoes-usuario.test.ts:209 - 9. listAllRequests retorna solicitações de múltiplos usuários
 - AUTO-0434868CBC70 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:217 - 10. listAllRequests filtra por status PENDING
 - AUTO-C721F0302B25 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:222 - 11. listAllRequests filtra por companyId
-- AUTO-F62CA60D814B - testes/api/solicitacoes/solicitacoes-usuario.test.ts:227 - 12. listAllRequests ordenaÃ§Ã£o createdAt_asc
-- AUTO-2A80BB14522A - testes/api/solicitacoes/solicitacoes-usuario.test.ts:236 - 13. getRequestById retorna solicitaÃ§Ã£o existente
+- AUTO-F62CA60D814B - testes/api/solicitacoes/solicitacoes-usuario.test.ts:227 - 12. listAllRequests ordenação createdAt_asc
+- AUTO-2A80BB14522A - testes/api/solicitacoes/solicitacoes-usuario.test.ts:236 - 13. getRequestById retorna solicitação existente
 - AUTO-4072E0C57461 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:245 - 14. getRequestById retorna null para id inexistente
-- AUTO-1968163DA923 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:263 - 15. aprova solicitaÃ§Ã£o PENDING
-- AUTO-27D493290CFB - testes/api/solicitacoes/solicitacoes-usuario.test.ts:269 - 16. rejeita solicitaÃ§Ã£o PENDING de userB
+- AUTO-1968163DA923 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:263 - 15. aprova solicitação PENDING
+- AUTO-27D493290CFB - testes/api/solicitacoes/solicitacoes-usuario.test.ts:269 - 16. rejeita solicitação PENDING de userB
 - AUTO-28BB5C7F6483 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:278 - 17. registra reviewedBy, reviewNote e reviewedAt
-- AUTO-DBF5644A24C7 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:287 - 18. nÃ£o altera solicitaÃ§Ã£o jÃ¡ revisada
+- AUTO-DBF5644A24C7 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:287 - 18. não altera solicitação já revisada
 - AUTO-27ED01FE2292 - testes/api/solicitacoes/solicitacoes-usuario.test.ts:293 - 19. retorna null para id inexistente
-- AUTO-A84F16CDC08A - testes/api/solicitacoes/solicitacoes-usuario.test.ts:298 - 20. dois usuÃ¡rios com o mesmo tipo nÃ£o conflitam (duplicate check Ã© por userId)
-- AUTO-F4D106FE52CE - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:25 - SolicitaÃ§Ãµes de acesso - consulta/status API â€º deve consultar solicitaÃ§Ã£o por accessKey e validar status, data e e-mail
-- AUTO-57A023801159 - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:38 - SolicitaÃ§Ãµes de acesso - consulta/status API â€º deve retornar erro para token invÃ¡lido
-- AUTO-456B9F5C7CA8 - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:42 - SolicitaÃ§Ãµes de acesso - consulta/status API â€º deve aprovar solicitaÃ§Ã£o e consultar status aprovado
-- AUTO-13047EA086BC - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:56 - SolicitaÃ§Ãµes de acesso - consulta/status API â€º deve recusar solicitaÃ§Ã£o e consultar status recusado
-- AUTO-AA2BD728AF5C - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:70 - SolicitaÃ§Ãµes de acesso - consulta/status API â€º deve solicitar ajuste e consultar status ajuste necessÃ¡rio
-- AUTO-C3D2798CF5F8 - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:85 - SolicitaÃ§Ãµes de acesso - consulta/status API â€º deve aceitar somente os campos solicitados e registrar o retorno para anÃ¡lise
-- AUTO-09F79D1A445E - testes/api/solicitar-acesso/consulta/correcao-dados-email-consulta-fluxo.api.spec.ts:217 - Solicitar acesso - correÃ§Ã£o de dados via e-mail â€º deve enviar e-mail de ajuste, abrir consulta por chave e salvar dados corrigidos
-- AUTO-11C63079277A - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovaÃ§Ã£o por perfil solicitado â€º deve enviar e-mail aprovado para Empresa
-- AUTO-BAD959B4AE92 - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovaÃ§Ã£o por perfil solicitado â€º deve enviar e-mail aprovado para LÃ­der TC
-- AUTO-F233E26FE9CE - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovaÃ§Ã£o por perfil solicitado â€º deve enviar e-mail aprovado para Suporte tÃ©cnico
-- AUTO-7565CD7ED6BE - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovaÃ§Ã£o por perfil solicitado â€º deve enviar e-mail aprovado para UsuÃ¡rio da empresa
-- AUTO-5E4FDCAF9526 - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovaÃ§Ã£o por perfil solicitado â€º deve enviar e-mail aprovado para UsuÃ¡rio TC
-- AUTO-F142835CCF9E - testes/api/solicitar-acesso/emails/galeria/emails-galeria-visual-perfis.api.spec.ts:140 - Galeria visual assistida de e-mails por perfil â€º gera HTML dos e-mails de aprovaÃ§Ã£o e rejeiÃ§Ã£o dos cinco perfis
-- AUTO-D4D708A2E257 - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeiÃ§Ã£o por perfil solicitado â€º deve enviar e-mail rejeitado para Empresa
-- AUTO-5A8D7251F8BE - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeiÃ§Ã£o por perfil solicitado â€º deve enviar e-mail rejeitado para LÃ­der TC
-- AUTO-C44EEAC02F4B - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeiÃ§Ã£o por perfil solicitado â€º deve enviar e-mail rejeitado para Suporte tÃ©cnico
-- AUTO-8E06DE55F6E2 - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeiÃ§Ã£o por perfil solicitado â€º deve enviar e-mail rejeitado para UsuÃ¡rio da empresa
-- AUTO-CBBA1E593992 - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeiÃ§Ã£o por perfil solicitado â€º deve enviar e-mail rejeitado para UsuÃ¡rio TC
-- AUTO-DBE444D56497 - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:23 - SolicitaÃ§Ãµes de acesso - ciclo de e-mail API â€º deve criar solicitaÃ§Ã£o pÃºblica e capturar e-mail de recebimento com detalhes
-- AUTO-ED21F9ABF751 - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:42 - SolicitaÃ§Ãµes de acesso - ciclo de e-mail API â€º deve concluir o envio do e-mail inicial para LÃ­der TC
-- AUTO-8DB6FD2129E5 - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:58 - SolicitaÃ§Ãµes de acesso - ciclo de e-mail API â€º deve identificar pessoa e empresa sem exibir o rÃ³tulo genÃ©rico ao usuÃ¡rio empresarial
-- AUTO-FF8F35A43D97 - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:87 - SolicitaÃ§Ãµes de acesso - ciclo de e-mail API â€º nÃ£o deve criar nova solicitaÃ§Ã£o duplicada nem gerar novo e-mail
-- AUTO-DE52128AB89C - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:104 - SolicitaÃ§Ãµes de acesso - ciclo de e-mail API â€º deve reenviar o mesmo cÃ³digo somente por e-mail e responder de forma neutra
+- AUTO-A84F16CDC08A - testes/api/solicitacoes/solicitacoes-usuario.test.ts:298 - 20. dois usuários com o mesmo tipo não conflitam (duplicate check é por userId)
+- AUTO-F4D106FE52CE - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:25 - Solicitações de acesso - consulta/status API › deve consultar solicitação por accessKey e validar status, data e e-mail
+- AUTO-57A023801159 - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:38 - Solicitações de acesso - consulta/status API › deve retornar erro para token inválido
+- AUTO-456B9F5C7CA8 - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:42 - Solicitações de acesso - consulta/status API › deve aprovar solicitação e consultar status aprovado
+- AUTO-13047EA086BC - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:56 - Solicitações de acesso - consulta/status API › deve recusar solicitação e consultar status recusado
+- AUTO-AA2BD728AF5C - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:70 - Solicitações de acesso - consulta/status API › deve solicitar ajuste e consultar status ajuste necessário
+- AUTO-C3D2798CF5F8 - testes/api/solicitar-acesso/consulta/consultar-status.positivo.api.spec.ts:85 - Solicitações de acesso - consulta/status API › deve aceitar somente os campos solicitados e registrar o retorno para análise
+- AUTO-09F79D1A445E - testes/api/solicitar-acesso/consulta/correcao-dados-email-consulta-fluxo.api.spec.ts:217 - Solicitar acesso - correção de dados via e-mail › deve enviar e-mail de ajuste, abrir consulta por chave e salvar dados corrigidos
+- AUTO-11C63079277A - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovação por perfil solicitado › deve enviar e-mail aprovado para Empresa
+- AUTO-BAD959B4AE92 - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovação por perfil solicitado › deve enviar e-mail aprovado para Líder TC
+- AUTO-F233E26FE9CE - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovação por perfil solicitado › deve enviar e-mail aprovado para Suporte técnico
+- AUTO-7565CD7ED6BE - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovação por perfil solicitado › deve enviar e-mail aprovado para Usuário da empresa
+- AUTO-5E4FDCAF9526 - testes/api/solicitar-acesso/emails/aprovacao/emails-aprovacao-perfis.api.spec.ts:103 - E-mails de aprovação por perfil solicitado › deve enviar e-mail aprovado para Usuário TC
+- AUTO-F142835CCF9E - testes/api/solicitar-acesso/emails/galeria/emails-galeria-visual-perfis.api.spec.ts:140 - Galeria visual assistida de e-mails por perfil › gera HTML dos e-mails de aprovação e rejeição dos cinco perfis
+- AUTO-D4D708A2E257 - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeição por perfil solicitado › deve enviar e-mail rejeitado para Empresa
+- AUTO-5A8D7251F8BE - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeição por perfil solicitado › deve enviar e-mail rejeitado para Líder TC
+- AUTO-C44EEAC02F4B - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeição por perfil solicitado › deve enviar e-mail rejeitado para Suporte técnico
+- AUTO-8E06DE55F6E2 - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeição por perfil solicitado › deve enviar e-mail rejeitado para Usuário da empresa
+- AUTO-CBBA1E593992 - testes/api/solicitar-acesso/emails/rejeicao/emails-rejeicao-perfis.api.spec.ts:90 - E-mails de rejeição por perfil solicitado › deve enviar e-mail rejeitado para Usuário TC
+- AUTO-DBE444D56497 - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:23 - Solicitações de acesso - ciclo de e-mail API › deve criar solicitação pública e capturar e-mail de recebimento com detalhes
+- AUTO-ED21F9ABF751 - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:42 - Solicitações de acesso - ciclo de e-mail API › deve concluir o envio do e-mail inicial para Líder TC
+- AUTO-8DB6FD2129E5 - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:58 - Solicitações de acesso - ciclo de e-mail API › deve identificar pessoa e empresa sem exibir o rótulo genérico ao usuário empresarial
+- AUTO-FF8F35A43D97 - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:87 - Solicitações de acesso - ciclo de e-mail API › não deve criar nova solicitação duplicada nem gerar novo e-mail
+- AUTO-DE52128AB89C - testes/api/solicitar-acesso/emails/solicitacao/email-solicitacao.positivo.api.spec.ts:104 - Solicitações de acesso - ciclo de e-mail API › deve reenviar o mesmo código somente por e-mail e responder de forma neutra
 - AUTO-63B0EB1DD110 - testes/api/solicitar-acesso/endpoints/endpoints-publicos.api.spec.ts:8 - consulta publica rejeita chave inexistente sem expor erro interno
 - AUTO-2CD75DAA20F1 - testes/api/solicitar-acesso/endpoints/endpoints-publicos.api.spec.ts:16 - listagem administrativa exige autenticacao
-- AUTO-114AF8DB76A5 - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:31 - Solicitacoes de acesso - ciclos por perfil revisor â€º LÃ­der TC deve aprovar, enviar e-mail e liberar login
-- AUTO-7F5CE683CC5F - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:31 - Solicitacoes de acesso - ciclos por perfil revisor â€º Suporte TÃ©cnico deve aprovar, enviar e-mail e liberar login
-- AUTO-574E613288F3 - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:83 - Solicitacoes de acesso - ciclos por perfil revisor â€º LÃ­der TC deve solicitar ajuste e receber dados corrigidos
-- AUTO-26AC53C63531 - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:83 - Solicitacoes de acesso - ciclos por perfil revisor â€º Suporte TÃ©cnico deve solicitar ajuste e receber dados corrigidos
-- AUTO-0A5F8BD0D26A - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:151 - Solicitacoes de acesso - ciclos por perfil revisor â€º LÃ­der TC deve recusar com motivo e enviar e-mail
-- AUTO-4864AF83955B - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:151 - Solicitacoes de acesso - ciclos por perfil revisor â€º Suporte TÃ©cnico deve recusar com motivo e enviar e-mail
-- AUTO-5AD91714719D - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:14 - Solicitacoes - permissao por perfil na API â€º usuario nao autenticado deve receber 401
-- AUTO-4D26074AA414 - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:20 - Solicitacoes - permissao por perfil na API â€º LÃ­der TC deve acessar a API
-- AUTO-D29212420F1F - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:20 - Solicitacoes - permissao por perfil na API â€º Suporte TÃ©cnico deve acessar a API
-- AUTO-AE7C19B9041E - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:32 - Solicitacoes - permissao por perfil na API â€º Empresa deve receber 403 na API
-- AUTO-FB9E6F33483D - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:32 - Solicitacoes - permissao por perfil na API â€º UsuÃ¡rio da empresa deve receber 403 na API
-- AUTO-E1CA7DAB27BB - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:32 - Solicitacoes - permissao por perfil na API â€º UsuÃ¡rio Testing Company deve receber 403 na API
-- AUTO-C704C824E73C - testes/api/usuarios/dados-alterados-combo-campos.api.spec.ts:220 - Dados Alterados - combo de campos do usuÃ¡rio â€º deve criar, alterar e validar todos os campos editÃ¡veis do usuÃ¡rio
+- AUTO-114AF8DB76A5 - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:31 - Solicitacoes de acesso - ciclos por perfil revisor › Líder TC deve aprovar, enviar e-mail e liberar login
+- AUTO-7F5CE683CC5F - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:31 - Solicitacoes de acesso - ciclos por perfil revisor › Suporte Técnico deve aprovar, enviar e-mail e liberar login
+- AUTO-574E613288F3 - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:83 - Solicitacoes de acesso - ciclos por perfil revisor › Líder TC deve solicitar ajuste e receber dados corrigidos
+- AUTO-26AC53C63531 - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:83 - Solicitacoes de acesso - ciclos por perfil revisor › Suporte Técnico deve solicitar ajuste e receber dados corrigidos
+- AUTO-0A5F8BD0D26A - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:151 - Solicitacoes de acesso - ciclos por perfil revisor › Líder TC deve recusar com motivo e enviar e-mail
+- AUTO-4864AF83955B - testes/api/solicitar-acesso/solicitacoes/acoes-solicitacao.positivo.api.spec.ts:151 - Solicitacoes de acesso - ciclos por perfil revisor › Suporte Técnico deve recusar com motivo e enviar e-mail
+- AUTO-5AD91714719D - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:14 - Solicitacoes - permissao por perfil na API › usuario nao autenticado deve receber 401
+- AUTO-4D26074AA414 - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:20 - Solicitacoes - permissao por perfil na API › Líder TC deve acessar a API
+- AUTO-D29212420F1F - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:20 - Solicitacoes - permissao por perfil na API › Suporte Técnico deve acessar a API
+- AUTO-AE7C19B9041E - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:32 - Solicitacoes - permissao por perfil na API › Empresa deve receber 403 na API
+- AUTO-FB9E6F33483D - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:32 - Solicitacoes - permissao por perfil na API › Usuário da empresa deve receber 403 na API
+- AUTO-E1CA7DAB27BB - testes/api/solicitar-acesso/solicitacoes/listar-solicitacoes.positivo.api.spec.ts:32 - Solicitacoes - permissao por perfil na API › Usuário Testing Company deve receber 403 na API
+- AUTO-C704C824E73C - testes/api/usuarios/dados-alterados-combo-campos.api.spec.ts:220 - Dados Alterados - combo de campos do usuário › deve criar, alterar e validar todos os campos editáveis do usuário
 - AUTO-DEDD7A5902A0 - testes/api/usuarios/edit-user-profiles.test.ts:65 - Regular: edita nome, email e telefone
 - AUTO-7FEBCC6B6199 - testes/api/usuarios/edit-user-profiles.test.ts:85 - IT Dev: edita job_title e linkedin_url
-- AUTO-5430B58A5A05 - testes/api/usuarios/edit-user-profiles.test.ts:99 - Admin Global: rebaixa para usuÃ¡rio normal (is_global_admin=false)
+- AUTO-5430B58A5A05 - testes/api/usuarios/edit-user-profiles.test.ts:99 - Admin Global: rebaixa para usuário normal (is_global_admin=false)
 - AUTO-C850766337E2 - testes/api/usuarios/edit-user-profiles.test.ts:120 - Viewer: promove membership de viewer para company_admin
 - AUTO-BFD8EDC7B391 - testes/api/usuarios/edit-user-profiles.test.ts:147 - CompAdmin: desativa conta (active=false, status=blocked)
 - AUTO-2EA2FF3B20F2 - testes/api/usuarios/edit-user-profiles.test.ts:165 - Convidado: ativa conta mudando status de invited para active
 - AUTO-5626DF085F78 - testes/api/usuarios/edit-user-profiles.test.ts:180 - Regular: promove role de user para it_dev com is_global_admin
-- AUTO-B64934C47660 - testes/api/usuarios/edit-user-profiles.test.ts:198 - rejeita ediÃ§Ã£o com e-mail jÃ¡ cadastrado para outro usuÃ¡rio
-- AUTO-562EC94D7977 - testes/api/usuarios/edit-user-profiles.test.ts:210 - retorna null ao tentar editar usuÃ¡rio com id inexistente
-- AUTO-932AF72DE529 - testes/api/usuarios/edit-user-profiles.test.ts:217 - edita mÃºltiplos campos do usuÃ¡rio em uma Ãºnica operaÃ§Ã£o
-- AUTO-A2F2B9306B01 - testes/api/usuarios/notas-usuario.test.ts:60 - cria nota 1 â€” rascunho, prioridade baixa
-- AUTO-1932FF56A580 - testes/api/usuarios/notas-usuario.test.ts:86 - cria nota 2 â€” em andamento, prioridade alta, com tags
-- AUTO-CFB87BD65880 - testes/api/usuarios/notas-usuario.test.ts:110 - cria nota 3 â€” urgente, cor sky
-- AUTO-A20A54E9A7B9 - testes/api/usuarios/notas-usuario.test.ts:132 - confirma que as 3 notas foram criadas para o usuÃ¡rio
+- AUTO-B64934C47660 - testes/api/usuarios/edit-user-profiles.test.ts:198 - rejeita edição com e-mail já cadastrado para outro usuário
+- AUTO-562EC94D7977 - testes/api/usuarios/edit-user-profiles.test.ts:210 - retorna null ao tentar editar usuário com id inexistente
+- AUTO-932AF72DE529 - testes/api/usuarios/edit-user-profiles.test.ts:217 - edita múltiplos campos do usuário em uma única operação
+- AUTO-A2F2B9306B01 - testes/api/usuarios/notas-usuario.test.ts:60 - cria nota 1 — rascunho, prioridade baixa
+- AUTO-1932FF56A580 - testes/api/usuarios/notas-usuario.test.ts:86 - cria nota 2 — em andamento, prioridade alta, com tags
+- AUTO-CFB87BD65880 - testes/api/usuarios/notas-usuario.test.ts:110 - cria nota 3 — urgente, cor sky
+- AUTO-A20A54E9A7B9 - testes/api/usuarios/notas-usuario.test.ts:132 - confirma que as 3 notas foram criadas para o usuário
 - AUTO-9F32E9BD08D7 - testes/api/usuarios/notas-usuario.test.ts:145 - deleta a nota 2
-- AUTO-B32ABED895E9 - testes/api/usuarios/notas-usuario.test.ts:157 - confirma que nota 1 e nota 3 permanecem apÃ³s deletar nota 2
-- AUTO-CC502E86B45B - testes/api/usuarios/notas-usuario.test.ts:169 - edita nota 1 â€” altera tÃ­tulo, conteÃºdo, status e prioridade
-- AUTO-DF3DE98D2B67 - testes/api/usuarios/notas-usuario.test.ts:191 - confirma que a ediÃ§Ã£o da nota 1 foi persistida no banco
-- AUTO-28046D2D6870 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:140 - 1. usuÃƒÂ¡rio cria solicitaÃƒÂ§ÃƒÂ£o PASSWORD_RESET
-- AUTO-43D53C2A5B43 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:156 - 2. solicitaÃƒÂ§ÃƒÂ£o estÃƒÂ¡ PENDING no requestsStore
-- AUTO-B5B5386B7630 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:167 - 3. LÃƒÂ­der TC aprova a solicitaÃƒÂ§ÃƒÂ£o e token ÃƒÂ© gerado no Redis
-- AUTO-38EB84ED10B3 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:197 - 4. usuÃƒÂ¡rio redefine a senha usando o token
-- AUTO-0FF6BEF4E8A8 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:219 - 5. token ÃƒÂ© invalidado apÃƒÂ³s uso (nÃƒÂ£o pode ser reutilizado)
-- AUTO-B39AC06F9CAB - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:227 - 6. Suporte TÃƒÂ©cnico (it_dev) tambÃƒÂ©m aprova PASSWORD_RESET
+- AUTO-B32ABED895E9 - testes/api/usuarios/notas-usuario.test.ts:157 - confirma que nota 1 e nota 3 permanecem após deletar nota 2
+- AUTO-CC502E86B45B - testes/api/usuarios/notas-usuario.test.ts:169 - edita nota 1 — altera título, conteúdo, status e prioridade
+- AUTO-DF3DE98D2B67 - testes/api/usuarios/notas-usuario.test.ts:191 - confirma que a edição da nota 1 foi persistida no banco
+- AUTO-28046D2D6870 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:140 - 1. usuário cria solicitação PASSWORD_RESET
+- AUTO-43D53C2A5B43 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:156 - 2. solicitação está PENDING no requestsStore
+- AUTO-B5B5386B7630 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:167 - 3. Líder TC aprova a solicitação e token é gerado no Redis
+- AUTO-38EB84ED10B3 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:197 - 4. usuário redefine a senha usando o token
+- AUTO-0FF6BEF4E8A8 - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:219 - 5. token é invalidado após uso (não pode ser reutilizado)
+- AUTO-B39AC06F9CAB - testes/bd/login/esqueci-senha/lider-tc/esqueci-senha-lider-tc.test.ts:227 - 6. Suporte Técnico (it_dev) também aprova PASSWORD_RESET
 - AUTO-04968F93E4D8 - testes/bd/login/senha-temporaria/temp-password-generation.test.ts:52 - armazena hash correto e permite verificar a senha plain-text posteriormente
-- AUTO-58AE42F94971 - testes/bd/login/senha-temporaria/temp-password-generation.test.ts:73 - hash de senha diferente nÃƒÂ£o autentica com a senha temporÃƒÂ¡ria
+- AUTO-58AE42F94971 - testes/bd/login/senha-temporaria/temp-password-generation.test.ts:73 - hash de senha diferente não autentica com a senha temporária
 - AUTO-93E4C87A380A - testes/bd/persistencia/company-creation-persist.test.ts:31 - cria a empresa e persiste no PostgreSQL
-- AUTO-C1CC07FC9F13 - testes/bd/persistencia/company-creation-persist.test.ts:54 - confirma que a empresa estÃ¡ no banco via SELECT independente
+- AUTO-C1CC07FC9F13 - testes/bd/persistencia/company-creation-persist.test.ts:54 - confirma que a empresa está no banco via SELECT independente
 - AUTO-7B6C4080BAAE - testes/bd/persistencia/company-creation-persist.test.ts:68 - confirma que a empresa aparece na listagem geral do banco
-- AUTO-B0D4090C4F76 - testes/bd/persistencia/permissoes-banco.test.ts:72 - 1. Criar override allow â†’ persistido no banco
-- AUTO-87090BDC19F2 - testes/bd/persistencia/permissoes-banco.test.ts:87 - 2. Criar override deny â†’ persistido no banco
-- AUTO-927F249DF8F6 - testes/bd/persistencia/permissoes-banco.test.ts:102 - 3. Atualizar override via upsert â†’ sem duplicaÃ§Ã£o de linha
-- AUTO-F8A927F3C52D - testes/bd/persistencia/permissoes-banco.test.ts:117 - 4. Deletar override â†’ linha removida do banco
-- AUTO-1D4F9DE40D0A - testes/bd/persistencia/permissoes-banco.test.ts:135 - 5. UsuÃ¡rio sem override â†’ getUserOverride retorna null
+- AUTO-B0D4090C4F76 - testes/bd/persistencia/permissoes-banco.test.ts:72 - 1. Criar override allow → persistido no banco
+- AUTO-87090BDC19F2 - testes/bd/persistencia/permissoes-banco.test.ts:87 - 2. Criar override deny → persistido no banco
+- AUTO-927F249DF8F6 - testes/bd/persistencia/permissoes-banco.test.ts:102 - 3. Atualizar override via upsert → sem duplicação de linha
+- AUTO-F8A927F3C52D - testes/bd/persistencia/permissoes-banco.test.ts:117 - 4. Deletar override → linha removida do banco
+- AUTO-1D4F9DE40D0A - testes/bd/persistencia/permissoes-banco.test.ts:135 - 5. Usuário sem override → getUserOverride retorna null
 - AUTO-50D5847CE98B - testes/bd/persistencia/permissoes-banco.test.ts:144 - 6. listUserOverrides retorna todos os overrides cadastrados
-- AUTO-1459422E3D12 - testes/bd/persistencia/permissoes-banco.test.ts:159 - 7. Allow + Deny na mesma linha â†’ effectivePermissions aplica ambos
+- AUTO-1459422E3D12 - testes/bd/persistencia/permissoes-banco.test.ts:159 - 7. Allow + Deny na mesma linha → effectivePermissions aplica ambos
 - AUTO-57F36EF3AD97 - testes/bd/persistencia/permissoes-banco.test.ts:182 - 8. updatedBy gravado corretamente na tabela
-- AUTO-8EBB858ADC84 - testes/bd/persistencia/permissoes-banco.test.ts:197 - 9. Override mantÃ©m isolamento â€” outro usuÃ¡rio nÃ£o Ã© afetado
-- AUTO-E66FD3B17A8B - testes/bd/persistencia/permissoes-banco.test.ts:212 - 10. ApÃ³s deletar override, usuÃ¡rio volta Ã s permissÃµes padrÃ£o do perfil
+- AUTO-8EBB858ADC84 - testes/bd/persistencia/permissoes-banco.test.ts:197 - 9. Override mantém isolamento — outro usuário não é afetado
+- AUTO-E66FD3B17A8B - testes/bd/persistencia/permissoes-banco.test.ts:212 - 10. Após deletar override, usuário volta às permissões padrão do perfil
 - AUTO-C0E6D000D811 - testes/bd/persistencia/seed-testing-company.test.ts:37 - cria ou reutiliza a empresa Testing Company
-- AUTO-8BE2C62DF5EF - testes/bd/persistencia/seed-testing-company.test.ts:62 - cria UsuÃ¡rio Empresa vinculado como viewer
-- AUTO-4BD73ADF32D8 - testes/bd/persistencia/seed-testing-company.test.ts:94 - cria UsuÃ¡rio Testing Company vinculado como viewer
-- AUTO-DB9B18AB67B5 - testes/bd/persistencia/seed-testing-company.test.ts:126 - cria LÃ­der TC vinculado como company_admin
-- AUTO-D29149061A18 - testes/bd/persistencia/seed-testing-company.test.ts:158 - cria Suporte TÃ©cnico com role it_dev e global_admin
+- AUTO-8BE2C62DF5EF - testes/bd/persistencia/seed-testing-company.test.ts:62 - cria Usuário Empresa vinculado como viewer
+- AUTO-4BD73ADF32D8 - testes/bd/persistencia/seed-testing-company.test.ts:94 - cria Usuário Testing Company vinculado como viewer
+- AUTO-DB9B18AB67B5 - testes/bd/persistencia/seed-testing-company.test.ts:126 - cria Líder TC vinculado como company_admin
+- AUTO-D29149061A18 - testes/bd/persistencia/seed-testing-company.test.ts:158 - cria Suporte Técnico com role it_dev e global_admin
 - AUTO-76CED9A23BCF - testes/bd/persistencia/seed-testing-company.test.ts:194 - confirma todos os registros no banco
-- AUTO-385B8B560CA9 - testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts:21 - SolicitaÃ§Ã£o pÃºblica de acesso - aprovaÃ§Ã£o, login e perfil â€º deve aprovar, logar e validar perfil para LÃ­der TC
-- AUTO-155523397CF6 - testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts:21 - SolicitaÃ§Ã£o pÃºblica de acesso - aprovaÃ§Ã£o, login e perfil â€º deve aprovar, logar e validar perfil para Suporte TÃ©cnico
-- AUTO-9494C7718F1E - testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts:21 - SolicitaÃ§Ã£o pÃºblica de acesso - aprovaÃ§Ã£o, login e perfil â€º deve aprovar, logar e validar perfil para UsuÃ¡rio da empresa
-- AUTO-2BA1CCDBB981 - testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts:21 - SolicitaÃ§Ã£o pÃºblica de acesso - aprovaÃ§Ã£o, login e perfil â€º deve aprovar, logar e validar perfil para UsuÃ¡rio TC
-- AUTO-70229A138138 - testes/ui/alertas/alerts.spec.ts:5 - alerta ÃƒÂ© exibido para admin
-- AUTO-FF3C54D31340 - testes/ui/automacoes/automation-studio.spec.ts:23 - Tela de Automacao â€º @smoke @case=TC-AUTO-001 admin acessa /automacoes/tools e ve a area Tools
-- AUTO-A7BED7665F96 - testes/ui/automacoes/automation-studio.spec.ts:33 - Tela de Automacao â€º @case=TC-AUTO-002 admin ve o runner biometrico na pagina de execucoes
-- AUTO-3BA460AC506D - testes/ui/automacoes/automation-studio.spec.ts:41 - Tela de Automacao â€º @case=TC-AUTO-003 admin ve lista de casos em /automacoes/casos
-- AUTO-2383DD4350D8 - testes/ui/automacoes/automation-studio.spec.ts:49 - Tela de Automacao â€º @case=TC-AUTO-004 seletores da pagina de execucoes nao quebram
-- AUTO-BFE77209601C - testes/ui/automacoes/automation-studio.spec.ts:59 - Tela de Automacao â€º @case=TC-AUTO-005 API Lab abre em /automacoes/api-lab sem erros
-- AUTO-915CA800F25A - testes/ui/automacoes/automation-studio.spec.ts:69 - Tela de Automacao â€º @case=TC-AUTO-006 catalogo importado aparece no workbench
-- AUTO-021BA29B3B21 - testes/ui/automacoes/automation-studio.spec.ts:77 - Tela de Automacao â€º @case=TC-AUTO-007 Base64 abre em /automacoes/base64 sem erros
-- AUTO-0A096F64AE02 - testes/ui/automacoes/automation-studio.spec.ts:86 - Tela de Automacao â€º @case=TC-AUTO-008 Arquivos abre em /automacoes/arquivos sem erros
-- AUTO-E67BDCA124EB - testes/ui/automacoes/automation-studio.spec.ts:95 - Tela de Automacao â€º @case=TC-AUTO-009 Logs abre em /automacoes/logs sem erros
-- AUTO-3F888A1CA10B - testes/ui/automacoes/automation-studio.spec.ts:105 - Tela de Automacao â€º @case=TC-AUTO-010 Scripts abre em /automacoes/scripts sem erros
-- AUTO-D7DF99CFEC92 - testes/ui/automacoes/automation-studio.spec.ts:115 - Tela de Automacao â€º @case=TC-AUTO-011 Fluxos abre em /automacoes/fluxos sem erros
-- AUTO-904BD3A8ECB7 - testes/ui/automacoes/automation-studio.spec.ts:126 - Tela de Automacao â€º @case=TC-AUTO-012 ambiente exige URL base e token no Studio
+- AUTO-385B8B560CA9 - testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts:21 - Solicitação pública de acesso - aprovação, login e perfil › deve aprovar, logar e validar perfil para Líder TC
+- AUTO-155523397CF6 - testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts:21 - Solicitação pública de acesso - aprovação, login e perfil › deve aprovar, logar e validar perfil para Suporte Técnico
+- AUTO-9494C7718F1E - testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts:21 - Solicitação pública de acesso - aprovação, login e perfil › deve aprovar, logar e validar perfil para Usuário da empresa
+- AUTO-2BA1CCDBB981 - testes/bd/solicitar-acesso/perfil-criado-igual-cadastro.bd.spec.ts:21 - Solicitação pública de acesso - aprovação, login e perfil › deve aprovar, logar e validar perfil para Usuário TC
+- AUTO-70229A138138 - testes/ui/alertas/alerts.spec.ts:5 - alerta é exibido para admin
+- AUTO-FF3C54D31340 - testes/ui/automacoes/automation-studio.spec.ts:23 - Tela de Automacao › @smoke @case=TC-AUTO-001 admin acessa /automacoes/tools e ve a area Tools
+- AUTO-A7BED7665F96 - testes/ui/automacoes/automation-studio.spec.ts:33 - Tela de Automacao › @case=TC-AUTO-002 admin ve o runner biometrico na pagina de execucoes
+- AUTO-3BA460AC506D - testes/ui/automacoes/automation-studio.spec.ts:41 - Tela de Automacao › @case=TC-AUTO-003 admin ve lista de casos em /automacoes/casos
+- AUTO-2383DD4350D8 - testes/ui/automacoes/automation-studio.spec.ts:49 - Tela de Automacao › @case=TC-AUTO-004 seletores da pagina de execucoes nao quebram
+- AUTO-BFE77209601C - testes/ui/automacoes/automation-studio.spec.ts:59 - Tela de Automacao › @case=TC-AUTO-005 API Lab abre em /automacoes/api-lab sem erros
+- AUTO-915CA800F25A - testes/ui/automacoes/automation-studio.spec.ts:69 - Tela de Automacao › @case=TC-AUTO-006 catalogo importado aparece no workbench
+- AUTO-021BA29B3B21 - testes/ui/automacoes/automation-studio.spec.ts:77 - Tela de Automacao › @case=TC-AUTO-007 Base64 abre em /automacoes/base64 sem erros
+- AUTO-0A096F64AE02 - testes/ui/automacoes/automation-studio.spec.ts:86 - Tela de Automacao › @case=TC-AUTO-008 Arquivos abre em /automacoes/arquivos sem erros
+- AUTO-E67BDCA124EB - testes/ui/automacoes/automation-studio.spec.ts:95 - Tela de Automacao › @case=TC-AUTO-009 Logs abre em /automacoes/logs sem erros
+- AUTO-3F888A1CA10B - testes/ui/automacoes/automation-studio.spec.ts:105 - Tela de Automacao › @case=TC-AUTO-010 Scripts abre em /automacoes/scripts sem erros
+- AUTO-D7DF99CFEC92 - testes/ui/automacoes/automation-studio.spec.ts:115 - Tela de Automacao › @case=TC-AUTO-011 Fluxos abre em /automacoes/fluxos sem erros
+- AUTO-904BD3A8ECB7 - testes/ui/automacoes/automation-studio.spec.ts:126 - Tela de Automacao › @case=TC-AUTO-012 ambiente exige URL base e token no Studio
 - AUTO-4B1A2BA807E2 - testes/ui/brain/brain-agents.spec.ts:15 - brain agents tab renders agent selectors
 - AUTO-EB2826F8A09E - testes/ui/brain/brain-agents.spec.ts:26 - brain agents tab switches agent modes
 - AUTO-7A5CE521238D - testes/ui/brain/brain-agents.spec.ts:39 - brain agent sends message and receives streaming response
 - AUTO-DC2BC014DFBB - testes/ui/brain/brain-agents.spec.ts:63 - brain agent input disabled while loading and send button inactive when empty
 - AUTO-AC0C4870A52C - testes/ui/brain/brain-agents.spec.ts:79 - brain agents tab messages area starts empty with quick prompts
-- AUTO-2ABA0CF3A934 - testes/ui/casos-de-teste/navigation-central-cases.spec.ts:49 - NavegaÃ§Ã£o central de casos â€º @case=TC-NAV-001 Sidebar Casos navega para rota canÃ´nica
-- AUTO-2E9655281ADE - testes/ui/casos-de-teste/navigation-central-cases.spec.ts:55 - NavegaÃ§Ã£o central de casos â€º @case=TC-NAV-002 Atalho Casos do UI Studio navega para rota canÃ´nica
-- AUTO-163D983195C2 - testes/ui/casos-de-teste/test-case-automation-link.spec.ts:92 - AutomaÃ§Ã£o Playwright vinculada ao caso existente â€º @case=TC-AUTOMATION-LINK-leader_tc LÃ­der TC vincula automaÃ§Ã£o sem duplicar caso
-- AUTO-F392DC5B41FD - testes/ui/casos-de-teste/test-case-automation-link.spec.ts:92 - AutomaÃ§Ã£o Playwright vinculada ao caso existente â€º @case=TC-AUTOMATION-LINK-technical_support Suporte TÃ©cnico vincula automaÃ§Ã£o sem duplicar caso
-- AUTO-72F951F336C2 - testes/ui/casos-de-teste/test-cases-repository.spec.ts:5 - Repositorio central de casos de teste â€º @case=TC-CASES-001 abre o repositorio central e mostra a tela unica
+- AUTO-2ABA0CF3A934 - testes/ui/casos-de-teste/navigation-central-cases.spec.ts:49 - Navegação central de casos › @case=TC-NAV-001 Sidebar Casos navega para rota canônica
+- AUTO-2E9655281ADE - testes/ui/casos-de-teste/navigation-central-cases.spec.ts:55 - Navegação central de casos › @case=TC-NAV-002 Atalho Casos do UI Studio navega para rota canônica
+- AUTO-163D983195C2 - testes/ui/casos-de-teste/test-case-automation-link.spec.ts:92 - Automação Playwright vinculada ao caso existente › @case=TC-AUTOMATION-LINK-leader_tc Líder TC vincula automação sem duplicar caso
+- AUTO-F392DC5B41FD - testes/ui/casos-de-teste/test-case-automation-link.spec.ts:92 - Automação Playwright vinculada ao caso existente › @case=TC-AUTOMATION-LINK-technical_support Suporte Técnico vincula automação sem duplicar caso
+- AUTO-72F951F336C2 - testes/ui/casos-de-teste/test-cases-repository.spec.ts:5 - Repositorio central de casos de teste › @case=TC-CASES-001 abre o repositorio central e mostra a tela unica
 - AUTO-B5A513D3ACCA - testes/ui/clientes/permissoes/clients-access.spec.ts:4 - admin global sees clients list
 - AUTO-35DC30DA7173 - testes/ui/clientes/permissoes/clients-access.spec.ts:13 - user cannot access /admin/clients
 - AUTO-BC81A983BE40 - testes/ui/dashboard/alerts-dashboard.spec.ts:5 - dashboard mostra leitura executiva e alertas quando existem
@@ -291,49 +291,49 @@
 - AUTO-4D2E3C5558A7 - testes/ui/dashboard/dashboard-executive.spec.ts:5 - company loads the current dashboard shell and key summary blocks
 - AUTO-18573C990AA7 - testes/ui/dashboard/export-quality.spec.ts:6 - company consegue exportar CSV de qualidade
 - AUTO-DD71AD90BE18 - testes/ui/dashboard/health-score.spec.ts:5 - health score attention aparece no dashboard
-- AUTO-355E0C606FD9 - testes/ui/dashboard/mttr-dashboard.spec.ts:6 - dashboard exibe MTTR mÃƒÂ©dio
-- AUTO-C72F17783F6E - testes/ui/dashboard/mttr-manual.spec.ts:7 - MTTR ÃƒÂ© calculado ao fechar defeito manual
-- AUTO-B39737839C6C - testes/ui/dashboard/quality-gate-history.spec.ts:4 - histÃƒÂ³rico de quality gate ÃƒÂ© registrado
-- AUTO-33536009A204 - testes/ui/dashboard/quality-goal.spec.ts:6 - meta de qualidade mantÃ©m leitura executiva disponÃ­vel
+- AUTO-355E0C606FD9 - testes/ui/dashboard/mttr-dashboard.spec.ts:6 - dashboard exibe MTTR médio
+- AUTO-C72F17783F6E - testes/ui/dashboard/mttr-manual.spec.ts:7 - MTTR é calculado ao fechar defeito manual
+- AUTO-B39737839C6C - testes/ui/dashboard/quality-gate-history.spec.ts:4 - histórico de quality gate é registrado
+- AUTO-33536009A204 - testes/ui/dashboard/quality-goal.spec.ts:6 - meta de qualidade mantém leitura executiva disponível
 - AUTO-DC29971640B9 - testes/ui/dashboard/quality-score.spec.ts:5 - release exibe quality score
-- AUTO-B124CBDFFDF1 - testes/ui/dashboard/quality-trend.spec.ts:5 - tendÃƒÂªncia improving aparece no dashboard
+- AUTO-B124CBDFFDF1 - testes/ui/dashboard/quality-trend.spec.ts:5 - tendÃƒªncia improving aparece no dashboard
 - AUTO-426FEBC11178 - testes/ui/dashboard/risco-qualidade-runs.spec.ts:7 - release com risco aparece na leitura executiva
 - AUTO-545B5B8DD68D - testes/ui/dashboard/sla-dashboard.spec.ts:5 - dashboard indica defeitos e sinais de SLA
-- AUTO-BAC1BC0AD6EE - testes/ui/dashboard/trend-dashboard.spec.ts:5 - dashboard mostra tendÃƒÂªncia de MTTR
+- AUTO-BAC1BC0AD6EE - testes/ui/dashboard/trend-dashboard.spec.ts:5 - dashboard mostra tendÃƒªncia de MTTR
 - AUTO-2F54EB87F9B0 - testes/ui/defeitos/business-run-defect.spec.ts:18 - empresa cria run e defeito com vinculo basico
-- AUTO-E8AD5E858A4D - testes/ui/defeitos/defect-create.spec.ts:6 - defeitos - criaÃƒÂ§ÃƒÂ£o manual â€º user cria defeito na empresa ativa
+- AUTO-E8AD5E858A4D - testes/ui/defeitos/defect-create.spec.ts:6 - defeitos - criação manual › user cria defeito na empresa ativa
 - AUTO-9C19D39F78CF - testes/ui/defeitos/defect-link-run.spec.ts:7 - vincula defeito manual a uma run
-- AUTO-3231477C36F2 - testes/ui/defeitos/defect-permissions.spec.ts:5 - defeitos - permissÃƒÂµes â€º user nÃƒÂ£o vÃƒÂª botÃƒÂ£o de ediÃƒÂ§ÃƒÂ£o de defeito manual
-- AUTO-89D49765A7D0 - testes/ui/defeitos/defect-permissions.spec.ts:17 - defeitos - permissÃƒÂµes â€º admin acessa pÃƒÂ¡gina de defeitos
-- AUTO-2AED2B707332 - testes/ui/defeitos/defects-list.spec.ts:5 - defeitos - listagem por empresa ativa â€º user vÃƒÂª pÃƒÂ¡gina e lista de defeitos na empresa ativa
-- AUTO-B992D0E62F3A - testes/ui/defeitos/kanban-move.spec.ts:5 - kanban - movimentaÃƒÂ§ÃƒÂ£o â€º admin move card para outra coluna
-- AUTO-01DF121BBB22 - testes/ui/defeitos/kanban-permission.spec.ts:5 - kanban - permissÃƒÂ£o â€º user nÃƒÂ£o vÃƒÂª controles de movimentaÃƒÂ§ÃƒÂ£o
-- AUTO-A9B8A0B7611A - testes/ui/defeitos/kanban-persist.spec.ts:5 - kanban - persistÃƒÂªncia local â€º status persiste apÃƒÂ³s reload
-- AUTO-5FDBEAACC93C - testes/ui/defeitos/kanban-view.spec.ts:5 - kanban - visualizaÃƒÂ§ÃƒÂ£o â€º user vÃƒÂª colunas do kanban
-- AUTO-7D5767FC67D2 - testes/ui/defeitos/rbac-defects.spec.ts:8 - rbac - defeitos â€º user nÃƒÂ£o vÃƒÂª aÃƒÂ§ÃƒÂµes protegidas
-- AUTO-0ED4AA0A9D57 - testes/ui/defeitos/rbac-defects.spec.ts:16 - rbac - defeitos â€º company vÃƒÂª editar/link em defeito manual, mas nÃƒÂ£o delete
-- AUTO-C1DB57DE0738 - testes/ui/defeitos/rbac-defects.spec.ts:29 - rbac - defeitos â€º admin vÃƒÂª todas as aÃƒÂ§ÃƒÂµes
+- AUTO-3231477C36F2 - testes/ui/defeitos/defect-permissions.spec.ts:5 - defeitos - permissÃƒµes › user não vÃƒª botão de edição de defeito manual
+- AUTO-89D49765A7D0 - testes/ui/defeitos/defect-permissions.spec.ts:17 - defeitos - permissÃƒµes › admin acessa página de defeitos
+- AUTO-2AED2B707332 - testes/ui/defeitos/defects-list.spec.ts:5 - defeitos - listagem por empresa ativa › user vÃƒª página e lista de defeitos na empresa ativa
+- AUTO-B992D0E62F3A - testes/ui/defeitos/kanban-move.spec.ts:5 - kanban - movimentação › admin move card para outra coluna
+- AUTO-01DF121BBB22 - testes/ui/defeitos/kanban-permission.spec.ts:5 - kanban - permissão › user não vÃƒª controles de movimentação
+- AUTO-A9B8A0B7611A - testes/ui/defeitos/kanban-persist.spec.ts:5 - kanban - persistÃƒªncia local › status persiste após reload
+- AUTO-5FDBEAACC93C - testes/ui/defeitos/kanban-view.spec.ts:5 - kanban - visualização › user vÃƒª colunas do kanban
+- AUTO-7D5767FC67D2 - testes/ui/defeitos/rbac-defects.spec.ts:8 - rbac - defeitos › user não vÃƒª açÃƒµes protegidas
+- AUTO-0ED4AA0A9D57 - testes/ui/defeitos/rbac-defects.spec.ts:16 - rbac - defeitos › company vÃƒª editar/link em defeito manual, mas não delete
+- AUTO-C1DB57DE0738 - testes/ui/defeitos/rbac-defects.spec.ts:29 - rbac - defeitos › admin vÃƒª todas as açÃƒµes
 - AUTO-3499D4644D39 - testes/ui/documentos/documents.spec.ts:12 - documentos - company anexa arquivo e salva link
 - AUTO-BF3EBB3E5BA8 - testes/ui/documentos/documents.spec.ts:34 - documentos - admin acessa outras empresas e company nao
 - AUTO-CB64C49FED7E - testes/ui/empresas/business-export-csv.spec.ts:5 - exporta relatorio CSV com dados do kanban
 - AUTO-8F23787E789E - testes/ui/empresas/business-export-pdf.spec.ts:16 - exporta relatorio PDF da run
 - AUTO-4C2A36D0DA25 - testes/ui/empresas/business-gate-block.spec.ts:15 - quality gate falho bloqueia aprovacao de run manual
-- AUTO-199C19A2CADD - testes/ui/empresas/persist-active-company.spec.ts:4 - empresa ativa persiste apÃƒÂ³s reload
+- AUTO-199C19A2CADD - testes/ui/empresas/persist-active-company.spec.ts:4 - empresa ativa persiste após reload
 - AUTO-08F279CEA739 - testes/ui/empresas/switch-company.spec.ts:4 - admin seleciona empresa no dashboard global
 
-- ... 152 itens adicionais no inventÃ¡rio.
+- ... 152 itens adicionais no inventário.
 
-## RecomendaÃ§Ãµes
+## Recomendações
 
 1. Executar a run por blocos e registrar resultados incrementais no Qase.
-2. Priorizar UI headed para telas recÃ©m-finalizadas.
-3. Expandir cobertura de Empresa em SolicitaÃ§Ãµes para ajuste, recusa e comentÃ¡rio prÃ³prios; a decisÃ£o de produto do acesso restrito jÃ¡ foi aplicada.
+2. Priorizar UI headed para telas recém-finalizadas.
+3. Expandir cobertura de Empresa em Solicitações para ajuste, recusa e comentário próprios; a decisão de produto do acesso restrito já foi aplicada.
 4. Usar o `AUTO_DOC_ID` como chave de compatibilidade quando testes forem criados, alterados ou removidos.
 
-## Complemento 2026-06-21 - Empresa em SolicitaÃ§Ãµes
+## Complemento 2026-06-21 - Empresa em Solicitações
 
-- Regra oficial aplicada: Empresa possui acesso restrito Ã  tela SolicitaÃ§Ãµes e pode executar o fluxo completo de anÃ¡lise apenas para solicitaÃ§Ãµes vinculadas Ã  prÃ³pria empresa. SolicitaÃ§Ãµes de outras empresas nÃ£o devem ser exibidas nem acessÃ­veis por URL direta ou API.
-- Lacuna fechada: conflito anterior entre "Empresa sem acesso ao mÃ³dulo" e "Empresa com acesso restrito por escopo".
-- AutomaÃ§Ã£o adicionada/atualizada: escopo negativo por duas empresas, bloqueio de URL direta/API para outra empresa, aceite de solicitaÃ§Ã£o prÃ³pria, validaÃ§Ã£o de vÃ­nculo e login, e bloqueio de admin fora de SolicitaÃ§Ãµes.
-- Lacunas remanescentes: solicitaÃ§Ã£o de alteraÃ§Ã£o prÃ³pria, recusa prÃ³pria e comentÃ¡rio prÃ³prio por Empresa ainda nÃ£o receberam Passed no run #2.
-- RejeiÃ§Ã£o continua tratada como recusa enquanto o produto nÃ£o expuser uma aÃ§Ã£o separada.
+- Regra oficial aplicada: Empresa possui acesso restrito à tela Solicitações e pode executar o fluxo completo de análise apenas para solicitações vinculadas à própria empresa. Solicitações de outras empresas não devem ser exibidas nem acessíveis por URL direta ou API.
+- Lacuna fechada: conflito anterior entre "Empresa sem acesso ao módulo" e "Empresa com acesso restrito por escopo".
+- Automação adicionada/atualizada: escopo negativo por duas empresas, bloqueio de URL direta/API para outra empresa, aceite de solicitação própria, validação de vínculo e login, e bloqueio de admin fora de Solicitações.
+- Lacunas remanescentes: solicitação de alteração própria, recusa própria e comentário próprio por Empresa ainda não receberam Passed no run #2.
+- Rejeição continua tratada como recusa enquanto o produto não expuser uma ação separada.

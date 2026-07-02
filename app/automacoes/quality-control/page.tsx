@@ -76,7 +76,7 @@ export default function QualityControlAutomationPage() {
             <article className="rounded-[24px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-4 shadow-sm">
               <div className="flex items-center gap-2">
                 <FiActivity className="h-5 w-5 text-[var(--tc-accent,#ef0001)]" />
-                <h2 className="text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Fluxo rastreÃ¡vel</h2>
+                <h2 className="text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">Fluxo rastreável</h2>
               </div>
               <div className="mt-3 space-y-2">
                 {flow.map((item, index) => (
@@ -92,10 +92,10 @@ export default function QualityControlAutomationPage() {
 
         <section className="rounded-[24px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-            <span className="inline-flex items-center gap-2 font-bold text-[var(--tc-text,#0b1a3c)]"><FiPlayCircle className="h-4 w-4" /> PrÃ³xima validaÃ§Ã£o manual:</span>
-            abrir a Ã¡rea de automaÃ§Ãµes, criar ou executar uma spec Playwright e conferir se o resultado pode alimentar run, central, visÃ£o geral e Brain.
+            <span className="inline-flex items-center gap-2 font-bold text-[var(--tc-text,#0b1a3c)]"><FiPlayCircle className="h-4 w-4" /> Próxima validação manual:</span>
+            abrir a área de automações, criar ou executar uma spec Playwright e conferir se o resultado pode alimentar run, central, visão geral e Brain.
             <span className="inline-flex items-center gap-2 font-bold text-[var(--tc-text,#0b1a3c)]"><FiBarChart2 className="h-4 w-4" /> Indicadores:</span>
-            suites, runs, score, gate, tendÃªncia e nota executiva.
+            suites, runs, score, gate, tendência e nota executiva.
           </div>
         </section>
       </div>

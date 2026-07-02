@@ -19,7 +19,7 @@ export function useDashboardFilters({ chips, fallback = "Sem filtros ativos", ma
       compactChips,
       hiddenChipCount: Math.max(0, activeChips.length - compactChips.length),
       hasActiveFilters: activeChips.length > 0,
-      summary: activeChips.length > 0 ? activeChips.join(" Â· ") : fallback,
+      summary: activeChips.length > 0 ? activeChips.join(" · ") : fallback,
     };
   }, [chips, fallback, maxVisible]);
 }

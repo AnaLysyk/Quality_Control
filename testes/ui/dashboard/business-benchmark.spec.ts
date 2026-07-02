@@ -75,11 +75,11 @@ test("admin compara metricas entre empresas", async ({ page, context }) => {
   await expect(page.getByText(/Atualizando\.\.\./).first()).toBeHidden({ timeout: 30000 });
   await expect(page.getByText(/Carregando ranking/i)).toHaveCount(0, { timeout: 30000 });
 
-  await expect(page.getByText(/SeleÃ§Ã£o rÃ¡pida de empresa/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Seleção rápida de empresa/i)).toBeVisible({ timeout: 15000 });
   await expect(page.getByText(/Compare empresas/i).first()).toBeVisible({ timeout: 15000 });
 
   const totalCompanies = parseRunsCount(await page.getByText(/empresas no escopo global/i).first().textContent());
-  const totalRuns = parseRunsCount(await page.getByText(/ExecuÃ§Ãµes consolidadas/i).locator("..").textContent());
+  const totalRuns = parseRunsCount(await page.getByText(/Execuções consolidadas/i).locator("..").textContent());
 
   expect(totalCompanies).toBeGreaterThanOrEqual(1);
   expect(totalRuns).toBeGreaterThanOrEqual(1);

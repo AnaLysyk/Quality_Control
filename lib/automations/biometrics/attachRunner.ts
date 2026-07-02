@@ -93,7 +93,7 @@ function resolveConfig(config?: Partial<BiometricApiConfig>): BiometricApiConfig
   }
 
   if (!Number.isFinite(port) || port <= 0) {
-    throw new Error("Porta invÃ¡lida para a API biomÃ©trica.");
+    throw new Error("Porta inválida para a API biométrica.");
   }
 
   return { host, password, port, user };
@@ -108,15 +108,15 @@ function resolveFingerprintInput(input: BiometricAttachInput) {
   const index = Number(indexValue);
 
   if (!filePath) {
-    throw new Error("Informe uma fixture biomÃ©trica ou um arquivo de digital.");
+    throw new Error("Informe uma fixture biométrica ou um arquivo de digital.");
   }
 
   if (!fs.existsSync(filePath)) {
-    throw new Error(`Arquivo de digital nÃ£o encontrado: ${filePath}`);
+    throw new Error(`Arquivo de digital não encontrado: ${filePath}`);
   }
 
   if (!Number.isFinite(index)) {
-    throw new Error("Informe o Ã­ndice do dedo ou escolha uma fixture padrÃ£o com Ã­ndice conhecido.");
+    throw new Error("Informe o índice do dedo ou escolha uma fixture padrão com índice conhecido.");
   }
 
   return {
@@ -135,7 +135,7 @@ function resolveFaceInput(input: BiometricAttachInput) {
 
   if (!filePath) return null;
   if (!fs.existsSync(filePath)) {
-    throw new Error(`Arquivo de face nÃ£o encontrado: ${filePath}`);
+    throw new Error(`Arquivo de face não encontrado: ${filePath}`);
   }
 
   const extension = path.extname(filePath).toLowerCase();
@@ -252,7 +252,7 @@ async function resolveProcessId(config: BiometricApiConfig, token: string, input
   );
 
   if (!found?.processId) {
-    throw new Error(`NÃ£o foi possÃ­vel localizar processo para o protocolo ${protocol}.`);
+    throw new Error(`Não foi possível localizar processo para o protocolo ${protocol}.`);
   }
 
   return String(found.processId);

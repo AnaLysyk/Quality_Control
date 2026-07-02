@@ -40,7 +40,7 @@ export async function getCompanyQualitySummary(slug: string, _period: string = "
     return Number.isFinite(opened) && now - opened > SLA_MS;
   }).length;
 
-  // Quality Score: usar lÃ³gica do summary (pode ser ajustado)
+  // Quality Score: usar lógica do summary (pode ser ajustado)
   let qualityScore = 100;
   if (slaOverdue > 0) qualityScore -= slaOverdue * 10;
   // Penalidade extra se MTTR medio > 48h
@@ -61,7 +61,7 @@ export async function getCompanyQualitySummary(slug: string, _period: string = "
 // Lista de defeitos flat para exportacao
 export async function getCompanyDefects(slug: string, _period: string = "30d") {
   void _period;
-  // Reutiliza a mesma lÃ³gica do summary
+  // Reutiliza a mesma lógica do summary
   // Manual + Qase
   const manualReleases = await readManualReleaseStore();
   const manualDefects = manualReleases.map((r) => {

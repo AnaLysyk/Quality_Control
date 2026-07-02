@@ -113,7 +113,7 @@ export default function ChamadosPage() {
                   source: "chamados",
                   agentMode: "qa",
                   panelMode: "side",
-                  initialMessage: "Analise os chamados abertos: prioridades, padrÃµes e prÃ³ximas aÃ§Ãµes recomendadas.",
+                  initialMessage: "Analise os chamados abertos: prioridades, padrões e próximas ações recomendadas.",
                 },
               }));
             }
@@ -123,21 +123,21 @@ export default function ChamadosPage() {
           ðŸ§  Perguntar IA
         </button>
       </div>
-      {/* BotÃ£o flutuante para criar chamado */}
+      {/* Botão flutuante para criar chamado */}
       <div className="fixed bottom-8 right-8 z-50">
         <CreateSupportTicketButton />
       </div>
       <form className="space-y-3 mb-6" onSubmit={salvar}>
         <input
           className="w-full border rounded px-3 py-2"
-          placeholder="TÃ­tulo do chamado"
+          placeholder="Título do chamado"
           value={form.title}
           onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
           required
         />
         <textarea
           className="w-full border rounded px-3 py-2"
-          placeholder="DescriÃ§Ã£o"
+          placeholder="Descrição"
           value={form.description}
           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
         />

@@ -69,7 +69,7 @@ async function fetcher(path: string) {
   const response = await fetchApi(path, { cache: "no-store" });
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(payload?.error || payload?.message || "NÃ£o foi possÃ­vel carregar o fluxo do Brain.");
+    throw new Error(payload?.error || payload?.message || "Não foi possível carregar o fluxo do Brain.");
   }
   return payload as FlowPayload;
 }
@@ -96,7 +96,7 @@ function kindLabel(kind: string) {
 function statusLabel(status: string) {
   const labels: Record<string, string> = {
     pending: "Pendente",
-    under_review: "Em anÃ¡lise",
+    under_review: "Em análise",
     needs_more_info: "Aguardando ajuste",
     approved: "Aprovada",
     rejected: "Rejeitada",
@@ -139,9 +139,9 @@ export function BrainAccessRequestEmailFlowPanel() {
           <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
             <FiShield className="h-4 w-4" /> Brain observability
           </span>
-          <h2 className="mt-3 text-xl font-extrabold text-[var(--tc-text,#0b1a3c)]">SolicitaÃ§Ãµes pÃºblicas e fluxo de e-mails</h2>
+          <h2 className="mt-3 text-xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Solicitações públicas e fluxo de e-mails</h2>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-            O Brain correlaciona rotas pÃºblicas, auditoria, solicitaÃ§Ã£o e e-mails capturados para transformar o fluxo em validaÃ§Ã£o rastreÃ¡vel.
+            O Brain correlaciona rotas públicas, auditoria, solicitação e e-mails capturados para transformar o fluxo em validação rastreável.
           </p>
         </div>
         <button
@@ -170,7 +170,7 @@ export function BrainAccessRequestEmailFlowPanel() {
 
       <div className="mt-4 grid gap-3 md:grid-cols-4">
         {[
-          ["SolicitaÃ§Ãµes", data?.summary.requests ?? 0],
+          ["Solicitações", data?.summary.requests ?? 0],
           ["Logs de auditoria", data?.summary.auditLogs ?? 0],
           ["E-mails capturados", data?.summary.capturedAccessRequestEmails ?? 0],
           ["Rotas mapeadas", data?.summary.mappedRoutes ?? 0],
@@ -208,7 +208,7 @@ export function BrainAccessRequestEmailFlowPanel() {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <FiMail className="h-5 w-5 text-[var(--tc-accent,#ef0001)]" />
-              <h3 className="text-sm font-extrabold text-[var(--tc-text,#0b1a3c)]">ValidaÃ§Ã£o por solicitaÃ§Ã£o</h3>
+              <h3 className="text-sm font-extrabold text-[var(--tc-text,#0b1a3c)]">Validação por solicitação</h3>
             </div>
             <span className="inline-flex items-center gap-1 rounded-full border border-[var(--tc-border,#d7deea)] bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--tc-text-muted,#6b7280)]">
               <FiClock className="h-3 w-3" /> {data?.generatedAt ? formatDate(data.generatedAt) : "--"}
@@ -230,14 +230,14 @@ export function BrainAccessRequestEmailFlowPanel() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{request.requesterName ?? request.requesterEmail}</p>
-                        <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{statusLabel(request.status)} â€¢ {request.emails.length} e-mail(s)</p>
+                        <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{statusLabel(request.status)} • {request.emails.length} e-mail(s)</p>
                       </div>
                       {ok ? <FiCheckCircle className="h-4 w-4 shrink-0 text-emerald-600" /> : <FiAlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />}
                     </div>
                   </button>
                 );
               })}
-              {!data?.requests?.length && !isLoading ? <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma solicitaÃ§Ã£o encontrada.</p> : null}
+              {!data?.requests?.length && !isLoading ? <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhuma solicitação encontrada.</p> : null}
             </div>
 
             <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-3">
@@ -246,16 +246,16 @@ export function BrainAccessRequestEmailFlowPanel() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="text-base font-extrabold text-[var(--tc-text,#0b1a3c)]">{selectedRequest.requesterEmail}</p>
-                      <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">Perfil: {selectedRequest.requestedRole ?? "--"} â€¢ Criado: {formatDate(selectedRequest.createdAt)}</p>
+                      <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">Perfil: {selectedRequest.requestedRole ?? "--"} • Criado: {formatDate(selectedRequest.createdAt)}</p>
                     </div>
                     <span className="rounded-full bg-[var(--tc-surface-2,#f8fafc)] px-2.5 py-1 text-xs font-bold text-[var(--tc-text-muted,#6b7280)]">{statusLabel(selectedRequest.status)}</span>
                   </div>
 
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     {[
-                      ["Log criaÃ§Ã£o", selectedRequest.validation.hasCreationLog],
+                      ["Log criação", selectedRequest.validation.hasCreationLog],
                       ["E-mail recebido", selectedRequest.validation.hasReceivedEmail],
-                      ["E-mail decisÃ£o", selectedRequest.validation.hasDecisionEmail],
+                      ["E-mail decisão", selectedRequest.validation.hasDecisionEmail],
                       ["E-mail ajuste", selectedRequest.validation.hasAdjustmentEmail],
                     ].map(([label, ok]) => (
                       <div key={String(label)} className="flex items-center gap-2 rounded-lg border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-2.5 py-2 text-xs font-bold text-[var(--tc-text,#0b1a3c)]">
@@ -272,7 +272,7 @@ export function BrainAccessRequestEmailFlowPanel() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <p className="truncate text-sm font-bold text-[var(--tc-text,#0b1a3c)]">{email.subject}</p>
-                            <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{kindLabel(email.kind)} â€¢ {formatDate(email.createdAt)} â€¢ {email.source}</p>
+                            <p className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">{kindLabel(email.kind)} • {formatDate(email.createdAt)} • {email.source}</p>
                           </div>
                           <button
                             type="button"
@@ -284,11 +284,11 @@ export function BrainAccessRequestEmailFlowPanel() {
                         </div>
                       </div>
                     ))}
-                    {!selectedRequest.emails.length ? <p className="rounded-xl border border-dashed border-[var(--tc-border,#d7deea)] px-3 py-3 text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhum e-mail capturado para esta solicitaÃ§Ã£o.</p> : null}
+                    {!selectedRequest.emails.length ? <p className="rounded-xl border border-dashed border-[var(--tc-border,#d7deea)] px-3 py-3 text-sm text-[var(--tc-text-muted,#6b7280)]">Nenhum e-mail capturado para esta solicitação.</p> : null}
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Selecione uma solicitaÃ§Ã£o para ver logs e e-mails.</p>
+                <p className="text-sm text-[var(--tc-text-muted,#6b7280)]">Selecione uma solicitação para ver logs e e-mails.</p>
               )}
             </div>
           </div>
@@ -297,7 +297,7 @@ export function BrainAccessRequestEmailFlowPanel() {
 
       {data?.notes?.length ? (
         <div className="mt-4 rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-2 text-xs leading-5 text-[var(--tc-text-muted,#6b7280)]">
-          {data.notes.map((note) => <p key={note}>â€¢ {note}</p>)}
+          {data.notes.map((note) => <p key={note}>• {note}</p>)}
         </div>
       ) : null}
     </section>

@@ -384,7 +384,7 @@ export default function BrainGraphView() {
         }
       }
 
-      // Draw nodes (sorted sÃ³ selected is on top)
+      // Draw nodes (sorted só selected is on top)
       const sortedNodes = [...simNodes].sort((a, b) => {
         if (a.id === selectedNodeId) return 1;
         if (b.id === selectedNodeId) return -1;
@@ -458,7 +458,7 @@ export default function BrainGraphView() {
         ctx.fillText(icon, node.x, node.y);
 
         // Label with rounded background
-        const label = node.label.length > 22 ? node.label.slice(0, 20) + "â€¦" : node.label;
+        const label = node.label.length > 22 ? node.label.slice(0, 20) + "…" : node.label;
         ctx.font = `${isSelected ? "bold " : ""}${radius > 26 ? 14 : 12}px Inter, system-ui, sans-serif`;
         const labelWidth = ctx.measureText(label).width;
         const labelY = node.y + radius + 14;
@@ -633,7 +633,7 @@ export default function BrainGraphView() {
       <div className={styles.topBar}>
         <div className={styles.title}>
           <span className={styles.pulseOrb} />
-          {t.brain.title} â€” {t.brain.subtitle}
+          {t.brain.title} — {t.brain.subtitle}
         </div>
 
         <input
@@ -670,15 +670,15 @@ export default function BrainGraphView() {
         {/* Stats */}
         <div className={styles.statsBar}>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.nodes ?? "â€”"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.nodes ?? "—"}</span>
             <span className={styles.statLabel}>{t.brain.stats.nodes}</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.edges ?? "â€”"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.edges ?? "—"}</span>
             <span className={styles.statLabel}>{t.brain.stats.edges}</span>
           </div>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.integrity?.stats?.memories ?? "â€”"}</span>
+            <span className={styles.statValue}>{stats?.integrity?.stats?.memories ?? "—"}</span>
             <span className={styles.statLabel}>{t.brain.stats.memories}</span>
           </div>
         </div>
@@ -720,13 +720,13 @@ export default function BrainGraphView() {
               <div>
                 <h2 className={styles.panelTitle}>{selectedNode.label}</h2>
                 <p className={styles.panelSubtitle}>
-                  {selectedNode.type} {selectedNode.refId ? `â€¢ ${selectedNode.refId.slice(0, 8)}` : ""}
+                  {selectedNode.type} {selectedNode.refId ? `• ${selectedNode.refId.slice(0, 8)}` : ""}
                 </p>
               </div>
 
               {selectedNode.description && (
                 <div className={styles.panelSection}>
-                  <p className={styles.panelSectionTitle}>{locale === "pt" ? "DescriÃ§Ã£o" : "Description"}</p>
+                  <p className={styles.panelSectionTitle}>{locale === "pt" ? "Descrição" : "Description"}</p>
                   <p className={styles.memorySummary}>{selectedNode.description}</p>
                 </div>
               )}
@@ -747,7 +747,7 @@ export default function BrainGraphView() {
               {nodeNeighbors.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>
-                    {t.brain.panel.connections} ({nodeOutgoing.length} {locale === "pt" ? "saÃ­da" : "out"}, {nodeIncoming.length} {locale === "pt" ? "entrada" : "in"})
+                    {t.brain.panel.connections} ({nodeOutgoing.length} {locale === "pt" ? "saída" : "out"}, {nodeIncoming.length} {locale === "pt" ? "entrada" : "in"})
                   </p>
                   {nodeNeighbors.slice(0, 20).map((neighbor: BrainNode & { id: string; label: string; type: string }) => {
                     const outEdge = nodeOutgoing.find((e: { toId: string; type: string }) => e.toId === neighbor.id);
@@ -787,7 +787,7 @@ export default function BrainGraphView() {
                           }
                         }}
                       >
-                        {m.memoryType} â€¢ â˜…{m.importance}
+                        {m.memoryType} • â˜…{m.importance}
                       </span>
                     </div>
                   ))}
@@ -798,7 +798,7 @@ export default function BrainGraphView() {
               {nodeContext?.impact?.impactedNodes?.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>
-                    {locale === "pt" ? "Impacto" : "Impact"} ({nodeContext.impact.impactedNodes.length} {locale === "pt" ? "nÃ³s afetados" : "affected nodes"})
+                    {locale === "pt" ? "Impacto" : "Impact"} ({nodeContext.impact.impactedNodes.length} {locale === "pt" ? "nós afetados" : "affected nodes"})
                   </p>
                   {nodeContext.impact.paths.slice(0, 10).map((p: { nodeId: string; edgeType: string; distance: number }, i: number) => {
                     const impactNode = nodeContext.impact.impactedNodes.find((n: BrainNode) => n.id === p.nodeId);
@@ -830,14 +830,14 @@ export default function BrainGraphView() {
                               nodeLabel: selectedNode.label,
                               nodeType: selectedNode.type,
                               agentMode: "qa",
-                              initialMessage: `Analise o nÃ³ "${selectedNode.label}" (${selectedNode.type}): resumo, conexÃµes, impacto e prÃ³ximos passos.`,
+                              initialMessage: `Analise o nó "${selectedNode.label}" (${selectedNode.type}): resumo, conexões, impacto e próximos passos.`,
                             },
                           }),
                         );
                       }
                     }}
                   >
-                    ðŸ§  Perguntar para IA sobre este nÃ³
+                    ðŸ§  Perguntar para IA sobre este nó
                   </button>
                 </div>
               )}
@@ -846,7 +846,7 @@ export default function BrainGraphView() {
               {timeline.length > 0 && (
                 <div className={styles.panelSection}>
                   <p className={styles.panelSectionTitle}>
-                    {locale === "pt" ? "HistÃ³rico" : "History"} ({timeline.length})
+                    {locale === "pt" ? "Histórico" : "History"} ({timeline.length})
                   </p>
                   <div className={styles.timelineList}>
                     {timeline.slice(0, 15).map((entry) => (
@@ -879,8 +879,8 @@ export default function BrainGraphView() {
         ))}
         <div className={styles.legendHint}>
           {locale === "pt"
-            ? "Clique = selecionar â€¢ Duplo clique = explorar â€¢ Scroll = zoom â€¢ Arrastar = mover"
-            : "Click = select â€¢ Double click = explore â€¢ Scroll = zoom â€¢ Drag = move"
+            ? "Clique = selecionar • Duplo clique = explorar • Scroll = zoom • Arrastar = mover"
+            : "Click = select • Double click = explore • Scroll = zoom • Drag = move"
           }
         </div>
       </div>

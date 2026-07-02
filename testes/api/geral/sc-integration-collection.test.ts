@@ -6,7 +6,7 @@ describe("SC Integration API v2 collection", () => {
     expect(SC_INTEGRATION_COLLECTION.totalRequests).toBe(67);
     expect(SC_INTEGRATION_COLLECTION.groups).toHaveLength(11);
     expect(SC_INTEGRATION_COLLECTION.groups.map((group) => group.title)).toEqual(
-      expect.arrayContaining(["Tokens", "Processos", "Cardscan", "CidadÃ£o Smart"]),
+      expect.arrayContaining(["Tokens", "Processos", "Cardscan", "Cidadão Smart"]),
     );
   });
 });

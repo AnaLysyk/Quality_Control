@@ -68,7 +68,7 @@ export default function DocsOverviewClient() {
   // wiki summaries keyed by company slug
   const [summaries, setSummaries] = useState<Record<string, WikiSummary>>({});
   const [summariesLoading, setSummariesLoading] = useState(false);
-  // platform (internal) wiki summary â€” only shown to leader/support
+  // platform (internal) wiki summary — only shown to leader/support
   const [platformSummary, setPlatformSummary] = useState<WikiSummary>(null);
 
   useEffect(() => {
@@ -193,7 +193,7 @@ export default function DocsOverviewClient() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Plataforma</p>
-                        <h3 className="text-lg leading-7 font-extrabold text-[var(--tc-text,#0b1a3c)]">RepositÃ³rio da Testing Company</h3>
+                        <h3 className="text-lg leading-7 font-extrabold text-[var(--tc-text,#0b1a3c)]">Repositório da Testing Company</h3>
                       </div>
                     </div>
                     <span className="inline-flex min-h-8 w-fit items-center rounded-full border border-[#c7d2fe] bg-[#eef2ff] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#6366f1]">
@@ -202,7 +202,7 @@ export default function DocsOverviewClient() {
                   </div>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">ConteÃºdo</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Conteúdo</p>
                       <p className="mt-1.5 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
                         {platformSummary === null
                           ? "Carregando..."
@@ -221,8 +221,8 @@ export default function DocsOverviewClient() {
                       className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(90deg,#011848,#6366f1)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                     >
                       {platformSummary?.docCount === 0 && platformSummary?.canEdit
-                        ? <><FiEdit3 className="h-4 w-4" /> Criar documentaÃ§Ã£o</>
-                        : <><FiBookOpen className="h-4 w-4" /> Acessar repositÃ³rio</>
+                        ? <><FiEdit3 className="h-4 w-4" /> Criar documentação</>
+                        : <><FiBookOpen className="h-4 w-4" /> Acessar repositório</>
                       }
                       <FiArrowRight className="h-4 w-4" />
                     </Link>
@@ -240,7 +240,7 @@ export default function DocsOverviewClient() {
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhuma empresa vinculada</h3>
                   <p className="max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                    Quando houver vÃ­nculos ativos, os repositÃ³rios das empresas aparecerÃ£o aqui.
+                    Quando houver vínculos ativos, os repositórios das empresas aparecerão aqui.
                   </p>
                 </div>
               </div>
@@ -252,9 +252,9 @@ export default function DocsOverviewClient() {
                   <FiFolder className="h-7 w-7" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum repositÃ³rio com conteÃºdo</h3>
+                  <h3 className="text-xl font-bold text-[var(--tc-text-primary,#0b1a3c)]">Nenhum repositório com conteúdo</h3>
                   <p className="max-w-xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-                    Quando alguma empresa vinculada publicar conteÃºdo no repositÃ³rio, ela aparecerÃ¡ aqui automaticamente.
+                    Quando alguma empresa vinculada publicar conteúdo no repositório, ela aparecerá aqui automaticamente.
                   </p>
                 </div>
               </div>
@@ -296,12 +296,12 @@ export default function DocsOverviewClient() {
                         </div>
                       </div>
                       <span className="inline-flex min-h-8 w-fit items-center rounded-full border border-[var(--tc-border,#d7deea)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">
-                        RepositÃ³rio
+                        Repositório
                       </span>
                     </div>
                     <div className="grid grid-cols-1 gap-3">
                       <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">ConteÃºdo</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Conteúdo</p>
                         <p className="mt-1.5 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
                           {docCount === null
                             ? "Carregando..."
@@ -320,7 +320,7 @@ export default function DocsOverviewClient() {
                         href={href}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--tc-primary,#0b1a3c)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                       >
-                        {docCount === 0 && canEdit ? <><FiEdit3 className="h-4 w-4" /> Criar documentaÃ§Ã£o</> : <><FiBookOpen className="h-4 w-4" /> Acessar repositÃ³rio</>}
+                        {docCount === 0 && canEdit ? <><FiEdit3 className="h-4 w-4" /> Criar documentação</> : <><FiBookOpen className="h-4 w-4" /> Acessar repositório</>}
                         <FiArrowRight className="h-4 w-4" />
                       </Link>
                     </div>

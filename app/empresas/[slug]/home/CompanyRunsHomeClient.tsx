@@ -114,7 +114,7 @@ function numberToneClasses(tone: Tone) {
 }
 
 function sourceLabel(sourceType: RunSourceType) {
-  return sourceType === "manual" ? "Manual" : "IntegraÃ§Ã£o";
+  return sourceType === "manual" ? "Manual" : "Integração";
 }
 
 function providerLabel(provider: RunIntegrationProvider) {
@@ -161,7 +161,7 @@ function buildAttentionItems(companySlug: string, run: HomeRunItem | null): Atte
     items.push({
       id: "not-run",
       title: "Cobertura incompleta",
-      detail: `${pluralize(run.stats.notRun, "caso")} ainda nÃ£o foi executado nesta run.`,
+      detail: `${pluralize(run.stats.notRun, "caso")} ainda não foi executado nesta run.`,
       tone: "warning",
       href: run.href,
     });
@@ -170,8 +170,8 @@ function buildAttentionItems(companySlug: string, run: HomeRunItem | null): Atte
   if (!run.isCompleted && isOlderThanDays(run.updatedAt ?? run.createdAt, 3)) {
     items.push({
       id: "stale",
-      title: "ExecuÃ§Ã£o sem atualizaÃ§Ã£o recente",
-      detail: "A run segue aberta hÃ¡ mais de 3 dias sem nova movimentaÃ§Ã£o registrada.",
+      title: "Execução sem atualização recente",
+      detail: "A run segue aberta há mais de 3 dias sem nova movimentação registrada.",
       tone: "warning",
       href: run.href,
     });
@@ -181,7 +181,7 @@ function buildAttentionItems(companySlug: string, run: HomeRunItem | null): Atte
     items.push({
       id: "integration",
       title: "Origem integrada confirmada",
-      detail: `Esta run veio da integraÃ§Ã£o ${providerLabel(run.integrationProvider)} e reaproveita a tela oficial jÃ¡ existente.`,
+      detail: `Esta run veio da integração ${providerLabel(run.integrationProvider)} e reaproveita a tela oficial já existente.`,
       tone: "positive",
       href: run.href,
     });
@@ -191,7 +191,7 @@ function buildAttentionItems(companySlug: string, run: HomeRunItem | null): Atte
     items.push({
       id: "clear",
       title: "Sem alertas imediatos",
-      detail: "A run selecionada nÃ£o expÃµe sinais crÃ­ticos de risco neste resumo rÃ¡pido.",
+      detail: "A run selecionada não expõe sinais críticos de risco neste resumo rápido.",
       tone: "positive",
       href: run.href,
     });
@@ -218,7 +218,7 @@ function buildRunEvents(run: HomeRunItem | null): RunEvent[] {
   if (run.updatedAt && run.updatedAt !== run.createdAt) {
     events.push({
       id: "updated",
-      title: "Ãšltima atualizaÃ§Ã£o",
+      title: "Última atualização",
       detail: `A run recebeu atualizacao ${formatRelative(run.updatedAt)}.`,
       tone: run.isCompleted ? "positive" : "warning",
       at: toTimestamp(run.updatedAt),
@@ -230,8 +230,8 @@ function buildRunEvents(run: HomeRunItem | null): RunEvent[] {
     title: run.sourceType === "manual" ? "Origem manual" : "Origem integrada",
     detail:
       run.sourceType === "manual"
-        ? "ExecuÃ§Ã£o criada manualmente no painel da empresa."
-        : `Run sincronizada via ${providerLabel(run.integrationProvider) ?? "integraÃ§Ã£o"}.`,
+        ? "Execução criada manualmente no painel da empresa."
+        : `Run sincronizada via ${providerLabel(run.integrationProvider) ?? "integração"}.`,
     tone: run.sourceType === "manual" ? "neutral" : "positive",
     at: toTimestamp(run.updatedAt ?? run.createdAt),
   });
@@ -493,7 +493,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                 <div className="max-w-3xl">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/80">
-                      {isMetricsView ? "MÃ©tricas operacionais" : "Dashboard de runs"}
+                      {isMetricsView ? "Métricas operacionais" : "Dashboard de runs"}
                     </span>
                     <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${toneClasses(companyStatus.tone)}`}>
                       {companyStatus.title}
@@ -519,7 +519,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                     className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
                   >
                     <FiArrowLeft className="h-4 w-4" />
-                    Voltar Ã s empresas
+                    Voltar às empresas
                   </Link>
                 ) : null}
                 <button
@@ -532,8 +532,8 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                           agentMode: "debug",
                           panelMode: "side",
                           initialMessage: isMetricsView
-                            ? `Analise as mÃ©tricas operacionais da empresa ${companyName}: runs, defeitos, tendÃªncias e pontos de atenÃ§Ã£o.`
-                            : `Analise as runs da empresa ${companyName}: execuÃ§Ãµes recentes, falhas e prÃ³ximas aÃ§Ãµes.`,
+                            ? `Analise as métricas operacionais da empresa ${companyName}: runs, defeitos, tendências e pontos de atenção.`
+                            : `Analise as runs da empresa ${companyName}: execuções recentes, falhas e próximas ações.`,
                         },
                       }));
                     }
@@ -554,11 +554,11 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
               <HeroMetric label="Runs totais" value={String(heroStats.total)} note="Base consolidada da empresa." tone="neutral" />
-              <HeroMetric label="Em andamento" value={String(heroStats.inProgress)} note="Runs ainda abertas ou em execuÃ§Ã£o." tone={heroStats.inProgress > 0 ? "warning" : "neutral"} />
+              <HeroMetric label="Em andamento" value={String(heroStats.inProgress)} note="Runs ainda abertas ou em execução." tone={heroStats.inProgress > 0 ? "warning" : "neutral"} />
               <HeroMetric label="Concluidas" value={String(heroStats.completed)} note="Runs com ciclo encerrado." tone={heroStats.completed > 0 ? "positive" : "neutral"} />
-              <HeroMetric label="Manuais" value={String(heroStats.manual)} note="Criadas no prÃ³prio painel." tone={heroStats.manual > 0 ? "neutral" : "warning"} />
-              <HeroMetric label="Integradas" value={String(heroStats.integration)} note="Vindas de integraÃ§Ãµes ativas." tone={heroStats.integration > 0 ? "positive" : "neutral"} />
-              <HeroMetric label="Ãšltima execuÃ§Ã£o" value={heroStats.latestExecutionAt ? formatRelative(heroStats.latestExecutionAt) : "-"} note={`${heroStats.alerts} alertas recentes | ${heroStats.openDefects} defeitos abertos | ${heroStats.applications} apps`} tone={heroStats.alerts > 0 || heroStats.openDefects > 0 ? "warning" : "positive"} />
+              <HeroMetric label="Manuais" value={String(heroStats.manual)} note="Criadas no próprio painel." tone={heroStats.manual > 0 ? "neutral" : "warning"} />
+              <HeroMetric label="Integradas" value={String(heroStats.integration)} note="Vindas de integrações ativas." tone={heroStats.integration > 0 ? "positive" : "neutral"} />
+              <HeroMetric label="Última execução" value={heroStats.latestExecutionAt ? formatRelative(heroStats.latestExecutionAt) : "-"} note={`${heroStats.alerts} alertas recentes | ${heroStats.openDefects} defeitos abertos | ${heroStats.applications} apps`} tone={heroStats.alerts > 0 || heroStats.openDefects > 0 ? "warning" : "positive"} />
             </div>
           </div>
           </section>
@@ -567,9 +567,9 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
         <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] p-6 shadow-sm sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <SectionHeader
-              eyebrow="SeleÃ§Ã£o rÃ¡pida"
+              eyebrow="Seleção rápida"
               title={isMetricsView ? "Base operacional das runs da empresa" : "Runs mais recentes da empresa"}
-              description={isMetricsView ? "Leitura operacional detalhada, organizada por execuÃ§Ã£o, projeto, status e origem." : "Cards ordenados da execuÃ§Ã£o mais recente para a mais antiga, combinando fontes manuais e integradas."}
+              description={isMetricsView ? "Leitura operacional detalhada, organizada por execução, projeto, status e origem." : "Cards ordenados da execução mais recente para a mais antiga, combinando fontes manuais e integradas."}
             />
             {isMetricsView ? (
               <div className="flex flex-wrap gap-3 lg:justify-end">
@@ -579,7 +579,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                     className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#ffffff)] px-5 py-3 text-sm font-semibold text-[var(--tc-text,#0b1a3c)] transition hover:bg-[var(--tc-surface-alt)]"
                   >
                     <FiArrowLeft className="h-4 w-4" />
-                    Voltar Ã s empresas
+                    Voltar às empresas
                   </Link>
                 ) : null}
                 <CreateManualReleaseButton companySlug={companySlug} redirectToRun={false} />
@@ -701,7 +701,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
           )}
           {hasMoreRunsThanCards ? (
             <p className="mt-4 text-xs font-medium text-[var(--tc-text-muted,#6b7280)]">
-              Exibindo {runsForCards.length} de {runs.length} runs para leitura rÃ¡pida. Use o botÃ£o &quot;Abrir runs&quot; para ver a lista completa.
+              Exibindo {runsForCards.length} de {runs.length} runs para leitura rápida. Use o botão &quot;Abrir runs&quot; para ver a lista completa.
             </p>
           ) : null}
         </section>
@@ -713,7 +713,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                 <SectionHeader
                   eyebrow="Run em foco"
                   title={selectedRunWithLiveStats.title}
-                  description="Resumo rÃ¡pido da run selecionada, sem substituir a tela oficial de execuÃ§Ã£o."
+                  description="Resumo rápido da run selecionada, sem substituir a tela oficial de execução."
                 />
 
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -739,7 +739,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                     <StatusChart
                       stats={selectedRunWithLiveStats.stats}
                       hasData={selectedRunWithLiveStats.stats.total > 0}
-                      emptyLabel="Sem execuÃ§Ãµes"
+                      emptyLabel="Sem execuções"
                     />
                   </div>
                   <div className="flex flex-1 flex-col gap-3 self-center">
@@ -751,7 +751,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                         </span>
                       ) : (
                         <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
-                          Sem sincronizaÃ§Ã£o ao vivo
+                          Sem sincronização ao vivo
                         </span>
                       )}
                     </div>
@@ -778,17 +778,17 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                 </div>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  <SummaryValue label="AplicaÃ§Ã£o" value={selectedRunWithLiveStats.applicationName} note="Contexto principal desta run." />
+                  <SummaryValue label="Aplicação" value={selectedRunWithLiveStats.applicationName} note="Contexto principal desta run." />
                   <SummaryValue label="Origem" value={sourceLabel(selectedRunWithLiveStats.sourceType)} note={selectedRunWithLiveStats.integrationProvider ? `Provedor ${providerLabel(selectedRunWithLiveStats.integrationProvider)}` : "Run criada manualmente."} />
-                  <SummaryValue label="Criada em" value={formatDate(selectedRunWithLiveStats.createdAt)} note="Data base da execuÃ§Ã£o." />
-                  <SummaryValue label="Ãšltima atualizaÃ§Ã£o" value={formatDate(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)} note={formatRelative(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)} />
-                  <SummaryValue label="Casos totais" value={String(selectedRunWithLiveStats.stats.total)} note="Soma de aprovados, falhados, bloqueados e nÃ£o executados." />
+                  <SummaryValue label="Criada em" value={formatDate(selectedRunWithLiveStats.createdAt)} note="Data base da execução." />
+                  <SummaryValue label="Última atualização" value={formatDate(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)} note={formatRelative(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)} />
+                  <SummaryValue label="Casos totais" value={String(selectedRunWithLiveStats.stats.total)} note="Soma de aprovados, falhados, bloqueados e não executados." />
                   <SummaryValue label="Aprovados" value={String(selectedRunWithLiveStats.stats.pass)} note="Casos que passaram nesta run." />
                   <SummaryValue label="Falhados" value={String(selectedRunWithLiveStats.stats.fail)} note="Casos com falha registrada." />
                   <SummaryValue label="Bloqueados" value={String(selectedRunWithLiveStats.stats.blocked)} note="Casos que ainda dependem de destravamento." />
-                  <SummaryValue label="NÃ£o executados" value={String(selectedRunWithLiveStats.stats.notRun)} note="Casos ainda sem execuÃ§Ã£o nesta leitura." />
-                  <SummaryValue label="Pass rate" value={selectedRunWithLiveStats.stats.passRate != null ? `${selectedRunWithLiveStats.stats.passRate}%` : "Sem telemetria"} note="Percentual atual de aprovaÃ§Ã£o." />
-                  <SummaryValue label="Release associada" value={selectedRunWithLiveStats.releaseLabel ?? "NÃ£o informada"} note={selectedRunWithLiveStats.responsibleLabel ? `ResponsÃ¡vel: ${selectedRunWithLiveStats.responsibleLabel}` : "Sem responsÃ¡vel vinculado."} />
+                  <SummaryValue label="Não executados" value={String(selectedRunWithLiveStats.stats.notRun)} note="Casos ainda sem execução nesta leitura." />
+                  <SummaryValue label="Pass rate" value={selectedRunWithLiveStats.stats.passRate != null ? `${selectedRunWithLiveStats.stats.passRate}%` : "Sem telemetria"} note="Percentual atual de aprovação." />
+                  <SummaryValue label="Release associada" value={selectedRunWithLiveStats.releaseLabel ?? "Não informada"} note={selectedRunWithLiveStats.responsibleLabel ? `Responsável: ${selectedRunWithLiveStats.responsibleLabel}` : "Sem responsável vinculado."} />
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-3">
@@ -805,8 +805,8 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
               <aside className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface)] p-6 shadow-sm sm:p-7">
                 <SectionHeader
                   eyebrow="Prioridades"
-                  title="AtenÃ§Ã£o da run"
-                  description="Sinais de risco, pendÃªncia ou consistÃªncia para a run atualmente selecionada."
+                  title="Atenção da run"
+                  description="Sinais de risco, pendência ou consistência para a run atualmente selecionada."
                 />
 
                 <div className="mt-6 grid gap-4">
@@ -831,7 +831,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                   </div>
                   <div className="mt-4 grid gap-3">
                     <div className="rounded-2xl bg-[var(--tc-surface-alt)] px-4 py-3 shadow-sm">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Tipo de execuÃ§Ã£o</div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Tipo de execução</div>
                       <div className="mt-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                         {sourceLabel(selectedRunWithLiveStats.sourceType)}
                         {providerLabel(selectedRunWithLiveStats.integrationProvider) ? ` | ${providerLabel(selectedRunWithLiveStats.integrationProvider)}` : ""}
@@ -846,11 +846,11 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
                             ? "Bloqueios impactam o fechamento"
                             : selectedRunWithLiveStats.isCompleted
                               ? "Run concluida"
-                              : "ExecuÃ§Ã£o em andamento"}
+                              : "Execução em andamento"}
                       </div>
                     </div>
                     <div className="rounded-2xl bg-[var(--tc-surface-alt)] px-4 py-3 shadow-sm">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Ãšltima movimentacao</div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted,#6b7280)]">Última movimentacao</div>
                       <div className="mt-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">
                         {formatRelative(selectedRunWithLiveStats.updatedAt ?? selectedRunWithLiveStats.createdAt)}
                       </div>
@@ -864,7 +864,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
               <SectionHeader
                 eyebrow="Eventos recentes"
                 title="Movimentos da run selecionada"
-                description="Linha do tempo enxuta da run em foco, sem criar uma nova tela paralela de execuÃ§Ã£o."
+                description="Linha do tempo enxuta da run em foco, sem criar uma nova tela paralela de execução."
               />
 
               <div className="mt-6 grid gap-4">
@@ -893,7 +893,7 @@ export default function CompanyRunsHomeClient(props: CompanyRunsHomeClientProps)
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--tc-text-muted,#6b7280)]">Run em foco</p>
               <h3 className="mt-3 text-xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Selecione uma run para carregar o resumo detalhado</h3>
               <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)]">
-                Clique em &quot;Ver resumo&quot; em um card para abrir distribuiÃ§Ã£o de casos, eventos e sinais de atenÃ§Ã£o.
+                Clique em &quot;Ver resumo&quot; em um card para abrir distribuição de casos, eventos e sinais de atenção.
               </p>
               <div className="mt-5">
                 <button

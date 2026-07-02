@@ -16,14 +16,14 @@ function isAuthorized(req: NextRequest): boolean {
 
 export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) {
-    return apiFail(req, "NÃ£o autorizado", {
+    return apiFail(req, "Não autorizado", {
       status: 401,
       code: "UNAUTHORIZED",
     });
   }
 
   if (!isRedisConfigured()) {
-    return apiFail(req, "Redis nÃ£o configurado", {
+    return apiFail(req, "Redis não configurado", {
       status: 503,
       code: "REDIS_NOT_CONFIGURED",
       details: "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",

@@ -1,6 +1,6 @@
 ﻿/**
  * Shared data-access helpers and presenters used by multiple tools.
- * Server-only â€” uses stores and RBAC.
+ * Server-only — uses stores and RBAC.
  */
 import "server-only";
 
@@ -22,11 +22,11 @@ export { extractTicketReference };
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ User helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function displayRole(user: AuthUser) {
-  return user.permissionRole ?? user.role ?? user.companyRole ?? "usuÃ¡rio";
+  return user.permissionRole ?? user.role ?? user.companyRole ?? "usuário";
 }
 
 export function displayName(user: { full_name?: string | null; name?: string | null; email?: string | null } | null | undefined) {
-  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || "usuÃ¡rio";
+  return user?.full_name?.trim() || user?.name?.trim() || user?.email?.trim() || "usuário";
 }
 
 export function isSupportOperator(user: AuthUser) {
@@ -68,7 +68,7 @@ export function isProtectedPlatformProfile(user: { globalRole?: string | null; r
 
 export function summarizePermissionMatrix(permissions: PermissionMatrix | null | undefined) {
   const entries = Object.entries(permissions ?? {}).filter(([, actions]) => Array.isArray(actions) && actions.length > 0);
-  if (!entries.length) return "sem mÃ³dulos liberados";
+  if (!entries.length) return "sem módulos liberados";
   return entries
     .slice(0, 6)
     .map(([moduleId, actions]) => `${moduleId}: ${actions.join(", ")}`)
@@ -97,9 +97,9 @@ export function scoreTicketMatch(ticket: TicketRecord, text: string) {
 export function formatTicketCard(ticket: Awaited<ReturnType<typeof attachAssigneeToTicket>>) {
   if (!ticket) return "";
   return [
-    `${ticket.code} â€” ${ticket.title}`,
+    `${ticket.code} — ${ticket.title}`,
     `status: ${ticket.status} | prioridade: ${ticket.priority} | tipo: ${ticket.type}`,
-    `criador: ${ticket.createdByName ?? "nÃ£o identificado"} | responsÃ¡vel: ${ticket.assignedToName ?? "nÃ£o definido"}`,
+    `criador: ${ticket.createdByName ?? "não identificado"} | responsável: ${ticket.assignedToName ?? "não definido"}`,
     `atualizado em: ${formatDateTime(ticket.updatedAt)}`,
   ].join("\n");
 }
@@ -225,8 +225,8 @@ export function buildPromptActions(context: AssistantScreenContext): AssistantAc
 
 export function getStatusFilters(message: string) {
   const n = normalizeSearch(message);
-  if (n.includes("concluido") || n.includes("concluÃ­do")) return new Set(["done"]);
-  if (n.includes("revisao") || n.includes("revisÃ£o")) return new Set(["review"]);
+  if (n.includes("concluido") || n.includes("concluído")) return new Set(["done"]);
+  if (n.includes("revisao") || n.includes("revisão")) return new Set(["review"]);
   if (n.includes("andamento")) return new Set(["doing"]);
   if (n.includes("backlog")) return new Set(["backlog"]);
   return null;
@@ -235,7 +235,7 @@ export function getStatusFilters(message: string) {
 export function getPriorityFilters(message: string) {
   const n = normalizeSearch(message);
   if (n.includes("urgente") || n.includes("alta")) return new Set(["high"]);
-  if (n.includes("media") || n.includes("mÃ©dia")) return new Set(["medium"]);
+  if (n.includes("media") || n.includes("média")) return new Set(["medium"]);
   if (n.includes("baixa")) return new Set(["low"]);
   return null;
 }

@@ -153,7 +153,7 @@ function ClientesPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Clientes</h1>
-          <p className="text-sm text-gray-600">Crie e gerencie empresas (clientes). Perfil nÃ£o e criado aqui.</p>
+          <p className="text-sm text-gray-600">Crie e gerencie empresas (clientes). Perfil não e criado aqui.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isGlobalAdmin && (
@@ -217,7 +217,7 @@ function ClientesPage() {
           <div className="text-sm text-gray-600">
             {isGlobalAdmin ? (
               <div className="mt-2 rounded-xl border border-dashed border-gray-300 p-4 text-center">
-                <p className="text-sm text-gray-700">VocÃª ainda nÃ£o criou nenhuma empresa.</p>
+                <p className="text-sm text-gray-700">Você ainda não criou nenhuma empresa.</p>
                 <button
                   onClick={() => setOpenCreate(true)}
                   className="mt-3 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white shadow-sm hover:bg-indigo-500"

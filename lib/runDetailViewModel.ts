@@ -49,7 +49,7 @@ function buildQaseFallbackRelease(slug: string, normalizedSlug: string): Release
   return {
     slug: normalizedSlug,
     title: `Run ${parsed.runId}`,
-    summary: "ExecuÃ§Ã£o integrada via Qase.",
+    summary: "Execução integrada via Qase.",
     runId: parsed.runId,
     project: parsed.projectCode.toLowerCase(),
     app: parsed.projectCode.toLowerCase(),

@@ -30,7 +30,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const body = asRecord(await request.json().catch(() => null));
   try {
     if (!isItemStatus(body.status)) {
-      return apiFail(request, "Status invÃ¡lido para item da run", { status: 400, code: "RUN_ITEM_STATUS_INVALID" });
+      return apiFail(request, "Status inválido para item da run", { status: 400, code: "RUN_ITEM_STATUS_INVALID" });
     }
 
     const result = await updateRunItemResult({

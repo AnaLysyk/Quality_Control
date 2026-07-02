@@ -6,7 +6,7 @@ import { createAccessRequestFromPayload, listAccessRequestsForUser } from "@/lib
 export async function GET(req: Request) {
   const authUser = await authenticateRequest(req);
   if (!authUser) {
-    return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const url = new URL(req.url);
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const authUser = await authenticateRequest(req);
   if (!authUser) {
-    return NextResponse.json({ message: "NÃ£o autenticado" }, { status: 401 });
+    return NextResponse.json({ message: "Não autenticado" }, { status: 401 });
   }
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;

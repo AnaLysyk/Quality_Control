@@ -246,10 +246,10 @@ export async function GET(request: Request) {
   const auth = await authenticateRequest(request);
   const mockRole = await getRunMockRole();
   if (!auth && !mockRole) {
-    return apiFail(request, "NÃ£o autorizado", {
+    return apiFail(request, "Não autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "NÃ£o autorizado" } },
+      extra: { error: { message: "Não autorizado" } },
     });
   }
   if (auth && !hasGlobalCompanyVisibility(auth) && !isCompanyUser(auth)) {
@@ -321,14 +321,14 @@ export async function GET(request: Request) {
 
   // If requested, aggregate runs across all configured projects for this company
   if (all) {
-    // Only discover Qase projects when no projects are already configured â€” avoids
+    // Only discover Qase projects when no projects are already configured — avoids
     // fetching the entire project list on every page load when settings are present.
     let discoveredProjects: string[] = [];
     if (configuredProjects.length === 0) {
       try {
         discoveredProjects = await fetchAllQaseProjectCodes(baseUrl, tokenToUse);
       } catch {
-        // Ignore â€” keep configured projects only
+        // Ignore — keep configured projects only
       }
     }
 
@@ -426,10 +426,10 @@ export async function POST(request: Request) {
     auth ?? (mockRole ? { id: `mock-${mockRole}`, email: `${mockRole}@example.com`, isGlobalAdmin: mockRole === "leader_tc" } : null);
 
   if (!effectiveAuth) {
-    return apiFail(request, "NÃ£o autorizado", {
+    return apiFail(request, "Não autorizado", {
       status: 401,
       code: "AUTH_REQUIRED",
-      extra: { error: { message: "NÃ£o autorizado" } },
+      extra: { error: { message: "Não autorizado" } },
     });
   }
   if (auth && !auth.isGlobalAdmin && !isCompanyUser(auth)) {

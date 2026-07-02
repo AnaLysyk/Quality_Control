@@ -37,7 +37,7 @@ export type NavItemDef = {
   favoriteEnabled?: boolean;
   action?: "navigate" | "focusSearch" | "openCreateModal";
   testId?: string;
-  /** Label de agrupamento visual no sidebar (nÃ£o afeta filtros de role) */
+  /** Label de agrupamento visual no sidebar (não afeta filtros de role) */
   group?: string;
 };
 
@@ -69,7 +69,7 @@ const USER_MANAGERS: SystemRole[] = PRIVILEGED;
 
 export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
-  // HOME â€” All users
+  // HOME — All users
   // ============================================
   {
     id: "home",
@@ -83,11 +83,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // EMPRESAS â€” Only for SYSTEM_USERS
+  // EMPRESAS — Only for SYSTEM_USERS
   // ============================================
   {
     id: "companies",
-    label: "GestÃ£o de Empresas",
+    label: "Gestão de Empresas",
     iconKey: "building",
     allowedRoles: SYSTEM_USERS,
     testId: "nav-companies",
@@ -130,11 +130,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // OPERAÃ‡Ã•ES â€” All users (context varies)
+  // OPERAÃ‡Ã•ES — All users (context varies)
   // ============================================
   {
     id: "operations",
-    label: "OperaÃ§Ãµes",
+    label: "Operações",
     iconKey: "monitor",
     allowedRoles: ALL_USERS,
     testId: "nav-operations",
@@ -153,7 +153,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "ops-metrics",
         routeId: "operacao.metricas",
-        label: "MÃ©tricas",
+        label: "Métricas",
         iconKey: "bar-chart",
         module: "operations",
         href: "/operacoes/metricas",
@@ -175,12 +175,12 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // REPOSITÃ“RIO DE TESTES â€” All users
-  // Removed: Releases, Cobertura, EvidÃªncias
+  // REPOSITÃ“RIO DE TESTES — All users
+  // Removed: Releases, Cobertura, Evidências
   // ============================================
   {
     id: "quality",
-    label: "RepositÃ³rio de Testes",
+    label: "Repositório de Testes",
     iconKey: "check-circle",
     allowedRoles: ALL_USERS,
     testId: "nav-test-repository",
@@ -230,12 +230,12 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // AUTOMAÃ‡ÃƒO â€” All internal users
-  // Grouped: Workspace | ExecuÃ§Ãµes | Ativos
+  // AUTOMAÃ‡ÃƒO — All internal users
+  // Grouped: Workspace | Execuções | Ativos
   // ============================================
   {
     id: "automation",
-    label: "AutomaÃ§Ã£o",
+    label: "Automação",
     iconKey: "zap",
     allowedRoles: ALL_INTERNAL,
     testId: "nav-automation",
@@ -265,12 +265,12 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "auto-execucoes",
         routeId: "automacao.execucoes",
-        label: "ExecuÃ§Ãµes",
+        label: "Execuções",
         iconKey: "play",
         module: "automation",
         href: "/automacoes/execucoes",
         favoriteEnabled: true,
-        group: "ExecuÃ§Ãµes",
+        group: "Execuções",
         testId: "nav-automation-executions",
       },
       {
@@ -281,7 +281,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation",
         href: "/automacoes/fluxos",
         favoriteEnabled: true,
-        group: "ExecuÃ§Ãµes",
+        group: "Execuções",
         testId: "nav-automation-flows",
       },
       {
@@ -292,7 +292,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "automation",
         href: "/automacoes/casos",
         favoriteEnabled: true,
-        group: "ExecuÃ§Ãµes",
+        group: "Execuções",
         testId: "nav-automation-cases",
       },
       {
@@ -365,12 +365,12 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // SOLICITAÃ‡Ã•ES â€” Leader + Technical support only
+  // SOLICITAÃ‡Ã•ES — Leader + Technical support only
   // ============================================
   {
     id: "requests",
     routeId: "solicitacoes.listagem",
-    label: "SolicitaÃ§Ãµes",
+    label: "Solicitações",
     iconKey: "clipboard",
     href: "/solicitacoes",
     allowedRoles: LEADER_AND_SUPPORT,
@@ -401,7 +401,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // AGENDA â€” Leader + Technical support only
+  // AGENDA — Leader + Technical support only
   // ============================================
   {
     id: "agenda",
@@ -416,7 +416,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // SUPORTE â€” All users
+  // SUPORTE — All users
   // ============================================
   {
     id: "support",
@@ -471,7 +471,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // CHAT â€” All users (contact scope varies by role)
+  // CHAT — All users (contact scope varies by role)
   // ============================================
   {
     id: "chat",
@@ -505,8 +505,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // BRAIN â€” All users
-  // Removed: Assistente da empresa, Brain Admin, MemÃ³rias, Contexto atual
+  // BRAIN — All users
+  // Removed: Assistente da empresa, Brain Admin, Memórias, Contexto atual
   // ============================================
   {
     id: "brain",
@@ -541,8 +541,8 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // DOCUMENTOS â€” All users
-  // Removed: Documentos da empresa, DocumentaÃ§Ã£o tÃ©cnica, EvidÃªncias, ExportaÃ§Ãµes
+  // DOCUMENTOS — All users
+  // Removed: Documentos da empresa, Documentação técnica, Evidências, Exportações
   // ============================================
   {
     id: "documents",
@@ -564,7 +564,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "docs-repository",
         routeId: "documentos.repositorio",
-        label: "RepositÃ³rio de documentos",
+        label: "Repositório de documentos",
         iconKey: "book",
         module: "documents",
         href: "/documentos/repositorio",
@@ -575,11 +575,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // GESTÃƒO â€” perfil e usuÃ¡rios
+  // GESTÃƒO — perfil e usuários
   // ============================================
   {
     id: "management",
-    label: "GestÃ£o",
+    label: "Gestão",
     iconKey: "sliders",
     allowedRoles: PRIVILEGED,
     testId: "nav-management",
@@ -597,7 +597,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "management-users",
         routeId: "permissoes.matriz",
-        label: "UsuÃ¡rios",
+        label: "Usuários",
         iconKey: "users",
         module: "management",
         href: "/admin/users/permissions",
@@ -621,7 +621,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // LOGS â€” link direto, fora de Admin
+  // LOGS — link direto, fora de Admin
   // ============================================
   {
     id: "logs",

@@ -20,11 +20,11 @@ function mapTestCaseError(error: unknown) {
   if (!(error instanceof Error)) return null;
 
   if (error.message === "TITLE_REQUIRED") {
-    return NextResponse.json({ message: "TÃ­tulo Ã© obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ message: "Título é obrigatório" }, { status: 400 });
   }
 
   if (error.message === "STEP_ACTION_REQUIRED") {
-    return NextResponse.json({ message: "Cada passo precisa de aÃ§Ã£o" }, { status: 400 });
+    return NextResponse.json({ message: "Cada passo precisa de ação" }, { status: 400 });
   }
 
   if (error.message === "STEP_EXPECTED_RESULT_REQUIRED") {
@@ -38,7 +38,7 @@ function mapTestCaseError(error: unknown) {
     error.message === "INVALID_TEST_CASE_PRIORITY" ||
     error.message === "INVALID_TEST_CASE_AUTOMATION_STATUS"
   ) {
-    return NextResponse.json({ message: "Campos de classificaÃ§Ã£o invÃ¡lidos" }, { status: 400 });
+    return NextResponse.json({ message: "Campos de classificação inválidos" }, { status: 400 });
   }
 
   return null;
@@ -111,7 +111,7 @@ function matchesTestCaseFilters(record: Awaited<ReturnType<typeof listTestCaseRe
 
 export async function GET(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const url = new URL(req.url);
   const filters = filtersFromUrl(url);
@@ -140,13 +140,13 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const payload = (await req.json()) as CreateTestCaseInput & { companySlug?: string | null };
   const companySlug = payload.companySlug ?? payload.companyId ?? null;
 
   if (!canCreateTestCaseForCompany(user, companySlug)) {
-    return NextResponse.json({ message: "Sem permissÃ£o para criar caso neste contexto" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão para criar caso neste contexto" }, { status: 403 });
   }
 
   try {
@@ -182,11 +182,11 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const payload = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!payload || !payload.id) {
-    return NextResponse.json({ message: "id obrigatÃ³rio" }, { status: 400 });
+    return NextResponse.json({ message: "id obrigatório" }, { status: 400 });
   }
 
   const id = String(payload.id);
@@ -196,9 +196,9 @@ export async function PATCH(req: Request) {
   const existing = (await listTestCaseRecords()).find(
     (r) => r.testCase.id === id || r.testCase.key === id,
   );
-  if (!existing) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+  if (!existing) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, existing)) {
-    return NextResponse.json({ message: "Sem permissÃ£o para editar este caso" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão para editar este caso" }, { status: 403 });
   }
 
   try {
@@ -206,7 +206,7 @@ export async function PATCH(req: Request) {
       ? await archiveTestCaseRecord(id, user.id)
       : await updateTestCaseRecord(id, payload as Parameters<typeof updateTestCaseRecord>[1], user.id);
 
-    if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+    if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
 
     writeAuditLog({
       actorUserId: user.id,

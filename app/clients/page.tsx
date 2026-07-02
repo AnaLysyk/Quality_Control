@@ -126,10 +126,10 @@ function ClientsPage() {
                 : role === "client_admin" || role === "empresa"
                   ? "Admin"
                   : role === "it_dev" || role === "technical_support"
-                    ? "Suporte TÃ©cnico"
+                    ? "Suporte Técnico"
                     : role === "company_user"
-                      ? "UsuÃ¡rio da empresa"
-                      : "UsuÃ¡rio",
+                      ? "Usuário da empresa"
+                      : "Usuário",
             avatarUrl: typeof item.avatar_url === "string" ? item.avatar_url : null,
           };
         });

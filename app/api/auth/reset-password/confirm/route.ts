@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const newPassword = typeof body?.newPassword === "string" ? body.newPassword : "";
 
   if (!token || !newPassword) {
-    return NextResponse.json({ error: "Token e nova senha obrigatÃ³rios" }, { status: 400 });
+    return NextResponse.json({ error: "Token e nova senha obrigatórios" }, { status: 400 });
   }
 
   if (newPassword.length < 8) {
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
   const userId = await consumePasswordResetToken(token);
   if (!userId) {
-    return NextResponse.json({ error: "Token invÃ¡lido ou expirado" }, { status: 400 });
+    return NextResponse.json({ error: "Token inválido ou expirado" }, { status: 400 });
   }
 
   await updateLocalUser(userId, { password_hash: hashPasswordSha256(newPassword) });

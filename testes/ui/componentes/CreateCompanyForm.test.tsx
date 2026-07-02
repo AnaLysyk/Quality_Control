@@ -40,7 +40,7 @@ describe("CreateCompanyForm", () => {
 
     render(<CreateCompanyForm />);
 
-    const cnpjInput = screen.getByPlaceholderText("CNPJ (opcional para preenchimento automÃ¡tico)");
+    const cnpjInput = screen.getByPlaceholderText("CNPJ (opcional para preenchimento automático)");
     const nameInput = screen.getByPlaceholderText("Nome da empresa");
 
     fireEvent.change(cnpjInput, { target: { value: "11.111.111/1111-11" } });
@@ -87,7 +87,7 @@ describe("CreateCompanyForm", () => {
 
     render(<CreateCompanyForm />);
 
-    const cnpjInput = screen.getByPlaceholderText("CNPJ (opcional para preenchimento automÃ¡tico)");
+    const cnpjInput = screen.getByPlaceholderText("CNPJ (opcional para preenchimento automático)");
     const nameInput = screen.getByPlaceholderText("Nome da empresa");
 
     fireEvent.change(cnpjInput, { target: { value: "19131243000197" } });

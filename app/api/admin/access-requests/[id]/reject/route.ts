@@ -24,7 +24,7 @@ function applyAdminNotes(message: string, notes: string | null) {
 export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
   const { admin, status } = await requireAccessRequestReviewerWithStatus(req);
   if (!admin) {
-    return NextResponse.json({ error: status === 401 ? "NÃ£o autenticado" : "Sem permissÃ£o" }, { status });
+    return NextResponse.json({ error: status === 401 ? "Não autenticado" : "Sem permissão" }, { status });
   }
 
   const body = (await req.json().catch(() => null)) as { reason?: string | null; comment?: string | null } | null;
@@ -98,10 +98,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   if (shouldUseJsonStore()) {
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     const updatedMessage = applyAdminNotes(existing.message, reason || null);
     const updated = await updateAccessRequest(id, { status: "rejected", message: updatedMessage });
@@ -111,7 +111,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
-      body: [reason || comment || "SolicitaÃ§Ã£o recusada.", "Fale com um responsÃ¡vel para revisar o acesso solicitado."]
+      body: [reason || comment || "Solicitação recusada.", "Fale com um responsável para revisar o acesso solicitado."]
         .filter(Boolean)
         .join("\n"),
     });
@@ -149,10 +149,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
   try {
     const existing = await prisma.supportRequest.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
 
     const updated = await prisma.supportRequest.update({
@@ -169,7 +169,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
-      body: [reason || comment || "SolicitaÃ§Ã£o recusada.", "Fale com um responsÃ¡vel para revisar o acesso solicitado."]
+      body: [reason || comment || "Solicitação recusada.", "Fale com um responsável para revisar o acesso solicitado."]
         .filter(Boolean)
         .join("\n"),
     });
@@ -206,10 +206,10 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     console.error("[ACCESS-REQUESTS][REJECT][PRISMA_FALLBACK]", error);
     const existing = await getAccessRequestById(id);
     if (!existing) {
-      return NextResponse.json({ error: "SolicitaÃ§Ã£o nÃ£o encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
     }
     if (!canReviewerAccessQueue(admin, resolveAccessRequestQueue(existing.message, existing.email))) {
-      return NextResponse.json({ error: "Sem permissÃ£o para esta solicitaÃ§Ã£o" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para esta solicitação" }, { status: 403 });
     }
     const updated = await updateAccessRequest(id, { status: "rejected", message: applyAdminNotes(existing.message, reason || null) });
     await createAccessRequestComment({
@@ -218,7 +218,7 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
       authorName: admin.email || "Admin",
       authorEmail: admin.email || null,
       authorId: admin.id || null,
-      body: [reason || comment || "SolicitaÃ§Ã£o recusada.", "Fale com um responsÃ¡vel para revisar o acesso solicitado."]
+      body: [reason || comment || "Solicitação recusada.", "Fale com um responsável para revisar o acesso solicitado."]
         .filter(Boolean)
         .join("\n"),
     });

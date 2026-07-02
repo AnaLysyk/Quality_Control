@@ -39,9 +39,9 @@ describe("parseStructuredTicketDraft", () => {
 
   it("parses a complete structured draft", () => {
     const input = [
-      "Titulo: BotÃ£o de login sem resposta",
+      "Titulo: Botão de login sem resposta",
       "Descricao: Ao clicar em login, nada acontece",
-      "Impacto: UsuÃ¡rios nÃ£o conseguem acessar o sistema",
+      "Impacto: Usuários não conseguem acessar o sistema",
       "Comportamento esperado: Redirecionar para o dashboard",
       "Comportamento atual: A tela fica branca",
       "Tipo: bug",
@@ -51,23 +51,23 @@ describe("parseStructuredTicketDraft", () => {
     const result = parseStructuredTicketDraft(input);
     expect(result).not.toBeNull();
     expect(result!.hasNamedFields).toBe(true);
-    expect(result!.title).toBe("BotÃ£o de login sem resposta");
+    expect(result!.title).toBe("Botão de login sem resposta");
     expect(result!.description).toBe("Ao clicar em login, nada acontece");
-    expect(result!.impact).toContain("nÃ£o conseguem acessar");
+    expect(result!.impact).toContain("não conseguem acessar");
     expect(result!.type).toBe("bug");
     expect(result!.priority).toBe("high");
   });
 
-  it("parses with accented field names (TÃ­tulo, DescriÃ§Ã£o)", () => {
+  it("parses with accented field names (Título, Descrição)", () => {
     const input = [
-      "TÃ­tulo: Erro no dashboard",
-      "DescriÃ§Ã£o: O grÃ¡fico nÃ£o carrega",
+      "Título: Erro no dashboard",
+      "Descrição: O gráfico não carrega",
     ].join("\n");
 
     const result = parseStructuredTicketDraft(input);
     expect(result).not.toBeNull();
     expect(result!.title).toBe("Erro no dashboard");
-    expect(result!.description).toBe("O grÃ¡fico nÃ£o carrega");
+    expect(result!.description).toBe("O gráfico não carrega");
   });
 
   it("parses priority 'media' as medium", () => {
@@ -120,24 +120,24 @@ describe("parseStructuredTicketDraft", () => {
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("inferTicketType", () => {
-  it("detects 'bug' keyword â†’ bug", () => {
+  it("detects 'bug' keyword → bug", () => {
     expect(inferTicketType("Tem um bug no login", ctx())).toBe("bug");
   });
 
-  it("detects 'erro' keyword â†’ bug", () => {
-    expect(inferTicketType("Erro ao salvar formulÃ¡rio", ctx())).toBe("bug");
+  it("detects 'erro' keyword → bug", () => {
+    expect(inferTicketType("Erro ao salvar formulário", ctx())).toBe("bug");
   });
 
-  it("detects 'falha' keyword â†’ bug", () => {
-    expect(inferTicketType("Falha na integraÃ§Ã£o", ctx())).toBe("bug");
+  it("detects 'falha' keyword → bug", () => {
+    expect(inferTicketType("Falha na integração", ctx())).toBe("bug");
   });
 
-  it("detects 'melhoria' keyword â†’ melhoria", () => {
-    expect(inferTicketType("SugestÃ£o de melhoria na tela", ctx())).toBe("melhoria");
+  it("detects 'melhoria' keyword → melhoria", () => {
+    expect(inferTicketType("Sugestão de melhoria na tela", ctx())).toBe("melhoria");
   });
 
-  it("detects 'sugestÃ£o' â†’ melhoria", () => {
-    expect(inferTicketType("Uma sugestÃ£o para o dashboard", ctx())).toBe("melhoria");
+  it("detects 'sugestão' → melhoria", () => {
+    expect(inferTicketType("Uma sugestão para o dashboard", ctx())).toBe("melhoria");
   });
 
   it("defaults to tarefa for test_plans module", () => {
@@ -145,7 +145,7 @@ describe("inferTicketType", () => {
   });
 
   it("defaults to tarefa for unrecognized text", () => {
-    expect(inferTicketType("verificar o relatÃ³rio", ctx())).toBe("tarefa");
+    expect(inferTicketType("verificar o relatório", ctx())).toBe("tarefa");
   });
 });
 
@@ -154,32 +154,32 @@ describe("inferTicketType", () => {
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 describe("inferTicketPriority", () => {
-  it("detects 'urgente' â†’ high", () => {
-    expect(inferTicketPriority("Isso Ã© urgente")).toBe("high");
+  it("detects 'urgente' → high", () => {
+    expect(inferTicketPriority("Isso é urgente")).toBe("high");
   });
 
-  it("detects 'critico' â†’ high", () => {
-    expect(inferTicketPriority("cenÃ¡rio critico")).toBe("high");
+  it("detects 'critico' → high", () => {
+    expect(inferTicketPriority("cenário critico")).toBe("high");
   });
 
-  it("detects 'bloqueia' â†’ high", () => {
+  it("detects 'bloqueia' → high", () => {
     expect(inferTicketPriority("o erro bloqueia o acesso")).toBe("high");
   });
 
-  it("detects 'nÃ£o abre' â†’ high", () => {
-    expect(inferTicketPriority("a tela nÃ£o abre")).toBe("high");
+  it("detects 'não abre' → high", () => {
+    expect(inferTicketPriority("a tela não abre")).toBe("high");
   });
 
-  it("detects 'baixa' â†’ low", () => {
+  it("detects 'baixa' → low", () => {
     expect(inferTicketPriority("prioridade baixa")).toBe("low");
   });
 
-  it("detects 'simples' â†’ low", () => {
+  it("detects 'simples' → low", () => {
     expect(inferTicketPriority("ajuste simples")).toBe("low");
   });
 
   it("defaults to medium", () => {
-    expect(inferTicketPriority("verificar o relatÃ³rio")).toBe("medium");
+    expect(inferTicketPriority("verificar o relatório")).toBe("medium");
   });
 });
 
@@ -189,10 +189,10 @@ describe("inferTicketPriority", () => {
 
 describe("buildTicketTitle", () => {
   it("strips action verbs and ticket keywords", () => {
-    const result = buildTicketTitle("criar chamado sobre botÃ£o quebrado", ctx());
+    const result = buildTicketTitle("criar chamado sobre botão quebrado", ctx());
     expect(result).not.toContain("criar");
     expect(result).not.toContain("chamado");
-    expect(result).toContain("botÃ£o quebrado");
+    expect(result).toContain("botão quebrado");
   });
 
   it("takes only the first sentence", () => {
@@ -217,14 +217,14 @@ describe("buildTicketTitle", () => {
 
 describe("buildTicketDescription", () => {
   it("includes screen label and route", () => {
-    const result = buildTicketDescription("O botÃ£o nÃ£o funciona", ctx());
+    const result = buildTicketDescription("O botão não funciona", ctx());
     expect(result).toContain("Kanban global de suporte");
     expect(result).toContain("/admin/support");
   });
 
   it("includes the user message", () => {
-    const result = buildTicketDescription("O botÃ£o nÃ£o funciona", ctx());
-    expect(result).toContain("O botÃ£o nÃ£o funciona");
+    const result = buildTicketDescription("O botão não funciona", ctx());
+    expect(result).toContain("O botão não funciona");
   });
 
   it("truncates to 1900 chars max", () => {
@@ -243,7 +243,7 @@ describe("buildStructuredTicketDescription", () => {
       hasNamedFields: true,
       title: "Bug X",
       description: "Detalhe do problema",
-      impact: "UsuÃ¡rios sem acesso",
+      impact: "Usuários sem acesso",
       expectedBehavior: "Deveria funcionar",
       currentBehavior: "Tela branca",
       type: null,
@@ -251,7 +251,7 @@ describe("buildStructuredTicketDescription", () => {
     };
     const result = buildStructuredTicketDescription(draft, ctx());
     expect(result).toContain("Detalhe do problema");
-    expect(result).toContain("UsuÃ¡rios sem acesso");
+    expect(result).toContain("Usuários sem acesso");
     expect(result).toContain("Deveria funcionar");
     expect(result).toContain("Tela branca");
   });
@@ -260,7 +260,7 @@ describe("buildStructuredTicketDescription", () => {
     const draft = {
       hasNamedFields: true,
       title: "Bug Y",
-      description: "Apenas descriÃ§Ã£o",
+      description: "Apenas descrição",
       impact: "",
       expectedBehavior: "",
       currentBehavior: "",
@@ -268,7 +268,7 @@ describe("buildStructuredTicketDescription", () => {
       priority: null,
     };
     const result = buildStructuredTicketDescription(draft, ctx());
-    expect(result).toContain("Apenas descriÃ§Ã£o");
+    expect(result).toContain("Apenas descrição");
     expect(result).not.toContain("Impacto:");
   });
 });
@@ -279,13 +279,13 @@ describe("buildStructuredTicketDescription", () => {
 
 describe("extractNarrativePayload", () => {
   it("extracts payload from 'converter esta nota ... em chamado'", () => {
-    const result = extractNarrativePayload("converter esta nota o botÃ£o estÃ¡ quebrado em chamado");
-    expect(result).toContain("botÃ£o estÃ¡ quebrado");
+    const result = extractNarrativePayload("converter esta nota o botão está quebrado em chamado");
+    expect(result).toContain("botão está quebrado");
   });
 
   it("extracts payload from 'nota: ...' pattern", () => {
-    const result = extractNarrativePayload("nota: o sistema nÃ£o responde apÃ³s login");
-    expect(result).toContain("o sistema nÃ£o responde");
+    const result = extractNarrativePayload("nota: o sistema não responde após login");
+    expect(result).toContain("o sistema não responde");
   });
 
   it("returns empty string when no pattern matches", () => {
@@ -306,8 +306,8 @@ describe("extractTicketNarrativeSource", () => {
   });
 
   it("preserves actual content", () => {
-    const result = extractTicketNarrativeSource("criar chamado: o relatÃ³rio mostra dados errados");
-    expect(result).toContain("relatÃ³rio mostra dados errados");
+    const result = extractTicketNarrativeSource("criar chamado: o relatório mostra dados errados");
+    expect(result).toContain("relatório mostra dados errados");
   });
 });
 
@@ -329,7 +329,7 @@ describe("isTicketTemplateRequest", () => {
   });
 
   it("returns false for regular text", () => {
-    expect(isTicketTemplateRequest("o botÃ£o nÃ£o funciona")).toBe(false);
+    expect(isTicketTemplateRequest("o botão não funciona")).toBe(false);
   });
 });
 

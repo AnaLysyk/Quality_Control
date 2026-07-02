@@ -325,7 +325,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     return undefined;
   }, [settings.theme]);
 
-  // Sync LanguageContext â†’ AppSettings when user toggles LanguageSelector
+  // Sync LanguageContext → AppSettings when user toggles LanguageSelector
   useEffect(() => {
     if (syncingRef.current) return;
     const mapped = localeToLanguage(locale);
@@ -338,7 +338,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [locale, setLanguage, settings.language]);
 
-  // Sync AppSettings â†’ LanguageContext when settings change (e.g. from server)
+  // Sync AppSettings → LanguageContext when settings change (e.g. from server)
   useEffect(() => {
     if (syncingRef.current) return;
     const mapped = languageToLocale(settings.language);

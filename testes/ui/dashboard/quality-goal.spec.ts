@@ -3,7 +3,7 @@ import { simularAutenticacao } from "../../../support/functions/ui/apoio/simular
 import { criarStatusMetaQualidade } from "../../../support/functions/banco-de-dados/geradores-dados/criar-dados-mttr-meta";
 import { validarDashboardAtualPronto } from "../../../support/functions/ui/apoio/operar-dashboard-e-defeitos";
 
-test("meta de qualidade mantÃ©m leitura executiva disponÃ­vel", async ({ page, context }) => {
+test("meta de qualidade mantém leitura executiva disponível", async ({ page, context }) => {
   await criarStatusMetaQualidade();
   await simularAutenticacao(context, {
     role: "company",

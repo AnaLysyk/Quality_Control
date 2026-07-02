@@ -1,5 +1,5 @@
 ﻿/**
- * Profile Engine â€” exports
+ * Profile Engine — exports
  */
 
 export * from "./types";

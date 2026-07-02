@@ -46,7 +46,7 @@ async function createAccessRequest(
 
 test.setTimeout(180000);
 
-test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }) => {
+test("admin abre e aceita/rejeita solicitações de acesso", async ({ page }) => {
   const suffix = Date.now().toString().slice(-6);
   const acceptEmail = `e2e.accept.${suffix}@demo.test`;
   const rejectEmail = `e2e.reject.${suffix}@demo.test`;
@@ -57,7 +57,7 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
     role: "QA Lead",
     company: "DEMO",
     accessType: "company",
-    notes: "SolicitaÃ§Ã£o para administrar a empresa.",
+    notes: "Solicitação para administrar a empresa.",
   });
 
   await createAccessRequest(page, {
@@ -66,7 +66,7 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
     role: "QA",
     company: "DEMO",
     accessType: "user",
-    notes: "SolicitaÃ§Ã£o para acesso bÃ¡sico.",
+    notes: "Solicitação para acesso básico.",
   });
 
   await configurarUsuarioSimulado(page, "admin");
@@ -87,7 +87,7 @@ test("admin abre e aceita/rejeita solicitaÃ§Ãµes de acesso", async ({ page }
   await expect(rejectRow).toBeVisible({ timeout: 20000 });
   await rejectRow.click();
   await expect(page.getByLabel(/^Email$/i)).toHaveValue(rejectEmail);
-  await page.getByLabel(/Notas do admin/i).fill("SolicitaÃ§Ã£o rejeitada.");
+  await page.getByLabel(/Notas do admin/i).fill("Solicitação rejeitada.");
 
   await expect(page.getByRole("button", { name: /Recusar solicita/i })).toBeEnabled();
   await page.getByRole("button", { name: /Recusar solicita/i }).click();

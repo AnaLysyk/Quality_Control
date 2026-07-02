@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
   if (!body) return jsonError("JSON invalido", 400);
 
   const user = await authenticateRequest(request);
-  if (!user) return jsonError("NÃ£o autorizado", 401);
+  if (!user) return jsonError("Não autorizado", 401);
 
   const record = body as Record<string, unknown>;
   const project = asProject(record.project);
@@ -92,12 +92,12 @@ export async function POST(request: NextRequest) {
     effectiveSlug = requestedSlug ?? preferredCompanySlug ?? null;
   } else {
     const allowed = resolveAllowedSlugs(user);
-    if (!allowed.length) return jsonError("slug e obrigatÃ³rio", 400);
+    if (!allowed.length) return jsonError("slug e obrigatório", 400);
     if (requestedSlug && !allowed.includes(requestedSlug)) return jsonError("Acesso proibido", 403);
     effectiveSlug = requestedSlug ?? preferredCompanySlug ?? allowed[0] ?? null;
   }
 
-  if (!effectiveSlug) return jsonError("slug e obrigatÃ³rio", 400);
+  if (!effectiveSlug) return jsonError("slug e obrigatório", 400);
   if (!project || runId === null || caseId === null) {
     return jsonError("Campos obrigatorios: project, runId, caseId", 400);
   }

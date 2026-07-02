@@ -91,7 +91,7 @@ async function assertThemeVisible(page: import("@playwright/test").Page, route: 
     };
   });
 
-  expect(result.textCount, `Sem texto visÃ­vel em ${route} (${theme})`).toBeGreaterThan(0);
+  expect(result.textCount, `Sem texto visível em ${route} (${theme})`).toBeGreaterThan(0);
 }
 
 test.describe("theme visibility - public", () => {

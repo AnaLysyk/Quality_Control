@@ -401,13 +401,13 @@ async function enrichItems(items: CompanyDocumentItem[]) {
 
 export async function GET(req: NextRequest) {
   const auth = await getAuthContext(req);
-  if (!auth) return NextResponse.json({ error: "NÃ£o autorizado", items: [] }, { status: 401 });
+  if (!auth) return NextResponse.json({ error: "Não autorizado", items: [] }, { status: 401 });
   const canManage = canManageCompanyDocuments(auth);
 
   const url = new URL(req.url);
   const slugRaw = url.searchParams.get("slug") ?? "";
   const companySlug = sanitizeSlug(slugRaw);
-  if (!companySlug) return NextResponse.json({ error: "slug obrigatÃ³rio", items: [] }, { status: 400 });
+  if (!companySlug) return NextResponse.json({ error: "slug obrigatório", items: [] }, { status: 400 });
   if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado", items: [] }, { status: 403 });
 
   const download = url.searchParams.get("download") === "1";
@@ -421,10 +421,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ history: items, canManage }, { status: 200 });
   }
   if (download) {
-    if (!downloadId) return NextResponse.json({ error: "id obrigatÃ³rio" }, { status: 400 });
+    if (!downloadId) return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
     const store = await readStore();
     const item = store.items.find((i) => i.companySlug === companySlug && i.id === downloadId) ?? null;
-    if (!item) return NextResponse.json({ error: "Documento nÃ£o encontrado" }, { status: 404 });
+    if (!item) return NextResponse.json({ error: "Documento não encontrado" }, { status: 404 });
     if (item.kind !== "file" || !item.storagePath) return NextResponse.json({ error: "Documento invalido" }, { status: 400 });
 
     const relative = item.storagePath.replace(/^local:/, "");
@@ -439,7 +439,7 @@ export async function GET(req: NextRequest) {
       }
       return new NextResponse(buf, { status: 200, headers });
     } catch {
-      return NextResponse.json({ error: "Arquivo nÃ£o encontrado" }, { status: 404 });
+      return NextResponse.json({ error: "Arquivo não encontrado" }, { status: 404 });
     }
   }
 
@@ -469,8 +469,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const auth = await getAuthContext(req);
-  if (!auth) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
-  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissÃ£o para gerenciar documentos" }, { status: 403 });
+  if (!auth) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissão para gerenciar documentos" }, { status: 403 });
 
   const contentType = req.headers.get("content-type") || "";
   if (contentType.includes("multipart/form-data")) {
@@ -481,9 +481,9 @@ export async function POST(req: NextRequest) {
     const description = String(form.get("description") ?? "").trim().slice(0, 280) || null;
     const file = form.get("file");
 
-    if (!companySlug) return NextResponse.json({ error: "slug obrigatÃ³rio" }, { status: 400 });
+    if (!companySlug) return NextResponse.json({ error: "slug obrigatório" }, { status: 400 });
     if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-    if (!(file instanceof File)) return NextResponse.json({ error: "arquivo obrigatÃ³rio" }, { status: 400 });
+    if (!(file instanceof File)) return NextResponse.json({ error: "arquivo obrigatório" }, { status: 400 });
 
     const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
@@ -543,7 +543,7 @@ export async function POST(req: NextRequest) {
   const record = (body ?? null) as Record<string, unknown> | null;
   const slugRaw = typeof record?.slug === "string" ? record.slug : "";
   const companySlug = sanitizeSlug(slugRaw);
-  if (!companySlug) return NextResponse.json({ error: "slug obrigatÃ³rio" }, { status: 400 });
+  if (!companySlug) return NextResponse.json({ error: "slug obrigatório" }, { status: 400 });
   if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
 
   const kind = (record?.kind === "file" ? "file" : "link") as CompanyDocumentKind;
@@ -552,7 +552,7 @@ export async function POST(req: NextRequest) {
   const title = (typeof record?.title === "string" ? record.title : "Link").trim().slice(0, 120) || "Link";
   const description = (typeof record?.description === "string" ? record.description : "").trim().slice(0, 280) || null;
   const url = (typeof record?.url === "string" ? record.url : "").trim();
-  if (!url) return NextResponse.json({ error: "url obrigatÃ³ria" }, { status: 400 });
+  if (!url) return NextResponse.json({ error: "url obrigatória" }, { status: 400 });
 
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
@@ -593,8 +593,8 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const auth = await getAuthContext(req);
-  if (!auth) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
-  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissÃ£o para gerenciar documentos" }, { status: 403 });
+  if (!auth) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissão para gerenciar documentos" }, { status: 403 });
 
   const url = new URL(req.url);
   const id = (url.searchParams.get("id") ?? "").trim();
@@ -634,15 +634,15 @@ export async function DELETE(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const auth = await getAuthContext(req);
-  if (!auth) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
-  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissÃ£o para gerenciar documentos" }, { status: 403 });
+  if (!auth) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!canManageCompanyDocuments(auth)) return NextResponse.json({ error: "Sem permissão para gerenciar documentos" }, { status: 403 });
 
   const body = (await req.json().catch(() => null)) as unknown;
   const record = (body ?? null) as Record<string, unknown> | null;
   const slugRaw = typeof record?.slug === "string" ? record.slug : "";
   const companySlug = sanitizeSlug(slugRaw);
   const id = (typeof record?.id === "string" ? record.id : "").trim();
-  if (!companySlug || !id) return NextResponse.json({ error: "slug e id obrigatÃ³rios" }, { status: 400 });
+  if (!companySlug || !id) return NextResponse.json({ error: "slug e id obrigatórios" }, { status: 400 });
   if (!canAccessCompany(auth, companySlug)) return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
 
   const newTitle = typeof record?.title === "string" ? record.title.trim().slice(0, 120) : undefined;
@@ -652,7 +652,7 @@ export async function PATCH(req: NextRequest) {
 
   if (USE_POSTGRES) {
     const row = await prisma.companyDocument.findFirst({ where: { id, companySlug } });
-    if (!row) return NextResponse.json({ error: "Documento nÃ£o encontrado" }, { status: 404 });
+    if (!row) return NextResponse.json({ error: "Documento não encontrado" }, { status: 404 });
     const data: Record<string, unknown> = {};
     if (newTitle !== undefined) data.title = newTitle || row.title;
     if (newDescription !== undefined) data.description = newDescription || null;
@@ -662,7 +662,7 @@ export async function PATCH(req: NextRequest) {
   } else {
     const store = await readStore();
     const item = store.items.find((i) => i.id === id && i.companySlug === companySlug);
-    if (!item) return NextResponse.json({ error: "Documento nÃ£o encontrado" }, { status: 404 });
+    if (!item) return NextResponse.json({ error: "Documento não encontrado" }, { status: 404 });
     if (newTitle !== undefined) item.title = newTitle || item.title;
     if (newDescription !== undefined) item.description = newDescription || null;
     if (newUrl !== undefined && item.kind === "link") item.url = newUrl || item.url;

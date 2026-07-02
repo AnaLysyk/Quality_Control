@@ -16,9 +16,9 @@
 
 describe("stripAccents", () => {
   it("removes accents from Portuguese text", () => {
-    expect(stripAccents("descriÃ§Ã£o")).toBe("descricao");
-    expect(stripAccents("tÃ­tulo")).toBe("titulo");
-    expect(stripAccents("prÃ³ximo")).toBe("proximo");
+    expect(stripAccents("descrição")).toBe("descricao");
+    expect(stripAccents("título")).toBe("titulo");
+    expect(stripAccents("próximo")).toBe("proximo");
   });
 
   it("leaves ASCII text unchanged", () => {
@@ -36,7 +36,7 @@ describe("normalizeSearch", () => {
   });
 
   it("strips accents", () => {
-    expect(normalizeSearch("AÃ§Ã£o disponÃ­vel")).toBe("acao disponivel");
+    expect(normalizeSearch("Ação disponível")).toBe("acao disponivel");
   });
 
   it("trims whitespace", () => {
@@ -122,7 +122,7 @@ describe("formatDateTime", () => {
 
 describe("normalizeCommentForComparison", () => {
   it("removes accents, punctuation and extra spaces", () => {
-    expect(normalizeCommentForComparison("OlÃ¡, tudo bem?")).toBe("ola tudo bem");
+    expect(normalizeCommentForComparison("Olá, tudo bem?")).toBe("ola tudo bem");
   });
 
   it("lowercases text", () => {

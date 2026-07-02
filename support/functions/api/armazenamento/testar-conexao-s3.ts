@@ -13,7 +13,7 @@ const s3 = new S3Client({
 async function testS3Connection() {
   try {
     const result = await s3.send(new ListBucketsCommand({}));
-    console.log("ConexÃ£o S3 bem-sucedida! Buckets:", result.Buckets);
+    console.log("Conexão S3 bem-sucedida! Buckets:", result.Buckets);
   } catch (err) {
     console.error("Erro ao conectar no S3:", err);
   }

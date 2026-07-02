@@ -36,7 +36,7 @@ const STATUS_META: Record<StatusKey, { label: string; rowClass: string; badgeCla
   pass:    { label: "Passou",        rowClass: styles.rowPass,    badgeClass: styles.badgePass },
   fail:    { label: "Falhou",        rowClass: styles.rowFail,    badgeClass: styles.badgeFail },
   blocked: { label: "Bloqueado",     rowClass: styles.rowBlocked, badgeClass: styles.badgeBlocked },
-  not_run: { label: "NÃ£o Executado", rowClass: styles.rowNotRun,  badgeClass: styles.badgeNotRun },
+  not_run: { label: "Não Executado", rowClass: styles.rowNotRun,  badgeClass: styles.badgeNotRun },
 };
 
 const STATUS_ORDER: StatusKey[] = ["fail", "blocked", "not_run", "pass"];
@@ -113,7 +113,7 @@ function CaseRow({ item }: { item: CaseItem }) {
 
           {item.description && (
             <div className={styles.detailBlock}>
-              <p className={styles.detailLabel}>DescriÃ§Ã£o</p>
+              <p className={styles.detailLabel}>Descrição</p>
               <p className={styles.detailText}>{item.description}</p>
             </div>
           )}
@@ -153,7 +153,7 @@ function CaseRow({ item }: { item: CaseItem }) {
                   className={styles.linkCase}
                 >
                   <FiExternalLink size={12} />
-                  Abrir no RepositÃ³rio
+                  Abrir no Repositório
                 </a>
               )}
             </div>
@@ -190,19 +190,19 @@ function ManualCaseList({ runSlug }: { runSlug: string }) {
       .then((data: unknown) =>
         setItems(Array.isArray(data) ? (data as CaseItem[]) : [])
       )
-      .catch(() => setError("Erro ao carregar casos da execuÃ§Ã£o."));
+      .catch(() => setError("Erro ao carregar casos da execução."));
   }, [runSlug]);
 
   if (error) {
     return <p className={`${styles.stateMsg} ${styles.stateMsgError}`}>{error}</p>;
   }
   if (!items) {
-    return <p className={styles.stateMsg}>Carregando casosâ€¦</p>;
+    return <p className={styles.stateMsg}>Carregando casos…</p>;
   }
   if (!items.length) {
     return (
       <p className={styles.stateMsg}>
-        Nenhum caso registrado nesta execuÃ§Ã£o ainda.
+        Nenhum caso registrado nesta execução ainda.
       </p>
     );
   }
@@ -246,7 +246,7 @@ export function RunCaseListSection({ vm }: { vm: RunDetailViewModel }) {
       <h2 className={styles.sectionTitle}>Casos de Teste</h2>
 
       {vm.source === "API" ? (
-        /* Qase API runs â€” keep existing streaming component */
+        /* Qase API runs — keep existing streaming component */
         <RunKanbanStream
           projectKey={vm.projectKey}
           projectCode={vm.projectCode}

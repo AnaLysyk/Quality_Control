@@ -10,7 +10,7 @@ const logError = (msg: string, error?: any) =>
   console.error(`[SYNC ERROR] ${msg}`, error?.message || '')
 
 /**
- * SincronizaÃ§Ã£o inicial do Brain
+ * Sincronização inicial do Brain
  * Popula BrainNode, BrainEdge e valida integridade
  */
 export async function syncBrain() {
@@ -25,7 +25,7 @@ export async function syncBrain() {
     // await prisma.brainNode.deleteMany({})
     // log('Cleaned old brain data')
 
-    // ===== STEP 2: Criar nÃ³s para cada entidade
+    // ===== STEP 2: Criar nós para cada entidade
     log('Step 1: Creating nodes from entities...')
     let nodeCount = 0
 
@@ -123,7 +123,7 @@ export async function syncBrain() {
     log('Step 2: Creating edges between entities...')
     let edgeCount = 0
 
-    // Company â†’ Application (HAS_APPLICATION)
+    // Company → Application (HAS_APPLICATION)
     for (const app of applications) {
       const companyNode = await prisma.brainNode.findFirst({
         where: { refType: 'Company', refId: app.companyId },
@@ -138,7 +138,7 @@ export async function syncBrain() {
     }
     log(`Created Application edges`)
 
-    // Ticket â†’ Company (BELONGS_TO)
+    // Ticket → Company (BELONGS_TO)
     for (const ticket of tickets) {
       const ticketNode = await prisma.brainNode.findFirst({
         where: { refType: 'Ticket', refId: ticket.id },
@@ -153,7 +153,7 @@ export async function syncBrain() {
     }
     log(`Created Ticket-Company edges`)
 
-    // Ticket â†’ User (CREATED_BY)
+    // Ticket → User (CREATED_BY)
     for (const ticket of tickets) {
       if (ticket.createdBy) {
         const ticketNode = await prisma.brainNode.findFirst({
@@ -170,7 +170,7 @@ export async function syncBrain() {
     }
     log(`Created Ticket-Creator edges`)
 
-    // Ticket â†’ User (ASSIGNED_TO)
+    // Ticket → User (ASSIGNED_TO)
     for (const ticket of tickets) {
       if (ticket.assignedToUserId) {
         const ticketNode = await prisma.brainNode.findFirst({
@@ -187,7 +187,7 @@ export async function syncBrain() {
     }
     log(`Created Ticket-Assignee edges`)
 
-    // User â†’ Company (MEMBER_OF)
+    // User → Company (MEMBER_OF)
     const memberships = await prisma.membership.findMany()
     for (const membership of memberships) {
       const userNode = await prisma.brainNode.findFirst({
@@ -221,7 +221,7 @@ export async function syncBrain() {
 
     log(`\nStats:\n  - Nodes: ${validation.stats.nodes}\n  - Edges: ${validation.stats.edges}\n  - Memories: ${validation.stats.memories}\n    `)
 
-    // ===== STEP 5: Registrar conclusÃ£o
+    // ===== STEP 5: Registrar conclusão
     const duration = Date.now() - startTime
     log(`===== SYNC COMPLETED in ${duration}ms =====`)
 

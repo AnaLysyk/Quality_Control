@@ -1,15 +1,15 @@
 ﻿/**
- * CenÃ¡rios de ediÃ§Ã£o de empresa no banco PostgreSQL.
- * âœ… cleanup total em afterAll â€” nenhum dado permanece.
+ * Cenários de edição de empresa no banco PostgreSQL.
+ * âœ… cleanup total em afterAll — nenhum dado permanece.
  *
- * CenÃ¡rios cobertos:
+ * Cenários cobertos:
  *  1. Editar nome da empresa
  *  2. Editar status (active â†” inactive)
  *  3. Editar campos de contato (phone, address, website, cep)
  *  4. Editar tax_id (CNPJ)
  *  5. Editar short_description e notes
- *  6. Editar campos de integraÃ§Ã£o (jira_base_url, jira_email, qase_project_code)
- *  7. Rejeitar nome duplicado na ediÃ§Ã£o
+ *  6. Editar campos de integração (jira_base_url, jira_email, qase_project_code)
+ *  7. Rejeitar nome duplicado na edição
  *  8. Retornar null para empresa inexistente
  */
 
@@ -46,7 +46,7 @@ async function makeCompany(suffix: string, extra: Record<string, unknown> = {}) 
   return company;
 }
 
-describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
+describePg("Edição de empresa — cenários", () => {
 
   // â”€â”€ 1. Editar nome â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("edita o nome da empresa e persiste no banco", async () => {
@@ -60,11 +60,11 @@ describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
 
     const row = await prisma.company.findUnique({ where: { id: company.id } });
     expect(row!.name).toBe(novoNome);
-    console.log(`\nâœ… Nome alterado: "${company.name}" â†’ "${updated!.name}"`);
+    console.log(`\nâœ… Nome alterado: "${company.name}" → "${updated!.name}"`);
   });
 
   // â”€â”€ 2. Editar status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("altera status active â†’ inactive â†’ active", async () => {
+  it("altera status active → inactive → active", async () => {
     const company = await makeCompany("status");
 
     const deactivated = await pgUpdateLocalCompany(company.id, { status: "inactive", active: false });
@@ -75,7 +75,7 @@ describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
     expect(reactivated!.status).toBe("active");
     expect(reactivated!.active).toBe(true);
 
-    console.log(`\nâœ… Status: active â†’ inactive â†’ active`);
+    console.log(`\nâœ… Status: active → inactive → active`);
   });
 
   // â”€â”€ 3. Editar campos de contato â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -84,13 +84,13 @@ describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
 
     const updated = await pgUpdateLocalCompany(company.id, {
       phone: "+55 11 99999-0001",
-      address: "Rua dos Testes, 123 â€” Bairro QA",
+      address: "Rua dos Testes, 123 — Bairro QA",
       website: "https://testing-company.local",
       cep: "01310-100",
     });
 
     expect(updated!.phone).toBe("+55 11 99999-0001");
-    expect(updated!.address).toBe("Rua dos Testes, 123 â€” Bairro QA");
+    expect(updated!.address).toBe("Rua dos Testes, 123 — Bairro QA");
     expect(updated!.website).toBe("https://testing-company.local");
     expect(updated!.cep).toBe("01310-100");
 
@@ -112,22 +112,22 @@ describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
     console.log(`\nâœ… CNPJ editado: ${updated!.tax_id}`);
   });
 
-  // â”€â”€ 5. Editar descriÃ§Ã£o e notes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ 5. Editar descrição e notes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   it("edita short_description e notes", async () => {
     const company = await makeCompany("descricao");
 
     const updated = await pgUpdateLocalCompany(company.id, {
       short_description: "Empresa de testes automatizados do painel QA",
-      notes: "Criada em suite de ediÃ§Ã£o â€” UID: " + UID,
+      notes: "Criada em suite de edição — UID: " + UID,
     });
 
     expect(updated!.short_description).toBe("Empresa de testes automatizados do painel QA");
     expect(updated!.notes).toContain(UID);
-    console.log(`\nâœ… DescriÃ§Ã£o e notes editados`);
+    console.log(`\nâœ… Descrição e notes editados`);
   });
 
-  // â”€â”€ 6. Editar campos de integraÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("edita campos de integraÃ§Ã£o (jira, qase_project_code)", async () => {
+  // â”€â”€ 6. Editar campos de integração â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("edita campos de integração (jira, qase_project_code)", async () => {
     const company = await makeCompany("integracao");
 
     const updated = await pgUpdateLocalCompany(company.id, {
@@ -142,7 +142,7 @@ describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
     expect(updated!.jira_email).toBe("qa@testing-company.local");
     expect(updated!.qase_project_code).toBe("TC");
     expect(updated!.integration_mode).toBe("jira");
-    console.log(`\nâœ… IntegraÃ§Ã£o editada: jira_base_url=${updated!.jira_base_url} | qase=${updated!.qase_project_code}`);
+    console.log(`\nâœ… Integração editada: jira_base_url=${updated!.jira_base_url} | qase=${updated!.qase_project_code}`);
   });
 
   // â”€â”€ 7. Limpar campos opcionais (set null) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -169,7 +169,7 @@ describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
   it("retorna null ao tentar editar empresa com id inexistente", async () => {
     const result = await pgUpdateLocalCompany("id-que-nao-existe-9999", { name: "Fantasma" });
     expect(result).toBeNull();
-    console.log(`\nâœ… Empresa inexistente â†’ retornou null`);
+    console.log(`\nâœ… Empresa inexistente → retornou null`);
   });
 
   // â”€â”€ 9. Editar linkedin_url â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -184,8 +184,8 @@ describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
     console.log(`\nâœ… LinkedIn editado: ${updated!.linkedin_url}`);
   });
 
-  // â”€â”€ 10. MÃºltiplos campos em uma Ãºnica chamada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  it("edita mÃºltiplos campos em uma Ãºnica operaÃ§Ã£o", async () => {
+  // â”€â”€ 10. Múltiplos campos em uma única chamada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  it("edita múltiplos campos em uma única operação", async () => {
     const company = await makeCompany("multiplos");
 
     const updated = await pgUpdateLocalCompany(company.id, {
@@ -201,7 +201,7 @@ describePg("EdiÃ§Ã£o de empresa â€” cenÃ¡rios", () => {
     expect(updated!.phone).toBe("+55 21 98765-4321");
     expect(updated!.website).toBe("https://multi.testing.local");
     expect(updated!.tax_id).toBe("98.765.432/0001-10");
-    console.log(`\nâœ… MÃºltiplos campos editados em uma operaÃ§Ã£o`);
+    console.log(`\nâœ… Múltiplos campos editados em uma operação`);
   });
 });
 

@@ -76,7 +76,7 @@ const FALLBACK_DEFECTS: DefectItem[] = [
   },
   {
     id: "df-3",
-    title: "Dashboard sem atualizar mÃ©tricas",
+    title: "Dashboard sem atualizar métricas",
     status: "pending",
     run_id: "run-789",
     projectCode: "PRINT",
@@ -103,7 +103,7 @@ const STATUS_LABEL: Record<string, string> = {
   fail: "Em falha",
   blocked: "Bloqueado",
   pending: "Aguardando teste",
-  done: "ConcluÃ­do",
+  done: "Concluído",
 };
 
 const STATUS_LABEL_EN: Record<string, string> = {
@@ -134,12 +134,12 @@ export default function AdminDefeitosPage() {
       isPt
         ? {
             sessionExpired: "Sessao expirada. Faca login novamente.",
-            noPermission: "Sem permissÃ£o",
+            noPermission: "Sem permissão",
             loadError: "Erro ao carregar dados",
             loadingDefects: "Carregando defeitos...",
             defects: "Defeitos",
             globalPanel: "Painel de defeitos (global)",
-            panelSubtitle: "VisÃ£o consolidada de falhas por empresa e por run. Clique para entrar no contexto da empresa.",
+            panelSubtitle: "Visão consolidada de falhas por empresa e por run. Clique para entrar no contexto da empresa.",
             openDefects: "Defeitos abertos",
             companiesWithDefects: "Empresas com defeitos",
             defectsQaseManual: "Defeitos (Qase + manuais)",
@@ -157,8 +157,8 @@ export default function AdminDefeitosPage() {
             noRunWithDefects: "Nenhuma run com defeitos.",
             openRun: "Abrir run",
             company: "Empresa",
-            defectsByApp: "Defeitos por aplicaÃ§Ã£o",
-            noAppWithDefects: "Nenhuma aplicaÃ§Ã£o com defeitos.",
+            defectsByApp: "Defeitos por aplicação",
+            noAppWithDefects: "Nenhuma aplicação com defeitos.",
             statusFallback: "status",
           }
         : {
@@ -410,7 +410,7 @@ export default function AdminDefeitosPage() {
 
         {!loading && (
           <>
-            {/* visÃ£o macro por empresa */}
+            {/* visão macro por empresa */}
             <section className="grid gap-4 md:grid-cols-3">
               <MetricCard label={ui.openDefects} value={defects.length} color="text-red-600" icon={<FiAlertTriangle />} />
               <MetricCard label={ui.companiesWithDefects} value={companyCards.length} icon={<FiTrendingDown />} />
@@ -539,7 +539,7 @@ export default function AdminDefeitosPage() {
                           <div className={`h-full rounded-full bg-red-500 ${widthClass}`} />
                         </div>
                         <p className="text-xs text-[var(--tc-text-secondary,#4b5563)]">
-                          {r.count} {ui.defectsCount} â€¢ {r.app} â€¢ {r.client ?? ui.company}
+                          {r.count} {ui.defectsCount} • {r.app} • {r.client ?? ui.company}
                         </p>
                       </div>
                     );
@@ -548,7 +548,7 @@ export default function AdminDefeitosPage() {
               )}
             </section>
 
-            {/* Defeitos por aplicaÃ§Ã£o */}
+            {/* Defeitos por aplicação */}
             <section className="rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-white p-6 shadow-sm space-y-3">
               <h2 className="text-xl font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{ui.defectsByApp}</h2>
               {defectsByApp.length === 0 ? (

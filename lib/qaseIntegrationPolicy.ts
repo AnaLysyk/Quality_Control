@@ -22,13 +22,13 @@ export type QaseIntegrationPolicy = {
 export const QASE_SYNC_SCOPE_LABELS: Record<QaseSyncScope, string> = {
   test_cases: "Casos de teste",
   test_plans: "Planos de teste",
-  test_runs: "ExecuÃ§Ãµes / runs",
+  test_runs: "Execuções / runs",
   test_results: "Resultados",
   defects: "Defeitos",
-  evidence: "EvidÃªncias",
+  evidence: "Evidências",
   attachments: "Anexos",
   milestones: "Marcos / releases",
-  automation_status: "Status de automaÃ§Ã£o",
+  automation_status: "Status de automação",
 };
 
 export const QASE_EVERYTHING_SCOPES: QaseSyncScope[] = [
@@ -88,11 +88,11 @@ export function buildQaseIntegrationPolicy(input: {
 
 export function describeQaseIntegrationPolicy(policy: QaseIntegrationPolicy) {
   if (policy.mode === "disabled") {
-    return "Qase nÃ£o sincroniza dados atÃ© configurar token e projeto.";
+    return "Qase não sincroniza dados até configurar token e projeto.";
   }
   if (policy.mode === "everything") {
-    return "IntegraÃ§Ã£o completa: casos, planos, runs, resultados, defeitos, evidÃªncias, anexos, releases e status de automaÃ§Ã£o podem ser enviados ao Qase.";
+    return "Integração completa: casos, planos, runs, resultados, defeitos, evidências, anexos, releases e status de automação podem ser enviados ao Qase.";
   }
-  return "IntegraÃ§Ã£o seletiva: somente os escopos escolhidos serÃ£o enviados ao Qase.";
+  return "Integração seletiva: somente os escopos escolhidos serão enviados ao Qase.";
 }
 

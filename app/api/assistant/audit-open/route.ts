@@ -4,8 +4,8 @@ import { authenticateRequest } from "@/lib/jwtAuth";
 import { prisma } from "@/lib/prismaClient";
 
 /**
- * Rota leve de audit: registra quando o assistente Ã© aberto com contexto.
- * Chamada fire-and-forget pelo ChatButton â€” falha silenciosamente no cliente.
+ * Rota leve de audit: registra quando o assistente é aberto com contexto.
+ * Chamada fire-and-forget pelo ChatButton — falha silenciosamente no cliente.
  */
 export const runtime = "nodejs";
 
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch {
-    // Falha silenciosa â€” audit nÃ£o deve bloquear UX
+    // Falha silenciosa — audit não deve bloquear UX
     return NextResponse.json({ ok: false });
   }
 }

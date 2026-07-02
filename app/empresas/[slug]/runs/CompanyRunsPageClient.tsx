@@ -210,7 +210,7 @@ function normalizeManualRuns(data: unknown[], t: (key: string, params?: Record<s
       sourceType === "qase"
         ? "Qase"
         : sourceType === "automation"
-          ? "AutomaÃ§Ã£o"
+          ? "Automação"
           : sourceType === "local"
             ? "Local"
             : t("runsPage.manualSource");
@@ -232,7 +232,7 @@ function normalizeManualRuns(data: unknown[], t: (key: string, params?: Record<s
       statusLabel: resolveStatusLabel(typeof rec.status === "string" ? rec.status : null, t),
       sourceType,
       sourceLabel,
-      providerLabel: sourceType === "qase" ? t("runsPage.providerQase") : sourceType === "automation" ? "AutomaÃ§Ã£o" : null,
+      providerLabel: sourceType === "qase" ? t("runsPage.providerQase") : sourceType === "automation" ? "Automação" : null,
       applicationLabel: String(rec.app ?? rec.qaseProject ?? t("runsPage.manualAppFallback")),
       projectCode: normalizeProjectCode(rec.qaseProject ?? rec.app),
       summary: t("runsPage.manualSummary", { pass: stats.pass, fail: stats.fail, blocked: stats.blocked, notRun: stats.notRun }),
@@ -341,7 +341,7 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], t: (key: string, params?
         sourceType === "qase"
           ? "Qase"
           : sourceType === "automation"
-            ? "AutomaÃ§Ã£o"
+            ? "Automação"
             : sourceType === "local"
               ? "Local"
               : t("runsPage.integratedSource"),
@@ -349,7 +349,7 @@ function toUnifiedIntegratedRuns(data: IntegratedRun[], t: (key: string, params?
         sourceType === "qase"
           ? t("runsPage.providerQase")
           : sourceType === "automation"
-            ? "AutomaÃ§Ã£o"
+            ? "Automação"
             : providerLabel,
       applicationLabel,
       projectCode: normalizeProjectCode(run.qaseProject ?? run.project ?? run.app),
@@ -910,7 +910,7 @@ export default function CompanyRunsPageClient() {
                 <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[var(--tc-text-muted,#6b7280)]">Execucao</p>
                 <h2 className="truncate text-xl font-black text-[var(--tc-text,#0b1a3c)]">{activeRun.name}</h2>
                 <p className="truncate text-sm text-[var(--tc-text-muted,#6b7280)]">
-                  {activeRun.applicationLabel} Â· {formatDate(activeRun.createdAt, language, t)}
+                  {activeRun.applicationLabel} · {formatDate(activeRun.createdAt, language, t)}
                 </p>
               </div>
               <button

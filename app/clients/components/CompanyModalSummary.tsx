@@ -16,7 +16,7 @@ export type CompanyModalSummaryProps = {
   notificationsFanoutEnabled?: boolean;
 };
 
-function text(value?: string | null, fallback = "NÃ£o informado") {
+function text(value?: string | null, fallback = "Não informado") {
   const normalized = value?.trim();
   return normalized || fallback;
 }
@@ -42,7 +42,7 @@ export function CompanyModalSummary({
   primaryQaseProjectCode,
   notificationsFanoutEnabled,
 }: CompanyModalSummaryProps) {
-  const modeLabel = mode === "create" ? "CriaÃ§Ã£o" : isEditing ? "EdiÃ§Ã£o" : "VisualizaÃ§Ã£o";
+  const modeLabel = mode === "create" ? "Criação" : isEditing ? "Edição" : "Visualização";
   const qaseLabel = qaseTokenConfigured
     ? selectedQaseProjectsCount > 0
       ? `${selectedQaseProjectsCount} projeto${selectedQaseProjectsCount === 1 ? "" : "s"}`
@@ -60,25 +60,25 @@ export function CompanyModalSummary({
             <SummaryPill label="Modo" value={modeLabel} />
             <SummaryPill label="Empresa" value={text(name, "Nova empresa")} />
             <SummaryPill label="Admin" value={text(adminEmail)} />
-            <SummaryPill label="UsuÃ¡rio" value={text(companyUsername, "A gerar")} />
+            <SummaryPill label="Usuário" value={text(companyUsername, "A gerar")} />
             <SummaryPill label="Fan-out" value={notificationsFanoutEnabled ? "Ativo" : "Inativo"} />
           </div>
         </div>
 
         <div className="rounded-xl border border-white/12 bg-slate-950/18 p-3">
           <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-white/62">
-            <FiCloudLightning className="h-4 w-4" /> Qase e aplicaÃ§Ãµes
+            <FiCloudLightning className="h-4 w-4" /> Qase e aplicações
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <SummaryPill label="IntegraÃ§Ã£o" value={qaseLabel} />
+            <SummaryPill label="Integração" value={qaseLabel} />
             <SummaryPill label="Principal" value={text(primaryQaseProjectCode, "Sem projeto principal")} />
           </div>
           {syncWithMyProfile ? (
             <p className="mt-3 flex items-start gap-2 rounded-xl border border-sky-200/20 bg-sky-400/10 px-3 py-2 text-xs font-semibold leading-5 text-sky-50">
               <FiLink2 className="mt-0.5 h-4 w-4 shrink-0" />
               {profileSyncDetected
-                ? "Dados carregados do Meu Perfil da empresa. Ao salvar, o perfil institucional tambÃ©m serÃ¡ atualizado."
-                : "Fluxo preparado para sincronizar com Meu Perfil da empresa quando houver dados disponÃ­veis."}
+                ? "Dados carregados do Meu Perfil da empresa. Ao salvar, o perfil institucional também será atualizado."
+                : "Fluxo preparado para sincronizar com Meu Perfil da empresa quando houver dados disponíveis."}
             </p>
           ) : null}
         </div>
@@ -96,7 +96,7 @@ export function CompanyQaseApplicationsSummary({ selectedProjects, primaryProjec
   if (!selectedProjects.length) {
     return (
       <div className="rounded-xl border border-dashed border-sky-300 bg-sky-50 px-4 py-4 text-sm font-semibold leading-6 text-sky-900 dark:border-sky-700/55 dark:bg-sky-950/30 dark:text-sky-100">
-        Nenhuma aplicaÃ§Ã£o Qase selecionada. A empresa serÃ¡ criada em modo manual atÃ© selecionar projetos.
+        Nenhuma aplicação Qase selecionada. A empresa será criada em modo manual até selecionar projetos.
       </div>
     );
   }
@@ -106,14 +106,14 @@ export function CompanyQaseApplicationsSummary({ selectedProjects, primaryProjec
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-sm font-black text-slate-950 dark:text-slate-50">
-            <FiZap className="h-4 w-4 text-sky-500" /> AplicaÃ§Ãµes que serÃ£o criadas
+            <FiZap className="h-4 w-4 text-sky-500" /> Aplicações que serão criadas
           </p>
           <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-300">
-            Cada projeto Qase selecionado vira uma aplicaÃ§Ã£o independente da empresa.
+            Cada projeto Qase selecionado vira uma aplicação independente da empresa.
           </p>
         </div>
         <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-black text-sky-700 dark:border-sky-700/55 dark:bg-sky-950/50 dark:text-sky-100">
-          {selectedProjects.length} aplicaÃ§Ã£o{selectedProjects.length === 1 ? "" : "Ãµes"}
+          {selectedProjects.length} aplicação{selectedProjects.length === 1 ? "" : "ões"}
         </span>
       </div>
 

@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
   if (!login || !email || !newPassword) {
     return NextResponse.json(
-      { error: "UsuÃ¡rio, email e nova senha obrigatorios." },
+      { error: "Usuário, email e nova senha obrigatorios." },
       { status: 400 },
     );
   }
@@ -28,14 +28,14 @@ export async function POST(req: Request) {
 
   if (newPassword.length > MAX_PASSWORD_LENGTH) {
     return NextResponse.json(
-      { error: `A nova senha deve ter no mÃ¡ximo ${MAX_PASSWORD_LENGTH} caracteres.` },
+      { error: `A nova senha deve ter no máximo ${MAX_PASSWORD_LENGTH} caracteres.` },
       { status: 400 },
     );
   }
 
   const user = await findLocalUserByEmailOrId(login);
   if (!user || (user.email ?? "").toLowerCase() !== email) {
-    return NextResponse.json({ error: "UsuÃ¡rio e email nÃ£o conferem." }, { status: 400 });
+    return NextResponse.json({ error: "Usuário e email não conferem." }, { status: 400 });
   }
 
   try {

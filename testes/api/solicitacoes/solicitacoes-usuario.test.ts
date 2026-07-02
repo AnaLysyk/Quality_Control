@@ -1,32 +1,32 @@
 ﻿/**
- * CenÃ¡rios do fluxo de SolicitaÃ§Ãµes de UsuÃ¡rio (requestsStore) no banco PostgreSQL.
- * âœ… cleanup total em afterAll â€” nenhum dado permanece.
+ * Cenários do fluxo de Solicitações de Usuário (requestsStore) no banco PostgreSQL.
+ * âœ… cleanup total em afterAll — nenhum dado permanece.
  *
- * CriaÃ§Ã£o (5 cenÃ¡rios):
- *  1. Cria solicitaÃ§Ã£o de troca de e-mail (PENDING por padrÃ£o)
- *  2. Cria solicitaÃ§Ã£o de troca de empresa
- *  3. Cria solicitaÃ§Ã£o de reset de senha
- *  4. Cria solicitaÃ§Ã£o de exclusÃ£o de perfil com payload customizado
- *  5. Bloqueia duplicata PENDING do mesmo usuÃ¡rio+tipo
+ * Criação (5 cenários):
+ *  1. Cria solicitação de troca de e-mail (PENDING por padrão)
+ *  2. Cria solicitação de troca de empresa
+ *  3. Cria solicitação de reset de senha
+ *  4. Cria solicitação de exclusão de perfil com payload customizado
+ *  5. Bloqueia duplicata PENDING do mesmo usuário+tipo
  *
- * Consultas (6 cenÃ¡rios):
- *  6.  listUserRequests retorna apenas solicitaÃ§Ãµes do usuÃ¡rio
+ * Consultas (6 cenários):
+ *  6.  listUserRequests retorna apenas solicitações do usuário
  *  7.  listUserRequests filtra por status APPROVED
  *  8.  listUserRequests filtra por tipo PASSWORD_RESET
- *  9.  listAllRequests retorna todas as solicitaÃ§Ãµes
+ *  9.  listAllRequests retorna todas as solicitações
  * 10. listAllRequests filtra por status REJECTED
  * 11. listAllRequests filtra por companyId
- * 12. listAllRequests ordenaÃ§Ã£o asc por createdAt
- * 13. getRequestById retorna solicitaÃ§Ã£o existente
+ * 12. listAllRequests ordenação asc por createdAt
+ * 13. getRequestById retorna solicitação existente
  * 14. getRequestById retorna null para id inexistente
  *
- * RevisÃ£o (6 cenÃ¡rios):
- * 15. updateRequestStatus aprova solicitaÃ§Ã£o PENDING
- * 16. updateRequestStatus rejeita solicitaÃ§Ã£o PENDING
+ * Revisão (6 cenários):
+ * 15. updateRequestStatus aprova solicitação PENDING
+ * 16. updateRequestStatus rejeita solicitação PENDING
  * 17. updateRequestStatus registra reviewedBy, reviewNote e reviewedAt
- * 18. updateRequestStatus nÃ£o altera solicitaÃ§Ã£o jÃ¡ revisada
+ * 18. updateRequestStatus não altera solicitação já revisada
  * 19. updateRequestStatus retorna null para id inexistente
- * 20. Dois usuÃ¡rios com mesmo tipo nÃ£o conflitam entre si
+ * 20. Dois usuários com mesmo tipo não conflitam entre si
  */
 
 process.env.AUTH_STORE = process.env.DATABASE_URL ? "postgres" : "json";
@@ -74,7 +74,7 @@ beforeAll(async () => {
   });
   createdCompanyIds.push(company.id);
 
-  // Criar usuÃ¡rios de teste
+  // Criar usuários de teste
   const uA = await pgCreateLocalUser({
     email: email("user-a"),
     name: "Usuario A",
@@ -136,10 +136,10 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-// â”€â”€ CriaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Criação â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes", () => {
-  test("1. cria solicitaÃ§Ã£o EMAIL_CHANGE com status PENDING", async () => {
+describePg("Criação de solicitações", () => {
+  test("1. cria solicitação EMAIL_CHANGE com status PENDING", async () => {
     const req = await addRequest(userA, "EMAIL_CHANGE", { newEmail: "novo@email.com" });
     createdRequestIds.push(req.id);
 
@@ -151,7 +151,7 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes", () => {
     expect(req.createdAt).toBeTruthy();
   });
 
-  test("2. cria solicitaÃ§Ã£o COMPANY_CHANGE com companyId e companyName", async () => {
+  test("2. cria solicitação COMPANY_CHANGE com companyId e companyName", async () => {
     const req = await addRequest(userA, "COMPANY_CHANGE", { targetCompanyId: "cmp_xyz" });
     createdRequestIds.push(req.id);
 
@@ -160,7 +160,7 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes", () => {
     expect(req.companyName).toBe(userA.companyName);
   });
 
-  test("3. cria solicitaÃ§Ã£o PASSWORD_RESET", async () => {
+  test("3. cria solicitação PASSWORD_RESET", async () => {
     const req = await addRequest(userA, "PASSWORD_RESET", {});
     createdRequestIds.push(req.id);
 
@@ -168,7 +168,7 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes", () => {
     expect(req.status).toBe("PENDING");
   });
 
-  test("4. cria solicitaÃ§Ã£o PROFILE_DELETION com motivo no payload", async () => {
+  test("4. cria solicitação PROFILE_DELETION com motivo no payload", async () => {
     const req = await addRequest(userB, "PROFILE_DELETION", { reason: "leaving company" });
     createdRequestIds.push(req.id);
 
@@ -178,8 +178,8 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes", () => {
     expect(req.userEmail).toBe(userB.email);
   });
 
-  test("5. bloqueia duplicata PENDING do mesmo usuÃ¡rio+tipo", async () => {
-    // userB jÃ¡ tem PROFILE_DELETION PENDING do teste 4
+  test("5. bloqueia duplicata PENDING do mesmo usuário+tipo", async () => {
+    // userB já tem PROFILE_DELETION PENDING do teste 4
     const error = await addRequest(userB, "PROFILE_DELETION", {}).catch((e) => e);
     expect(error).toBeInstanceOf(Error);
     expect((error as Error & { code?: string }).code).toBe("DUPLICATE");
@@ -188,8 +188,8 @@ describePg("CriaÃ§Ã£o de solicitaÃ§Ãµes", () => {
 
 // â”€â”€ Consultas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("Consultas de solicitaÃ§Ãµes", () => {
-  test("6. listUserRequests retorna apenas solicitaÃ§Ãµes do usuÃ¡rio", async () => {
+describePg("Consultas de solicitações", () => {
+  test("6. listUserRequests retorna apenas solicitações do usuário", async () => {
     const reqs = await listUserRequests(userA.id);
     expect(reqs.length).toBeGreaterThanOrEqual(3);
     reqs.forEach((r) => expect(r.userId).toBe(userA.id));
@@ -206,7 +206,7 @@ describePg("Consultas de solicitaÃ§Ãµes", () => {
     expect(reqs.some((r) => r.userId === userA.id)).toBe(true);
   });
 
-  test("9. listAllRequests retorna solicitaÃ§Ãµes de mÃºltiplos usuÃ¡rios", async () => {
+  test("9. listAllRequests retorna solicitações de múltiplos usuários", async () => {
     const all = await listAllRequests();
     const userAreqs = all.filter((r) => r.userId === userA.id);
     const userBreqs = all.filter((r) => r.userId === userB.id);
@@ -224,7 +224,7 @@ describePg("Consultas de solicitaÃ§Ãµes", () => {
     reqs.forEach((r) => expect(r.companyId).toBe(userA.companyId));
   });
 
-  test("12. listAllRequests ordenaÃ§Ã£o createdAt_asc", async () => {
+  test("12. listAllRequests ordenação createdAt_asc", async () => {
     const reqs = await listAllRequests({ sort: "createdAt_asc" });
     if (reqs.length >= 2) {
       const first = new Date(reqs[0].createdAt).getTime();
@@ -233,7 +233,7 @@ describePg("Consultas de solicitaÃ§Ãµes", () => {
     }
   });
 
-  test("13. getRequestById retorna solicitaÃ§Ã£o existente", async () => {
+  test("13. getRequestById retorna solicitação existente", async () => {
     const all = await listUserRequests(userA.id);
     const target = all[0];
     const found = await getRequestById(target.id);
@@ -248,25 +248,25 @@ describePg("Consultas de solicitaÃ§Ãµes", () => {
   });
 });
 
-// â”€â”€ RevisÃ£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Revisão â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-describePg("RevisÃ£o de solicitaÃ§Ãµes (updateRequestStatus)", () => {
+describePg("Revisão de solicitações (updateRequestStatus)", () => {
   let pendingId: string;
 
   beforeAll(async () => {
-    // Cria uma solicitaÃ§Ã£o especÃ­fica para ser revisada
+    // Cria uma solicitação específica para ser revisada
     const req = await addRequest(adminUser, "EMAIL_CHANGE", { newEmail: "admin-reviewed@test.local" });
     createdRequestIds.push(req.id);
     pendingId = req.id;
   });
 
-  test("15. aprova solicitaÃ§Ã£o PENDING", async () => {
+  test("15. aprova solicitação PENDING", async () => {
     const updated = await updateRequestStatus(pendingId, "APPROVED", { id: adminUser.id });
     expect(updated).not.toBeNull();
     expect(updated!.status).toBe("APPROVED");
   });
 
-  test("16. rejeita solicitaÃ§Ã£o PENDING de userB", async () => {
+  test("16. rejeita solicitação PENDING de userB", async () => {
     // userB tem PROFILE_DELETION PENDING ainda
     const list = await listUserRequests(userB.id, { status: "PENDING", type: "PROFILE_DELETION" });
     expect(list.length).toBeGreaterThanOrEqual(1);
@@ -284,8 +284,8 @@ describePg("RevisÃ£o de solicitaÃ§Ãµes (updateRequestStatus)", () => {
     expect(updated!.reviewedAt).toBeTruthy();
   });
 
-  test("18. nÃ£o altera solicitaÃ§Ã£o jÃ¡ revisada", async () => {
-    // pendingId foi aprovado no teste 15 â€” tentar aprovar de novo nÃ£o muda nada
+  test("18. não altera solicitação já revisada", async () => {
+    // pendingId foi aprovado no teste 15 — tentar aprovar de novo não muda nada
     const unchanged = await updateRequestStatus(pendingId, "REJECTED", { id: adminUser.id });
     expect(unchanged!.status).toBe("APPROVED"); // permanece APPROVED
   });
@@ -295,9 +295,9 @@ describePg("RevisÃ£o de solicitaÃ§Ãµes (updateRequestStatus)", () => {
     expect(result).toBeNull();
   });
 
-  test("20. dois usuÃ¡rios com o mesmo tipo nÃ£o conflitam (duplicate check Ã© por userId)", async () => {
+  test("20. dois usuários com o mesmo tipo não conflitam (duplicate check é por userId)", async () => {
     // userA e adminUser podem ter EMAIL_CHANGE ao mesmo tempo? adminUser acabou de ser APPROVED.
-    // Criar novo para adminUser â€” sem conflito porque anterior nÃ£o Ã© PENDING
+    // Criar novo para adminUser — sem conflito porque anterior não é PENDING
     const req = await addRequest(adminUser, "EMAIL_CHANGE", { newEmail: "new2@test.local" });
     createdRequestIds.push(req.id);
     expect(req.status).toBe("PENDING");

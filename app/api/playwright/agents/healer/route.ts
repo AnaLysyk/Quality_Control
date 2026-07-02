@@ -23,7 +23,7 @@ const HealerSchema = z.object({
 
 export async function POST(request: Request) {
   const user = await authenticateRequest(request);
-  if (!user) return NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
   const parsed = HealerSchema.safeParse(body);
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const allowed = resolveAutomationAllowedCompanySlugs(user);
   const access = resolveAutomationAccess(user, allowed.length);
   if (!access.canOpen || (!access.hasGlobalCompanyVisibility && !allowed.includes(companySlug)))
-    return NextResponse.json({ error: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
 
   const apiKey = requireAiApiKey();
   const openai = createOpenAI({ apiKey });

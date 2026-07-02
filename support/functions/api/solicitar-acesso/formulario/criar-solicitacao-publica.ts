@@ -52,19 +52,19 @@ export function montarPayloadSolicitacaoPublica(
   const requestedRole = opcoes.requestedRole ?? "technical_support";
 
   const tituloPorPerfil: Record<PerfilSolicitacaoAcessoPublica, string> = {
-    empresa: "SolicitaÃ§Ã£o de acesso empresarial",
-    company_user: "SolicitaÃ§Ã£o de acesso como usuÃ¡rio da empresa",
-    testing_company_user: "SolicitaÃ§Ã£o de acesso como usuÃ¡rio TC",
-    leader_tc: "SolicitaÃ§Ã£o de acesso como lÃ­der TC",
-    technical_support: "SolicitaÃ§Ã£o de acesso como suporte tÃ©cnico",
+    empresa: "Solicitação de acesso empresarial",
+    company_user: "Solicitação de acesso como usuário da empresa",
+    testing_company_user: "Solicitação de acesso como usuário TC",
+    leader_tc: "Solicitação de acesso como líder TC",
+    technical_support: "Solicitação de acesso como suporte técnico",
   };
 
   const descricaoPorPerfil: Record<PerfilSolicitacaoAcessoPublica, string> = {
-    empresa: "SolicitaÃ§Ã£o criada para validar o ciclo de aprovaÃ§Ã£o de acesso empresarial.",
-    company_user: "SolicitaÃ§Ã£o criada para validar o ciclo de aprovaÃ§Ã£o de usuÃ¡rio vinculado Ã  empresa.",
-    testing_company_user: "SolicitaÃ§Ã£o criada para validar o ciclo de aprovaÃ§Ã£o de usuÃ¡rio TC.",
-    leader_tc: "SolicitaÃ§Ã£o criada para validar o ciclo de aprovaÃ§Ã£o de lÃ­der TC.",
-    technical_support: "SolicitaÃ§Ã£o criada para validar o ciclo de aprovaÃ§Ã£o de suporte tÃ©cnico.",
+    empresa: "Solicitação criada para validar o ciclo de aprovação de acesso empresarial.",
+    company_user: "Solicitação criada para validar o ciclo de aprovação de usuário vinculado à empresa.",
+    testing_company_user: "Solicitação criada para validar o ciclo de aprovação de usuário TC.",
+    leader_tc: "Solicitação criada para validar o ciclo de aprovação de líder TC.",
+    technical_support: "Solicitação criada para validar o ciclo de aprovação de suporte técnico.",
   };
 
   const payload: DadosSolicitacaoAcessoPublica = {
@@ -98,9 +98,9 @@ export function montarPayloadSolicitacaoPublica(
       taxId: "19131243000197",
       tax_id: "19131243000197",
       cep: "01001-000",
-      address: "PraÃ§a da SÃ©",
+      address: "Praça da Sé",
       number: "100",
-      city: "SÃ£o Paulo",
+      city: "São Paulo",
       state: "SP",
       company: "NEXT COMPANY TECNOLOGIA LTDA",
     });
@@ -149,10 +149,10 @@ export async function criarSolicitacaoPublicaViaApi(
   const emailContent = `${captured.html}\n${captured.text ?? ""}`;
   const accessKeyFromEmail =
     emailContent.match(/status\?key=([a-f0-9]+)/i)?.[1] ??
-    emailContent.match(/C[oÃ³]digo de consulta:\s*([a-f0-9]+)/i)?.[1] ??
+    emailContent.match(/C[oó]digo de consulta:\s*([a-f0-9]+)/i)?.[1] ??
     "";
   const accessKey = accessKeyFromBody || accessKeyFromEmail;
-  expect(accessKey, "O cÃ³digo deve existir na API ou no e-mail capturado").toBeTruthy();
+  expect(accessKey, "O código deve existir na API ou no e-mail capturado").toBeTruthy();
 
   if (accessKeyFromBody && accessKeyFromEmail) {
     expect(accessKeyFromEmail).toBe(accessKeyFromBody);

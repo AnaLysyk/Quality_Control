@@ -20,7 +20,7 @@ const config: JestConfigWithTsJest = {
   reporters: ["default"],
   setupFiles: ["<rootDir>/support/functions/banco-de-dados/ambiente/configurar-variaveis-testes.js"],
   testTimeout: 10000,
-  // setupFiles removido pois o arquivo nÃ£o existe mais
+  // setupFiles removido pois o arquivo não existe mais
   transform: {
     "^.+\\.(ts|tsx)$": [
       "ts-jest",

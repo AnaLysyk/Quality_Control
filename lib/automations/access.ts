@@ -77,7 +77,7 @@ export function resolveAutomationAccess(
   const ownCompanyLabel =
     companyCount > 0
       ? `${companyCount} empresa${companyCount === 1 ? "" : "s"} da conta`
-      : "PrÃ³pria empresa";
+      : "Própria empresa";
 
   if (isLeader) {
     return {
@@ -86,10 +86,10 @@ export function resolveAutomationAccess(
       canManageFlows: true,
       canViewTechnicalLogs: true,
       hasGlobalCompanyVisibility: true,
-      profileLabel: "LÃ­der TC",
+      profileLabel: "Líder TC",
       scopeLabel: "Todas as empresas",
-      visibilityLabel: "GestÃ£o completa",
-      helperText: "Pode configurar ambientes, fluxos, segredos operacionais e histÃ³rico tÃ©cnico.",
+      visibilityLabel: "Gestão completa",
+      helperText: "Pode configurar ambientes, fluxos, segredos operacionais e histórico técnico.",
     };
   }
 
@@ -100,9 +100,9 @@ export function resolveAutomationAccess(
       canManageFlows: true,
       canViewTechnicalLogs: true,
       hasGlobalCompanyVisibility: true,
-      profileLabel: "Suporte tÃ©cnico",
+      profileLabel: "Suporte técnico",
       scopeLabel: "Todas as empresas",
-      visibilityLabel: "OperaÃ§Ã£o completa",
+      visibilityLabel: "Operação completa",
       helperText: "Pode operar e ajustar fluxos guiados, com leitura global de empresas e ambientes.",
     };
   }
@@ -114,10 +114,10 @@ export function resolveAutomationAccess(
       canManageFlows: false,
       canViewTechnicalLogs: false,
       hasGlobalCompanyVisibility: false,
-      profileLabel: "UsuÃ¡rio TC",
+      profileLabel: "Usuário TC",
       scopeLabel: linkedCompaniesLabel,
       visibilityLabel: "Somente leitura operacional",
-      helperText: "MantÃ©m a mesma identidade visual do mÃ³dulo interno, executa automaÃ§Ãµes das empresas vinculadas e nÃ£o altera fluxos, ambientes nem segredos.",
+      helperText: "Mantém a mesma identidade visual do módulo interno, executa automações das empresas vinculadas e não altera fluxos, ambientes nem segredos.",
     };
   }
 
@@ -128,11 +128,11 @@ export function resolveAutomationAccess(
       canManageFlows: true,
       canViewTechnicalLogs: false,
       hasGlobalCompanyVisibility: false,
-      profileLabel: isCompanyUserRole && !isCompanyRole ? "UsuÃ¡rio da empresa" : "Empresa",
+      profileLabel: isCompanyUserRole && !isCompanyRole ? "Usuário da empresa" : "Empresa",
       scopeLabel: ownCompanyLabel,
-      visibilityLabel: "OperaÃ§Ã£o da empresa",
+      visibilityLabel: "Operação da empresa",
       helperText:
-        "Visualiza, edita, inativa e executa apenas as automaÃ§Ãµes da prÃ³pria empresa. UsuÃ¡rio da empresa herda a mesma visÃ£o da empresa de origem.",
+        "Visualiza, edita, inativa e executa apenas as automações da própria empresa. Usuário da empresa herda a mesma visão da empresa de origem.",
     };
   }
 
@@ -143,9 +143,9 @@ export function resolveAutomationAccess(
     canViewTechnicalLogs: false,
     hasGlobalCompanyVisibility: false,
     profileLabel: "Conta",
-    scopeLabel: "Sem acesso ao mÃ³dulo",
+    scopeLabel: "Sem acesso ao módulo",
     visibilityLabel: "Restrito",
-    helperText: "Esse workspace Ã© interno e foi pensado para operaÃ§Ã£o tÃ©cnica da Testing Company.",
+    helperText: "Esse workspace é interno e foi pensado para operação técnica da Testing Company.",
   };
 }
 

@@ -56,17 +56,17 @@ type AuditLogsResponse = {
   };
 };
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Translation layer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* â”â‚¬â”â‚¬ Translation layer â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬ */
 
 const ACTION_TITLES: Record<string, string> = {
   // Users
-  "user.created": "UsuÃ¡rio criado",
-  "user.updated": "UsuÃ¡rio atualizado",
-  "user.deleted": "UsuÃ¡rio removido",
-  "user.permissions.updated": "PermissÃµes atualizadas",
-  "user.permissions.reset": "PermissÃµes restauradas",
-  "user.activated": "UsuÃ¡rio ativado",
-  "user.deactivated": "UsuÃ¡rio inativado",
+  "user.created": "Usuário criado",
+  "user.updated": "Usuário atualizado",
+  "user.deleted": "Usuário removido",
+  "user.permissions.updated": "Permissões atualizadas",
+  "user.permissions.reset": "Permissões restauradas",
+  "user.activated": "Usuário ativado",
+  "user.deactivated": "Usuário inativado",
   "user.role.changed": "Papel alterado",
   "user.email.changed": "E-mail alterado",
   "user.avatar.changed": "Avatar atualizado",
@@ -76,11 +76,11 @@ const ACTION_TITLES: Record<string, string> = {
   "client.updated": "Empresa atualizada",
   "client.deleted": "Empresa removida",
   "client.logo.changed": "Logo da empresa alterado",
-  "client.user.linked": "UsuÃ¡rio vinculado Ã  empresa",
-  "client.user.unlinked": "UsuÃ¡rio desvinculado da empresa",
+  "client.user.linked": "Usuário vinculado à empresa",
+  "client.user.unlinked": "Usuário desvinculado da empresa",
   // Runs
-  "run.created": "ExecuÃ§Ã£o criada",
-  "run.deleted": "ExecuÃ§Ã£o removida",
+  "run.created": "Execução criada",
+  "run.deleted": "Execução removida",
   // Auth
   "auth.login.success": "Login realizado",
   "auth.login.failure": "Tentativa de login falhou",
@@ -95,20 +95,20 @@ const ACTION_TITLES: Record<string, string> = {
   "ticket.created": "Chamado aberto",
   "ticket.updated": "Chamado atualizado",
   "ticket.deleted": "Chamado removido",
-  "ticket.assigned": "Chamado atribuÃ­do",
+  "ticket.assigned": "Chamado atribuído",
   "ticket.status.changed": "Status do chamado alterado",
   "ticket.closed": "Chamado fechado",
-  "ticket.commented": "ComentÃ¡rio no chamado",
+  "ticket.commented": "Comentário no chamado",
   // Access requests / Solicitações
   "access_request.created": "Solicitação de acesso criada",
   "access_request.accepted": "Solicitação aprovada",
   "access_request.rejected": "Solicitação recusada",
   "access_request.updated": "Solicitação ajustada",
-  "access_request.commented": "ComentÃ¡rio na solicitação",
+  "access_request.commented": "Comentário na solicitação",
   // Self-service requests
   "request.email_change": "Solicitação de alteração de e-mail",
-  "request.profile_deletion": "Solicitação de exclusÃ£o de perfil",
-  "request.company_change": "Solicitação de mudanÃ§a de empresa",
+  "request.profile_deletion": "Solicitação de exclusão de perfil",
+  "request.company_change": "Solicitação de mudança de empresa",
   // Defects
   "defect.created": "Defeito registrado",
   // Integrations
@@ -123,23 +123,23 @@ const ACTION_TITLES: Record<string, string> = {
   "audit.purged": "Logs de auditoria limpos",
   // legacy uppercase keys
   CREATE: "Registro criado",
-  USER_CREATED: "UsuÃ¡rio criado",
+  USER_CREATED: "Usuário criado",
   CLIENT_CREATED: "Empresa criada",
   UPDATE: "Registro atualizado",
-  USER_UPDATED: "UsuÃ¡rio atualizado",
+  USER_UPDATED: "Usuário atualizado",
   CLIENT_UPDATED: "Empresa atualizada",
   DELETE: "Registro removido",
-  USER_DELETED: "UsuÃ¡rio removido",
+  USER_DELETED: "Usuário removido",
   CLIENT_DELETED: "Empresa removida",
 };
 
 const ENTITY_LABELS: Record<string, string> = {
-  user: "UsuÃ¡rio",
+  user: "Usuário",
   client: "Empresa",
   company: "Empresa",
-  membership: "VÃ­nculo",
+  membership: "Vínculo",
   permission: "Permissão",
-  run: "ExecuÃ§Ã£o",
+  run: "Execução",
   ticket: "Chamado",
   access_request: "Solicitação",
   defect: "Defeito",
@@ -153,28 +153,28 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   slug: "Slug",
   active: "Status",
   role: "Papel",
-  permissionRole: "Papel de permissÃ£o",
+  permissionRole: "Papel de permissão",
   companyId: "ID da empresa",
   companySlug: "Slug da empresa",
   companyLabel: "Empresa",
-  membershipRole: "Papel no vÃ­nculo",
-  user_origin: "Origem do usuÃ¡rio",
+  membershipRole: "Papel no vínculo",
+  user_origin: "Origem do usuário",
   user_scope: "Escopo",
   integrationMode: "Modo de integração",
-  allowCount: "PermissÃµes concedidas",
-  denyCount: "PermissÃµes negadas",
-  effectiveCount: "PermissÃµes efetivas",
+  allowCount: "Permissões concedidas",
+  denyCount: "Permissões negadas",
+  effectiveCount: "Permissões efetivas",
   restored: "Restaurado",
   targetPermissionRole: "Papel do alvo",
   actorRole: "Papel do ator",
-  userEmail: "Email do usuÃ¡rio",
-  userId: "ID do usuÃ¡rio",
-  username: "UsuÃ¡rio (login)",
+  userEmail: "Email do usuário",
+  userId: "ID do usuário",
+  username: "Usuário (login)",
   // Auth
   reason: "Motivo",
-  ip: "EndereÃ§o IP",
-  method: "MÃ©todo",
-  sessionId: "SessÃ£o",
+  ip: "Endereço IP",
+  method: "Método",
+  sessionId: "Sessão",
   // Tickets
   type: "Tipo",
   priority: "Prioridade",
@@ -185,7 +185,7 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   profileType: "Tipo de perfil",
   accessType: "Tipo de acesso",
   company: "Empresa",
-  comment: "ComentÃ¡rio",
+  comment: "Comentário",
   // Defects
   releaseManualId: "ID do release manual",
   // Integrations
@@ -194,7 +194,7 @@ const METADATA_KEY_LABELS: Record<string, string> = {
   // Exports
   format: "Formato",
   project: "Projeto",
-  runId: "ID da execuÃ§Ã£o",
+  runId: "ID da execução",
   rows: "Registros exportados",
   scope: "Escopo",
   // Requests
@@ -206,17 +206,17 @@ const METADATA_KEY_LABELS: Record<string, string> = {
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin global", global_admin: "Admin global",
   company: "Admin da empresa", company_admin: "Admin da empresa", client_admin: "Admin da empresa", client_owner: "Admin da empresa", client_manager: "Admin da empresa", empresa: "Admin da empresa",
-  user: "UsuÃ¡rio da empresa", viewer: "UsuÃ¡rio da empresa", client_user: "UsuÃ¡rio da empresa", client_viewer: "UsuÃ¡rio da empresa", company_user: "UsuÃ¡rio da empresa",
-  testing_company_user: "UsuÃ¡rio TC", dev: "UsuÃ¡rio TC", it_dev: "UsuÃ¡rio TC", developer: "UsuÃ¡rio TC", itdev: "UsuÃ¡rio TC",
-  leader_tc: "LÃ­der TC", tc_leader: "LÃ­der TC", lider_tc: "LÃ­der TC",
-  support: "Suporte tÃ©cnico", technical_support: "Suporte tÃ©cnico", tech_support: "Suporte tÃ©cnico", support_tech: "Suporte tÃ©cnico",
+  user: "Usuário da empresa", viewer: "Usuário da empresa", client_user: "Usuário da empresa", client_viewer: "Usuário da empresa", company_user: "Usuário da empresa",
+  testing_company_user: "Usuário TC", dev: "Usuário TC", it_dev: "Usuário TC", developer: "Usuário TC", itdev: "Usuário TC",
+  leader_tc: "Líder TC", tc_leader: "Líder TC", lider_tc: "Líder TC",
+  support: "Suporte técnico", technical_support: "Suporte técnico", tech_support: "Suporte técnico", support_tech: "Suporte técnico",
 };
 /** Metadata keys that contain role values. */
 const ROLE_META_KEYS = new Set(["role", "permissionRole", "targetPermissionRole", "actorRole", "membershipRole", "profileType"]);
 
 /** Keys that belong in the "summary" tier (not the operation details). */
 const SUMMARY_META_KEYS = new Set(["companyLabel", "companySlug", "companyId", "userEmail", "userId", "ip", "sessionId"]);
-/** Keys that are IDs / technical â€” go in tier 3. */
+/** Keys that are IDs / technical — go in tier 3. */
 const TECHNICAL_META_KEYS = new Set(["companyId", "userId", "ip", "sessionId", "_payload"]);
 
 type ActionCategory = "create" | "update" | "delete" | "permission" | "link" | "auth" | "error" | "integration" | "export" | "default";
@@ -311,8 +311,8 @@ function getActorInitials(email: string | null): string {
 
 function getCategoryLabel(cat: ActionCategory): string {
   return {
-    create: "Criação", update: "Alteração", delete: "ExclusÃ£o",
-    permission: "Permissão", link: "VÃ­nculo", auth: "Autenticação",
+    create: "Criação", update: "Alteração", delete: "Exclusão",
+    permission: "Permissão", link: "Vínculo", auth: "Autenticação",
     error: "Erro", integration: "Integração", export: "Exportação", default: "Evento",
   }[cat];
 }
@@ -328,8 +328,8 @@ function getResultLabel(cat: ActionCategory): { label: string; cls: string } {
 function formatMetaValue(val: unknown, key?: string): string {
   if (val === true) return "Sim";
   if (val === false) return "Não";
-  if (val === null || val === undefined) return "â€”";
-  if (Array.isArray(val)) return val.length ? val.join(", ") : "â€”";
+  if (val === null || val === undefined) return "—";
+  if (Array.isArray(val)) return val.length ? val.join(", ") : "—";
   if (typeof val === "object") return JSON.stringify(val);
   const str = String(val);
   if (key && ROLE_META_KEYS.has(key)) return ROLE_LABELS[str.toLowerCase()] ?? str;
@@ -395,8 +395,8 @@ const DATE_PRESETS: { value: DatePreset; label: string }[] = [
   { value: "yesterday", label: "Ontem" },
   { value: "7d", label: "Últimos 7 dias" },
   { value: "30d", label: "Últimos 30 dias" },
-  { value: "thisMonth", label: "Este mÃªs" },
-  { value: "lastMonth", label: "MÃªs passado" },
+  { value: "thisMonth", label: "Este mês" },
+  { value: "lastMonth", label: "Mês passado" },
   { value: "custom", label: "Personalizado" },
 ];
 
@@ -467,7 +467,7 @@ async function readAuditLogsJson(response: Response) {
 function getAuditLogsErrorMessage(json: unknown) {
   return isRecord(json) && typeof json.error === "string"
     ? json.error
-    : "Não foi possÃ­vel carregar o histÃ³rico";
+    : "Não foi possível carregar o histórico";
 }
 
 function normalizeAuditLogsResponse(json: AuditLogsResponse): NormalizedAuditLogsResponse {
@@ -575,7 +575,7 @@ export default function AdminAuditLogsPage() {
       setActionOptions(data.actionOptions);
       setEntityTypeOptions(data.entityTypeOptions);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Falha ao carregar histÃ³rico");
+      setError(err instanceof Error ? err.message : "Falha ao carregar histórico");
       setItems([]);
       setTotal(0);
       setTrend([]);
@@ -634,10 +634,10 @@ export default function AdminAuditLogsPage() {
           <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">{warning}</div>
         )}
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Card principal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* â”â‚¬â”â‚¬ Card principal â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬ */}
         <div className={styles.card}>
 
-          {/* Filtros rÃ¡pidos por categoria */}
+          {/* Filtros rápidos por categoria */}
           <div className={styles.categoryChips}>
             <button
               type="button"
@@ -889,11 +889,11 @@ export default function AdminAuditLogsPage() {
               <svg className={styles.emptyStateIcon} width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
                 <circle cx="8" cy="8" r="6" /><path d="M8 5v3.5" /><circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none" />
               </svg>
-              Não hÃ¡ logs para o filtro selecionado.
+              Não há logs para o filtro selecionado.
             </div>
           )}
 
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬ Event timeline Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* â”â‚¬â”â‚¬ Event timeline â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬ */}
           {!showSkeleton && total > 0 && (
             <div className={styles.listHeader}>
               <span className={styles.listHeaderLabel}>
@@ -903,14 +903,14 @@ export default function AdminAuditLogsPage() {
               <span className={styles.listHeaderCount}>{total} resultado{total !== 1 ? "s" : ""} · Página {currentPage} de {totalPages}</span>
             </div>
           )}
-          {/* Ã¢â€â‚¬Ã¢â€â‚¬ Pagination Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+          {/* â”â‚¬â”â‚¬ Pagination â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬ */}
           {total > 0 && (
             <div className={styles.paginationBar}>
               <div className={styles.paginationInfo}>
                 <span>{total} resultado{total !== 1 ? "s" : ""}</span>
                 <span className={styles.paginationSep}>·</span>
                 <label className={styles.paginationLabel}>
-                  Por pÃ¡gina
+                  Por página
                   <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }} className={styles.paginationSelect}>
                     {PAGE_SIZES.map((s) => (<option key={s} value={s}>{s}</option>))}
                   </select>
@@ -965,7 +965,7 @@ export default function AdminAuditLogsPage() {
               // Split metadata into contextual (summary enrichment) and operation details
               const beforeData = (meta._before && typeof meta._before === "object" && !Array.isArray(meta._before)) ? meta._before as Record<string, unknown> : null;
               const operationEntries = Object.entries(meta).filter(([k, v]) => v !== undefined && v !== null && k !== "_before" && !SUMMARY_META_KEYS.has(k) && !TECHNICAL_META_KEYS.has(k));
-              // For diff: merge keys from _before and current operation entries for full beforeÃ¢â€ â€™after view
+              // For diff: merge keys from _before → after view
               const allDiffKeys = beforeData ? [...new Set([...Object.keys(beforeData).filter(k => k !== "_before" && k !== "_payload" && !TECHNICAL_META_KEYS.has(k)), ...operationEntries.map(([k]) => k)])] : [];
               const diffEntries = allDiffKeys.map((k) => {
                 const after = meta[k] ?? null;
@@ -1016,10 +1016,10 @@ export default function AdminAuditLogsPage() {
                     </div>
                   </button>
 
-                  {/* Ã¢â€â‚¬Ã¢â€â‚¬ Expanded detail â€” 3 tiers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                  {/* â”â‚¬â”â‚¬ Expanded detail — 3 tiers â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬ */}
                   {isOpen && (
                     <div className={styles.expandedPanel}>
-                      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Tier 1: Resumo do evento Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                      {/* â”â‚¬â”â‚¬ Tier 1: Resumo do evento â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬ */}
                       <div className={styles.tier}>
                         <p className={styles.tierTitle}>Resumo do evento</p>
                         <div className={styles.tierContentGrid}>
@@ -1055,12 +1055,12 @@ export default function AdminAuditLogsPage() {
                         </div>
                       </div>
 
-                      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Tier 2: Detalhes da alteração Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                      {/* â”â‚¬â”â‚¬ Tier 2: Detalhes da alteração â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬â”â‚¬ */}
                       {(diffEntries.length > 0 || regularEntries.length > 0) && (
                         <div className={styles.tier}>
                           <p className={styles.tierTitle}>Alterações</p>
                           <div className={styles.tierContent}>
-                            {/* Before Ã¢â€ â€™ After diff table */}
+                            {/* Before → After diff table */}
                             {diffEntries.length > 0 && (
                               <table className={styles.diffTable}>
                                 <thead>
@@ -1080,7 +1080,7 @@ export default function AdminAuditLogsPage() {
                                       <tr key={key} className={changed ? styles.diffRowChanged : styles.diffRow}>
                                         <td className={styles.diffCellLabel}>{METADATA_KEY_LABELS[key] ?? key}</td>
                                         <td className={styles.diffCellBefore}>{before}</td>
-                                        <td className={styles.diffCellArrow}>{changed ? "Ã¢â€ â€™" : "="}</td>
+                                        <td className={styles.diffCellArrow}>{changed ? "→" : "="}</td>
                                         <td className={changed ? styles.diffCellAfter : styles.diffCellSame}>{after}</td>
                                       </tr>
                                     );
@@ -1099,7 +1099,7 @@ export default function AdminAuditLogsPage() {
                         </div>
                       )}
 
-                      {/* Ã¢â€â‚¬Ã¢â€â‚¬ Tier 3: Informações tÃ©cnicas (collapsible) Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                      {/* â”â‚¬â”â‚¬ Tier 3: Informações técnicas (collapsible) â”â‚¬â”â‚¬ */}
                       <div className={styles.tier}>
                         <button
                           type="button"
@@ -1107,7 +1107,7 @@ export default function AdminAuditLogsPage() {
                           onClick={() => setShowTech((prev) => prev === item.id ? null : item.id)}
                         >
                           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 4l4 4-4 4" /></svg>
-                          <span className={styles.tierTitleInline}>Informações tÃ©cnicas</span>
+                          <span className={styles.tierTitleInline}>Informações técnicas</span>
                         </button>
                         {showTech === item.id && (
                         <div className={styles.tierContentCollapsible}>
@@ -1180,7 +1180,7 @@ export default function AdminAuditLogsPage() {
 
             <p className={styles.modalBody}>
               Selecione o período dos registros que deseja remover permanentemente do banco de dados.
-              Registros de limpeza de logs sÃ£o preservados e nÃ£o podem ser removidos por esta operação.
+              Registros de limpeza de logs são preservados e não podem ser removidos por esta operação.
             </p>
 
             <div className={styles.modalDateRow}>
@@ -1200,8 +1200,8 @@ export default function AdminAuditLogsPage() {
                   <path d="M8 1.5L1 14h14L8 1.5z" /><path d="M8 6.5v3" /><circle cx="8" cy="12" r="0.5" fill="currentColor" stroke="none" />
                 </svg>
                 <span>
-                  Todos os registros entre <strong>{new Date(purgeStart + "T00:00:00").toLocaleDateString("pt-BR")}</strong> e <strong>{new Date(purgeEnd + "T00:00:00").toLocaleDateString("pt-BR")}</strong> serÃ£o
-                  apagados <strong>permanentemente</strong>. Esta ação nÃ£o pode ser desfeita.
+                  Todos os registros entre <strong>{new Date(purgeStart + "T00:00:00").toLocaleDateString("pt-BR")}</strong> e <strong>{new Date(purgeEnd + "T00:00:00").toLocaleDateString("pt-BR")}</strong> serão
+                  apagados <strong>permanentemente</strong>. Esta ação não pode ser desfeita.
                 </span>
               </div>
             )}
@@ -1230,7 +1230,7 @@ export default function AdminAuditLogsPage() {
                   disabled={purging || !purgeStart || !purgeEnd}
                   className={styles.btnDangerFilled}
                 >
-                  {purging ? "Removendo..." : "Confirmar exclusÃ£o"}
+                  {purging ? "Removendo..." : "Confirmar exclusão"}
                 </button>
               )}
             </div>

@@ -2,7 +2,7 @@
  * brain-sync.ts
  * Fire-and-forget helper functions that keep the Brain in sync when system
  * entities are created or updated. Each function is safe to call without await
- * â€” they never throw, just log errors.
+ * — they never throw, just log errors.
  *
  * Pattern in API routes:
  *   syncTicketToBrain(ticket).catch(() => {});
@@ -170,7 +170,7 @@ export async function syncIntegrationToBrain(integration: {
       label: `${integration.type} Integration`,
       refType: "CompanyIntegration",
       refId: integration.id,
-      description: `IntegraÃ§Ã£o ${integration.type}`,
+      description: `Integração ${integration.type}`,
       metadata: {
         integrationType: integration.type,
         companyId: integration.companyId,
@@ -452,7 +452,7 @@ export async function syncBrain() {
   const logError = (msg: string, error?: any) =>
     console.error(`[SYNC ERROR] ${msg}`, error?.message || '')
 
-  log('===== STARTING BRAIN SYNC â€” Testing Company Platform =====')
+  log('===== STARTING BRAIN SYNC — Testing Company Platform =====')
   const startTime = Date.now()
 
   try {
@@ -462,7 +462,7 @@ export async function syncBrain() {
       label: 'Testing Company',
       refType: 'Platform',
       refId: 'testing-company-root',
-      description: 'Plataforma de QA da Testing Company â€” nÃ³ raiz do Brain',
+      description: 'Plataforma de QA da Testing Company — nó raiz do Brain',
       metadata: {
         slug: 'testing-company',
         status: 'active',
@@ -631,7 +631,7 @@ export async function syncBrain() {
         label: `${integration.type} Integration`,
         refType: 'CompanyIntegration',
         refId: integration.id,
-        description: `IntegraÃ§Ã£o ${integration.type}`,
+        description: `Integração ${integration.type}`,
         metadata: {
           integrationType: integration.type,
           companyId: integration.companyId,
@@ -824,7 +824,7 @@ export async function syncBrain() {
       }
     }
 
-    // Testing Company root â†’ all Companies (RELATES_TO)
+    // Testing Company root → all Companies (RELATES_TO)
     const rootNode = await findNode('Platform', 'testing-company-root')
     if (rootNode) {
       for (const company of companies) {
@@ -836,14 +836,14 @@ export async function syncBrain() {
       }
     }
 
-    // Company â†’ Application (BELONGS_TO)
+    // Company → Application (BELONGS_TO)
     for (const app of applications) {
       if (app.companyId) {
         await safeConnectNodes('Application', app.id, 'Company', app.companyId, 'BELONGS_TO')
       }
     }
 
-    // Company â†’ Integration (BELONGS_TO)
+    // Company → Integration (BELONGS_TO)
     for (const integration of integrations) {
       await safeConnectNodes('CompanyIntegration', integration.id, 'Company', integration.companyId, 'BELONGS_TO')
       if (integration.type === 'QASE') {
@@ -860,22 +860,22 @@ export async function syncBrain() {
       }
     }
 
-    // Ticket â†’ Company (BELONGS_TO)
+    // Ticket → Company (BELONGS_TO)
     for (const ticket of tickets) {
       if (ticket.companyId) {
         await safeConnectNodes('Ticket', ticket.id, 'Company', ticket.companyId, 'BELONGS_TO')
       }
-      // Ticket â†’ User (CREATED_BY)
+      // Ticket → User (CREATED_BY)
       if (ticket.createdBy) {
         await safeConnectNodes('Ticket', ticket.id, 'User', ticket.createdBy, 'CREATED_BY')
       }
-      // Ticket â†’ User (ASSIGNED_TO)
+      // Ticket → User (ASSIGNED_TO)
       if (ticket.assignedToUserId) {
         await safeConnectNodes('Ticket', ticket.id, 'User', ticket.assignedToUserId, 'ASSIGNED_TO')
       }
     }
 
-    // Defect â†’ Company (BELONGS_TO)
+    // Defect → Company (BELONGS_TO)
     for (const defect of defects) {
       if (defect.companyId) {
         await safeConnectNodes('Defect', defect.id, 'Company', defect.companyId, 'BELONGS_TO')
@@ -885,7 +885,7 @@ export async function syncBrain() {
       }
     }
 
-    // Release â†’ Company (BELONGS_TO), Release â†’ User (CREATED_BY / ASSIGNED_TO)
+    // Release → Company (BELONGS_TO), Release → User (CREATED_BY / ASSIGNED_TO)
     for (const release of releases) {
       if (release.companyId) {
         await safeConnectNodes('Release', release.id, 'Company', release.companyId, 'BELONGS_TO')
@@ -926,7 +926,7 @@ export async function syncBrain() {
       if (company) await safeConnectNodes('QualityAlert', alert.id, 'Company', company.id, 'BELONGS_TO')
     }
 
-    // User â†’ Company (MEMBER_OF) via Membership
+    // User → Company (MEMBER_OF) via Membership
     const memberships = await prisma.membership.findMany()
     for (const membership of memberships) {
       await safeConnectNodes('User', membership.userId, 'Company', membership.companyId, 'MEMBER_OF', {
@@ -934,7 +934,7 @@ export async function syncBrain() {
       })
     }
 
-    // Note â†’ User (CREATED_BY)
+    // Note → User (CREATED_BY)
     for (const note of notes) {
       await safeConnectNodes('UserNote', note.id, 'User', note.userId, 'CREATED_BY')
     }

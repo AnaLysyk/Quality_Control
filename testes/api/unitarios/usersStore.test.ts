@@ -5,7 +5,7 @@ describe("usersStore", () => {
     const user = getUserById("usr_001");
     expect(user).not.toBeNull();
     expect(user?.id).toBe("usr_001");
-    expect(user?.name).toBe("UsuÃ¡rio");
+    expect(user?.name).toBe("Usuário");
   });
 
   it("should return null for non-existent user", () => {

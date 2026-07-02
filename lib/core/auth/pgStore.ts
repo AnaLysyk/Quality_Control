@@ -169,7 +169,7 @@ function toLocalCompany(c: PrismaCompany): LocalAuthCompany {
     cep: c.cep,
     linkedin_url: c.linkedin_url,
     qase_token: c.qase_token ?? undefined,
-    // PersistÃªncia e leitura apenas do array canÃ´nico
+    // Persistência e leitura apenas do array canônico
     qase_project_code: legacyProjectCode,
     qase_project_codes: normalizedProjectCodes,
     jira_base_url: c.jira_base_url,
@@ -196,7 +196,7 @@ function toLocalMembership(m: PrismaMembership): LocalAuthMembership {
   };
 }
 
-// keep identity here â€” database stores legacy labels now
+// keep identity here — database stores legacy labels now
 function mapRoleEnumToLegacy(_r?: string | null): string {
   return (_r ?? "user");
 }
@@ -492,7 +492,7 @@ export async function pgCreateLocalCompany(
       notes: (input.notes as string | null | undefined) ?? null,
       cep: (input.cep as string | null | undefined) ?? null,
       linkedin_url: (input.linkedin_url as string | null | undefined) ?? null,
-      // PersistÃªncia apenas do array canÃ´nico
+      // Persistência apenas do array canônico
       qase_project_codes: normalizedProjectCodes,
       jira_base_url: (input.jira_base_url as string | null | undefined) ?? null,
       jira_email: (input.jira_email as string | null | undefined) ?? null,

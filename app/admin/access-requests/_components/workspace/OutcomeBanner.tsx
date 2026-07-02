@@ -2,8 +2,8 @@
   if (accepting) {
     return {
       tone: "border-sky-200 bg-sky-50 text-sky-900",
-      label: "Processando decisÃ£o",
-      title: "Validando solicitaÃ§Ã£o...",
+      label: "Processando decisão",
+      title: "Validando solicitação...",
     };
   }
 
@@ -27,7 +27,7 @@
     return {
       tone: "border-rose-200 bg-rose-50 text-rose-900",
       label: "Fluxo encerrado",
-      title: "SolicitaÃ§Ã£o recusada.",
+      title: "Solicitação recusada.",
     };
   }
 

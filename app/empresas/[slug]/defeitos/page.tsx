@@ -233,19 +233,19 @@ const EMPTY_FILTERS: FilterState = {
 const DEFECT_STATUS_OPTIONS = [
   { value: "open", label: "Aberto" },
   { value: "in_progress", label: "Em andamento" },
-  { value: "done", label: "ConcluÃ­do" },
+  { value: "done", label: "Concluído" },
 ] as const;
 
 const DEFECT_SEVERITY_OPTIONS = [
-  { value: "critical", label: "CrÃ­tica" },
+  { value: "critical", label: "Crítica" },
   { value: "high", label: "Alta" },
-  { value: "medium", label: "MÃ©dia" },
+  { value: "medium", label: "Média" },
   { value: "low", label: "Baixa" },
 ] as const;
 
 const DEFECT_PRIORITY_OPTIONS = [
   { value: "high", label: "Alta" },
-  { value: "medium", label: "MÃ©dia" },
+  { value: "medium", label: "Média" },
   { value: "low", label: "Baixa" },
 ] as const;
 
@@ -258,25 +258,25 @@ const DEFECTS_COPY = {
       company: "Empresa",
       emptyValue: "--",
       system: "Sistema",
-      integration: "IntegraÃ§Ã£o",
+      integration: "Integração",
     },
     hero: {
       kicker: "Painel {company}",
       title: "Defeitos",
-      subtitle: "Base unificada para triagem, leitura e acompanhamento dos defeitos visÃ­veis no contexto atual.",
+      subtitle: "Base unificada para triagem, leitura e acompanhamento dos defeitos visíveis no contexto atual.",
       qaseConnected: "Qase conectado",
-      integrationStatus: "Status da integraÃ§Ã£o: {value}",
+      integrationStatus: "Status da integração: {value}",
       newDefect: "Novo defeito",
     },
     metrics: {
       openTitle: "Defeitos abertos",
-      openDescription: "Itens fora de concluÃ­do no recorte atual.",
+      openDescription: "Itens fora de concluído no recorte atual.",
       qaseTitle: "Qase integrados",
-      qaseDescription: "Total trazido da integraÃ§Ã£o com o Qase.",
+      qaseDescription: "Total trazido da integração com o Qase.",
       manualTitle: "Manuais",
       manualDescription: "Itens internos criados na plataforma.",
-      mttrTitle: "MTTR mÃ©dio",
-      mttrDescription: "Tempo mÃ©dio de resoluÃ§Ã£o dos itens concluÃ­dos.",
+      mttrTitle: "MTTR médio",
+      mttrDescription: "Tempo médio de resolução dos itens concluídos.",
     },
     source: {
       manual: "Manual",
@@ -292,15 +292,15 @@ const DEFECTS_COPY = {
     status: {
       open: "Aberto",
       inProgress: "Em andamento",
-      done: "ConcluÃ­do",
+      done: "Concluído",
       label: "Status",
       filterAll: "Status: todos",
       prefix: "Status: {value}",
     },
     severity: {
-      critical: "CrÃ­tica",
+      critical: "Crítica",
       high: "Alta",
-      medium: "MÃ©dia",
+      medium: "Média",
       low: "Baixa",
       none: "Sem severidade",
       label: "Severidade",
@@ -308,109 +308,109 @@ const DEFECTS_COPY = {
     },
     priority: {
       high: "Alta",
-      medium: "MÃ©dia",
+      medium: "Média",
       low: "Baixa",
       none: "Sem prioridade",
       label: "Prioridade",
       prefix: "Prioridade: {value}",
     },
     blocked: {
-      badge: "Projetos Qase indisponÃ­veis",
-      title: "Alguns projetos nÃ£o puderam ser consultados agora",
+      badge: "Projetos Qase indisponíveis",
+      title: "Alguns projetos não puderam ser consultados agora",
       description:
-        "Esses projetos foram removidos dos filtros, da vinculaÃ§Ã£o manual e do catÃ¡logo de aplicaÃ§Ãµes atÃ© a integraÃ§Ã£o voltar a responder com seguranÃ§a.",
+        "Esses projetos foram removidos dos filtros, da vinculação manual e do catálogo de aplicações até a integração voltar a responder com segurança.",
       blockedProjects: "Projetos bloqueados",
-      blockedProjectsDescription: "NÃ£o entram nos seletores enquanto o acesso nÃ£o for normalizado.",
-      unauthorized: "Sem autorizaÃ§Ã£o",
-      unauthorizedDescription: "Token sem permissÃ£o suficiente para ler o projeto no Qase.",
-      technicalFailure: "Falha tÃ©cnica",
-      technicalFailureDescription: "Projeto invÃ¡lido, rota incorreta ou erro de integraÃ§Ã£o retornado pela API.",
-      unauthorizedPill: "Sem autorizaÃ§Ã£o",
-      integrationFailurePill: "Falha de integraÃ§Ã£o",
-      whyUnavailable: "Por que ficou indisponÃ­vel",
+      blockedProjectsDescription: "Não entram nos seletores enquanto o acesso não for normalizado.",
+      unauthorized: "Sem autorização",
+      unauthorizedDescription: "Token sem permissão suficiente para ler o projeto no Qase.",
+      technicalFailure: "Falha técnica",
+      technicalFailureDescription: "Projeto inválido, rota incorreta ou erro de integração retornado pela API.",
+      unauthorizedPill: "Sem autorização",
+      integrationFailurePill: "Falha de integração",
+      whyUnavailable: "Por que ficou indisponível",
       returnedDetail: "Detalhe retornado",
       howToFix: "Como corrigir",
-      noTechnicalDetail: "Nenhum detalhe tÃ©cnico foi retornado pela integraÃ§Ã£o.",
-      unauthorizedReason: "Sem autorizaÃ§Ã£o para consultar os defeitos desse projeto no Qase.",
-      genericReason: "A integraÃ§Ã£o nÃ£o conseguiu consultar esse projeto no Qase.",
+      noTechnicalDetail: "Nenhum detalhe técnico foi retornado pela integração.",
+      unauthorizedReason: "Sem autorização para consultar os defeitos desse projeto no Qase.",
+      genericReason: "A integração não conseguiu consultar esse projeto no Qase.",
       unauthorizedAction:
         "Revise o token salvo e confirme se ele possui acesso de leitura a esse projeto dentro do Qase.",
       duplicatedBaseUrlAction:
-        "A URL base da integraÃ§Ã£o estÃ¡ duplicando /v1. Corrija a configuraÃ§Ã£o da empresa para usar apenas o domÃ­nio base da API do Qase.",
+        "A URL base da integração está duplicando /v1. Corrija a configuração da empresa para usar apenas o domínio base da API do Qase.",
       notFoundAction:
-        "Valide se o cÃ³digo do projeto estÃ¡ correto no cadastro da empresa e se ele realmente existe no workspace do Qase.",
+        "Valide se o código do projeto está correto no cadastro da empresa e se ele realmente existe no workspace do Qase.",
       genericAction:
-        "Valide a configuraÃ§Ã£o do projeto e a conectividade da integraÃ§Ã£o antes de liberar esse item novamente na plataforma.",
+        "Valide a configuração do projeto e a conectividade da integração antes de liberar esse item novamente na plataforma.",
     },
     filters: {
       kicker: "Filtros operacionais",
       title: "Controle do painel",
-      subtitle: "Ajuste o recorte por origem, aplicaÃ§Ã£o, status e responsÃ¡vel.",
+      subtitle: "Ajuste o recorte por origem, aplicação, status e responsável.",
       clear: "Limpar filtros",
-      searchPlaceholder: "Buscar por tÃ­tulo, descriÃ§Ã£o e run...",
+      searchPlaceholder: "Buscar por título, descrição e run...",
       searchAria: "Buscar defeitos",
-      applicationAll: "AplicaÃ§Ã£o: todas",
-      startDateAria: "Filtrar defeitos pela data inicial de criaÃ§Ã£o",
-      endDateAria: "Filtrar defeitos pela data final de criaÃ§Ã£o",
+      applicationAll: "Aplicação: todas",
+      startDateAria: "Filtrar defeitos pela data inicial de criação",
+      endDateAria: "Filtrar defeitos pela data final de criação",
       projectAll: "Projeto: todos",
-      responsibleAll: "ResponsÃ¡vel: todos",
-      responsibleAria: "Filtrar defeitos por responsÃ¡vel",
-      applicationAria: "Filtrar defeitos por aplicaÃ§Ã£o",
+      responsibleAll: "Responsável: todos",
+      responsibleAria: "Filtrar defeitos por responsável",
+      applicationAria: "Filtrar defeitos por aplicação",
       projectAria: "Filtrar defeitos por projeto",
       sourceAria: "Filtrar defeitos por origem",
       statusAria: "Filtrar defeitos por status",
-      unassigned: "Sem responsÃ¡vel",
+      unassigned: "Sem responsável",
       chipRun: "Run {value}",
-      chipApplication: "AplicaÃ§Ã£o {value}",
+      chipApplication: "Aplicação {value}",
       chipDateFrom: "De {value}",
-      chipDateTo: "AtÃ© {value}",
-      chipDateRange: "PerÃ­odo {from} - {to}",
+      chipDateTo: "Até {value}",
+      chipDateRange: "Período {from} - {to}",
       chipProject: "Projeto {value}",
       chipStatus: "Status {value}",
-      chipResponsible: "ResponsÃ¡vel {value}",
+      chipResponsible: "Responsável {value}",
       chipSearch: 'Busca "{value}"',
     },
     list: {
       kicker: "Base operacional",
-      title: "Defeitos visÃ­veis",
-      subtitle: "Cards com leitura rÃ¡pida, detalhe, comentÃ¡rios e responsÃ¡vel.",
+      title: "Defeitos visíveis",
+      subtitle: "Cards com leitura rápida, detalhe, comentários e responsável.",
       cardsCount: "{count} cards",
       reload: "Recarregar dados",
       loading: "Carregando defeitos...",
       emptyTitle: "Nenhum defeito encontrado.",
       emptyDescription:
-        "Recarregue os dados da integraÃ§Ã£o, revise a base vinculada da empresa ou crie um defeito manual para iniciar o painel.",
+        "Recarregue os dados da integração, revise a base vinculada da empresa ou crie um defeito manual para iniciar o painel.",
       filteredEmptyTitle: "Nenhum defeito encontrado com os filtros atuais.",
       filteredEmptyDescription: "Revise os filtros aplicados ou recarregue os dados para atualizar a base exibida.",
       createManual: "Criar defeito manual",
       viewDetails: "Ver detalhe",
       openInQase: "Abrir no Qase",
-      commentsCount: "{count} comentÃ¡rio(s)",
-      application: "AplicaÃ§Ã£o",
+      commentsCount: "{count} comentário(s)",
+      application: "Aplicação",
       project: "Projeto",
-      responsible: "ResponsÃ¡vel",
+      responsible: "Responsável",
       severity: "Severidade",
       priority: "Prioridade",
-      notDefined: "NÃ£o definido",
+      notDefined: "Não definido",
       createdAt: "Criado em",
       run: "Run",
       createdBy: "Criado por",
-      lastComment: "Ãšltimo comentÃ¡rio",
+      lastComment: "Último comentário",
       mttr: "MTTR",
     },
     create: {
       kicker: "Novo defeito manual",
       title: "Registrar defeito",
       subtitle: "Cadastre um defeito interno sem tirar o foco da base operacional.",
-      closeAria: "Fechar criaÃ§Ã£o de defeito",
+      closeAria: "Fechar criação de defeito",
       closeTitle: "Fechar",
-      titlePlaceholder: "TÃ­tulo do defeito",
-      selectApplication: "Selecionar aplicaÃ§Ã£o",
-      otherApplication: "Outra aplicaÃ§Ã£o",
-      customApplicationPlaceholder: "AplicaÃ§Ã£o",
-      selectProject: "Projeto / cÃ³digo Qase",
-      customProjectPlaceholder: "Projeto / cÃ³digo Qase",
-      selectApplicationAria: "Selecionar aplicaÃ§Ã£o do defeito",
+      titlePlaceholder: "Título do defeito",
+      selectApplication: "Selecionar aplicação",
+      otherApplication: "Outra aplicação",
+      customApplicationPlaceholder: "Aplicação",
+      selectProject: "Projeto / código Qase",
+      customProjectPlaceholder: "Projeto / código Qase",
+      selectApplicationAria: "Selecionar aplicação do defeito",
       selectProjectAria: "Selecionar projeto Qase do defeito",
       selectStatusAria: "Selecionar status do defeito manual",
       selectSeverityAria: "Selecionar severidade do defeito manual",
@@ -419,71 +419,71 @@ const DEFECTS_COPY = {
       runSearchPlaceholder: "Buscar run da aplica??o",
       runEmpty: "Nenhuma run encontrada para a aplica??o selecionada.",
       runClear: "Sem run vinculada",
-      descriptionPlaceholder: "DescriÃ§Ã£o do defeito",
-      environmentsPlaceholder: "Ambientes (separados por vÃ­rgula)",
+      descriptionPlaceholder: "Descrição do defeito",
+      environmentsPlaceholder: "Ambientes (separados por vírgula)",
       cancel: "Cancelar",
       creating: "Criando...",
       submit: "Criar defeito",
-      manualApplicationFallback: "AplicaÃ§Ã£o manual",
+      manualApplicationFallback: "Aplicação manual",
     },
     detail: {
       kicker: "Defeitos",
       summary: "Resumo executivo",
-      manualDescription: "Defeito manual com ediÃ§Ã£o operacional, comentÃ¡rios internos e acompanhamento completo.",
-      qaseDescription: "Defeito sincronizado do Qase com colaboraÃ§Ã£o interna e responsÃ¡vel local.",
+      manualDescription: "Defeito manual com edição operacional, comentários internos e acompanhamento completo.",
+      qaseDescription: "Defeito sincronizado do Qase com colaboração interna e responsável local.",
       closeAria: "Fechar detalhes do defeito",
       closeTitle: "Fechar",
       openOriginal: "Abrir item original no Qase",
       operationalFields: "Campos operacionais",
-      titlePlaceholder: "TÃ­tulo",
-      descriptionPlaceholder: "DescriÃ§Ã£o",
-      applicationPlaceholder: "AplicaÃ§Ã£o",
-      projectPlaceholder: "Projeto / cÃ³digo Qase",
+      titlePlaceholder: "Título",
+      descriptionPlaceholder: "Descrição",
+      applicationPlaceholder: "Aplicação",
+      projectPlaceholder: "Projeto / código Qase",
       runPlaceholder: "Run vinculada",
       environmentsPlaceholder: "Ambientes",
       statusAria: "Status do defeito",
       severityAria: "Severidade do defeito",
       priorityAria: "Prioridade do defeito",
-      responsibleAria: "ResponsÃ¡vel do defeito",
+      responsibleAria: "Responsável do defeito",
       runSelectAria: "Selecionar run vinculada ao defeito",
       runSearchPlaceholder: "Buscar run da aplica??o",
       runEmpty: "Nenhuma run encontrada para a aplica??o selecionada.",
       runClear: "Sem run vinculada",
       remove: "Remover defeito",
-      saveChanges: "Salvar alteraÃ§Ãµes",
-      saveAssignee: "Salvar responsÃ¡vel interno",
+      saveChanges: "Salvar alterações",
+      saveAssignee: "Salvar responsável interno",
     },
     comments: {
-      title: "ComentÃ¡rios internos",
-      subtitle: "Conversa operacional do defeito. O mesmo padrÃ£o usado no atendimento agora vale aqui.",
+      title: "Comentários internos",
+      subtitle: "Conversa operacional do defeito. O mesmo padrão usado no atendimento agora vale aqui.",
       refresh: "Atualizar",
       loading: "Carregando conversa...",
-      empty: "Nenhum comentÃ¡rio interno registrado.",
-      you: "VocÃª",
+      empty: "Nenhum comentário interno registrado.",
+      you: "Você",
       team: "Equipe",
-      internalComment: "comentÃ¡rio interno",
+      internalComment: "comentário interno",
       internalCollaborator: "colaborador interno",
-      inputPlaceholder: "Escreva uma atualizaÃ§Ã£o ou orientaÃ§Ã£o interna para este defeito",
-      visibilityNote: "Os comentÃ¡rios ficam visÃ­veis para quem tem acesso ao defeito.",
+      inputPlaceholder: "Escreva uma atualização ou orientação interna para este defeito",
+      visibilityNote: "Os comentários ficam visíveis para quem tem acesso ao defeito.",
       characters: "{count}/{max} caracteres",
       sending: "Enviando...",
-      publish: "Publicar comentÃ¡rio",
+      publish: "Publicar comentário",
     },
     evidence: {
-      attach: "Anexar evidÃªncia",
-      change: "Trocar evidÃªncia",
-      remove: "Remover evidÃªncia",
-      uploadError: "NÃ£o foi possÃ­vel anexar a evidÃªncia.",
-      oneAttached: "1 evidÃªncia",
-      manyAttached: "{count} evidÃªncias",
+      attach: "Anexar evidência",
+      change: "Trocar evidência",
+      remove: "Remover evidência",
+      uploadError: "Não foi possível anexar a evidência.",
+      oneAttached: "1 evidência",
+      manyAttached: "{count} evidências",
     },
     timeline: {
-      kicker: "HistÃ³rico de mudanÃ§as",
+      kicker: "Histórico de mudanças",
       title: "Linha do tempo operacional",
       notice:
-        "O Qase nÃ£o expÃµe um histÃ³rico detalhado de comentÃ¡rios e mudanÃ§as nessa API. A linha do tempo mescla os marcos disponÃ­veis do Qase com os eventos internos da plataforma.",
-      loading: "Carregando histÃ³rico...",
-      empty: "Nenhuma mudanÃ§a registrada.",
+        "O Qase não expõe um histórico detalhado de comentários e mudanças nessa API. A linha do tempo mescla os marcos disponíveis do Qase com os eventos internos da plataforma.",
+      loading: "Carregando histórico...",
+      empty: "Nenhuma mudança registrada.",
       qase: "Qase",
       platform: "Plataforma",
       created: "Defeito criado",
@@ -494,40 +494,40 @@ const DEFECTS_COPY = {
       runRemoved: "Run desvinculada",
       runRemovedWithValue: "Run removida: {value}",
       updated: "Campos do defeito atualizados",
-      assigneeRemoved: "ResponsÃ¡vel interno removido",
-      assigneeWithValue: "ResponsÃ¡vel interno: {value}",
-      commentAdded: "ComentÃ¡rio interno registrado",
+      assigneeRemoved: "Responsável interno removido",
+      assigneeWithValue: "Responsável interno: {value}",
+      commentAdded: "Comentário interno registrado",
       deleted: "Defeito removido",
       deletedWithNote: "Defeito removido: {note}",
-      updatedFallback: "AtualizaÃ§Ã£o registrada",
+      updatedFallback: "Atualização registrada",
     },
     api: {
-      unauthorized: "NÃ£o autorizado",
-      companyMissing: "Empresa nÃ£o informada",
+      unauthorized: "Não autorizado",
+      companyMissing: "Empresa não informada",
       forbidden: "Acesso proibido",
-      defectNotFound: "Defeito nÃ£o encontrado",
-      requiredComment: "ComentÃ¡rio obrigatÃ³rio",
-      saveCommentFailed: "NÃ£o foi possÃ­vel salvar o comentÃ¡rio",
-      nameRequired: "Nome obrigatÃ³rio",
-      invalidJson: "JSON invÃ¡lido",
-      notFound: "NÃ£o encontrado",
-      invalidResponsible: "ResponsÃ¡vel invÃ¡lido",
-      responsibleMustBelongCompany: "ResponsÃ¡vel precisa estar vinculado Ã  empresa.",
+      defectNotFound: "Defeito não encontrado",
+      requiredComment: "Comentário obrigatório",
+      saveCommentFailed: "Não foi possível salvar o comentário",
+      nameRequired: "Nome obrigatório",
+      invalidJson: "JSON inválido",
+      notFound: "Não encontrado",
+      invalidResponsible: "Responsável inválido",
+      responsibleMustBelongCompany: "Responsável precisa estar vinculado à empresa.",
       qualityGateBlocked: "Quality gate bloqueado",
-      noAssignPermission: "Sem permissÃ£o para atribuir responsÃ¡vel",
-      integratedAssignOnly: "A atribuiÃ§Ã£o local sÃ³ Ã© usada para defeitos integrados",
-      saveAssigneeFailed: "NÃ£o foi possÃ­vel salvar o responsÃ¡vel",
+      noAssignPermission: "Sem permissão para atribuir responsável",
+      integratedAssignOnly: "A atribuição local só é usada para defeitos integrados",
+      saveAssigneeFailed: "Não foi possível salvar o responsável",
       forbiddenEn: "Forbidden",
     },
     fallbackErrors: {
-      network: "NÃ£o foi possÃ­vel conectar a API.",
-      loadHistory: "NÃ£o foi possÃ­vel carregar o histÃ³rico do defeito.",
-      loadDefects: "NÃ£o foi possÃ­vel carregar os defeitos da empresa.",
-      createManual: "NÃ£o foi possÃ­vel criar o defeito manual.",
-      saveManual: "NÃ£o foi possÃ­vel salvar o defeito manual.",
-      saveInternalAssignee: "NÃ£o foi possÃ­vel salvar o responsÃ¡vel interno.",
-      removeManual: "NÃ£o foi possÃ­vel remover o defeito manual.",
-      publishComment: "NÃ£o foi possÃ­vel publicar o comentÃ¡rio.",
+      network: "Não foi possível conectar a API.",
+      loadHistory: "Não foi possível carregar o histórico do defeito.",
+      loadDefects: "Não foi possível carregar os defeitos da empresa.",
+      createManual: "Não foi possível criar o defeito manual.",
+      saveManual: "Não foi possível salvar o defeito manual.",
+      saveInternalAssignee: "Não foi possível salvar o responsável interno.",
+      removeManual: "Não foi possível remover o defeito manual.",
+      publishComment: "Não foi possível publicar o comentário.",
     },
   },
   "en-US": {
@@ -890,11 +890,11 @@ function buildEvidenceMarkdown(name: string, url: string) {
 }
 
 function isDefectEvidenceLabel(label: string) {
-  return /^evid[eÃª]ncia:/i.test(label.trim());
+  return /^evid[eê]ncia:/i.test(label.trim());
 }
 
 function getDefectEvidenceDisplayLabel(label: string) {
-  return label.replace(/^evid[eÃª]ncia:\s*/i, "").trim() || label.trim();
+  return label.replace(/^evid[eê]ncia:\s*/i, "").trim() || label.trim();
 }
 
 function parseDefectDescription(body?: string | null): { text: string; evidence: DefectEvidenceLink[] } {
@@ -1129,7 +1129,7 @@ function RunSelectorField({
         <FiChevronDown className={`shrink-0 transition ${open ? "rotate-180" : ""}`} size={16} />
       </button>
 
-      {/* Campo de busca fora do listbox para padrÃ£o ARIA */}
+      {/* Campo de busca fora do listbox para padrão ARIA */}
       {open && !disabled && (
         <div className="absolute left-0 top-[calc(100%+0.5rem)] z-30 w-full rounded-2xl border border-[var(--tc-border,#e5e7eb)] bg-[var(--tc-surface,#fff)] p-3 shadow-[0_18px_40px_rgba(15,23,42,0.24)]">
           <div className="relative mb-3">
@@ -1196,7 +1196,7 @@ function RunSelectorField({
                       <p className="truncate text-sm font-semibold text-[var(--tc-text-primary,#0b1a3c)]">{option.name}</p>
                       <p className="truncate text-xs text-[var(--tc-text-muted,#64748b)]">
                         {option.slug}
-                        {option.projectCode ? ` Â· ${option.projectCode}` : ""}
+                        {option.projectCode ? ` · ${option.projectCode}` : ""}
                       </p>
                     </div>
                     {selected ? <span className="text-xs font-semibold text-sky-600">âœ“</span> : null}
@@ -3132,7 +3132,7 @@ export default function CompanyDefectsPage() {
                   type="file"
                   className="hidden"
                   onChange={(event) => setCreateEvidenceFile(event.target.files?.[0] ?? null)}
-                  title="Anexar evidÃªncia"
+                  title="Anexar evidência"
                 />
                 <div className="flex flex-wrap items-center gap-3 md:col-span-2">
                   <button
@@ -3336,7 +3336,7 @@ export default function CompanyDefectsPage() {
                     type="file"
                     className="hidden"
                     onChange={(event) => setEditEvidenceFile(event.target.files?.[0] ?? null)}
-                    title="Trocar evidÃªncia"
+                    title="Trocar evidência"
                   />
                   <textarea
                     value={editDraft.description}
@@ -3634,7 +3634,7 @@ export default function CompanyDefectsPage() {
                               type="file"
                               className="hidden"
                               onChange={(event) => setCommentEvidenceFile(event.target.files?.[0] ?? null)}
-                              title="Anexar evidÃªncia ao comentÃ¡rio"
+                              title="Anexar evidência ao comentário"
                             />
                             <textarea
                               value={commentBody}

@@ -18,7 +18,7 @@ type BrainEventPayload = {
 
 /**
  * Emits a Brian impulse event in shadow mode (non-blocking, fire-and-forget).
- * Safe to call from any server-side context â€” failures are silently swallowed
+ * Safe to call from any server-side context — failures are silently swallowed
  * so they never break the calling flow.
  */
 export function emitBrainEvent(payload: BrainEventPayload): void {

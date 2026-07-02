@@ -1,21 +1,21 @@
 ﻿/**
- * Teste de fluxo completo de criaÃ§Ã£o de usuÃ¡rios
+ * Teste de fluxo completo de criação de usuários
  * Cobre todos os perfis: empresa, company_user, testing_company_user, leader_tc, technical_support
  */
 
 describe('User Creation Flow - All Profiles', () => {
-  // Este teste simula a criaÃ§Ã£o de usuÃ¡rios com diferentes perfis
+  // Este teste simula a criação de usuários com diferentes perfis
   // Validando que:
-  // 1. O usuÃ¡rio Ã© criado com sucesso
-  // 2. O login Ã© gerado/normalizado
-  // 3. A senha temporÃ¡ria Ã© gerada (ou usada a fornecida para leader_tc)
-  // 4. O email de boas-vindas Ã© disparado
-  // 5. Os dados corretos sÃ£o incluÃ­dos no payload
+  // 1. O usuário é criado com sucesso
+  // 2. O login é gerado/normalizado
+  // 3. A senha temporária é gerada (ou usada a fornecida para leader_tc)
+  // 4. O email de boas-vindas é disparado
+  // 5. Os dados corretos são incluídos no payload
 
   const API_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const adminToken = process.env.TEST_ADMIN_TOKEN || '';
 
-  // ConfiguraÃ§Ãµes de teste para cada perfil
+  // Configurações de teste para cada perfil
   const testProfiles = [
     {
       name: 'testing_company_user',
@@ -23,7 +23,7 @@ describe('User Creation Flow - All Profiles', () => {
       requiresCompany: false,
       requiresPassword: false,
       testData: {
-        full_name: 'JoÃ£o Silva - Testing User',
+        full_name: 'João Silva - Testing User',
         name: 'joao.silva',
         email: `teste-testing-${Date.now()}@example.com`,
         phone: '+55 11 98765-4321',
@@ -91,16 +91,16 @@ describe('User Creation Flow - All Profiles', () => {
         phone: '+55 11 95678-9012',
         job_title: 'TC Leader',
         role: 'leader_tc',
-        password: 'SecurePass@123', // MÃ­nimo 8 caracteres
+        password: 'SecurePass@123', // Mínimo 8 caracteres
         active: true,
       },
     },
   ];
 
   testProfiles.forEach((profile) => {
-    test(`criar usuÃ¡rio com perfil ${profile.name}`, async () => {
+    test(`criar usuário com perfil ${profile.name}`, async () => {
       if (!adminToken) {
-        console.warn(`âš ï¸  TEST_ADMIN_TOKEN nÃ£o configurado. Use npm run test com NODE_ENV=test e TOKEN_ADMIN definido.`);
+        console.warn(`âš ï¸  TEST_ADMIN_TOKEN não configurado. Use npm run test com NODE_ENV=test e TOKEN_ADMIN definido.`);
         return; // Skip if no token
       }
 
@@ -108,7 +108,7 @@ describe('User Creation Flow - All Profiles', () => {
         ...profile.testData,
       };
 
-      console.log(`\nðŸ“§ [${profile.name}] Iniciando criaÃ§Ã£o de usuÃ¡rio...`);
+      console.log(`\nðŸ“§ [${profile.name}] Iniciando criação de usuário...`);
       console.log(`   Email: ${payload.email}`);
       console.log(`   Login: ${payload.name}`);
 
@@ -132,11 +132,11 @@ describe('User Creation Flow - All Profiles', () => {
 
         const result = await response.json();
 
-        console.log(`   âœ… UsuÃ¡rio criado com sucesso`);
+        console.log(`   âœ… Usuário criado com sucesso`);
         console.log(`   ID: ${result.id}`);
         console.log(`   Login gerado/normalizado: ${result.user?.user || result.user?.email}`);
 
-        // ValidaÃ§Ãµes
+        // Validações
         expect(result.ok).toBe(true);
         expect(result.id).toBeDefined();
         expect(result.user).toBeDefined();
@@ -149,13 +149,13 @@ describe('User Creation Flow - All Profiles', () => {
         console.log(`   ðŸ“§ Email de boas-vindas disparado para: ${payload.email}`);
         console.log(`   â„¹ï¸  Verifique o email para as credenciais de acesso\n`);
       } catch (error) {
-        console.error(`   âŒ Erro na criaÃ§Ã£o: ${error}`);
+        console.error(`   âŒ Erro na criação: ${error}`);
         throw error;
       }
     });
   });
 
-  test('validar rejeiÃ§Ã£o de password para perfis que nÃ£o requerem', async () => {
+  test('validar rejeição de password para perfis que não requerem', async () => {
     if (!adminToken) return;
 
     const invalidPayload = {
@@ -163,7 +163,7 @@ describe('User Creation Flow - All Profiles', () => {
       name: 'testuser',
       email: `teste-invalid-${Date.now()}@example.com`,
       role: 'testing_company_user',
-      password: 'SomePassword@123', // NÃ£o deveria aceitar
+      password: 'SomePassword@123', // Não deveria aceitar
       active: true,
     };
 
@@ -176,8 +176,8 @@ describe('User Creation Flow - All Profiles', () => {
       body: JSON.stringify(invalidPayload),
     });
 
-    // A API aceita mas ignora a senha (usa a temporÃ¡ria gerada)
-    // Validar que nÃ£o foi usada a senha fornecida
+    // A API aceita mas ignora a senha (usa a temporária gerada)
+    // Validar que não foi usada a senha fornecida
     if (response.ok) {
       const result = await response.json();
       expect(result.user).toBeDefined();
@@ -185,13 +185,13 @@ describe('User Creation Flow - All Profiles', () => {
     }
   });
 
-  test('validar rejeiÃ§Ã£o de email invÃ¡lido', async () => {
+  test('validar rejeição de email inválido', async () => {
     if (!adminToken) return;
 
     const invalidPayload = {
       full_name: 'Test User',
       name: 'testuser',
-      email: 'invalid-email-format', // Email invÃ¡lido
+      email: 'invalid-email-format', // Email inválido
       role: 'testing_company_user',
       active: true,
     };
@@ -207,8 +207,8 @@ describe('User Creation Flow - All Profiles', () => {
 
     expect(response.status).toBe(400);
     const error = await response.json();
-    expect(error.error).toContain('invÃ¡lido');
-    console.log(`âœ… Email invÃ¡lido rejeitado corretamente`);
+    expect(error.error).toContain('inválido');
+    console.log(`âœ… Email inválido rejeitado corretamente`);
   });
 
   test('validar normalizacao de email duplicado', async () => {
@@ -216,7 +216,7 @@ describe('User Creation Flow - All Profiles', () => {
 
     const testEmail = `duplicate-test-${Date.now()}@example.com`;
 
-    // Primeiro usuÃ¡rio
+    // Primeiro usuário
     const response1 = await fetch(`${API_URL}/api/admin/users`, {
       method: 'POST',
       headers: {
@@ -233,9 +233,9 @@ describe('User Creation Flow - All Profiles', () => {
     });
 
     expect(response1.ok).toBe(true);
-    console.log(`âœ… Primeiro usuÃ¡rio criado`);
+    console.log(`âœ… Primeiro usuário criado`);
 
-    // Segundo usuÃ¡rio com mesmo email (deve falhar)
+    // Segundo usuário com mesmo email (deve falhar)
     const response2 = await fetch(`${API_URL}/api/admin/users`, {
       method: 'POST',
       headers: {
@@ -253,7 +253,7 @@ describe('User Creation Flow - All Profiles', () => {
 
     expect(response2.status).toBe(409);
     const error = await response2.json();
-    expect(error.error).toContain('jÃ¡ cadastrado');
+    expect(error.error).toContain('já cadastrado');
     console.log(`âœ… Email duplicado rejeitado corretamente`);
   });
 });

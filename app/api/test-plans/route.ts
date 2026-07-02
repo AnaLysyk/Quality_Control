@@ -51,7 +51,7 @@ function hasGlobalTestPlanWriteAccess(user: AuthUser) {
 async function requireTestPlanCompanyAccess(request: Request, companySlug: string, mode: "read" | "write") {
   const user = await authenticateRequest(request);
   if (!user) {
-    return { response: NextResponse.json({ error: "NÃ£o autorizado" }, { status: 401 }) };
+    return { response: NextResponse.json({ error: "Não autorizado" }, { status: 401 }) };
   }
   if (!companySlug) {
     return { response: NextResponse.json({ error: "companySlug is required" }, { status: 400 }) };
@@ -220,15 +220,15 @@ async function resolveCentralTestPlanCasesByIds(testCaseIds: string[], user: Aut
 function resolveWarningFromQaseError(error: unknown) {
   const status = error instanceof QaseError ? error.status : 500;
   if (status === 401 || status === 403) {
-    return "Qase recusou a autenticaÃ§Ã£o deste projeto.";
+    return "Qase recusou a autenticação deste projeto.";
   }
   if (status === 404) {
-    return "Projeto ou plano nÃ£o encontrado no Qase.";
+    return "Projeto ou plano não encontrado no Qase.";
   }
   if (status === 422) {
     return "Qase recusou os dados do plano informado.";
   }
-  return "NÃ£o foi possÃ­vel consultar os planos de teste no Qase.";
+  return "Não foi possível consultar os planos de teste no Qase.";
 }
 
 export async function GET(request: Request) {
@@ -446,7 +446,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
     }
     if (error instanceof Error && error.message === "TEST_CASE_FORBIDDEN") {
-      return NextResponse.json({ error: "Sem permissÃ£o para vincular um ou mais casos" }, { status: 403 });
+      return NextResponse.json({ error: "Sem permissão para vincular um ou mais casos" }, { status: 403 });
     }
     throw error;
   }
@@ -598,7 +598,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
       }
       if (error instanceof Error && error.message === "TEST_CASE_FORBIDDEN") {
-        return NextResponse.json({ error: "Sem permissÃ£o para vincular um ou mais casos" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissão para vincular um ou mais casos" }, { status: 403 });
       }
       throw error;
     }
@@ -610,7 +610,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "One or more linked cases were not found in the central repository" }, { status: 400 });
       }
       if (error instanceof Error && error.message === "TEST_CASE_FORBIDDEN") {
-        return NextResponse.json({ error: "Sem permissÃ£o para vincular um ou mais casos" }, { status: 403 });
+        return NextResponse.json({ error: "Sem permissão para vincular um ou mais casos" }, { status: 403 });
       }
       throw error;
     }

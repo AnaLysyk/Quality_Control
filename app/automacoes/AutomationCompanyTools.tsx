@@ -299,7 +299,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{tool.title}</p>
                       <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
-                        {tool.group} â€¢ {tool.method}
+                        {tool.group} • {tool.method}
                       </p>
                     </div>
                     <FiServer className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tc-accent,#ef0001)]" />
@@ -405,7 +405,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
             </>
           ) : (
             <div className="rounded-xl border border-dashed border-[var(--tc-border,#d7deea)] px-4 py-6 text-sm text-[var(--tc-text-muted,#6b7280)]">
-              Nenhuma tool disponÃ­vel para a empresa atual.
+              Nenhuma tool disponível para a empresa atual.
             </div>
           )}
         </article>
@@ -431,7 +431,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
               <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{result?.status ? `${result.status} ${result.statusText ?? ""}` : "--"}</p>
             </div>
             <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">DuraÃ§Ã£o</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Duração</p>
               <p className="mt-1 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]">{typeof result?.durationMs === "number" ? `${result.durationMs} ms` : "--"}</p>
             </div>
             <div className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
@@ -480,7 +480,7 @@ export default function AutomationCompanyTools({ access, activeCompanySlug, comp
 
           <div className="mt-3 flex items-center gap-2 text-xs text-[var(--tc-text-muted,#6b7280)]">
             <FiActivity className="h-4 w-4" />
-            Tool pronta para operaÃ§Ã£o rÃ¡pida por empresa.
+            Tool pronta para operação rápida por empresa.
           </div>
         </aside>
       </div>

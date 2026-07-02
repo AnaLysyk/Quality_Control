@@ -39,7 +39,7 @@ export function mapQaseToKanban(entities: RawQaseEntity[]): KanbanData {
 }
 
 export async function mapQaseToKanbanWithTitles(project: string, raw: RawQaseEntity[]) {
-  // Sem transformaÃ§Ã£o extra alÃ©m da jÃ¡ aplicada; tipos explÃ­citos para evitar any
+  // Sem transformação extra além da já aplicada; tipos explícitos para evitar any
   return mapQaseToKanban(raw);
 }
 

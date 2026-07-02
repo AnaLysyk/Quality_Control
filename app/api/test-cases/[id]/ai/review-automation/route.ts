@@ -28,13 +28,13 @@ function evaluateLocatorPolicy(code: string, justification: string | null) {
   const lower = code.toLowerCase();
 
   if (lower.includes("nth(")) {
-    reasons.push("Uso de nth() detectado (instÃ¡vel por mudanÃ§a de layout).");
+    reasons.push("Uso de nth() detectado (instável por mudança de layout).");
   }
   if (/locator\(\s*["'`]\/\//i.test(code) || /xpath=/i.test(lower)) {
-    reasons.push("XPath detectado (proibido por polÃ­tica padrÃ£o).");
+    reasons.push("XPath detectado (proibido por política padrão).");
   }
   if (/locator\(\s*["'`][^"'`]*(>|:nth-child|:nth-of-type|\.\w+\s+\w+)/i.test(code)) {
-    reasons.push("CSS locator potencialmente frÃ¡gil detectado.");
+    reasons.push("CSS locator potencialmente frágil detectado.");
   }
 
   const hasJustification = Boolean(justification && justification.trim().length >= 12);
@@ -79,7 +79,7 @@ function buildReview(draftCode: string, caseKey: string): BaseReviewOutput {
   if (!hasTag) risks.push("Script sem tag do caso para rastreabilidade.");
   if (!hasTestStep) risks.push("Script sem test.step para mapear passos manuais.");
   if (!hasExpect) risks.push("Script sem assertions expect().");
-  if (!hasResilientLocators) risks.push("Locators resilientes nÃ£o detectados (getByRole/getByTestId/getByLabel).");
+  if (!hasResilientLocators) risks.push("Locators resilientes não detectados (getByRole/getByTestId/getByLabel).");
 
   const score = [hasTag, hasTestStep, hasExpect, hasResilientLocators].filter(Boolean).length * 25;
   return {
@@ -89,28 +89,28 @@ function buildReview(draftCode: string, caseKey: string): BaseReviewOutput {
     hasExpect,
     hasResilientLocators,
     risks,
-    notes: risks.length ? "RevisÃ£o concluÃ­da com recomendaÃ§Ãµes." : "RevisÃ£o concluÃ­da sem riscos crÃ­ticos.",
+    notes: risks.length ? "Revisão concluída com recomendações." : "Revisão concluída sem riscos críticos.",
   };
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await authenticateRequest(req);
-  if (!user) return NextResponse.json({ message: "NÃ£o autorizado" }, { status: 401 });
+  if (!user) return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
 
   const { id } = await params;
   const record = await getTestCaseRecord(id);
-  if (!record) return NextResponse.json({ message: "Caso nÃ£o encontrado" }, { status: 404 });
+  if (!record) return NextResponse.json({ message: "Caso não encontrado" }, { status: 404 });
   if (!canAccessTestCaseRecord(user, record)) {
-    return NextResponse.json({ message: "Sem permissÃ£o" }, { status: 403 });
+    return NextResponse.json({ message: "Sem permissão" }, { status: 403 });
   }
 
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const draftId = typeof body?.draftId === "string" ? body.draftId : "";
   const locatorJustification = typeof body?.locatorJustification === "string" ? body.locatorJustification : null;
-  if (!draftId) return NextResponse.json({ message: "draftId Ã© obrigatÃ³rio" }, { status: 400 });
+  if (!draftId) return NextResponse.json({ message: "draftId é obrigatório" }, { status: 400 });
 
   const draft = await getAutomationDraft(record.testCase.id, draftId);
-  if (!draft) return NextResponse.json({ message: "Draft nÃ£o encontrado" }, { status: 404 });
+  if (!draft) return NextResponse.json({ message: "Draft não encontrado" }, { status: 404 });
 
   const baseReview = buildReview(draft.specCode ?? "", record.testCase.key || record.testCase.id);
   const locatorPolicy = evaluateLocatorPolicy(draft.specCode ?? "", locatorJustification);

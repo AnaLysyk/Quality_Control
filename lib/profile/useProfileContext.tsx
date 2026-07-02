@@ -37,7 +37,7 @@ export function useProfileContext(): ProfileRuntimeContext {
 }
 
 /**
- * Hook para verificar se aÃ§Ã£o Ã© permitida
+ * Hook para verificar se ação é permitida
  */
 export function useProfileAction(
   action:
@@ -94,7 +94,7 @@ export function useProfileAction(
 }
 
 /**
- * Hook para filtrar abas visÃ­veis
+ * Hook para filtrar abas visíveis
  */
 export function useProfileTabs() {
   const context = useProfileContext();

@@ -430,7 +430,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         label: "Abrir chamado",
         iconKey: "plus-circle",
         module: "support",
-        href: "/suporte?modal=create",
+        href: "/kanban-it?modal=create",
         action: "openCreateModal",
         favoriteEnabled: true,
         testId: "nav-support-create",
@@ -438,10 +438,10 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "support-kanban",
         routeId: "suporte.kanban",
-        label: "Andamento dos chamados",
+        label: "Kanban IT",
         iconKey: "kanban",
         module: "support",
-        href: "/suporte/kanban",
+        href: "/kanban-it",
         favoriteEnabled: true,
         testId: "nav-support-kanban",
       },
@@ -451,7 +451,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
         label: "Chamados",
         iconKey: "inbox",
         module: "support",
-        href: "/chamados",
+        href: "/kanban-it",
         allowedRoles: PRIVILEGED,
         favoriteEnabled: true,
         testId: "nav-support-chamados",
@@ -620,4 +620,5 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [],
   },
 ];
+
 

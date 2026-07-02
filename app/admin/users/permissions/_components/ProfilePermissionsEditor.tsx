@@ -111,11 +111,11 @@ const QUICK_CONTROL_MODULES = new Set(["dashboard", "context", "operations", "ai
 const CRITICAL_MODULES = new Set(["permissions", "users", "access_requests", "audit"]);
 
 const TABS: Array<{ id: ActiveTab; label: string; icon: typeof FiGrid }> = [
-  { id: "overview", label: "Visao geral", icon: FiInfo },
-  { id: "modules", label: "Modulos e funcoes", icon: FiGrid },
+  { id: "overview", label: "Visão geral", icon: FiInfo },
+  { id: "modules", label: "Módulos e funções", icon: FiGrid },
   { id: "screens", label: "Telas impactadas", icon: FiEye },
   { id: "brain", label: "Brain e Assistente", icon: FiShield },
-  { id: "users", label: "Usuarios impactados", icon: FiUsers },
+  { id: "users", label: "Usuários impactados", icon: FiUsers },
 ];
 
 function normalizeText(value: string) {
@@ -214,9 +214,9 @@ function getModulePermissionState(
 }
 
 function formatDateTime(value?: string | null) {
-  if (!value) return "Sem alteracao salva";
+  if (!value) return "Sem alteração salva";
   const time = Date.parse(value);
-  if (!Number.isFinite(time)) return "Sem alteracao salva";
+  if (!Number.isFinite(time)) return "Sem alteração salva";
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -378,7 +378,7 @@ export default function ProfilePermissionsEditor({
       try {
         const response = await fetch(`/api/admin/profile-permissions/${selectedRole}/users`, { credentials: "include" });
         const payload = (await response.json().catch(() => null)) as ProfileUsersResponse | { error?: string } | null;
-        if (!response.ok) throw new Error((payload as { error?: string } | null)?.error ?? "Falha ao carregar usuarios do perfil");
+        if (!response.ok) throw new Error((payload as { error?: string } | null)?.error ?? "Falha ao carregar usuários do perfil");
         if (!cancelled) setProfileUsers((payload as ProfileUsersResponse).users ?? []);
       } catch {
         if (!cancelled) setProfileUsers([]);
@@ -490,8 +490,8 @@ export default function ProfilePermissionsEditor({
   const impactedUsersCount = editingUser ? 1 : activeUsersCount;
   const targetLabel = editingUser && selectedUser ? selectedUser.label : getFixedProfileLabel(selectedRole);
   const targetSubtitle = editingUser
-    ? "Ajuste individual: somente este usuario sera impactado. O perfil original nao sera alterado."
-    : "Ajuste por perfil: todos os usuarios ativos deste perfil serao impactados.";
+    ? "Ajuste individual: somente este usuário será impactado. O perfil original não será alterado."
+    : "Ajuste por perfil: todos os usuários ativos deste perfil seráo impactados.";
   const canReset = profileState?.canEdit === true && can("permissions", "reset");
 
   function handleToggle(moduleId: string, action: string, checked: boolean) {
@@ -501,7 +501,7 @@ export default function ProfilePermissionsEditor({
   function handleModuleToggle(module: PermissionModule, shouldAllow: boolean) {
     if (!shouldAllow && CRITICAL_MODULES.has(module.id)) {
       const confirmed = window.confirm(
-        `Ocultar ${module.label} pode remover acesso administrativo sensivel. Deseja continuar?`,
+        `Ocultar ${module.label} pode remover acesso administrativo sensível. Deseja continuar?`,
       );
       if (!confirmed) return;
     }
@@ -568,7 +568,7 @@ export default function ProfilePermissionsEditor({
       const body = {
         allow: normalizePermissionMatrix(draftOverride.allow),
         deny: normalizePermissionMatrix(draftOverride.deny),
-        reason: editingUser ? "Ajuste individual pela Gestao de Perfis" : "Ajuste pela Gestao de Perfis",
+        reason: editingUser ? "Ajuste individual pela Gestão de Perfis" : "Ajuste pela Gestão de Perfis",
       };
       const response = await fetch(selectedUserId ? `/api/admin/user-permissions/${selectedUserId}` : `/api/admin/profile-permissions/${selectedRole}`, {
         method: "PATCH",
@@ -601,7 +601,7 @@ export default function ProfilePermissionsEditor({
       setNotice({
         type: "success",
         message: editingUser
-          ? "Usuario salvo. Ele mantem o perfil, mas agora usa permissoes individuais."
+          ? "Usuário salvo. Ele mantem o perfil, mas agora usa permissões individuais."
           : "Perfil salvo. As telas e funcoes bloqueadas ja saem da navegacao e da experiencia do perfil.",
       });
       await refreshUser();
@@ -617,8 +617,8 @@ export default function ProfilePermissionsEditor({
     if (!canReset) return;
     const confirmed = window.confirm(
       editingUser
-        ? "Este usuario voltara a herdar o perfil. Deseja restaurar o ajuste individual?"
-        : "Isso remove os ajustes e volta ao padrao do sistema. Deseja restaurar o perfil?",
+        ? "Este usuário voltara a herdar o perfil. Deseja restaurar o ajuste individual?"
+        : "Isso remove os ajustes e volta ao padrão do sistema. Deseja restaurar o perfil?",
     );
     if (!confirmed) return;
 
@@ -654,8 +654,8 @@ export default function ProfilePermissionsEditor({
       setNotice({
         type: "success",
         message: editingUser
-          ? "Usuario restaurado. Ele voltou a seguir o padrao efetivo do perfil."
-          : "Perfil restaurado para o padrao do sistema.",
+          ? "Usuário restaurado. Ele voltou a seguir o padrão efetivo do perfil."
+          : "Perfil restaurado para o padrão do sistema.",
       });
       await refreshUser();
       notifyPermissionRuntimeChanged();
@@ -671,10 +671,10 @@ export default function ProfilePermissionsEditor({
   if (!canView) {
     return (
       <AccessDeniedState
-        moduleName="Gestao de Perfis"
+        moduleName="Gestão de Perfis"
         requiredPermission="permissions:view"
         title="Acesso restrito"
-        description="A central de perfis exige permissao para visualizar a matriz de acessos."
+        description="A central de perfis exige permissão para visualizar a matriz de acessos."
       />
     );
   }
@@ -688,17 +688,17 @@ export default function ProfilePermissionsEditor({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-3">
                 <FiShield className="h-4 w-4 text-blue-200" />
-                <span className="text-xs font-black uppercase tracking-wider text-blue-200">Governanca de Acesso</span>
+                <span className="text-xs font-black uppercase tracking-wider text-blue-200">Governança de Acesso</span>
               </div>
               <h1 className="text-3xl font-black tracking-tight">Central de Acessos e Perfis</h1>
               <p className="mt-2 text-sm font-semibold text-blue-100">
-                Controle Ãºnico de telas, aÃ§Ãµes, dados, Brain e assistente por perfil, empresa, projeto e usuÃ¡rio.
+                Controle único de telas, ações, dados, Brain e assistente por perfil, empresa, projeto e usuário.
               </p>
               <p className="mt-4 flex flex-wrap items-center gap-3 text-sm font-bold">
                 <span className="text-white">{targetLabel}</span>
                 <span className="text-blue-300">/</span>
                 <span className="text-blue-100">
-                  {impactedUsersCount} {impactedUsersCount === 1 ? "usuÃ¡rio impactado" : "usuÃ¡rios impactados"}
+                  {impactedUsersCount} {impactedUsersCount === 1 ? "usuário impactado" : "usuários impactados"}
                 </span>
               </p>
             </div>
@@ -711,7 +711,7 @@ export default function ProfilePermissionsEditor({
                 className="inline-flex h-10 items-center gap-2 rounded-xl border border-blue-300/30 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FiRefreshCw className="h-4 w-4" />
-                {editingUser ? "Restaurar usuÃ¡rio" : "Restaurar padrÃ£o"}
+                {editingUser ? "Restaurar usuário" : "Restaurar padrão"}
               </button>
               <button
                 type="button"
@@ -720,7 +720,7 @@ export default function ProfilePermissionsEditor({
                 className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#011848] shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <FiSave className="h-4 w-4" />
-                {saving ? "Salvando..." : hasDraftChanges ? "Salvar alteraÃ§Ãµes" : "Tudo salvo"}
+                {saving ? "Salvando..." : hasDraftChanges ? "Salvar alterações" : "Tudo salvo"}
               </button>
             </div>
           </div>
@@ -730,11 +730,11 @@ export default function ProfilePermissionsEditor({
             <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-white">
                 <span className={`h-2 w-2 rounded-full ${hasDraftChanges ? "bg-[#ef0001]" : "bg-emerald-400"}`} />
-                {hasDraftChanges ? "AlteraÃ§Ãµes pendentes" : "Tudo salvo"}
+                {hasDraftChanges ? "Alterações pendentes" : "Tudo salvo"}
               </span>
               <span className="hidden text-blue-200 sm:inline">/</span>
               <span className="text-blue-100">
-                {editingUser ? "PermissÃ£o individual" : "PermissÃ£o por perfil"}
+                {editingUser ? "Permissão individual" : "Permissão por perfil"}
               </span>
             </div>
           </div>
@@ -743,11 +743,11 @@ export default function ProfilePermissionsEditor({
         {/* Indicadores Compactos */}
         <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
-            { label: "PermissÃµes efetivas", value: effectivePermissionCount, icon: FiUnlock, tone: "emerald" },
-            { label: "Telas visÃ­veis", value: visibleScreenCount, icon: FiEye, tone: "emerald" },
+            { label: "Permissões efetivas", value: effectivePermissionCount, icon: FiUnlock, tone: "emerald" },
+            { label: "Telas visíveis", value: visibleScreenCount, icon: FiEye, tone: "emerald" },
             { label: "Telas ocultas", value: hiddenScreenCount, icon: FiEyeOff, tone: "rose" },
             { label: "Ajustes no alvo", value: overriddenCount, icon: FiSliders, tone: "red" },
-            { label: editingUser ? "UsuÃ¡rio afetado" : "UsuÃ¡rios ativos", value: impactedUsersCount, icon: FiUsers, tone: "blue" },
+            { label: editingUser ? "Usuário afetado" : "Usuários ativos", value: impactedUsersCount, icon: FiUsers, tone: "blue" },
           ].map((metric) => {
             const Icon = metric.icon;
             const toneClass = {
@@ -812,8 +812,8 @@ export default function ProfilePermissionsEditor({
 
             {/* Escopo */}
             <section className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-black uppercase text-slate-500 mb-2">Escopo da AlteraÃ§Ã£o</p>
-              <h4 className="font-black text-[#0f172a] mb-3">{editingUser ? "Por usuÃ¡rio" : "Por perfil"}</h4>
+              <p className="text-xs font-black uppercase text-slate-500 mb-2">Escopo da Alteração</p>
+              <h4 className="font-black text-[#0f172a] mb-3">{editingUser ? "Por usuário" : "Por perfil"}</h4>
 
               <button
                 type="button"
@@ -826,16 +826,16 @@ export default function ProfilePermissionsEditor({
                 ].join(" ")}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span>Editar padrÃ£o do perfil</span>
+                  <span>Editar padrão do perfil</span>
                   {!editingUser && <FiCheck className="h-4 w-4 shrink-0" />}
                 </div>
                 <p className={["mt-1 text-xs leading-4", !editingUser ? "text-blue-50/85" : "text-slate-500"].join(" ")}>
-                  Afeta todos os usuÃ¡rios.
+                  Afeta todos os usuários.
                 </p>
               </button>
             </section>
 
-            {/* UsuÃ¡rios do Perfil */}
+            {/* Usuários do Perfil */}
             <section className="rounded-2xl border border-slate-200 bg-white p-4">
               <label className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5">
                 <FiSearch className="h-3.5 w-3.5 shrink-0 text-slate-500" />
@@ -843,9 +843,9 @@ export default function ProfilePermissionsEditor({
                   type="search"
                   value={userQuery}
                   onChange={(event) => setUserQuery(event.target.value)}
-                  placeholder="Buscar usuÃ¡rio..."
+                  placeholder="Buscar usuário..."
                   className="w-full bg-transparent text-xs font-semibold outline-none placeholder:text-slate-400"
-                  aria-label="Buscar usuÃ¡rio do perfil"
+                  aria-label="Buscar usuário do perfil"
                 />
               </label>
 
@@ -888,7 +888,7 @@ export default function ProfilePermissionsEditor({
                   })
                 ) : (
                   <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-center text-xs font-semibold text-slate-500">
-                    Nenhum usuÃ¡rio.
+                    Nenhum usuário.
                   </div>
                 )}
               </div>
@@ -911,9 +911,9 @@ export default function ProfilePermissionsEditor({
                       type="search"
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Buscar mÃ³dulo, tela, funÃ§Ã£o..."
+                      placeholder="Buscar módulo, tela, função..."
                       className="w-full bg-transparent text-xs font-semibold outline-none placeholder:text-slate-400"
-                      aria-label="Buscar mÃ³dulo, tela ou funÃ§Ã£o"
+                      aria-label="Buscar módulo, tela ou função"
                     />
                   </label>
                 </div>
@@ -958,13 +958,13 @@ export default function ProfilePermissionsEditor({
 
                 {!canEdit && profileState && (
                   <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
-                    VocÃª pode consultar, mas nÃ£o possui permissÃ£o para editar a matriz.
+                    Você pode consultar, mas não possui permissão para editar a matriz.
                   </div>
                 )}
               </div>
             </div>
 
-            {/* ConteÃºdo das Abas */}
+            {/* Conteúdo das Abas */}
             <div className="flex-1 overflow-auto p-5">
                 {activeTab === "overview" ? (
                   <div className="space-y-4">
@@ -981,8 +981,8 @@ export default function ProfilePermissionsEditor({
                         <h4 className="text-xs font-black uppercase text-slate-500">O que muda?</h4>
                         <ul className="mt-3 space-y-1.5 text-xs font-semibold text-slate-700">
                           <li>â€¢ {hiddenScreenCount} tela{hiddenScreenCount !== 1 ? "s" : ""} fica{hiddenScreenCount !== 1 ? "m" : ""} oculta{hiddenScreenCount !== 1 ? "s" : ""}</li>
-                          <li>â€¢ {partialModuleCount} mÃ³dulo{partialModuleCount !== 1 ? "s" : ""} parcial{partialModuleCount !== 1 ? "is" : ""}</li>
-                          <li>â€¢ {adjustedModuleCount} mÃ³dulo{adjustedModuleCount !== 1 ? "s" : ""} alterado{adjustedModuleCount !== 1 ? "s" : ""}</li>
+                          <li>â€¢ {partialModuleCount} módulo{partialModuleCount !== 1 ? "s" : ""} parcial{partialModuleCount !== 1 ? "is" : ""}</li>
+                          <li>â€¢ {adjustedModuleCount} módulo{adjustedModuleCount !== 1 ? "s" : ""} alterado{adjustedModuleCount !== 1 ? "s" : ""}</li>
                           <li>â€¢ {overriddenCount} ajuste{overriddenCount !== 1 ? "s" : ""} direto{overriddenCount !== 1 ? "s" : ""}</li>
                         </ul>
                       </div>
@@ -990,11 +990,11 @@ export default function ProfilePermissionsEditor({
 
                     <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-3">
                       <div className="text-center">
-                        <p className="text-xs font-black uppercase text-slate-500">UsuÃ¡rios impactados</p>
+                        <p className="text-xs font-black uppercase text-slate-500">Usuários impactados</p>
                         <p className="mt-2 text-2xl font-black text-[#011848]">{impactedUsersCount}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs font-black uppercase text-slate-500">PermissÃµes liberadas</p>
+                        <p className="text-xs font-black uppercase text-slate-500">Permissões liberadas</p>
                         <p className="mt-2 text-2xl font-black text-emerald-600">{effectivePermissionCount}</p>
                       </div>
                       <div className="text-center">
@@ -1004,14 +1004,14 @@ export default function ProfilePermissionsEditor({
                     </div>
 
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <h4 className="text-xs font-black uppercase text-slate-500 mb-4">DecisÃµes rÃ¡pidas</h4>
+                      <h4 className="text-xs font-black uppercase text-slate-500 mb-4">Decisões rápidas</h4>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                           <thead className="border-b border-slate-200 text-xs font-black uppercase text-slate-500">
                             <tr>
-                              <th className="pb-2 pr-3">MÃ³dulo</th>
+                              <th className="pb-2 pr-3">Módulo</th>
                               <th className="pb-2 px-3">Estado</th>
-                              <th className="pb-2 px-3 text-right">AÃ§Ãµes</th>
+                              <th className="pb-2 px-3 text-right">Ações</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-200">
@@ -1060,21 +1060,21 @@ export default function ProfilePermissionsEditor({
                 {activeTab === "modules" ? (
                   <div className="rounded-xl border border-slate-200 bg-slate-50">
                     <div className="border-b border-slate-200 bg-white px-4 py-3">
-                      <h4 className="text-sm font-black text-[#0f172a]">Matriz de MÃ³dulos e FunÃ§Ãµes</h4>
+                      <h4 className="text-sm font-black text-[#0f172a]">Matriz de Módulos e Funções</h4>
                       <p className="mt-1 text-xs font-semibold text-slate-600">
-                        Clique em um mÃ³dulo para expandir e ajustar as aÃ§Ãµes individuais.
+                        Clique em um módulo para expandir e ajustar as ações individuais.
                       </p>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-600 border-collapse text-left">
                         <thead className="bg-white text-xs font-black uppercase text-slate-500">
                           <tr className="border-b border-slate-200">
-                            <th className="px-4 py-2.5">MÃ³dulo</th>
+                            <th className="px-4 py-2.5">Módulo</th>
                             <th className="px-4 py-2.5">Categoria</th>
-                            <th className="px-4 py-2.5">PermissÃµes</th>
+                            <th className="px-4 py-2.5">Permissões</th>
                             <th className="px-4 py-2.5">Estado</th>
                             <th className="px-4 py-2.5">Ajustes</th>
-                            <th className="px-4 py-2.5 text-right">AÃ§Ãµes</th>
+                            <th className="px-4 py-2.5 text-right">Ações</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 bg-white">
@@ -1170,7 +1170,7 @@ export default function ProfilePermissionsEditor({
                           ) : (
                             <tr>
                               <td colSpan={6} className="px-4 py-8 text-center text-xs font-semibold text-slate-500">
-                                Nenhum mÃ³dulo encontrado.
+                                Nenhum módulo encontrado.
                               </td>
                             </tr>
                           )}
@@ -1186,13 +1186,13 @@ export default function ProfilePermissionsEditor({
                       <div>
                         <h4 className="text-sm font-black text-[#0f172a]">Telas Impactadas</h4>
                         <p className="mt-1 text-xs font-semibold text-slate-600">
-                          Visualize quais telas e rotas serÃ£o afetadas pelas permissÃµes.
+                          Visualize quais telas e rotas serão afetadas pelas permissões.
                         </p>
                       </div>
                       <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-1">
                         {[
                           { id: "all", label: "Todas" },
-                          { id: "visible", label: "VisÃ­veis" },
+                          { id: "visible", label: "Visíveis" },
                           { id: "hidden", label: "Ocultas" },
                         ].map((filter) => (
                           <button
@@ -1216,8 +1216,8 @@ export default function ProfilePermissionsEditor({
                           <tr>
                             <th className="px-4 py-2.5">Tela</th>
                             <th className="px-4 py-2.5">Rota</th>
-                            <th className="px-4 py-2.5">MÃ³dulo</th>
-                            <th className="px-4 py-2.5">PermissÃ£o</th>
+                            <th className="px-4 py-2.5">Módulo</th>
+                            <th className="px-4 py-2.5">Permissão</th>
                             <th className="px-4 py-2.5">Estado</th>
                           </tr>
                         </thead>
@@ -1247,7 +1247,7 @@ export default function ProfilePermissionsEditor({
                                     ].join(" ")}
                                   >
                                     {visible ? <FiEye className="h-3 w-3" /> : <FiEyeOff className="h-3 w-3" />}
-                                    {visible ? "VisÃ­vel" : "Oculta"}
+                                    {visible ? "Visível" : "Oculta"}
                                   </span>
                                 </td>
                               </tr>
@@ -1270,7 +1270,7 @@ export default function ProfilePermissionsEditor({
                     <div className="border-b border-slate-200 bg-white px-4 py-3">
                       <h4 className="text-sm font-black text-[#0f172a]">Brain e Assistente</h4>
                       <p className="mt-1 text-xs font-semibold text-slate-600">
-                        Controle quais mÃ³dulos, dados e aÃ§Ãµes o Brain e Assistente podem acessar.
+                        Controle quais módulos, dados e ações o Brain e Assistente podem acessar.
                       </p>
                     </div>
                     <div className="overflow-x-auto">
@@ -1278,9 +1278,9 @@ export default function ProfilePermissionsEditor({
                         <thead className="border-b border-slate-200 text-xs font-bold uppercase text-slate-500">
                           <tr>
                             <th className="px-4 py-2.5">Recurso</th>
-                            <th className="px-4 py-2.5">DescriÃ§Ã£o</th>
+                            <th className="px-4 py-2.5">Descrição</th>
                             <th className="px-4 py-2.5">Estado</th>
-                            <th className="px-4 py-2.5 text-right">AÃ§Ãµes</th>
+                            <th className="px-4 py-2.5 text-right">Ações</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
@@ -1294,37 +1294,37 @@ export default function ProfilePermissionsEditor({
                             {
                               id: "assistant",
                               label: "Assistente IA",
-                              desc: "AutomaÃ§Ãµes, sugestÃµes e mensagens inteligentes.",
+                              desc: "Automações, sugestões e mensagens inteligentes.",
                               actions: ["query_qase", "query_jira", "create_external_ticket", "update_external_ticket"],
                             },
                             {
                               id: "chat",
                               label: "Chat",
-                              desc: "ComunicaÃ§Ã£o em tempo real com contexto.",
+                              desc: "Comunicação em tempo real com contexto.",
                               actions: ["view", "use"],
                             },
                             {
                               id: "operations",
                               label: "Dados Operacionais",
-                              desc: "Brain pode consultar dados operacionais e mÃ©tricas.",
+                              desc: "Brain pode consultar dados operacionais e métricas.",
                               actions: ["view"],
                             },
                             {
                               id: "qase",
                               label: "Qase/Kase",
-                              desc: "Brain pode acessar informaÃ§Ãµes de testes e defeitos.",
+                              desc: "Brain pode acessar informações de testes e defeitos.",
                               actions: ["view", "view_projects", "view_cases", "view_runs", "view_results", "view_defects", "sync"],
                             },
                             {
                               id: "jira",
                               label: "Jira",
-                              desc: "Arquitetura preparada para issues, bugs, epicos, sprints e transicoes.",
+                              desc: "Arquitetura preparada para issues, bugs, épicos, sprints e transições.",
                               actions: ["view", "view_projects", "view_issues", "view_bugs", "view_sprints", "sync"],
                             },
                             {
                               id: "users",
-                              label: "Dados de UsuÃ¡rios",
-                              desc: "Brain pode listar e consultar informaÃ§Ãµes de usuÃ¡rios.",
+                              label: "Dados de Usuários",
+                              desc: "Brain pode listar e consultar informações de usuários.",
                               actions: ["view", "view_company", "view_all"],
                             },
                           ].map((resource) => {
@@ -1388,7 +1388,7 @@ export default function ProfilePermissionsEditor({
                   <section className="profile-command-section rounded-2xl border border-slate-200 bg-white">
                     <div className="flex flex-col gap-2 border-b border-slate-200 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
                       <div>
-                        <h3 className="text-base font-black text-[#0f172a]">Usuarios impactados</h3>
+                        <h3 className="text-base font-black text-[#0f172a]">Usuários impactados</h3>
                         <p className="mt-1 text-sm font-semibold text-slate-600">
                           Pessoas que seguem este perfil e podem receber excecao individual quando necessario.
                         </p>
@@ -1402,12 +1402,12 @@ export default function ProfilePermissionsEditor({
                       <table className="w-full min-w-225 border-collapse text-left">
                         <thead className="bg-slate-50 text-xs font-black uppercase text-slate-500">
                           <tr>
-                            <th className="px-4 py-3">Usuario</th>
+                            <th className="px-4 py-3">Usuário</th>
                             <th className="px-4 py-3">Email</th>
                             <th className="px-4 py-3">Status</th>
                             <th className="px-4 py-3">Ajuste individual</th>
-                            <th className="px-4 py-3">Permissoes efetivas</th>
-                            <th className="px-4 py-3">Ultima alteracao</th>
+                            <th className="px-4 py-3">Permissões efetivas</th>
+                            <th className="px-4 py-3">Ultima alteração</th>
                             <th className="px-4 py-3 text-right">Acao</th>
                           </tr>
                         </thead>
@@ -1448,7 +1448,7 @@ export default function ProfilePermissionsEditor({
                                           : "border-slate-200 bg-white text-slate-700 hover:border-[#011848] hover:text-[#011848]",
                                       ].join(" ")}
                                     >
-                                      {selected ? "Editando" : "Editar usuario"}
+                                      {selected ? "Editando" : "Editar usuário"}
                                     </button>
                                   </td>
                                 </tr>
@@ -1457,7 +1457,7 @@ export default function ProfilePermissionsEditor({
                           ) : (
                             <tr>
                               <td colSpan={7} className="px-4 py-10 text-center text-sm font-semibold text-slate-500">
-                                Nenhum usuÃ¡rio encontrado.
+                                Nenhum usuário encontrado.
                               </td>
                             </tr>
                           )}
@@ -1473,5 +1473,6 @@ export default function ProfilePermissionsEditor({
       </main>
   );
 }
+
 
 

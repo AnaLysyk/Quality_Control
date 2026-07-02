@@ -1,9 +1,9 @@
-export type PermissionModuleCategory =
+﻿export type PermissionModuleCategory =
   | "Módulos e páginas"
   | "Chamados e suporte"
   | "Usuários e administração"
   | "Produtividade"
-  | "OperaÃƒÂ§ÃƒÂ£o"
+  | "OperaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o"
   | "Operação";
 
 export type PermissionModule = {
@@ -54,7 +54,7 @@ export const ACTION_LABELS: Record<string, string> = {
   create_external_ticket: "Criar ticket externo",
   update_external_ticket: "Atualizar ticket externo",
   view_projects: "Ver projetos",
-  view_suites: "Ver suites",
+  view_suítes: "Ver suítes",
   view_cases: "Ver casos",
   view_runs: "Ver runs",
   view_results: "Ver resultados",
@@ -67,7 +67,7 @@ export const ACTION_LABELS: Record<string, string> = {
   link_defect: "Vincular defeito",
   view_issues: "Ver issues",
   view_bugs: "Ver bugs",
-  view_epics: "Ver epicos",
+  view_epics: "Ver épicos",
   view_sprints: "Ver sprints",
   create_issue: "Criar issue",
   update_issue: "Atualizar issue",
@@ -171,6 +171,13 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     actions: ["read", "create", "approve", "block"],
   },
   {
+    id: "release_calendar",
+    label: "Agendamento",
+    description: "Calendário operacional, marcações, entregas e acompanhamento de horários por empresa, projeto e usuário.",
+    category: "Módulos e páginas",
+    actions: ["view", "create", "edit", "delete", "status"],
+  },
+  {
     id: "releases",
     label: "Releases",
     description: "Fluxo de releases, histórico e qualidade.",
@@ -243,22 +250,22 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   {
     id: "assistant",
     label: "Assistente",
-    description: "Acoes do assistente sobre fontes internas e externas respeitando permissoes.",
+    description: "Ações do assistente sobre fontes internas e externas respeitando permissões.",
     category: "Produtividade",
     actions: ["query_qase", "query_jira", "create_external_ticket", "update_external_ticket"],
   },
   {
     id: "qase",
     label: "Qase/Kase",
-    description: "Projetos, suites, casos, runs, resultados e defeitos vindos da integracao Qase/Kase.",
-    category: "OperaÃ§Ã£o",
-    actions: ["view", "view_projects", "view_suites", "view_cases", "view_runs", "view_results", "view_defects", "create_case", "update_case", "create_run", "update_run", "sync", "link_defect"],
+    description: "Projetos, suítes, casos, runs, resultados e defeitos vindos da integração Qase/Kase.",
+    category: "Operação",
+    actions: ["view", "view_projects", "view_suítes", "view_cases", "view_runs", "view_results", "view_defects", "create_case", "update_case", "create_run", "update_run", "sync", "link_defect"],
   },
   {
     id: "jira",
     label: "Jira",
-    description: "Projetos, issues, bugs, epicos, sprints e transicoes da integracao Jira.",
-    category: "OperaÃ§Ã£o",
+    description: "Projetos, issues, bugs, épicos, sprints e transições da integração Jira.",
+    category: "Operação",
     actions: ["view", "view_projects", "view_issues", "view_bugs", "view_epics", "view_sprints", "create_issue", "update_issue", "transition_issue", "comment_issue", "link_issue", "sync"],
   },
   {
@@ -312,3 +319,5 @@ export function getPermissionModule(moduleId: string) {
 export function getActionLabel(action: string) {
   return ACTION_LABELS[action] ?? action;
 }
+
+

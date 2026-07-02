@@ -575,7 +575,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
   },
 
   // ============================================
-  // GESTÃƒO — perfil e usuários
+  // GESTAO — perfil e usuarios
   // ============================================
   {
     id: "management",
@@ -586,18 +586,19 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [
       {
         id: "management-profile",
-        routeId: "permissoes.visao-geral",
+        routeId: "permissoes.perfil",
         label: "Perfil",
         iconKey: "shield",
         module: "management",
         href: "/admin/permissions",
+        allowedRoles: USER_MANAGERS,
         favoriteEnabled: true,
         testId: "nav-management-profile",
       },
       {
         id: "management-users",
         routeId: "permissoes.matriz",
-        label: "Usuários",
+        label: "Usuário",
         iconKey: "users",
         module: "management",
         href: "/admin/users/permissions",
@@ -605,24 +606,9 @@ export const NAV_CATALOG: NavModuleDef[] = [
         favoriteEnabled: true,
         testId: "nav-management-users",
       },
-      {
-        id: "users-list-empresas",
-        routeId: "usuarios.listagem",
-        label: "Usuários de empresas",
-        iconKey: "building",
-        module: "users",
-        href: "/admin/users?tab=company",
-        allowedRoles: USER_MANAGERS,
-        favoriteEnabled: true,
-        group: "Listagem",
-        testId: "nav-users-list-companies",
-      },
     ],
   },
 
-  // ============================================
-  // LOGS — link direto, fora de Admin
-  // ============================================
   {
     id: "logs",
     routeId: "configuracoes.auditoria",

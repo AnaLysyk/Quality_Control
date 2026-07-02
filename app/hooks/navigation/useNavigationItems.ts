@@ -224,41 +224,16 @@ function resolveModuleItems(
     mod.id === "home" && effectiveRole != null && INTERNAL_DASHBOARD_ROLES.has(effectiveRole);
   const usesCompanyCentral =
     mod.id === "home" && effectiveRole != null && COMPANY_DASHBOARD_ROLES.has(effectiveRole);
-    const permissionItems: NavItemDef[] = [
-    {
-      id: "admin-permissions-profile",
-      routeId: "permissoes.perfil",
-      label: "Gestão de perfil",
-      iconKey: "shield",
-      module: "permissoes",
-      href: "/admin/permissions",
-      favoriteEnabled: true,
-      testId: "nav-admin-permissions-profile",
-    },
-    {
-      id: "admin-permissions-user",
-      routeId: "permissoes.matriz",
-      label: "Gestão de usuário",
-      iconKey: "users",
-      module: "permissoes",
-      href: "/admin/users/permissions",
-      favoriteEnabled: true,
-      testId: "nav-admin-permissions-user",
-    },
-  ];
-
   const dynamicItems =
-    mod.id === "permissoes"
-      ? permissionItems
-      : mod.id === "brain"
-        ? buildBrainItems(effectiveRole, companySlug, projectSlug)
-        : mod.id === "quality"
-          ? buildQualityItems(mod.items, companySlug)
-          : mod.items;
+    mod.id === "brain"
+      ? buildBrainItems(effectiveRole, companySlug, projectSlug)
+      : mod.id === "quality"
+        ? buildQualityItems(mod.items, companySlug)
+        : mod.items;
 
   return {
     ...mod,
-    label: mod.id === "permissoes" ? "Gestão de permissões" : usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
+    label: usesInternalOverview ? "Visão Geral" : usesCompanyCentral ? "Central da Empresa" : mod.label,
     href: resolveModuleHref(mod, companySlug, projectSlug, companyRouteInput, effectiveRole),
     items: dynamicItems
       .filter((item) => {

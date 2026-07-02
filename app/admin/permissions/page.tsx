@@ -697,6 +697,37 @@ export default function AdminPermissionsPage() {
       setSaving(false);
     }
   }
+  useEffect(() => {
+    document.body.classList.add("qc-permissions-profile-route");
+
+    const hideShellPermissionsCover = () => {
+      const nodes = Array.from(document.querySelectorAll("h1,h2,h3,span,p,div"));
+      const titleNode = nodes.find((node) => {
+        const text = node.textContent?.trim();
+        if (text !== "Permissions") return false;
+        return !node.closest(".profile-permissions-page");
+      });
+
+      const cover = titleNode?.closest("section,header,div");
+      titleNode?.classList.add("qc-hidden-permissions-title");
+      cover?.classList.add("qc-hidden-permissions-shell-cover");
+    };
+
+    hideShellPermissionsCover();
+    const timer = window.setTimeout(hideShellPermissionsCover, 250);
+
+    return () => {
+      window.clearTimeout(timer);
+      document.body.classList.remove("qc-permissions-profile-route");
+      document.querySelectorAll(".qc-hidden-permissions-title").forEach((node) => {
+        node.classList.remove("qc-hidden-permissions-title");
+      });
+      document.querySelectorAll(".qc-hidden-permissions-shell-cover").forEach((node) => {
+        node.classList.remove("qc-hidden-permissions-shell-cover");
+      });
+    };
+  }, []);
+
 
   if (loading) return <AccessDeniedState state="loading" />;
 
@@ -714,9 +745,9 @@ export default function AdminPermissionsPage() {
   const sortMark = sortDirection === "asc" ? "?" : "?";
 
   return (
-    <main className="profile-permissions-page min-h-screen bg-[#f8fafc] px-4 py-0 text-[#0f172a] lg:px-6">
+    <main className="qc-profile-permissions-page profile-permissions-page min-h-screen bg-[#f8fafc] px-4 py-0 text-[#0f172a] lg:px-6">
       <div className="flex w-full max-w-none flex-col gap-4">
-        <section className="permissions-profile-panel rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="permissions-profile-panel permissions-profile-hero-unified permissions-profile-hero-unified permissions-profile-cover-content rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
               <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#011848]">

@@ -1,13 +1,17 @@
-﻿"use client";
+"use client";
 
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
-import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPaperclip, FiPlus, FiSearch, FiTrash2, FiX } from "react-icons/fi";
+import { useAuth } from "@/context/AuthContext";
+import { useClientContext } from "@/context/ClientContext";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
+import { useI18n } from "@/hooks/useI18n";
 import { useSuporteKanbanColumns } from "@/hooks/useSuporteKanbanColumns";
+import { canAccessGlobalSupportScope, canCreateSupportTickets, canManageSupportWorkflow, canViewSupportBoard } from "@/lib/supportAccess";
 import {
   getSuporteStatusLabel,
   normalizeKanbanStatus,
@@ -37,6 +41,7 @@ type SuporteItem = {
 };
 
 type ColumnKey = string;
+type SupportEvidenceLink = { raw: string; label: string; href: string };
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Baixa" },
@@ -51,48 +56,45 @@ const TYPE_OPTIONS = [
 ];
 
 const SUPPORT_COLUMN_THEMES = ["rose", "sky", "emerald", "amber", "violet", "orange"] as const;
+const KNOWN_SUPPORT_ROUTE_ROOTS = new Set([
+  "admin",
+  "api",
+  "login",
+  "settings",
+  "me",
+  "profile",
+  "home",
+  "dashboard",
+  "runs",
+  "release",
+  "requests",
+  "docs",
+  "documentos",
+  "chamados",
+  "meus-chamados",
+  "clients",
+  "clients-list",
+  "integrations",
+  "issues",
+  "metrics",
+  "brand-identity",
+  "empresas",
+  "kanban-it",
+]);
+const SUPPORT_EVIDENCE_PATTERN = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
-
-function isPrivilegedRole(role: string | null | undefined) {
-  const value = (role ?? "").toLowerCase();
-  return (
-    value === "it_dev" ||
-    value === "itdev" ||
-    value === "developer" ||
-    value === "dev"
-  );
-}
-
-function isPrivilegedSupportUser(user: {
-  role?: string | null;
-  permissionRole?: string | null;
-  companyRole?: string | null;
-  isGlobalAdmin?: boolean;
-} | null | undefined) {
-  const permissionRole = (user?.permissionRole ?? "").toLowerCase();
-  const companyRole = (user?.companyRole ?? "").toLowerCase();
-
-  return (
-    user?.isGlobalAdmin === true ||
-    permissionRole === "admin" ||
-    permissionRole === "dev" ||
-    companyRole === "it_dev" ||
-    isPrivilegedRole(user?.role)
-  );
-}
-
-function shortText(value?: string | null, max = 120) {
-  if (!value) return "Sem descricao.";
+function shortText(value?: string | null, max = 120, fallback = "Sem descrição.") {
+  if (!value) return fallback;
   const trimmed = value.trim();
   if (trimmed.length <= max) return trimmed;
   return `${trimmed.slice(0, Math.max(0, max - 3))}...`;
 }
 
-function formatDate(iso?: string | null) {
+function formatDate(iso?: string | null, locale: "pt-BR" | "en-US" = "pt-BR") {
   if (!iso) return "-";
   const time = Date.parse(iso);
   if (!Number.isFinite(time)) return "-";
-  return new Date(time).toLocaleDateString("pt-BR");
+  return new Date(time).toLocaleDateString(locale);
 }
 
 function hasMeaningfulContent(value: string) {
@@ -107,14 +109,14 @@ function hasMeaningfulContent(value: string) {
   return true;
 }
 
-function getSupportTypeLabel(value?: string | null) {
+function getSupportTypeLabel(value: string | null | undefined, labels: Record<string, string>) {
   const normalized = (value ?? "tarefa").toLowerCase();
-  return TYPE_OPTIONS.find((option) => option.value === normalized)?.label ?? "Tarefa";
+  return labels[normalized] ?? labels.tarefa;
 }
 
-function getSupportPriorityLabel(value?: string | null) {
+function getSupportPriorityLabel(value: string | null | undefined, labels: Record<string, string>) {
   const normalized = (value ?? "medium").toLowerCase();
-  return PRIORITY_OPTIONS.find((option) => option.value === normalized)?.label ?? "Média";
+  return labels[normalized] ?? labels.medium;
 }
 
 function normalizeTicketLookup(value?: string | null) {
@@ -199,8 +201,63 @@ function getTicketSearchMeta(query: string, suporte: SuporteItem) {
   return { bestScore, hasDirectMatch, nearestDistance };
 }
 
+function getInitials(label: string) {
+  const parts = label
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const compact = (parts.length > 1 ? parts.slice(0, 2).map((part) => part[0]) : [label.slice(0, 2)]).join("");
+  const normalized = compact.replace(/[^a-zA-Z0-9]/g, "").slice(0, 2).toUpperCase();
+  return normalized || "TC";
+}
+
+function sanitizeEvidenceFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-").slice(-120);
+}
+
+function buildEvidenceMarkdown(name: string, url: string) {
+  return `[Evidencia: ${name}](${url})`;
+}
+
+function isSupportEvidenceLabel(label: string) {
+  return /^evid[eê]ncia:/i.test(label.trim());
+}
+
+function parseSupportDescription(body?: string | null): { text: string; evidence: SupportEvidenceLink[] } {
+  const source = body ?? "";
+  if (!source.trim()) {
+    return { text: "", evidence: [] };
+  }
+
+  const evidence: SupportEvidenceLink[] = [];
+  const text = source
+    .replace(SUPPORT_EVIDENCE_PATTERN, (raw, label, href) => {
+      if (!isSupportEvidenceLabel(label)) return raw;
+      evidence.push({ raw, label, href });
+      return "";
+    })
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return { text, evidence };
+}
+
+function resolveCompanySlugFromPath(pathname: string) {
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts[0] === "empresas" && parts[2] === "chamados" && parts[1]) {
+    return decodeURIComponent(parts[1]);
+  }
+  if (parts.length >= 2 && parts[1] === "chamados" && !KNOWN_SUPPORT_ROUTE_ROOTS.has(parts[0])) {
+    return decodeURIComponent(parts[0]);
+  }
+  return null;
+}
+
+function shouldUseNativeImageTag(src: string) {
+  return src.startsWith("/api/s3/object?") || /^(https?:|data:|blob:)/i.test(src);
+}
+
 export default function KanbanItPage() {
-  const { user, loading, can } = usePermissionAccess();
   const { language } = useI18n();
   const isPt = language === "pt-BR";
   const locale = isPt ? "pt-BR" : "en-US";
@@ -416,7 +473,6 @@ export default function KanbanItPage() {
     [isPt],
   );
   const pathname = usePathname() || "";
-  const searchParams = useSearchParams();
   const { user, loading } = usePermissionAccess();
   const { companies } = useAuth();
   const { activeClient, activeClientSlug } = useClientContext();
@@ -438,7 +494,6 @@ export default function KanbanItPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [createEvidenceFile, setCreateEvidenceFile] = useState<File | null>(null);
   const createEvidenceInputRef = useRef<HTMLInputElement | null>(null);
-  const openCreateTokenRef = useRef<string | null>(null);
 
   const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
   const [editingColumnLabel, setEditingColumnLabel] = useState("");
@@ -453,16 +508,39 @@ export default function KanbanItPage() {
   const [draggingColumnKey, setDraggingColumnKey] = useState<string | null>(null);
   const [columnDropTargetKey, setColumnDropTargetKey] = useState<string | null>(null);
 
-  // Só DEV pode editar/remover/adicionar colunas
-  const isPrivileged =
-    isPrivilegedSupportUser(user) ||
-    can("tickets", "assign") ||
-    can("tickets", "status") ||
-    can("support", "assign") ||
-    can("support", "status");
-  const canAccessGlobalKanban =
-    (can("tickets", "view_all") || isPrivileged) &&
-    (can("tickets", "view") || can("support", "view"));
+  const canOpenBoard = canViewSupportBoard(user);
+  const canCreateSupport = canCreateSupportTickets(user);
+  const hasGlobalScope = canAccessGlobalSupportScope(user);
+  const isPrivileged = canManageSupportWorkflow(user);
+  const supportBrand = useMemo(() => {
+    const routeCompanySlug = resolveCompanySlugFromPath(pathname);
+    const preferredSlug =
+      routeCompanySlug ??
+      activeClientSlug ??
+      (typeof user?.clientSlug === "string" ? user.clientSlug : null) ??
+      (typeof user?.defaultClientSlug === "string" ? user.defaultClientSlug : null) ??
+      null;
+
+    const foundCompany = preferredSlug
+      ? companies.find((company) => company.slug === preferredSlug) ?? null
+      : null;
+    const matchedCompany = foundCompany
+      ?? (preferredSlug && activeClient && activeClient.slug === preferredSlug ? activeClient : null);
+
+    const companyName = matchedCompany?.name ?? (preferredSlug ? preferredSlug.replace(/[-_]+/g, " ") : null);
+    const logoSrc =
+      typeof matchedCompany?.logoUrl === "string" && matchedCompany.logoUrl.trim()
+        ? matchedCompany.logoUrl
+        : null;
+
+    return {
+      companyName,
+      logoSrc,
+      logoAlt: companyName ? `Logo da empresa ${companyName}` : "Logo Testing Company",
+      logoFallback: getInitials(companyName ?? "Testing Company"),
+      isCompanyScoped: Boolean(companyName),
+    };
+  }, [activeClient, activeClientSlug, companies, pathname, user?.clientSlug, user?.defaultClientSlug]);
   const statusKeys = useMemo(
     () => suportes.map((suporte) => normalizeKanbanStatus(suporte.status)),
     [suportes],
@@ -510,27 +588,35 @@ export default function KanbanItPage() {
 
     return [
       {
-        label: "Chamados no painel",
+        label: ui.ticketsPanel,
         value: filteredSuportes.length,
-        copy: "Tickets ativos no fluxo global de atendimento.",
+        copy: hasGlobalScope
+          ? ui.ticketsPanelGlobalCopy
+          : ui.ticketsPanelPersonalCopy,
       },
       {
-        label: "Em andamento",
+        label: ui.inProgress,
         value: inProgressCount,
-        copy: "Chamados em atendimento ou revisao pelo suporte global.",
+        copy: hasGlobalScope
+          ? ui.inProgressGlobalCopy
+          : ui.inProgressPersonalCopy,
       },
       {
-        label: "Com responsavel",
+        label: ui.withOwner,
         value: assignedCount,
-        copy: "Chamados ja vinculados ao time de suporte global.",
+        copy: hasGlobalScope
+          ? ui.withOwnerGlobalCopy
+          : ui.withOwnerPersonalCopy,
       },
       {
-        label: "Concluidos",
+        label: ui.completed,
         value: completedCount,
-        copy: "Tickets finalizados dentro do fluxo de suporte.",
+        copy: hasGlobalScope
+          ? ui.completedGlobalCopy
+          : ui.completedPersonalCopy,
       },
     ];
-  }, [filteredSuportes]);
+  }, [filteredSuportes, hasGlobalScope, ui]);
 
   const updateColumnsRailState = useCallback(() => {
     const rail = columnsRailRef.current;
@@ -556,20 +642,17 @@ export default function KanbanItPage() {
       const json = (await res.json().catch(() => ({}))) as { items?: SuporteItem[]; error?: string };
       if (!res.ok) {
         setSuportes([]);
-        setError(json?.error || "Erro ao carregar suportes");
+        setError(json?.error || ui.loadError);
         return;
       }
       setSuportes(Array.isArray(json.items) ? json.items : []);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao carregar suportes";
+      const msg = err instanceof Error ? err.message : ui.loadError;
       setError(msg);
     } finally {
       setLoadingSuportes(false);
     }
-  }, []);
-
-  // Backwards-compatible alias used in some UI handlers
-  const loadTickets = loadSuportes;
+  }, [ui.loadError]);
 
   useEffect(() => {
     loadSuportes();
@@ -579,27 +662,6 @@ export default function KanbanItPage() {
     const timer = setInterval(loadSuportes, 30000);
     return () => clearInterval(timer);
   }, [loadSuportes]);
-
-  useEffect(() => {
-    const shouldOpenCreateModal = searchParams.get("modal") === "create" || searchParams.get("create") === "1";
-    if (!canCreateSupport || !shouldOpenCreateModal) return;
-
-    const token = searchParams.toString();
-    if (openCreateTokenRef.current === token) return;
-
-    openCreateTokenRef.current = token;
-    setCreateOpen(true);
-
-    const nextParams = new URLSearchParams(token);
-    nextParams.delete("modal");
-    nextParams.delete("create");
-    const nextQueryString = nextParams.toString();
-    window.history.replaceState(
-      {},
-      "",
-      `${window.location.pathname}${nextQueryString ? `?${nextQueryString}` : ""}${window.location.hash}`,
-    );
-  }, [canCreateSupport, searchParams]);
 
   // Auto-scroll ao card encontrado pela busca
   useEffect(() => {
@@ -631,15 +693,16 @@ export default function KanbanItPage() {
   }, [columns.length, updateColumnsRailState]);
 
   function handleDragStart(suporte: SuporteItem) {
-    if (!(isPrivileged && (user?.id === suporte.createdBy || isPrivilegedSupportUser(user)))) return;
+    if (!isPrivileged) return;
     setDragging({ id: suporte.id, from: suporte.status });
   }
 
   async function updateStatus(suporteId: string, nextStatus: SuporteStatus) {
+    if (!isPrivileged) return;
     const currentSuporte = suportes.find((suporte) => suporte.id === suporteId) ?? null;
     if (!currentSuporte) return;
-    if (isPrivilegedSupportUser(user) && !currentSuporte.assignedToUserId) {
-      setError("Selecione e salve um responsavel antes de mover o chamado.");
+    if (hasGlobalScope && !currentSuporte.assignedToUserId) {
+      setError(ui.assignBeforeMove);
       setSelectedSuporte(currentSuporte);
       return;
     }
@@ -658,7 +721,7 @@ export default function KanbanItPage() {
       const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
       if (!res.ok || !json.item) {
         setSuportes(previous);
-        setError(json?.error || "Falha ao atualizar status");
+        setError(json?.error || ui.updateStatusError);
         return;
       }
       const updatedItem = json.item;
@@ -668,7 +731,7 @@ export default function KanbanItPage() {
       setSelectedSuporte((current) => (current?.id === updatedItem.id ? updatedItem : current));
     } catch {
       setSuportes(previous);
-      setError("Falha ao atualizar status");
+      setError(ui.updateStatusError);
     }
   }
 
@@ -721,7 +784,7 @@ export default function KanbanItPage() {
     const columnItems = grouped[columnKey] ?? [];
 
     if (columnItems.length > 0 && !fallbackColumn) {
-      setError("Crie outra coluna antes de remover esta, para nao perder os chamados.");
+      setError(ui.removeColumnGuard);
       return;
     }
 
@@ -746,7 +809,7 @@ export default function KanbanItPage() {
           });
           const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
           if (!res.ok || !json.item) {
-            throw new Error(json?.error || "Falha ao mover chamados da coluna");
+            throw new Error(json?.error || ui.moveColumnError);
           }
           return json.item;
         }));
@@ -756,7 +819,7 @@ export default function KanbanItPage() {
         setSelectedSuporte((current) => (current ? movedMap.get(current.id) ?? current : current));
       } catch (err) {
         setSuportes(previous);
-        setError(err instanceof Error ? err.message : "Falha ao mover chamados da coluna");
+        setError(err instanceof Error ? err.message : ui.moveColumnError);
         return;
       }
     }
@@ -775,48 +838,83 @@ export default function KanbanItPage() {
 
     const titleTrimmed = createDraft.title.trim();
     if (!titleTrimmed) {
-      setCreateError("O titulo nao pode ser vazio.");
+      setCreateError(ui.createTitleRequired);
       setCreating(false);
       return;
     }
     if (!hasMeaningfulContent(titleTrimmed)) {
-      setCreateError("O titulo deve conter pelo menos uma letra ou numero valido.");
+      setCreateError(ui.createTitleInvalid);
       setCreating(false);
       return;
     }
     const descTrimmed = createDraft.description.trim();
     if (descTrimmed && !hasMeaningfulContent(descTrimmed)) {
-      setCreateError("A descricao deve conter pelo menos uma letra ou numero valido.");
+      setCreateError(ui.createDescriptionInvalid);
       setCreating(false);
       return;
     }
 
     try {
+      let evidenceMarkdown = "";
+      if (createEvidenceFile) {
+        const safeName = sanitizeEvidenceFileName(createEvidenceFile.name || `evidencia-${Date.now()}`);
+        const key = `tickets/evidencias/tmp/${Date.now()}-${safeName}`;
+        const form = new FormData();
+        form.set("file", createEvidenceFile);
+        form.set("key", key);
+        const uploadRes = await fetch("/api/s3/upload", {
+          method: "POST",
+          credentials: "include",
+          body: form,
+        });
+        const uploadJson = (await uploadRes.json().catch(() => ({}))) as { ok?: boolean; key?: string; error?: string };
+        if (!uploadRes.ok || !uploadJson.ok || !uploadJson.key) {
+          setCreateError(uploadJson?.error || ui.uploadEvidenceError);
+          setCreating(false);
+          return;
+        }
+        evidenceMarkdown = buildEvidenceMarkdown(
+          createEvidenceFile.name,
+          `/api/s3/object?key=${encodeURIComponent(uploadJson.key)}`,
+        );
+      }
+
+      const description = [createDraft.description.trim(), evidenceMarkdown].filter(Boolean).join("\n\n");
+
       const res = await fetch("/api/suportes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           title: createDraft.title,
-          description: createDraft.description,
+          description,
           type: createDraft.type,
           priority: createDraft.priority,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as { item?: SuporteItem; error?: string };
       if (!res.ok || !json.item) {
-        setCreateError(json?.error || "Erro ao criar suporte");
+        setCreateError(json?.error || ui.createError);
         return;
       }
       setCreateOpen(false);
       setCreateDraft({ title: "", description: "", type: "tarefa", priority: "medium" });
+      setCreateEvidenceFile(null);
+      if (createEvidenceInputRef.current) createEvidenceInputRef.current.value = "";
       setSuportes((current) => [json.item as SuporteItem, ...current]);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar suporte";
+      const msg = err instanceof Error ? err.message : ui.createError;
       setCreateError(msg);
     } finally {
       setCreating(false);
     }
+  }
+
+  function closeCreateModal() {
+    setCreateOpen(false);
+    setCreateError(null);
+    setCreateEvidenceFile(null);
+    if (createEvidenceInputRef.current) createEvidenceInputRef.current.value = "";
   }
 
   function startEditColumn(key: string, label: string) {
@@ -919,47 +1017,78 @@ export default function KanbanItPage() {
   }
 
   if (loading) {
-    return <div className="p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">Carregando...</div>;
+    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">{ui.loading}</div>;
   }
 
-  if (!canAccessGlobalKanban) {
-    return <div className="p-6 text-sm text-[var(--tc-text-muted,#6b7280)]">Acesso restrito.</div>;
+  if (!canOpenBoard) {
+    return <div className="p-6 text-sm text-(--tc-text-muted,#6b7280)">{ui.restricted}</div>;
   }
 
   return (
     <div className="support-board-page">
       <section className="support-board-hero">
+        <div className="support-board-hero-brand">
+          <div className="support-board-hero-logo">
+            {supportBrand.logoSrc ? (
+              shouldUseNativeImageTag(supportBrand.logoSrc) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={supportBrand.logoSrc}
+                  alt={supportBrand.logoAlt}
+                  width={72}
+                  height={72}
+                  className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                  loading="eager"
+                  decoding="async"
+                />
+              ) : (
+                <Image
+                  src={supportBrand.logoSrc}
+                  alt={supportBrand.logoAlt}
+                  width={72}
+                  height={72}
+                  className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                  priority
+                />
+              )
+            ) : supportBrand.isCompanyScoped ? (
+              <span className="text-lg font-bold tracking-[0.18em] text-[#011848] dark:text-slate-900 dark:text-white/90 sm:text-xl">
+                {supportBrand.logoFallback}
+              </span>
+            ) : (
+              <Image src="/images/tc.png" alt="Logo Testing Company" width={72} height={72} className="h-14 w-14 object-contain sm:h-16 sm:w-16" priority />
+            )}
+          </div>
+          <div className="min-w-0">
+            {supportBrand.companyName ? <p className="support-board-kicker">{ui.companyKickerPrefix} {supportBrand.companyName.toUpperCase()}</p> : null}
+            <h1 className="support-board-title">{ui.support}</h1>
+          </div>
+        </div>
+
         <div className="support-board-hero-top">
           <div className="support-board-hero-copy">
-            <h1 className="support-board-title">Suporte</h1>
             <p className="support-board-subtitle">
-              {isPrivilegedSupportUser(user)
-                ? "Acompanhe todos os chamados abertos que entram no atendimento global com a mesma hierarquia visual dos paineis administrativos."
-                : "Acompanhe os chamados vinculados ao usuario autenticado seguindo o mesmo padrao visual premium da plataforma."}
+              {hasGlobalScope
+                ? ui.heroSubtitleGlobal
+                : supportBrand.companyName
+                  ? ui.heroSubtitleCompany.replace("{company}", supportBrand.companyName)
+                  : ui.heroSubtitlePersonal}
             </p>
           </div>
 
-          <div className="support-board-hero-actions">
-            <button
-              type="button"
-              onClick={loadTickets}
-              className="support-board-ghost-btn"
-            >
-              <FiRefreshCw size={14} />
-              Atualizar
-            </button>
-            {(can("support", "create") || can("tickets", "create")) && (
+          {canCreateSupport ? (
+            <div className="support-board-hero-actions">
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
                 className="support-board-accent-btn"
-                aria-label="Criar suporte"
+                aria-label={ui.createSupport}
               >
                 <FiPlus size={18} />
-                Novo suporte
+                {ui.newSupport}
               </button>
-            )}
-          </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="support-board-stat-grid">
@@ -976,10 +1105,14 @@ export default function KanbanItPage() {
       <section className="support-board-workspace">
         <div className="support-board-workspace-head">
           <div className="support-board-workspace-copy">
-            <p className="support-board-section-kicker">Painel de atendimento</p>
-            <h2 className="support-board-section-title">Fluxo global de chamados</h2>
+            <p className="support-board-section-kicker">{ui.boardKicker}</p>
+            <h2 className="support-board-section-title">
+              {hasGlobalScope ? ui.boardTitleGlobal : ui.boardTitlePersonal}
+            </h2>
             <p className="support-board-section-description">
-              Organize colunas, acompanhe responsaveis e abra o detalhamento do ticket dentro de uma superficie unica, alinhada com empresa, usuarios e gestao.
+              {hasGlobalScope
+                ? ui.boardSubtitleGlobal
+                : ui.boardSubtitlePersonal}
             </p>
           </div>
 
@@ -994,7 +1127,7 @@ export default function KanbanItPage() {
                       className="support-board-toolbar-btn"
                     >
                       <FiPlus size={13} />
-                      Nova coluna
+                      {ui.addColumn}
                     </button>
                   )}
                   {addingColumn && (
@@ -1015,7 +1148,7 @@ export default function KanbanItPage() {
                         }
                       }}
                       className="support-board-column-input"
-                      placeholder="Nome da coluna"
+                      placeholder={ui.columnNamePlaceholder}
                     />
                   )}
                 </>
@@ -1023,7 +1156,7 @@ export default function KanbanItPage() {
             </div>
 
             <div className="support-board-search-card">
-              <div className="support-board-search-label">Buscar chamado</div>
+              <div className="support-board-search-label">{ui.searchLabel}</div>
               <div className="support-board-search-field">
                 <FiSearch size={15} className="support-board-search-icon" />
                 <input
@@ -1031,39 +1164,38 @@ export default function KanbanItPage() {
                   value={ticketSearch}
                   onChange={(event) => setTicketSearch(event.target.value)}
                   className="support-board-search-input"
-                  placeholder="ID ou codigo, ex.: 27 ou SP-000027"
-                  aria-label="Buscar chamado por ID"
+                  placeholder={ui.searchPlaceholder}
+                  aria-label={ui.searchAria}
                 />
               </div>
-              <div className="support-board-meta-row" aria-label="Informacoes do painel">
-                <span className="support-board-meta-item">Atualizacao 30s</span>
+              <div className="support-board-meta-row" aria-label={ui.boardMetaAria}>
                 <span className="support-board-meta-item">
-                  {columns.length} {columns.length === 1 ? "coluna ativa" : "colunas ativas"}
+                  {columns.length} {columns.length === 1 ? ui.oneColumn : ui.manyColumns}
                 </span>
-                {dragging ? <span className="support-board-meta-item support-board-meta-item-accent">Movimentacao em andamento</span> : null}
+                {dragging ? <span className="support-board-meta-item support-board-meta-item-accent">{ui.movementInProgress}</span> : null}
               </div>
             </div>
           </div>
         </div>
 
         {error ? <p className="support-board-alert support-board-alert-error">{error}</p> : null}
-        {loadingSuportes ? <p className="support-board-alert">Carregando chamados...</p> : null}
+        {loadingSuportes ? <p className="support-board-alert">{ui.ticketsLoading}</p> : null}
         {ticketSearch.trim() && filteredSuportes.length === 0 && !loadingSuportes ? (
           <div className="support-board-no-results">
             <FiSearch size={18} className="support-board-no-results-icon" />
-            <span>Nenhum chamado encontrado para <strong>&ldquo;{ticketSearch.trim()}&rdquo;</strong>. Verifique o ID ou código e tente novamente.</span>
+            <span>{ui.noResults} <strong>&ldquo;{ticketSearch.trim()}&rdquo;</strong>. {ui.noResultsHint}</span>
           </div>
         ) : null}
 
         <div className="support-board-columns-stage">
-          <div className="support-board-carousel-controls support-board-carousel-controls-side" aria-label="Navegacao das colunas">
+          <div className="support-board-carousel-controls support-board-carousel-controls-side" aria-label={ui.columnsNavigation}>
             <button
               type="button"
               className="support-board-carousel-btn support-board-carousel-btn-side support-board-carousel-btn-prev"
               onClick={() => scrollColumnsRail("prev")}
               disabled={!canScrollColumnsPrev}
-              aria-label="Ver colunas anteriores"
-              title="Ver colunas anteriores"
+              aria-label={ui.previousColumns}
+              title={ui.previousColumns}
             >
               <FiChevronLeft size={16} />
             </button>
@@ -1072,8 +1204,8 @@ export default function KanbanItPage() {
               className="support-board-carousel-btn support-board-carousel-btn-side support-board-carousel-btn-next"
               onClick={() => scrollColumnsRail("next")}
               disabled={!canScrollColumnsNext}
-              aria-label="Ver proximas colunas"
-              title="Ver proximas colunas"
+              aria-label={ui.nextColumns}
+              title={ui.nextColumns}
             >
               <FiChevronRight size={16} />
             </button>
@@ -1093,7 +1225,7 @@ export default function KanbanItPage() {
           {columns.map((column, idx) => {
             const columnTheme = SUPPORT_COLUMN_THEMES[idx % SUPPORT_COLUMN_THEMES.length];
             const columnItems = grouped[column.key] ?? [];
-            const isDropTarget = Boolean(dragging && dragging.from !== column.key && isPrivilegedSupportUser(user));
+            const isDropTarget = Boolean(dragging && dragging.from !== column.key && isPrivileged);
             const isColumnDropTarget = Boolean(draggingColumnKey && draggingColumnKey !== column.key && columnDropTargetKey === column.key);
             const isDraggingColumn = draggingColumnKey === column.key;
 
@@ -1131,10 +1263,10 @@ export default function KanbanItPage() {
                       handleColumnDragStart(column.key);
                     } : undefined}
                     onDragEnd={isPrivileged ? handleColumnDragEnd : undefined}
-                    title={isPrivileged ? `Segure e arraste para mover a coluna ${column.label}` : undefined}
+                    title={isPrivileged ? ui.dragColumnHelp.replace("{column}", column.label) : undefined}
                   >
                     <div className="support-board-column-head-copy">
-                      <p className="support-board-column-kicker">Coluna</p>
+                      <p className="support-board-column-kicker">{ui.columnKicker}</p>
                       {editingColumnKey === column.key ? (
                         <input
                           value={editingColumnLabel}
@@ -1151,9 +1283,9 @@ export default function KanbanItPage() {
                               cancelEditColumn();
                             }
                           }}
-                          placeholder="Nome da coluna"
-                          title="Editar nome da coluna"
-                          aria-label="Editar nome da coluna"
+                          placeholder={ui.columnNamePlaceholder}
+                          title={ui.editColumnName}
+                          aria-label={ui.editColumnName}
                           className="support-board-column-title-input"
                         />
                       ) : isPrivileged ? (
@@ -1169,7 +1301,7 @@ export default function KanbanItPage() {
                         <span className="support-board-column-title support-board-column-title-static">{column.label}</span>
                       )}
                       <p className="support-board-column-description">
-                        {columnItems.length} {columnItems.length === 1 ? "chamado nesta etapa" : "chamados nesta etapa"}
+                        {columnItems.length} {columnItems.length === 1 ? ui.oneTicketInStage : ui.manyTicketsInStage}
                       </p>
                     </div>
                     <div className="support-board-column-head-side">
@@ -1182,8 +1314,8 @@ export default function KanbanItPage() {
                         type="button"
                         className="support-board-column-tool"
                         onClick={() => startEditColumn(column.key, column.label)}
-                        aria-label={`Editar coluna ${column.label}`}
-                        title="Editar coluna"
+                        aria-label={`${ui.editColumn} ${column.label}`}
+                        title={ui.editColumn}
                       >
                         <FiEdit2 size={13} />
                       </button>
@@ -1191,8 +1323,8 @@ export default function KanbanItPage() {
                         type="button"
                         className="support-board-column-tool support-board-column-tool-danger"
                         onClick={() => handleRemoveColumn(column.key)}
-                        aria-label={`Remover coluna ${column.label}`}
-                        title="Remover coluna"
+                        aria-label={`${ui.removeColumn} ${column.label}`}
+                        title={ui.removeColumn}
                       >
                         <FiTrash2 size={13} />
                       </button>
@@ -1203,9 +1335,9 @@ export default function KanbanItPage() {
                 <div className="support-board-column-list">
                   {columnItems.map((suporte) => {
                     const creatorLabel = suporte.createdByName || suporte.createdByEmail || suporte.createdBy || "-";
-                    const assigneeLabel = suporte.assignedToName || suporte.assignedToEmail || "Nao definido";
-                    const canManageSuporte =
-                      isPrivileged && (user?.id === suporte.createdBy || isPrivilegedSupportUser(user));
+                    const assigneeLabel = suporte.assignedToName || suporte.assignedToEmail || ui.notDefined;
+                    const canManageSuporte = isPrivileged;
+                    const parsedDescription = parseSupportDescription(suporte.description);
 
                     return (
                       <article key={suporte.id} className="support-board-card" data-search-match={ticketSearch.trim() ? "true" : undefined}>
@@ -1224,8 +1356,6 @@ export default function KanbanItPage() {
                           } : undefined}
                           onClick={() => setSelectedSuporte(suporte)}
                           className="support-board-card-button"
-                          data-disabled={!canManageSuporte ? "true" : undefined}
-                          disabled={!canManageSuporte}
                         >
                           <div className="support-board-card-top">
                             <p className="support-board-card-code">
@@ -1236,10 +1366,20 @@ export default function KanbanItPage() {
                             </span>
                           </div>
 
-                          <p className="support-board-card-title">{suporte.title || "Sem titulo"}</p>
+                          <p className="support-board-card-title">{suporte.title || ui.untitled}</p>
                           <p className="support-board-card-description">
-                            {shortText(suporte.description, 108)}
+                            {shortText(parsedDescription.text, 108, ui.noDescription)}
                           </p>
+                          {parsedDescription.evidence.length > 0 ? (
+                            <div className="support-board-card-evidence">
+                              <FiPaperclip size={12} />
+                              <span>
+                                {parsedDescription.evidence.length === 1
+                                  ? ui.oneEvidence
+                                  : ui.manyEvidence.replace("{count}", String(parsedDescription.evidence.length))}
+                              </span>
+                            </div>
+                          ) : null}
 
                           <div className="support-board-badge-row">
                             <span
@@ -1247,42 +1387,42 @@ export default function KanbanItPage() {
                               data-kind="type"
                               data-value={(suporte.type ?? "tarefa").toLowerCase()}
                             >
-                              {getSupportTypeLabel(suporte.type)}
+                              {getSupportTypeLabel(suporte.type, ui.typeLabels)}
                             </span>
                             <span
                               className="support-board-badge"
                               data-kind="priority"
                               data-value={(suporte.priority ?? "medium").toLowerCase()}
                             >
-                              {getSupportPriorityLabel(suporte.priority)}
+                              {getSupportPriorityLabel(suporte.priority, ui.priorityLabels)}
                             </span>
                           </div>
 
                           <div className="support-board-kv-grid">
                             <div className="support-board-kv">
-                              <span>Criador</span>
+                              <span>{ui.creator}</span>
                               <strong title={creatorLabel}>{creatorLabel}</strong>
                             </div>
                             <div className="support-board-kv">
-                              <span>Responsavel</span>
+                              <span>{ui.assignee}</span>
                               <strong title={assigneeLabel}>{assigneeLabel}</strong>
                             </div>
                           </div>
 
                           <div className="support-board-card-footer">
-                            <span>Criado {formatDate(suporte.createdAt)}</span>
-                            <span>Atualizado {formatDate(suporte.updatedAt)}</span>
+                            <span>{ui.createdAt} {formatDate(suporte.createdAt, locale)}</span>
+                            <span>{ui.updatedAt} {formatDate(suporte.updatedAt, locale)}</span>
                           </div>
                         </button>
 
                         <div className="support-board-card-controls">
                           <label className="support-board-card-control" htmlFor={`status-${suporte.id}`}>
-                            <span className="support-board-card-control-label">Mover para</span>
+                            <span className="support-board-card-control-label">{ui.moveTo}</span>
                             {canManageSuporte ? (
                               <select
                                 id={`status-${suporte.id}`}
-                                aria-label="Status do suporte"
-                                title="Status do suporte"
+                                aria-label={ui.supportStatus}
+                                title={ui.supportStatus}
                                 className="support-board-card-select"
                                 value={normalizeKanbanStatus(suporte.status)}
                                 onChange={(e) => updateStatus(suporte.id, e.target.value as SuporteStatus)}
@@ -1296,8 +1436,8 @@ export default function KanbanItPage() {
                             ) : (
                               <select
                                 id={`status-${suporte.id}`}
-                                aria-label="Status do suporte"
-                                title="Status do suporte"
+                                aria-label={ui.supportStatus}
+                                title={ui.supportStatus}
                                 className="support-board-card-select"
                                 value={normalizeKanbanStatus(suporte.status)}
                                 disabled
@@ -1312,7 +1452,7 @@ export default function KanbanItPage() {
 
                           {!canManageSuporte ? (
                             <p className="support-board-card-warning">
-                              Voce nao tem permissao para mover o suporte.
+                              {ui.supportOnlyChange}
                             </p>
                           ) : null}
                         </div>
@@ -1322,9 +1462,9 @@ export default function KanbanItPage() {
 
                   {columnItems.length === 0 ? (
                     <div className="support-board-column-empty">
-                      <p className="support-board-column-empty-title">Sem chamados nesta etapa</p>
+                      <p className="support-board-column-empty-title">{ui.emptyColumnTitle}</p>
                       <p className="support-board-column-empty-copy">
-                        Novos tickets aparecerao aqui quando entrarem neste fluxo.
+                        {ui.emptyColumnCopy}
                       </p>
                     </div>
                   ) : null}
@@ -1341,7 +1481,7 @@ export default function KanbanItPage() {
         open={Boolean(selectedSuporte)}
         suporte={selectedSuporte}
         onClose={() => setSelectedSuporte(null)}
-        canEditStatus={true}
+        canEditStatus={isPrivileged}
         statusOptions={statusOptions}
         onSuporteUpdated={(updated: SuporteItem) => {
           setSelectedSuporte(updated);
@@ -1354,7 +1494,7 @@ export default function KanbanItPage() {
       {createOpen && (
         <div
           className="ticket-detail-modal-overlay support-create-modal-overlay"
-          onClick={() => setCreateOpen(false)}
+          onClick={closeCreateModal}
         >
           <div
             className="support-create-modal-shell"
@@ -1369,21 +1509,21 @@ export default function KanbanItPage() {
                   <FiLifeBuoy size={18} />
                 </span>
                 <div className="support-create-modal-heading-copy">
-                  <p className="support-create-modal-kicker">SUPORTE</p>
+                  <p className="support-create-modal-kicker">{ui.createModalKicker}</p>
                   <h2 id="support-create-modal-title" className="support-create-modal-title">
-                    Novo suporte
+                    {ui.createModalTitle}
                   </h2>
                   <p className="support-create-modal-subtitle">
-                    Abra um chamado com titulo, descricao, tipo e prioridade.
+                    {ui.createModalSubtitle}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setCreateOpen(false)}
+                onClick={closeCreateModal}
                 className="support-create-modal-close"
-                aria-label="Fechar modal de novo suporte"
-                title="Fechar"
+                aria-label={ui.closeCreateModal}
+                title={ui.close}
               >
                 <FiX size={16} />
               </button>
@@ -1392,23 +1532,23 @@ export default function KanbanItPage() {
             <div className="support-create-modal-body">
               <div className="support-create-modal-form">
                 <label className="support-create-modal-field" htmlFor="kanban-create-suporte-title">
-                  <span className="support-create-modal-label">Titulo</span>
+                  <span className="support-create-modal-label">{ui.title}</span>
                   <input
                     id="kanban-create-suporte-title"
                     className="support-create-modal-input"
-                    placeholder="Digite o titulo do suporte"
+                    placeholder={ui.titlePlaceholder}
                     value={createDraft.title}
                     onChange={(e) => setCreateDraft((prev) => ({ ...prev, title: e.target.value }))}
                   />
                 </label>
 
                 <label className="support-create-modal-field" htmlFor="kanban-create-suporte-description">
-                  <span className="support-create-modal-label">Descricao</span>
+                  <span className="support-create-modal-label">{ui.description}</span>
                   <textarea
                     id="kanban-create-suporte-description"
                     rows={5}
                     className="support-create-modal-textarea"
-                    placeholder="Descreva o suporte..."
+                    placeholder={ui.descriptionPlaceholder}
                     value={createDraft.description}
                     onChange={(e) => setCreateDraft((prev) => ({ ...prev, description: e.target.value }))}
                   />
@@ -1416,36 +1556,36 @@ export default function KanbanItPage() {
 
                 <div className="support-create-modal-select-grid">
                   <label className="support-create-modal-field" htmlFor="kanban-create-suporte-type">
-                    <span className="support-create-modal-label">Tipo</span>
+                    <span className="support-create-modal-label">{ui.type}</span>
                     <select
                       id="kanban-create-suporte-type"
-                      aria-label="Tipo do suporte"
-                      title="Tipo do suporte"
+                      aria-label={ui.supportTypeAria}
+                      title={ui.supportTypeAria}
                       className="support-create-modal-select"
                       value={createDraft.type}
                       onChange={(e) => setCreateDraft((prev) => ({ ...prev, type: e.target.value }))}
                     >
                       {TYPE_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                          {ui.typeLabels[(opt.value ?? "tarefa").toLowerCase() as keyof typeof ui.typeLabels] ?? ui.typeLabels.tarefa}
                         </option>
                       ))}
                     </select>
                   </label>
 
                   <label className="support-create-modal-field" htmlFor="kanban-create-suporte-priority">
-                    <span className="support-create-modal-label">Prioridade</span>
+                    <span className="support-create-modal-label">{ui.priority}</span>
                     <select
                       id="kanban-create-suporte-priority"
-                      aria-label="Prioridade do suporte"
-                      title="Prioridade do suporte"
+                      aria-label={ui.supportPriorityAria}
+                      title={ui.supportPriorityAria}
                       className="support-create-modal-select"
                       value={createDraft.priority}
                       onChange={(e) => setCreateDraft((prev) => ({ ...prev, priority: e.target.value }))}
                     >
                       {PRIORITY_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                          {ui.priorityLabels[(opt.value ?? "medium").toLowerCase() as keyof typeof ui.priorityLabels] ?? ui.priorityLabels.medium}
                         </option>
                       ))}
                     </select>
@@ -1457,12 +1597,51 @@ export default function KanbanItPage() {
             </div>
 
             <div className="support-create-modal-footer">
+              <input
+                ref={createEvidenceInputRef}
+                type="file"
+                className="sr-only"
+                aria-label={ui.attachEvidence}
+                title={ui.attachEvidence}
+                accept="image/*,.pdf,.txt,.log,.json,.zip,.csv,.xlsx,.doc,.docx"
+                onChange={(event) => setCreateEvidenceFile(event.target.files?.[0] ?? null)}
+              />
+              <div className="support-create-modal-footer-side">
+                <button
+                  type="button"
+                  onClick={() => createEvidenceInputRef.current?.click()}
+                  className="support-create-modal-attach"
+                  aria-label={createEvidenceFile ? ui.replaceEvidence : ui.attachEvidence}
+                  title={createEvidenceFile ? ui.replaceEvidence : ui.attachEvidence}
+                >
+                  <FiPaperclip size={16} />
+                </button>
+                {createEvidenceFile ? (
+                  <div className="support-create-modal-file-chip">
+                    <span className="support-create-modal-file-name" title={createEvidenceFile.name}>
+                      {createEvidenceFile.name}
+                    </span>
+                    <button
+                      type="button"
+                      className="support-create-modal-file-remove"
+                      onClick={() => {
+                        setCreateEvidenceFile(null);
+                        if (createEvidenceInputRef.current) createEvidenceInputRef.current.value = "";
+                      }}
+                      aria-label={ui.removeEvidence}
+                      title={ui.removeEvidence}
+                    >
+                      <FiX size={12} />
+                    </button>
+                  </div>
+                ) : null}
+              </div>
               <button
                 type="button"
-                onClick={() => setCreateOpen(false)}
+                onClick={closeCreateModal}
                 className="support-create-modal-secondary"
               >
-                Cancelar
+                {ui.cancel}
               </button>
               <button
                 type="button"
@@ -1471,7 +1650,7 @@ export default function KanbanItPage() {
                 className="support-create-modal-primary"
               >
                 <FiPlus size={14} />
-                {creating ? "Criando..." : "Criar"}
+                {creating ? ui.creating : ui.create}
               </button>
             </div>
           </div>
@@ -1480,4 +1659,3 @@ export default function KanbanItPage() {
     </div>
   );
 }
-

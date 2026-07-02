@@ -20,7 +20,6 @@ import type { NavModuleDef } from "@/lib/navigation/navigationCatalog";
 
 const menuLogoEnv = process.env.NEXT_PUBLIC_MENU_LOGO || "";
 const REMOVED_MODULE_IDS = new Set<string>();
-const SUPPORT_MENU_ITEM_IDS = new Set(["support-create", "support-chamados"]);
 const SUPPORT_MENU_ITEM_IDS = new Set(["support-create", "support-kanban"]);
 
 type SidebarProps = {
@@ -44,28 +43,12 @@ function simplifySupportMenu(mod: NavModuleDef): NavModuleDef {
     ...mod,
     items: mod.items
       .filter((item) => SUPPORT_MENU_ITEM_IDS.has(item.id))
-      .map((item) => {
-        if (item.id === "support-chamados") {
-          return {
-            ...item,
-            label: "Buscar chamados",
-            group: undefined,
-            testId: "nav-support-search",
-        if (item.id === "support-kanban") {
-          return {
-            ...item,
-            label: "Kanban de chamados",
-            group: undefined,
-          };
-        }
-
-        return {
-          ...item,
-          label: "Abrir chamado",
-          label: "Criar chamado",
-          group: undefined,
-        };
-      }),
+      .map((item) => ({
+        ...item,
+        label: item.id === "support-kanban" ? "Kanban de chamados" : "Criar chamado",
+        group: undefined,
+        testId: item.id === "support-kanban" ? "nav-support-kanban" : "nav-support-create",
+      })),
   };
 }
 
@@ -366,6 +349,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     </>
   );
 }
+
 
 
 

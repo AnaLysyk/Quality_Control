@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 /**
- * User Profile Form â€” FormulÃ¡rio de perfil de usuÃ¡rio
- * Renderiza campos baseado em USER_PROFILE_FIELDS e permissÃµes
+ * User Profile Form — Formulário de perfil de usuário
+ * Renderiza campos baseado em USER_PROFILE_FIELDS e permissões
  */
 
 import { useState } from "react";
@@ -69,8 +69,6 @@ export function UserProfileForm({
   if (visibleFields.length === 0) {
     return (
       <div className="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-700">
-        Sem campos visÃ­veis para este modo.
-      <div className="rounded-lg border border-amber-200 bg-yellow-50 p-4 text-sm text-yellow-700 dark:border-amber-400/40 dark:bg-amber-950/30 dark:text-amber-100">
         Sem campos visíveis para este modo.
       </div>
     );
@@ -79,7 +77,7 @@ export function UserProfileForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-400/40 dark:bg-red-950/30 dark:text-red-100">
+        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -94,7 +92,7 @@ export function UserProfileForm({
 
         return (
           <div key={field.field}>
-            <label className="mb-2 block text-sm font-semibold text-(--tc-text-primary)">
+            <label className="block text-sm font-semibold text-tc-text-primary mb-2">
               {field.label}
               {field.required && <span className="text-red-500 ml-1">*</span>}
             </label>
@@ -107,7 +105,7 @@ export function UserProfileForm({
               disabled={!editable}
               required={field.required && editable}
               placeholder={field.label}
-              className="w-full rounded-lg border border-(--tc-border) bg-(--tc-surface) px-3 py-2 text-(--tc-text-primary) disabled:bg-(--tc-surface-hover) disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-(--tc-accent)"
+              className="w-full px-3 py-2 rounded-lg border border-tc-border bg-tc-surface text-tc-text-primary disabled:bg-tc-surface-hover disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-tc-accent"
             />
           </div>
         );
@@ -118,14 +116,14 @@ export function UserProfileForm({
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-(--tc-accent) px-4 py-2 font-semibold text-white transition hover:bg-(--tc-accent-hover) disabled:opacity-50"
+            className="rounded-lg bg-tc-accent px-4 py-2 text-white font-semibold hover:bg-tc-accent-hover disabled:opacity-50 transition"
           >
             {loading ? "Salvando..." : "Salvar"}
           </button>
           <button
             type="button"
             onClick={() => setFormData(initialData || {})}
-            className="rounded-lg border border-(--tc-border) bg-(--tc-surface) px-4 py-2 font-semibold text-(--tc-text-primary) transition hover:bg-(--tc-surface-hover)"
+            className="rounded-lg bg-tc-surface px-4 py-2 text-tc-text-primary font-semibold hover:bg-tc-surface-hover transition"
           >
             Cancelar
           </button>
@@ -134,4 +132,3 @@ export function UserProfileForm({
     </form>
   );
 }
-

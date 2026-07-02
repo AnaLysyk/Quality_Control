@@ -65,6 +65,7 @@ const ALL_USERS: SystemRole[] = [...SYSTEM_USERS, ...INSTITUTIONAL_USERS];
 const LEADER_AND_SUPPORT: SystemRole[] = [SYSTEM_ROLES.LEADER_TC, SYSTEM_ROLES.TECHNICAL_SUPPORT];
 const ALL_INTERNAL: SystemRole[] = SYSTEM_USERS;
 const PRIVILEGED: SystemRole[] = LEADER_AND_SUPPORT;
+const USER_MANAGERS: SystemRole[] = PRIVILEGED;
 
 export const NAV_CATALOG: NavModuleDef[] = [
   // ============================================
@@ -388,7 +389,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "requests-search",
         routeId: "solicitacoes.buscar",
-        label: "Buscar solicitaÃ§Ã£o",
         label: "Buscar solicitação",
         iconKey: "search",
         module: "requests",
@@ -439,7 +439,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "support-kanban",
         routeId: "suporte.kanban",
-        label: "Kanban IT",
         label: "Kanban de chamados",
         iconKey: "kanban",
         module: "support",
@@ -602,8 +601,6 @@ export const NAV_CATALOG: NavModuleDef[] = [
         iconKey: "users",
         module: "management",
         href: "/admin/users/permissions",
-        module: "users",
-        href: "/admin/users",
         allowedRoles: USER_MANAGERS,
         favoriteEnabled: true,
         testId: "nav-management-users",
@@ -635,41 +632,9 @@ export const NAV_CATALOG: NavModuleDef[] = [
     allowedRoles: PRIVILEGED,
     testId: "nav-logs",
     items: [],
-    testId: "nav-admin",
-    items: [
-      {
-        id: "admin-permissions",
-        routeId: "permissoes.atalho-admin",
-        label: "Gestão de Perfis",
-        iconKey: "lock",
-        module: "admin",
-        href: "/admin/permissoes",
-        favoriteEnabled: true,
-        testId: "nav-admin-permissions",
-      },
-      {
-        id: "admin-audit-logs",
-        routeId: "configuracoes.auditoria",
-        label: "Audit Logs",
-        iconKey: "eye",
-        module: "admin",
-        href: "/audit-logs?source=admin",
-        favoriteEnabled: true,
-        testId: "nav-admin-audit-logs",
-      },
-      {
-        id: "admin-system-map",
-        routeId: "configuracoes.mapa-sistema",
-        label: "Mapa do Sistema",
-        iconKey: "map",
-        module: "admin",
-        href: "/admin/sistema/mapa",
-        favoriteEnabled: true,
-        testId: "nav-admin-system-map",
-      },
-    ],
   },
 ];
+
 
 
 

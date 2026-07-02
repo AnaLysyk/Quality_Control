@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { FiCheckCircle, FiMessageSquare, FiMoreVertical, FiX } from "react-icons/fi";
 import type { AccessRequestComparisonRow } from "../../_types/accessRequests.types";
 
@@ -25,7 +25,7 @@ function safeValue(value: string) {
 }
 
 function displayValue(value: string) {
-  return safeValue(value) || "NÃ£o informado";
+  return safeValue(value) || "Não informado";
 }
 
 function OriginalRequestSection({ rows }: { rows: AccessRequestComparisonRow[] }) {
@@ -35,7 +35,7 @@ function OriginalRequestSection({ rows }: { rows: AccessRequestComparisonRow[] }
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm dark:border-slate-700/60 dark:bg-[#0d1b2f]">
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">SolicitaÃ§Ã£o</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Solicitação</p>
 
       <div className="mt-3 grid gap-4">
         {visibleRows.map((row) => (
@@ -86,10 +86,10 @@ function RegistrationFieldRow({
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             {changed ? <FiCheckCircle className="h-4 w-4 text-emerald-600" /> : null}
-            <p className="truncate text-sm font-black text-slate-950 dark:text-slate-50">{row.label}</p>
+            <p className="truncate text-sm font-black text-slate-950">{row.label}</p>
           </div>
           <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            {selected ? (hasComment ? "Ajuste orientado" : "Ajuste sem orientaÃ§Ã£o") : changed ? "Alterado apÃ³s ajuste" : "Sem ajuste"}
+            {selected ? (hasComment ? "Ajuste orientado" : "Ajuste sem orientação") : changed ? "Alterado após ajuste" : "Sem ajuste"}
           </p>
         </div>
 
@@ -113,8 +113,8 @@ function RegistrationFieldRow({
             disabled={readOnly}
             onClick={onMenuToggle}
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700/60 dark:bg-[#0d1b2f] dark:text-slate-300 dark:hover:bg-[#13243b]"
-            aria-label={"Abrir aÃ§Ãµes de " + row.label}
-            title="AÃ§Ãµes"
+            aria-label={"Abrir ações de " + row.label}
+            title="Ações"
           >
             <FiMoreVertical />
           </button>
@@ -138,8 +138,6 @@ function RegistrationFieldRow({
         <div className="mt-3 rounded-xl border border-amber-200 bg-white p-3 dark:border-amber-400/40 dark:bg-[#071426]">
           <label className="block">
             <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
-              OrientaÃ§Ã£o ao solicitante
-            <span className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700 dark:text-amber-200">
               Orientação ao solicitante
             </span>
             <textarea
@@ -185,9 +183,9 @@ export function ChangesShowcase({
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700/60 dark:bg-[#0d1b2f]">
         <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-700/60">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Dados cadastrais</p>
-          <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950 dark:text-slate-50">Campos que formarÃ£o o perfil</h3>
+          <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950 dark:text-slate-50">Campos que formarão o perfil</h3>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Estes sÃ£o os dados que entram no cadastro. Use os trÃªs pontinhos para solicitar ajuste somente quando necessÃ¡rio.
+            Estes são os dados que entram no cadastro. Use os três pontinhos para solicitar ajuste somente quando necessário.
           </p>
         </div>
 
@@ -214,4 +212,3 @@ export function ChangesShowcase({
     </div>
   );
 }
-

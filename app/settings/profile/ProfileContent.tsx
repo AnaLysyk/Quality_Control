@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 /**
- * ProfileContent â€” Loader e renderer da Profile Engine
- * ResponsÃ¡vel por: carregar contexto, validar permissÃµes, renderizar shell
+ * ProfileContent — Loader e renderer da Profile Engine
+ * Responsável por: carregar contexto, validar permissões, renderizar shell
  */
 
 import { useEffect, useState } from "react";
@@ -41,7 +41,7 @@ export default function ProfileContent() {
           const meData = await meResponse.json();
           targetId = meData?.user?.id;
           if (!targetId) {
-            throw new Error("NÃ£o foi possÃ­vel resolver usuÃ¡rio atual");
+            throw new Error("Não foi possível resolver usuário atual");
           }
         }
 
@@ -70,7 +70,7 @@ export default function ProfileContent() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-4 border-(--tc-border) border-t-(--tc-accent)" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-tc-border border-t-tc-accent mx-auto mb-2" />
           Carregando perfil...
         </div>
       </div>
@@ -80,8 +80,8 @@ export default function ProfileContent() {
   if (error) {
     return (
       <div className="mx-auto max-w-2xl p-6">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-800 dark:border-red-400/40 dark:bg-red-950/30 dark:text-red-100">
-          <h2 className="mb-2 font-semibold">Erro ao carregar perfil</h2>
+        <div className="rounded-lg bg-red-50 p-6 text-red-800 border border-red-200">
+          <h2 className="font-semibold mb-2">Erro ao carregar perfil</h2>
           <p className="text-sm">{error}</p>
         </div>
       </div>
@@ -92,8 +92,6 @@ export default function ProfileContent() {
     return (
       <div className="mx-auto max-w-2xl p-6">
         <div className="rounded-lg bg-yellow-50 p-6 text-yellow-800 border border-yellow-200">
-          Contexto de perfil nÃ£o disponÃ­vel
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-yellow-800 dark:border-yellow-400/40 dark:bg-yellow-950/30 dark:text-yellow-100">
           Contexto de perfil não disponível
         </div>
       </div>
@@ -115,17 +113,17 @@ export default function ProfileContent() {
         tabs={
           <ProfileTabs defaultTab="overview">
             {{
-              overview: <div className="p-4">VisÃ£o geral</div>,
+              overview: <div className="p-4">Visão geral</div>,
               profile: <div className="p-4">Cadastro</div>,
               access: <div className="p-4">Acesso</div>,
               companies: <div className="p-4">Empresas</div>,
-              users: <div className="p-4">UsuÃ¡rios</div>,
-              applications: <div className="p-4">AplicaÃ§Ãµes</div>,
-              integrations: <div className="p-4">IntegraÃ§Ãµes</div>,
-              permissions: <div className="p-4">PermissÃµes</div>,
-              preferences: <div className="p-4">PreferÃªncias</div>,
-              security: <div className="p-4">SeguranÃ§a</div>,
-              audit: <div className="p-4">HistÃ³rico</div>,
+              users: <div className="p-4">Usuários</div>,
+              applications: <div className="p-4">Aplicações</div>,
+              integrations: <div className="p-4">Integrações</div>,
+              permissions: <div className="p-4">Permissões</div>,
+              preferences: <div className="p-4">Preferências</div>,
+              security: <div className="p-4">Segurança</div>,
+              audit: <div className="p-4">Histórico</div>,
             }}
           </ProfileTabs>
         }
@@ -150,4 +148,3 @@ export default function ProfileContent() {
     </div>
   );
 }
-

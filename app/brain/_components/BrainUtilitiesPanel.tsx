@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, type ChangeEvent } from "react";
 import { FiCopy, FiDownload, FiFile, FiPaperclip, FiRefreshCw, FiTool, FiUploadCloud } from "react-icons/fi";
@@ -71,7 +71,7 @@ function extensionForFormat(format: TargetFormat) {
 }
 
 function getSourceLabel(file: File | null, text: string) {
-  if (file) return `${file.name} (${file.type || "tipo nÃ£o informado"})`;
+  if (file) return `${file.name} (${file.type || "tipo não informado"})`;
   if (text.trim()) return "Texto digitado no Brain";
   return "Nenhuma origem selecionada";
 }
@@ -97,7 +97,7 @@ async function readFileAsDataUrl(file: File) {
   return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("NÃ£o foi possÃ­vel ler o arquivo."));
+    reader.onerror = () => reject(new Error("Não foi possível ler o arquivo."));
     reader.readAsDataURL(file);
   });
 }
@@ -109,14 +109,11 @@ function textToBase64(value: string) {
 async function createPdfBlob(sourceText: string, file: File | null) {
   const pdfModule = (await import("jspdf")) as unknown as { default?: new () => any; jsPDF?: new () => any };
   const JsPDF = pdfModule.default ?? pdfModule.jsPDF;
-  if (!JsPDF) throw new Error("Biblioteca PDF indisponÃ­vel no navegador.");
-  const brainModule = (await import("jspdf")) as unknown as { default?: new () => any; jsPDF?: new () => any };
-  const JsPDF = brainModule.default ?? brainModule.jsPDF;
   if (!JsPDF) throw new Error("Biblioteca PDF indisponível no navegador.");
 
   const doc = new JsPDF();
   doc.setFontSize(14);
-  doc.text("Brain â€” arquivo convertido", 12, 16);
+  doc.text("Brain — arquivo convertido", 12, 16);
   doc.setFontSize(10);
   doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, 12, 24);
 
@@ -124,7 +121,7 @@ async function createPdfBlob(sourceText: string, file: File | null) {
     const dataUrl = await readFileAsDataUrl(file);
     doc.addImage(dataUrl, file.type.includes("png") ? "PNG" : "JPEG", 12, 34, 180, 120, undefined, "FAST");
   } else {
-    const lines = doc.splitTextToSize(sourceText || "Sem conteÃºdo textual informado.", 180);
+    const lines = doc.splitTextToSize(sourceText || "Sem conteúdo textual informado.", 180);
     doc.text(lines, 12, 36);
   }
 
@@ -142,7 +139,7 @@ async function createXlsxBlob(file: File | null, sourceText: string) {
       .split(/\r?\n/)
       .filter(Boolean)
       .map((line) => [line]);
-    xlsx.utils.book_append_sheet(workbook, xlsx.utils.aoa_to_sheet(rows.length ? rows : [["Sem conteÃºdo"]]), "Brain");
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.aoa_to_sheet(rows.length ? rows : [["Sem conteúdo"]]), "Brain");
   }
 
   const array = xlsx.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
@@ -185,7 +182,7 @@ function buildTextOutput(format: TargetFormat, sourceText: string, file: File | 
   }
 
   if (format === "md") {
-    return `# ConteÃºdo convertido pelo Brain\n\n${normalizedText}`;
+    return `# Conteúdo convertido pelo Brain\n\n${normalizedText}`;
   }
 
   if (format === "base64") {
@@ -285,13 +282,13 @@ export function BrainUtilitiesPanel() {
       setAudit((current) => [
         {
           id: makeId("audit"),
-          label: `${getSourceLabel(file, text)} â†’ ${targetFormat.toUpperCase()} (${result.sizeLabel})`,
+          label: `${getSourceLabel(file, text)} → ${targetFormat.toUpperCase()} (${result.sizeLabel})`,
           createdAt: result.generatedAt,
         },
         ...current,
       ].slice(0, 5));
     } catch (conversionError) {
-      setError(conversionError instanceof Error ? conversionError.message : "Formato nÃ£o suportado para conversÃ£o.");
+      setError(conversionError instanceof Error ? conversionError.message : "Formato não suportado para conversão.");
     } finally {
       setBusy(false);
     }
@@ -299,26 +296,26 @@ export function BrainUtilitiesPanel() {
 
   async function copyMetrics() {
     const summary = [
-      `Caracteres com espaÃ§o: ${metrics.charsWithSpaces}`,
-      `Caracteres sem espaÃ§o: ${metrics.charsWithoutSpaces}`,
+      `Caracteres com espaço: ${metrics.charsWithSpaces}`,
+      `Caracteres sem espaço: ${metrics.charsWithoutSpaces}`,
       `Palavras: ${metrics.words}`,
       `Linhas: ${metrics.lines}`,
-      `ParÃ¡grafos: ${metrics.paragraphs}`,
+      `Parágrafos: ${metrics.paragraphs}`,
       `Tokens aproximados: ${metrics.estimatedTokens}`,
     ].join("\n");
     await navigator.clipboard.writeText(summary);
   }
 
   return (
-    <section className="rounded-[28px] border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface,#fff)] p-4 shadow-sm sm:p-5">
+    <section className="rounded-[28px] border border-(--tc-border,#d7deea) bg-(--tc-surface,#fff) p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">
-            <FiTool className="h-4 w-4" /> Brain utilitÃ¡rio
+          <span className="inline-flex items-center gap-2 rounded-full border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">
+            <FiTool className="h-4 w-4" /> Brain utilitário
           </span>
-          <h2 className="mt-3 text-xl font-extrabold text-[var(--tc-text,#0b1a3c)]">Contador e conversor no fluxo do Brain</h2>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)]">
-            Cole texto, anexe evidÃªncia e gere arquivo de saÃ­da sem sair do contexto do Brain. ConversÃµes locais respeitam limite de tamanho, erro claro e trilha de auditoria visual.
+          <h2 className="mt-3 text-xl font-extrabold text-(--tc-text,#0b1a3c)">Contador e conversor no fluxo do Brain</h2>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-(--tc-text-secondary,#4b5563)">
+            Cole texto, anexe evidência e gere arquivo de saída sem sair do contexto do Brain. Conversões locais respeitam limite de tamanho, erro claro e trilha de auditoria visual.
           </p>
         </div>
         <button
@@ -329,46 +326,46 @@ export function BrainUtilitiesPanel() {
             setConvertedFile(null);
             setError(null);
           }}
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
         >
           <FiRefreshCw className="h-4 w-4" /> Limpar
         </button>
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-        <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
+        <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="text-sm font-bold text-[var(--tc-text,#0b1a3c)]">Texto do Brain / ticket / nota executiva</label>
-            <label className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)]">
+            <label className="text-sm font-bold text-(--tc-text,#0b1a3c)">Texto do Brain / ticket / nota executiva</label>
+            <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--tc-text-muted,#6b7280)">
               Limite
               <input
                 type="number"
                 min={0}
                 value={limit}
                 onChange={(event) => setLimit(Number(event.target.value || 0))}
-                className="h-8 w-24 rounded-lg border border-[var(--tc-border,#d7deea)] bg-white px-2 text-sm outline-none"
+                className="h-8 w-24 rounded-lg border border-(--tc-border,#d7deea) bg-white px-2 text-sm outline-none"
               />
             </label>
           </div>
           <textarea
             value={text}
             onChange={(event) => setText(event.target.value)}
-            placeholder="Cole aqui o texto que vocÃª quer medir, transformar em PDF, Markdown, JSON ou Base64."
-            className="mt-2 min-h-52 w-full resize-y rounded-2xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-3 text-sm leading-6 outline-none"
+            placeholder="Cole aqui o texto que você quer medir, transformar em PDF, Markdown, JSON ou Base64."
+            className="mt-2 min-h-52 w-full resize-y rounded-2xl border border-(--tc-border,#d7deea) bg-white px-4 py-3 text-sm leading-6 outline-none"
           />
 
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              ["Com espaÃ§o", metrics.charsWithSpaces],
-              ["Sem espaÃ§o", metrics.charsWithoutSpaces],
+              ["Com espaço", metrics.charsWithSpaces],
+              ["Sem espaço", metrics.charsWithoutSpaces],
               ["Palavras", metrics.words],
               ["Linhas", metrics.lines],
-              ["ParÃ¡grafos", metrics.paragraphs],
+              ["Parágrafos", metrics.paragraphs],
               ["Tokens aprox.", metrics.estimatedTokens],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--tc-text-muted,#6b7280)]">{label}</p>
-                <p className="mt-1 text-lg font-extrabold text-[var(--tc-text,#0b1a3c)]">{value}</p>
+              <div key={label} className="rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-(--tc-text-muted,#6b7280)">{label}</p>
+                <p className="mt-1 text-lg font-extrabold text-(--tc-text,#0b1a3c)">{value}</p>
               </div>
             ))}
           </div>
@@ -382,36 +379,36 @@ export function BrainUtilitiesPanel() {
           <button
             type="button"
             onClick={copyMetrics}
-            className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 py-2 text-sm font-semibold text-[var(--tc-text,#0b1a3c)]"
+            className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 py-2 text-sm font-semibold text-(--tc-text,#0b1a3c)"
           >
             <FiCopy className="h-4 w-4" /> Copiar contagem
           </button>
         </div>
 
-        <div className="rounded-2xl border border-[var(--tc-border,#d7deea)] bg-[var(--tc-surface-2,#f8fafc)] p-3">
-          <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--tc-border,#d7deea)] bg-white px-4 py-5 text-center">
-            <FiUploadCloud className="h-8 w-8 text-[var(--tc-accent,#ef0001)]" />
-            <span className="mt-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">Anexar arquivo para o Brain converter</span>
-            <span className="mt-1 text-xs text-[var(--tc-text-muted,#6b7280)]">TXT, MD, JSON, CSV, XLSX e imagens atÃ© {formatFileSize(MAX_FILE_SIZE_BYTES)}</span>
+        <div className="rounded-2xl border border-(--tc-border,#d7deea) bg-(--tc-surface-2,#f8fafc) p-3">
+          <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-(--tc-border,#d7deea) bg-white px-4 py-5 text-center">
+            <FiUploadCloud className="h-8 w-8 text-(--tc-accent,#ef0001)" />
+            <span className="mt-2 text-sm font-bold text-(--tc-text,#0b1a3c)">Anexar arquivo para o Brain converter</span>
+            <span className="mt-1 text-xs text-(--tc-text-muted,#6b7280)">TXT, MD, JSON, CSV, XLSX e imagens até {formatFileSize(MAX_FILE_SIZE_BYTES)}</span>
             <input type="file" className="sr-only" onChange={handleFileChange} />
           </label>
 
-          <div className="mt-3 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2 text-sm text-[var(--tc-text,#0b1a3c)]">
+          <div className="mt-3 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2 text-sm text-(--tc-text,#0b1a3c)">
             <div className="flex items-start gap-2">
-              <FiPaperclip className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tc-text-muted,#6b7280)]" />
+              <FiPaperclip className="mt-0.5 h-4 w-4 shrink-0 text-(--tc-text-muted,#6b7280)" />
               <div className="min-w-0">
                 <p className="truncate font-bold">{getSourceLabel(file, text)}</p>
-                <p className="text-xs text-[var(--tc-text-muted,#6b7280)]">{file ? formatFileSize(file.size) : "Use texto digitado quando nÃ£o houver anexo."}</p>
+                <p className="text-xs text-(--tc-text-muted,#6b7280)">{file ? formatFileSize(file.size) : "Use texto digitado quando não houver anexo."}</p>
               </div>
             </div>
           </div>
 
-          <label className="mt-3 grid gap-2 text-sm font-bold text-[var(--tc-text,#0b1a3c)]">
-            Formato de saÃ­da
+          <label className="mt-3 grid gap-2 text-sm font-bold text-(--tc-text,#0b1a3c)">
+            Formato de saída
             <select
               value={targetFormat}
               onChange={(event) => setTargetFormat(event.target.value as TargetFormat)}
-              className="min-h-11 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-4 text-sm outline-none"
+              className="min-h-11 rounded-xl border border-(--tc-border,#d7deea) bg-white px-4 text-sm outline-none"
             >
               {TARGET_FORMATS.map((format) => (
                 <option key={format.value} value={format.value}>{format.label}</option>
@@ -423,7 +420,7 @@ export function BrainUtilitiesPanel() {
             type="button"
             onClick={handleConvert}
             disabled={busy}
-            className="mt-3 inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--tc-primary,#011848)] px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+            className="mt-3 inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-(--tc-primary,#011848) px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
           >
             <FiFile className="h-4 w-4" /> {busy ? "Convertendo..." : "Converter no Brain"}
           </button>
@@ -435,7 +432,7 @@ export function BrainUtilitiesPanel() {
           {convertedFile ? (
             <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
               <p className="font-extrabold">Arquivo convertido pronto</p>
-              <p className="mt-1 text-xs">{convertedFile.fileName} â€¢ {convertedFile.mimeType} â€¢ {convertedFile.sizeLabel}</p>
+              <p className="mt-1 text-xs">{convertedFile.fileName} • {convertedFile.mimeType} • {convertedFile.sizeLabel}</p>
               <a
                 href={convertedFile.url}
                 download={convertedFile.fileName}
@@ -447,11 +444,11 @@ export function BrainUtilitiesPanel() {
           ) : null}
 
           {audit.length > 0 ? (
-            <div className="mt-3 rounded-xl border border-[var(--tc-border,#d7deea)] bg-white px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--tc-text-muted,#6b7280)]">Auditoria local</p>
-              <ul className="mt-2 space-y-1 text-xs text-[var(--tc-text-secondary,#4b5563)]">
+            <div className="mt-3 rounded-xl border border-(--tc-border,#d7deea) bg-white px-3 py-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--tc-text-muted,#6b7280)">Auditoria local</p>
+              <ul className="mt-2 space-y-1 text-xs text-(--tc-text-secondary,#4b5563)">
                 {audit.map((item) => (
-                  <li key={item.id}>â€¢ {item.label}</li>
+                  <li key={item.id}>• {item.label}</li>
                 ))}
               </ul>
             </div>
@@ -461,4 +458,3 @@ export function BrainUtilitiesPanel() {
     </section>
   );
 }
-

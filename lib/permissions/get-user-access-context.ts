@@ -1,4 +1,4 @@
-﻿import type { AuthCompany } from "@/contracts/auth";
+import type { AuthCompany } from "@/contracts/auth";
 import {
   normalizeAuthenticatedUser,
   type AuthenticatedUserLike,
@@ -122,23 +122,5 @@ export function getUserAccessContext(
     isTestingCompanyUser,
     isCompanyUser,
     permissions: applyPermissionOverride(basePermissions, userPermissionOverride),
-    permissions:
-      isGlobalAdmin
-        ? resolveEffectivePermissionMatrix({
-            permissionRole,
-            role,
-            companyRole,
-            globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
-            isGlobalAdmin,
-          })
-        : resolvedUserPermissions ??
-          resolveEffectivePermissionMatrix({
-            permissionRole,
-            role,
-            companyRole,
-            globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
-            isGlobalAdmin,
-          }),
   };
 }
-

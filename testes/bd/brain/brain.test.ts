@@ -1,6 +1,5 @@
-﻿import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { prisma } from '@/lib/prismaClient'
-import { describeDb } from '../../../support/functions/banco-de-dados/descrever-banco'
 import {
   upsertNode,
   connectNodes,
@@ -13,8 +12,7 @@ import {
   validateBrainIntegrity,
 } from '@/lib/brain'
 
-describe('Brain - CÃ©rebro do Quality Control', () => {
-describeDb('Brain - Cérebro do Quality Control', () => {
+describe('Brain - Cérebro do Quality Control', () => {
   let testCompanyNodeId: string
   let testAppNodeId: string
   let testModuleNodeId: string
@@ -176,7 +174,7 @@ describeDb('Brain - Cérebro do Quality Control', () => {
     })
 
     it('should retrieve memories for a node', async () => {
-      // Adicionar memÃ³ria
+      // Adicionar memória
       await addMemory({
         title: 'Pattern: Singleton',
         summary: 'Use singleton pattern for services',
@@ -314,7 +312,7 @@ describeDb('Brain - Cérebro do Quality Control', () => {
   })
 
   describe('Complex Scenarios', () => {
-    it('should build a company â†’ app â†’ module hierarchy', async () => {
+    it('should build a company → app → module hierarchy', async () => {
       const company = await upsertNode({
         type: 'Company',
         label: 'Hierarchy Test',
@@ -359,4 +357,3 @@ describeDb('Brain - Cérebro do Quality Control', () => {
     })
   })
 })
-

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
@@ -7,7 +7,6 @@ import { buildBrainAccessContextFromAuthUser } from "@/lib/brain/access";
 import { answerBrainChatQuestion } from "@/lib/brain/chat";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { buildWebSupportContext, shouldUseWebSupport } from "@/lib/assistant/webSupport";
-import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import type { AgentMode } from "@/lib/brain/agents";
 import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/assistant/types";
 
@@ -105,7 +104,7 @@ async function persistConversationMemory(args: {
       });
     }
   } catch {
-    // aprendizado nÃ£o pode quebrar o chat
+    // aprendizado não pode quebrar o chat
   }
 }
 
@@ -142,23 +141,13 @@ function isStructuredToolAction(body: AssistantRequestBody) {
   );
 }
 
-function shouldUseBrainFirst(brainContext: AssistantOpenEventDetail | null | undefined) {
-  return Boolean(
-    brainContext &&
-      (brainContext.source === "brain" ||
-        brainContext.nodeId ||
-        brainContext.agentMode ||
-        brainContext.metadata),
-  );
-}
-
 function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?: string | null }): string | null {
   const fromActor = body.actor?.companySlug ?? body.actor?.companySlugs?.[0] ?? null;
   return fromActor ?? authUser.companySlug ?? body.brainContext?.companySlug ?? null;
 }
 
 function shouldAnswerFromBrain(message: string) {
-  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cÃ§][aÃ£]o|defeito|bug|usuario|usu[aÃ¡]rio|qase|kase|jira|operacional|brain|brian|n[oÃ³]|dashboard|painel)\b/i.test(message);
+  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cç][aã]o|defeito|bug|usuario|usu[aá]rio|qase|kase|jira|operacional|brain|brian|n[oó]|dashboard|painel)\b/i.test(message);
 }
 
 function shouldUseBrainFirstContext(brainContext: AssistantOpenEventDetail | null) {
@@ -192,18 +181,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sem permissao para usar o assistente" }, { status: 403 });
   }
   if (!authUser) {
-    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
   try {
     const body = (await req.json().catch(() => ({}))) as AssistantRequestBody;
     const brainContext = body.brainContext ?? null;
-    const canViewAi = authUser.isGlobalAdmin || hasPermissionAccess(authUser.permissions, "ai", "view");
-    const canUseAi = authUser.isGlobalAdmin || hasPermissionAccess(authUser.permissions, "ai", "use");
-
-    if (!canViewAi || !canUseAi) {
-      return NextResponse.json({ error: "Sem permissao para usar o assistente" }, { status: 403 });
-    }
 
     if (isStructuredToolAction(body)) {
       const { runAssistantRequest } = await import("@/lib/assistant/service");
@@ -223,29 +206,6 @@ export async function POST(req: Request) {
         tool: response.tool,
         agentMode: null,
         brainContext,
-      });
-
-      return NextResponse.json(response);
-    }
-
-    if (!shouldUseBrainFirst(brainContext)) {
-      const { runAssistantRequest } = await import("@/lib/assistant/service");
-      const response = await runAssistantRequest(authUser, {
-        message: body.message,
-        context: body.context ?? null,
-        actor: body.actor ?? null,
-        action: body.action ?? null,
-        history: body.history ?? null,
-        brainContext: null,
-      } as Parameters<typeof runAssistantRequest>[1]);
-
-      await persistConversationMemory({
-        body,
-        authUser,
-        reply: String(response.reply ?? ""),
-        tool: response.tool,
-        agentMode: null,
-        brainContext: null,
       });
 
       return NextResponse.json(response);
@@ -329,12 +289,12 @@ export async function POST(req: Request) {
 
     const lastUserContent = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
     if (!lastUserContent.trim()) {
-      return NextResponse.json({ error: "Mensagem obrigatÃ³ria" }, { status: 400 });
+      return NextResponse.json({ error: "Mensagem obrigatória" }, { status: 400 });
     }
 
     const companySlug = resolveCompanySlug(body, authUser);
     const agentMode: AgentMode = (brainContext?.agentMode as AgentMode | undefined) ?? detectAgentMode(lastUserContent);
-    const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "ðŸ§ ", label: "Agente Brain", color: "#5b92ff" };
+    const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "🧠", label: "Agente Brain", color: "#5b92ff" };
     const startedAt = Date.now();
 
     const engine = new InternalBrainEngine();
@@ -371,7 +331,7 @@ export async function POST(req: Request) {
       success,
     });
 
-    const finalReply = replyText || (success ? "AnÃ¡lise concluÃ­da." : "NÃ£o foi possÃ­vel processar sua pergunta.");
+    const finalReply = replyText || (success ? "Análise concluída." : "Não foi possível processar sua pergunta.");
 
     await persistConversationMemory({ body, authUser, reply: finalReply, tool: lastToolName ?? agentMode, agentMode, brainContext });
 
@@ -397,4 +357,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

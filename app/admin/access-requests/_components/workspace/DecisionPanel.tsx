@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { FiAlertTriangle, FiCheckCircle, FiEdit3, FiSend, FiX, FiXCircle } from "react-icons/fi";
 
@@ -30,9 +30,9 @@ type DecisionPanelProps = {
 };
 
 function finalTitle(status: string) {
-  if (status === "closed") return "SolicitaÃ§Ã£o aprovada";
-  if (status === "rejected") return "SolicitaÃ§Ã£o recusada";
-  return "SolicitaÃ§Ã£o finalizada";
+  if (status === "closed") return "Solicitação aprovada";
+  if (status === "rejected") return "Solicitação recusada";
+  return "Solicitação finalizada";
 }
 
 export function DecisionPanel({
@@ -60,8 +60,8 @@ export function DecisionPanel({
 
   if (commentsLocked) {
     return (
-      <div className="sticky bottom-0 z-30 rounded-2xl border border-slate-200 bg-white/98 px-4 py-3 shadow-[0_-10px_36px_rgba(15,23,42,0.10)] backdrop-blur dark:border-slate-700/60 dark:bg-[#0d1b2f]/95">
-        <p className="text-sm font-black text-slate-700 dark:text-slate-200">{finalTitle(status)}</p>
+      <div className="sticky bottom-0 z-30 rounded-2xl border border-slate-200 bg-white/98 px-4 py-3 shadow-[0_-10px_36px_rgba(15,23,42,0.10)] backdrop-blur">
+        <p className="text-sm font-black text-slate-700">{finalTitle(status)}</p>
       </div>
     );
   }
@@ -102,13 +102,11 @@ export function DecisionPanel({
   }
 
   return (
-    <section className="sticky bottom-0 z-30 rounded-xl border border-slate-200 bg-white/98 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur dark:border-slate-700/60 dark:bg-[#0d1b2f]/95">
+    <section className="sticky bottom-0 z-30 rounded-xl border border-slate-200 bg-white/98 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
         <div className="min-w-0">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">AÃ§Ãµes da solicitaÃ§Ã£o</p>
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Ações da solicitação</p>
           <p className="mt-0.5 text-sm font-semibold text-slate-600">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Ações da solicitação</p>
-          <p className="mt-0.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
             {adjustmentFieldCount > 0
               ? `${adjustmentFieldCount} campo(s) marcados para ajuste`
               : "Nenhum ajuste marcado"}
@@ -120,7 +118,7 @@ export function DecisionPanel({
             type="button"
             onClick={onRequestAdjustment}
             disabled={!canRequestAdjustment}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-400/40 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-950/45"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FiEdit3 />
             {requestingAdjustment ? "Enviando..." : "Solicitar ajuste"}
@@ -129,9 +127,9 @@ export function DecisionPanel({
           <button
             type="button"
             onClick={() => setRejectOpen(true)}
-            aria-label="Recusar solicitaÃ§Ã£o"
+            aria-label="Recusar solicitação"
             disabled={accepting || isRejecting}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-400/40 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/45"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 text-xs font-black uppercase tracking-[0.12em] text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FiXCircle />
             {isRejecting ? "Recusando..." : "Recusar"}
@@ -140,9 +138,9 @@ export function DecisionPanel({
           <button
             type="button"
             onClick={() => void confirmApprove()}
-            aria-label="Aprovar solicitaÃ§Ã£o"
+            aria-label="Aprovar solicitação"
             disabled={approvalBlocked || isRejecting}
-            className="inline-flex h-9 items-center gap-2 rounded-xl bg-slate-950 px-5 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-sky-700 dark:hover:bg-sky-600"
+            className="inline-flex h-9 items-center gap-2 rounded-xl bg-slate-950 px-5 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FiCheckCircle />
             {isApproving ? "Aprovando..." : selectedIsPasswordReset ? "Aprovar reset" : "Aprovar"}
@@ -153,7 +151,7 @@ export function DecisionPanel({
       <Dialog.Root open={rejectOpen} onOpenChange={(open) => !isRejecting && setRejectOpen(open)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[220] bg-slate-950/55 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[221] w-[min(560px,calc(100vw-28px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-rose-100 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.35)] dark:border-rose-400/30 dark:bg-[#0d1b2f]">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[221] w-[min(560px,calc(100vw-28px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-rose-100 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.35)]">
             <div className="bg-[linear-gradient(135deg,#7f1d1d_0%,#be123c_60%,#ef4444_130%)] px-6 py-5 text-white">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-start gap-3">
@@ -162,17 +160,17 @@ export function DecisionPanel({
                   </span>
                   <div className="min-w-0">
                     <Dialog.Title className="text-xl font-black tracking-tight text-white">
-                      VocÃª tem certeza?
+                      Você tem certeza?
                     </Dialog.Title>
                     <Dialog.Description className="mt-1 text-sm font-semibold leading-6 text-white/82">
-                      A solicitaÃ§Ã£o serÃ¡ marcada como recusada e o motivo ficarÃ¡ registrado no histÃ³rico.
+                      A solicitação será marcada como recusada e o motivo ficará registrado no histórico.
                     </Dialog.Description>
                   </div>
                 </div>
 
                 <Dialog.Close
                   className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
-                  aria-label="Fechar confirmaÃ§Ã£o de recusa"
+                  aria-label="Fechar confirmação de recusa"
                 >
                   <FiX className="h-4 w-4" />
                 </Dialog.Close>
@@ -181,15 +179,15 @@ export function DecisionPanel({
 
             <div className="space-y-4 px-6 py-5">
               <label className="block">
-                <span className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">
                   Motivo da recusa
                 </span>
                 <select
                   value={rejectionReasonDraft}
                   onChange={(event) => onRejectionReasonChange(event.target.value)}
-                  className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100 dark:border-slate-700/60 dark:bg-[#071426] dark:text-slate-100 dark:focus:ring-rose-950/40"
+                  className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
                   data-testid="access-request-rejection-reason"
-                  aria-label="Motivo da rejeiÃ§Ã£o"
+                  aria-label="Motivo da rejeição"
                 >
                   <option value="">Selecionar motivo</option>
                   {rejectionReasons.map((reason) => (
@@ -202,25 +200,20 @@ export function DecisionPanel({
 
               <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3">
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-rose-700">
-                  O que serÃ¡ enviado
-              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 dark:border-rose-400/40 dark:bg-rose-950/30">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-rose-700 dark:text-rose-200">
                   O que será enviado
                 </p>
-                <p className="mt-1 text-sm font-bold leading-6 text-rose-950 dark:text-rose-50">
+                <p className="mt-1 text-sm font-bold leading-6 text-rose-950">
                   {rejectionSummary || "Selecione um motivo ou escreva uma justificativa na conversa antes de confirmar."}
                 </p>
               </div>
 
               <p className="text-sm font-semibold leading-6 text-slate-600">
-                Para justificar por mensagem, escreva no chat da solicitaÃ§Ã£o antes de confirmar a recusa.
-              <p className="text-sm font-semibold leading-6 text-slate-600 dark:text-slate-300">
                 Para justificar por mensagem, escreva no chat da solicitação antes de confirmar a recusa.
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4 dark:border-slate-700/60 dark:bg-[#071426]">
-              <Dialog.Close className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-100 dark:border-slate-700/60 dark:bg-[#0d1b2f] dark:text-slate-200 dark:hover:bg-[#13243b]">
+            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
+              <Dialog.Close className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-100">
                 Cancelar
               </Dialog.Close>
 
@@ -231,7 +224,7 @@ export function DecisionPanel({
                 className="inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-5 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(225,29,72,0.24)] transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-55"
               >
                 <FiSend className="h-4 w-4" />
-                {isRejecting ? "Recusando..." : "Sim, recusar solicitaÃ§Ã£o"}
+                {isRejecting ? "Recusando..." : "Sim, recusar solicitação"}
               </button>
             </div>
           </Dialog.Content>
@@ -240,4 +233,3 @@ export function DecisionPanel({
     </section>
   );
 }
-

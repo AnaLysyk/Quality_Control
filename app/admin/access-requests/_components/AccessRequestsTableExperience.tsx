@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -96,7 +96,7 @@ type AccessRequestsTableExperienceProps = {
 function formatDate(value: string | null | undefined) {
   if (!value) return "Sem data";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Data invÃ¡lida";
+  if (Number.isNaN(date.getTime())) return "Data inválida";
   return date.toLocaleString("pt-BR");
 }
 
@@ -118,7 +118,7 @@ function RequestAvatar({ item, size = "md" }: { item: AccessRequestTableItem; si
   if ((visual?.avatarKind === "image" || visual?.avatarKind === "gif") && isImageAvatar(value) && !broken) {
     return (
       <div
-        className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-[var(--tc-border)] bg-white shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
+        className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-(--tc-border) bg-white shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
         style={{ lineHeight: 0 }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -136,7 +136,7 @@ function RequestAvatar({ item, size = "md" }: { item: AccessRequestTableItem; si
   if (visual?.avatarKind === "emoji" && value) {
     return (
       <div
-        className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-[var(--tc-border)] bg-white text-base shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
+        className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-(--tc-border) bg-white text-base shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
         style={{ lineHeight: 1 }}
       >
         <span className="block text-lg leading-none">{value}</span>
@@ -146,7 +146,7 @@ function RequestAvatar({ item, size = "md" }: { item: AccessRequestTableItem; si
 
   return (
     <div
-      className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-[var(--tc-primary)] shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
+      className={`relative isolate flex shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary) shadow-[0_8px_18px_rgba(1,24,72,0.10)] [contain:paint] ${boxClass}`}
       title="Perfil sem foto"
       aria-label="Perfil sem foto"
     >
@@ -184,7 +184,7 @@ async function downloadRequestPdf(item: AccessRequestTableItem) {
   const margin = 16;
   let y = 18;
 
-  function drawHeader(title = "RelatÃ³rio de solicitaÃ§Ã£o") {
+  function drawHeader(title = "Relatório de solicitação") {
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, pageWidth, 34, "F");
     pdf.setFillColor(1, 24, 72);
@@ -199,7 +199,7 @@ async function downloadRequestPdf(item: AccessRequestTableItem) {
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(9);
     pdf.setTextColor(71, 85, 105);
-    pdf.text("Quality Control Â· Central de aprovaÃ§Ã£o", margin, 25);
+    pdf.text("Quality Control · Central de aprovação", margin, 25);
     pdf.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pageWidth - margin, 25, { align: "right" });
     pdf.setDrawColor(226, 232, 240);
     pdf.line(margin, 31, pageWidth - margin, 31);
@@ -236,12 +236,12 @@ async function downloadRequestPdf(item: AccessRequestTableItem) {
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(9);
     pdf.setTextColor(15, 23, 42);
-    const wrapped = pdf.splitTextToSize(value || "NÃ£o informado", 112);
+    const wrapped = pdf.splitTextToSize(value || "Não informado", 112);
     pdf.text(wrapped, margin + 48, y + 1);
     y += Math.max(11, wrapped.length * 5);
   }
 
-  drawHeader("SolicitaÃ§Ã£o de acesso");
+  drawHeader("Solicitação de acesso");
 
   const nameLines = pdf.splitTextToSize(displayName(item), pageWidth - margin * 2 - 10);
   const heroHeight = Math.max(24, 14 + nameLines.length * 6);
@@ -254,28 +254,28 @@ async function downloadRequestPdf(item: AccessRequestTableItem) {
   pdf.text(nameLines, margin + 5, y + 5);
   pdf.setFontSize(9);
   pdf.setTextColor(71, 85, 105);
-  pdf.text(`${item.accessType || "Perfil nÃ£o informado"} Â· ${statusLabel(item.status)}`, margin + 5, y + 7 + nameLines.length * 6);
+  pdf.text(`${item.accessType || "Perfil não informado"} · ${statusLabel(item.status)}`, margin + 5, y + 7 + nameLines.length * 6);
   y += heroHeight + 8;
 
   const rows = [
     ["Nome", displayName(item)],
-    ["E-mail", item.email || "NÃ£o informado"],
-    ["UsuÃ¡rio", item.username || "A definir"],
-    ["Telefone", item.phone || "NÃ£o informado"],
-    ["Empresa", item.company || "NÃ£o informada"],
-    ["Cargo", item.jobRole || "NÃ£o informado"],
-    ["Perfil", item.accessType || "NÃ£o informado"],
+    ["E-mail", item.email || "Não informado"],
+    ["Usuário", item.username || "A definir"],
+    ["Telefone", item.phone || "Não informado"],
+    ["Empresa", item.company || "Não informada"],
+    ["Cargo", item.jobRole || "Não informado"],
+    ["Perfil", item.accessType || "Não informado"],
     ["Status", statusLabel(item.status)],
     ["Senha", item.passwordProvided ? "Informada" : "Pendente"],
     ["Recebida em", formatDate(item.createdAt)],
-    ["TÃ­tulo", item.title || "NÃ£o informado"],
-    ["DescriÃ§Ã£o", item.description || "NÃ£o informada"],
-    ["ObservaÃ§Ãµes", item.notes || "NÃ£o informado"],
+    ["Título", item.title || "Não informado"],
+    ["Descrição", item.description || "Não informada"],
+    ["Observações", item.notes || "Não informado"],
   ];
 
   drawSectionTitle("Dados do perfil");
   rows.slice(0, 10).forEach(([label, value]) => drawRow(label, String(value)));
-  drawSectionTitle("Contexto da solicitaÃ§Ã£o");
+  drawSectionTitle("Contexto da solicitação");
   rows.slice(10).forEach(([label, value]) => drawRow(label, String(value)));
 
   pdf.setFont("helvetica", "normal");
@@ -362,7 +362,7 @@ export function AccessRequestsTableExperience({
       if (item.status === "closed") {
         events.push({
           id: "approved-" + item.id,
-          title: "SolicitaÃ§Ã£o aceita",
+          title: "Solicitação aceita",
           description: name + " foi aprovado(a).",
           date: formatDate(date),
           sortDate: date,
@@ -374,7 +374,7 @@ export function AccessRequestsTableExperience({
       if (item.status === "rejected") {
         events.push({
           id: "rejected-" + item.id,
-          title: "SolicitaÃ§Ã£o recusada",
+          title: "Solicitação recusada",
           description: name + " foi recusado(a).",
           date: formatDate(date),
           sortDate: date,
@@ -387,7 +387,7 @@ export function AccessRequestsTableExperience({
         events.push({
           id: "adjustment-" + item.id,
           title: "Ajuste solicitado",
-          description: name + " estÃ¡ aguardando correÃ§Ã£o do solicitante.",
+          description: name + " está aguardando correção do solicitante.",
           date: formatDate(date),
           sortDate: date,
           tone: "warn",
@@ -417,9 +417,9 @@ export function AccessRequestsTableExperience({
               <RequestAvatar item={item} />
 
               <div className="min-w-0">
-                <p className="truncate text-sm font-black text-[var(--tc-text-primary)]">{name}</p>
-                <p className="truncate text-xs font-semibold text-[var(--tc-accent)]">{item.email}</p>
-                <p className="mt-1 truncate text-xs text-[var(--tc-text-muted)]">{item.jobRole || "Cargo nÃ£o informado"}</p>
+                <p className="truncate text-sm font-black text-(--tc-text-primary)">{name}</p>
+                <p className="truncate text-xs font-semibold text-(--tc-accent)">{item.email}</p>
+                <p className="mt-1 truncate text-xs text-(--tc-text-muted)">{item.jobRole || "Cargo não informado"}</p>
               </div>
             </div>
           );
@@ -430,8 +430,8 @@ export function AccessRequestsTableExperience({
         header: "Empresa",
         accessorFn: (row) => row.company || "",
         cell: ({ row }) => (
-          <span className="text-sm font-semibold text-[var(--tc-text-secondary)]">
-            {row.original.company || "NÃ£o informada"}
+          <span className="text-sm font-semibold text-(--tc-text-secondary)">
+            {row.original.company || "Não informada"}
           </span>
         ),
       },
@@ -441,7 +441,7 @@ export function AccessRequestsTableExperience({
         accessorFn: (row) => row.accessType || "",
         cell: ({ row }) => (
           <span className="inline-flex max-w-46 items-center whitespace-nowrap rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-black leading-none text-violet-700">
-            {row.original.accessType || "NÃ£o informado"}
+            {row.original.accessType || "Não informado"}
           </span>
         ),
       },
@@ -458,7 +458,7 @@ export function AccessRequestsTableExperience({
       {
         id: "passwordProvided",
         header: "Senha",
-        accessorFn: (row) => (row.passwordProvided ? "sim" : "nÃ£o"),
+        accessorFn: (row) => (row.passwordProvided ? "sim" : "não"),
         cell: ({ row }) => (
           <span
             className={`rounded-full border px-3 py-1 text-xs font-black ${
@@ -473,12 +473,12 @@ export function AccessRequestsTableExperience({
       },
       {
         id: "changes",
-        header: "AlteraÃ§Ãµes",
+        header: "Alterações",
         accessorFn: (row) => row.lastAdjustmentDiff?.length ?? 0,
         cell: ({ row }) => {
           const count = row.original.lastAdjustmentDiff?.length ?? 0;
           return (
-            <span className="inline-flex min-w-6 justify-center text-sm font-black text-[var(--tc-text-primary)]">
+            <span className="inline-flex min-w-6 justify-center text-sm font-black text-(--tc-text-primary)">
               {count}
             </span>
           );
@@ -489,14 +489,14 @@ export function AccessRequestsTableExperience({
         header: "Recebida em",
         accessorFn: (row) => row.createdAt,
         cell: ({ row }) => (
-          <span className="whitespace-nowrap text-xs font-semibold text-[var(--tc-text-muted)]">
+          <span className="whitespace-nowrap text-xs font-semibold text-(--tc-text-muted)">
             {formatDate(row.original.createdAt)}
           </span>
         ),
       },
       {
         id: "actions",
-        header: "AÃ§Ãµes",
+        header: "Ações",
         enableSorting: false,
         size: 76,
         cell: ({ row }) => {
@@ -510,20 +510,20 @@ export function AccessRequestsTableExperience({
             <div className="relative flex justify-end">
               <button
                 type="button"
-                aria-label="Abrir aÃ§Ãµes da solicitaÃ§Ã£o"
-                title="AÃ§Ãµes"
+                aria-label="Abrir ações da solicitação"
+                title="Ações"
                 onClick={(event) => {
                   event.stopPropagation();
                   setOpenActionMenuId(menuOpen ? null : item.id);
                 }}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-secondary)] shadow-[0_10px_22px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:bg-[var(--tc-surface-2)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-secondary) shadow-[0_10px_22px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:bg-(--tc-surface-2)"
               >
                 <FiMoreVertical />
               </button>
 
               {menuOpen ? (
                 <div
-                  className="absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] text-left shadow-[0_22px_60px_rgba(15,23,42,0.18)]"
+                  className="absolute right-0 top-11 z-30 w-56 overflow-hidden rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-left shadow-[0_22px_60px_rgba(15,23,42,0.18)]"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <button
@@ -535,7 +535,7 @@ export function AccessRequestsTableExperience({
                       setOpen(true);
                       closeMenu();
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-[var(--tc-text-primary)] transition hover:bg-[var(--tc-surface-2)]"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-(--tc-text-primary) transition hover:bg-(--tc-surface-2)"
                   >
                     <FiEye />
                     Visualizar
@@ -550,7 +550,7 @@ export function AccessRequestsTableExperience({
                         setOpen(true);
                         closeMenu();
                       }}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-[var(--tc-text-primary)] transition hover:bg-[var(--tc-surface-2)]"
+                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-(--tc-text-primary) transition hover:bg-(--tc-surface-2)"
                     >
                       <FiEdit3 />
                       Analisar / editar
@@ -559,14 +559,14 @@ export function AccessRequestsTableExperience({
 
                   <button
                     type="button"
-                    aria-label="Baixar solicitaÃ§Ã£o em PDF"
-                    title="Baixar solicitaÃ§Ã£o em PDF"
+                    aria-label="Baixar solicitação em PDF"
+                    title="Baixar solicitação em PDF"
                     data-brain-action="pdf"
                     onClick={() => {
                       void downloadRequestPdf(item);
                       closeMenu();
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-[var(--tc-text-primary)] transition hover:bg-[var(--tc-surface-2)]"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-(--tc-text-primary) transition hover:bg-(--tc-surface-2)"
                   >
                     <FiDownload />
                     Baixar PDF
@@ -580,7 +580,7 @@ export function AccessRequestsTableExperience({
                         setRemoveCandidate(item);
                         closeMenu();
                       }}
-                      className="flex w-full items-center gap-3 border-t border-[var(--tc-border)] px-4 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-50"
+                      className="flex w-full items-center gap-3 border-t border-(--tc-border) px-4 py-3 text-sm font-bold text-rose-700 transition hover:bg-rose-50"
                     >
                       <FiTrash2 />
                       Remover da fila
@@ -629,18 +629,18 @@ export function AccessRequestsTableExperience({
   return (
     <>
       {queueHistoryOpen ? (
-        <section className={`${styles.queueShell} mb-4 overflow-hidden rounded-[26px] border border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-primary)] shadow-[0_22px_70px_rgba(15,23,42,0.12)]`}>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-5 py-4">
+        <section className={`${styles.queueShell} mb-4 overflow-hidden rounded-[26px] border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary) shadow-[0_22px_70px_rgba(15,23,42,0.12)]`}>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--tc-border) bg-(--tc-surface-2) px-5 py-4">
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white shadow-[0_14px_32px_rgba(15,23,42,0.18)]">
                 <FiClock className="h-4 w-4" />
               </span>
 
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">HistÃ³rico da fila</p>
-                <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">MovimentaÃ§Ãµes de solicitaÃ§Ãµes</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Histórico da fila</p>
+                <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">Movimentações de solicitações</h3>
                 <p className="mt-0.5 text-sm font-semibold text-slate-500">
-                  Aceites, recusas, ajustes solicitados e remoÃ§Ãµes.
+                  Aceites, recusas, ajustes solicitados e remoções.
                 </p>
               </div>
             </div>
@@ -648,20 +648,20 @@ export function AccessRequestsTableExperience({
             <button
               type="button"
               onClick={() => setQueueHistoryOpen(false)}
-              aria-label="Fechar histÃ³rico"
+              aria-label="Fechar histórico"
               title="Fechar"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-[var(--tc-surface)] text-[var(--tc-text-secondary)] transition hover:bg-slate-50"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-(--tc-surface) text-(--tc-text-secondary) transition hover:bg-slate-50"
             >
               <FiX className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="max-h-86 overflow-y-auto bg-[var(--tc-surface)] px-5 py-4">
+          <div className="max-h-86 overflow-y-auto bg-(--tc-surface) px-5 py-4">
             {queueHistoryItems.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-5 text-center">
-                <p className="text-sm font-black text-slate-800">Nenhuma movimentaÃ§Ã£o registrada</p>
+                <p className="text-sm font-black text-slate-800">Nenhuma movimentação registrada</p>
                 <p className="mt-1 text-sm font-semibold text-slate-500">
-                  As aÃ§Ãµes feitas na fila aparecem aqui.
+                  As ações feitas na fila aparecem aqui.
                 </p>
               </div>
             ) : (
@@ -694,7 +694,7 @@ export function AccessRequestsTableExperience({
                       <button
                         type="button"
                         onClick={() => setExpandedQueueHistoryId(expanded ? null : event.id)}
-                        className="w-full rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-4 py-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)]"
+                        className="w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)]"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
@@ -726,13 +726,13 @@ export function AccessRequestsTableExperience({
         </section>
       ) : null}
 
-      <section className={`${styles.queueShell} overflow-hidden rounded-[24px] border border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-primary)] shadow-[0_18px_54px_rgba(15,23,42,0.09)]`}>
-        <div className="border-b border-[var(--tc-border)] bg-[linear-gradient(135deg,var(--tc-surface)_0%,var(--tc-surface-2)_55%,rgba(239,0,1,0.06)_130%)] p-3 sm:p-4">
+      <section className={`${styles.queueShell} overflow-hidden rounded-[24px] border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary) shadow-[0_18px_54px_rgba(15,23,42,0.09)]`}>
+        <div className="border-b border-(--tc-border) bg-[linear-gradient(135deg,var(--tc-surface)_0%,var(--tc-surface-2)_55%,rgba(239,0,1,0.06)_130%)] p-3 sm:p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[var(--tc-text-muted)]">Fila de anÃ¡lise</p>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--tc-text-secondary)]">
-                Use a busca e os filtros para encontrar perfis, revisar alteraÃ§Ãµes e concluir decisÃµes.
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-(--tc-text-muted)">Fila de análise</p>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-(--tc-text-secondary)">
+                Use a busca e os filtros para encontrar perfis, revisar alterações e concluir decisões.
               </p>
             </div>
 
@@ -749,19 +749,18 @@ export function AccessRequestsTableExperience({
               <button
                 type="button"
                 onClick={() => setQueueHistoryOpen((current) => !current)}
-                aria-label="Abrir histÃ³rico da fila"
-                title="HistÃ³rico da fila"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--tc-border)] bg-white text-[var(--tc-text-secondary)] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-[rgba(239,0,1,0.28)] hover:bg-[var(--tc-surface-2)]"
+                aria-label="Abrir histórico da fila"
+                title="Histórico da fila"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-(--tc-border) bg-white text-(--tc-text-secondary) shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-[rgba(239,0,1,0.28)] hover:bg-(--tc-surface-2)"
               >
                 <FiClock className="h-4 w-4" />
               </button>
 
-              <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-3.5 text-[var(--tc-text-primary)] shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
-                <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted)]">
+              <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-3.5 text-(--tc-text-primary) shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                <span className="text-[10px] font-black uppercase tracking-[0.16em] text-(--tc-text-muted)">
                   Total
                 </span>
-                <span className="text-base font-black leading-none text-[var(--tc-primary)]">
-                <span className="text-base font-black leading-none text-[var(--tc-primary-text,var(--tc-primary))]">
+                <span className="text-base font-black leading-none text-(--tc-primary)">
                   {total}
                 </span>
               </div>
@@ -770,7 +769,7 @@ export function AccessRequestsTableExperience({
 
           <div className="mt-3 grid gap-2 xl:grid-cols-[minmax(260px,1fr)_180px_180px]">
             <label className="relative">
-              <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted)]" />
+              <FiSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--tc-text-muted)" />
               <input
                 value={searchTerm}
                 onChange={(event) => {
@@ -778,19 +777,19 @@ export function AccessRequestsTableExperience({
                   table.setPageIndex(0);
                 }}
                 placeholder="Buscar por nome, e-mail, empresa, perfil ou cargo"
-                className="h-12 w-full rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] pl-11 pr-4 text-sm font-semibold text-[var(--tc-text-primary)] outline-none transition placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)] focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
+                className="h-12 w-full rounded-2xl border border-(--tc-border) bg-(--tc-surface) pl-11 pr-4 text-sm font-semibold text-(--tc-text-primary) outline-none transition placeholder:text-(--tc-text-muted) focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
               />
             </label>
 
             <select
-              aria-label="Filtrar solicitaÃ§Ãµes por status"
-              title="Filtrar solicitaÃ§Ãµes por status"
+              aria-label="Filtrar solicitações por status"
+              title="Filtrar solicitações por status"
               value={statusFilter}
               onChange={(event) => {
                 onStatusFilterChange(event.target.value);
                 table.setPageIndex(0);
               }}
-              className="h-12 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-4 text-sm font-black text-[var(--tc-text-primary)] outline-none transition focus:border-[var(--tc-accent)] focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
+              className="h-12 rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 text-sm font-black text-(--tc-text-primary) outline-none transition focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
             >
               <option value="all">Todos os status</option>
               <option value="open">Aberta</option>
@@ -800,20 +799,20 @@ export function AccessRequestsTableExperience({
             </select>
 
             <select
-              aria-label="Filtrar solicitaÃ§Ãµes por perÃ­odo"
-              title="Filtrar solicitaÃ§Ãµes por perÃ­odo"
+              aria-label="Filtrar solicitações por período"
+              title="Filtrar solicitações por período"
               value={dateFilter}
               onChange={(event) => {
                 onDateFilterChange(event.target.value);
                 table.setPageIndex(0);
               }}
-              className="h-12 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-4 text-sm font-black text-[var(--tc-text-primary)] outline-none transition focus:border-[var(--tc-accent)] focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
+              className="h-12 rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 text-sm font-black text-(--tc-text-primary) outline-none transition focus:border-(--tc-accent) focus:ring-4 focus:ring-[rgba(239,0,1,0.10)]"
             >
-              <option value="all">Todo o histÃ³rico</option>
-              <option value="two_hours">Data: Ãºltimas 2 horas</option>
+              <option value="all">Todo o histórico</option>
+              <option value="two_hours">Data: últimas 2 horas</option>
               <option value="today">Data: hoje</option>
-              <option value="week">Ãšltimos 7 dias</option>
-              <option value="month">Ãšltimos 30 dias</option>
+              <option value="week">Últimos 7 dias</option>
+              <option value="month">Últimos 30 dias</option>
             </select>
           </div>
 
@@ -829,7 +828,7 @@ export function AccessRequestsTableExperience({
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.12em] transition ${
                   statusFilter === option.value
                     ? "border-[#011848] bg-[#011848] text-white shadow-[0_12px_24px_rgba(1,24,72,0.18)] dark:border-sky-500/40 dark:bg-sky-950 dark:text-sky-100"
-                    : "border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-secondary)] hover:border-[rgba(239,0,1,0.25)] hover:text-[var(--tc-text-primary)]"
+                    : "border-(--tc-border) bg-(--tc-surface) text-(--tc-text-secondary) hover:border-[rgba(239,0,1,0.25)] hover:text-(--tc-text-primary)"
                 }`}
               >
                 <FiCircle className={`h-2 w-2 ${statusFilter === option.value ? "text-white" : statusDotClass(option.value)}`} />
@@ -841,13 +840,13 @@ export function AccessRequestsTableExperience({
         </div>
 
         {loading ? (
-          <div className="p-8 text-sm font-semibold text-[var(--tc-text-muted)]">Carregando solicitaÃ§Ãµes...</div>
+          <div className="p-8 text-sm font-semibold text-(--tc-text-muted)">Carregando solicitações...</div>
         ) : items.length === 0 ? (
           <div className="flex min-h-90 items-center justify-center p-8 text-center">
             <div className="max-w-md">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--tc-surface-2)] text-2xl">ðŸ”Ž</div>
-              <h3 className="mt-5 text-xl font-black text-[var(--tc-text-primary)]">Nenhuma solicitaÃ§Ã£o encontrada</h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--tc-text-secondary)]">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-(--tc-surface-2) text-2xl">🔎</div>
+              <h3 className="mt-5 text-xl font-black text-(--tc-text-primary)">Nenhuma solicitação encontrada</h3>
+              <p className="mt-2 text-sm leading-6 text-(--tc-text-secondary)">
                 Ajuste os filtros ou busque por outro nome, e-mail, empresa, perfil ou cargo.
               </p>
             </div>
@@ -856,7 +855,7 @@ export function AccessRequestsTableExperience({
           <>
             <div className="max-h-[calc(100vh-306px)] overflow-auto">
               <table className="w-full min-w-250 border-separate border-spacing-0">
-                <thead className="sticky top-0 z-10 bg-[var(--tc-surface)] shadow-[0_1px_0_var(--tc-border)]">
+                <thead className="sticky top-0 z-10 bg-(--tc-surface) shadow-[0_1px_0_var(--tc-border)]">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
                       {headerGroup.headers.map((header) => {
@@ -867,21 +866,21 @@ export function AccessRequestsTableExperience({
                         return (
                           <th
                             key={header.id}
-                            className={`whitespace-nowrap border-b border-[var(--tc-border)] px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] ${
+                            className={`whitespace-nowrap border-b border-(--tc-border) px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] ${
                               active
                                 ? "bg-sky-50 text-sky-800 dark:bg-sky-950/55 dark:text-sky-200"
-                                : "text-[var(--tc-text-muted)]"
+                                : "text-(--tc-text-muted)"
                             }`}
                           >
                             <button
                               type="button"
                               disabled={!canSort}
                               onClick={header.column.getToggleSortingHandler()}
-                              className={`inline-flex items-center gap-2 ${canSort ? "cursor-pointer hover:text-[var(--tc-text-primary)]" : "cursor-default"}`}
+                              className={`inline-flex items-center gap-2 ${canSort ? "cursor-pointer hover:text-(--tc-text-primary)" : "cursor-default"}`}
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
-                              <span className={active ? "text-sky-700 dark:text-sky-300" : "text-[var(--tc-text-muted)]"}>
-                                {sorted === "asc" ? "â†‘" : sorted === "desc" ? "â†“" : canSort ? "â†•" : ""}
+                              <span className={active ? "text-sky-700 dark:text-sky-300" : "text-(--tc-text-muted)"}>
+                                {sorted === "asc" ? "↑" : sorted === "desc" ? "↓" : canSort ? "↕" : ""}
                               </span>
                             </button>
                           </th>
@@ -904,8 +903,8 @@ export function AccessRequestsTableExperience({
                         data-brain-email={row.original.email}
                         data-brain-status={statusLabel(row.original.status)}
                         data-brain-status-value={row.original.status}
-                        data-brain-profile={row.original.accessType || "NÃ£o informado"}
-                        data-brain-company={row.original.company || "NÃ£o informada"}
+                        data-brain-profile={row.original.accessType || "Não informado"}
+                        data-brain-company={row.original.company || "Não informada"}
                         data-brain-changes={row.original.lastAdjustmentDiff?.length ?? 0}
                         onClick={() => {
                           onSelect(row.original.id);
@@ -925,11 +924,11 @@ export function AccessRequestsTableExperience({
                         className={`group cursor-pointer transition ${
                           active
                             ? "bg-sky-50/80 dark:bg-sky-950/40"
-                            : "odd:bg-[var(--tc-surface)] even:bg-[var(--tc-surface-2)] hover:bg-sky-50/50 dark:hover:bg-sky-950/25"
+                            : "odd:bg-(--tc-surface) even:bg-(--tc-surface-2) hover:bg-sky-50/50 dark:hover:bg-sky-950/25"
                         }`}
                       >
                         {row.getVisibleCells().map((cell) => (
-                          <td key={cell.id} className="border-b border-[var(--tc-border)] px-4 py-3 align-middle">
+                          <td key={cell.id} className="border-b border-(--tc-border) px-4 py-3 align-middle">
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </td>
                         ))}
@@ -940,22 +939,22 @@ export function AccessRequestsTableExperience({
               </table>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--tc-border)] bg-[var(--tc-surface)] px-5 py-4">
-              <p className="text-sm font-semibold text-[var(--tc-text-secondary)]">
-                PÃ¡gina {table.getState().pagination.pageIndex + 1} de {table.getPageCount()} Â· {items.length} resultado(s)
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--tc-border) bg-(--tc-surface) px-5 py-4">
+              <p className="text-sm font-semibold text-(--tc-text-secondary)">
+                Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()} · {items.length} resultado(s)
               </p>
 
               <div className="flex items-center gap-2">
                 <select
-                  aria-label="Quantidade de solicitaÃ§Ãµes por pÃ¡gina"
-                  title="Quantidade de solicitaÃ§Ãµes por pÃ¡gina"
+                  aria-label="Quantidade de solicitações por página"
+                  title="Quantidade de solicitações por página"
                   value={table.getState().pagination.pageSize}
                   onChange={(event) => table.setPageSize(Number(event.target.value))}
-                  className="h-10 rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-3 text-sm font-bold text-[var(--tc-text-primary)]"
+                  className="h-10 rounded-xl border border-(--tc-border) bg-(--tc-surface) px-3 text-sm font-bold text-(--tc-text-primary)"
                 >
                   {[10, 12, 20, 50].map((size) => (
                     <option key={size} value={size}>
-                      {size}/pÃ¡gina
+                      {size}/página
                     </option>
                   ))}
                 </select>
@@ -964,8 +963,8 @@ export function AccessRequestsTableExperience({
                   type="button"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-primary)] transition hover:bg-[var(--tc-surface-2)] disabled:opacity-40"
-                  aria-label="PÃ¡gina anterior"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary) transition hover:bg-(--tc-surface-2) disabled:opacity-40"
+                  aria-label="Página anterior"
                 >
                   <FiChevronLeft />
                 </button>
@@ -974,8 +973,8 @@ export function AccessRequestsTableExperience({
                   type="button"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-primary)] transition hover:bg-[var(--tc-surface-2)] disabled:opacity-40"
-                  aria-label="PrÃ³xima pÃ¡gina"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--tc-border) bg-(--tc-surface) text-(--tc-text-primary) transition hover:bg-(--tc-surface-2) disabled:opacity-40"
+                  aria-label="Próxima página"
                 >
                   <FiChevronRight />
                 </button>
@@ -1002,21 +1001,21 @@ export function AccessRequestsTableExperience({
               className={`w-full rounded-[26px] border p-4 text-left transition ${
                 active
                   ? "border-sky-200 bg-sky-50 shadow-[0_18px_40px_rgba(14,165,233,0.12)] dark:border-sky-700/60 dark:bg-sky-950/40"
-                  : "border-[var(--tc-border)] bg-[var(--tc-surface)] hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]"
+                  : "border-(--tc-border) bg-(--tc-surface) hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]"
               }`}
             >
               <div className="flex items-start gap-3">
                 <RequestAvatar item={item} size="lg" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-black text-[var(--tc-text-primary)]">{displayName(item)}</p>
+                    <p className="truncate text-sm font-black text-(--tc-text-primary)">{displayName(item)}</p>
                     <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${statusClass(item.status)}`}>
                       {statusLabel(item.status)}
                     </span>
                   </div>
-                  <p className="mt-1 truncate text-xs font-semibold text-[var(--tc-text-secondary)]">{item.email}</p>
-                  <p className="mt-1 text-xs text-[var(--tc-text-muted)]">
-                    {item.company || "Empresa nÃ£o informada"} Â· {item.accessType || "Perfil nÃ£o informado"}
+                  <p className="mt-1 truncate text-xs font-semibold text-(--tc-text-secondary)">{item.email}</p>
+                  <p className="mt-1 text-xs text-(--tc-text-muted)">
+                    {item.company || "Empresa não informada"} · {item.accessType || "Perfil não informado"}
                   </p>
                 </div>
               </div>
@@ -1030,17 +1029,17 @@ export function AccessRequestsTableExperience({
           <Dialog.Overlay className="fixed inset-0 z-[100] bg-slate-950/45 backdrop-blur-sm" />
           <Dialog.Content
             data-access-requests-dialog="profile"
-            className={`${styles.queueShell} fixed left-1/2 top-1/2 z-[101] flex max-h-[calc(100dvh-12px)] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[30px] border border-[var(--tc-border)] bg-[var(--tc-surface)] shadow-[0_34px_100px_rgba(15,23,42,0.35)] sm:max-h-[calc(100dvh-8px)] sm:w-[min(1720px,calc(100vw-24px))]`}
+            className={`${styles.queueShell} fixed left-1/2 top-1/2 z-[101] flex max-h-[calc(100dvh-12px)] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[30px] border border-(--tc-border) bg-(--tc-surface) shadow-[0_34px_100px_rgba(15,23,42,0.35)] sm:max-h-[calc(100dvh-8px)] sm:w-[min(1720px,calc(100vw-24px))]`}
           >
             <div className="flex items-center justify-between gap-4 border-b border-white/10 bg-[linear-gradient(135deg,var(--tc-primary)_0%,#071a44_48%,rgba(239,0,1,0.74)_150%)] px-6 py-4 text-white">
               <div>
                 <Dialog.Title className="text-xl font-black tracking-tight !text-white">
-                  {modalMode === "view" ? "VisualizaÃ§Ã£o da solicitaÃ§Ã£o" : "AnÃ¡lise da solicitaÃ§Ã£o"}
+                  {modalMode === "view" ? "Visualização da solicitação" : "Análise da solicitação"}
                 </Dialog.Title>
                 <Dialog.Description className="mt-1 text-sm text-white/75">
                   {modalMode === "view"
-                    ? "Consulta em modo somente leitura. Para alterar, use o lÃ¡pis na listagem."
-                    : "Revise dados, histÃ³rico, conversa, ajustes e decisÃ£o."}
+                    ? "Consulta em modo somente leitura. Para alterar, use o lápis na listagem."
+                    : "Revise dados, histórico, conversa, ajustes e decisão."}
                 </Dialog.Description>
               </div>
 
@@ -1063,7 +1062,7 @@ export function AccessRequestsTableExperience({
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto bg-[var(--tc-surface)]">
+            <div className="min-h-0 flex-1 overflow-auto bg-(--tc-surface)">
               {detail(modalMode)}
             </div>
           </Dialog.Content>
@@ -1075,22 +1074,22 @@ export function AccessRequestsTableExperience({
           <Dialog.Overlay className="fixed inset-0 z-[105] bg-slate-950/45 backdrop-blur-sm" />
           <Dialog.Content
             data-access-requests-dialog="remove"
-            className="fixed left-1/2 top-1/2 z-[106] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-rose-100 bg-[var(--tc-surface)] p-6 shadow-[0_30px_80px_rgba(15,23,42,0.28)]"
+            className="fixed left-1/2 top-1/2 z-[106] w-[min(1720px,calc(100vw-12px))] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-rose-100 bg-(--tc-surface) p-6 shadow-[0_30px_80px_rgba(15,23,42,0.28)]"
           >
-            <Dialog.Title className="text-xl font-black text-[var(--tc-text-primary)]">Remover solicitaÃ§Ã£o?</Dialog.Title>
-            <Dialog.Description className="mt-3 text-sm leading-6 text-[var(--tc-text-secondary)]">
-              Essa solicitaÃ§Ã£o serÃ¡ removida da listagem principal e a movimentaÃ§Ã£o deverÃ¡ ficar registrada nos logs.
+            <Dialog.Title className="text-xl font-black text-(--tc-text-primary)">Remover solicitação?</Dialog.Title>
+            <Dialog.Description className="mt-3 text-sm leading-6 text-(--tc-text-secondary)">
+              Essa solicitação será removida da listagem principal e a movimentação deverá ficar registrada nos logs.
             </Dialog.Description>
 
             {removeCandidate ? (
-              <div className="mt-5 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-3">
-                <p className="font-black text-[var(--tc-text-primary)]">{displayName(removeCandidate)}</p>
-                <p className="mt-1 text-sm font-semibold text-[var(--tc-accent)]">{removeCandidate.email}</p>
+              <div className="mt-5 rounded-2xl border border-(--tc-border) bg-(--tc-surface-2) px-4 py-3">
+                <p className="font-black text-(--tc-text-primary)">{displayName(removeCandidate)}</p>
+                <p className="mt-1 text-sm font-semibold text-(--tc-accent)">{removeCandidate.email}</p>
               </div>
             ) : null}
 
             <div className="mt-6 flex justify-end gap-3">
-              <Dialog.Close className="rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-4 py-2 text-sm font-black text-[var(--tc-text-secondary)] transition hover:bg-[var(--tc-surface-2)]">
+              <Dialog.Close className="rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-4 py-2 text-sm font-black text-(--tc-text-secondary) transition hover:bg-(--tc-surface-2)">
                 Cancelar
               </Dialog.Close>
 
@@ -1105,7 +1104,7 @@ export function AccessRequestsTableExperience({
                     setQueueDeletedHistory((current) => [
                       {
                         id: "deleted-" + removed.id + "-" + Date.now(),
-                        title: "SolicitaÃ§Ã£o removida",
+                        title: "Solicitação removida",
                         description: displayName(removed) + " foi removido(a) da fila.",
                         date: formatDate(new Date().toISOString()),
                         sortDate: new Date().toISOString(),
@@ -1123,7 +1122,7 @@ export function AccessRequestsTableExperience({
                 disabled={removing}
                 className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-black text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {removing ? "Removendo..." : "Confirmar remoÃ§Ã£o"}
+                {removing ? "Removendo..." : "Confirmar remoção"}
               </button>
             </div>
           </Dialog.Content>
@@ -1132,4 +1131,3 @@ export function AccessRequestsTableExperience({
     </>
   );
 }
-

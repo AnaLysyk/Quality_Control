@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 /**
- * Profile Header â€” mostra entidade + status
+ * Profile Header — mostra entidade + status
  */
 
 import { FiUser } from "react-icons/fi";
@@ -16,11 +16,11 @@ export type ProfileHeaderProps = {
 };
 
 const statusColors = {
-  active: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200",
-  inactive: "bg-gray-100 text-gray-800 dark:bg-slate-800 dark:text-slate-200",
-  blocked: "bg-red-100 text-red-800 dark:bg-red-950/45 dark:text-red-200",
-  pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/45 dark:text-yellow-200",
-  archived: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+  active: "bg-green-100 text-green-800",
+  inactive: "bg-gray-100 text-gray-800",
+  blocked: "bg-red-100 text-red-800",
+  pending: "bg-yellow-100 text-yellow-800",
+  archived: "bg-slate-100 text-slate-800",
 };
 
 const modeLabels = {
@@ -28,7 +28,7 @@ const modeLabels = {
   view: "Visualizando",
   edit: "Editando",
   create: "Novo",
-  "admin-edit": "EdiÃ§Ã£o administrativa",
+  "admin-edit": "Edição administrativa",
 };
 
 export function ProfileHeader({
@@ -41,8 +41,7 @@ export function ProfileHeader({
   return (
     <div className="flex items-start justify-between gap-6">
       <div className="flex items-start gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-[var(--tc-primary,#011848)] shadow-[0_14px_28px_rgba(1,24,72,0.12)]">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary,#011848) shadow-[0_14px_28px_rgba(1,24,72,0.12)] dark:border-slate-700/60 dark:bg-[linear-gradient(135deg,#13213a_0%,#0d1b2f_100%)] dark:text-slate-100">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_100%)] text-(--tc-primary,#011848) shadow-[0_14px_28px_rgba(1,24,72,0.12)]">
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt={title} className="h-full w-full object-cover" />
@@ -52,7 +51,7 @@ export function ProfileHeader({
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-(--tc-text-primary)">{title}</h1>
+            <h1 className="text-2xl font-bold text-tc-text-primary">{title}</h1>
             {status && (
               <span
                 className={cn(
@@ -65,9 +64,9 @@ export function ProfileHeader({
             )}
           </div>
           {subtitle && (
-            <p className="text-sm text-(--tc-text-muted)">{subtitle}</p>
+            <p className="text-sm text-tc-text-muted">{subtitle}</p>
           )}
-          <p className="text-xs text-(--tc-text-muted) italic">
+          <p className="text-xs text-tc-text-muted italic">
             {modeLabels[mode]}
           </p>
         </div>
@@ -75,4 +74,3 @@ export function ProfileHeader({
     </div>
   );
 }
-

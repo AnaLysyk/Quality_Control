@@ -1,4 +1,4 @@
-﻿import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { normalizeLegacyRole, SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type Role = SystemRole;
 
@@ -28,7 +28,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     assistant: [],
     qase: [],
     jira: [],
-    // â”€â”€ QA Platform modules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: ["read"],
     test_plan: ["read"],
     test_run: ["read"],
@@ -61,7 +61,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     assistant: [],
     qase: [],
     jira: [],
-    // â”€â”€ QA Platform modules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: [],
     test_plan: [],
     test_run: [],
@@ -94,7 +94,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     assistant: ["query_qase"],
     qase: ["view", "view_projects", "view_suites", "view_cases", "view_runs", "view_results", "view_defects"],
     jira: [],
-    // â”€â”€ QA Platform modules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: ["read", "create", "update"],
     test_plan: ["read", "create", "update"],
     test_run: ["read", "create", "update"],
@@ -107,7 +107,6 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     context: ["global_overview", "view_all_companies", "view_all_projects"],
     applications: ["view", "create", "edit", "delete", "export"],
     operations: ["view"],
-    operations: [],
     release_calendar: ["view", "create", "edit", "status"],
     metrics: ["view", "export"],
     testPlans: ["view", "create", "edit", "delete"],
@@ -130,7 +129,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     assistant: ["query_qase", "query_jira", "create_external_ticket", "update_external_ticket"],
     qase: ["view", "view_projects", "view_suites", "view_cases", "view_runs", "view_results", "view_defects", "create_case", "update_case", "create_run", "update_run", "sync", "link_defect"],
     jira: ["view", "view_projects", "view_issues", "view_bugs", "view_epics", "view_sprints", "create_issue", "update_issue", "transition_issue", "comment_issue", "link_issue", "sync"],
-    // â”€â”€ QA Platform modules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: ["read", "create", "update", "delete", "import"],
     test_plan: ["read", "create", "update", "delete"],
     test_run: ["read", "create", "update", "delete"],
@@ -143,7 +142,6 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     context: ["global_overview", "view_all_companies", "view_all_projects"],
     applications: ["view", "create", "edit"],
     operations: ["view"],
-    operations: [],
     release_calendar: ["view", "create", "edit", "status"],
     releases: ["view"],
     runs: ["view"],
@@ -164,7 +162,7 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     assistant: ["query_qase", "query_jira"],
     qase: ["view", "view_projects", "view_suites", "view_cases", "view_runs", "view_results", "view_defects"],
     jira: ["view", "view_projects", "view_issues", "view_bugs", "view_sprints"],
-    // â”€â”€ QA Platform modules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── QA Platform modules ──────────────────────────────────────────────────
     test_repository: ["read", "create", "update"],
     test_plan: ["read"],
     test_run: ["read"],
@@ -178,4 +176,3 @@ export function resolveRoleDefaults(role?: string | null) {
   const normalizedRole = normalizeLegacyRole(role);
   return normalizedRole ? ROLE_DEFAULTS[normalizedRole] : {};
 }
-

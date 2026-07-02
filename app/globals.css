@@ -9870,63 +9870,64 @@ video {
   color: inherit;
 }
 
-/* FIX: capa final permissoes perfil */
+/* FIX: permissoes perfil - light dark correto */
 
-/* esconde a capa global que só tinha logo + Permissions */
+/* esconde a capa global antiga que só mostrava logo + Permissions */
 .qc-permissions-profile-route .qc-hidden-permissions-shell-cover {
   display: none !important;
 }
 
-/* página */
+/* MODO CLARO: fundo claro de verdade */
 .profile-permissions-page,
 .qc-profile-permissions-page {
-  padding-top: 0 !important;
-  color: #f8fafc;
-  background: transparent !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
 }
 
-/* capa única correta: agora o painel de gestão vira a capa principal */
+/* capa única em degradê continua no topo */
 .profile-permissions-page .permissions-profile-hero-unified,
 .qc-profile-permissions-page .permissions-profile-hero-unified {
   margin-top: 0 !important;
   border-radius: 28px !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(1, 24, 72, 0.12) !important;
   background:
-    radial-gradient(circle at 8% 18%, rgba(239, 0, 1, 0.24), transparent 22%),
-    linear-gradient(135deg, rgba(1, 24, 72, 0.98) 0%, rgba(13, 31, 86, 0.96) 48%, rgba(190, 0, 18, 0.94) 100%) !important;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34) !important;
+    radial-gradient(circle at 8% 18%, rgba(239, 0, 1, 0.22), transparent 24%),
+    linear-gradient(135deg, #011848 0%, #16215f 52%, #b00018 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 48px rgba(1, 24, 72, 0.22) !important;
 }
 
-/* cabeçalho dentro da capa */
+/* textos dentro da capa */
 .profile-permissions-page .permissions-profile-hero-unified h1,
-.qc-profile-permissions-page .permissions-profile-hero-unified h1 {
-  color: #ffffff !important;
-}
-
 .profile-permissions-page .permissions-profile-hero-unified p,
-.qc-profile-permissions-page .permissions-profile-hero-unified p {
-  color: #dbeafe !important;
+.profile-permissions-page .permissions-profile-hero-unified [class*="text-[#0f172a]"],
+.profile-permissions-page .permissions-profile-hero-unified [class*="text-[#011848]"],
+.qc-profile-permissions-page .permissions-profile-hero-unified h1,
+.qc-profile-permissions-page .permissions-profile-hero-unified p,
+.qc-profile-permissions-page .permissions-profile-hero-unified [class*="text-[#0f172a]"],
+.qc-profile-permissions-page .permissions-profile-hero-unified [class*="text-[#011848]"] {
+  color: #ffffff !important;
 }
 
-.profile-permissions-page .permissions-profile-hero-unified [class*="text-[#011848]"],
-.profile-permissions-page .permissions-profile-hero-unified [class*="text-[#0f172a]"],
-.qc-profile-permissions-page .permissions-profile-hero-unified [class*="text-[#011848]"],
-.qc-profile-permissions-page .permissions-profile-hero-unified [class*="text-[#0f172a]"] {
-  color: #ffffff !important;
+.profile-permissions-page .permissions-profile-hero-unified .text-slate-500,
+.profile-permissions-page .permissions-profile-hero-unified .text-slate-600,
+.qc-profile-permissions-page .permissions-profile-hero-unified .text-slate-500,
+.qc-profile-permissions-page .permissions-profile-hero-unified .text-slate-600 {
+  color: #dbeafe !important;
 }
 
 /* cards de contagem dentro da capa */
 .profile-permissions-page .permissions-profile-metrics > div,
 .qc-profile-permissions-page .permissions-profile-metrics > div {
-  background: rgba(8, 17, 36, 0.68) !important;
-  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: rgba(8, 17, 36, 0.62) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
   color: #ffffff !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .profile-permissions-page .permissions-profile-metrics p,
 .qc-profile-permissions-page .permissions-profile-metrics p {
-  color: #cbd7f4 !important;
+  color: #dbeafe !important;
 }
 
 .profile-permissions-page .permissions-profile-metrics p:last-child,
@@ -9934,76 +9935,66 @@ video {
   color: #ffffff !important;
 }
 
-/* botões da capa */
+/* botões dentro da capa */
 .profile-permissions-page .permissions-profile-hero-unified a,
 .profile-permissions-page .permissions-profile-hero-unified button,
 .qc-profile-permissions-page .permissions-profile-hero-unified a,
 .qc-profile-permissions-page .permissions-profile-hero-unified button {
-  border-color: rgba(148, 163, 184, 0.38) !important;
-  background: rgba(8, 17, 36, 0.55) !important;
-  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.26) !important;
 }
 
-/* resto da tela dark */
-.profile-permissions-page .bg-white,
-.profile-permissions-page .bg-slate-50,
-.qc-profile-permissions-page .bg-white,
-.qc-profile-permissions-page .bg-slate-50 {
+/* MODO ESCURO: só aplica se o tema realmente estiver escuro */
+html.dark .profile-permissions-page,
+body.dark .profile-permissions-page,
+[data-theme="dark"] .profile-permissions-page,
+html.dark .qc-profile-permissions-page,
+body.dark .qc-profile-permissions-page,
+[data-theme="dark"] .qc-profile-permissions-page {
+  background: #020617 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .profile-permissions-page .bg-white,
+body.dark .profile-permissions-page .bg-white,
+[data-theme="dark"] .profile-permissions-page .bg-white,
+html.dark .profile-permissions-page .bg-slate-50,
+body.dark .profile-permissions-page .bg-slate-50,
+[data-theme="dark"] .profile-permissions-page .bg-slate-50,
+html.dark .qc-profile-permissions-page .bg-white,
+body.dark .qc-profile-permissions-page .bg-white,
+[data-theme="dark"] .qc-profile-permissions-page .bg-white,
+html.dark .qc-profile-permissions-page .bg-slate-50,
+body.dark .qc-profile-permissions-page .bg-slate-50,
+[data-theme="dark"] .qc-profile-permissions-page .bg-slate-50 {
   background: rgba(8, 17, 36, 0.94) !important;
 }
 
-.profile-permissions-page .border-slate-200,
-.profile-permissions-page .border-slate-100,
-.qc-profile-permissions-page .border-slate-200,
-.qc-profile-permissions-page .border-slate-100 {
-  border-color: rgba(148, 163, 184, 0.24) !important;
-}
-
-.profile-permissions-page .text-slate-900,
-.profile-permissions-page .text-slate-800,
-.profile-permissions-page .text-slate-700,
-.profile-permissions-page [class*="text-[#0f172a]"],
-.profile-permissions-page [class*="text-[#011848]"],
-.qc-profile-permissions-page .text-slate-900,
-.qc-profile-permissions-page .text-slate-800,
-.qc-profile-permissions-page .text-slate-700,
-.qc-profile-permissions-page [class*="text-[#0f172a]"],
-.qc-profile-permissions-page [class*="text-[#011848]"] {
+html.dark .profile-permissions-page .text-slate-900,
+html.dark .profile-permissions-page .text-slate-800,
+html.dark .profile-permissions-page .text-slate-700,
+html.dark .profile-permissions-page [class*="text-[#0f172a]"],
+html.dark .profile-permissions-page [class*="text-[#011848]"],
+body.dark .profile-permissions-page .text-slate-900,
+body.dark .profile-permissions-page .text-slate-800,
+body.dark .profile-permissions-page .text-slate-700,
+body.dark .profile-permissions-page [class*="text-[#0f172a]"],
+body.dark .profile-permissions-page [class*="text-[#011848]"],
+[data-theme="dark"] .profile-permissions-page .text-slate-900,
+[data-theme="dark"] .profile-permissions-page .text-slate-800,
+[data-theme="dark"] .profile-permissions-page .text-slate-700,
+[data-theme="dark"] .profile-permissions-page [class*="text-[#0f172a]"],
+[data-theme="dark"] .profile-permissions-page [class*="text-[#011848]"] {
   color: #f8fafc !important;
 }
 
-.profile-permissions-page .text-slate-600,
-.profile-permissions-page .text-slate-500,
-.profile-permissions-page .text-slate-400,
-.qc-profile-permissions-page .text-slate-600,
-.qc-profile-permissions-page .text-slate-500,
-.qc-profile-permissions-page .text-slate-400 {
+html.dark .profile-permissions-page .text-slate-600,
+html.dark .profile-permissions-page .text-slate-500,
+html.dark .profile-permissions-page .text-slate-400,
+body.dark .profile-permissions-page .text-slate-600,
+body.dark .profile-permissions-page .text-slate-500,
+body.dark .profile-permissions-page .text-slate-400,
+[data-theme="dark"] .profile-permissions-page .text-slate-600,
+[data-theme="dark"] .profile-permissions-page .text-slate-500,
+[data-theme="dark"] .profile-permissions-page .text-slate-400 {
   color: #b8c7e6 !important;
-}
-
-.profile-permissions-page input,
-.profile-permissions-page select,
-.profile-permissions-page textarea,
-.qc-profile-permissions-page input,
-.qc-profile-permissions-page select,
-.qc-profile-permissions-page textarea {
-  background: rgba(2, 6, 23, 0.78) !important;
-  color: #f8fafc !important;
-  border-color: rgba(148, 163, 184, 0.30) !important;
-}
-
-.profile-permissions-page option,
-.qc-profile-permissions-page option {
-  background: #020617;
-  color: #f8fafc;
-}
-
-.profile-permissions-page table,
-.qc-profile-permissions-page table {
-  color: #e5eefc;
-}
-
-.profile-permissions-page thead,
-.qc-profile-permissions-page thead {
-  background: rgba(8, 17, 36, 0.98) !important;
 }

@@ -28,8 +28,8 @@ export function UserIdentitySection({
   }
 
   return (
-    <div className="rounded-lg border border-tc-border p-6 bg-tc-surface">
-      <h3 className="text-lg font-semibold text-tc-text-primary mb-6">
+    <div className="rounded-lg border border-(--tc-border) bg-(--tc-surface) p-6">
+      <h3 className="mb-6 text-lg font-semibold text-(--tc-text-primary)">
         Dados Pessoais
       </h3>
 

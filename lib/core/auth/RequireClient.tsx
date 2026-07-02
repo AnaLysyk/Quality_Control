@@ -80,13 +80,11 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
   const { user, loading, error, refreshUser } = useAuthUser();
   const router = useRouter();
   const pathname = usePathname() || "/";
+<<<<<<< HEAD
   const [mounted, setMounted] = useState(true);
+=======
+>>>>>>> fix/governanca-perfis-rotas
   const [timedOut, setTimedOut] = useState(false);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setMounted(true), 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
 
   useEffect(() => {
     if (!loading) {
@@ -124,7 +122,7 @@ export function RequireClient({ slug, children, fallback }: RequireClientProps) 
     }
   }, [loading, loginHref, router, user]);
 
-  if (!mounted || accessState === "loading") {
+  if (accessState === "loading") {
     return (fallback as ReactNode) ?? <AuthSkeleton message="Validando acesso da empresa" />;
   }
 

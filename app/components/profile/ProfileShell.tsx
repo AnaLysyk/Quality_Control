@@ -24,9 +24,9 @@ export function ProfileShell({
 }) {
   return (
     <ProfileProvider context={context}>
-      <div className="flex flex-col gap-6 py-6">
+      <div className="flex flex-col gap-6 py-6 text-(--tc-text-primary)">
         {/* Header */}
-        <div className="border-b border-tc-border pb-6">{header}</div>
+        <div className="border-b border-(--tc-border) pb-6">{header}</div>
 
         {/* Tabs + Actions */}
         <div className="flex flex-col gap-4">

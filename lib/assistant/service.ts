@@ -305,7 +305,11 @@ function buildClarifyReply(
     success: true,
     summary: "pedido pouco claro",
     reply: compactMultiline([
+<<<<<<< HEAD
       `${prefix}Nao consegui entender bem o que voce quer que eu faca.`,
+=======
+      `${prefix}Nao consegui entender completamente o que voce quer que eu faca.`,
+>>>>>>> fix/governanca-perfis-rotas
       "",
       `Estou em ${context.screenLabel}. Me diga o objetivo em uma frase e eu sigo contigo passo a passo.`,
       "",

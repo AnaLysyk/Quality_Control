@@ -109,7 +109,10 @@ export const NAV_CATALOG: NavModuleDef[] = [
         module: "companies",
         href: "/admin/clients?focus=search",
         action: "focusSearch",
+<<<<<<< HEAD
         allowedRoles: PRIVILEGED,
+=======
+>>>>>>> fix/governanca-perfis-rotas
         favoriteEnabled: true,
         testId: "nav-companies-search",
       },
@@ -388,7 +391,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "requests-search",
         routeId: "solicitacoes.buscar",
+<<<<<<< HEAD
         label: "Buscar solicitaÃ§Ã£o",
+=======
+        label: "Buscar solicitação",
+>>>>>>> fix/governanca-perfis-rotas
         iconKey: "search",
         module: "requests",
         href: "/solicitacoes?focus=search",
@@ -427,7 +434,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "support-create",
         routeId: "suporte.criar",
-        label: "Abrir chamado",
+        label: "Criar chamado",
         iconKey: "plus-circle",
         module: "support",
         href: "/kanban-it?modal=create",
@@ -438,7 +445,11 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "support-kanban",
         routeId: "suporte.kanban",
+<<<<<<< HEAD
         label: "Kanban IT",
+=======
+        label: "Kanban de chamados",
+>>>>>>> fix/governanca-perfis-rotas
         iconKey: "kanban",
         module: "support",
         href: "/kanban-it",
@@ -598,10 +609,28 @@ export const NAV_CATALOG: NavModuleDef[] = [
         routeId: "permissoes.matriz",
         label: "UsuÃ¡rios",
         iconKey: "users",
+<<<<<<< HEAD
         module: "management",
         href: "/admin/users/permissions",
+=======
+        module: "users",
+        href: "/admin/users",
+        allowedRoles: USER_MANAGERS,
+>>>>>>> fix/governanca-perfis-rotas
         favoriteEnabled: true,
         testId: "nav-management-users",
+      },
+      {
+        id: "users-list-empresas",
+        routeId: "usuarios.listagem",
+        label: "Usuários de empresas",
+        iconKey: "building",
+        module: "users",
+        href: "/admin/users?tab=company",
+        allowedRoles: USER_MANAGERS,
+        favoriteEnabled: true,
+        group: "Listagem",
+        testId: "nav-users-list-companies",
       },
     ],
   },
@@ -616,8 +645,44 @@ export const NAV_CATALOG: NavModuleDef[] = [
     iconKey: "eye",
     href: "/admin/audit-logs",
     allowedRoles: PRIVILEGED,
+<<<<<<< HEAD
     testId: "nav-logs",
     items: [],
+=======
+    testId: "nav-admin",
+    items: [
+      {
+        id: "admin-permissions",
+        routeId: "permissoes.atalho-admin",
+        label: "Gestão de Perfis",
+        iconKey: "lock",
+        module: "admin",
+        href: "/admin/permissoes",
+        favoriteEnabled: true,
+        testId: "nav-admin-permissions",
+      },
+      {
+        id: "admin-audit-logs",
+        routeId: "configuracoes.auditoria",
+        label: "Audit Logs",
+        iconKey: "eye",
+        module: "admin",
+        href: "/audit-logs?source=admin",
+        favoriteEnabled: true,
+        testId: "nav-admin-audit-logs",
+      },
+      {
+        id: "admin-system-map",
+        routeId: "configuracoes.mapa-sistema",
+        label: "Mapa do Sistema",
+        iconKey: "map",
+        module: "admin",
+        href: "/admin/sistema/mapa",
+        favoriteEnabled: true,
+        testId: "nav-admin-system-map",
+      },
+    ],
+>>>>>>> fix/governanca-perfis-rotas
   },
 ];
 

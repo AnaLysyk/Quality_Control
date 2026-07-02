@@ -1,5 +1,6 @@
 ﻿import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
 import { prisma } from '@/lib/prismaClient'
+import { describeDb } from '../../../support/functions/banco-de-dados/descrever-banco'
 import {
   upsertNode,
   connectNodes,
@@ -12,7 +13,11 @@ import {
   validateBrainIntegrity,
 } from '@/lib/brain'
 
+<<<<<<< HEAD
 describe('Brain - CÃ©rebro do Quality Control', () => {
+=======
+describeDb('Brain - Cérebro do Quality Control', () => {
+>>>>>>> fix/governanca-perfis-rotas
   let testCompanyNodeId: string
   let testAppNodeId: string
   let testModuleNodeId: string

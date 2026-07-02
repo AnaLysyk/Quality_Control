@@ -760,7 +760,11 @@ export function AccessRequestsTableExperience({
                 <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--tc-text-muted)]">
                   Total
                 </span>
+<<<<<<< HEAD
                 <span className="text-base font-black leading-none text-[var(--tc-primary)]">
+=======
+                <span className="text-base font-black leading-none text-[var(--tc-primary-text,var(--tc-primary))]">
+>>>>>>> fix/governanca-perfis-rotas
                   {total}
                 </span>
               </div>

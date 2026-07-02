@@ -106,7 +106,11 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     dashboard: ["view"],
     context: ["global_overview", "view_all_companies", "view_all_projects"],
     applications: ["view", "create", "edit", "delete", "export"],
+<<<<<<< HEAD
     operations: ["view"],
+=======
+    operations: [],
+>>>>>>> fix/governanca-perfis-rotas
     release_calendar: ["view", "create", "edit", "status"],
     metrics: ["view", "export"],
     testPlans: ["view", "create", "edit", "delete"],
@@ -141,7 +145,11 @@ export const ROLE_DEFAULTS: Record<Role, Record<string, string[]>> = {
     dashboard: ["view"],
     context: ["global_overview", "view_all_companies", "view_all_projects"],
     applications: ["view", "create", "edit"],
+<<<<<<< HEAD
     operations: ["view"],
+=======
+    operations: [],
+>>>>>>> fix/governanca-perfis-rotas
     release_calendar: ["view", "create", "edit", "status"],
     releases: ["view"],
     runs: ["view"],

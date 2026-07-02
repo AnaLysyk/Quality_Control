@@ -3122,8 +3122,13 @@ export default function SettingsProfilePage() {
                     </div>
 
                     {jobTitleMenuOpen ? (
+<<<<<<< HEAD
                       <div className="absolute left-0 right-0 top-[calc(100%+0.55rem)] z-30 overflow-hidden rounded-[20px] border border-[#7b92bc] bg-white shadow-[0_18px_46px_rgba(15,23,42,0.18)] dark:border-[#7b92bc] dark:bg-white">
                         <div className="border-b border-[#d7e0ef] px-4 py-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[var(--tc-accent)] dark:border-[#d7e0ef] dark:text-[var(--tc-accent)]">
+=======
+                      <div className="absolute left-0 right-0 top-[calc(100%+0.55rem)] z-30 overflow-hidden rounded-[20px] border border-[#7b92bc] bg-white shadow-[0_18px_46px_rgba(15,23,42,0.18)] dark:border-slate-600 dark:bg-[#0d1b2f]">
+                        <div className="border-b border-[#d7e0ef] px-4 py-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-(--tc-accent) dark:border-slate-700/60 dark:text-[#ff8a8a]">
+>>>>>>> fix/governanca-perfis-rotas
                           {profileJobTitle.trim()
                             ? `${filteredJobTitleOptions.length} sugestoes encontradas`
                             : `${JOB_TITLE_OPTIONS.length} cargos conhecidos`}
@@ -3140,8 +3145,8 @@ export default function SettingsProfilePage() {
                                   aria-selected={Boolean(isSelected)}
                                   className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold transition ${
                                     isSelected
-                                      ? "bg-rose-50 text-[#0b1f52] dark:bg-rose-50 dark:text-[#0b1f52]"
-                                      : "text-[#0b1f52] hover:bg-[#eef3fb] hover:text-[#0b1f52] dark:text-[#0b1f52] dark:hover:bg-[#eef3fb] dark:hover:text-[#0b1f52]"
+                                      ? "bg-rose-50 text-[#0b1f52] dark:bg-rose-950/30 dark:text-slate-50"
+                                      : "text-[#0b1f52] hover:bg-[#eef3fb] hover:text-[#0b1f52] dark:text-slate-200 dark:hover:bg-[#13243b] dark:hover:text-white"
                                   }`}
                                   onClick={() => {
                                     setProfileJobTitle(jobTitleOption);
@@ -3154,8 +3159,13 @@ export default function SettingsProfilePage() {
                               );
                             })
                           ) : (
+<<<<<<< HEAD
                             <div className="px-4 py-4 text-sm font-semibold text-[#0b1f52] dark:text-[#0b1f52]">
                               Nenhum cargo conhecido encontrado. VocÃª pode digitar um cargo personalizado.
+=======
+                            <div className="px-4 py-4 text-sm font-semibold text-[#0b1f52] dark:text-slate-200">
+                              Nenhum cargo conhecido encontrado. Você pode digitar um cargo personalizado.
+>>>>>>> fix/governanca-perfis-rotas
                             </div>
                           )}
                         </div>

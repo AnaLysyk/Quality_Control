@@ -70,7 +70,7 @@ export default function ProfileContent() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-tc-border border-t-tc-accent mx-auto mb-2" />
+          <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-4 border-(--tc-border) border-t-(--tc-accent)" />
           Carregando perfil...
         </div>
       </div>
@@ -80,8 +80,8 @@ export default function ProfileContent() {
   if (error) {
     return (
       <div className="mx-auto max-w-2xl p-6">
-        <div className="rounded-lg bg-red-50 p-6 text-red-800 border border-red-200">
-          <h2 className="font-semibold mb-2">Erro ao carregar perfil</h2>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-800 dark:border-red-400/40 dark:bg-red-950/30 dark:text-red-100">
+          <h2 className="mb-2 font-semibold">Erro ao carregar perfil</h2>
           <p className="text-sm">{error}</p>
         </div>
       </div>
@@ -91,8 +91,13 @@ export default function ProfileContent() {
   if (!context || !headerData) {
     return (
       <div className="mx-auto max-w-2xl p-6">
+<<<<<<< HEAD
         <div className="rounded-lg bg-yellow-50 p-6 text-yellow-800 border border-yellow-200">
           Contexto de perfil nÃ£o disponÃ­vel
+=======
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-yellow-800 dark:border-yellow-400/40 dark:bg-yellow-950/30 dark:text-yellow-100">
+          Contexto de perfil não disponível
+>>>>>>> fix/governanca-perfis-rotas
         </div>
       </div>
     );

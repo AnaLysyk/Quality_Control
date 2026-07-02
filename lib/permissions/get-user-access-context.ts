@@ -121,7 +121,27 @@ export function getUserAccessContext(
     isGlobalAdmin,
     isTestingCompanyUser,
     isCompanyUser,
+<<<<<<< HEAD
     permissions: applyPermissionOverride(basePermissions, userPermissionOverride),
+=======
+    permissions:
+      isGlobalAdmin
+        ? resolveEffectivePermissionMatrix({
+            permissionRole,
+            role,
+            companyRole,
+            globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
+            isGlobalAdmin,
+          })
+        : resolvedUserPermissions ??
+          resolveEffectivePermissionMatrix({
+            permissionRole,
+            role,
+            companyRole,
+            globalRole: typeof user.globalRole === "string" ? user.globalRole : null,
+            isGlobalAdmin,
+          }),
+>>>>>>> fix/governanca-perfis-rotas
   };
 }
 

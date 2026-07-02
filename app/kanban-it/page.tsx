@@ -1,5 +1,12 @@
 ﻿"use client";
 
+<<<<<<< HEAD
+=======
+export const dynamic = "force-dynamic";
+
+import Image from "next/image";
+import { usePathname, useSearchParams } from "next/navigation";
+>>>>>>> fix/governanca-perfis-rotas
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
 import { FiChevronLeft, FiChevronRight, FiEdit2, FiLifeBuoy, FiPlus, FiRefreshCw, FiSearch, FiTrash2, FiX } from "react-icons/fi";
 import { usePermissionAccess } from "@/hooks/usePermissionAccess";
@@ -196,7 +203,229 @@ function getTicketSearchMeta(query: string, suporte: SuporteItem) {
 }
 
 export default function KanbanItPage() {
+<<<<<<< HEAD
   const { user, loading, can } = usePermissionAccess();
+=======
+  const { language } = useI18n();
+  const isPt = language === "pt-BR";
+  const locale = isPt ? "pt-BR" : "en-US";
+  const ui = useMemo(
+    () =>
+      isPt
+        ? {
+            loading: "Carregando...",
+            restricted: "Acesso restrito.",
+            support: "Suporte",
+            createSupport: "Criar suporte",
+            newSupport: "Novo suporte",
+            boardKicker: "Painel de atendimento",
+            boardTitleGlobal: "Kanban de suporte",
+            boardTitlePersonal: "Seus tickets",
+            boardSubtitleGlobal: "Organize colunas, acompanhe responsáveis e abra o detalhamento do ticket.",
+            boardSubtitlePersonal: "Acompanhe seus tickets, responda e consulte o histórico.",
+            heroSubtitleGlobal: "Acompanhe os tickets do atendimento técnico em um fluxo direto.",
+            heroSubtitleCompany: "Acompanhe os tickets visiveis de {company} no fluxo de suporte.",
+            heroSubtitlePersonal: "Acompanhe apenas os tickets criados por você no fluxo de suporte.",
+            searchLabel: "Busca",
+            searchPlaceholder: "ID ou codigo do ticket",
+            searchAria: "Buscar ticket por ID",
+            boardMetaAria: "Informações do painel",
+            oneColumn: "coluna ativa",
+            manyColumns: "colunas ativas",
+            movementInProgress: "Movimentacao em andamento",
+            noResults: "Nenhum ticket encontrado para",
+            noResultsHint: "Verifique o ID ou codigo e tente novamente.",
+            loadError: "Erro ao carregar suportes",
+            assignBeforeMove: "Selecione e salve um responsável antes de mover o ticket.",
+            updateStatusError: "Falha ao atualizar status",
+            removeColumnGuard: "Crie outra coluna antes de remover esta, para não perder os tickets.",
+            moveColumnError: "Falha ao mover tickets da coluna",
+            createTitleRequired: "O título não pode ser vazio.",
+            createTitleInvalid: "O título deve conter pelo menos uma letra ou número válido.",
+            createDescriptionInvalid: "A descrição deve conter pelo menos uma letra ou número válido.",
+            uploadEvidenceError: "Erro ao anexar evidencia",
+            createError: "Erro ao criar suporte",
+            creator: "Criador",
+            assignee: "Responsável",
+            notDefined: "Não definido",
+            createdAt: "Criado",
+            updatedAt: "Atualizado",
+            moveTo: "Mover para",
+            supportOnlyChange: "Apenas o time de suporte pode alterar status e responsável.",
+            emptyColumnTitle: "Sem tickets nesta etapa",
+            emptyColumnCopy: "Novos tickets aparecerao aqui quando entrarem neste fluxo.",
+            createModalKicker: "SUPORTE",
+            createModalTitle: "Novo suporte",
+            createModalSubtitle: "Abra um ticket com título, descrição, tipo e prioridade.",
+            closeCreateModal: "Fechar modal de novo suporte",
+            close: "Fechar",
+            title: "Título",
+            titlePlaceholder: "Digite o título do suporte",
+            description: "Descrição",
+            descriptionPlaceholder: "Descreva o suporte...",
+            type: "Tipo",
+            priority: "Prioridade",
+            attachEvidence: "Anexar evidencia",
+            replaceEvidence: "Trocar evidencia",
+            removeEvidence: "Remover evidencia",
+            cancel: "Cancelar",
+            creating: "Criando...",
+            create: "Criar",
+            noDescription: "Sem descrição.",
+            oneEvidence: "1 evidencia",
+            manyEvidence: "{count} evidencias",
+            ticketsPanel: "Tickets no painel",
+            ticketsPanelGlobalCopy: "Tickets ativos no fluxo global de atendimento.",
+            ticketsPanelPersonalCopy: "Tickets visiveis no seu painel pessoal de atendimento.",
+            inProgress: "Em andamento",
+            inProgressGlobalCopy: "Tickets em atendimento ou revisão pelo time de suporte.",
+            inProgressPersonalCopy: "Seus tickets em atendimento ou revisão no momento.",
+            withOwner: "Com responsável",
+            withOwnerGlobalCopy: "Tickets já vinculados ao time de suporte.",
+            withOwnerPersonalCopy: "Seus tickets que já possuem responsável definido.",
+            completed: "Concluidos",
+            completedGlobalCopy: "Tickets finalizados dentro do fluxo de suporte.",
+            completedPersonalCopy: "Tickets seus que já foram finalizados no fluxo de suporte.",
+            companyKickerPrefix: "EMPRESA",
+            addColumn: "Nova coluna",
+            columnNamePlaceholder: "Nome da coluna",
+            ticketsLoading: "Carregando tickets...",
+            columnsNavigation: "Navegacao das colunas",
+            previousColumns: "Ver colunas anteriores",
+            nextColumns: "Ver proximas colunas",
+            dragColumnHelp: "Segure e arraste para mover a coluna {column}",
+            columnKicker: "Coluna",
+            editColumnName: "Editar nome da coluna",
+            oneTicketInStage: "ticket nesta etapa",
+            manyTicketsInStage: "tickets nesta etapa",
+            editColumn: "Editar coluna",
+            removeColumn: "Remover coluna",
+            untitled: "Sem título",
+            supportStatus: "Status do suporte",
+            supportTypeAria: "Tipo do suporte",
+            supportPriorityAria: "Prioridade do suporte",
+            typeLabels: {
+              tarefa: "Tarefa",
+              bug: "Bug",
+              melhoria: "Melhoria",
+            },
+            priorityLabels: {
+              high: "Alta",
+              medium: "Media",
+              low: "Baixa",
+            },
+          }
+        : {
+            loading: "Loading...",
+            restricted: "Restricted access.",
+            support: "Support",
+            createSupport: "Create support ticket",
+            newSupport: "New support",
+            boardKicker: "Service board",
+            boardTitleGlobal: "Support kanban",
+            boardTitlePersonal: "Your tickets",
+            boardSubtitleGlobal: "Organize columns, track owners, and open ticket details.",
+            boardSubtitlePersonal: "Track your tickets, reply, and review history.",
+            heroSubtitleGlobal: "Track technical support tickets in a direct workflow.",
+            heroSubtitleCompany: "Track visible tickets from {company} in the support workflow.",
+            heroSubtitlePersonal: "Track only tickets created by you in the support workflow.",
+            searchLabel: "Search",
+            searchPlaceholder: "Ticket ID or code",
+            searchAria: "Search ticket by ID",
+            boardMetaAria: "Board information",
+            oneColumn: "active column",
+            manyColumns: "active columns",
+            movementInProgress: "Move in progress",
+            noResults: "No ticket found for",
+            noResultsHint: "Check the ID or code and try again.",
+            loadError: "Failed to load tickets",
+            assignBeforeMove: "Select and save an owner before moving this ticket.",
+            updateStatusError: "Failed to update status",
+            removeColumnGuard: "Create another column before removing this one to avoid losing tickets.",
+            moveColumnError: "Failed to move tickets from the column",
+            createTitleRequired: "Title cannot be empty.",
+            createTitleInvalid: "Title must contain at least one valid letter or number.",
+            createDescriptionInvalid: "Description must contain at least one valid letter or number.",
+            uploadEvidenceError: "Error attaching evidence",
+            createError: "Error creating support ticket",
+            creator: "Creator",
+            assignee: "Owner",
+            notDefined: "Not defined",
+            createdAt: "Created",
+            updatedAt: "Updated",
+            moveTo: "Move to",
+            supportOnlyChange: "Only the support team can change status and owner.",
+            emptyColumnTitle: "No tickets in this stage",
+            emptyColumnCopy: "New tickets will appear here when they enter this flow.",
+            createModalKicker: "SUPPORT",
+            createModalTitle: "New support",
+            createModalSubtitle: "Open a ticket with title, description, type, and priority.",
+            closeCreateModal: "Close new support modal",
+            close: "Close",
+            title: "Title",
+            titlePlaceholder: "Enter support title",
+            description: "Description",
+            descriptionPlaceholder: "Describe the support request...",
+            type: "Type",
+            priority: "Priority",
+            attachEvidence: "Attach evidence",
+            replaceEvidence: "Replace evidence",
+            removeEvidence: "Remove evidence",
+            cancel: "Cancel",
+            creating: "Creating...",
+            create: "Create",
+            noDescription: "No description.",
+            oneEvidence: "1 evidence",
+            manyEvidence: "{count} evidence files",
+            ticketsPanel: "Tickets on board",
+            ticketsPanelGlobalCopy: "Active tickets in the global support workflow.",
+            ticketsPanelPersonalCopy: "Tickets visible in your personal support board.",
+            inProgress: "In progress",
+            inProgressGlobalCopy: "Tickets under handling or review by the support team.",
+            inProgressPersonalCopy: "Your tickets currently under handling or review.",
+            withOwner: "With owner",
+            withOwnerGlobalCopy: "Tickets already assigned to the support team.",
+            withOwnerPersonalCopy: "Your tickets that already have an assigned owner.",
+            completed: "Completed",
+            completedGlobalCopy: "Tickets completed in the support workflow.",
+            completedPersonalCopy: "Your tickets that were already completed in the support workflow.",
+            companyKickerPrefix: "COMPANY",
+            addColumn: "New column",
+            columnNamePlaceholder: "Column name",
+            ticketsLoading: "Loading tickets...",
+            columnsNavigation: "Column navigation",
+            previousColumns: "View previous columns",
+            nextColumns: "View next columns",
+            dragColumnHelp: "Hold and drag to move column {column}",
+            columnKicker: "Column",
+            editColumnName: "Edit column name",
+            oneTicketInStage: "ticket in this stage",
+            manyTicketsInStage: "tickets in this stage",
+            editColumn: "Edit column",
+            removeColumn: "Remove column",
+            untitled: "Untitled",
+            supportStatus: "Support status",
+            supportTypeAria: "Support type",
+            supportPriorityAria: "Support priority",
+            typeLabels: {
+              tarefa: "Task",
+              bug: "Bug",
+              melhoria: "Improvement",
+            },
+            priorityLabels: {
+              high: "High",
+              medium: "Medium",
+              low: "Low",
+            },
+          },
+    [isPt],
+  );
+  const pathname = usePathname() || "";
+  const searchParams = useSearchParams();
+  const { user, loading } = usePermissionAccess();
+  const { companies } = useAuth();
+  const { activeClient, activeClientSlug } = useClientContext();
+>>>>>>> fix/governanca-perfis-rotas
   const [suportes, setSuportes] = useState<SuporteItem[]>([]);
   const [ticketSearch, setTicketSearch] = useState("");
   const [loadingSuportes, setLoadingSuportes] = useState(false);
@@ -213,6 +442,12 @@ export default function KanbanItPage() {
   });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+<<<<<<< HEAD
+=======
+  const [createEvidenceFile, setCreateEvidenceFile] = useState<File | null>(null);
+  const createEvidenceInputRef = useRef<HTMLInputElement | null>(null);
+  const openCreateTokenRef = useRef<string | null>(null);
+>>>>>>> fix/governanca-perfis-rotas
 
   const [editingColumnKey, setEditingColumnKey] = useState<string | null>(null);
   const [editingColumnLabel, setEditingColumnLabel] = useState("");
@@ -353,6 +588,27 @@ export default function KanbanItPage() {
     const timer = setInterval(loadSuportes, 30000);
     return () => clearInterval(timer);
   }, [loadSuportes]);
+
+  useEffect(() => {
+    const shouldOpenCreateModal = searchParams.get("modal") === "create" || searchParams.get("create") === "1";
+    if (!canCreateSupport || !shouldOpenCreateModal) return;
+
+    const token = searchParams.toString();
+    if (openCreateTokenRef.current === token) return;
+
+    openCreateTokenRef.current = token;
+    setCreateOpen(true);
+
+    const nextParams = new URLSearchParams(token);
+    nextParams.delete("modal");
+    nextParams.delete("create");
+    const nextQueryString = nextParams.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${nextQueryString ? `?${nextQueryString}` : ""}${window.location.hash}`,
+    );
+  }, [canCreateSupport, searchParams]);
 
   // Auto-scroll ao card encontrado pela busca
   useEffect(() => {

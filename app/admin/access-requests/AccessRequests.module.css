@@ -37,7 +37,8 @@
 
 :global(.dark) .queueShell {
   --tc-border: rgba(148, 163, 184, 0.22);
-  --tc-primary: #dbeafe;
+  --tc-primary: #17458f;
+  --tc-primary-text: #bfdbfe;
   --tc-surface: #071426;
   --tc-surface-2: #0d1b2f;
   --tc-text-muted: #94a3b8;
@@ -113,7 +114,8 @@
 :global([data-theme="dark"]) .queueShell,
 :global([data-mode="dark"]) .queueShell {
   --tc-border: rgba(148, 163, 184, 0.24);
-  --tc-primary: #dbeafe;
+  --tc-primary: #17458f;
+  --tc-primary-text: #bfdbfe;
   --tc-surface: #071426;
   --tc-surface-2: #0d1b2f;
   --tc-text-muted: #94a3b8;

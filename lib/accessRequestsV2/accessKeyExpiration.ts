@@ -33,4 +33,3 @@ export function isAccessRequestLookupCodeExpired(
 
   return expiresAtTime <= now.getTime();
 }
-

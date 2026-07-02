@@ -107,9 +107,15 @@ function textToBase64(value: string) {
 }
 
 async function createPdfBlob(sourceText: string, file: File | null) {
+<<<<<<< HEAD
   const pdfModule = (await import("jspdf")) as unknown as { default?: new () => any; jsPDF?: new () => any };
   const JsPDF = pdfModule.default ?? pdfModule.jsPDF;
   if (!JsPDF) throw new Error("Biblioteca PDF indisponÃ­vel no navegador.");
+=======
+  const brainModule = (await import("jspdf")) as unknown as { default?: new () => any; jsPDF?: new () => any };
+  const JsPDF = brainModule.default ?? brainModule.jsPDF;
+  if (!JsPDF) throw new Error("Biblioteca PDF indisponível no navegador.");
+>>>>>>> fix/governanca-perfis-rotas
 
   const doc = new JsPDF();
   doc.setFontSize(14);

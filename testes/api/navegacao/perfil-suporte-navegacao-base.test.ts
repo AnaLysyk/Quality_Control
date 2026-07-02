@@ -27,7 +27,6 @@ describe("perfil suporte - navegacao base", () => {
       expect.arrayContaining([
         "home",
         "companies",
-        "operations",
         "quality",
         "automation",
         "requests",

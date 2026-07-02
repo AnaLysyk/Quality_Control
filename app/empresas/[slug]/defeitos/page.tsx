@@ -1771,7 +1771,7 @@ export default function CompanyDefectsPage() {
         setLoading(false);
       }
     },
-    [activeProject?.id, activeProject?.slug, companySlug, copy.fallbackErrors.loadDefects, localizeApiMessage, localizeClientError],
+    [activeProject, companySlug, copy.fallbackErrors.loadDefects, localizeApiMessage, localizeClientError],
   );
 
   useEffect(() => {

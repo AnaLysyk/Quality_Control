@@ -8,10 +8,17 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
+jest.mock("@/hooks/usePermissionAccess", () => ({
+  usePermissionAccess: () => ({
+    accessContext: null,
+    companies: [],
+  }),
+}));
+
 import { CreateUserModal } from "@/admin/users/components/CreateUserModal";
 
 describe("CreateUserModal", () => {
-  it("auto-selects the single client and enables submit when required fields and password are filled", async () => {
+  it("auto-selects the single client and enables submit when required fields are filled", async () => {
     const onClose = jest.fn();
     const onCreated = jest.fn();
 
@@ -28,14 +35,13 @@ describe("CreateUserModal", () => {
     // Fill required fields
     const nameInput = screen.getByPlaceholderText("Nome do usu\u00e1rio") as HTMLInputElement;
     const emailInput = screen.getByPlaceholderText("email@empresa.com") as HTMLInputElement;
-    const passwordInput = screen.getByPlaceholderText("M\u00ednimo 8 caracteres") as HTMLInputElement;
     const submit = screen.getByRole("button", { name: /Criar usu\u00e1rio/i }) as HTMLButtonElement;
 
     fireEvent.change(nameInput, { target: { value: "Teste Usuario" } });
-    fireEvent.change(emailInput, { target: { value: "teste@exemplo.com" } });
     expect(submit).toBeDisabled();
 
-    fireEvent.change(passwordInput, { target: { value: "admin123" } });
+    fireEvent.change(emailInput, { target: { value: "teste@exemplo.com" } });
+    expect(screen.getByText(/Senha temporaria automatica/i)).toBeInTheDocument();
     expect(submit).not.toBeDisabled();
   });
 });

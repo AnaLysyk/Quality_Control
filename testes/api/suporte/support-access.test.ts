@@ -24,7 +24,7 @@ describe("supportAccess", () => {
     expect(canManageSupportWorkflow(user)).toBe(false);
   });
 
-  it("mantem lider tc no escopo proprio", () => {
+  it("libera lider tc para o fluxo global de suporte", () => {
     const user = {
       role: "user",
       permissionRole: "leader_tc",
@@ -33,8 +33,8 @@ describe("supportAccess", () => {
     };
 
     expect(canViewSupportBoard(user)).toBe(true);
-    expect(canAccessGlobalSupportScope(user)).toBe(false);
-    expect(canManageSupportWorkflow(user)).toBe(false);
+    expect(canAccessGlobalSupportScope(user)).toBe(true);
+    expect(canManageSupportWorkflow(user)).toBe(true);
   });
 
   it("mantem suporte tecnico com escopo global do kanban", () => {
@@ -67,7 +67,7 @@ describe("supportAccess", () => {
     expect(canManageSupportWorkflow(user)).toBe(true);
   });
 
-  it("mantem admin fora do fluxo global de suporte", () => {
+  it("libera admin global para o fluxo global de suporte", () => {
     const user = {
       role: "admin",
       permissionRole: "admin",
@@ -79,8 +79,8 @@ describe("supportAccess", () => {
     expect(canViewSupportBoard(user)).toBe(true);
     expect(canCreateSupportTickets(user)).toBe(true);
     expect(canCommentSupportTickets(user)).toBe(true);
-    expect(canAccessGlobalSupportScope(user)).toBe(false);
-    expect(canManageSupportWorkflow(user)).toBe(false);
+    expect(canAccessGlobalSupportScope(user)).toBe(true);
+    expect(canManageSupportWorkflow(user)).toBe(true);
   });
 });
 

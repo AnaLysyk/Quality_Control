@@ -13,6 +13,13 @@ import type { AssistantClientRequest, AssistantOpenEventDetail } from "@/lib/ass
 export const runtime = "nodejs";
 
 const ASSISTANT_ENABLED = process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED !== "false";
+const MAX_ASSISTANT_PAYLOAD_BYTES = 256 * 1024;
+const MAX_HISTORY_MESSAGES = 8;
+const MAX_MESSAGE_CHARS = 2500;
+const MAX_REPLY_CHARS = 12000;
+const MAX_AGENT_RUNTIME_MS = 45_000;
+const MAX_BRAIN_DIRECT_MS = 35_000;
+const MAX_WEB_CONTEXT_CHARS = 3000;
 
 type AssistantRequestBody = {
   messages?: Array<{ role: "user" | "assistant"; content: string }>;
@@ -34,6 +41,64 @@ function compactJson(value: unknown, max = 5000) {
   }
 }
 
+function limitMessageContent(value: unknown, max = MAX_MESSAGE_CHARS) {
+  return compactText(String(value ?? ""), max);
+}
+
+function limitMessageList(items: unknown): Array<{ role: "user" | "assistant"; content: string }> {
+  if (!Array.isArray(items)) return [];
+  return items
+    .slice(-MAX_HISTORY_MESSAGES)
+    .map((item) => {
+      const entry = item && typeof item === "object" ? item as Record<string, unknown> : {};
+      return {
+        role: entry.role === "assistant" ? ("assistant" as const) : ("user" as const),
+        content: limitMessageContent(entry.content),
+      };
+    })
+    .filter((item) => item.content);
+}
+
+function limitHistoryList(items: unknown) {
+  if (!Array.isArray(items)) return null;
+  return items
+    .slice(-MAX_HISTORY_MESSAGES)
+    .map((item) => {
+      const entry = item && typeof item === "object" ? item as Record<string, unknown> : {};
+      return {
+        ...entry,
+        text: limitMessageContent(entry.text),
+      };
+    });
+}
+
+function sanitizeBrainContext(value: AssistantOpenEventDetail | null | undefined): AssistantOpenEventDetail | null {
+  if (!value) return null;
+  return {
+    ...value,
+    metadata: compactJson(value.metadata, 2500) ? { compact: compactJson(value.metadata, 2500) } : null,
+  } as AssistantOpenEventDetail;
+}
+
+function sanitizeRequestBody(body: AssistantRequestBody): AssistantRequestBody {
+  const brainContext = sanitizeBrainContext(body.brainContext ?? null);
+  const contextMetadata = compactJson(body.context?.metadata ?? null, 2500);
+
+  return {
+    ...body,
+    message: typeof body.message === "string" ? limitMessageContent(body.message, MAX_MESSAGE_CHARS) : body.message,
+    messages: limitMessageList(body.messages),
+    history: limitHistoryList(body.history) as AssistantRequestBody["history"],
+    context: body.context
+      ? {
+          ...body.context,
+          metadata: contextMetadata ? { compact: contextMetadata } : null,
+        }
+      : body.context,
+    brainContext,
+  };
+}
+
 function getLatestUserMessage(body: AssistantRequestBody) {
   const explicit = typeof body.message === "string" ? body.message.trim() : "";
   if (explicit) return explicit;
@@ -47,6 +112,19 @@ function getLatestUserMessage(body: AssistantRequestBody) {
     ? [...body.history].reverse().find((item) => item?.from !== "assistant" && String(item?.text ?? "").trim())
     : null;
   return fromHistory?.text ? String(fromHistory.text).trim() : "";
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(`${label} excedeu ${Math.round(timeoutMs / 1000)}s`)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
 }
 
 async function persistConversationMemory(args: {
@@ -111,26 +189,27 @@ async function persistConversationMemory(args: {
 function buildMessagesFromHistory(body: AssistantRequestBody): Array<{ role: "user" | "assistant"; content: string }> {
   const historyMessages = Array.isArray(body.history)
     ? body.history
-        .slice(-12)
+        .slice(-MAX_HISTORY_MESSAGES)
         .map((item) => ({
           role: item?.from === "assistant" ? ("assistant" as const) : ("user" as const),
-          content: String(item?.text ?? "").trim(),
+          content: limitMessageContent(item?.text),
         }))
         .filter((item) => item.content)
     : [];
 
   const directMessages = Array.isArray(body.messages)
     ? body.messages
+        .slice(-MAX_HISTORY_MESSAGES)
         .map((item) => ({
           role: item?.role === "assistant" ? ("assistant" as const) : ("user" as const),
-          content: String(item?.content ?? "").trim(),
+          content: limitMessageContent(item?.content),
         }))
         .filter((item) => item.content)
     : [];
 
   if (directMessages.length > 0) return directMessages;
 
-  const currentMessage = typeof body.message === "string" ? body.message.trim() : "";
+  const currentMessage = typeof body.message === "string" ? limitMessageContent(body.message) : "";
   return currentMessage ? [...historyMessages, { role: "user" as const, content: currentMessage }] : historyMessages;
 }
 
@@ -164,9 +243,10 @@ function appendContextToLastUserMessage(messages: Array<{ role: "user" | "assist
     }
   }
   if (lastUserIndex < 0) return messages;
+  const nextContent = [messages[lastUserIndex].content, "", "---", `[${title}]`, context].join("\n");
   messages[lastUserIndex] = {
     ...messages[lastUserIndex],
-    content: [messages[lastUserIndex].content, "", "---", `[${title}]`, context].join("\n"),
+    content: limitMessageContent(nextContent, MAX_MESSAGE_CHARS + MAX_WEB_CONTEXT_CHARS),
   };
   return messages;
 }
@@ -174,6 +254,14 @@ function appendContextToLastUserMessage(messages: Array<{ role: "user" | "assist
 export async function POST(req: Request) {
   if (!ASSISTANT_ENABLED) {
     return NextResponse.json({ error: "Assistente desativado" }, { status: 410 });
+  }
+
+  const contentLength = Number(req.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_ASSISTANT_PAYLOAD_BYTES) {
+    return NextResponse.json(
+      { error: "Mensagem muito grande. Reduza o histórico/contexto e tente novamente." },
+      { status: 413 },
+    );
   }
 
   const authUser = await authenticateRequest(req);
@@ -185,19 +273,20 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = (await req.json().catch(() => ({}))) as AssistantRequestBody;
+    const rawBody = (await req.json().catch(() => ({}))) as AssistantRequestBody;
+    const body = sanitizeRequestBody(rawBody);
     const brainContext = body.brainContext ?? null;
 
     if (isStructuredToolAction(body)) {
       const { runAssistantRequest } = await import("@/lib/assistant/service");
-      const response = await runAssistantRequest(authUser, {
+      const response = await withTimeout(runAssistantRequest(authUser, {
         message: body.message,
         context: body.context ?? null,
         actor: body.actor ?? null,
         action: body.action ?? null,
         history: body.history ?? null,
         brainContext: brainContext ?? null,
-      } as Parameters<typeof runAssistantRequest>[1]);
+      } as Parameters<typeof runAssistantRequest>[1]), MAX_AGENT_RUNTIME_MS, "Assistente");
 
       await persistConversationMemory({
         body,
@@ -216,7 +305,7 @@ export async function POST(req: Request) {
     if (shouldAnswerFromBrain(latestUserMessage)) {
       const brainAccess = await buildBrainAccessContextFromAuthUser(authUser);
       if (brainAccess) {
-        const brainAnswer = await answerBrainChatQuestion({
+        const brainAnswer = await withTimeout(answerBrainChatQuestion({
           message: latestUserMessage,
           access: brainAccess,
           currentBrainContext: {
@@ -227,7 +316,7 @@ export async function POST(req: Request) {
             lastRoute: brainContext?.route ?? body.context?.route ?? null,
             lastIntent: null,
           },
-        });
+        }), MAX_BRAIN_DIRECT_MS, "Brain");
 
         await persistConversationMemory({
           body,
@@ -239,7 +328,7 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({
-          reply: brainAnswer.answer,
+          reply: compactText(brainAnswer.answer, MAX_REPLY_CHARS),
           tool: "use_brain",
           actions: brainAnswer.navigation
             ? [{ kind: "prompt", label: brainAnswer.navigation.label, prompt: `abrir ${brainAnswer.navigation.route}` }]
@@ -251,21 +340,21 @@ export async function POST(req: Request) {
             source: "brain",
             navigation: brainAnswer.navigation ?? null,
             blocked: brainAnswer.blocked ?? null,
-            evidence: brainAnswer.evidence,
+            evidence: brainAnswer.evidence?.slice(0, 8) ?? [],
           },
         });
       }
     }
     if (!shouldUseBrainFirstContext(brainContext)) {
       const { runAssistantRequest } = await import("@/lib/assistant/service");
-      const response = await runAssistantRequest(authUser, {
+      const response = await withTimeout(runAssistantRequest(authUser, {
         message: body.message,
         context: body.context ?? null,
         actor: body.actor ?? null,
         action: body.action ?? null,
         history: body.history ?? null,
         brainContext: brainContext ?? null,
-      } as Parameters<typeof runAssistantRequest>[1]);
+      } as Parameters<typeof runAssistantRequest>[1]), MAX_AGENT_RUNTIME_MS, "Assistente");
 
       await persistConversationMemory({
         body,
@@ -279,12 +368,12 @@ export async function POST(req: Request) {
       return NextResponse.json(response);
     }
 
-    const brainRuntimeSnapshot = compactJson(brainContext?.metadata ?? body.context?.metadata ?? null);
+    const brainRuntimeSnapshot = compactJson(brainContext?.metadata ?? body.context?.metadata ?? null, 2500);
     appendContextToLastUserMessage(messages, "Brain runtime context", brainRuntimeSnapshot);
 
     if (shouldUseWebSupport(latestUserMessage)) {
       const webContext = await buildWebSupportContext(latestUserMessage).catch(() => "");
-      appendContextToLastUserMessage(messages, "Apoio externo/web", webContext);
+      appendContextToLastUserMessage(messages, "Apoio externo/web", compactText(webContext, MAX_WEB_CONTEXT_CHARS));
     }
 
     const lastUserContent = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
@@ -312,9 +401,21 @@ export async function POST(req: Request) {
     let replyText = "";
     let lastToolName: string | null = null;
     let success = true;
+    let timedOut = false;
 
     for await (const event of events) {
-      if (event.type === "text-delta") replyText += event.text;
+      if (Date.now() - startedAt > MAX_AGENT_RUNTIME_MS) {
+        timedOut = true;
+        success = false;
+        break;
+      }
+      if (event.type === "text-delta") {
+        replyText += event.text;
+        if (replyText.length > MAX_REPLY_CHARS) {
+          replyText = `${replyText.slice(0, MAX_REPLY_CHARS)}\n\n_Resposta interrompida para proteger a memória do servidor._`;
+          break;
+        }
+      }
       else if (event.type === "tool-input-start") lastToolName = event.toolName;
       else if (event.type === "error") {
         success = false;
@@ -331,12 +432,14 @@ export async function POST(req: Request) {
       success,
     });
 
-    const finalReply = replyText || (success ? "Análise concluída." : "Não foi possível processar sua pergunta.");
+    const finalReply = timedOut
+      ? "O assistente interrompeu a análise para proteger a memória do servidor local. Tente uma pergunta mais específica ou abra um módulo menor do Brain."
+      : replyText || (success ? "Análise concluída." : "Não foi possível processar sua pergunta.");
 
     await persistConversationMemory({ body, authUser, reply: finalReply, tool: lastToolName ?? agentMode, agentMode, brainContext });
 
     return NextResponse.json({
-      reply: finalReply,
+      reply: compactText(finalReply, MAX_REPLY_CHARS),
       tool: "use_brain",
       actions: [],
       context: null,
@@ -349,6 +452,7 @@ export async function POST(req: Request) {
         nodeId: brainContext?.nodeId ?? null,
         source: brainContext?.source ?? "chat",
         durationMs: Date.now() - startedAt,
+        timedOut,
       },
     });
   } catch (error) {

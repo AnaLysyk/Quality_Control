@@ -17791,3 +17791,1579 @@ body:not(.dark) .qc-chat-page-shell,
     linear-gradient(135deg, #ffffff 0%, #fbfdff 48%, #f3f8ff 100%) !important;
   color: #0f172a !important;
 }
+
+/* FIX: Chat Slack full workspace */
+
+/* /chat vira workspace real, não card dentro de página */
+.qc-chat-page-shell {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.qc-chat-page-loading {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background: #020817;
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+/* no chat não pode ter scroll externo da página */
+body:has(.qc-chat-page-shell) {
+  overflow: hidden !important;
+}
+
+/* remove qualquer espaço criado por wrapper anterior */
+body:has(.qc-chat-page-shell) main {
+  min-height: 0 !important;
+}
+
+/* root do TeamChat ocupa todo o espaço útil */
+.qc-chat-page-shell .qc-chat-shell,
+.qc-chat-page-shell .qc-team-chat-testing-company,
+.qc-chat-page-shell .qc-team-chat-slack-v3,
+.qc-chat-page-shell > div {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* grid principal encostado no topo/rodapé/laterais */
+.qc-chat-page-shell section {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* coluna de conversas estilo Slack: encostada e fixa */
+.qc-chat-page-shell aside {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+/* conversa ocupa tudo */
+.qc-chat-page-shell main {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* header da conversa colado no topo */
+.qc-chat-page-shell main > header {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* miolo da conversa ocupa o espaço restante */
+.qc-chat-page-shell main > div {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* composer colado embaixo */
+.qc-chat-page-shell form {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* limpa botões antigos soltos, deixa só o botão novo de opções */
+.qc-chat-page-shell .qc-chat-composer-modal-actions,
+.qc-chat-page-shell [data-qc-chat-tools-panel],
+.qc-chat-page-shell form .mb-3.flex.gap-2.overflow-x-auto.pb-1,
+.qc-chat-page-shell form > .mb-3 {
+  display: none !important;
+}
+
+/* modo escuro: fundo contínuo, sem parecer tela colada */
+html.dark .qc-chat-page-shell,
+body.dark .qc-chat-page-shell,
+.dark .qc-chat-page-shell,
+.theme-dark .qc-chat-page-shell,
+[data-theme="dark"] .qc-chat-page-shell,
+[data-appearance="dark"] .qc-chat-page-shell,
+body:has([title*="Ativar modo claro"]) .qc-chat-page-shell,
+body:has([aria-label*="Ativar modo claro"]) .qc-chat-page-shell {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 92% 82%, rgba(200, 16, 46, 0.10), transparent 36%),
+    linear-gradient(135deg, #020817 0%, #071225 48%, #10071a 100%) !important;
+  color: #f8fafc !important;
+}
+
+/* modo claro: branco/degradê contínuo */
+html:not(.dark) .qc-chat-page-shell,
+body:not(.dark) .qc-chat-page-shell,
+[data-theme="light"] .qc-chat-page-shell,
+[data-appearance="light"] .qc-chat-page-shell {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 88% 78%, rgba(200, 16, 46, 0.05), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #fbfdff 48%, #f3f8ff 100%) !important;
+  color: #0f172a !important;
+}
+
+/* scroll mais fino, igual app profissional */
+.qc-chat-page-shell * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.qc-chat-page-shell *::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.qc-chat-page-shell *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.qc-chat-page-shell *::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.32);
+}
+
+.qc-chat-page-shell *::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.48);
+}
+
+/* FIX: Chat conversa limpa status meet audio agenda */
+
+/* lateral do chat sempre escura e legível */
+.qc-chat-page-shell aside,
+.qc-chat-shell aside,
+.qc-team-chat-testing-company aside {
+  background:
+    linear-gradient(180deg, #061225 0%, #071a4a 48%, #5b0f35 100%) !important;
+  color: #f8fafc !important;
+}
+
+.qc-chat-page-shell aside > div:first-child,
+.qc-chat-shell aside > div:first-child,
+.qc-team-chat-testing-company aside > div:first-child {
+  color: #f8fafc !important;
+}
+
+.qc-chat-page-shell aside > div:first-child .truncate,
+.qc-chat-shell aside > div:first-child .truncate,
+.qc-team-chat-testing-company aside > div:first-child .truncate {
+  color: #f8fafc !important;
+}
+
+/* busca pode continuar clara, mas texto legível */
+.qc-chat-page-shell aside input,
+.qc-chat-shell aside input,
+.qc-team-chat-testing-company aside input {
+  background: rgba(255,255,255,0.96) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(255,255,255,0.16) !important;
+}
+
+.qc-chat-page-shell aside input::placeholder,
+.qc-chat-shell aside input::placeholder,
+.qc-team-chat-testing-company aside input::placeholder {
+  color: rgba(71,85,105,0.72) !important;
+}
+
+/* remove sensação de lista "usuários visíveis" pesada */
+.qc-chat-sidebar-presence-label {
+  color: #34d399 !important;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+}
+
+/* avatar com bolinha de status */
+.qc-chat-contact-avatar {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.qc-chat-presence-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  border: 2px solid #061225;
+  background: #64748b;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.12);
+}
+
+.qc-chat-presence-dot.is-online {
+  background: #22c55e;
+  box-shadow:
+    0 0 0 1px rgba(34,197,94,0.35),
+    0 0 12px rgba(34,197,94,0.50);
+}
+
+.qc-chat-presence-dot.is-offline {
+  background: #64748b;
+}
+
+/* cards de contato no dark */
+.qc-chat-page-shell aside .space-y-1\.5 > button,
+.qc-chat-shell aside .space-y-1\.5 > button,
+.qc-team-chat-testing-company aside .space-y-1\.5 > button {
+  background: rgba(255,255,255,0.055) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: none !important;
+}
+
+.qc-chat-page-shell aside .space-y-1\.5 > button:hover,
+.qc-chat-shell aside .space-y-1\.5 > button:hover,
+.qc-team-chat-testing-company aside .space-y-1\.5 > button:hover {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.20), rgba(14,165,233,0.16)) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+}
+
+/* barra de ações dentro da conversa */
+.qc-chat-composer-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
+}
+
+.qc-chat-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  min-height: 2.05rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.20);
+  background: rgba(15,23,42,0.72);
+  color: #f8fafc;
+  padding: 0.42rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  box-shadow: none;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.qc-chat-action-pill:hover:not(:disabled),
+.qc-chat-action-pill:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(14,165,233,0.36);
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.22), rgba(14,165,233,0.18));
+  box-shadow:
+    0 0 0 3px rgba(14,165,233,0.08),
+    0 10px 22px rgba(0,0,0,0.16);
+}
+
+.qc-chat-action-pill--primary {
+  background:
+    linear-gradient(135deg, #c8102e, #0b2c6f);
+  color: #ffffff;
+  border-color: rgba(255,255,255,0.14);
+}
+
+.qc-chat-action-pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+/* remove botões antigos definitivamente */
+.qc-chat-composer-one-plus,
+.qc-chat-composer-modal-actions,
+.qc-chat-page-shell [data-qc-chat-tools-panel],
+.qc-chat-page-shell form .mb-3.flex.flex-col.gap-2,
+.qc-chat-page-shell form .mb-3.flex.gap-2.overflow-x-auto.pb-1,
+.qc-chat-page-shell form > .mb-3 {
+  display: none !important;
+}
+
+/* composer menos grosseiro */
+.qc-chat-page-shell form {
+  padding: 0.85rem 1rem !important;
+}
+
+.qc-chat-page-shell form .flex.items-end.gap-3.rounded-\[28px\] {
+  border-radius: 18px !important;
+  background: rgba(15,23,42,0.72) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  box-shadow: none !important;
+}
+
+.qc-chat-page-shell textarea {
+  color: #f8fafc !important;
+}
+
+.qc-chat-page-shell textarea::placeholder {
+  color: rgba(203,213,225,0.62) !important;
+}
+
+/* modo claro, mas chat com lateral escura: textos continuam brancos */
+html:not(.dark) .qc-chat-page-shell aside,
+body:not(.dark) .qc-chat-page-shell aside,
+[data-theme="light"] .qc-chat-page-shell aside,
+[data-appearance="light"] .qc-chat-page-shell aside {
+  color: #f8fafc !important;
+}
+
+/* FIX: Chat audio camera agenda brain */
+
+.qc-chat-composer-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
+}
+
+.qc-chat-action-pill {
+  display: inline-flex;
+  min-height: 2.05rem;
+  align-items: center;
+  gap: 0.42rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.20);
+  background: rgba(15,23,42,0.72);
+  color: #f8fafc;
+  padding: 0.42rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  transition: 140ms ease;
+}
+
+.qc-chat-action-pill:hover:not(:disabled),
+.qc-chat-action-pill:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(14,165,233,0.36);
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.22), rgba(14,165,233,0.18));
+  box-shadow:
+    0 0 0 3px rgba(14,165,233,0.08),
+    0 10px 22px rgba(0,0,0,0.16);
+}
+
+.qc-chat-action-pill--primary {
+  background:
+    linear-gradient(135deg, #c8102e, #0b2c6f);
+  color: #ffffff;
+  border-color: rgba(255,255,255,0.14);
+}
+
+.qc-chat-action-pill.is-recording {
+  background:
+    linear-gradient(135deg, #dc2626, #7f1d1d) !important;
+  color: #ffffff !important;
+  animation: qc-chat-recording-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes qc-chat-recording-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.32); }
+  50% { box-shadow: 0 0 0 6px rgba(220,38,38,0.08); }
+}
+
+.qc-chat-composer-one-plus,
+.qc-chat-composer-modal-actions,
+.qc-chat-page-shell [data-qc-chat-tools-panel],
+.qc-chat-page-shell form .mb-3.flex.flex-col.gap-2,
+.qc-chat-page-shell form .mb-3.flex.gap-2.overflow-x-auto.pb-1,
+.qc-chat-page-shell form > .mb-3 {
+  display: none !important;
+}
+
+.qc-chat-page-shell form {
+  padding: 0.85rem 1rem !important;
+}
+
+.qc-chat-page-shell form .flex.items-end.gap-3.rounded-\[28px\] {
+  border-radius: 18px !important;
+  background: rgba(15,23,42,0.72) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  box-shadow: none !important;
+}
+
+.qc-chat-page-shell textarea {
+  color: #f8fafc !important;
+}
+
+.qc-chat-page-shell textarea::placeholder {
+  color: rgba(203,213,225,0.62) !important;
+}
+
+/* Modal de agenda */
+.qc-chat-schedule-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 105;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.qc-chat-schedule-modal__panel {
+  position: relative;
+  width: min(720px, calc(100vw - 2rem));
+  max-height: min(86dvh, 760px);
+  overflow-y: auto;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background:
+    linear-gradient(135deg, rgba(15,23,42,0.98), rgba(17,24,39,0.96));
+  color: #f8fafc;
+  box-shadow:
+    0 28px 90px rgba(2,6,23,0.42),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.qc-chat-schedule-modal__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.qc-chat-schedule-modal__header span {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  color: #38bdf8;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.qc-chat-schedule-modal__header h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 950;
+  letter-spacing: -0.045em;
+}
+
+.qc-chat-schedule-modal__header p {
+  margin: 0.35rem 0 0;
+  color: rgba(203,213,225,0.72);
+  font-size: 0.9rem;
+}
+
+.qc-chat-schedule-modal__header > button {
+  display: inline-grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: #111827;
+  color: #f8fafc;
+}
+
+.qc-chat-schedule-modal__body {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 1.35rem;
+}
+
+.qc-chat-schedule-modal__body label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.qc-chat-schedule-modal__body label > span,
+.qc-chat-schedule-modal__linked strong {
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(203,213,225,0.74);
+}
+
+.qc-chat-schedule-modal__body input,
+.qc-chat-schedule-modal__body select,
+.qc-chat-schedule-modal__body textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 0.75rem 0.85rem;
+  outline: none;
+}
+
+.qc-chat-schedule-modal__body input:focus,
+.qc-chat-schedule-modal__body select:focus,
+.qc-chat-schedule-modal__body textarea:focus {
+  border-color: rgba(14,165,233,0.42);
+  box-shadow: 0 0 0 4px rgba(14,165,233,0.10);
+}
+
+.qc-chat-schedule-modal__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 0.75rem;
+}
+
+.qc-chat-schedule-modal__check {
+  display: flex !important;
+  grid-template-columns: none !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem !important;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  padding: 0.8rem;
+}
+
+.qc-chat-schedule-modal__check input {
+  width: auto;
+}
+
+.qc-chat-schedule-modal__linked {
+  display: grid;
+  gap: 0.25rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.12), rgba(14,165,233,0.10));
+  padding: 0.85rem;
+}
+
+.qc-chat-schedule-modal__linked span {
+  font-weight: 900;
+}
+
+.qc-chat-schedule-modal__linked small {
+  color: rgba(203,213,225,0.74);
+}
+
+.qc-chat-schedule-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1rem 1.35rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.10);
+}
+
+.qc-chat-schedule-modal__footer button {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: #111827;
+  color: #f8fafc;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.qc-chat-schedule-modal__footer button:last-child {
+  background:
+    linear-gradient(135deg, #c8102e, #0b2c6f);
+  color: #ffffff;
+}
+
+@media (max-width: 720px) {
+  .qc-chat-schedule-modal__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* FIX: Chat presenca real online busy offline */
+
+/* A bolinha só aparece quando existe estado real. */
+.qc-chat-presence-dot {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  border: 2px solid #061225;
+  background: transparent;
+  opacity: 0;
+  box-shadow: none;
+}
+
+.qc-chat-presence-dot.is-online {
+  opacity: 1;
+  background: #22c55e !important;
+  box-shadow:
+    0 0 0 1px rgba(34,197,94,0.35),
+    0 0 12px rgba(34,197,94,0.50) !important;
+}
+
+.qc-chat-presence-dot.is-busy {
+  opacity: 1;
+  background: #ef4444 !important;
+  box-shadow:
+    0 0 0 1px rgba(239,68,68,0.35),
+    0 0 12px rgba(239,68,68,0.52) !important;
+}
+
+.qc-chat-presence-dot.is-offline {
+  opacity: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Label da lateral. */
+.qc-chat-sidebar-presence-label {
+  color: #34d399 !important;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+}
+
+/* Card ocupado ganha detalhe vermelho. */
+.qc-chat-page-shell aside button:has(.qc-chat-presence-dot.is-busy),
+.qc-chat-shell aside button:has(.qc-chat-presence-dot.is-busy),
+.qc-team-chat-testing-company aside button:has(.qc-chat-presence-dot.is-busy) {
+  border-color: rgba(239, 68, 68, 0.34) !important;
+  box-shadow:
+    inset 4px 0 0 #ef4444,
+    0 12px 26px rgba(239, 68, 68, 0.08) !important;
+}
+
+/* Card online ganha detalhe discreto verde só no avatar. */
+.qc-chat-page-shell aside button:has(.qc-chat-presence-dot.is-online):hover,
+.qc-chat-shell aside button:has(.qc-chat-presence-dot.is-online):hover,
+.qc-team-chat-testing-company aside button:has(.qc-chat-presence-dot.is-online):hover {
+  border-color: rgba(34, 197, 94, 0.28) !important;
+}
+
+/* FIX: Chat busca real audio typing */
+
+/* sem listagem infinita: área fica limpa quando não há busca */
+.qc-chat-page-shell aside .min-h-0.flex-1 {
+  overflow-y: auto !important;
+}
+
+.qc-chat-page-shell aside button {
+  transition: 140ms ease;
+}
+
+/* botões da conversa menos grosseiros */
+.qc-chat-composer-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-bottom: 0.65rem;
+}
+
+.qc-chat-action-pill {
+  min-height: 2rem !important;
+  border-radius: 999px !important;
+  padding: 0.4rem 0.68rem !important;
+  background: rgba(15, 23, 42, 0.76) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  box-shadow: none !important;
+  font-size: 0.72rem !important;
+}
+
+.qc-chat-action-pill:hover:not(:disabled) {
+  background:
+    linear-gradient(135deg, rgba(200,16,46,0.20), rgba(14,165,233,0.16)) !important;
+  border-color: rgba(14,165,233,0.28) !important;
+  transform: translateY(-1px);
+}
+
+.qc-chat-action-pill.is-recording {
+  background:
+    linear-gradient(135deg, #dc2626, #7f1d1d) !important;
+  color: #ffffff !important;
+}
+
+/* áudio gravado: envia ou descarta */
+.qc-chat-audio-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.65rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(15,23,42,0.72);
+  padding: 0.55rem;
+  color: #f8fafc;
+}
+
+.qc-chat-audio-preview > div {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.qc-chat-audio-preview audio {
+  width: min(320px, 100%);
+  height: 32px;
+}
+
+.qc-chat-audio-preview button {
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: #f8fafc;
+  padding: 0.42rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.qc-chat-audio-preview button:nth-of-type(1) {
+  background:
+    linear-gradient(135deg, #c8102e, #0b2c6f);
+}
+
+/* digitando */
+.qc-chat-typing-indicator {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(14,165,233,0.20);
+  background: rgba(14,165,233,0.08);
+  color: #bae6fd;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+/* busca/lateral sempre legível */
+.qc-chat-page-shell aside,
+.qc-chat-shell aside {
+  color: #f8fafc !important;
+}
+
+.qc-chat-page-shell aside input,
+.qc-chat-shell aside input {
+  background: rgba(255,255,255,0.96) !important;
+  color: #0f172a !important;
+}
+
+.qc-chat-page-shell aside input::placeholder,
+.qc-chat-shell aside input::placeholder {
+  color: rgba(71,85,105,0.70) !important;
+}
+
+/* offline sem bolinha; online real verde; ocupado vermelho */
+.qc-chat-presence-dot.is-offline {
+  opacity: 0 !important;
+}
+
+.qc-chat-presence-dot.is-online {
+  opacity: 1 !important;
+  background: #22c55e !important;
+}
+
+.qc-chat-presence-dot.is-busy {
+  opacity: 1 !important;
+  background: #ef4444 !important;
+}
+
+/* FIX: chat composer gif visual */
+
+/* área central da conversa: mais profissional, menos vazia e menos colada */
+.qc-chat-page-shell main {
+  position: relative !important;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(14, 165, 233, 0.08), transparent 34%),
+    radial-gradient(circle at 88% 86%, rgba(200, 16, 46, 0.08), transparent 34%),
+    linear-gradient(135deg, #020817 0%, #071225 52%, #10071a 100%) !important;
+}
+
+.qc-chat-page-shell main > div {
+  padding: 26px clamp(24px, 4vw, 72px) 22px !important;
+  scroll-padding-bottom: 140px !important;
+}
+
+/* limita a largura da conversa para ela não ficar perdida no meio */
+.qc-chat-page-shell main > div > div,
+.qc-chat-page-shell [data-qc-chat-messages],
+.qc-chat-page-shell .qc-chat-messages,
+.qc-chat-page-shell .qc-chat-message-list {
+  max-width: 1120px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* balões mais bonitos */
+.qc-chat-page-shell [class*="rounded"][class*="bg-"],
+.qc-chat-page-shell .qc-chat-message,
+.qc-chat-page-shell .qc-message-bubble {
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+}
+
+/* composer: tira do canto bruto e vira uma barra flutuante limpa */
+.qc-chat-page-shell form {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 30 !important;
+  padding: 16px clamp(24px, 4vw, 72px) 20px !important;
+  background:
+    linear-gradient(180deg, rgba(2, 8, 23, 0), rgba(2, 8, 23, 0.78) 24%, rgba(2, 8, 23, 0.96)) !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.16) !important;
+}
+
+/* caixa interna do composer */
+.qc-chat-page-shell form > div:last-child,
+.qc-chat-page-shell form textarea,
+.qc-chat-page-shell form input[type="text"],
+.qc-chat-page-shell form [contenteditable="true"] {
+  border-radius: 22px !important;
+}
+
+/* dá espaço real para o botão enviar não ficar colado no canto */
+.qc-chat-page-shell form {
+  padding-right: clamp(96px, 8vw, 140px) !important;
+}
+
+/* botão enviar: sobe e afasta do canto */
+.qc-chat-page-shell form button[type="submit"],
+.qc-chat-page-shell form button[aria-label*="Enviar"],
+.qc-chat-page-shell form button[title*="Enviar"] {
+  right: clamp(28px, 3vw, 54px) !important;
+  bottom: 26px !important;
+  min-width: 92px !important;
+  height: 54px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 18px 42px rgba(200, 16, 46, 0.26) !important;
+}
+
+/* botão/avatar flutuante do canto: não sobrepor enviar */
+.qc-chat-page-shell main > button:last-child,
+.qc-chat-page-shell [class*="fixed"][class*="bottom"][class*="right"] {
+  margin-right: 12px !important;
+  margin-bottom: 14px !important;
+}
+
+/* modal/painel de GIF/anexo: visual mais limpo e menos feio */
+.qc-chat-page-shell [data-qc-gif-modal],
+.qc-chat-page-shell [data-qc-chat-gif-modal],
+.qc-chat-page-shell .qc-gif-modal,
+.qc-chat-page-shell .qc-chat-gif-modal,
+.qc-chat-page-shell .qc-chat-media-modal,
+.qc-chat-page-shell [role="dialog"] {
+  border-radius: 26px !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 100% 100%, rgba(200, 16, 46, 0.10), transparent 34%),
+    rgba(8, 17, 36, 0.98) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42) !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+/* cards dentro do modal de GIF */
+.qc-chat-page-shell [role="dialog"] img,
+.qc-chat-page-shell .qc-gif-modal img,
+.qc-chat-page-shell .qc-chat-gif-modal img {
+  border-radius: 16px !important;
+  object-fit: cover !important;
+}
+
+.qc-chat-page-shell [role="dialog"] button,
+.qc-chat-page-shell .qc-gif-modal button,
+.qc-chat-page-shell .qc-chat-gif-modal button {
+  border-radius: 14px !important;
+}
+
+/* modo claro */
+html:not(.dark) .qc-chat-page-shell main,
+body:not(.dark) .qc-chat-page-shell main {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(14, 165, 233, 0.08), transparent 34%),
+    radial-gradient(circle at 88% 86%, rgba(200, 16, 46, 0.05), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 52%, #ffffff 100%) !important;
+}
+
+html:not(.dark) .qc-chat-page-shell form,
+body:not(.dark) .qc-chat-page-shell form {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0), rgba(248,250,252,0.84) 24%, rgba(255,255,255,0.98)) !important;
+  border-top-color: rgba(15, 23, 42, 0.10) !important;
+}
+
+html:not(.dark) .qc-chat-page-shell [role="dialog"],
+body:not(.dark) .qc-chat-page-shell [role="dialog"] {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.08), transparent 34%),
+    radial-gradient(circle at 100% 100%, rgba(200, 16, 46, 0.06), transparent 34%),
+    rgba(255, 255, 255, 0.98) !important;
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* mobile */
+@media (max-width: 760px) {
+  .qc-chat-page-shell main > div {
+    padding: 18px 14px 18px !important;
+  }
+
+  .qc-chat-page-shell form {
+    padding: 12px 84px 14px 14px !important;
+  }
+
+  .qc-chat-page-shell form button[type="submit"],
+  .qc-chat-page-shell form button[aria-label*="Enviar"],
+  .qc-chat-page-shell form button[title*="Enviar"] {
+    right: 16px !important;
+    bottom: 18px !important;
+    min-width: 58px !important;
+    width: 58px !important;
+  }
+}
+
+/* FIX: chat audio whatsapp meet agenda */
+
+.qc-chat-action-pill--recording {
+  background: rgba(239, 0, 1, 0.16) !important;
+  border-color: rgba(239, 0, 1, 0.42) !important;
+  color: #fecaca !important;
+  box-shadow: 0 0 0 4px rgba(239, 0, 1, 0.08), 0 12px 28px rgba(239, 0, 1, 0.18) !important;
+  animation: qcChatRecordingPulse 1.2s ease-in-out infinite;
+}
+
+.qc-chat-schedule-modal__quick {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.qc-chat-schedule-modal__quick button,
+.qc-chat-schedule-modal__quick > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  border-radius: 22px;
+  border: 1px solid rgba(14, 165, 233, 0.18);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.12), transparent 34%),
+    rgba(15, 23, 42, 0.56);
+  padding: 14px;
+  text-align: left;
+}
+
+.qc-chat-schedule-modal__quick button {
+  cursor: pointer;
+}
+
+.qc-chat-schedule-modal__quick button:hover {
+  border-color: rgba(14, 165, 233, 0.38);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.18), transparent 34%),
+    rgba(15, 23, 42, 0.72);
+}
+
+.qc-chat-schedule-modal__quick svg {
+  flex: 0 0 auto;
+  color: #38bdf8;
+}
+
+.qc-chat-schedule-modal__quick span,
+.qc-chat-schedule-modal__quick div {
+  min-width: 0;
+}
+
+.qc-chat-schedule-modal__quick strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 0.95rem;
+  font-weight: 950;
+}
+
+.qc-chat-schedule-modal__quick small {
+  display: block;
+  margin-top: 3px;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+/* remove preview antigo de áudio, se sobrar no DOM */
+.qc-chat-audio-preview {
+  display: none !important;
+}
+
+html:not(.dark) .qc-chat-schedule-modal__quick button,
+html:not(.dark) .qc-chat-schedule-modal__quick > div,
+body:not(.dark) .qc-chat-schedule-modal__quick button,
+body:not(.dark) .qc-chat-schedule-modal__quick > div {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.08), transparent 34%),
+    rgba(255, 255, 255, 0.94);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+html:not(.dark) .qc-chat-schedule-modal__quick strong,
+body:not(.dark) .qc-chat-schedule-modal__quick strong {
+  color: #0f172a;
+}
+
+html:not(.dark) .qc-chat-schedule-modal__quick small,
+body:not(.dark) .qc-chat-schedule-modal__quick small {
+  color: #475569;
+}
+
+@keyframes qcChatRecordingPulse {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 0 0 3px rgba(239, 0, 1, 0.08), 0 12px 28px rgba(239, 0, 1, 0.16);
+  }
+
+  50% {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 7px rgba(239, 0, 1, 0.08), 0 16px 34px rgba(239, 0, 1, 0.22);
+  }
+}
+
+/* FIX: chat ui dark audio agenda */
+
+/* área principal do chat */
+.qc-chat-page-shell,
+.qc-chat-layout,
+.qc-chat-workspace,
+.qc-chat-thread-shell {
+  min-height: calc(100vh - 88px) !important;
+}
+
+/* cabeçalho da conversa */
+.qc-chat-thread-header,
+.qc-chat-conversation-header {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+  background:
+    linear-gradient(135deg, rgba(7, 20, 45, 0.96), rgba(10, 27, 63, 0.94)) !important;
+}
+
+/* fundo escuro melhor */
+html.dark .qc-chat-thread-body,
+body.dark .qc-chat-thread-body,
+[data-theme="dark"] .qc-chat-thread-body,
+html.dark .qc-chat-messages,
+body.dark .qc-chat-messages,
+[data-theme="dark"] .qc-chat-messages {
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(239, 0, 1, 0.06), transparent 26%),
+    linear-gradient(180deg, #0a1120 0%, #0c1730 46%, #0b1325 100%) !important;
+}
+
+/* lista de mensagens usa mais a tela */
+.qc-chat-thread-body,
+.qc-chat-messages {
+  padding: 18px 22px 12px !important;
+}
+
+/* bolhas de mensagem */
+.qc-chat-message,
+.qc-chat-message-card,
+.qc-chat-bubble {
+  max-width: min(72%, 760px) !important;
+  border-radius: 24px !important;
+}
+
+.qc-chat-message--own,
+.qc-chat-bubble--own {
+  margin-left: auto !important;
+}
+
+.qc-chat-message--other,
+.qc-chat-bubble--other {
+  margin-right: auto !important;
+}
+
+/* bolha própria */
+html.dark .qc-chat-message--own,
+html.dark .qc-chat-bubble--own,
+body.dark .qc-chat-message--own,
+body.dark .qc-chat-bubble--own,
+[data-theme="dark"] .qc-chat-message--own,
+[data-theme="dark"] .qc-chat-bubble--own {
+  background:
+    linear-gradient(135deg, rgba(7, 34, 92, 0.96), rgba(10, 43, 122, 0.94)) !important;
+  border: 1px solid rgba(96, 165, 250, 0.18) !important;
+  box-shadow: 0 14px 34px rgba(2, 6, 23, 0.22) !important;
+}
+
+/* bolha recebida */
+html.dark .qc-chat-message--other,
+html.dark .qc-chat-bubble--other,
+body.dark .qc-chat-message--other,
+body.dark .qc-chat-bubble--other,
+[data-theme="dark"] .qc-chat-message--other,
+[data-theme="dark"] .qc-chat-bubble--other {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(21, 33, 61, 0.94)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.18) !important;
+}
+
+/* barra inferior/composer */
+.qc-chat-composer,
+.qc-chat-composer-shell,
+.qc-chat-input-shell {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 8 !important;
+  padding: 12px 18px 14px !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.14) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.94)) !important;
+  backdrop-filter: blur(16px) saturate(1.08);
+}
+
+html.dark .qc-chat-composer,
+html.dark .qc-chat-composer-shell,
+html.dark .qc-chat-input-shell,
+body.dark .qc-chat-composer,
+body.dark .qc-chat-composer-shell,
+body.dark .qc-chat-input-shell,
+[data-theme="dark"] .qc-chat-composer,
+[data-theme="dark"] .qc-chat-composer-shell,
+[data-theme="dark"] .qc-chat-input-shell {
+  background:
+    linear-gradient(180deg, rgba(10,16,32,0.82), rgba(8,15,29,0.95)) !important;
+}
+
+/* linha de ações */
+.qc-chat-composer-actions,
+.qc-chat-toolbar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+/* botões superiores */
+.qc-chat-action-pill,
+.qc-chat-toolbar button {
+  min-height: 40px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+/* área do input */
+.qc-chat-composer-main,
+.qc-chat-input-row {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) 150px !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+.qc-chat-input-attach,
+.qc-chat-attach-button {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 18px !important;
+}
+
+.qc-chat-composer textarea,
+.qc-chat-composer input[type="text"],
+.qc-chat-input,
+.qc-chat-message-input {
+  min-height: 52px !important;
+  height: 52px !important;
+  border-radius: 18px !important;
+  padding: 14px 16px !important;
+  font-size: 15px !important;
+}
+
+.qc-chat-send-button,
+.qc-chat-submit,
+.qc-chat-composer button[type="submit"] {
+  min-height: 52px !important;
+  height: 52px !important;
+  border-radius: 18px !important;
+  padding: 0 18px !important;
+  justify-self: stretch !important;
+}
+
+/* preview de áudio */
+.qc-chat-audio-preview,
+.qc-chat-audio-recorder-card {
+  margin-bottom: 10px !important;
+  padding: 14px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  background:
+    linear-gradient(135deg, rgba(10, 24, 54, 0.96), rgba(16, 29, 59, 0.94)) !important;
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.18) !important;
+}
+
+.qc-chat-audio-visualizer {
+  display: flex !important;
+  align-items: end !important;
+  gap: 4px !important;
+  height: 44px !important;
+  margin: 10px 0 12px !important;
+}
+
+.qc-chat-audio-visualizer span {
+  width: 6px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, #38bdf8, #22c55e) !important;
+  animation: qcChatVoiceWave 1s ease-in-out infinite;
+}
+
+.qc-chat-audio-visualizer span:nth-child(2n) { animation-delay: .08s; }
+.qc-chat-audio-visualizer span:nth-child(3n) { animation-delay: .16s; }
+.qc-chat-audio-visualizer span:nth-child(4n) { animation-delay: .24s; }
+
+.qc-chat-audio-meta {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #cbd5e1 !important;
+}
+
+.qc-chat-audio-preview audio {
+  width: 100% !important;
+  margin-top: 10px !important;
+}
+
+/* modal agenda */
+.qc-chat-schedule-modal,
+.qc-chat-schedule-modal__panel {
+  width: min(880px, calc(100vw - 40px)) !important;
+  max-width: 880px !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  border-radius: 28px !important;
+}
+
+.qc-chat-schedule-modal__panel,
+.qc-chat-schedule-modal__content {
+  padding: 0 !important;
+  background:
+    linear-gradient(135deg, rgba(8, 20, 46, 0.98), rgba(12, 23, 52, 0.96)) !important;
+}
+
+.qc-chat-schedule-modal__header {
+  padding: 22px 24px 16px !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+
+.qc-chat-schedule-modal__body {
+  display: grid !important;
+  grid-template-columns: 1.15fr .85fr !important;
+  gap: 18px !important;
+  padding: 20px 24px !important;
+  overflow: visible !important;
+}
+
+.qc-chat-schedule-modal__left,
+.qc-chat-schedule-modal__right {
+  display: grid !important;
+  gap: 14px !important;
+  align-content: start !important;
+}
+
+.qc-chat-schedule-modal textarea {
+  min-height: 120px !important;
+  resize: none !important;
+}
+
+.qc-chat-schedule-modal__footer {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  padding: 18px 24px 24px !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+
+/* sem rolagem no modal */
+.qc-chat-schedule-modal *::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* mobile */
+@media (max-width: 900px) {
+  .qc-chat-composer-main,
+  .qc-chat-input-row {
+    grid-template-columns: 48px minmax(0, 1fr) 120px !important;
+  }
+
+  .qc-chat-schedule-modal__body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-chat-message,
+  .qc-chat-message-card,
+  .qc-chat-bubble {
+    max-width: 90% !important;
+  }
+}
+
+@keyframes qcChatVoiceWave {
+  0%, 100% { height: 10px; opacity: .55; }
+  50% { height: 40px; opacity: 1; }
+}
+
+/* FIX: chat audio preview modal agenda final */
+
+.qc-chat-message-bubble {
+  max-width: min(760px, 76vw) !important;
+}
+
+.qc-chat-message-row.justify-end .qc-chat-message-bubble {
+  margin-left: auto !important;
+}
+
+.qc-chat-audio-attachment audio {
+  width: 100% !important;
+  height: 40px !important;
+}
+
+.qc-chat-audio-recorder-card {
+  margin-bottom: 10px !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(96, 165, 250, 0.24) !important;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.12), transparent 38%),
+    linear-gradient(135deg, rgba(8, 20, 46, 0.98), rgba(13, 26, 58, 0.96)) !important;
+  padding: 14px !important;
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.24) !important;
+}
+
+.qc-chat-audio-recorder-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+}
+
+.qc-chat-audio-recorder-head strong {
+  display: block !important;
+  color: #f8fafc !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+}
+
+.qc-chat-audio-recorder-head span {
+  display: block !important;
+  margin-top: 3px !important;
+  color: rgba(226, 232, 240, 0.70) !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+
+.qc-chat-audio-recorder-time {
+  border-radius: 999px !important;
+  border: 1px solid rgba(56, 189, 248, 0.26) !important;
+  background: rgba(2, 6, 23, 0.42) !important;
+  color: #bfdbfe !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+}
+
+.qc-chat-audio-visualizer {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  height: 52px !important;
+  margin: 12px 0 !important;
+}
+
+.qc-chat-audio-visualizer span {
+  width: 7px !important;
+  min-height: 8px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, #38bdf8, #22c55e) !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.20) !important;
+  transition: height 90ms linear !important;
+}
+
+.qc-chat-audio-preview-player {
+  width: 100% !important;
+  margin-top: 4px !important;
+}
+
+.qc-chat-audio-recorder-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+}
+
+.qc-chat-audio-recorder-actions button {
+  min-height: 38px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(148, 163, 184, 0.20) !important;
+  background: rgba(15, 23, 42, 0.82) !important;
+  color: #f8fafc !important;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.qc-chat-audio-recorder-actions button.is-primary {
+  border-color: rgba(56, 189, 248, 0.34) !important;
+  background: linear-gradient(135deg, #0f4c81, #0369a1) !important;
+}
+
+.qc-chat-action-pill--recording {
+  background: rgba(239, 0, 1, 0.16) !important;
+  border-color: rgba(239, 0, 1, 0.42) !important;
+  color: #fecaca !important;
+  animation: qcChatRecordingPulse 1.2s ease-in-out infinite;
+}
+
+/* Modal de agenda compacto, sem rolagem visual */
+.qc-chat-schedule-modal,
+.qc-chat-schedule-modal__panel,
+.qc-chat-schedule-modal__content {
+  width: min(780px, calc(100vw - 42px)) !important;
+  max-height: calc(100vh - 72px) !important;
+  overflow: hidden !important;
+  border-radius: 28px !important;
+}
+
+.qc-chat-schedule-modal__header {
+  padding: 18px 22px 12px !important;
+}
+
+.qc-chat-schedule-modal__quick {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  margin: 0 22px 12px !important;
+}
+
+.qc-chat-schedule-modal__quick button,
+.qc-chat-schedule-modal__quick > div {
+  min-height: 74px !important;
+  border-radius: 18px !important;
+  padding: 12px !important;
+}
+
+.qc-chat-schedule-modal__body {
+  display: grid !important;
+  grid-template-columns: 1fr 0.72fr !important;
+  gap: 12px !important;
+  padding: 0 22px 14px !important;
+  overflow: visible !important;
+}
+
+.qc-chat-schedule-modal__body label {
+  margin: 0 !important;
+}
+
+.qc-chat-schedule-modal__body input,
+.qc-chat-schedule-modal__body select,
+.qc-chat-schedule-modal__body textarea {
+  min-height: 42px !important;
+  border-radius: 14px !important;
+}
+
+.qc-chat-schedule-modal__body textarea {
+  min-height: 76px !important;
+  max-height: 90px !important;
+  resize: none !important;
+}
+
+.qc-chat-schedule-modal__footer {
+  padding: 12px 22px 18px !important;
+}
+
+.qc-chat-schedule-modal * {
+  scrollbar-width: none !important;
+}
+
+.qc-chat-schedule-modal *::-webkit-scrollbar {
+  display: none !important;
+}
+
+html:not(.dark) .qc-chat-audio-recorder-card,
+body:not(.dark) .qc-chat-audio-recorder-card {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.08), transparent 38%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html:not(.dark) .qc-chat-audio-recorder-head strong,
+body:not(.dark) .qc-chat-audio-recorder-head strong {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-chat-audio-recorder-head span,
+body:not(.dark) .qc-chat-audio-recorder-head span {
+  color: #475569 !important;
+}
+
+@keyframes qcChatRecordingPulse {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 0 0 3px rgba(239, 0, 1, 0.08), 0 12px 28px rgba(239, 0, 1, 0.16);
+  }
+
+  50% {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 7px rgba(239, 0, 1, 0.08), 0 16px 34px rgba(239, 0, 1, 0.22);
+  }
+}
+
+@media (max-width: 860px) {
+  .qc-chat-schedule-modal__quick,
+  .qc-chat-schedule-modal__body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-chat-schedule-modal,
+  .qc-chat-schedule-modal__panel,
+  .qc-chat-schedule-modal__content {
+    max-height: calc(100vh - 32px) !important;
+    overflow: auto !important;
+  }
+}

@@ -1,8 +1,8 @@
 "use client";
 
-import { type PointerEvent as ReactPointerEvent, type CSSProperties, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type MouseEvent } from "react";
-import { FiBell, FiChevronRight, FiFile, FiImage, FiInbox, FiPaperclip, FiPlus, FiRefreshCw, FiSearch, FiSend, FiSmile, FiUploadCloud, FiUsers, FiX } from "react-icons/fi";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { FiBell, FiCalendar, FiCamera, FiChevronRight, FiFile, FiImage, FiInbox, FiMic, FiPaperclip, FiPauseCircle, FiPlus, FiRefreshCw, FiSearch, FiSend, FiSmile, FiUploadCloud, FiUsers, FiVideo, FiVolume2, FiX, FiStopCircle } from "react-icons/fi";
 
 import UserAvatar from "@/components/UserAvatar";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -22,6 +22,11 @@ type ChatContact = {
   company_names: string[];
   active: boolean;
   status: string | null;
+  presence_status?: "online" | "busy" | "offline";
+  presence_label?: string;
+  presence_last_seen_at?: string | null;
+  presence_busy_until?: string | null;
+  presence_busy_title?: string | null;
   job_title: string | null;
   linkedin_url: string | null;
   origin_label: string | null;
@@ -127,6 +132,27 @@ function formatClock(value: string) {
   return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
+function getDefaultMeetingDateTime() {
+  const date = new Date();
+  date.setMinutes(date.getMinutes() + 30);
+  date.setSeconds(0, 0);
+
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function toGoogleCalendarDate(value: Date) {
+  return value.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+function formatScheduleDate(value: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(value);
+}
+
 function formatRelative(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
@@ -164,6 +190,18 @@ function AttachmentView({ attachment, mine, removable, onRemove }: { attachment:
     return <div className="mt-2 text-5xl leading-none">{attachment.label}</div>;
   }
 
+  if ((attachment.mimeType?.startsWith("audio/") || attachment.sourceLabel === "Áudio") && attachment.url) {
+    return (
+      <div className={`qc-chat-audio-attachment mt-2 rounded-2xl border px-3 py-3 ${mine ? "border-white/15 bg-white/10" : "border-(--tc-border) bg-(--tc-surface-2)"}`}>
+        <div className={`mb-2 flex items-center justify-between gap-3 text-xs font-black ${mine ? "text-white/80" : "text-slate-600 dark:text-white/70"}`}>
+          <span>Áudio</span>
+          {attachment.sizeLabel ? <span>{attachment.sizeLabel}</span> : null}
+        </div>
+        <audio controls src={attachment.url} className="w-full" preload="metadata" />
+      </div>
+    );
+  }
+
   if (isImage(attachment) && attachment.url) {
     return (
       <a href={attachment.url} target="_blank" rel="noreferrer" className="mt-2 block max-w-sm overflow-hidden rounded-[22px] border border-white/15 bg-black/10">
@@ -190,7 +228,14 @@ function AttachmentView({ attachment, mine, removable, onRemove }: { attachment:
 function ContactRow({ contact, active, recent, onSelect }: { contact: ChatContact; active: boolean; recent: boolean; onSelect: (id: string) => void }) {
   return (
     <button type="button" onClick={() => onSelect(contact.id)} className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition ${active ? "bg-white/12 text-white" : "text-white/78 hover:bg-white/8 hover:text-white"}`}>
-      <UserAvatar src={contact.avatar_url} name={contact.name} size="sm" className="shrink-0" frameClassName="border border-white/15" />
+      <span className="qc-chat-contact-avatar">
+        <UserAvatar src={contact.avatar_url} name={contact.name} size="sm" className="shrink-0" frameClassName="border border-white/15" />
+        <span
+          className={`qc-chat-presence-dot ${contact.presence_status === "busy" ? "is-busy" : contact.presence_status === "online" ? "is-online" : "is-offline"}`}
+          title={contact.presence_label ?? "Offline"}
+          aria-label={contact.presence_label ?? "Offline"}
+        />
+      </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2"><span className="truncate text-sm font-bold">{contact.name}</span>{recent ? <span className="h-2 w-2 rounded-full bg-(--tc-accent)" /> : null}</span>
         <span className="block truncate text-[11px] text-white/48">{contact.user ? `@${contact.user}` : contact.email}</span>
@@ -262,6 +307,12 @@ export default function TeamChat() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const latestIncomingRef = useRef<string | null>(null);
   const notificationBootstrappedRef = useRef(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioAnimationRef = useRef<number | null>(null);
+  const scheduleReminderTimeoutsRef = useRef<number[]>([]);
 
   const [contacts, setContacts] = useState<ChatContact[]>([]);
   const [threads, setThreads] = useState<ChatThreadSummary[]>([]);
@@ -270,6 +321,19 @@ export default function TeamChat() {
   const [chatSidebarWidth, setChatSidebarWidth] = useState(304);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
+  const [typingUserName, setTypingUserName] = useState<string | null>(null);
+  const [recordingAudio, setRecordingAudio] = useState(false);
+  const [recordedAudioFile, setRecordedAudioFile] = useState<File | null>(null);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
+  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [audioLevels, setAudioLevels] = useState<number[]>(() => Array.from({ length: 18 }, () => 12));
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [scheduleTitle, setScheduleTitle] = useState("");
+  const [scheduleDateTime, setScheduleDateTime] = useState(getDefaultMeetingDateTime);
+  const [scheduleDurationMinutes, setScheduleDurationMinutes] = useState("30");
+  const [scheduleNotes, setScheduleNotes] = useState("");
+  const [scheduleWithMeet, setScheduleWithMeet] = useState(true);
   const [chatActionTarget, setChatActionTarget] = useState<"composer" | ChatMessage | null>(null);
   const [messageReactions, setMessageReactions] = useState<Record<string, Record<string, number>>>({});
   const [messageReactionTarget, setMessageReactionTarget] = useState<ChatMessage | null>(null);
@@ -294,6 +358,17 @@ export default function TeamChat() {
   useEffect(() => {
     if (typeof window !== "undefined") setNoticePermission("Notification" in window ? Notification.permission : "unsupported");
   }, []);
+
+  // qc-chat-recording-timer-effect
+  useEffect(() => {
+    if (!recordingAudio || !recordingStartedAt) return;
+
+    const interval = window.setInterval(() => {
+      setRecordingSeconds(Math.max(0, Math.floor((Date.now() - recordingStartedAt) / 1000)));
+    }, 250);
+
+    return () => window.clearInterval(interval);
+  }, [recordingAudio, recordingStartedAt]);
 
   useEffect(() => {
     setChatActionTarget(null);
@@ -375,6 +450,16 @@ export default function TeamChat() {
     void loadMessages(selectedPeerId);
     setMessage("");
     setPendingAttachments([]);
+
+    if (selectedPeerId) {
+      void fetch("/api/chat/typing", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ peerId: selectedPeerId, active: false }),
+      }).catch(() => null);
+    }
     setToolsOpen(false);
   }, [isChatRoute, loadMessages, selectedPeerId]);
 
@@ -392,9 +477,25 @@ export default function TeamChat() {
   const currentUserId = user?.id ?? "";
   const recentIds = useMemo(() => new Set(threads.map((thread) => thread.peerId)), [threads]);
   const filteredContacts = useMemo(() => {
-    const term = normalizeSearch(search);
-    if (!term) return contacts;
-    return contacts.filter((contact) => normalizeSearch(`${contact.name} ${contact.email} ${contact.user} ${contact.company_name ?? ""} ${contact.company_names.join(" ")} ${contact.job_title ?? ""}`).includes(term));
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (normalizedSearch.length < 2) {
+      return [];
+    }
+
+    return contacts
+      .filter((contact) => {
+        return [
+          contact.name,
+          contact.email,
+          contact.user,
+          contact.company_name,
+          (contact.origin_label ?? contact.permission_role ?? contact.profile_kind ?? ''),
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedSearch));
+      })
+      .slice(0, 20);
   }, [contacts, search]);
 
   const openConversation = useCallback((peerId: string) => {
@@ -507,6 +608,449 @@ export default function TeamChat() {
     if (!selectedPeerId) return;
     await sendToPeer(selectedPeerId, "", [{ kind: "link", label: gif.label, url: gif.url, mimeType: "image/gif", sizeLabel: null, sourceLabel: "GIF" }]);
   }, [selectedPeerId, sendToPeer]);
+
+  const playChatScheduleSound = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      const audio = new AudioContextClass();
+      const oscillator = audio.createOscillator();
+      const gain = audio.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, audio.currentTime);
+      gain.gain.setValueAtTime(0.001, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.18, audio.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.35);
+
+      oscillator.connect(gain);
+      gain.connect(audio.destination);
+
+      oscillator.start();
+      oscillator.stop(audio.currentTime + 0.38);
+    } catch {
+      // Som é opcional.
+    }
+  }, []);
+
+  const showScheduleNotification = useCallback((title: string, body: string) => {
+    playChatScheduleSound();
+
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+
+    if (Notification.permission === "granted") {
+      new Notification(title, {
+        body,
+        icon: "/images/tc.png",
+        tag: "qc-chat-schedule",
+      });
+    }
+  }, [playChatScheduleSound]);
+
+  const startMeetNow = useCallback(async () => {
+    if (!selectedPeerId) return;
+
+    const start = new Date();
+    const end = new Date(start.getTime() + 30 * 60 * 1000);
+    const participantEmail = selectedContact?.email ?? selectedThread?.peerHandle ?? "";
+    const title = `Ligação com ${selectedName}`;
+    const meetUrl = "https://meet.google.com/new";
+
+    const callNote = [
+      "[LIGACAO_QC]",
+      `Título: ${title}`,
+      `Quando: ${formatScheduleDate(start)}`,
+      "Tipo: ligação iniciada agora",
+      "Duração prevista: 30 minutos",
+      `Pessoa vinculada: ${selectedName}`,
+      `Contato: ${participantEmail || "não informado"}`,
+      `Empresa/contexto: ${selectedCompany || "não informado"}`,
+      "Google Meet: Sim",
+      "[/LIGACAO_QC]",
+    ].join("\n");
+
+    await fetch("/api/chat/schedules", {
+      method: "POST",
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        type: "meeting",
+        startAt: start.toISOString(),
+        endAt: end.toISOString(),
+        userIds: [selectedPeerId],
+        companyName: selectedCompany || null,
+        notes: "Ligação iniciada agora pelo chat.",
+        meet: true,
+        status: "started",
+      }),
+    }).catch(() => null);
+
+    await sendToPeer(selectedPeerId, callNote, [
+      {
+        kind: "link",
+        label: "Abrir Google Meet",
+        url: meetUrl,
+        mimeType: null,
+        sizeLabel: "Ligação iniciada agora",
+        sourceLabel: "Meet",
+      },
+    ]);
+
+    if (typeof window !== "undefined") {
+      window.open(meetUrl, "_blank", "noopener,noreferrer");
+    }
+
+    showScheduleNotification("Ligação iniciada", `${title} foi registrada no chat.`);
+    setScheduleModalOpen(false);
+  }, [
+    selectedCompany,
+    selectedContact?.email,
+    selectedName,
+    selectedPeerId,
+    selectedThread?.peerHandle,
+    sendToPeer,
+    showScheduleNotification,
+  ]);
+
+  const openCameraCapture = useCallback(() => {
+    if (typeof window === "undefined" || uploading) return;
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*,video/*";
+    input.capture = "environment";
+
+    input.onchange = () => {
+      if (input.files?.length) void uploadFiles(input.files);
+    };
+
+    input.click();
+  }, [uploadFiles, uploading]);
+
+
+  const formatRecordingTime = useCallback((seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return String(minutes).padStart(2, "0") + ":" + String(rest).padStart(2, "0");
+  }, []);
+
+  const stopAudioMeter = useCallback(() => {
+    if (audioAnimationRef.current) {
+      cancelAnimationFrame(audioAnimationRef.current);
+      audioAnimationRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      void audioContextRef.current.close().catch(() => null);
+      audioContextRef.current = null;
+    }
+  }, []);
+
+  const stopAudioStream = useCallback(() => {
+    audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+    audioStreamRef.current = null;
+  }, []);
+
+  const startAudioMeter = useCallback((stream: MediaStream) => {
+    stopAudioMeter();
+
+    try {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+      if (!AudioContextClass) return;
+
+      const audioContext = new AudioContextClass();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+
+      const tick = () => {
+        analyser.getByteFrequencyData(data);
+
+        const next = Array.from({ length: 18 }, (_, index) => {
+          const value = data[index % data.length] ?? 0;
+          return Math.max(8, Math.min(46, 8 + (value / 255) * 42));
+        });
+
+        setAudioLevels(next);
+        audioAnimationRef.current = requestAnimationFrame(tick);
+      };
+
+      tick();
+    } catch {
+      setAudioLevels(Array.from({ length: 18 }, () => 16));
+    }
+  }, [stopAudioMeter]);
+
+  const discardRecordedAudio = useCallback(() => {
+    if (recordedAudioUrl) URL.revokeObjectURL(recordedAudioUrl);
+
+    setRecordedAudioFile(null);
+    setRecordedAudioUrl(null);
+    setRecordingSeconds(0);
+    setRecordingStartedAt(null);
+    setAudioLevels(Array.from({ length: 18 }, () => 12));
+  }, [recordedAudioUrl]);
+
+  const sendRecordedAudio = useCallback(async () => {
+    if (!recordedAudioFile || !selectedPeerId) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const form = new FormData();
+      form.append("files", recordedAudioFile, recordedAudioFile.name);
+
+      const response = await fetchApi("/api/chat/attachments", {
+        method: "POST",
+        body: form,
+      });
+
+      if (response.status === 401) {
+        router.replace("/login");
+        return;
+      }
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        attachments?: ChatAttachment[];
+        error?: string;
+      };
+
+      if (!response.ok || !Array.isArray(payload.attachments)) {
+        throw new Error(payload.error || "Não foi possível enviar o áudio.");
+      }
+
+      const ok = await sendToPeer(
+        selectedPeerId,
+        "",
+        payload.attachments.map((attachment) => ({
+          ...attachment,
+          sourceLabel: attachment.sourceLabel || "Áudio",
+        })),
+      );
+
+      if (ok) discardRecordedAudio();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível enviar o áudio.");
+    } finally {
+      setUploading(false);
+    }
+  }, [discardRecordedAudio, recordedAudioFile, router, selectedPeerId, sendToPeer]);
+
+  const stopAudioRecording = useCallback(() => {
+    mediaRecorderRef.current?.stop();
+  }, []);
+
+  const cancelAudioRecording = useCallback(() => {
+    audioChunksRef.current = [];
+    mediaRecorderRef.current?.stop();
+    stopAudioMeter();
+    stopAudioStream();
+    setRecordingAudio(false);
+    setRecordingStartedAt(null);
+    setRecordingSeconds(0);
+  }, [stopAudioMeter, stopAudioStream]);
+
+  const startAudioRecording = useCallback(async () => {
+    if (recordingAudio) {
+      stopAudioRecording();
+      return;
+    }
+
+    if (!selectedPeerId) {
+      setError("Selecione uma conversa para gravar áudio.");
+      return;
+    }
+
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setError("Este navegador não permitiu gravação de áudio.");
+      return;
+    }
+
+    discardRecordedAudio();
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(
+        stream,
+        MediaRecorder.isTypeSupported("audio/webm") ? { mimeType: "audio/webm" } : undefined,
+      );
+
+      audioStreamRef.current = stream;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        stopAudioMeter();
+        stopAudioStream();
+
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        audioChunksRef.current = [];
+
+        mediaRecorderRef.current = null;
+        setRecordingAudio(false);
+        setRecordingStartedAt(null);
+
+        if (blob.size > 0) {
+          const file = new File([blob], "audio-chat-" + Date.now() + ".webm", { type: "audio/webm" });
+          setRecordedAudioFile(file);
+          setRecordedAudioUrl(URL.createObjectURL(blob));
+        }
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecordingAudio(true);
+      setRecordingStartedAt(Date.now());
+      setRecordingSeconds(0);
+      startAudioMeter(stream);
+      setError(null);
+    } catch {
+      stopAudioMeter();
+      stopAudioStream();
+      setRecordingAudio(false);
+      setRecordingStartedAt(null);
+      setError("Não foi possível acessar o microfone.");
+    }
+  }, [
+    discardRecordedAudio,
+    recordingAudio,
+    selectedPeerId,
+    startAudioMeter,
+    stopAudioMeter,
+    stopAudioRecording,
+    stopAudioStream,
+  ]);
+
+
+  const openScheduleModal = useCallback(() => {
+    setScheduleTitle(selectedPeerId ? `Reunião com ${selectedName}` : "Nova reunião");
+    setScheduleDateTime(getDefaultMeetingDateTime());
+    setScheduleDurationMinutes("30");
+    setScheduleNotes("");
+    setScheduleWithMeet(true);
+    setScheduleModalOpen(true);
+  }, [selectedName, selectedPeerId]);
+
+  const submitSchedule = useCallback(async () => {
+    if (!selectedPeerId) return;
+
+    const start = new Date(scheduleDateTime);
+    const duration = Number(scheduleDurationMinutes) || 30;
+
+    if (Number.isNaN(start.getTime())) {
+      setError("Informe uma data válida para o agendamento.");
+      return;
+    }
+
+    const end = new Date(start.getTime() + duration * 60 * 1000);
+    const participantEmail = selectedContact?.email ?? selectedThread?.peerHandle ?? "";
+    const meetText = scheduleWithMeet ? "Sim" : "Não";
+
+    const brainScheduleNote = [
+      "[AGENDA_QC]",
+      `Título: ${scheduleTitle || `Reunião com ${selectedName}`}`,
+      `Quando: ${formatScheduleDate(start)}`,
+      `Duração: ${duration} minutos`,
+      `Pessoa vinculada: ${selectedName}`,
+      `Contato: ${participantEmail || "não informado"}`,
+      `Empresa/contexto: ${selectedCompany || "não informado"}`,
+      `Google Meet: ${meetText}`,
+      `Nota/descrição: ${scheduleNotes.trim() || "sem nota"}`,
+      "[/AGENDA_QC]",
+    ].join("\n");
+
+    await fetch("/api/chat/schedules", {
+      method: "POST",
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: scheduleTitle || `Reunião com ${selectedName}`,
+        type: "meeting",
+        startAt: start.toISOString(),
+        endAt: end.toISOString(),
+        userIds: [selectedPeerId],
+        companyName: selectedCompany || null,
+        notes: scheduleNotes,
+        meet: scheduleWithMeet,
+      }),
+    }).catch(() => null);
+
+    await sendToPeer(selectedPeerId, brainScheduleNote, [
+      {
+        kind: "system",
+        label: "Agendamento registrado",
+        url: null,
+        mimeType: null,
+        sizeLabel: null,
+        sourceLabel: "Agenda",
+      },
+    ]);
+
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: scheduleTitle || `Reunião com ${selectedName}`,
+      dates: `${toGoogleCalendarDate(start)}/${toGoogleCalendarDate(end)}`,
+      details: [
+        scheduleNotes.trim() || "Reunião criada pelo Chat do Quality Control.",
+        "",
+        "Registro para Brain:",
+        brainScheduleNote,
+      ].join("\n"),
+      location: scheduleWithMeet ? "Google Meet" : "",
+    });
+
+    if (participantEmail.includes("@")) params.set("add", participantEmail);
+
+    if (typeof window !== "undefined") {
+      window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener,noreferrer");
+
+      const reminderDelay = start.getTime() - Date.now() - 5 * 60 * 1000;
+
+      if (reminderDelay > 0 && reminderDelay < 24 * 60 * 60 * 1000) {
+        const timeoutId = window.setTimeout(() => {
+          showScheduleNotification("Reunião chegando", `${scheduleTitle || selectedName} começa em 5 minutos.`);
+        }, reminderDelay);
+
+        scheduleReminderTimeoutsRef.current.push(timeoutId);
+      }
+    }
+
+    showScheduleNotification("Agendamento preparado", `${scheduleTitle || selectedName} foi registrado no chat e aberto no calendário.`);
+
+    setScheduleModalOpen(false);
+  }, [
+    scheduleDateTime,
+    scheduleDurationMinutes,
+    scheduleNotes,
+    scheduleTitle,
+    scheduleWithMeet,
+    selectedCompany,
+    selectedContact?.email,
+    selectedName,
+    selectedPeerId,
+    selectedThread?.peerHandle,
+    sendToPeer,
+    showScheduleNotification,
+  ]);
+
+
 
   const applyMessageReaction = useCallback((target: ChatMessage, emoji: string) => {
     setMessageReactions((current) => {
@@ -623,12 +1167,118 @@ export default function TeamChat() {
     window.addEventListener("pointerup", handlePointerUp);
   }, [chatSidebarWidth]);
 
+  useEffect(() => {
+    if (!isChatRoute || !user?.id) return;
+
+    const ping = () => {
+      void fetch(`/api/chat/presence?path=${encodeURIComponent(window.location.pathname)}`, {
+        method: "POST",
+        cache: "no-store",
+        credentials: "same-origin",
+      }).catch(() => null);
+    };
+
+    ping();
+
+    const interval = window.setInterval(ping, 30_000);
+    window.addEventListener("focus", ping);
+    document.addEventListener("visibilitychange", ping);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", ping);
+      document.removeEventListener("visibilitychange", ping);
+    };
+  }, [isChatRoute, user?.id]);
+
   if (!isChatRoute) return null;
   if (loading && !user) return <div className="h-screen animate-pulse bg-[#061225]" />;
   if (!user) return null;
 
   return (
-    <div className="qc-team-chat-testing-company h-full min-h-0 overflow-hidden bg-[linear-gradient(180deg,var(--page-bg),var(--tc-bg))] text-(--tc-text-primary)" onClickCapture={handleChatModalButtonCapture}>
+    <div className="qc-chat-shell qc-team-chat-testing-company h-full min-h-0 overflow-hidden bg-[linear-gradient(180deg,var(--page-bg),var(--tc-bg))] text-(--tc-text-primary)" onClickCapture={handleChatModalButtonCapture}>
+      {scheduleModalOpen ? (
+        <div className="qc-chat-schedule-modal" role="dialog" aria-modal="true" aria-label="Agendar reunião">
+          <div className="qc-chat-modal-backdrop" onClick={() => setScheduleModalOpen(false)} />
+          <div className="qc-chat-schedule-modal__panel">
+            <div className="qc-chat-schedule-modal__header">
+              <div>
+                <span>Ligação e agenda</span>
+                <h2>Ligação / Meet</h2>
+                <p>Inicie uma ligação agora ou agende para mais tarde com registro no chat.</p>
+              </div>
+              <button type="button" onClick={() => setScheduleModalOpen(false)} aria-label="Fechar">
+                <FiX size={18} />
+              </button>
+            </div>
+
+            <div className="qc-chat-schedule-modal__quick">
+              <button type="button" onClick={() => void startMeetNow()} disabled={!selectedPeerId || sending}>
+                <FiVideo size={18} />
+                <span>
+                  <strong>Iniciar agora</strong>
+                  <small>Abre o Meet e registra a ligação no chat automaticamente.</small>
+                </span>
+              </button>
+
+              <div>
+                <strong>Agendar para mais tarde</strong>
+                <small>Informe data e horário abaixo para criar o registro de agenda.</small>
+              </div>
+            </div>
+
+            <div className="qc-chat-schedule-modal__body">
+              <label>
+                <span>Título</span>
+                <input value={scheduleTitle} onChange={(event) => setScheduleTitle(event.target.value)} placeholder="Reunião com..." />
+              </label>
+
+              <div className="qc-chat-schedule-modal__row">
+                <label>
+                  <span>Data e horário para mais tarde</span>
+                  <input type="datetime-local" value={scheduleDateTime} onChange={(event) => setScheduleDateTime(event.target.value)} />
+                </label>
+
+                <label>
+                  <span>Duração</span>
+                  <select value={scheduleDurationMinutes} onChange={(event) => setScheduleDurationMinutes(event.target.value)}>
+                    <option value="15">15 minutos</option>
+                    <option value="30">30 minutos</option>
+                    <option value="45">45 minutos</option>
+                    <option value="60">1 hora</option>
+                    <option value="90">1h30</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                <span>Contexto da ligação</span>
+                <textarea value={scheduleNotes} onChange={(event) => setScheduleNotes(event.target.value)} rows={4} placeholder="Descrição, pauta, contexto, pendências e pessoas vinculadas..." />
+              </label>
+
+              <label className="qc-chat-schedule-modal__check">
+                <input type="checkbox" checked={scheduleWithMeet} onChange={(event) => setScheduleWithMeet(event.target.checked)} />
+                <span>Criar registro como Google Meet</span>
+              </label>
+
+              <div className="qc-chat-schedule-modal__linked">
+                <strong>Pessoas vinculadas</strong>
+                <span>{selectedName}</span>
+                {selectedContact?.email ? <small>{selectedContact.email}</small> : null}
+                {selectedCompany ? <small>{selectedCompany}</small> : null}
+              </div>
+            </div>
+
+            <div className="qc-chat-schedule-modal__footer">
+              <button type="button" onClick={() => setScheduleModalOpen(false)}>Cancelar</button>
+              <button type="button" onClick={() => void submitSchedule()}>
+                <FiCalendar size={15} />
+                Agendar e abrir calendário
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {chatActionTarget ? (
         <div className="qc-chat-unified-action-modal" role="dialog" aria-modal="true" aria-label={isComposerAction ? "Enviar na conversa" : "Reagir à mensagem"}>
           <div className="qc-chat-modal-backdrop" onClick={() => setChatActionTarget(null)} />
@@ -785,12 +1435,12 @@ export default function TeamChat() {
               <button type="button" onClick={() => void loadThreads()} className="rounded-full border border-white/10 bg-white/8 p-2 text-white/70 hover:text-white"><FiRefreshCw size={14} className={loadingThreads ? "animate-spin" : ""} /></button>
             </div>
             <div className="relative mt-4"><FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35" size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Enter" && filteredContacts[0]) openConversation(filteredContacts[0].id); }} placeholder="Buscar usuário pelo nome" className="w-full rounded-2xl border border-white/10 bg-white/8 py-3 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/38" /></div>
-            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]"><span className="rounded-full border border-white/10 px-2.5 py-1 text-white/62">{contacts.length} contatos</span><span className="rounded-full border border-white/10 px-2.5 py-1 text-white/62">{contacts.filter((c) => c.active).length} ativos</span>{noticePermission === "granted" ? <span className="rounded-full border border-emerald-400/30 px-2.5 py-1 text-emerald-300">notifica</span> : null}</div>
+            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]"><span className="rounded-full border border-white/10 px-2.5 py-1 text-white/62">{contacts.length} contatos</span><span className="rounded-full border border-white/10 px-2.5 py-1 text-white/62">{contacts.filter((c) => c.presence_status === "online").length} ativos</span>{noticePermission === "granted" ? <span className="rounded-full border border-emerald-400/30 px-2.5 py-1 text-emerald-300">notifica</span> : null}</div>
           </div>
           {error ? <div className="m-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
             <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiInbox size={12} /> Recentes</span><span>{threads.length}</span></div><div className="space-y-1.5">{threads.slice(0, 6).map((thread) => <button key={thread.key} type="button" onClick={() => openConversation(thread.peerId)} className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left ${thread.peerId === selectedPeerId ? "bg-white/12" : "hover:bg-white/8"}`}><UserAvatar src={contactsById.get(thread.peerId)?.avatar_url ?? thread.peerAvatarUrl} name={thread.peerName} size="sm" frameClassName="border border-white/15" /><span className="min-w-0 flex-1"><span className="flex justify-between gap-2"><span className="truncate text-sm font-bold">{thread.peerName}</span><span className="text-[10px] text-white/40">{formatRelative(thread.lastMessageAt)}</span></span><span className="block truncate text-xs text-white/52">{thread.lastSenderId === currentUserId ? "Você" : thread.lastSenderName}: {thread.lastMessage}</span></span></button>)}{threads.length === 0 ? <div className="rounded-2xl border border-dashed border-white/10 px-4 py-4 text-sm text-white/48">Ainda não há conversas recentes.</div> : null}</div></div>
-            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiUsers size={12} /> Usuários visíveis</span><span>{filteredContacts.length}</span></div><div className="space-y-1.5">{loadingContacts ? <div className="px-4 py-4 text-sm text-white/48">Carregando contatos...</div> : filteredContacts.map((contact) => <ContactRow key={contact.id} contact={contact} active={contact.id === selectedPeerId} recent={recentIds.has(contact.id)} onSelect={openConversation} />)}</div></div>
+            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiUsers size={12} /> Conversas</span><span className="qc-chat-sidebar-presence-label">{contacts.filter((c) => c.presence_status === "online").length} online</span></div><div className="space-y-1.5">{loadingContacts ? <div className="px-4 py-4 text-sm text-white/48">Digite pelo menos 2 caracteres para buscar usuários.</div> : filteredContacts.map((contact) => <ContactRow key={contact.id} contact={contact} active={contact.id === selectedPeerId} recent={recentIds.has(contact.id)} onSelect={openConversation} />)}</div></div>
           </div>
         </aside>
 
@@ -805,7 +1455,7 @@ export default function TeamChat() {
         </button>
 
         <main className="relative flex min-h-0 flex-col" onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={handleDrop}>
-          {dragging ? <div className="pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-[32px] border-2 border-dashed border-(--tc-accent) bg-slate-950/70 text-white"><div className="text-center"><FiUploadCloud size={42} className="mx-auto mb-3" /><div className="text-lg font-black">Solte aqui para anexar</div><div className="text-sm text-white/70">Imagem, GIF, PDF ou TXT até 10 MB</div></div></div> : null}
+          {dragging ? <div className="pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-[32px] border-2 border-dashed border-(--tc-accent) bg-slate-950/70 text-white"><div className="text-center"><FiUploadCloud size={42} className="mx-auto mb-3" /><div className="text-lg font-black">Solte aqui para anexar</div><div className="text-sm text-white/70">Imagem, GIF, PDF, TXT ou áudio até 10 MB</div></div></div> : null}
           <header className="flex min-h-[88px] items-center justify-between gap-4 border-b border-(--tc-border) bg-(--tc-surface)/90 px-5 py-4">
             <div className="flex min-w-0 items-center gap-4"><UserAvatar src={selectedAvatar} name={selectedName} size="lg" frameClassName="border border-(--tc-border)" /><div className="min-w-0"><h1 className="truncate text-2xl font-black tracking-[-0.04em]">{selectedName}</h1><div className="mt-1 truncate text-xs text-(--tc-text-muted)">{selectedContact?.user ? `@${selectedContact.user}` : selectedThread?.peerHandle ? `@${selectedThread.peerHandle}` : "Busque uma pessoa na lateral para começar"}{selectedCompany ? ` • ${selectedCompany}` : ""}</div></div></div>
             <div className="hidden" aria-hidden />
@@ -820,52 +1470,101 @@ export default function TeamChat() {
                       onOpenMessageReaction={setChatActionTarget}
                     />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Use mensagens, arquivos, GIFs e reações para conversar.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-[-0.05em]">Selecione uma conversa</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaço inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
           <form onSubmit={sendMessage} className="border-t border-(--tc-border) bg-(--tc-surface)/94 px-5 py-4">
-              <div className="qc-chat-composer-one-plus">
+              <div className="qc-chat-composer-action-bar">
                 <button
                   type="button"
+                  className="qc-chat-action-pill qc-chat-action-pill--primary"
                   onClick={() => setChatActionTarget("composer")}
                   disabled={!selectedPeerId || sending}
                   aria-label="Abrir opções da conversa"
                   title="Abrir opções"
                 >
-                  <FiPlus size={16} />
+                  <FiPlus size={15} />
                   <span>Opções</span>
                 </button>
-              </div>
-              <div className="qc-chat-composer-modal-actions">
-                <button type="button" data-qc-chat-action="open-message-tools" disabled={!selectedPeerId || sending}>
-                  <span>✨</span> GIFs, ícones e figuras
+
+                <button
+                  type="button"
+                  className={`qc-chat-action-pill ${recordingAudio ? "qc-chat-action-pill--recording" : ""}`}
+                  onClick={() => recordingAudio ? stopAudioRecording() : void startAudioRecording()}
+                  disabled={!selectedPeerId || sending || uploading}
+                  title={recordingAudio ? "Parar gravação" : "Gravar áudio"}
+                >
+                  {recordingAudio ? <FiStopCircle size={15} /> : <FiMic size={15} />}
+                  <span>{recordingAudio ? "Gravando" : "Áudio"}</span>
                 </button>
-                <button type="button" data-qc-chat-action="open-reaction-tools" disabled={!selectedPeerId || sending}>
-                  <span>👍</span> Reagir
+
+                <button
+                  type="button"
+                  className="qc-chat-action-pill"
+                  onClick={openScheduleModal}
+                  disabled={!selectedPeerId}
+                  title="Ligação / Meet"
+                >
+                  <FiVideo size={15} />
+                  <span>Ligação</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="qc-chat-action-pill"
+                  onClick={openScheduleModal}
+                  disabled={!selectedPeerId}
+                  title="Agendar reunião"
+                >
+                  <FiCalendar size={15} />
+                  <span>Agenda</span>
                 </button>
               </div>
-            <input ref={fileInputRef} type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain" className="hidden" onChange={handleFileChange} />
+            <input ref={fileInputRef} type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,audio/mpeg,audio/wav,audio/webm,audio/ogg" className="hidden" onChange={handleFileChange} />
             <div className="w-full">{pendingAttachments.length > 0 ? <div className="mb-3 flex gap-2 overflow-x-auto">{pendingAttachments.map((attachment, index) => <AttachmentView key={attachment.id ?? index} attachment={attachment} removable onRemove={() => setPendingAttachments((items) => items.filter((_, i) => i !== index))} />)}</div> : null}
-              <div className="mb-3 flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-2">
-                  <button type="button" disabled={!selectedPeerId || sending} onClick={() => setToolsOpen((value) => !value)} className="inline-flex items-center gap-2 rounded-full border border-(--tc-border) bg-(--tc-surface-2) px-4 py-2 text-xs font-black text-(--tc-text-primary) disabled:opacity-50">
-                    <FiSmile size={14} /> Reações
-                  </button>
-                  <span className="text-[11px] text-(--tc-text-muted)">Anexe arquivos no clipe ou arraste para a conversa.</span>
+{typingUserName ? (
+                <div className="qc-chat-typing-indicator">
+                  {typingUserName} está digitando...
                 </div>
-                {toolsOpen ? (
-                  <div data-qc-chat-tools-panel className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto rounded-[24px] border border-(--tc-border) bg-(--tc-surface-2) p-3 sm:grid-cols-6 lg:grid-cols-8">
-                    {QUICK_REACTIONS.map((reaction) => (
-                      <button key={reaction} type="button" disabled={!selectedPeerId || sending} onClick={() => void sendSticker(reaction)} className="flex h-12 items-center justify-center rounded-2xl border border-(--tc-border) bg-(--tc-surface) text-lg transition hover:scale-[1.03] disabled:opacity-50">
-                        {reaction}
-                      </button>
-                    ))}
-                    {QUICK_GIFS.map((gif) => (
-                      <button key={gif.label} type="button" disabled={!selectedPeerId || sending} onClick={() => void sendGif(gif)} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-(--tc-border) bg-(--tc-surface) px-3 text-xs font-bold transition hover:scale-[1.03] disabled:opacity-50">
-                        <FiImage size={12} /> {gif.label}
-                      </button>
+              ) : null}
+
+              
+              {recordingAudio || recordedAudioUrl ? (
+                <div className="qc-chat-audio-recorder-card">
+                  <div className="qc-chat-audio-recorder-head">
+                    <div>
+                      <strong>{recordingAudio ? "Gravando áudio" : "Prévia do áudio"}</strong>
+                      <span>{recordingAudio ? "Fale agora. Clique em Gravando para parar." : "Ouça antes de enviar."}</span>
+                    </div>
+                    <span className="qc-chat-audio-recorder-time">{formatRecordingTime(recordingSeconds)}</span>
+                  </div>
+
+                  <div className="qc-chat-audio-visualizer" aria-hidden="true">
+                    {audioLevels.map((level, index) => (
+                      <span key={index} style={{ height: `${level}px` }} />
                     ))}
                   </div>
-                ) : null}
-              </div>
+
+                  {recordedAudioUrl ? (
+                    <audio controls src={recordedAudioUrl} preload="metadata" className="qc-chat-audio-preview-player" />
+                  ) : null}
+
+                  <div className="qc-chat-audio-recorder-actions">
+                    <button type="button" onClick={recordingAudio ? cancelAudioRecording : discardRecordedAudio}>
+                      Descartar
+                    </button>
+
+                    {recordingAudio ? (
+                      <button type="button" onClick={stopAudioRecording} className="is-primary">
+                        Parar gravação
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => void sendRecordedAudio()} disabled={!recordedAudioFile || uploading || sending} className="is-primary">
+                        Enviar áudio
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="flex items-end gap-3 rounded-[28px] border border-(--tc-border) bg-(--tc-surface-2) p-2"><button type="button" onClick={() => fileInputRef.current?.click()} disabled={!selectedPeerId || uploading} className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface)">{uploading ? <FiRefreshCw className="animate-spin" /> : <FiPaperclip />}</button><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={selectedPeerId ? `Enviar mensagem para ${selectedName}...` : "Escolha uma pessoa para começar"} rows={1} disabled={!selectedPeerId || sending} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-1 py-3 text-sm leading-6 outline-none placeholder:text-(--tc-text-muted)" /><button type="submit" disabled={!selectedPeerId || sending || uploading || (!message.trim() && pendingAttachments.length === 0)} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 text-sm font-black text-white disabled:opacity-50"><FiSend size={16} /> Enviar</button></div>
-              <div className="mt-2 flex justify-between px-2 text-[11px] text-(--tc-text-muted)"><span>Enter envia, Shift+Enter quebra linha. Arraste arquivos para anexar.</span><span>{uploading ? "Anexando..." : "Imagem, GIF, PDF ou TXT"}</span></div></div>
+              <div className="mt-2 flex justify-between px-2 text-[11px] text-(--tc-text-muted)"><span>Enter envia, Shift+Enter quebra linha. Arraste arquivos para anexar.</span><span>{uploading ? "Anexando..." : "Imagem, GIF, PDF, TXT ou áudio"}</span></div></div>
           </form>
         </main>
       </section>

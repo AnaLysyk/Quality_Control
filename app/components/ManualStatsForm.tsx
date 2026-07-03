@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 type ManualStatsFormProps = {
@@ -12,6 +12,7 @@ type ManualStatsFormProps = {
 export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
   const { user, loading: authLoading } = useAuthUser();
   const router = useRouter();
+  const [, startTransition] = useTransition();
   const role = typeof user?.role === "string" ? user.role.toLowerCase() : "";
   const canEdit = Boolean(user?.isGlobalAdmin || role === "leader_tc" || role === "technical_support" || role === "empresa");
   const [stats, setStats] = useState(initialStats);
@@ -24,6 +25,12 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
   const update = (key: keyof typeof stats, value: string) => {
     const n = Math.max(0, Number(value) || 0);
     setStats((prev) => ({ ...prev, [key]: n }));
+  };
+
+  const refreshInBackground = () => {
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   const handleSave = async () => {
@@ -40,7 +47,7 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
         throw new Error(`save_failed_${res.status}`);
       }
 
-      router.refresh();
+      refreshInBackground();
     } catch (e) {
       console.error("Erro ao salvar stats manuais", e);
     } finally {
@@ -83,4 +90,3 @@ export function ManualStatsForm({ slug, initialStats }: ManualStatsFormProps) {
     </div>
   );
 }
-

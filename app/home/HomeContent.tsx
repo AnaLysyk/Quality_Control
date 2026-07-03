@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { FiArrowRight, FiChevronRight, FiGrid, FiHome, FiLayers } from "react-icons/fi";
@@ -10,9 +10,9 @@ import { useNavigationItems } from "@/hooks/navigation/useNavigationItems";
 
 function resolveModuleDescription(label: string, itemCount: number) {
   if (itemCount > 0) {
-    return `${itemCount} opção${itemCount === 1 ? "" : "ões"} disponível${itemCount === 1 ? "" : "eis"} conforme suas permissões.`;
+    return `${itemCount} opÃ§Ã£o${itemCount === 1 ? "" : "Ãµes"} disponÃ­vel${itemCount === 1 ? "" : "eis"} conforme suas permissÃµes.`;
   }
-  return `Acesso direto disponível conforme suas permissões.`;
+  return `Acesso direto disponÃ­vel conforme suas permissÃµes.`;
 }
 
 function resolveModuleBadge(index: number) {
@@ -49,10 +49,10 @@ export default function HomeContent() {
                 Home
               </div>
               <h1 className="mt-5 text-3xl font-black tracking-tight md:text-5xl">
-                Painel das opções disponíveis
+                Painel das opÃ§Ãµes disponÃ­veis
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--tc-text-secondary,#4b5563)] dark:text-white/70">
-                Esta tela espelha o menu lateral: aparece aqui somente o que está liberado para seu perfil, empresa e contexto atual.
+                Esta tela espelha o menu lateral: aparece aqui somente o que estÃ¡ liberado para seu perfil, empresa e contexto atual.
               </p>
             </div>
 
@@ -60,14 +60,14 @@ export default function HomeContent() {
               <div className="grid min-w-64 gap-3 rounded-3xl border border-[var(--tc-border,#e5e7eb)] bg-white/70 p-4 text-sm shadow-sm dark:border-white/10 dark:bg-white/5">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-[var(--tc-text-muted,#6b7280)] dark:text-white/50">Perfil</span>
-                  <strong className="text-right uppercase tracking-[0.16em]">{effectiveRole ?? user?.role ?? "usuário"}</strong>
+                  <strong className="text-right uppercase tracking-[0.16em]">{effectiveRole ?? user?.role ?? "usuÃ¡rio"}</strong>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-[var(--tc-text-muted,#6b7280)] dark:text-white/50">Empresa ativa</span>
                   <strong className="text-right">{companySlug ?? "sem empresa"}</strong>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-[var(--tc-text-muted,#6b7280)] dark:text-white/50">Opções</span>
+                  <span className="text-[var(--tc-text-muted,#6b7280)] dark:text-white/50">OpÃ§Ãµes</span>
                   <strong>{totalOptions}</strong>
                 </div>
               </div>
@@ -96,7 +96,7 @@ export default function HomeContent() {
           <section className="rounded-4xl border border-[var(--tc-border,#e5e7eb)] bg-white/85 p-6 shadow-xl dark:border-white/10 dark:bg-slate-950/80">
             <CompanySelector
               title="Trocar empresa ativa"
-              description="A home muda junto com o contexto selecionado e mostra as opções disponíveis para aquela empresa."
+              description="A home muda junto com o contexto selecionado e mostra as opÃ§Ãµes disponÃ­veis para aquela empresa."
               buildHref={(company) =>
                 buildCompanyPathForAccess(company.clientSlug, "home", {
                   isGlobalAdmin: user?.isGlobalAdmin === true,
@@ -180,7 +180,7 @@ export default function HomeContent() {
                       ))}
                       {module.items.length > 5 && (
                         <span className="px-4 pt-1 text-xs font-semibold text-[var(--tc-text-muted,#6b7280)] dark:text-white/45">
-                          + {module.items.length - 5} opção{module.items.length - 5 === 1 ? "" : "ões"} no menu lateral
+                          + {module.items.length - 5} opÃ§Ã£o{module.items.length - 5 === 1 ? "" : "Ãµes"} no menu lateral
                         </span>
                       )}
                     </div>
@@ -190,7 +190,7 @@ export default function HomeContent() {
                     href={primaryHref}
                     className="mt-auto inline-flex items-center gap-2 pt-6 text-xs font-black uppercase tracking-[0.32em] text-[var(--tc-accent,#ef0001)] transition hover:gap-3"
                   >
-                    Abrir módulo
+                    Abrir mÃ³dulo
                     <FiArrowRight size={15} />
                   </Link>
                 </article>
@@ -201,9 +201,9 @@ export default function HomeContent() {
 
         {!isLoggedOut && visibleModules.length === 0 && (
           <section className="rounded-4xl border border-dashed border-[var(--tc-border,#e5e7eb)] bg-white/85 p-8 text-center shadow-xl dark:border-white/10 dark:bg-slate-950/80">
-            <h2 className="text-2xl font-bold">Nenhuma opção liberada</h2>
+            <h2 className="text-2xl font-bold">Nenhuma opÃ§Ã£o liberada</h2>
             <p className="mt-2 text-sm text-[var(--tc-text-secondary,#4b5563)] dark:text-white/65">
-              Assim que a Gestão de Perfis liberar módulos para seu usuário, eles aparecerão aqui e no menu lateral.
+              Assim que a GestÃ£o de Perfis liberar mÃ³dulos para seu usuÃ¡rio, eles aparecerÃ£o aqui e no menu lateral.
             </p>
           </section>
         )}
@@ -211,3 +211,4 @@ export default function HomeContent() {
     </div>
   );
 }
+

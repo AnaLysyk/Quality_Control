@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { FiCheck, FiChevronDown, FiSearch } from "react-icons/fi";
@@ -262,7 +262,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
           <input
             value={navSearch}
             onChange={(event) => setNavSearch(event.target.value)}
-            placeholder="Digite para procurar telas e módulos..."
+            placeholder="Digite para procurar telas e mÃ³dulos..."
             className="w-full bg-transparent text-[12px] text-white placeholder:text-white/50 outline-none"
             data-testid="sidebar-nav-search"
           />
@@ -288,7 +288,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
         )}
 
         {!collapsed && (
-          <nav className="px-3 pb-3 pt-0" aria-label="Navegação principal">
+          <nav className="px-3 pb-3 pt-0" aria-label="NavegaÃ§Ã£o principal">
             <div className="space-y-0.5">
               {!loading &&
                 visibleModules.map((mod) => (
@@ -297,7 +297,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                     mod={mod}
                     isActive={isModuleActive(mod)}
                     isItemActive={isItemActive}
-                    badgeCount={moduleBadgeCounts[mod.id as keyof typeof moduleBadgeCounts] ?? 0}
+                    badgeLabel={formatChatBadgeCount(moduleBadgeCounts[mod.id as keyof typeof moduleBadgeCounts] ?? 0)}
                     open={openSections.has(mod.id) || Boolean(navSearch.trim())}
                     onToggle={() => toggleSection(mod.id)}
                     onClose={onClose}
@@ -306,7 +306,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
             </div>
             {!loading && visibleModules.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/15 bg-white/8 px-3 py-4 text-center text-xs text-white/65">
-                Nenhum módulo encontrado.
+                Nenhum mÃ³dulo encontrado.
               </div>
             ) : null}
           </nav>
@@ -322,7 +322,7 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
                     mod={mod}
                     isActive={isModuleActive(mod)}
                     isItemActive={isItemActive}
-                    badgeCount={moduleBadgeCounts[mod.id as keyof typeof moduleBadgeCounts] ?? 0}
+                    badgeLabel={formatChatBadgeCount(moduleBadgeCounts[mod.id as keyof typeof moduleBadgeCounts] ?? 0)}
                     onClose={onClose}
                   />
                 ))}
@@ -348,3 +348,4 @@ export default function Sidebar({ pathname, mobileOpen = false, onClose, mobileP
     </>
   );
 }
+

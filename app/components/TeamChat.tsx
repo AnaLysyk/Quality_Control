@@ -100,7 +100,7 @@ const CHAT_UNIFIED_ACTION_OPTIONS = [
 
 const CHAT_MESSAGE_EMOJI_OPTIONS = [
   { emoji: "ðŸ‘", label: "Curtir", description: "Enviar curtida na conversa" },
-  { emoji: "â¤ï¸", label: "Amei", description: "Enviar reaÃ§Ã£o positiva" },
+  { emoji: "â¤ï¸", label: "Amei", description: "Enviar reação positiva" },
   { emoji: "âœ…", label: "Feito", description: "Confirmar que foi resolvido" },
   { emoji: "ðŸ‘€", label: "Vendo", description: "Avisar que estÃ¡ acompanhando" },
   { emoji: "ðŸ”¥", label: "Destaque", description: "Marcar algo importante" },
@@ -158,9 +158,9 @@ function formatRelative(value: string) {
   if (Number.isNaN(date.getTime())) return "";
   const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
   if (minutes < 1) return "agora";
-  if (minutes < 60) return `hÃ¡ ${minutes} min`;
+  if (minutes < 60) return `há ${minutes} min`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `hÃ¡ ${hours}h`;
+  if (hours < 24) return `há ${hours}h`;
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
 }
 
@@ -666,8 +666,8 @@ export default function TeamChat() {
       "Tipo: ligaÃ§Ã£o iniciada agora",
       "DuraÃ§Ã£o prevista: 30 minutos",
       `Pessoa vinculada: ${selectedName}`,
-      `Contato: ${participantEmail || "nÃ£o informado"}`,
-      `Empresa/contexto: ${selectedCompany || "nÃ£o informado"}`,
+      `Contato: ${participantEmail || "não informado"}`,
+      `Empresa/contexto: ${selectedCompany || "não informado"}`,
       "Google Meet: Sim",
       "[/LIGACAO_QC]",
     ].join("\n");
@@ -875,7 +875,7 @@ export default function TeamChat() {
     }
 
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError("Este navegador nÃ£o permitiu gravação de áudio.");
+      setError("Este navegador não permitiu gravação de áudio.");
       return;
     }
 
@@ -968,8 +968,8 @@ export default function TeamChat() {
       `Quando: ${formatScheduleDate(start)}`,
       `DuraÃ§Ã£o: ${duration} minutos`,
       `Pessoa vinculada: ${selectedName}`,
-      `Contato: ${participantEmail || "nÃ£o informado"}`,
-      `Empresa/contexto: ${selectedCompany || "nÃ£o informado"}`,
+      `Contato: ${participantEmail || "não informado"}`,
+      `Empresa/contexto: ${selectedCompany || "não informado"}`,
       `Google Meet: ${meetText}`,
       `Nota/descrição: ${scheduleNotes.trim() || "sem nota"}`,
       "[/AGENDA_QC]",
@@ -1025,7 +1025,7 @@ export default function TeamChat() {
 
       if (reminderDelay > 0 && reminderDelay < 24 * 60 * 60 * 1000) {
         const timeoutId = window.setTimeout(() => {
-          showScheduleNotification("Reunião chegando", `${scheduleTitle || selectedName} comeÃ§a em 5 minutos.`);
+          showScheduleNotification("Reunião chegando", `${scheduleTitle || selectedName} começa em 5 minutos.`);
         }, reminderDelay);
 
         scheduleReminderTimeoutsRef.current.push(timeoutId);
@@ -1109,7 +1109,7 @@ export default function TeamChat() {
     const action = button.getAttribute("data-qc-chat-action");
     const label = button.textContent?.trim().toLowerCase() ?? "";
 
-    if (action === "open-message-tools" || label.includes("gif") || label.includes("figura") || label.includes("Ã­cone") || label.includes("icone")) {
+    if (action === "open-message-tools" || label.includes("gif") || label.includes("figura") || label.includes("ícone") || label.includes("icone")) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -1118,7 +1118,7 @@ export default function TeamChat() {
       return;
     }
 
-    if (action === "open-reaction-tools" || label.includes("reaÃ§Ãµes") || label.includes("reacoes") || label.includes("reagir")) {
+    if (action === "open-reaction-tools" || label.includes("reações") || label.includes("reacoes") || label.includes("reagir")) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -1134,7 +1134,7 @@ export default function TeamChat() {
     if (!button) return;
 
     const label = button.textContent?.trim().toLowerCase() ?? "";
-    const opensReactionModal = label.includes("reaÃ§Ãµes") || label.includes("reacoes");
+    const opensReactionModal = label.includes("reações") || label.includes("reacoes");
 
     if (!opensReactionModal) return;
 
@@ -1286,8 +1286,8 @@ export default function TeamChat() {
             <div className="qc-chat-unified-action-modal__header">
               <div>
                 <span>{isComposerAction ? "Enviar na conversa" : "Reagir Ã  mensagem"}</span>
-                <h2>{isComposerAction ? "GIFs, Ã­cones e figuras" : "Curtir comentÃ¡rio"}</h2>
-                <p>{isComposerAction ? "Escolha uma opÃ§Ã£o para enviar na conversa." : "Escolha uma reaÃ§Ã£o para essa mensagem."}</p>
+                <h2>{isComposerAction ? "GIFs, ícones e figuras" : "Curtir comentÃ¡rio"}</h2>
+                <p>{isComposerAction ? "Escolha uma opÃ§Ã£o para enviar na conversa." : "Escolha uma reação para essa mensagem."}</p>
               </div>
               <button type="button" onClick={() => setChatActionTarget(null)} aria-label="Fechar">
                 <FiX size={18} />
@@ -1351,7 +1351,7 @@ export default function TeamChat() {
               <div>
                 <span className="qc-chat-modal-eyebrow">Reagir Ã  mensagem</span>
                 <h2>Curtir comentÃ¡rio</h2>
-                <p>Escolha uma reaÃ§Ã£o para marcar essa mensagem. Pode ter vÃ¡rias reaÃ§Ãµes na mesma mensagem.</p>
+                <p>Escolha uma reação para marcar essa mensagem. Pode ter vÃ¡rias reações na mesma mensagem.</p>
               </div>
               <button type="button" onClick={() => setMessageReactionTarget(null)} aria-label="Fechar">
                 <FiX size={18} />
@@ -1391,7 +1391,7 @@ export default function TeamChat() {
                 <h2>Curtir conversa</h2>
                 <p>Escolha uma opÃ§Ã£o para reagir Ã  mensagem/conversa atual.</p>
               </div>
-              <button type="button" onClick={() => setReactionModalOpen(false)} aria-label="Fechar reaÃ§Ãµes">
+              <button type="button" onClick={() => setReactionModalOpen(false)} aria-label="Fechar reações">
                 <FiX size={18} />
               </button>
             </div>
@@ -1414,7 +1414,7 @@ export default function TeamChat() {
             </div>
 
             <div className="qc-chat-reaction-modal__footer">
-              <span>Essa reaÃ§Ã£o entra na conversa como mensagem rÃ¡pida.</span>
+              <span>Essa reação entra na conversa como mensagem rápida.</span>
               <button type="button" onClick={() => setReactionModalOpen(false)}>Cancelar</button>
             </div>
           </div>
@@ -1434,13 +1434,13 @@ export default function TeamChat() {
               <div className="min-w-0 flex-1"><div className="truncate text-sm font-black">{activeIdentity.displayName}</div><div className="truncate text-xs text-white/52">{activeIdentity.username ? `@${activeIdentity.username}` : activeIdentity.email ?? "Conta autenticada"}</div></div>
               <button type="button" onClick={() => void loadThreads()} aria-label="Atualizar conversas" title="Atualizar conversas" className="rounded-full border border-white/10 bg-white/8 p-2 text-white/70 hover:text-white"><FiRefreshCw size={14} className={loadingThreads ? "animate-spin" : ""} /></button>
             </div>
-            <div className="relative mt-4"><FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35" size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Enter" && filteredContacts[0]) openConversation(filteredContacts[0].id); }} placeholder="Buscar usuÃ¡rio pelo nome" className="w-full rounded-2xl border border-white/10 bg-white/8 py-3 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/38" /></div>
+            <div className="relative mt-4"><FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35" size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => { if (event.key === "Enter" && filteredContacts[0]) openConversation(filteredContacts[0].id); }} placeholder="Buscar usuário pelo nome" className="w-full rounded-2xl border border-white/10 bg-white/8 py-3 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/38" /></div>
             <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.14em]"><span className="rounded-full border border-white/10 px-2.5 py-1 text-white/62">{contacts.length} contatos</span><span className="rounded-full border border-white/10 px-2.5 py-1 text-white/62">{contacts.filter((c) => c.presence_status === "online").length} ativos</span>{noticePermission === "granted" ? <span className="rounded-full border border-emerald-400/30 px-2.5 py-1 text-emerald-300">notifica</span> : null}</div>
           </div>
           {error ? <div className="m-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
-            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiInbox size={12} /> Recentes</span><span>{threads.length}</span></div><div className="space-y-1.5">{threads.slice(0, 6).map((thread) => <button key={thread.key} type="button" onClick={() => openConversation(thread.peerId)} className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left ${thread.peerId === selectedPeerId ? "bg-white/12" : "hover:bg-white/8"}`}><UserAvatar src={contactsById.get(thread.peerId)?.avatar_url ?? thread.peerAvatarUrl} name={thread.peerName} size="sm" frameClassName="border border-white/15" /><span className="min-w-0 flex-1"><span className="flex justify-between gap-2"><span className="truncate text-sm font-bold">{thread.peerName}</span><span className="text-[10px] text-white/40">{formatRelative(thread.lastMessageAt)}</span></span><span className="block truncate text-xs text-white/52">{thread.lastSenderId === currentUserId ? "VocÃª" : thread.lastSenderName}: {thread.lastMessage}</span></span></button>)}{threads.length === 0 ? <div className="rounded-2xl border border-dashed border-white/10 px-4 py-4 text-sm text-white/48">Ainda nÃ£o hÃ¡ conversas recentes.</div> : null}</div></div>
-            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiUsers size={12} /> Conversas</span><span className="qc-chat-sidebar-presence-label">{contacts.filter((c) => c.presence_status === "online").length} online</span></div><div className="space-y-1.5">{loadingContacts ? <div className="px-4 py-4 text-sm text-white/48">Digite pelo menos 2 caracteres para buscar usuÃ¡rios.</div> : filteredContacts.map((contact) => <ContactRow key={contact.id} contact={contact} active={contact.id === selectedPeerId} recent={recentIds.has(contact.id)} onSelect={openConversation} />)}</div></div>
+            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiInbox size={12} /> Recentes</span><span>{threads.length}</span></div><div className="space-y-1.5">{threads.slice(0, 6).map((thread) => <button key={thread.key} type="button" onClick={() => openConversation(thread.peerId)} className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left ${thread.peerId === selectedPeerId ? "bg-white/12" : "hover:bg-white/8"}`}><UserAvatar src={contactsById.get(thread.peerId)?.avatar_url ?? thread.peerAvatarUrl} name={thread.peerName} size="sm" frameClassName="border border-white/15" /><span className="min-w-0 flex-1"><span className="flex justify-between gap-2"><span className="truncate text-sm font-bold">{thread.peerName}</span><span className="text-[10px] text-white/40">{formatRelative(thread.lastMessageAt)}</span></span><span className="block truncate text-xs text-white/52">{thread.lastSenderId === currentUserId ? "VocÃª" : thread.lastSenderName}: {thread.lastMessage}</span></span></button>)}{threads.length === 0 ? <div className="rounded-2xl border border-dashed border-white/10 px-4 py-4 text-sm text-white/48">Ainda não há conversas recentes.</div> : null}</div></div>
+            <div><div className="mb-2 flex items-center justify-between px-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/40"><span className="inline-flex items-center gap-2"><FiUsers size={12} /> Conversas</span><span className="qc-chat-sidebar-presence-label">{contacts.filter((c) => c.presence_status === "online").length} online</span></div><div className="space-y-1.5">{loadingContacts ? <div className="px-4 py-4 text-sm text-white/48">Digite pelo menos 2 caracteres para buscar usuários.</div> : filteredContacts.map((contact) => <ContactRow key={contact.id} contact={contact} active={contact.id === selectedPeerId} recent={recentIds.has(contact.id)} onSelect={openConversation} />)}</div></div>
           </div>
         </aside>
 
@@ -1457,7 +1457,7 @@ export default function TeamChat() {
         <main className="relative flex min-h-0 flex-col" onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={handleDrop}>
           {dragging ? <div className="pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-4xl border-2 border-dashed border-(--tc-accent) bg-slate-950/70 text-white"><div className="text-center"><FiUploadCloud size={42} className="mx-auto mb-3" /><div className="text-lg font-black">Solte aqui para anexar</div><div className="text-sm text-white/70">Imagem, GIF, PDF, TXT ou áudio atÃ© 10 MB</div></div></div> : null}
           <header className="flex min-h-22 items-center justify-between gap-4 border-b border-(--tc-border) bg-(--tc-surface)/90 px-5 py-4">
-            <div className="flex min-w-0 items-center gap-4"><UserAvatar src={selectedAvatar} name={selectedName} size="lg" frameClassName="border border-(--tc-border)" /><div className="min-w-0"><h1 className="truncate text-2xl font-black tracking-[-0.04em]">{selectedName}</h1><div className="mt-1 truncate text-xs text-(--tc-text-muted)">{selectedContact?.user ? `@${selectedContact.user}` : selectedThread?.peerHandle ? `@${selectedThread.peerHandle}` : "Busque uma pessoa na lateral para comeÃ§ar"}{selectedCompany ? ` â€¢ ${selectedCompany}` : ""}</div></div></div>
+            <div className="flex min-w-0 items-center gap-4"><UserAvatar src={selectedAvatar} name={selectedName} size="lg" frameClassName="border border-(--tc-border)" /><div className="min-w-0"><h1 className="truncate text-2xl font-black tracking-[-0.04em]">{selectedName}</h1><div className="mt-1 truncate text-xs text-(--tc-text-muted)">{selectedContact?.user ? `@${selectedContact.user}` : selectedThread?.peerHandle ? `@${selectedThread.peerHandle}` : "Busque uma pessoa na lateral para começar"}{selectedCompany ? ` â€¢ ${selectedCompany}` : ""}</div></div></div>
             <div className="hidden" aria-hidden />
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><div className="flex min-h-full w-full flex-col justify-end gap-4">{selectedPeerId ? loadingMessages && messages.length === 0 ? <div className="h-24 animate-pulse rounded-[28px] bg-white/50 dark:bg-white/8" /> : messages.length > 0 ? messages.map((item) => { const mine = item.senderId === currentUserId; return <MessageBubble
@@ -1468,7 +1468,7 @@ export default function TeamChat() {
                       name={mine ? activeIdentity.displayName : selectedName}
                       reactions={messageReactions[item.id] ?? {}}
                       onOpenMessageReaction={setChatActionTarget}
-                    />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Use mensagens, arquivos, GIFs e reaÃ§Ãµes para conversar.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-tighter">Selecione uma conversa</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaÃ§o inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
+                    />; }) : <div className="flex min-h-[42vh] flex-col items-center justify-center text-center"><FiInbox size={32} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-2xl font-black">Conversa</h3><p className="mt-2 text-sm text-(--tc-text-muted)">Use mensagens, arquivos, GIFs e reações para conversar.</p></div> : <div className="flex min-h-full flex-col items-center justify-center text-center"><FiUsers size={34} className="text-(--tc-text-muted)" /><h3 className="mt-4 text-3xl font-black tracking-tighter">Selecione uma conversa</h3><p className="mt-2 max-w-xl text-sm text-(--tc-text-muted)">A conversa usa o espaço inteiro, com bolhas, anexos, GIFs, figurinhas e notificações.</p></div>}<div ref={messagesEndRef} /></div></div>
           <form onSubmit={sendMessage} className="border-t border-(--tc-border) bg-(--tc-surface)/94 px-5 py-4">
               <div className="qc-chat-composer-action-bar">
                 <button
@@ -1563,7 +1563,7 @@ export default function TeamChat() {
                 </div>
               ) : null}
 
-              <div className="flex items-end gap-3 rounded-[28px] border border-(--tc-border) bg-(--tc-surface-2) p-2"><button type="button" onClick={() => fileInputRef.current?.click()} disabled={!selectedPeerId || uploading} className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface)">{uploading ? <FiRefreshCw className="animate-spin" /> : <FiPaperclip />}</button><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={selectedPeerId ? `Enviar mensagem para ${selectedName}...` : "Escolha uma pessoa para comeÃ§ar"} rows={1} disabled={!selectedPeerId || sending} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-1 py-3 text-sm leading-6 outline-none placeholder:text-(--tc-text-muted)" /><button type="submit" disabled={!selectedPeerId || sending || uploading || (!message.trim() && pendingAttachments.length === 0)} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 text-sm font-black text-white disabled:opacity-50"><FiSend size={16} /> Enviar</button></div>
+              <div className="flex items-end gap-3 rounded-[28px] border border-(--tc-border) bg-(--tc-surface-2) p-2"><button type="button" onClick={() => fileInputRef.current?.click()} disabled={!selectedPeerId || uploading} className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-(--tc-border) bg-(--tc-surface)">{uploading ? <FiRefreshCw className="animate-spin" /> : <FiPaperclip />}</button><textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void sendMessage(); } }} placeholder={selectedPeerId ? `Enviar mensagem para ${selectedName}...` : "Escolha uma pessoa para começar"} rows={1} disabled={!selectedPeerId || sending} className="max-h-36 min-h-12 flex-1 resize-none bg-transparent px-1 py-3 text-sm leading-6 outline-none placeholder:text-(--tc-text-muted)" /><button type="submit" disabled={!selectedPeerId || sending || uploading || (!message.trim() && pendingAttachments.length === 0)} className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-(--tc-accent) px-5 text-sm font-black text-white disabled:opacity-50"><FiSend size={16} /> Enviar</button></div>
               <div className="mt-2 flex justify-between px-2 text-[11px] text-(--tc-text-muted)"><span>Enter envia, Shift+Enter quebra linha. Arraste arquivos para anexar.</span><span>{uploading ? "Anexando..." : "Imagem, GIF, PDF, TXT ou áudio"}</span></div></div>
           </form>
         </main>
@@ -1571,5 +1571,6 @@ export default function TeamChat() {
     </div>
   );
 }
+
 
 

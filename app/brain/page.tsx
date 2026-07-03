@@ -1,5 +1,4 @@
-﻿import { BrainDashboard } from "./_components/BrainDashboard";
-import { BrainUtilitiesPanel } from "./_components/BrainUtilitiesPanel";
+import { BrainDashboard } from "./_components/BrainDashboard";
 import { registerScreen } from "@/lib/brain/registry";
 
 export const dynamic = "force-dynamic";
@@ -26,8 +25,8 @@ registerScreen({
     "Tem no para todas as solicitacoes?",
     "O que falta mapear?",
     "Mostrar logs das solicitacoes.",
-    "Contar caracteres desta nota executiva.",
-    "Converter este anexo para PDF.",
+    "Pergunte ao Brain quais neurônios existem para este contexto.",
+    "Peça ao chat para converter arquivo, contar caracteres ou analisar documento."
   ],
 });
 
@@ -38,9 +37,7 @@ export const metadata = {
 
 export default function BrainPage() {
   return (
-    <div className="space-y-5">
-      <BrainUtilitiesPanel />
-      <BrainDashboard />
+    <div className="brain-page-fullscreen">      <BrainDashboard />
     </div>
   );
 }

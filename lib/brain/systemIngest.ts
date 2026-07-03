@@ -1,4 +1,4 @@
-﻿import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 import { addMemory, connectNodes, upsertNode } from "@/lib/brain";
 import type { AuditLogInput } from "@/lib/audit/writeAuditLog";
@@ -29,6 +29,46 @@ const TRACKED_ACTIONS = new Set([
   "restore",
 ]);
 
+const ACTION_ALIASES: Record<string, string> = {
+  accepted: "approve",
+  approved: "approve",
+  approve: "approve",
+  rejected: "reject",
+  reject: "reject",
+  created: "created",
+  create: "create",
+  updated: "updated",
+  update: "update",
+  changed: "update",
+  reset: "update",
+  commented: "update",
+  assigned: "update",
+  closed: "status_change",
+  activated: "update",
+  deactivated: "update",
+  failed: "status_change",
+  failure: "status_change",
+  success: "status_change",
+  executed: "created",
+  deleted: "delete",
+  purged: "delete",
+  logout: "status_change",
+};
+
+function normalizeAuditAction(value: unknown) {
+  const raw = normalizeText(value).toLowerCase();
+  if (!raw) return "";
+
+  if (raw.includes("status.changed")) return "status_change";
+  if (raw.includes("password.changed")) return "update";
+  if (raw.includes("password.reset")) return "update";
+  if (raw.includes("permissions.updated")) return "update";
+  if (raw.includes("permissions.reset")) return "update";
+
+  const last = raw.split(".").filter(Boolean).pop() ?? raw;
+  return ACTION_ALIASES[raw] ?? ACTION_ALIASES[last] ?? last;
+}
+
 const NODE_TYPE_BY_ENTITY: Record<string, string> = {
   Application: "Application",
   AuditLog: "AuditEvent",
@@ -46,6 +86,21 @@ const NODE_TYPE_BY_ENTITY: Record<string, string> = {
   TestRun: "TestRun",
   Ticket: "Ticket",
   User: "User",
+  access_request: "AccessRequest",
+  client: "Company",
+  company: "Company",
+  project: "Project",
+  run: "TestRun",
+  ticket: "Ticket",
+  user: "User",
+  profile: "Profile",
+  defect: "Defect",
+  integration: "Integration",
+  export: "Export",
+  request: "Request",
+  system: "SystemEvent",
+  audit: "AuditEvent",
+  audit_log: "AuditEvent",
 };
 
 function normalizeText(value: unknown) {
@@ -71,7 +126,7 @@ function pickText(metadata: IngestContext | null | undefined, keys: string[]) {
 }
 
 function shouldIngest(input: SystemEntityInput) {
-  const action = normalizeText(input.action).toLowerCase();
+  const action = normalizeAuditAction(input.action);
   if (!action) return false;
   if (!TRACKED_ACTIONS.has(action)) return false;
   if (!normalizeText(input.entityType)) return false;
@@ -85,7 +140,7 @@ function resolveNodeType(entityType: string) {
 
 function buildDescription(input: SystemEntityInput) {
   const label = normalizeText(input.entityLabel) || normalizeText(input.entityId) || "registro";
-  const action = normalizeText(input.action) || "evento";
+  const action = normalizeAuditAction(input.action) || "evento";
   const entity = normalizeText(input.entityType) || "Sistema";
   const company = pickText(input.metadata, ["companySlug", "companyId", "clientSlug"]);
   const project = pickText(input.metadata, ["projectSlug", "projectId", "projectCode", "testProjectCode"]);
@@ -153,7 +208,7 @@ export async function ingestSystemEventIntoBrain(input: SystemEntityInput) {
   const entityId = normalizeText(input.entityId) || normalizeSlug(input.entityLabel) || `${entityType}-${Date.now()}`;
   const label = normalizeText(input.entityLabel) || `${entityType} ${entityId}`;
   const nodeType = resolveNodeType(entityType);
-  const action = normalizeText(input.action).toLowerCase();
+  const action = normalizeAuditAction(input.action);
   const description = buildDescription(input);
 
   const node = await upsertNode({
@@ -165,6 +220,7 @@ export async function ingestSystemEventIntoBrain(input: SystemEntityInput) {
     metadata: {
       ...metadata,
       source: "system-audit-ingest",
+      rawAction: input.action,
       action,
       actorUserId: input.actorUserId ?? null,
       actorEmail: input.actorEmail ?? null,

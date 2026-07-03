@@ -1,4 +1,7 @@
-﻿"use client";
+"use client";
+
+
+
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FiDatabase, FiRefreshCw, FiShield } from "react-icons/fi";
@@ -394,7 +397,7 @@ function defaultProjectForBrain(context: BrainContextResponse | null) {
   return brainCanSeeAllCompanies(context) ? null : context?.defaultContext.projectId ?? null;
 }
 export function BrainNeuralDashboard() {
-  const [graph, setGraph] = useState<BuiltBrainGraph>(() => emptyGraph());
+const [graph, setGraph] = useState<BuiltBrainGraph>(() => emptyGraph());
   const [brainContext, setBrainContext] = useState<BrainContextResponse | null>(null);
   const [, setDataErrors] = useState<string[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -416,10 +419,78 @@ export function BrainNeuralDashboard() {
 
   useEffect(() => {
     document.body.classList.add("qc-brain-route");
+
+    const hideBrainCover = () => {
+      const candidates = Array.from(document.querySelectorAll("header, section, div"));
+
+      for (const element of candidates) {
+        const text = element.textContent?.trim() ?? "";
+        const rect = element.getBoundingClientRect();
+
+        const hasBrainTitle = text === "Brain" || text.startsWith("Brain");
+        const looksLikeBigCover =
+          rect.top >= 0 &&
+          rect.top < 180 &&
+          rect.width > 500 &&
+          rect.height >= 58 &&
+          rect.height <= 170;
+
+        const isFilter = element.closest(".brain-filter-hud") || element.classList.contains("qc-brain-filter-brand");
+        const isSidebar = element.closest("aside") || element.closest("nav");
+
+        if (hasBrainTitle && looksLikeBigCover && !isFilter && !isSidebar) {
+          element.classList.add("qc-brain-big-cover-hidden");
+        }
+      }
+    };
+
+    hideBrainCover();
+
+    const qcBrainHideBigCoverObserver = new MutationObserver(hideBrainCover);
+    qcBrainHideBigCoverObserver.observe(document.body, { childList: true, subtree: true });
     document.body.classList.add("qc-brain-active-route");
-    return () => {
+
+    const markBrainHeader = () => {
+      const headers = Array.from(document.querySelectorAll("header"));
+      for (const header of headers) {
+        const hasBrainTitle = Array.from(header.querySelectorAll("h1, h2, strong, span")).some(
+          (item) => item.textContent?.trim() === "Brain",
+        );
+
+        if (hasBrainTitle) {
+          header.classList.add("qc-brain-shell-header-hidden");
+        }
+      }
+    };
+
+    markBrainHeader();
+
+    const brainHeaderObserver = new MutationObserver(markBrainHeader);
+    brainHeaderObserver.observe(document.body, { childList: true, subtree: true });
+
+    const brainTitle = Array.from(document.querySelectorAll("h1")).find(
+      (item) => item.textContent?.trim() === "Brain",
+    );
+
+    const brainTopbar =
+      brainTitle?.closest("header") ??
+      brainTitle?.closest('[role="banner"]') ??
+      brainTitle?.parentElement?.parentElement?.parentElement ??
+      null;
+
+    const brainTopbarBrand = brainTitle?.parentElement ?? null;
+
+    brainTopbar?.classList.add("qc-brain-topbar-compact");
+    brainTopbarBrand?.classList.add("qc-brain-topbar-brand-hidden");
+  return () => {
       document.body.classList.remove("qc-brain-route");
+      qcBrainHideBigCoverObserver.disconnect();
+      document.querySelectorAll(".qc-brain-big-cover-hidden").forEach((item) => item.classList.remove("qc-brain-big-cover-hidden"));
       document.body.classList.remove("qc-brain-active-route");
+      brainHeaderObserver.disconnect();
+      document.querySelectorAll(".qc-brain-shell-header-hidden").forEach((item) => item.classList.remove("qc-brain-shell-header-hidden"));
+      brainTopbar?.classList.remove("qc-brain-topbar-compact");
+      brainTopbarBrand?.classList.remove("qc-brain-topbar-brand-hidden");
     };
   }, []);
 
@@ -838,8 +909,8 @@ function handleSelectNode(node: BrainNode) {
       .finally(() => setLoadingData(false));
   }
 
-  const filterHud = (
-    <div className="brain-filter-hud pointer-events-auto absolute left-1/2 top-6 z-30 w-[min(760px,calc(100%-48px))] -translate-x-1/2">
+const filterHud = (
+    <div className="brain-filter-hud pointer-events-auto absolute left-0 right-0 top-4 z-30 mx-auto w-[min(1180px,calc(100%-32px))]">
       <BrainContextSelector
           nodes={graph.nodes}
           companies={contextCompanies}
@@ -880,7 +951,7 @@ function handleSelectNode(node: BrainNode) {
   );
 
   return (
-    <main className="relative h-[calc(100dvh-88px)] min-h-[620px] overflow-hidden bg-[#020713] text-white">
+    <main className="relative h-[100dvh] min-h-[720px] overflow-hidden bg-[#020713] text-white">
       <div className="absolute inset-0">
         <BrainNeuralCanvas
           nodes={visibleGraph.nodes}
@@ -903,12 +974,3 @@ function handleSelectNode(node: BrainNode) {
 export function BrainDashboard() {
   return <BrainNeuralDashboard />;
 }
-
-
-
-
-
-
-
-
-

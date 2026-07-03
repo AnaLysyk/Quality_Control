@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import * as path from "path";
 import { randomUUID } from "crypto";
@@ -113,6 +113,36 @@ export type AuditLogListParams = AuditLogSearchParams & {
 export const AUDIT_LOG_RETENTION_DAYS = 60;
 
 type AuditLogStore = { items: AuditLogRow[] };
+
+function emitAuditLogToBrain(input: {
+  actorUserId?: string | null;
+  actorEmail?: string | null;
+  action: AuditAction;
+  entityType: AuditEntityType;
+  entityId?: string | null;
+  entityLabel?: string | null;
+  metadata?: unknown;
+}): void {
+  void (async () => {
+    try {
+      const { ingestSystemEventIntoBrain } = await import("@/lib/brain/systemIngest");
+      await ingestSystemEventIntoBrain({
+        action: input.action,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        entityLabel: input.entityLabel,
+        actorUserId: input.actorUserId,
+        actorEmail: input.actorEmail,
+        metadata:
+          input.metadata && typeof input.metadata === "object" && !Array.isArray(input.metadata)
+            ? (input.metadata as Record<string, unknown>)
+            : { value: input.metadata ?? null },
+      });
+    } catch {
+      // brain ingest must not block audit or the main flow
+    }
+  })();
+}
 
 const STORE_PATH = path.join(process.cwd(), "data", "audit-logs.json");
 const USE_MEMORY = process.env.AUDIT_LOGS_IN_MEMORY === "true";
@@ -235,6 +265,7 @@ export async function addAuditLog(input: {
     await prisma.auditLog.create({
       data: { actor_user_id: input.actorUserId ?? null, actor_email: input.actorEmail ?? null, action: input.action, entity_type: input.entityType, entity_id: input.entityId ?? null, entity_label: input.entityLabel ?? null, metadata: input.metadata !== undefined ? JSON.parse(JSON.stringify(input.metadata)) : null },
     });
+    emitAuditLogToBrain(input);
     return;
   }
   const store = await readStore();
@@ -253,6 +284,7 @@ export async function addAuditLog(input: {
   items.unshift(entry);
   // Persist ALL entries — never auto-prune. Use manual purge (purgeAuditLogs) for cleanup.
   await writeStore({ items });
+  emitAuditLogToBrain(input);
 }
 
 export async function searchAuditLogs(params?: AuditLogSearchParams) {

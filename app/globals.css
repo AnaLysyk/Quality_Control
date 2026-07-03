@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 /* ├ürea de hover para menu mobile */
 .menu-hover-area {
@@ -9870,59 +9870,46 @@ video {
   color: inherit;
 }
 
-/* FIX: permissoes perfil - light dark correto */
+/* FIX: permissoes perfil - escopo visual correto */
 
-/* esconde a capa global antiga que só mostrava logo + Permissions */
-.qc-permissions-profile-route .qc-hidden-permissions-shell-cover {
+/* esconde somente a capa global antiga, sem afetar avatar/ícones do topo */
+.qc-hidden-permissions-shell-cover {
   display: none !important;
 }
 
-/* MODO CLARO: fundo claro de verdade */
+/* página */
 .profile-permissions-page,
 .qc-profile-permissions-page {
-  background: #f8fafc !important;
-  color: #0f172a !important;
+  background: transparent !important;
+  color: #f8fafc !important;
 }
 
-/* capa única em degradê continua no topo */
+/* capa principal */
 .profile-permissions-page .permissions-profile-hero-unified,
 .qc-profile-permissions-page .permissions-profile-hero-unified {
-  margin-top: 0 !important;
   border-radius: 28px !important;
-  border: 1px solid rgba(1, 24, 72, 0.12) !important;
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
   background:
-    radial-gradient(circle at 8% 18%, rgba(239, 0, 1, 0.22), transparent 24%),
-    linear-gradient(135deg, #011848 0%, #16215f 52%, #b00018 100%) !important;
+    radial-gradient(circle at 8% 18%, rgba(239, 0, 1, 0.18), transparent 24%),
+    linear-gradient(135deg, rgba(1, 24, 72, 0.96) 0%, rgba(10, 28, 82, 0.94) 52%, rgba(150, 0, 28, 0.88) 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 18px 48px rgba(1, 24, 72, 0.22) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28) !important;
 }
 
-/* textos dentro da capa */
 .profile-permissions-page .permissions-profile-hero-unified h1,
 .profile-permissions-page .permissions-profile-hero-unified p,
-.profile-permissions-page .permissions-profile-hero-unified [class*="text-[#0f172a]"],
-.profile-permissions-page .permissions-profile-hero-unified [class*="text-[#011848]"],
+.profile-permissions-page .permissions-profile-hero-unified [class*="text-[#"],
 .qc-profile-permissions-page .permissions-profile-hero-unified h1,
 .qc-profile-permissions-page .permissions-profile-hero-unified p,
-.qc-profile-permissions-page .permissions-profile-hero-unified [class*="text-[#0f172a]"],
-.qc-profile-permissions-page .permissions-profile-hero-unified [class*="text-[#011848]"] {
+.qc-profile-permissions-page .permissions-profile-hero-unified [class*="text-[#"] {
   color: #ffffff !important;
 }
 
-.profile-permissions-page .permissions-profile-hero-unified .text-slate-500,
-.profile-permissions-page .permissions-profile-hero-unified .text-slate-600,
-.qc-profile-permissions-page .permissions-profile-hero-unified .text-slate-500,
-.qc-profile-permissions-page .permissions-profile-hero-unified .text-slate-600 {
-  color: #dbeafe !important;
-}
-
-/* cards de contagem dentro da capa */
 .profile-permissions-page .permissions-profile-metrics > div,
 .qc-profile-permissions-page .permissions-profile-metrics > div {
-  background: rgba(8, 17, 36, 0.62) !important;
+  background: rgba(2, 6, 23, 0.62) !important;
   border-color: rgba(255, 255, 255, 0.24) !important;
   color: #ffffff !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .profile-permissions-page .permissions-profile-metrics p,
@@ -9935,66 +9922,3248 @@ video {
   color: #ffffff !important;
 }
 
-/* botões dentro da capa */
-.profile-permissions-page .permissions-profile-hero-unified a,
-.profile-permissions-page .permissions-profile-hero-unified button,
-.qc-profile-permissions-page .permissions-profile-hero-unified a,
-.qc-profile-permissions-page .permissions-profile-hero-unified button {
-  border-color: rgba(255, 255, 255, 0.26) !important;
+/* remove fundo/container atrás dos tipos */
+.profile-permissions-page .permissions-profile-type-grid,
+.qc-profile-permissions-page .permissions-profile-type-grid {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
-/* MODO ESCURO: só aplica se o tema realmente estiver escuro */
-html.dark .profile-permissions-page,
-body.dark .profile-permissions-page,
-[data-theme="dark"] .profile-permissions-page,
-html.dark .qc-profile-permissions-page,
-body.dark .qc-profile-permissions-page,
-[data-theme="dark"] .qc-profile-permissions-page {
+/* cards de tipo no modo escuro */
+.profile-permissions-page .permissions-profile-type-grid > button,
+.qc-profile-permissions-page .permissions-profile-type-grid > button {
+  background: rgba(8, 17, 36, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.18) !important;
+}
+
+.profile-permissions-page .permissions-profile-type-grid > button:hover,
+.qc-profile-permissions-page .permissions-profile-type-grid > button:hover {
+  background: rgba(15, 23, 42, 0.98) !important;
+  border-color: rgba(96, 165, 250, 0.42) !important;
+  transform: translateY(-1px);
+}
+
+/* selecionado continua escuro, sem card claro */
+.profile-permissions-page .permissions-profile-type-grid > button.ring-2,
+.qc-profile-permissions-page .permissions-profile-type-grid > button.ring-2 {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(8, 17, 36, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.58) !important;
+  color: #f8fafc !important;
+  box-shadow:
+    0 0 0 1px rgba(96, 165, 250, 0.24),
+    0 14px 30px rgba(2, 6, 23, 0.24) !important;
+}
+
+/* textos dos cards de tipo */
+.profile-permissions-page .permissions-profile-type-grid > button h2,
+.profile-permissions-page .permissions-profile-type-grid > button p,
+.profile-permissions-page .permissions-profile-type-grid > button [class*="text-"],
+.qc-profile-permissions-page .permissions-profile-type-grid > button h2,
+.qc-profile-permissions-page .permissions-profile-type-grid > button p,
+.qc-profile-permissions-page .permissions-profile-type-grid > button [class*="text-"] {
+  color: #e5eefc !important;
+}
+
+/* mini cards internos dos tipos */
+.profile-permissions-page .permissions-profile-type-grid > button .bg-white\/70,
+.profile-permissions-page .permissions-profile-type-grid > button [class*="bg-white"],
+.qc-profile-permissions-page .permissions-profile-type-grid > button .bg-white\/70,
+.qc-profile-permissions-page .permissions-profile-type-grid > button [class*="bg-white"] {
+  background: rgba(15, 23, 42, 0.78) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #f8fafc !important;
+}
+
+/* restante da tela dark, só dentro da página */
+.profile-permissions-page .bg-white,
+.profile-permissions-page .bg-slate-50,
+.qc-profile-permissions-page .bg-white,
+.qc-profile-permissions-page .bg-slate-50 {
+  background: rgba(8, 17, 36, 0.94) !important;
+}
+
+.profile-permissions-page .border-slate-200,
+.profile-permissions-page .border-slate-100,
+.qc-profile-permissions-page .border-slate-200,
+.qc-profile-permissions-page .border-slate-100 {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+.profile-permissions-page .text-slate-900,
+.profile-permissions-page .text-slate-800,
+.profile-permissions-page .text-slate-700,
+.profile-permissions-page [class*="text-[#0f172a]"],
+.profile-permissions-page [class*="text-[#011848]"],
+.qc-profile-permissions-page .text-slate-900,
+.qc-profile-permissions-page .text-slate-800,
+.qc-profile-permissions-page .text-slate-700,
+.qc-profile-permissions-page [class*="text-[#0f172a]"],
+.qc-profile-permissions-page [class*="text-[#011848]"] {
+  color: #f8fafc !important;
+}
+
+.profile-permissions-page .text-slate-600,
+.profile-permissions-page .text-slate-500,
+.profile-permissions-page .text-slate-400,
+.qc-profile-permissions-page .text-slate-600,
+.qc-profile-permissions-page .text-slate-500,
+.qc-profile-permissions-page .text-slate-400 {
+  color: #b8c7e6 !important;
+}
+
+/* FIX: permissoes perfil - historico expansivel e topo limpo */
+
+/* toolbar do histórico */
+.profile-permissions-page .permissions-profile-toolbar,
+.qc-profile-permissions-page .permissions-profile-toolbar {
+  position: relative;
+  z-index: 5;
+}
+
+.profile-permissions-page .permissions-profile-history-toggle,
+.qc-profile-permissions-page .permissions-profile-history-toggle {
+  min-height: 42px;
+}
+
+/* remove a coluna lateral fixa e transforma em painel expansível */
+.profile-permissions-page .permissions-profile-history-aside,
+.qc-profile-permissions-page .permissions-profile-history-aside {
+  display: none;
+}
+
+/* quando abrir, o histórico vira painel expansível abaixo do botão */
+.profile-permissions-page[data-history-open="true"] .permissions-profile-history-aside,
+.qc-profile-permissions-page[data-history-open="true"] .permissions-profile-history-aside {
+  display: block !important;
+  margin-top: 12px !important;
+  margin-bottom: 18px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.profile-permissions-page[data-history-open="true"] .permissions-profile-history-aside > *,
+.qc-profile-permissions-page[data-history-open="true"] .permissions-profile-history-aside > * {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* visual do painel do histórico aberto */
+.profile-permissions-page .permissions-profile-history-aside .bg-white,
+.profile-permissions-page .permissions-profile-history-aside .bg-slate-50,
+.qc-profile-permissions-page .permissions-profile-history-aside .bg-white,
+.qc-profile-permissions-page .permissions-profile-history-aside .bg-slate-50 {
+  background: rgba(8, 17, 36, 0.94) !important;
+}
+
+.profile-permissions-page .permissions-profile-history-aside [class*="text-[#0f172a]"],
+.profile-permissions-page .permissions-profile-history-aside [class*="text-[#011848]"],
+.profile-permissions-page .permissions-profile-history-aside .text-slate-900,
+.profile-permissions-page .permissions-profile-history-aside .text-slate-800,
+.profile-permissions-page .permissions-profile-history-aside .text-slate-700,
+.qc-profile-permissions-page .permissions-profile-history-aside [class*="text-[#0f172a]"],
+.qc-profile-permissions-page .permissions-profile-history-aside [class*="text-[#011848]"],
+.qc-profile-permissions-page .permissions-profile-history-aside .text-slate-900,
+.qc-profile-permissions-page .permissions-profile-history-aside .text-slate-800,
+.qc-profile-permissions-page .permissions-profile-history-aside .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+.profile-permissions-page .permissions-profile-history-aside .text-slate-600,
+.profile-permissions-page .permissions-profile-history-aside .text-slate-500,
+.profile-permissions-page .permissions-profile-history-aside .text-slate-400,
+.qc-profile-permissions-page .permissions-profile-history-aside .text-slate-600,
+.qc-profile-permissions-page .permissions-profile-history-aside .text-slate-500,
+.qc-profile-permissions-page .permissions-profile-history-aside .text-slate-400 {
+  color: #b8c7e6 !important;
+}
+
+/* FIX: permissoes perfil - listagem limpa busca historico */
+.profile-permissions-page .permissions-profile-content-grid,
+.qc-profile-permissions-page .permissions-profile-content-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.profile-permissions-page .permissions-list-toolbar,
+.qc-profile-permissions-page .permissions-list-toolbar,
+.profile-permissions-page .permissions-smart-search,
+.qc-profile-permissions-page .permissions-smart-search {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.profile-permissions-page .permissions-smart-search,
+.qc-profile-permissions-page .permissions-smart-search {
+  background: rgba(8, 17, 36, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+.profile-permissions-page .permissions-smart-search input,
+.qc-profile-permissions-page .permissions-smart-search input {
+  color: #f8fafc !important;
+}
+
+.profile-permissions-page .permissions-smart-search input::placeholder,
+.qc-profile-permissions-page .permissions-smart-search input::placeholder {
+  color: #93a4c4 !important;
+}
+
+.profile-permissions-page .permissions-hero-history-toggle,
+.qc-profile-permissions-page .permissions-hero-history-toggle {
+  background: rgba(8, 17, 36, 0.55) !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #ffffff !important;
+}
+
+.profile-permissions-page .permissions-history-panel,
+.qc-profile-permissions-page .permissions-history-panel {
+  margin-bottom: 12px !important;
+  background: rgba(8, 17, 36, 0.94) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+.profile-permissions-page .permissions-history-panel [class*="text-[#0f172a]"],
+.profile-permissions-page .permissions-history-panel [class*="text-[#011848]"],
+.profile-permissions-page .permissions-history-panel .text-slate-900,
+.profile-permissions-page .permissions-history-panel .text-slate-800,
+.profile-permissions-page .permissions-history-panel .text-slate-700,
+.qc-profile-permissions-page .permissions-history-panel [class*="text-[#0f172a]"],
+.qc-profile-permissions-page .permissions-history-panel [class*="text-[#011848]"],
+.qc-profile-permissions-page .permissions-history-panel .text-slate-900,
+.qc-profile-permissions-page .permissions-history-panel .text-slate-800,
+.qc-profile-permissions-page .permissions-history-panel .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+.profile-permissions-page .permissions-pagination-footer,
+.qc-profile-permissions-page .permissions-pagination-footer {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.profile-permissions-page .permissions-pagination-footer > span,
+.qc-profile-permissions-page .permissions-pagination-footer > span {
+  width: 100%;
+}
+
+.profile-permissions-page .permissions-pagination-footer > div,
+.qc-profile-permissions-page .permissions-pagination-footer > div {
+  justify-content: center !important;
+  flex-wrap: wrap;
+}
+
+/* FIX: permissoes perfil - visual safe */
+
+/* -----------------------------
+   fundo claro / escuro correto
+------------------------------ */
+body.qc-permissions-profile-route {
+  background: #f8fafc !important;
+}
+
+body.qc-permissions-profile-route .profile-permissions-page,
+body.qc-permissions-profile-route .qc-profile-permissions-page {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.dark body.qc-permissions-profile-route,
+body.dark.qc-permissions-profile-route,
+[data-theme="dark"] body.qc-permissions-profile-route {
+  background: #020617 !important;
+}
+
+html.dark body.qc-permissions-profile-route .profile-permissions-page,
+html.dark body.qc-permissions-profile-route .qc-profile-permissions-page,
+body.dark.qc-permissions-profile-route .profile-permissions-page,
+body.dark.qc-permissions-profile-route .qc-profile-permissions-page,
+[data-theme="dark"] body.qc-permissions-profile-route .profile-permissions-page,
+[data-theme="dark"] body.qc-permissions-profile-route .qc-profile-permissions-page {
   background: #020617 !important;
   color: #f8fafc !important;
 }
 
-html.dark .profile-permissions-page .bg-white,
-body.dark .profile-permissions-page .bg-white,
-[data-theme="dark"] .profile-permissions-page .bg-white,
-html.dark .profile-permissions-page .bg-slate-50,
-body.dark .profile-permissions-page .bg-slate-50,
-[data-theme="dark"] .profile-permissions-page .bg-slate-50,
-html.dark .qc-profile-permissions-page .bg-white,
-body.dark .qc-profile-permissions-page .bg-white,
-[data-theme="dark"] .qc-profile-permissions-page .bg-white,
-html.dark .qc-profile-permissions-page .bg-slate-50,
-body.dark .qc-profile-permissions-page .bg-slate-50,
-[data-theme="dark"] .qc-profile-permissions-page .bg-slate-50 {
-  background: rgba(8, 17, 36, 0.94) !important;
+/* mantém a capa correta */
+body.qc-permissions-profile-route .permissions-profile-hero-unified,
+body.qc-permissions-profile-route .permissions-profile-panel {
+  overflow: hidden;
 }
 
-html.dark .profile-permissions-page .text-slate-900,
-html.dark .profile-permissions-page .text-slate-800,
-html.dark .profile-permissions-page .text-slate-700,
-html.dark .profile-permissions-page [class*="text-[#0f172a]"],
-html.dark .profile-permissions-page [class*="text-[#011848]"],
-body.dark .profile-permissions-page .text-slate-900,
-body.dark .profile-permissions-page .text-slate-800,
-body.dark .profile-permissions-page .text-slate-700,
-body.dark .profile-permissions-page [class*="text-[#0f172a]"],
-body.dark .profile-permissions-page [class*="text-[#011848]"],
-[data-theme="dark"] .profile-permissions-page .text-slate-900,
-[data-theme="dark"] .profile-permissions-page .text-slate-800,
-[data-theme="dark"] .profile-permissions-page .text-slate-700,
-[data-theme="dark"] .profile-permissions-page [class*="text-[#0f172a]"],
-[data-theme="dark"] .profile-permissions-page [class*="text-[#011848]"] {
+/* -----------------------------
+   busca grande e limpa
+------------------------------ */
+body.qc-permissions-profile-route .permissions-smart-search {
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
+body.qc-permissions-profile-route .permissions-smart-search input {
+  width: 100% !important;
+}
+
+/* modo claro da busca */
+body.qc-permissions-profile-route .permissions-smart-search {
+  background: #ffffff !important;
+  border-color: #d7deea !important;
+}
+
+body.qc-permissions-profile-route .permissions-smart-search input {
+  color: #0f172a !important;
+}
+
+body.qc-permissions-profile-route .permissions-smart-search input::placeholder {
+  color: #64748b !important;
+}
+
+/* modo escuro da busca */
+html.dark body.qc-permissions-profile-route .permissions-smart-search,
+body.dark.qc-permissions-profile-route .permissions-smart-search,
+[data-theme="dark"] body.qc-permissions-profile-route .permissions-smart-search {
+  background: rgba(8, 17, 36, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+html.dark body.qc-permissions-profile-route .permissions-smart-search input,
+body.dark.qc-permissions-profile-route .permissions-smart-search input,
+[data-theme="dark"] body.qc-permissions-profile-route .permissions-smart-search input {
   color: #f8fafc !important;
 }
 
-html.dark .profile-permissions-page .text-slate-600,
-html.dark .profile-permissions-page .text-slate-500,
-html.dark .profile-permissions-page .text-slate-400,
-body.dark .profile-permissions-page .text-slate-600,
-body.dark .profile-permissions-page .text-slate-500,
-body.dark .profile-permissions-page .text-slate-400,
-[data-theme="dark"] .profile-permissions-page .text-slate-600,
-[data-theme="dark"] .profile-permissions-page .text-slate-500,
-[data-theme="dark"] .profile-permissions-page .text-slate-400 {
+html.dark body.qc-permissions-profile-route .permissions-smart-search input::placeholder,
+body.dark.qc-permissions-profile-route .permissions-smart-search input::placeholder,
+[data-theme="dark"] body.qc-permissions-profile-route .permissions-smart-search input::placeholder {
+  color: #93a4c4 !important;
+}
+
+/* FIX: spinner branco na tela de permissoes */
+
+/* spinner/loading branco na rota de permissões */
+body.qc-permissions-profile-route [class*="min-h-[55vh]"] .animate-spin,
+body.qc-permissions-profile-route [class*="min-h-[55vh]"] .text-blue-600,
+body.qc-permissions-profile-route [class*="min-h-[55vh]"] .text-blue-500,
+body.qc-permissions-profile-route [class*="min-h-[55vh]"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* quadradinho do ícone continua escuro */
+body.qc-permissions-profile-route [class*="min-h-[55vh]"] .bg-slate-100,
+body.qc-permissions-profile-route [class*="min-h-[55vh]"] .bg-white {
+  background: rgba(30, 41, 59, 0.85) !important;
+}
+
+/* FIX: permissoes perfil - historico modal save floating */
+
+/* remove SOMENTE os dois botões da capa */
+body.qc-permissions-profile-route .qc-permissions-hide-cover-action {
+  display: none !important;
+}
+
+/* botão histórico principal da capa */
+body.qc-permissions-profile-route .qc-permissions-history-main-button {
+  position: relative;
+  z-index: 3;
+}
+
+/* salvar flutuante central */
+body.qc-permissions-profile-route .qc-permissions-floating-save {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 180px;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 165, 250, 0.34);
+  background: linear-gradient(135deg, #011848 0%, #0f2f7a 55%, #ef0001 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  padding: 0 20px;
+  box-shadow: 0 20px 44px rgba(2, 6, 23, 0.34);
+}
+
+/* histórico agora abre como modal, não no meio dos cards */
+body.qc-permissions-profile-route .permissions-history-modal {
+  position: fixed !important;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(960px, calc(100vw - 48px));
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+  z-index: 75;
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
+  border-radius: 28px !important;
+  background:
+    linear-gradient(180deg, rgba(1, 24, 72, 0.98) 0%, rgba(5, 18, 45, 0.97) 100%) !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42) !important;
+  padding: 24px !important;
+}
+
+/* backdrop do modal */
+body.qc-permissions-profile-route .permissions-history-modal::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+/* visual Testing Company */
+body.qc-permissions-profile-route .permissions-history-modal .bg-white,
+body.qc-permissions-profile-route .permissions-history-modal .bg-slate-50 {
+  background: rgba(8, 17, 36, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+body.qc-permissions-profile-route .permissions-history-modal .text-slate-900,
+body.qc-permissions-profile-route .permissions-history-modal .text-slate-800,
+body.qc-permissions-profile-route .permissions-history-modal .text-slate-700,
+body.qc-permissions-profile-route .permissions-history-modal [class*="text-[#0f172a]"],
+body.qc-permissions-profile-route .permissions-history-modal [class*="text-[#011848]"] {
+  color: #f8fafc !important;
+}
+
+body.qc-permissions-profile-route .permissions-history-modal .text-slate-600,
+body.qc-permissions-profile-route .permissions-history-modal .text-slate-500,
+body.qc-permissions-profile-route .permissions-history-modal .text-slate-400 {
   color: #b8c7e6 !important;
+}
+
+/* linha do tempo */
+body.qc-permissions-profile-route .permissions-history-modal .space-y-3,
+body.qc-permissions-profile-route .permissions-history-modal .space-y-4,
+body.qc-permissions-profile-route .permissions-history-modal .flex.flex-col.gap-3,
+body.qc-permissions-profile-route .permissions-history-modal .flex.flex-col.gap-4 {
+  position: relative;
+  padding-left: 28px;
+}
+
+body.qc-permissions-profile-route .permissions-history-modal .space-y-3::before,
+body.qc-permissions-profile-route .permissions-history-modal .space-y-4::before,
+body.qc-permissions-profile-route .permissions-history-modal .flex.flex-col.gap-3::before,
+body.qc-permissions-profile-route .permissions-history-modal .flex.flex-col.gap-4::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 10px;
+  width: 2px;
+  background: linear-gradient(180deg, #3b82f6 0%, #ef0001 100%);
+  opacity: 0.85;
+  border-radius: 999px;
+}
+
+body.qc-permissions-profile-route .permissions-history-modal .space-y-3 > *,
+body.qc-permissions-profile-route .permissions-history-modal .space-y-4 > *,
+body.qc-permissions-profile-route .permissions-history-modal .flex.flex-col.gap-3 > *,
+body.qc-permissions-profile-route .permissions-history-modal .flex.flex-col.gap-4 > * {
+  position: relative;
+}
+
+body.qc-permissions-profile-route .permissions-history-modal .space-y-3 > *::before,
+body.qc-permissions-profile-route .permissions-history-modal .space-y-4 > *::before,
+body.qc-permissions-profile-route .permissions-history-modal .flex.flex-col.gap-3 > *::before,
+body.qc-permissions-profile-route .permissions-history-modal .flex.flex-col.gap-4 > *::before {
+  content: "";
+  position: absolute;
+  left: -22px;
+  top: 20px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #ef0001;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 4px rgba(239, 0, 1, 0.18);
+}
+
+/* FIX: remover botoes capa permissoes */
+.profile-permissions-page .qc-permissions-remove-cover-actions,
+.qc-profile-permissions-page .qc-permissions-remove-cover-actions {
+  display: none !important;
+}
+
+/* FIX: historico apenas icone modal timeline */
+
+/* deixa só um botão de histórico */
+body.qc-permissions-profile-route .qc-permissions-history-extra-hidden {
+  display: none !important;
+}
+
+/* botão Histórico vira apenas ícone */
+body.qc-permissions-profile-route .qc-permissions-history-icon-only {
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 42px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  font-size: 0 !important;
+  color: transparent !important;
+  overflow: hidden !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  background: rgba(8, 17, 36, 0.72) !important;
+  border: 1px solid rgba(148, 163, 184, 0.34) !important;
+  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.22) !important;
+}
+
+body.qc-permissions-profile-route .qc-permissions-history-icon-only::before {
+  content: "◷";
+  font-size: 18px;
+  line-height: 1;
+  color: #ffffff;
+  font-weight: 900;
+}
+
+/* modal flutuante do histórico */
+body.qc-permissions-profile-route .permissions-history-panel,
+body.qc-permissions-profile-route .permissions-history-modal,
+body.qc-permissions-profile-route .profile-permissions-history {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(940px, calc(100vw - 48px)) !important;
+  max-height: calc(100vh - 96px) !important;
+  overflow: auto !important;
+  z-index: 90 !important;
+  border-radius: 30px !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(239, 0, 1, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(1, 24, 72, 0.98), rgba(8, 17, 36, 0.98) 58%, rgba(80, 0, 22, 0.94)) !important;
+  color: #f8fafc !important;
+  padding: 26px !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48) !important;
+}
+
+/* backdrop visual */
+body.qc-permissions-profile-route .permissions-history-panel::before,
+body.qc-permissions-profile-route .permissions-history-modal::before,
+body.qc-permissions-profile-route .profile-permissions-history::before {
+  content: "";
+  position: fixed;
+  inset: -100vh -100vw;
+  z-index: -1;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+/* texto do modal */
+body.qc-permissions-profile-route .permissions-history-panel *,
+body.qc-permissions-profile-route .permissions-history-modal *,
+body.qc-permissions-profile-route .profile-permissions-history * {
+  color: inherit;
+}
+
+body.qc-permissions-profile-route .permissions-history-panel .bg-white,
+body.qc-permissions-profile-route .permissions-history-panel .bg-slate-50,
+body.qc-permissions-profile-route .permissions-history-modal .bg-white,
+body.qc-permissions-profile-route .permissions-history-modal .bg-slate-50,
+body.qc-permissions-profile-route .profile-permissions-history .bg-white,
+body.qc-permissions-profile-route .profile-permissions-history .bg-slate-50 {
+  background: rgba(8, 17, 36, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+/* linha do tempo */
+body.qc-permissions-profile-route .permissions-history-panel .space-y-3,
+body.qc-permissions-profile-route .permissions-history-modal .space-y-3,
+body.qc-permissions-profile-route .profile-permissions-history .space-y-3 {
+  position: relative;
+  padding-left: 30px;
+}
+
+body.qc-permissions-profile-route .permissions-history-panel .space-y-3::before,
+body.qc-permissions-profile-route .permissions-history-modal .space-y-3::before,
+body.qc-permissions-profile-route .profile-permissions-history .space-y-3::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 10px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #60a5fa, #ef0001);
+}
+
+body.qc-permissions-profile-route .permissions-history-panel .space-y-3 > *,
+body.qc-permissions-profile-route .permissions-history-modal .space-y-3 > *,
+body.qc-permissions-profile-route .profile-permissions-history .space-y-3 > * {
+  position: relative;
+}
+
+body.qc-permissions-profile-route .permissions-history-panel .space-y-3 > *::before,
+body.qc-permissions-profile-route .permissions-history-modal .space-y-3 > *::before,
+body.qc-permissions-profile-route .profile-permissions-history .space-y-3 > *::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #ef0001;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 5px rgba(239, 0, 1, 0.18);
+}
+
+/* FIX: menu lateral busca fixa e destaque somente ativo */
+
+/* degradê pegando menu inteiro, incluindo topo e rodapé */
+.qc-sidebar.sidebar-operational-shell {
+  background:
+    linear-gradient(165deg, rgba(1, 24, 72, 0.98) 0%, rgba(10, 34, 86, 0.96) 42%, rgba(126, 17, 62, 0.94) 78%, rgba(157, 11, 38, 0.96) 100%) !important;
+}
+
+/* topo, busca fixa e rodapé deixam o degradê aparecer */
+.qc-sidebar > div:first-child,
+.qc-sidebar .sidebar-search-fixed,
+.qc-sidebar .sidebar-shell-footer {
+  background: transparent !important;
+}
+
+/* busca fixa não rola junto com as opções */
+.qc-sidebar .sidebar-search-fixed {
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* remove destaque parado dos itens */
+.qc-sidebar [data-testid^="nav-"] {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* destaque aparece só ao passar mouse ou quando está ativo/clicado */
+.qc-sidebar [data-testid^="nav-"]:hover,
+.qc-sidebar [data-testid^="nav-"][data-active="true"],
+.qc-sidebar [data-testid^="nav-"][aria-current="page"] {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border-color: var(--shell-menu-border) !important;
+  border-left-color: var(--tc-accent) !important;
+}
+
+/* subitens também sem caixa fixa */
+.qc-sidebar [data-testid^="nav-"]:not(:hover):not([data-active="true"]):not([aria-current="page"]) {
+  background: transparent !important;
+}
+
+/* rodapé mais limpo/profissional */
+.qc-sidebar .sidebar-shell-footer {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.qc-sidebar .sidebar-footer-brand {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.qc-sidebar .sidebar-footer-company-link {
+  text-decoration: none;
+}
+
+.qc-sidebar .sidebar-footer-company-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* FIX: sidebar light dark gradient correto */
+
+/* =========================================================
+   MODO CLARO
+   fundo branco + degradê suave no menu inteiro
+   ========================================================= */
+html:not(.dark) .qc-sidebar.sidebar-operational-shell,
+body:not(.dark) .qc-sidebar.sidebar-operational-shell {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(1, 24, 72, 0.10), transparent 36%),
+    radial-gradient(circle at 100% 100%, rgba(239, 0, 1, 0.12), transparent 42%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 48%, #ffffff 100%) !important;
+  color: #0f172a !important;
+  border-right-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* topo, busca fixa e rodapé no claro também deixam o degradê aparecer */
+html:not(.dark) .qc-sidebar > div:first-child,
+html:not(.dark) .qc-sidebar .sidebar-search-fixed,
+html:not(.dark) .qc-sidebar .sidebar-shell-footer,
+body:not(.dark) .qc-sidebar > div:first-child,
+body:not(.dark) .qc-sidebar .sidebar-search-fixed,
+body:not(.dark) .qc-sidebar .sidebar-shell-footer {
+  background: transparent !important;
+}
+
+/* textos fortes no modo claro */
+html:not(.dark) .qc-sidebar,
+html:not(.dark) .qc-sidebar span,
+html:not(.dark) .qc-sidebar a,
+html:not(.dark) .qc-sidebar button,
+body:not(.dark) .qc-sidebar,
+body:not(.dark) .qc-sidebar span,
+body:not(.dark) .qc-sidebar a,
+body:not(.dark) .qc-sidebar button {
+  color: #0f172a !important;
+}
+
+/* subtítulos/descrições no claro */
+html:not(.dark) .qc-sidebar .text-white\/55,
+html:not(.dark) .qc-sidebar .text-white\/50,
+html:not(.dark) .qc-sidebar .text-white\/45,
+html:not(.dark) .qc-sidebar .text-white\/40,
+body:not(.dark) .qc-sidebar .text-white\/55,
+body:not(.dark) .qc-sidebar .text-white\/50,
+body:not(.dark) .qc-sidebar .text-white\/45,
+body:not(.dark) .qc-sidebar .text-white\/40 {
+  color: #334155 !important;
+}
+
+/* busca fixa clara */
+html:not(.dark) .qc-sidebar .sidebar-search,
+html:not(.dark) .qc-sidebar .sidebar-control,
+body:not(.dark) .qc-sidebar .sidebar-search,
+body:not(.dark) .qc-sidebar .sidebar-control {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-sidebar .sidebar-search input,
+body:not(.dark) .qc-sidebar .sidebar-search input {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-sidebar .sidebar-search input::placeholder,
+body:not(.dark) .qc-sidebar .sidebar-search input::placeholder {
+  color: #475569 !important;
+}
+
+/* remove destaque parado no claro */
+html:not(.dark) .qc-sidebar [data-testid^="nav-"],
+body:not(.dark) .qc-sidebar [data-testid^="nav-"] {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* destaque só no hover ou ativo/clicado no claro */
+html:not(.dark) .qc-sidebar [data-testid^="nav-"]:hover,
+html:not(.dark) .qc-sidebar [data-testid^="nav-"][data-active="true"],
+html:not(.dark) .qc-sidebar [data-testid^="nav-"][aria-current="page"],
+body:not(.dark) .qc-sidebar [data-testid^="nav-"]:hover,
+body:not(.dark) .qc-sidebar [data-testid^="nav-"][data-active="true"],
+body:not(.dark) .qc-sidebar [data-testid^="nav-"][aria-current="page"] {
+  background: rgba(1, 24, 72, 0.08) !important;
+  border-color: rgba(1, 24, 72, 0.18) !important;
+  border-left-color: #ef0001 !important;
+}
+
+/* rodapé claro profissional */
+html:not(.dark) .qc-sidebar .sidebar-shell-footer,
+body:not(.dark) .qc-sidebar .sidebar-shell-footer {
+  border-top-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html:not(.dark) .qc-sidebar .sidebar-footer-company-link,
+body:not(.dark) .qc-sidebar .sidebar-footer-company-link {
+  color: #011848 !important;
+}
+
+html:not(.dark) .qc-sidebar .sidebar-footer-version,
+body:not(.dark) .qc-sidebar .sidebar-footer-version {
+  color: #475569 !important;
+}
+
+/* =========================================================
+   MODO ESCURO
+   mantém o que já estava bom, só garante topo fixo no degradê
+   ========================================================= */
+html.dark .qc-sidebar.sidebar-operational-shell,
+body.dark .qc-sidebar.sidebar-operational-shell,
+[data-theme="dark"] .qc-sidebar.sidebar-operational-shell {
+  background:
+    linear-gradient(165deg, rgba(1, 24, 72, 0.98) 0%, rgba(10, 34, 86, 0.96) 42%, rgba(126, 17, 62, 0.94) 78%, rgba(157, 11, 38, 0.96) 100%) !important;
+}
+
+/* cabeçalho fixo, busca fixa e rodapé pegam o mesmo degradê no escuro */
+html.dark .qc-sidebar > div:first-child,
+html.dark .qc-sidebar .sidebar-search-fixed,
+html.dark .qc-sidebar .sidebar-shell-footer,
+body.dark .qc-sidebar > div:first-child,
+body.dark .qc-sidebar .sidebar-search-fixed,
+body.dark .qc-sidebar .sidebar-shell-footer,
+[data-theme="dark"] .qc-sidebar > div:first-child,
+[data-theme="dark"] .qc-sidebar .sidebar-search-fixed,
+[data-theme="dark"] .qc-sidebar .sidebar-shell-footer {
+  background: transparent !important;
+}
+
+/* garante que o header não fique branco no escuro */
+html.dark .qc-sidebar > div:first-child *,
+body.dark .qc-sidebar > div:first-child *,
+[data-theme="dark"] .qc-sidebar > div:first-child * {
+  color: #ffffff !important;
+}
+
+/* remove bg branco hardcoded do header no escuro */
+html.dark .qc-sidebar > div:first-child [class*="bg-white"],
+body.dark .qc-sidebar > div:first-child [class*="bg-white"],
+[data-theme="dark"] .qc-sidebar > div:first-child [class*="bg-white"] {
+  background: transparent !important;
+}
+
+/* FIX: sidebar dark only contraste */
+
+/* modo escuro: força contraste forte no menu sem mexer no modo claro */
+html.dark .qc-sidebar.sidebar-operational-shell,
+body.dark .qc-sidebar.sidebar-operational-shell,
+[data-theme="dark"] .qc-sidebar.sidebar-operational-shell,
+.dark .qc-sidebar.sidebar-operational-shell {
+  background:
+    linear-gradient(165deg, rgba(1, 24, 72, 0.98) 0%, rgba(10, 34, 86, 0.96) 42%, rgba(126, 17, 62, 0.94) 78%, rgba(157, 11, 38, 0.96) 100%) !important;
+  color: #ffffff !important;
+}
+
+/* cabeçalho, busca fixa e rodapé pegam o degradê no dark */
+html.dark .qc-sidebar > div:first-child,
+html.dark .qc-sidebar .sidebar-search-fixed,
+html.dark .qc-sidebar .sidebar-shell-footer,
+body.dark .qc-sidebar > div:first-child,
+body.dark .qc-sidebar .sidebar-search-fixed,
+body.dark .qc-sidebar .sidebar-shell-footer,
+[data-theme="dark"] .qc-sidebar > div:first-child,
+[data-theme="dark"] .qc-sidebar .sidebar-search-fixed,
+[data-theme="dark"] .qc-sidebar .sidebar-shell-footer,
+.dark .qc-sidebar > div:first-child,
+.dark .qc-sidebar .sidebar-search-fixed,
+.dark .qc-sidebar .sidebar-shell-footer {
+  background: transparent !important;
+}
+
+/* textos fortes no dark */
+html.dark .qc-sidebar,
+html.dark .qc-sidebar span,
+html.dark .qc-sidebar a,
+html.dark .qc-sidebar button,
+body.dark .qc-sidebar,
+body.dark .qc-sidebar span,
+body.dark .qc-sidebar a,
+body.dark .qc-sidebar button,
+[data-theme="dark"] .qc-sidebar,
+[data-theme="dark"] .qc-sidebar span,
+[data-theme="dark"] .qc-sidebar a,
+[data-theme="dark"] .qc-sidebar button,
+.dark .qc-sidebar,
+.dark .qc-sidebar span,
+.dark .qc-sidebar a,
+.dark .qc-sidebar button {
+  color: #ffffff !important;
+}
+
+/* itens não ativos ficam visíveis, mas sem caixa fixa */
+html.dark .qc-sidebar [data-testid^="nav-"]:not(:hover):not([data-active="true"]):not([aria-current="page"]),
+body.dark .qc-sidebar [data-testid^="nav-"]:not(:hover):not([data-active="true"]):not([aria-current="page"]),
+[data-theme="dark"] .qc-sidebar [data-testid^="nav-"]:not(:hover):not([data-active="true"]):not([aria-current="page"]),
+.dark .qc-sidebar [data-testid^="nav-"]:not(:hover):not([data-active="true"]):not([aria-current="page"]) {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: none !important;
+}
+
+/* destaque só hover/ativo */
+html.dark .qc-sidebar [data-testid^="nav-"]:hover,
+html.dark .qc-sidebar [data-testid^="nav-"][data-active="true"],
+html.dark .qc-sidebar [data-testid^="nav-"][aria-current="page"],
+body.dark .qc-sidebar [data-testid^="nav-"]:hover,
+body.dark .qc-sidebar [data-testid^="nav-"][data-active="true"],
+body.dark .qc-sidebar [data-testid^="nav-"][aria-current="page"],
+[data-theme="dark"] .qc-sidebar [data-testid^="nav-"]:hover,
+[data-theme="dark"] .qc-sidebar [data-testid^="nav-"][data-active="true"],
+[data-theme="dark"] .qc-sidebar [data-testid^="nav-"][aria-current="page"],
+.dark .qc-sidebar [data-testid^="nav-"]:hover,
+.dark .qc-sidebar [data-testid^="nav-"][data-active="true"],
+.dark .qc-sidebar [data-testid^="nav-"][aria-current="page"] {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  border-left-color: #ef0001 !important;
+  color: #ffffff !important;
+}
+
+/* busca fixa no dark */
+html.dark .qc-sidebar .sidebar-search,
+body.dark .qc-sidebar .sidebar-search,
+[data-theme="dark"] .qc-sidebar .sidebar-search,
+.dark .qc-sidebar .sidebar-search {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+html.dark .qc-sidebar .sidebar-search input,
+body.dark .qc-sidebar .sidebar-search input,
+[data-theme="dark"] .qc-sidebar .sidebar-search input,
+.dark .qc-sidebar .sidebar-search input {
+  color: #ffffff !important;
+}
+
+html.dark .qc-sidebar .sidebar-search input::placeholder,
+body.dark .qc-sidebar .sidebar-search input::placeholder,
+[data-theme="dark"] .qc-sidebar .sidebar-search input::placeholder,
+.dark .qc-sidebar .sidebar-search input::placeholder {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+/* ícones no dark */
+html.dark .qc-sidebar svg,
+body.dark .qc-sidebar svg,
+[data-theme="dark"] .qc-sidebar svg,
+.dark .qc-sidebar svg {
+  color: currentColor !important;
+}
+
+/* rodapé no dark */
+html.dark .qc-sidebar .sidebar-footer-company-link,
+body.dark .qc-sidebar .sidebar-footer-company-link,
+[data-theme="dark"] .qc-sidebar .sidebar-footer-company-link,
+.dark .qc-sidebar .sidebar-footer-company-link {
+  color: #ffffff !important;
+}
+
+html.dark .qc-sidebar .sidebar-footer-version,
+body.dark .qc-sidebar .sidebar-footer-version,
+[data-theme="dark"] .qc-sidebar .sidebar-footer-version,
+.dark .qc-sidebar .sidebar-footer-version {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+
+/* FIX: brain filtro compacto funcional */
+
+.brain-filter-hud {
+  top: 16px !important;
+  width: min(1080px, calc(100% - 56px)) !important;
+  z-index: 45 !important;
+}
+
+.qc-brain-filter-panel-compact {
+  pointer-events: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(2, 6, 23, 0.58);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px);
+  color: #f8fafc;
+  padding: 8px;
+}
+
+.qc-brain-filter-compact-bar {
+  display: grid;
+  grid-template-columns: auto minmax(240px, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.qc-brain-filter-main-button,
+.qc-brain-filter-icon-button,
+.qc-brain-filter-chip {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.82);
+  color: #ffffff;
+  border-radius: 999px;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  font-weight: 900;
+  font-size: 12px;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.qc-brain-filter-main-button:hover,
+.qc-brain-filter-icon-button:hover,
+.qc-brain-filter-chip:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(96, 165, 250, 0.44);
+  transform: translateY(-1px);
+}
+
+.qc-brain-filter-main-button strong {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ef0001;
+  color: #fff;
+  font-size: 11px;
+}
+
+.qc-brain-filter-compact-search {
+  min-height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(8, 17, 36, 0.84);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+}
+
+.qc-brain-filter-compact-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.qc-brain-filter-compact-search input::placeholder {
+  color: rgba(226, 232, 240, 0.64);
+}
+
+.qc-brain-filter-compact-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.qc-brain-filter-compact-stats span,
+.qc-brain-filter-summary-chips span {
+  border: 1px solid rgba(148, 163, 184, 0.20);
+  background: rgba(15, 23, 42, 0.66);
+  color: rgba(248, 250, 252, 0.86);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.qc-brain-filter-summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.qc-brain-filter-popover {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  transform: translateX(-50%);
+  width: min(960px, calc(100vw - 72px));
+  max-height: min(72vh, 680px);
+  overflow: auto;
+  border-radius: 28px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(239, 0, 1, 0.16), transparent 26%),
+    linear-gradient(135deg, rgba(1, 24, 72, 0.98), rgba(8, 17, 36, 0.98) 62%, rgba(72, 0, 22, 0.92));
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.42);
+  padding: 20px;
+}
+
+.qc-brain-filter-popover-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.qc-brain-filter-eyebrow {
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+}
+
+.qc-brain-filter-popover h2 {
+  margin: 4px 0;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.qc-brain-filter-popover p {
+  margin: 0;
+  max-width: 720px;
+  color: rgba(226, 232, 240, 0.76);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.qc-brain-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.qc-brain-filter-field {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.20);
+  background: rgba(8, 17, 36, 0.72);
+  padding: 10px 12px;
+}
+
+.qc-brain-filter-field span {
+  color: rgba(226, 232, 240, 0.76);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .10em;
+}
+
+.qc-brain-filter-field select {
+  appearance: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 850;
+  padding-right: 22px;
+}
+
+.qc-brain-filter-field option {
+  background: #020617;
+  color: #ffffff;
+}
+
+.qc-brain-filter-field svg {
+  position: absolute;
+  right: 12px;
+  bottom: 13px;
+  color: rgba(226, 232, 240, 0.76);
+}
+
+.qc-brain-filter-actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.qc-brain-filter-chip[data-active="true"] {
+  background: rgba(14, 165, 233, 0.22);
+  border-color: rgba(96, 165, 250, 0.52);
+}
+
+.qc-brain-filter-context {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .brain-filter-hud {
+    width: calc(100% - 28px) !important;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .qc-brain-filter-compact-stats {
+    display: none;
+  }
+
+  .qc-brain-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* FIX: brain light api context */
+
+/* modo claro do Brain: fundo branco, mantendo nós e conexões com brilho */
+html:not(.dark) main:has(.brain-universe-canvas),
+body:not(.dark) main:has(.brain-universe-canvas) {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(1, 24, 72, 0.06), transparent 32%),
+    radial-gradient(circle at 82% 82%, rgba(239, 0, 1, 0.07), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 52%, #ffffff 100%) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .brain-universe-canvas,
+body:not(.dark) .brain-universe-canvas,
+html:not(.dark) .react-flow,
+body:not(.dark) .react-flow {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(1, 24, 72, 0.05), transparent 30%),
+    radial-gradient(circle at 78% 78%, rgba(239, 0, 1, 0.06), transparent 34%),
+    #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* grid do ReactFlow no claro: visível, mas suave */
+html:not(.dark) .react-flow__background,
+body:not(.dark) .react-flow__background {
+  opacity: 0.42 !important;
+}
+
+/* barra compacta do filtro no claro */
+html:not(.dark) .qc-brain-filter-panel-compact,
+body:not(.dark) .qc-brain-filter-panel-compact {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.10) !important;
+}
+
+html:not(.dark) .qc-brain-filter-main-button,
+html:not(.dark) .qc-brain-filter-icon-button,
+html:not(.dark) .qc-brain-filter-chip,
+body:not(.dark) .qc-brain-filter-main-button,
+body:not(.dark) .qc-brain-filter-icon-button,
+body:not(.dark) .qc-brain-filter-chip {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-brain-filter-compact-search,
+body:not(.dark) .qc-brain-filter-compact-search {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+html:not(.dark) .qc-brain-filter-compact-search input,
+body:not(.dark) .qc-brain-filter-compact-search input {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-brain-filter-compact-search input::placeholder,
+body:not(.dark) .qc-brain-filter-compact-search input::placeholder {
+  color: #475569 !important;
+}
+
+html:not(.dark) .qc-brain-filter-compact-stats span,
+html:not(.dark) .qc-brain-filter-summary-chips span,
+body:not(.dark) .qc-brain-filter-compact-stats span,
+body:not(.dark) .qc-brain-filter-summary-chips span {
+  background: rgba(255, 255, 255, 0.86) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #1e293b !important;
+}
+
+/* modal/popover do filtro no claro */
+html:not(.dark) .qc-brain-filter-popover,
+body:not(.dark) .qc-brain-filter-popover {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(239, 0, 1, 0.08), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98) 64%, rgba(255, 241, 242, 0.95)) !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-brain-filter-popover h2,
+body:not(.dark) .qc-brain-filter-popover h2 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-brain-filter-popover p,
+body:not(.dark) .qc-brain-filter-popover p {
+  color: #475569 !important;
+}
+
+html:not(.dark) .qc-brain-filter-field,
+body:not(.dark) .qc-brain-filter-field {
+  background: rgba(255, 255, 255, 0.86) !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+}
+
+html:not(.dark) .qc-brain-filter-field span,
+body:not(.dark) .qc-brain-filter-field span {
+  color: #475569 !important;
+}
+
+html:not(.dark) .qc-brain-filter-field select,
+body:not(.dark) .qc-brain-filter-field select {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-brain-filter-field option,
+body:not(.dark) .qc-brain-filter-field option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* rodapé/legendas do canvas no claro */
+html:not(.dark) .brain-universe-canvas .bg-black\/24,
+html:not(.dark) .brain-universe-canvas .bg-black\/32,
+body:not(.dark) .brain-universe-canvas .bg-black\/24,
+body:not(.dark) .brain-universe-canvas .bg-black\/32 {
+  background: rgba(255, 255, 255, 0.78) !important;
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* FIX: brain mais cor e rag visual */
+
+/* modo claro: branco, mas com mais presença visual */
+html:not(.dark) main:has(.brain-universe-canvas),
+body:not(.dark) main:has(.brain-universe-canvas) {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(1, 24, 72, 0.12), transparent 34%),
+    radial-gradient(circle at 76% 30%, rgba(14, 165, 233, 0.16), transparent 30%),
+    radial-gradient(circle at 88% 82%, rgba(239, 0, 1, 0.13), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 45%, #ffffff 100%) !important;
+}
+
+html:not(.dark) .brain-universe-canvas,
+body:not(.dark) .brain-universe-canvas,
+html:not(.dark) .react-flow,
+body:not(.dark) .react-flow {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(1, 24, 72, 0.10), transparent 30%),
+    radial-gradient(circle at 68% 24%, rgba(16, 185, 129, 0.16), transparent 28%),
+    radial-gradient(circle at 86% 78%, rgba(239, 0, 1, 0.12), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f4f8ff 48%, #fff7f7 100%) !important;
+}
+
+/* grid do grafo mais visível no claro */
+html:not(.dark) .react-flow__background,
+body:not(.dark) .react-flow__background {
+  opacity: 0.68 !important;
+}
+
+/* nós menos transparentes no claro */
+html:not(.dark) .brain-orb-node,
+body:not(.dark) .brain-orb-node {
+  opacity: 1 !important;
+  color: #ffffff !important;
+  border-width: 2px !important;
+  backdrop-filter: blur(8px) saturate(1.35) !important;
+  box-shadow:
+    0 18px 46px rgba(15, 23, 42, 0.22),
+    0 0 72px rgba(14, 165, 233, 0.24),
+    inset 0 0 34px rgba(255, 255, 255, 0.22) !important;
+}
+
+/* reforço de cor por status no modo claro */
+html:not(.dark) .brain-orb-node[data-brain-node-status="ok"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="ok"] {
+  background: linear-gradient(135deg, rgba(6, 95, 70, 0.88), rgba(16, 185, 129, 0.72)) !important;
+  border-color: rgba(16, 185, 129, 0.88) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="pending"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="warning"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="pending"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="warning"] {
+  background: linear-gradient(135deg, rgba(113, 63, 18, 0.90), rgba(250, 204, 21, 0.72)) !important;
+  border-color: rgba(250, 204, 21, 0.95) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="missing"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="error"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="orphan"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="missing"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="error"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="orphan"] {
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.90), rgba(244, 63, 94, 0.70)) !important;
+  border-color: rgba(251, 113, 133, 0.95) !important;
+}
+
+/* texto do nó mais legível */
+html:not(.dark) .brain-orb-node span,
+body:not(.dark) .brain-orb-node span {
+  color: #ffffff !important;
+  text-shadow: 0 1px 10px rgba(2, 6, 23, 0.42);
+}
+
+html:not(.dark) .brain-orb-node .bg-black\/22,
+html:not(.dark) .brain-orb-node .bg-black\/28,
+body:not(.dark) .brain-orb-node .bg-black\/22,
+body:not(.dark) .brain-orb-node .bg-black\/28 {
+  background: rgba(2, 6, 23, 0.34) !important;
+}
+
+/* conexões mais presentes */
+html:not(.dark) .react-flow__edge path,
+body:not(.dark) .react-flow__edge path {
+  stroke-opacity: 0.72 !important;
+  stroke-width: 2.1px !important;
+}
+
+/* filtro menos transparente */
+html:not(.dark) .qc-brain-filter-panel-compact,
+body:not(.dark) .qc-brain-filter-panel-compact {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(1, 24, 72, 0.20) !important;
+  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.14) !important;
+}
+
+html:not(.dark) .qc-brain-filter-popover,
+body:not(.dark) .qc-brain-filter-popover {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(239, 0, 1, 0.12), transparent 28%),
+    radial-gradient(circle at 82% 18%, rgba(14, 165, 233, 0.12), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98) 58%, rgba(255, 241, 242, 0.98)) !important;
+}
+
+/* indicador visual de que o Brain está pronto para RAG/contexto */
+.qc-brain-filter-compact-stats::after {
+  content: "RAG pronto";
+  border: 1px solid rgba(16, 185, 129, 0.34);
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+html.dark .qc-brain-filter-compact-stats::after,
+body.dark .qc-brain-filter-compact-stats::after,
+[data-theme="dark"] .qc-brain-filter-compact-stats::after {
+  color: #bbf7d0;
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(74, 222, 128, 0.30);
+}
+
+/* legenda inferior no claro com mais contraste */
+html:not(.dark) .brain-universe-canvas .bg-black\/24,
+html:not(.dark) .brain-universe-canvas .bg-black\/32,
+body:not(.dark) .brain-universe-canvas .bg-black\/24,
+body:not(.dark) .brain-universe-canvas .bg-black\/32 {
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #011848 !important;
+  border-color: rgba(1, 24, 72, 0.16) !important;
+}
+
+/* FIX: brain rag mais forte */
+
+/* Claro: continua branco, mas com mais contraste e cor */
+html:not(.dark) main:has(.brain-universe-canvas),
+body:not(.dark) main:has(.brain-universe-canvas) {
+  background:
+    radial-gradient(circle at 12% 16%, rgba(1, 24, 72, 0.16), transparent 32%),
+    radial-gradient(circle at 66% 24%, rgba(16, 185, 129, 0.20), transparent 28%),
+    radial-gradient(circle at 88% 80%, rgba(239, 0, 1, 0.16), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f3f8ff 44%, #ffffff 100%) !important;
+}
+
+html:not(.dark) .brain-universe-canvas,
+body:not(.dark) .brain-universe-canvas,
+html:not(.dark) .react-flow,
+body:not(.dark) .react-flow {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(1, 24, 72, 0.12), transparent 32%),
+    radial-gradient(circle at 62% 24%, rgba(45, 212, 191, 0.20), transparent 28%),
+    radial-gradient(circle at 88% 78%, rgba(239, 0, 1, 0.14), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #eff7ff 52%, #fff4f6 100%) !important;
+}
+
+/* Nós com mais presença */
+html:not(.dark) .brain-orb-node,
+body:not(.dark) .brain-orb-node {
+  opacity: 1 !important;
+  border-width: 2px !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(6px) saturate(1.55) !important;
+  filter: saturate(1.35) contrast(1.08);
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="ok"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="ok"] {
+  background: linear-gradient(135deg, rgba(4, 120, 87, 0.96), rgba(16, 185, 129, 0.82)) !important;
+  box-shadow: 0 22px 58px rgba(4, 120, 87, 0.28), 0 0 82px rgba(16, 185, 129, 0.34), inset 0 0 28px rgba(255,255,255,.20) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="pending"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="warning"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="pending"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="warning"] {
+  background: linear-gradient(135deg, rgba(133, 77, 14, 0.96), rgba(250, 204, 21, 0.86)) !important;
+  box-shadow: 0 22px 58px rgba(133, 77, 14, 0.26), 0 0 84px rgba(250, 204, 21, 0.38), inset 0 0 28px rgba(255,255,255,.20) !important;
+}
+
+html:not(.dark) .brain-orb-node[data-brain-node-status="missing"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="error"],
+html:not(.dark) .brain-orb-node[data-brain-node-status="orphan"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="missing"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="error"],
+body:not(.dark) .brain-orb-node[data-brain-node-status="orphan"] {
+  background: linear-gradient(135deg, rgba(159, 18, 57, 0.96), rgba(244, 63, 94, 0.82)) !important;
+  box-shadow: 0 22px 58px rgba(159, 18, 57, 0.24), 0 0 84px rgba(244, 63, 94, 0.36), inset 0 0 28px rgba(255,255,255,.18) !important;
+}
+
+/* Filtro e badges mais sólidos */
+html:not(.dark) .qc-brain-filter-panel-compact,
+body:not(.dark) .qc-brain-filter-panel-compact {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(1, 24, 72, 0.22) !important;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.16) !important;
+}
+
+.qc-brain-filter-compact-stats::after {
+  content: "RAG conectado";
+  border: 1px solid rgba(16, 185, 129, 0.38);
+  background: rgba(16, 185, 129, 0.16);
+  color: #047857;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+html.dark .qc-brain-filter-compact-stats::after,
+body.dark .qc-brain-filter-compact-stats::after,
+[data-theme="dark"] .qc-brain-filter-compact-stats::after {
+  color: #bbf7d0;
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(74, 222, 128, 0.34);
+}
+
+/* FIX: brain nodes strong final */
+
+/* claro: fundo branco, mas com cor suficiente */
+html:not(.dark) .brain-universe-canvas-strong,
+body:not(.dark) .brain-universe-canvas-strong {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(1, 24, 72, 0.16), transparent 34%),
+    radial-gradient(circle at 62% 24%, rgba(16, 185, 129, 0.24), transparent 30%),
+    radial-gradient(circle at 86% 78%, rgba(239, 0, 1, 0.18), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #eef6ff 50%, #fff1f3 100%) !important;
+}
+
+html:not(.dark) .brain-universe-canvas-strong .react-flow,
+body:not(.dark) .brain-universe-canvas-strong .react-flow {
+  background: transparent !important;
+}
+
+/* nós mais sólidos em qualquer modo */
+.brain-universe-canvas-strong .brain-orb-node {
+  opacity: 1 !important;
+  border-width: 2px !important;
+  filter: saturate(1.35) contrast(1.12) !important;
+}
+
+/* evita nó lavado no claro */
+html:not(.dark) .brain-universe-canvas-strong .brain-orb-node,
+body:not(.dark) .brain-universe-canvas-strong .brain-orb-node {
+  color: #ffffff !important;
+  text-shadow: 0 1px 12px rgba(2, 6, 23, 0.56) !important;
+  box-shadow:
+    0 20px 58px rgba(15, 23, 42, 0.22),
+    0 0 86px rgba(14, 165, 233, 0.26),
+    inset 0 0 34px rgba(255, 255, 255, 0.20) !important;
+}
+
+/* conexões mais visíveis */
+.brain-universe-canvas-strong .react-flow__edge path {
+  stroke-opacity: 0.82 !important;
+  stroke-width: 2.2px !important;
+}
+
+/* labels das conexões mais fortes */
+.brain-universe-canvas-strong .react-flow__edge-text,
+.brain-universe-canvas-strong .react-flow__edge-textbg {
+  opacity: 1 !important;
+}
+
+/* filtro mais sólido */
+.qc-brain-filter-panel-compact {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(1, 24, 72, 0.22) !important;
+}
+
+html.dark .qc-brain-filter-panel-compact,
+body.dark .qc-brain-filter-panel-compact,
+[data-theme="dark"] .qc-brain-filter-panel-compact {
+  background: rgba(2, 6, 23, 0.86) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+/* FIX: brain cerebro visual */
+
+/* canvas do Brain como cérebro */
+.brain-cortex-canvas {
+  isolation: isolate;
+}
+
+/* camada de córtex atrás do grafo */
+.brain-cortex-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* claro: fundo branco com cérebro visível */
+html:not(.dark) .brain-cortex-canvas,
+body:not(.dark) .brain-cortex-canvas {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(1, 24, 72, 0.16), transparent 34%),
+    radial-gradient(circle at 64% 26%, rgba(16, 185, 129, 0.22), transparent 30%),
+    radial-gradient(circle at 86% 78%, rgba(239, 0, 1, 0.17), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #eef6ff 50%, #fff1f4 100%) !important;
+}
+
+/* escuro preservado, só ganha profundidade */
+html.dark .brain-cortex-canvas,
+body.dark .brain-cortex-canvas,
+[data-theme="dark"] .brain-cortex-canvas {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(14, 165, 233, 0.14), transparent 34%),
+    radial-gradient(circle at 64% 24%, rgba(16, 185, 129, 0.16), transparent 30%),
+    radial-gradient(circle at 86% 78%, rgba(239, 0, 1, 0.16), transparent 34%),
+    linear-gradient(135deg, #020617 0%, #041225 54%, #21020a 100%) !important;
+}
+
+/* lobos do cérebro */
+.brain-cortex-lobe {
+  position: absolute;
+  top: 14%;
+  width: 39%;
+  height: 58%;
+  border-radius: 48% 52% 44% 56% / 48% 45% 55% 52%;
+  filter: blur(0.2px);
+  opacity: 0.88;
+}
+
+.brain-cortex-lobe-left {
+  left: 12%;
+  background:
+    repeating-radial-gradient(circle at 52% 48%, transparent 0 18px, rgba(1, 24, 72, 0.10) 19px 21px),
+    radial-gradient(circle at 38% 36%, rgba(14, 165, 233, 0.20), transparent 42%),
+    radial-gradient(circle at 62% 70%, rgba(250, 204, 21, 0.16), transparent 36%);
+  border: 1px solid rgba(1, 24, 72, 0.08);
+}
+
+.brain-cortex-lobe-right {
+  right: 12%;
+  background:
+    repeating-radial-gradient(circle at 48% 50%, transparent 0 18px, rgba(239, 0, 1, 0.10) 19px 21px),
+    radial-gradient(circle at 58% 34%, rgba(16, 185, 129, 0.22), transparent 40%),
+    radial-gradient(circle at 48% 72%, rgba(239, 0, 1, 0.16), transparent 38%);
+  border: 1px solid rgba(239, 0, 1, 0.08);
+}
+
+html.dark .brain-cortex-lobe-left,
+body.dark .brain-cortex-lobe-left,
+[data-theme="dark"] .brain-cortex-lobe-left {
+  background:
+    repeating-radial-gradient(circle at 52% 48%, transparent 0 18px, rgba(103, 232, 249, 0.08) 19px 21px),
+    radial-gradient(circle at 38% 36%, rgba(14, 165, 233, 0.16), transparent 42%),
+    radial-gradient(circle at 62% 70%, rgba(250, 204, 21, 0.10), transparent 36%);
+  border-color: rgba(103, 232, 249, 0.08);
+}
+
+html.dark .brain-cortex-lobe-right,
+body.dark .brain-cortex-lobe-right,
+[data-theme="dark"] .brain-cortex-lobe-right {
+  background:
+    repeating-radial-gradient(circle at 48% 50%, transparent 0 18px, rgba(251, 113, 133, 0.08) 19px 21px),
+    radial-gradient(circle at 58% 34%, rgba(16, 185, 129, 0.14), transparent 40%),
+    radial-gradient(circle at 48% 72%, rgba(239, 0, 1, 0.12), transparent 38%);
+  border-color: rgba(251, 113, 133, 0.08);
+}
+
+/* ponte entre os lobos */
+.brain-cortex-bridge {
+  position: absolute;
+  left: 43%;
+  top: 38%;
+  width: 14%;
+  height: 17%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.72), transparent 68%),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.18), rgba(239, 0, 1, 0.18));
+  box-shadow: 0 0 64px rgba(14, 165, 233, 0.18);
+}
+
+/* pulsos/sinapses */
+.brain-cortex-pulse {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: #22d3ee;
+  box-shadow: 0 0 0 8px rgba(34, 211, 238, 0.14), 0 0 34px rgba(34, 211, 238, 0.58);
+  animation: brainPulse 2.8s ease-in-out infinite;
+}
+
+.brain-cortex-pulse-a { left: 28%; top: 34%; }
+.brain-cortex-pulse-b { left: 54%; top: 48%; animation-delay: .7s; background: #10b981; }
+.brain-cortex-pulse-c { left: 74%; top: 36%; animation-delay: 1.3s; background: #ef0001; }
+
+.brain-cortex-thread {
+  position: absolute;
+  height: 2px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0), rgba(34, 211, 238, 0.36), rgba(239, 0, 1, 0));
+  filter: blur(.2px);
+}
+
+.brain-cortex-thread-a {
+  left: 28%;
+  top: 35%;
+  width: 34%;
+  transform: rotate(15deg);
+}
+
+.brain-cortex-thread-b {
+  left: 42%;
+  top: 58%;
+  width: 36%;
+  transform: rotate(-22deg);
+}
+
+.brain-cortex-thread-c {
+  left: 22%;
+  top: 66%;
+  width: 58%;
+  transform: rotate(-6deg);
+}
+
+/* ReactFlow acima do córtex */
+.brain-cortex-canvas .react-flow {
+  position: relative;
+  z-index: 2;
+  background: transparent !important;
+}
+
+/* controles e overlays acima */
+.brain-cortex-canvas .react-flow__controls,
+.brain-cortex-canvas .brain-node-overlay {
+  z-index: 20;
+}
+
+/* nós mais sólidos */
+.brain-cortex-canvas .brain-orb-node {
+  opacity: 1 !important;
+  border-width: 2px !important;
+  filter: saturate(1.42) contrast(1.14) !important;
+}
+
+html:not(.dark) .brain-cortex-canvas .brain-orb-node,
+body:not(.dark) .brain-cortex-canvas .brain-orb-node {
+  color: #ffffff !important;
+  text-shadow: 0 1px 12px rgba(2, 6, 23, 0.64) !important;
+}
+
+/* conexões mais neuronais */
+.brain-cortex-canvas .react-flow__edge path {
+  stroke-opacity: 0.86 !important;
+  stroke-width: 2.25px !important;
+  filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.24));
+}
+
+/* badge RAG/contexto */
+.qc-brain-filter-compact-stats::after {
+  content: "Cérebro RAG";
+  border: 1px solid rgba(16, 185, 129, 0.38);
+  background: rgba(16, 185, 129, 0.16);
+  color: #047857;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+html.dark .qc-brain-filter-compact-stats::after,
+body.dark .qc-brain-filter-compact-stats::after,
+[data-theme="dark"] .qc-brain-filter-compact-stats::after {
+  color: #bbf7d0;
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(74, 222, 128, 0.34);
+}
+
+@keyframes brainPulse {
+  0%, 100% {
+    transform: scale(0.86);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
+/* FIX: brain overlay rag context */
+
+.qc-brain-memory-panel {
+  border-color: rgba(103, 232, 249, 0.20) !important;
+}
+
+.qc-brain-rag-context-card {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(34, 211, 238, 0.14), transparent 34%),
+    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.12), transparent 32%),
+    rgba(8, 17, 36, 0.72) !important;
+  box-shadow:
+    inset 0 0 26px rgba(34, 211, 238, 0.06),
+    0 18px 44px rgba(2, 6, 23, 0.26);
+}
+
+/* no modo claro, painel continua profissional e legível */
+html:not(.dark) .qc-brain-memory-panel,
+body:not(.dark) .qc-brain-memory-panel {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(1, 24, 72, 0.12), transparent 32%),
+    radial-gradient(circle at 100% 100%, rgba(239, 0, 1, 0.10), transparent 32%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)) !important;
+  color: #0f172a !important;
+  border-color: rgba(1, 24, 72, 0.14) !important;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.18) !important;
+}
+
+html:not(.dark) .qc-brain-memory-panel *,
+body:not(.dark) .qc-brain-memory-panel * {
+  color: inherit;
+}
+
+html:not(.dark) .qc-brain-rag-context-card,
+body:not(.dark) .qc-brain-rag-context-card {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.10), transparent 32%),
+    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.10), transparent 32%),
+    rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(1, 24, 72, 0.12) !important;
+}
+
+html:not(.dark) .qc-brain-rag-context-card .bg-black\/20,
+html:not(.dark) .qc-brain-rag-context-card .bg-black\/18,
+body:not(.dark) .qc-brain-rag-context-card .bg-black\/20,
+body:not(.dark) .qc-brain-rag-context-card .bg-black\/18 {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+}
+
+/* FIX: brain overlay contexto ui */
+
+/* painel lateral claro mais sólido, sem cinza transparente */
+html:not(.dark) .qc-brain-memory-panel,
+body:not(.dark) .qc-brain-memory-panel {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(1, 24, 72, 0.08), transparent 32%),
+    radial-gradient(circle at 100% 0%, rgba(239, 0, 1, 0.08), transparent 30%),
+    linear-gradient(145deg, #ffffff 0%, #f8fafc 100%) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(15, 23, 42, 0.14) !important;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.22) !important;
+}
+
+/* corrige textos internos no claro */
+html:not(.dark) .qc-brain-memory-panel h2,
+html:not(.dark) .qc-brain-memory-panel h3,
+html:not(.dark) .qc-brain-memory-panel p,
+html:not(.dark) .qc-brain-memory-panel span,
+html:not(.dark) .qc-brain-memory-panel button,
+html:not(.dark) .qc-brain-memory-panel label,
+body:not(.dark) .qc-brain-memory-panel h2,
+body:not(.dark) .qc-brain-memory-panel h3,
+body:not(.dark) .qc-brain-memory-panel p,
+body:not(.dark) .qc-brain-memory-panel span,
+body:not(.dark) .qc-brain-memory-panel button,
+body:not(.dark) .qc-brain-memory-panel label {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+/* cards internos no claro */
+html:not(.dark) .qc-brain-memory-panel .bg-slate-950\/46,
+html:not(.dark) .qc-brain-memory-panel .bg-slate-950\/40,
+html:not(.dark) .qc-brain-memory-panel .bg-black\/18,
+html:not(.dark) .qc-brain-memory-panel .bg-black\/20,
+html:not(.dark) .qc-brain-memory-panel .bg-white\/\[0\.03\],
+html:not(.dark) .qc-brain-memory-panel .bg-white\/5,
+body:not(.dark) .qc-brain-memory-panel .bg-slate-950\/46,
+body:not(.dark) .qc-brain-memory-panel .bg-slate-950\/40,
+body:not(.dark) .qc-brain-memory-panel .bg-black\/18,
+body:not(.dark) .qc-brain-memory-panel .bg-black\/20,
+body:not(.dark) .qc-brain-memory-panel .bg-white\/\[0\.03\],
+body:not(.dark) .qc-brain-memory-panel .bg-white\/5 {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* header do painel no claro */
+html:not(.dark) .qc-brain-memory-panel header,
+body:not(.dark) .qc-brain-memory-panel header {
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,0.98), rgba(241,245,249,0.98)) !important;
+  border-bottom-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* card de adicionar contexto */
+.qc-brain-add-context-card {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.12), transparent 34%),
+    rgba(8, 17, 36, 0.74) !important;
+  box-shadow: inset 0 0 24px rgba(16, 185, 129, 0.05);
+}
+
+html:not(.dark) .qc-brain-add-context-card,
+body:not(.dark) .qc-brain-add-context-card {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.10), transparent 34%),
+    rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* inputs no claro */
+html:not(.dark) .qc-brain-memory-input,
+html:not(.dark) .qc-brain-add-context-card select,
+body:not(.dark) .qc-brain-memory-input,
+body:not(.dark) .qc-brain-add-context-card select {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.16) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .qc-brain-memory-input::placeholder,
+body:not(.dark) .qc-brain-memory-input::placeholder {
+  color: #64748b !important;
+}
+
+/* mantém o botão salvar com destaque */
+.qc-brain-add-context-card button:not([aria-label]) {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.92), rgba(16, 185, 129, 0.86)) !important;
+  color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+}
+
+
+/* FIX: brain polimento loading logo */
+
+/* força marca do Brain no topo quando o asset/imagem falhar */
+.qc-brain-route header,
+.qc-brain-active-route header {
+  position: relative;
+}
+
+.qc-brain-route header img,
+.qc-brain-active-route header img {
+  opacity: 1 !important;
+  visibility: visible !important;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.18));
+}
+
+/* se a bolha do logo estiver vazia, desenha símbolo visual */
+.qc-brain-route header .rounded-full:empty::before,
+.qc-brain-active-route header .rounded-full:empty::before {
+  content: "";
+  display: block;
+  width: 72%;
+  height: 72%;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, transparent 0 38%, #ef0001 39% 61%, transparent 62% 100%),
+    linear-gradient(135deg, #f8fafc 0 50%, #011848 51% 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.42);
+}
+
+/* loading neural discreto */
+.brain-synapse-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  background:
+    radial-gradient(circle at 0% 50%, rgba(34, 211, 238, 0.18), transparent 28%),
+    rgba(2, 6, 23, 0.78);
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.28);
+  padding: 0 14px;
+  color: #ecfeff;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .03em;
+  backdrop-filter: blur(14px);
+}
+
+.brain-synapse-loading-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #22d3ee;
+  box-shadow: 0 0 0 7px rgba(34, 211, 238, 0.12), 0 0 22px rgba(34, 211, 238, 0.72);
+  animation: brainSynapseDot 1.2s ease-in-out infinite;
+}
+
+html:not(.dark) .brain-synapse-loading,
+body:not(.dark) .brain-synapse-loading {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(14, 165, 233, 0.14), transparent 30%),
+    rgba(255, 255, 255, 0.94);
+  color: #011848;
+  border-color: rgba(1, 24, 72, 0.14);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.16);
+}
+
+/* filtro com presença, sem ficar lavado */
+.qc-brain-filter-panel-compact {
+  min-height: 46px;
+  border-width: 1px !important;
+}
+
+html:not(.dark) .qc-brain-filter-panel-compact,
+body:not(.dark) .qc-brain-filter-panel-compact {
+  background: rgba(255, 255, 255, 0.985) !important;
+  border-color: rgba(1, 24, 72, 0.20) !important;
+  box-shadow:
+    0 18px 46px rgba(15, 23, 42, 0.14),
+    inset 0 0 0 1px rgba(255,255,255,.72) !important;
+}
+
+html.dark .qc-brain-filter-panel-compact,
+body.dark .qc-brain-filter-panel-compact,
+[data-theme="dark"] .qc-brain-filter-panel-compact {
+  background: rgba(2, 6, 23, 0.88) !important;
+  border-color: rgba(103, 232, 249, 0.18) !important;
+}
+
+/* badge do RAG mais sólido */
+.qc-brain-filter-compact-stats::after {
+  content: "Cérebro RAG";
+  border: 1px solid rgba(16, 185, 129, 0.42);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.20), rgba(34, 197, 94, 0.12));
+  color: #047857;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+html.dark .qc-brain-filter-compact-stats::after,
+body.dark .qc-brain-filter-compact-stats::after,
+[data-theme="dark"] .qc-brain-filter-compact-stats::after {
+  color: #bbf7d0;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(34, 197, 94, 0.10));
+  border-color: rgba(74, 222, 128, 0.34);
+}
+
+/* botão grafo local mais profissional */
+.brain-cortex-canvas button:has(+ *) {
+  font-weight: 950;
+}
+
+@keyframes brainSynapseDot {
+  0%, 100% {
+    transform: scale(.86);
+    opacity: .72;
+  }
+  50% {
+    transform: scale(1.22);
+    opacity: 1;
+  }
+}
+
+/* FIX: brain limpo com filtro inteligente e chat */
+
+.qc-brain-ask-chat-button {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.92), rgba(37, 99, 235, 0.82)) !important;
+  color: #ffffff !important;
+  border-color: rgba(125, 211, 252, 0.42) !important;
+  box-shadow: 0 10px 26px rgba(14, 165, 233, 0.20);
+}
+
+.qc-brain-ask-chat-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(14, 165, 233, 0.26);
+}
+
+html:not(.dark) .qc-brain-ask-chat-button,
+body:not(.dark) .qc-brain-ask-chat-button {
+  color: #ffffff !important;
+}
+
+/* filtro vira a principal ferramenta visual, compacto e expansível */
+.brain-filter-hud {
+  top: 18px !important;
+  width: min(820px, calc(100% - 56px)) !important;
+}
+
+.qc-brain-filter-panel-compact {
+  border-radius: 999px !important;
+  padding: 6px !important;
+  background: rgba(2, 6, 23, 0.86) !important;
+  border-color: rgba(103, 232, 249, 0.18) !important;
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.32) !important;
+}
+
+.qc-brain-filter-panel-compact[data-open="true"] {
+  border-radius: 24px !important;
+}
+
+.qc-brain-filter-popover {
+  border-radius: 26px !important;
+  width: min(860px, calc(100vw - 72px)) !important;
+}
+
+/* no claro: branco, mas sem ficar lavado */
+html:not(.dark) .qc-brain-filter-panel-compact,
+body:not(.dark) .qc-brain-filter-panel-compact {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(1, 24, 72, 0.18) !important;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14) !important;
+}
+
+/* remove qualquer sobra visual de centro/radar/dock se algum JSX antigo persistir */
+.qc-brain-command-center-panel,
+.qc-brain-executive-radar-panel,
+.qc-brain-command-dock,
+.qc-brain-command-center-toggle {
+  display: none !important;
+}
+
+/* painel do nó: foco em memória automática + chat */
+.qc-brain-memory-panel footer {
+  gap: 8px;
+}
+
+html:not(.dark) .qc-brain-memory-panel footer,
+body:not(.dark) .qc-brain-memory-panel footer {
+  background: rgba(248, 250, 252, 0.96) !important;
+  border-top-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* FIX: brain universo escuro header compacto */
+
+/* compacta a capa/topo do Brain para sobrar tela para os neurônios */
+body.qc-brain-route header:not(.qc-brain-memory-panel header),
+body.qc-brain-active-route header:not(.qc-brain-memory-panel header) {
+  min-height: 58px !important;
+  height: 58px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  border-radius: 0 0 22px 22px !important;
+  overflow: hidden !important;
+}
+
+body.qc-brain-route header:not(.qc-brain-memory-panel header) h1,
+body.qc-brain-active-route header:not(.qc-brain-memory-panel header) h1 {
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+body.qc-brain-route header:not(.qc-brain-memory-panel header) img,
+body.qc-brain-active-route header:not(.qc-brain-memory-panel header) img,
+body.qc-brain-route header:not(.qc-brain-memory-panel header) .rounded-full,
+body.qc-brain-active-route header:not(.qc-brain-memory-panel header) .rounded-full {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+
+/* se algum header antigo continuar grande, reduz o bloco visual da rota */
+body.qc-brain-route main,
+body.qc-brain-active-route main {
+  margin-top: 0 !important;
+}
+
+/* marca Brain dentro do filtro */
+.qc-brain-filter-compact-bar {
+  grid-template-columns: auto auto minmax(260px, 1fr) auto auto !important;
+}
+
+.qc-brain-filter-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 232, 249, 0.20);
+  background:
+    radial-gradient(circle at 0% 50%, rgba(239, 0, 1, 0.18), transparent 34%),
+    rgba(15, 23, 42, 0.78);
+  color: #ffffff;
+  padding: 0 13px 0 8px;
+  box-shadow: inset 0 0 18px rgba(34, 211, 238, 0.05);
+}
+
+.qc-brain-filter-brand-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, transparent 0 37%, #ef0001 38% 62%, transparent 63% 100%),
+    linear-gradient(135deg, #f8fafc 0 50%, #011848 51% 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.30),
+    0 0 18px rgba(239, 0, 1, 0.22);
+}
+
+.qc-brain-filter-brand strong {
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+/* modo escuro: universo neural mais bonito e com mais cor */
+html.dark .brain-cortex-canvas,
+body.dark .brain-cortex-canvas,
+[data-theme="dark"] .brain-cortex-canvas {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(34, 211, 238, 0.22), transparent 28%),
+    radial-gradient(circle at 62% 38%, rgba(16, 185, 129, 0.18), transparent 26%),
+    radial-gradient(circle at 86% 74%, rgba(239, 0, 1, 0.22), transparent 34%),
+    radial-gradient(circle at 44% 58%, rgba(99, 102, 241, 0.15), transparent 26%),
+    linear-gradient(135deg, #020617 0%, #031424 42%, #120518 72%, #210208 100%) !important;
+}
+
+html.dark .brain-cortex-layer,
+body.dark .brain-cortex-layer,
+[data-theme="dark"] .brain-cortex-layer {
+  opacity: 1 !important;
+}
+
+/* mais profundidade para os lobos do cérebro no escuro */
+html.dark .brain-cortex-lobe-left,
+body.dark .brain-cortex-lobe-left,
+[data-theme="dark"] .brain-cortex-lobe-left {
+  opacity: 0.95 !important;
+  background:
+    repeating-radial-gradient(circle at 52% 48%, transparent 0 17px, rgba(103, 232, 249, 0.12) 18px 20px),
+    radial-gradient(circle at 38% 36%, rgba(14, 165, 233, 0.24), transparent 42%),
+    radial-gradient(circle at 62% 70%, rgba(250, 204, 21, 0.10), transparent 36%) !important;
+}
+
+html.dark .brain-cortex-lobe-right,
+body.dark .brain-cortex-lobe-right,
+[data-theme="dark"] .brain-cortex-lobe-right {
+  opacity: 0.95 !important;
+  background:
+    repeating-radial-gradient(circle at 48% 50%, transparent 0 17px, rgba(251, 113, 133, 0.12) 18px 20px),
+    radial-gradient(circle at 58% 34%, rgba(16, 185, 129, 0.20), transparent 40%),
+    radial-gradient(circle at 48% 72%, rgba(239, 0, 1, 0.18), transparent 38%) !important;
+}
+
+/* conexões mais vivas no universo escuro */
+html.dark .brain-cortex-canvas .react-flow__edge path,
+body.dark .brain-cortex-canvas .react-flow__edge path,
+[data-theme="dark"] .brain-cortex-canvas .react-flow__edge path {
+  stroke-opacity: 0.92 !important;
+  stroke-width: 2.35px !important;
+  filter:
+    drop-shadow(0 0 5px rgba(34, 211, 238, 0.34))
+    drop-shadow(0 0 12px rgba(14, 165, 233, 0.18)) !important;
+}
+
+/* nós com mais brilho no escuro */
+html.dark .brain-cortex-canvas .brain-orb-node,
+body.dark .brain-cortex-canvas .brain-orb-node,
+[data-theme="dark"] .brain-cortex-canvas .brain-orb-node {
+  filter: saturate(1.48) contrast(1.14) brightness(1.08) !important;
+  box-shadow:
+    0 22px 62px rgba(0, 0, 0, 0.42),
+    0 0 82px rgba(34, 211, 238, 0.22),
+    inset 0 0 34px rgba(255, 255, 255, 0.12) !important;
+}
+
+/* filtro no escuro fica central e com cara de cockpit */
+html.dark .qc-brain-filter-panel-compact,
+body.dark .qc-brain-filter-panel-compact,
+[data-theme="dark"] .qc-brain-filter-panel-compact {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(34, 211, 238, 0.10), transparent 30%),
+    radial-gradient(circle at 100% 50%, rgba(239, 0, 1, 0.10), transparent 30%),
+    rgba(2, 6, 23, 0.90) !important;
+  border-color: rgba(103, 232, 249, 0.24) !important;
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(255,255,255,0.04) !important;
+}
+
+/* claro mantém branco */
+html:not(.dark) .qc-brain-filter-brand,
+body:not(.dark) .qc-brain-filter-brand {
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: #011848 !important;
+  border-color: rgba(1, 24, 72, 0.16) !important;
+}
+
+/* em telas menores, esconde texto da marca e deixa só logo */
+@media (max-width: 920px) {
+  .qc-brain-filter-brand strong {
+    display: none;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto auto minmax(180px, 1fr) auto !important;
+  }
+}
+
+/* FIX: brain universo fullscreen dark */
+
+/* compacta a capa grande do Brain e deixa só os ícones globais */
+body.qc-brain-route .qc-brain-topbar-compact,
+body.qc-brain-active-route .qc-brain-topbar-compact {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 4px 14px !important;
+  border-radius: 0 0 16px 16px !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+
+body.qc-brain-route .qc-brain-topbar-brand-hidden,
+body.qc-brain-active-route .qc-brain-topbar-brand-hidden {
+  width: 0 !important;
+  min-width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.8) !important;
+}
+
+/* deixa os botões globais do topo vivos, sem capa gigante */
+body.qc-brain-route .qc-brain-topbar-compact button,
+body.qc-brain-active-route .qc-brain-topbar-compact button {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+}
+
+/* filtro vira o cabeçalho real do Brain */
+.brain-filter-hud {
+  top: 10px !important;
+  width: min(820px, calc(100% - 72px)) !important;
+  z-index: 55 !important;
+}
+
+.qc-brain-filter-compact-bar {
+  grid-template-columns: auto auto minmax(260px, 1fr) auto auto !important;
+  align-items: center !important;
+}
+
+/* marca Brain ao lado dos filtros */
+.qc-brain-filter-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 232, 249, 0.20);
+  background:
+    radial-gradient(circle at 0% 50%, rgba(239, 0, 1, 0.18), transparent 34%),
+    rgba(15, 23, 42, 0.84);
+  color: #ffffff;
+  padding: 0 12px 0 7px;
+  white-space: nowrap;
+}
+
+.qc-brain-filter-brand-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, transparent 0 37%, #ef0001 38% 62%, transparent 63% 100%),
+    linear-gradient(135deg, #f8fafc 0 50%, #011848 51% 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.30),
+    0 0 18px rgba(239, 0, 1, 0.28);
+}
+
+.qc-brain-filter-brand strong {
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+/* claro mantém branco */
+html:not(.dark) .qc-brain-filter-brand,
+body:not(.dark) .qc-brain-filter-brand {
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: #011848 !important;
+  border-color: rgba(1, 24, 72, 0.16) !important;
+}
+
+/* universo neural no modo escuro */
+html.dark .brain-cortex-canvas,
+body.dark .brain-cortex-canvas,
+[data-theme="dark"] .brain-cortex-canvas {
+  min-height: calc(100dvh - 42px) !important;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(34, 211, 238, 0.25), transparent 28%),
+    radial-gradient(circle at 58% 36%, rgba(16, 185, 129, 0.18), transparent 28%),
+    radial-gradient(circle at 84% 70%, rgba(239, 0, 1, 0.24), transparent 36%),
+    radial-gradient(circle at 44% 60%, rgba(99, 102, 241, 0.18), transparent 30%),
+    linear-gradient(135deg, #020617 0%, #02111f 38%, #09051a 68%, #22020a 100%) !important;
+}
+
+/* campo de estrelas/nebulosa */
+html.dark .brain-cortex-canvas::before,
+body.dark .brain-cortex-canvas::before,
+[data-theme="dark"] .brain-cortex-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.34;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.58) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(34,211,238,0.42) 0 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(239,0,1,0.34) 0 1px, transparent 1.8px);
+  background-size: 92px 92px, 138px 138px, 164px 164px;
+  background-position: 0 0, 34px 48px, 88px 20px;
+}
+
+/* profundidade atrás dos neurônios */
+html.dark .brain-cortex-canvas::after,
+body.dark .brain-cortex-canvas::after,
+[data-theme="dark"] .brain-cortex-canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.76;
+  background:
+    radial-gradient(circle at 22% 72%, rgba(14, 165, 233, 0.16), transparent 26%),
+    radial-gradient(circle at 74% 26%, rgba(239, 0, 1, 0.14), transparent 28%),
+    radial-gradient(circle at 54% 54%, rgba(255,255,255,0.08), transparent 18%);
+}
+
+/* react-flow sempre acima do universo */
+.brain-cortex-canvas .react-flow {
+  position: relative;
+  z-index: 2;
+}
+
+/* conexões mais vivas no escuro */
+html.dark .brain-cortex-canvas .react-flow__edge path,
+body.dark .brain-cortex-canvas .react-flow__edge path,
+[data-theme="dark"] .brain-cortex-canvas .react-flow__edge path {
+  stroke-opacity: 0.95 !important;
+  stroke-width: 2.4px !important;
+  filter:
+    drop-shadow(0 0 5px rgba(34, 211, 238, 0.38))
+    drop-shadow(0 0 12px rgba(14, 165, 233, 0.20)) !important;
+}
+
+/* neurônios com brilho no escuro */
+html.dark .brain-cortex-canvas .brain-orb-node,
+body.dark .brain-cortex-canvas .brain-orb-node,
+[data-theme="dark"] .brain-cortex-canvas .brain-orb-node {
+  filter: saturate(1.52) contrast(1.16) brightness(1.08) !important;
+  box-shadow:
+    0 24px 66px rgba(0, 0, 0, 0.48),
+    0 0 88px rgba(34, 211, 238, 0.24),
+    inset 0 0 34px rgba(255, 255, 255, 0.13) !important;
+}
+
+/* filtro escuro como cockpit */
+html.dark .qc-brain-filter-panel-compact,
+body.dark .qc-brain-filter-panel-compact,
+[data-theme="dark"] .qc-brain-filter-panel-compact {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(34, 211, 238, 0.12), transparent 30%),
+    radial-gradient(circle at 100% 50%, rgba(239, 0, 1, 0.12), transparent 30%),
+    rgba(2, 6, 23, 0.92) !important;
+  border-color: rgba(103, 232, 249, 0.28) !important;
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.46),
+    inset 0 0 0 1px rgba(255,255,255,0.05) !important;
+}
+
+/* em telas menores, logo fica compacto */
+@media (max-width: 920px) {
+  .qc-brain-filter-brand strong {
+    display: none;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto auto minmax(180px, 1fr) auto !important;
+  }
+}
+
+/* FIX: brain sem faixa universo dark */
+
+/* remove a faixa/header global só no Brain */
+body.qc-brain-route .qc-brain-shell-header-hidden,
+body.qc-brain-active-route .qc-brain-shell-header-hidden,
+body.qc-brain-route header:has(h1),
+body.qc-brain-active-route header:has(h1) {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+.brain-page-fullscreen {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+/* filtro vira a barra principal do Brain */
+.brain-filter-hud {
+  top: 14px !important;
+  width: min(950px, calc(100% - 80px)) !important;
+  z-index: 60 !important;
+}
+
+.qc-brain-filter-panel-compact {
+  border-radius: 18px !important;
+  padding: 8px !important;
+}
+
+.qc-brain-filter-panel-compact[data-open="true"] {
+  border-radius: 22px !important;
+}
+
+.qc-brain-filter-compact-bar {
+  grid-template-columns: auto auto minmax(320px, 1fr) auto auto !important;
+  gap: 8px !important;
+}
+
+/* logo mais visível e menos comprimido */
+.qc-brain-filter-brand {
+  height: 40px !important;
+  border-radius: 14px !important;
+  padding: 0 14px 0 9px !important;
+  gap: 9px !important;
+}
+
+.qc-brain-filter-brand-logo {
+  width: 28px !important;
+  height: 28px !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.34),
+    0 0 20px rgba(239, 0, 1, 0.28) !important;
+}
+
+.qc-brain-filter-brand strong {
+  display: inline !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+}
+
+.qc-brain-filter-main-button,
+.qc-brain-filter-icon-button,
+.qc-brain-filter-chip {
+  min-height: 38px !important;
+  border-radius: 14px !important;
+}
+
+.qc-brain-filter-compact-search {
+  min-height: 38px !important;
+  border-radius: 14px !important;
+}
+
+/* dark: céu/nebulosa/buraco negro mais suave */
+html.dark .brain-cortex-canvas,
+body.dark .brain-cortex-canvas,
+[data-theme="dark"] .brain-cortex-canvas {
+  min-height: 100dvh !important;
+  background:
+    radial-gradient(ellipse at 52% 44%, rgba(255, 255, 255, 0.16) 0%, rgba(148, 163, 184, 0.10) 6%, rgba(2, 6, 23, 0.16) 15%, transparent 28%),
+    radial-gradient(circle at 52% 44%, rgba(0, 0, 0, 0.72) 0%, rgba(2, 6, 23, 0.58) 9%, rgba(14, 165, 233, 0.08) 20%, transparent 34%),
+    radial-gradient(circle at 22% 26%, rgba(34, 211, 238, 0.18), transparent 34%),
+    radial-gradient(circle at 70% 30%, rgba(99, 102, 241, 0.14), transparent 32%),
+    radial-gradient(circle at 86% 76%, rgba(239, 0, 1, 0.13), transparent 38%),
+    radial-gradient(circle at 30% 82%, rgba(16, 185, 129, 0.11), transparent 34%),
+    linear-gradient(135deg, #020617 0%, #031827 38%, #08091f 66%, #12040d 100%) !important;
+}
+
+/* estrelas mais sutis */
+html.dark .brain-cortex-canvas::before,
+body.dark .brain-cortex-canvas::before,
+[data-theme="dark"] .brain-cortex-canvas::before {
+  opacity: 0.22 !important;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.52) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(34,211,238,0.34) 0 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(148,163,184,0.28) 0 1px, transparent 1.8px) !important;
+  background-size: 110px 110px, 156px 156px, 190px 190px !important;
+}
+
+/* reduz o vermelho pesado e dá profundidade */
+html.dark .brain-cortex-canvas::after,
+body.dark .brain-cortex-canvas::after,
+[data-theme="dark"] .brain-cortex-canvas::after {
+  opacity: 0.58 !important;
+  background:
+    radial-gradient(circle at 52% 44%, rgba(255, 255, 255, 0.08), transparent 14%),
+    radial-gradient(circle at 18% 72%, rgba(14, 165, 233, 0.14), transparent 28%),
+    radial-gradient(circle at 78% 72%, rgba(239, 0, 1, 0.08), transparent 30%),
+    radial-gradient(circle at 70% 24%, rgba(99, 102, 241, 0.10), transparent 26%) !important;
+}
+
+/* lobos/rings do cérebro mais elegantes no escuro */
+html.dark .brain-cortex-lobe-left,
+body.dark .brain-cortex-lobe-left,
+[data-theme="dark"] .brain-cortex-lobe-left {
+  opacity: 0.68 !important;
+  background:
+    repeating-radial-gradient(circle at 52% 48%, transparent 0 18px, rgba(103, 232, 249, 0.08) 19px 20px),
+    radial-gradient(circle at 38% 36%, rgba(14, 165, 233, 0.14), transparent 42%),
+    radial-gradient(circle at 62% 70%, rgba(59, 130, 246, 0.08), transparent 38%) !important;
+}
+
+html.dark .brain-cortex-lobe-right,
+body.dark .brain-cortex-lobe-right,
+[data-theme="dark"] .brain-cortex-lobe-right {
+  opacity: 0.60 !important;
+  background:
+    repeating-radial-gradient(circle at 48% 50%, transparent 0 18px, rgba(148, 163, 184, 0.08) 19px 20px),
+    radial-gradient(circle at 58% 34%, rgba(99, 102, 241, 0.12), transparent 40%),
+    radial-gradient(circle at 48% 72%, rgba(239, 0, 1, 0.08), transparent 40%) !important;
+}
+
+/* filtro no dark: cockpit suave */
+html.dark .qc-brain-filter-panel-compact,
+body.dark .qc-brain-filter-panel-compact,
+[data-theme="dark"] .qc-brain-filter-panel-compact {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(34, 211, 238, 0.10), transparent 30%),
+    radial-gradient(circle at 100% 50%, rgba(99, 102, 241, 0.10), transparent 30%),
+    rgba(2, 6, 23, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 1px rgba(255,255,255,0.045) !important;
+}
+
+html.dark .qc-brain-filter-brand,
+body.dark .qc-brain-filter-brand,
+[data-theme="dark"] .qc-brain-filter-brand {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(239, 0, 1, 0.16), transparent 34%),
+    rgba(15, 23, 42, 0.86) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+/* popover do filtro mais quadrado e legível */
+.qc-brain-filter-popover {
+  top: calc(100% + 12px) !important;
+  border-radius: 22px !important;
+}
+
+/* mobile */
+@media (max-width: 920px) {
+  .brain-filter-hud {
+    width: calc(100% - 24px) !important;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto auto minmax(160px, 1fr) auto !important;
+  }
+
+  .qc-brain-filter-brand strong {
+    display: none !important;
+  }
+}
+
+/* FIX: brain remover capa manchas */
+
+/* remove a capa grande da tela Brain */
+body.qc-brain-route .qc-brain-big-cover-hidden,
+body.qc-brain-active-route .qc-brain-big-cover-hidden {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* garante que a página Brain use a tela toda */
+.brain-page-fullscreen,
+body.qc-brain-route main,
+body.qc-brain-active-route main {
+  margin-top: 0 !important;
+}
+
+/* remove manchas, lobos, ponte, pulsos e anéis estranhos do córtex */
+.brain-cortex-layer,
+.brain-cortex-lobe,
+.brain-cortex-bridge,
+.brain-cortex-pulse,
+.brain-cortex-thread {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* remove pseudo-camadas que estavam criando manchas */
+.brain-cortex-canvas::before,
+.brain-cortex-canvas::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* dark mais suave: céu/nebulosa/buraco negro sem manchas fortes */
+html.dark .brain-cortex-canvas,
+body.dark .brain-cortex-canvas,
+[data-theme="dark"] .brain-cortex-canvas {
+  min-height: 100dvh !important;
+  background:
+    radial-gradient(ellipse at 52% 42%, rgba(255, 255, 255, 0.10) 0%, rgba(148, 163, 184, 0.08) 8%, rgba(2, 6, 23, 0.28) 18%, transparent 34%),
+    radial-gradient(circle at 52% 42%, rgba(0, 0, 0, 0.76) 0%, rgba(2, 6, 23, 0.58) 10%, rgba(15, 23, 42, 0.18) 24%, transparent 42%),
+    radial-gradient(circle at 20% 28%, rgba(14, 165, 233, 0.18), transparent 36%),
+    radial-gradient(circle at 72% 34%, rgba(99, 102, 241, 0.13), transparent 34%),
+    radial-gradient(circle at 88% 78%, rgba(239, 0, 1, 0.09), transparent 38%),
+    linear-gradient(135deg, #020617 0%, #031827 42%, #080b1f 70%, #120512 100%) !important;
+}
+
+/* claro fica limpo, branco e suave */
+html:not(.dark) .brain-cortex-canvas,
+body:not(.dark) .brain-cortex-canvas {
+  background:
+    radial-gradient(circle at 22% 28%, rgba(14, 165, 233, 0.10), transparent 34%),
+    radial-gradient(circle at 78% 72%, rgba(239, 0, 1, 0.06), transparent 38%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 52%, #ffffff 100%) !important;
+}
+
+/* linhas do grafo mais sutis, sem parecer sujeira */
+.brain-cortex-canvas .react-flow__edge path {
+  stroke-opacity: 0.46 !important;
+  stroke-width: 1.7px !important;
+  filter: none !important;
+}
+
+html.dark .brain-cortex-canvas .react-flow__edge path,
+body.dark .brain-cortex-canvas .react-flow__edge path,
+[data-theme="dark"] .brain-cortex-canvas .react-flow__edge path {
+  stroke-opacity: 0.58 !important;
+  stroke-width: 1.85px !important;
+  filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.16)) !important;
+}
+
+/* filtro maior, mais quadrado e mais legível */
+.brain-filter-hud {
+  top: 16px !important;
+  width: min(980px, calc(100% - 88px)) !important;
+  z-index: 70 !important;
+}
+
+.qc-brain-filter-panel-compact {
+  border-radius: 18px !important;
+  padding: 9px !important;
+}
+
+.qc-brain-filter-compact-bar {
+  grid-template-columns: auto auto minmax(360px, 1fr) auto auto !important;
+  gap: 9px !important;
+}
+
+.qc-brain-filter-brand {
+  height: 42px !important;
+  border-radius: 14px !important;
+  padding: 0 16px 0 10px !important;
+}
+
+.qc-brain-filter-brand-logo {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+.qc-brain-filter-brand strong {
+  display: inline !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+}
+
+.qc-brain-filter-main-button,
+.qc-brain-filter-icon-button,
+.qc-brain-filter-chip,
+.qc-brain-filter-compact-search {
+  min-height: 40px !important;
+  border-radius: 14px !important;
+}
+
+/* filtro escuro mais limpo */
+html.dark .qc-brain-filter-panel-compact,
+body.dark .qc-brain-filter-panel-compact,
+[data-theme="dark"] .qc-brain-filter-panel-compact {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(34, 211, 238, 0.09), transparent 32%),
+    rgba(2, 6, 23, 0.90) !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34) !important;
+}
+
+/* botão grafo local mais discreto */
+.brain-cortex-canvas button {
+  backdrop-filter: blur(12px);
+}
+
+/* mobile */
+@media (max-width: 920px) {
+  .brain-filter-hud {
+    width: calc(100% - 24px) !important;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto auto minmax(160px, 1fr) auto !important;
+  }
+
+  .qc-brain-filter-brand strong {
+    display: none !important;
+  }
+}
+
+
+/* FIX: brain filtro largo inteligente */
+
+/* HUD ocupa a área útil do Brain, sem empurrar o grafo */
+.brain-filter-hud {
+  top: 16px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(1040px, calc(100% - 96px)) !important;
+  max-width: 1040px !important;
+  z-index: 90 !important;
+  pointer-events: none !important;
+}
+
+.brain-filter-hud > * {
+  pointer-events: auto !important;
+}
+
+/* força o filtro a usar toda a largura do HUD */
+.qc-brain-filter-panel-compact {
+  width: 100% !important;
+  min-width: 0 !important;
+  border-radius: 18px !important;
+  padding: 9px !important;
+  min-height: 62px !important;
+  overflow: visible !important;
+}
+
+/* dark clean, mais legível */
+html.dark .qc-brain-filter-panel-compact,
+body.dark .qc-brain-filter-panel-compact,
+[data-theme="dark"] .qc-brain-filter-panel-compact {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+    rgba(4, 13, 31, 0.94) !important;
+  border: 1px solid rgba(148, 163, 184, 0.26) !important;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+/* claro continua limpo */
+html:not(.dark) .qc-brain-filter-panel-compact,
+body:not(.dark) .qc-brain-filter-panel-compact {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96)) !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  box-shadow:
+    0 16px 42px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255,255,255,0.80) !important;
+}
+
+/* grid do filtro: logo + filtros + busca + métricas + atualizar */
+.qc-brain-filter-compact-bar {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: auto auto minmax(360px, 1fr) auto auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+/* logo Brain mais visível */
+.qc-brain-filter-brand {
+  height: 44px !important;
+  min-width: 112px !important;
+  border-radius: 15px !important;
+  padding: 0 16px 0 10px !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.qc-brain-filter-brand-logo {
+  width: 31px !important;
+  height: 31px !important;
+  flex: 0 0 31px !important;
+}
+
+.qc-brain-filter-brand strong {
+  display: inline !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* botões quadradinhos, não grudados */
+.qc-brain-filter-main-button,
+.qc-brain-filter-icon-button,
+.qc-brain-filter-chip {
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 15px !important;
+  padding: 0 15px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+/* busca maior, estilo cockpit */
+.qc-brain-filter-compact-search {
+  width: 100% !important;
+  min-width: 320px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 15px !important;
+  padding: 0 15px !important;
+}
+
+.qc-brain-filter-compact-search input {
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+/* métricas agrupadas e espaçadas */
+.qc-brain-filter-compact-stats {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+}
+
+.qc-brain-filter-compact-stats span,
+.qc-brain-filter-compact-stats::after {
+  height: 38px !important;
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border-radius: 13px !important;
+  padding: 0 12px !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+}
+
+/* botão atualizar */
+.qc-brain-filter-icon-button {
+  width: 44px !important;
+  min-width: 44px !important;
+  padding: 0 !important;
+  flex: 0 0 44px !important;
+}
+
+/* dark dos itens internos */
+html.dark .qc-brain-filter-brand,
+html.dark .qc-brain-filter-main-button,
+html.dark .qc-brain-filter-icon-button,
+html.dark .qc-brain-filter-chip,
+html.dark .qc-brain-filter-compact-search,
+html.dark .qc-brain-filter-compact-stats span,
+html.dark .qc-brain-filter-compact-stats::after,
+body.dark .qc-brain-filter-brand,
+body.dark .qc-brain-filter-main-button,
+body.dark .qc-brain-filter-icon-button,
+body.dark .qc-brain-filter-chip,
+body.dark .qc-brain-filter-compact-search,
+body.dark .qc-brain-filter-compact-stats span,
+body.dark .qc-brain-filter-compact-stats::after,
+[data-theme="dark"] .qc-brain-filter-brand,
+[data-theme="dark"] .qc-brain-filter-main-button,
+[data-theme="dark"] .qc-brain-filter-icon-button,
+[data-theme="dark"] .qc-brain-filter-chip,
+[data-theme="dark"] .qc-brain-filter-compact-search,
+[data-theme="dark"] .qc-brain-filter-compact-stats span,
+[data-theme="dark"] .qc-brain-filter-compact-stats::after {
+  background: rgba(8, 18, 40, 0.96) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18) !important;
+}
+
+html.dark .qc-brain-filter-compact-search input,
+body.dark .qc-brain-filter-compact-search input,
+[data-theme="dark"] .qc-brain-filter-compact-search input {
+  color: #f8fafc !important;
+}
+
+html.dark .qc-brain-filter-compact-search input::placeholder,
+body.dark .qc-brain-filter-compact-search input::placeholder,
+[data-theme="dark"] .qc-brain-filter-compact-search input::placeholder {
+  color: rgba(226, 232, 240, 0.58) !important;
+}
+
+/* painel expandido: não ocupa layout, abre por cima como dropdown moderno */
+.qc-brain-filter-popover {
+  position: absolute !important;
+  top: calc(100% + 12px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(920px, calc(100vw - 96px)) !important;
+  max-height: min(72vh, 650px) !important;
+  overflow: auto !important;
+  border-radius: 22px !important;
+  padding: 20px !important;
+  z-index: 100 !important;
+}
+
+html.dark .qc-brain-filter-popover,
+body.dark .qc-brain-filter-popover,
+[data-theme="dark"] .qc-brain-filter-popover {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+    rgba(4, 13, 30, 0.98) !important;
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.48),
+    inset 0 1px 0 rgba(255,255,255,0.04) !important;
+}
+
+/* campos do painel expandido */
+.qc-brain-filter-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.qc-brain-filter-field {
+  border-radius: 16px !important;
+  padding: 12px !important;
+}
+
+.qc-brain-filter-field select {
+  min-height: 34px !important;
+}
+
+/* controla responsividade sem esmagar tudo */
+@media (max-width: 1280px) {
+  .brain-filter-hud {
+    width: min(900px, calc(100% - 60px)) !important;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto auto minmax(280px, 1fr) auto auto !important;
+  }
+
+  .qc-brain-filter-compact-stats span:nth-child(n+3) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .brain-filter-hud {
+    width: calc(100% - 24px) !important;
+    top: 12px !important;
+  }
+
+  .qc-brain-filter-compact-bar {
+    grid-template-columns: auto auto minmax(160px, 1fr) auto !important;
+    gap: 8px !important;
+  }
+
+  .qc-brain-filter-brand strong,
+  .qc-brain-filter-compact-stats {
+    display: none !important;
+  }
+
+  .qc-brain-filter-compact-search {
+    min-width: 0 !important;
+  }
+
+  .qc-brain-filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qc-brain-filter-popover {
+    width: calc(100vw - 24px) !important;
+    padding: 14px !important;
+  }
+}
+
+/* FIX: Brain final sem filtro + universo estrelado */
+
+/* Mata o filtro inútil do topo e docks criados por patches anteriores */
+.brain-filter-hud,
+.qc-brain-mini-dock,
+.qc-brain-filter-drag-grip,
+.qc-brain-side-chat {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Modo claro: branco com degradê e textura neural, não branco chapado */
+.qc-brain-dashboard-surface {
+  width: 100% !important;
+  max-width: 100% !important;
+  isolation: isolate;
+  color: #0f172a !important;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(34, 211, 238, 0.24), transparent 28%),
+    radial-gradient(circle at 78% 24%, rgba(59, 130, 246, 0.12), transparent 32%),
+    radial-gradient(circle at 86% 78%, rgba(239, 0, 1, 0.08), transparent 34%),
+    radial-gradient(circle at 42% 92%, rgba(14, 165, 233, 0.10), transparent 36%),
+    linear-gradient(135deg, #ffffff 0%, #f8fbff 38%, #eef9ff 72%, #ffffff 100%) !important;
+}
+
+.qc-brain-dashboard-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(15, 23, 42, 0.10) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(14, 165, 233, 0.16) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(239, 0, 1, 0.08) 0 1px, transparent 1.5px);
+  background-size: 110px 110px, 180px 180px, 280px 280px;
+  background-position: 0 0, 44px 62px, 120px 160px;
+  opacity: 0.45;
+}
+
+.qc-brain-dashboard-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.34)),
+    radial-gradient(ellipse at 50% 40%, transparent 0%, rgba(255,255,255,0.20) 52%, rgba(226, 246, 255, 0.46) 100%);
+}
+
+/* Modo escuro: universo estrelado escuro de verdade */
+@media (prefers-color-scheme: dark) {
+  .qc-brain-dashboard-surface {
+    color: #f8fafc !important;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(56, 189, 248, 0.18), transparent 26%),
+      radial-gradient(circle at 74% 22%, rgba(168, 85, 247, 0.22), transparent 30%),
+      radial-gradient(circle at 54% 84%, rgba(239, 0, 1, 0.16), transparent 34%),
+      radial-gradient(circle at 88% 72%, rgba(14, 165, 233, 0.10), transparent 28%),
+      linear-gradient(135deg, #020617 0%, #061326 42%, #10081f 74%, #020617 100%) !important;
+  }
+
+  .qc-brain-dashboard-surface::before {
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,0.96) 0 1px, transparent 1.4px),
+      radial-gradient(circle, rgba(125,211,252,0.78) 0 1px, transparent 1.5px),
+      radial-gradient(circle, rgba(216,180,254,0.68) 0 1px, transparent 1.6px),
+      radial-gradient(circle, rgba(255,255,255,0.55) 0 0.8px, transparent 1.2px);
+    background-size: 96px 96px, 150px 150px, 220px 220px, 340px 340px;
+    background-position: 0 0, 38px 58px, 90px 120px, 160px 30px;
+    opacity: 0.70;
+    animation: qcBrainStarsDrift 24s linear infinite;
+  }
+
+  .qc-brain-dashboard-surface::after {
+    background:
+      radial-gradient(ellipse at 50% 48%, transparent 0%, rgba(2, 6, 23, 0.10) 42%, rgba(2, 6, 23, 0.70) 100%) !important;
+  }
+}
+
+/* Também força quando o sistema usa classe/atributo dark */
+html.dark .qc-brain-dashboard-surface,
+body.dark .qc-brain-dashboard-surface,
+.dark .qc-brain-dashboard-surface,
+.theme-dark .qc-brain-dashboard-surface,
+[data-theme="dark"] .qc-brain-dashboard-surface,
+[data-appearance="dark"] .qc-brain-dashboard-surface,
+body[data-qc-brain-theme="dark"] .qc-brain-dashboard-surface,
+.qc-brain-dashboard-surface[data-qc-brain-theme="dark"],
+.qc-brain-dashboard-surface.qc-brain-is-dark {
+  color: #f8fafc !important;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(56, 189, 248, 0.18), transparent 26%),
+    radial-gradient(circle at 74% 22%, rgba(168, 85, 247, 0.22), transparent 30%),
+    radial-gradient(circle at 54% 84%, rgba(239, 0, 1, 0.16), transparent 34%),
+    radial-gradient(circle at 88% 72%, rgba(14, 165, 233, 0.10), transparent 28%),
+    linear-gradient(135deg, #020617 0%, #061326 42%, #10081f 74%, #020617 100%) !important;
+}
+
+html.dark .qc-brain-dashboard-surface::before,
+body.dark .qc-brain-dashboard-surface::before,
+.dark .qc-brain-dashboard-surface::before,
+.theme-dark .qc-brain-dashboard-surface::before,
+[data-theme="dark"] .qc-brain-dashboard-surface::before,
+[data-appearance="dark"] .qc-brain-dashboard-surface::before,
+body[data-qc-brain-theme="dark"] .qc-brain-dashboard-surface::before,
+.qc-brain-dashboard-surface[data-qc-brain-theme="dark"]::before,
+.qc-brain-dashboard-surface.qc-brain-is-dark::before {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.96) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(125,211,252,0.78) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(216,180,254,0.68) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(255,255,255,0.55) 0 0.8px, transparent 1.2px) !important;
+  background-size: 96px 96px, 150px 150px, 220px 220px, 340px 340px !important;
+  background-position: 0 0, 38px 58px, 90px 120px, 160px 30px !important;
+  opacity: 0.70 !important;
+  animation: qcBrainStarsDrift 24s linear infinite;
+}
+
+html.dark .qc-brain-dashboard-surface::after,
+body.dark .qc-brain-dashboard-surface::after,
+.dark .qc-brain-dashboard-surface::after,
+.theme-dark .qc-brain-dashboard-surface::after,
+[data-theme="dark"] .qc-brain-dashboard-surface::after,
+[data-appearance="dark"] .qc-brain-dashboard-surface::after,
+body[data-qc-brain-theme="dark"] .qc-brain-dashboard-surface::after,
+.qc-brain-dashboard-surface[data-qc-brain-theme="dark"]::after,
+.qc-brain-dashboard-surface.qc-brain-is-dark::after {
+  background:
+    radial-gradient(ellipse at 50% 48%, transparent 0%, rgba(2, 6, 23, 0.10) 42%, rgba(2, 6, 23, 0.70) 100%) !important;
+}
+
+@keyframes qcBrainStarsDrift {
+  from {
+    background-position: 0 0, 38px 58px, 90px 120px, 160px 30px;
+  }
+  to {
+    background-position: 96px 96px, 188px 208px, 310px 340px, 500px 370px;
+  }
+}
+
+/* Remove textos fixos nas conexões */
+.qc-brain-dashboard-surface .react-flow__edge-text,
+.qc-brain-dashboard-surface .react-flow__edge-textbg,
+.qc-brain-dashboard-surface .react-flow__edge-textwrapper,
+.qc-brain-dashboard-surface [class*="edge-label"],
+.qc-brain-dashboard-surface [class*="relation-label"],
+.qc-brain-dashboard-surface [class*="relationship-label"],
+.qc-brain-dashboard-surface [class*="connection-label"],
+.qc-brain-dashboard-surface [class*="edgeLabel"],
+.qc-brain-dashboard-surface [class*="RelationLabel"],
+.qc-brain-dashboard-surface [class*="ConnectionLabel"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }

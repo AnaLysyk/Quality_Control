@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/jwtAuth";
 import { InternalBrainEngine } from "@/lib/brain/internalEngine";
 import { logAgentExecution } from "@/lib/brain/orchestrator";
-import { detectAgentMode, AGENT_REGISTRY } from "@/lib/brain/agents";
+import { AGENT_REGISTRY } from "@/lib/brain/agents";
 import { buildBrainAccessContextFromAuthUser } from "@/lib/brain/access";
 import { answerBrainChatQuestion } from "@/lib/brain/chat";
+import { buildAutoBrainRoute } from "@/lib/brain/autoRouter";
 import { hasPermissionAccess } from "@/lib/permissionMatrix";
 import { buildWebSupportContext, shouldUseWebSupport } from "@/lib/assistant/webSupport";
 import type { AgentMode } from "@/lib/brain/agents";
@@ -182,7 +183,7 @@ async function persistConversationMemory(args: {
       });
     }
   } catch {
-    // aprendizado não pode quebrar o chat
+    // aprendizado nÃ£o pode quebrar o chat
   }
 }
 
@@ -226,7 +227,7 @@ function resolveCompanySlug(body: AssistantRequestBody, authUser: { companySlug?
 }
 
 function shouldAnswerFromBrain(message: string) {
-  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cç][aã]o|defeito|bug|usuario|usu[aá]rio|qase|kase|jira|operacional|brain|brian|n[oó]|dashboard|painel)\b/i.test(message);
+  return /\b(empresa|projeto|tela|rota|permiss|perfil|run|execu[cÃ§][aÃ£]o|defeito|bug|usuario|usu[aÃ¡]rio|qase|kase|jira|operacional|brain|brian|n[oÃ³]|dashboard|painel)\b/i.test(message);
 }
 
 function shouldUseBrainFirstContext(brainContext: AssistantOpenEventDetail | null) {
@@ -259,7 +260,7 @@ export async function POST(req: Request) {
   const contentLength = Number(req.headers.get("content-length") ?? 0);
   if (contentLength > MAX_ASSISTANT_PAYLOAD_BYTES) {
     return NextResponse.json(
-      { error: "Mensagem muito grande. Reduza o histórico/contexto e tente novamente." },
+      { error: "Mensagem muito grande. Reduza o histÃ³rico/contexto e tente novamente." },
       { status: 413 },
     );
   }
@@ -269,7 +270,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sem permissao para usar o assistente" }, { status: 403 });
   }
   if (!authUser) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "NÃ£o autenticado" }, { status: 401 });
   }
 
   try {
@@ -302,7 +303,9 @@ export async function POST(req: Request) {
 
     const messages = buildMessagesFromHistory(body);
     const latestUserMessage = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
-    if (shouldAnswerFromBrain(latestUserMessage)) {
+    const autoBrainRoute = buildAutoBrainRoute(latestUserMessage);
+
+    if (autoBrainRoute.useBrain || shouldAnswerFromBrain(latestUserMessage)) {
       const brainAccess = await buildBrainAccessContextFromAuthUser(authUser);
       if (brainAccess) {
         const brainAnswer = await withTimeout(answerBrainChatQuestion({
@@ -318,18 +321,26 @@ export async function POST(req: Request) {
           },
         }), MAX_BRAIN_DIRECT_MS, "Brain");
 
+        const webContext = autoBrainRoute.useWeb
+          ? await buildWebSupportContext(latestUserMessage).catch(() => "")
+          : "";
+
+        const finalBrainReply = [brainAnswer.answer, webContext]
+          .filter((item) => String(item ?? "").trim())
+          .join("\n\n");
+
         await persistConversationMemory({
           body,
           authUser,
-          reply: brainAnswer.answer,
-          tool: "use_brain",
-          agentMode: brainContext?.agentMode ?? "qa",
+          reply: finalBrainReply,
+          tool: "use_brain_auto",
+          agentMode: autoBrainRoute.agentMode,
           brainContext,
         });
 
         return NextResponse.json({
-          reply: compactText(brainAnswer.answer, MAX_REPLY_CHARS),
-          tool: "use_brain",
+          reply: compactText(finalBrainReply, MAX_REPLY_CHARS),
+          tool: "use_brain_auto",
           actions: brainAnswer.navigation
             ? [{ kind: "prompt", label: brainAnswer.navigation.label, prompt: `abrir ${brainAnswer.navigation.route}` }]
             : brainAnswer.suggestedActions.slice(0, 3).map((action) => ({ kind: "prompt", label: action.label, prompt: action.label })),
@@ -371,19 +382,19 @@ export async function POST(req: Request) {
     const brainRuntimeSnapshot = compactJson(brainContext?.metadata ?? body.context?.metadata ?? null, 2500);
     appendContextToLastUserMessage(messages, "Brain runtime context", brainRuntimeSnapshot);
 
-    if (shouldUseWebSupport(latestUserMessage)) {
+    if (autoBrainRoute.useWeb || shouldUseWebSupport(latestUserMessage)) {
       const webContext = await buildWebSupportContext(latestUserMessage).catch(() => "");
       appendContextToLastUserMessage(messages, "Apoio externo/web", compactText(webContext, MAX_WEB_CONTEXT_CHARS));
     }
 
     const lastUserContent = messages.filter((message) => message.role === "user").at(-1)?.content ?? "";
     if (!lastUserContent.trim()) {
-      return NextResponse.json({ error: "Mensagem obrigatória" }, { status: 400 });
+      return NextResponse.json({ error: "Mensagem obrigatÃ³ria" }, { status: 400 });
     }
 
     const companySlug = resolveCompanySlug(body, authUser);
-    const agentMode: AgentMode = (brainContext?.agentMode as AgentMode | undefined) ?? detectAgentMode(lastUserContent);
-    const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "🧠", label: "Agente Brain", color: "#5b92ff" };
+    const agentMode: AgentMode = autoBrainRoute.agentMode;
+    const agent = AGENT_REGISTRY?.[agentMode] ?? { name: agentMode, icon: "ðŸ§ ", label: "Agente Brain", color: "#5b92ff" };
     const startedAt = Date.now();
 
     const engine = new InternalBrainEngine();
@@ -412,7 +423,7 @@ export async function POST(req: Request) {
       if (event.type === "text-delta") {
         replyText += event.text;
         if (replyText.length > MAX_REPLY_CHARS) {
-          replyText = `${replyText.slice(0, MAX_REPLY_CHARS)}\n\n_Resposta interrompida para proteger a memória do servidor._`;
+          replyText = `${replyText.slice(0, MAX_REPLY_CHARS)}\n\n_Resposta interrompida para proteger a memÃ³ria do servidor._`;
           break;
         }
       }
@@ -433,8 +444,8 @@ export async function POST(req: Request) {
     });
 
     const finalReply = timedOut
-      ? "O assistente interrompeu a análise para proteger a memória do servidor local. Tente uma pergunta mais específica ou abra um módulo menor do Brain."
-      : replyText || (success ? "Análise concluída." : "Não foi possível processar sua pergunta.");
+      ? "O assistente interrompeu a anÃ¡lise para proteger a memÃ³ria do servidor local. Tente uma pergunta mais especÃ­fica ou abra um mÃ³dulo menor do Brain."
+      : replyText || (success ? "AnÃ¡lise concluÃ­da." : "NÃ£o foi possÃ­vel processar sua pergunta.");
 
     await persistConversationMemory({ body, authUser, reply: finalReply, tool: lastToolName ?? agentMode, agentMode, brainContext });
 
@@ -461,3 +472,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+

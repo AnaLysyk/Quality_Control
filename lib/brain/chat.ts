@@ -10,6 +10,7 @@ import type { BrainConversationContext } from "@/lib/brain/runtime";
 import { buildBrainRuntimeContext } from "@/lib/brain/runtime";
 import { redactBrainNodeForUser } from "@/lib/brain/redaction";
 import { buildBrainSearchIndex, searchBrainIndex } from "@/lib/brain/searchIndex";
+import { buildQaCopilotAnswer } from "@/lib/brain/qaCopilot";
 import { prisma } from "@/lib/prismaClient";
 
 export type BrainChatAnswer = {
@@ -146,9 +147,14 @@ export async function answerBrainChatQuestion(input: {
   const blockedSentence = blockedAction
     ? ` Algumas acoes ficam bloqueadas para seu perfil, como "${blockedAction.label}".`
     : "";
+  const qaCopilotAnswer = buildQaCopilotAnswer({
+    message: input.message,
+    foundNodes: foundNodes.slice(0, input.limit ?? 5),
+    allowedActions,
+  });
 
   return {
-    answer: `Encontrei no Brain: ${topLabels}.${navSentence}${blockedSentence}`,
+    answer: [`Encontrei no Brain: ${topLabels}.${navSentence}${blockedSentence}`, qaCopilotAnswer].join("\n\n"),
     foundNodes: foundNodes.slice(0, input.limit ?? 5).map((node) => toChatNode(node, input.access)),
     suggestedActions: allowedActions,
     navigation: navigationAction?.route ? { label: navigationAction.label, route: navigationAction.route } : undefined,
@@ -167,4 +173,5 @@ export async function answerBrainChatQuestion(input: {
     currentBrainContext,
   };
 }
+
 

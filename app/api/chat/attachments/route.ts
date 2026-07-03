@@ -1,4 +1,4 @@
-﻿import { randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -20,6 +20,11 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/gif",
   "application/pdf",
   "text/plain",
+  "audio/webm",
+  "audio/ogg",
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/wav",
 ]);
 
 function safeSegment(value: string) {
@@ -45,6 +50,11 @@ function extensionFor(file: File) {
   if (file.type === "image/webp") return ".webp";
   if (file.type === "image/gif") return ".gif";
   if (file.type === "application/pdf") return ".pdf";
+  if (file.type === "audio/webm") return ".webm";
+  if (file.type === "audio/ogg") return ".ogg";
+  if (file.type === "audio/mpeg") return ".mp3";
+  if (file.type === "audio/mp4") return ".m4a";
+  if (file.type === "audio/wav") return ".wav";
   return ".txt";
 }
 
@@ -64,6 +74,7 @@ function sourceLabelFor(file: File) {
   if (file.type === "image/gif") return "GIF";
   if (file.type.startsWith("image/")) return "Imagem";
   if (file.type === "application/pdf") return "PDF";
+  if (file.type.startsWith("audio/")) return "Áudio";
   return "Arquivo";
 }
 
@@ -118,4 +129,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, attachments }, { headers: NO_STORE_HEADERS });
 }
-

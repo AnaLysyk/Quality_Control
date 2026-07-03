@@ -1,4 +1,4 @@
-﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 
 export type NavModule =
   | "home"
@@ -95,7 +95,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "companies-listing",
         routeId: "empresas.listagem",
-        label: "Listagem",
+        label: "Listar empresas",
         iconKey: "layout",
         module: "companies",
         href: "/admin/clients",
@@ -379,7 +379,7 @@ export const NAV_CATALOG: NavModuleDef[] = [
       {
         id: "requests-list",
         routeId: "solicitacoes.listagem",
-        label: "Listagem",
+        label: "Listar empresas",
         iconKey: "clipboard",
         module: "requests",
         href: "/solicitacoes",
@@ -479,29 +479,9 @@ export const NAV_CATALOG: NavModuleDef[] = [
     iconKey: "message-circle",
     allowedRoles: ALL_USERS,
     testId: "nav-chat",
-    items: [
-      {
-        id: "chat-list",
-        routeId: "chat.principal",
-        label: "Lista de conversas",
-        iconKey: "message-square",
-        module: "chat",
-        href: "/chat",
-        favoriteEnabled: true,
-        testId: "nav-chat-list",
-      },
-      {
-        id: "chat-search",
-        routeId: "chat.buscar",
-        label: "Buscar conversa",
-        iconKey: "search",
-        module: "chat",
-        href: "/chat?focus=search",
-        action: "focusSearch",
-        favoriteEnabled: true,
-        testId: "nav-chat-search",
-      },
-    ],
+    href: "/chat",
+    routeId: "chat.principal",
+    items: [],
   },
 
   // ============================================
@@ -620,7 +600,3 @@ export const NAV_CATALOG: NavModuleDef[] = [
     items: [],
   },
 ];
-
-
-
-

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -6,6 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type
 import {
   FiChevronRight,
   FiImage,
+  FiPaperclip,
+  FiMic,
+  FiStopCircle,
   FiInbox,
   FiMessageSquare,
   FiRefreshCw,
@@ -277,6 +280,7 @@ function ThreadRow({
 function AttachmentPreview({ attachment }: { attachment: ChatAttachment }) {
   const isGif = attachment.sourceLabel === "GIF" || attachment.mimeType === "image/gif" || attachment.url?.includes("giphy.com");
   const isSticker = attachment.sourceLabel === "Figurinha";
+  const isAudio = attachment.sourceLabel === "Áudio" || attachment.mimeType?.startsWith("audio/");
 
   if (isGif && attachment.url) {
     return (
@@ -292,6 +296,15 @@ function AttachmentPreview({ attachment }: { attachment: ChatAttachment }) {
     return (
       <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-3 text-3xl">
         <span>{attachment.label}</span>
+      </div>
+    );
+  }
+
+  if (isAudio && attachment.url) {
+    return (
+      <div className="mt-3 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface-2)] px-4 py-3">
+        <div className="mb-2 text-xs font-semibold text-[var(--tc-text-muted)]">Áudio: {attachment.label}</div>
+        <audio controls src={attachment.url} className="w-full" />
       </div>
     );
   }
@@ -423,6 +436,9 @@ export default function ChatWorkspace() {
   const activeIdentity = resolveActiveIdentity({ user, activeCompany: activeClient });
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<BlobPart[]>([]);
   const contactsAbortRef = useRef<AbortController | null>(null);
   const threadsAbortRef = useRef<AbortController | null>(null);
   const messagesAbortRef = useRef<AbortController | null>(null);
@@ -434,6 +450,11 @@ export default function ChatWorkspace() {
   const [assetSearch, setAssetSearch] = useState("");
   const [assistantCommand, setAssistantCommand] = useState("");
   const [message, setMessage] = useState("");
+  const [composerPanelOpen, setComposerPanelOpen] = useState(false);
+  const [composerTab, setComposerTab] = useState<"stickers" | "gifs">("stickers");
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [recordingAudio, setRecordingAudio] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [threadsLoading, setThreadsLoading] = useState(false);
@@ -560,6 +581,8 @@ export default function ChatWorkspace() {
 
   useEffect(() => {
     setMessage("");
+    setPendingAttachments([]);
+    setComposerPanelOpen(false);
   }, [selectedPeerId]);
 
   useEffect(() => {
@@ -668,24 +691,128 @@ export default function ChatWorkspace() {
     [loadMessages, loadThreads, openConversation, router, sending],
   );
 
+
+  const uploadChatFiles = useCallback(
+    async (files: FileList | File[]) => {
+      const fileList = Array.from(files);
+      if (!fileList.length || uploadingAttachment) return;
+
+      setUploadingAttachment(true);
+      setThreadError(null);
+
+      try {
+        const formData = new FormData();
+        fileList.forEach((file) => formData.append("files", file));
+
+        const response = await fetchApi("/api/chat/attachments", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.status === 401) {
+          router.replace("/login");
+          return;
+        }
+
+        const payload = (await response.json().catch(() => ({}))) as {
+          attachments?: ChatAttachment[];
+          error?: string;
+        };
+
+        if (!response.ok || !Array.isArray(payload.attachments)) {
+          setThreadError(payload.error || "Não foi possível anexar o arquivo.");
+          return;
+        }
+
+        setPendingAttachments((current) => [...current, ...payload.attachments!]);
+      } catch (err) {
+        setThreadError(err instanceof Error ? err.message : "Não foi possível anexar o arquivo.");
+      } finally {
+        setUploadingAttachment(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    [router, uploadingAttachment],
+  );
+
+  const addAssetToComposer = useCallback((asset: ChatAsset) => {
+    setPendingAttachments((current) => [...current, buildAttachmentFromAsset(asset)]);
+    setComposerPanelOpen(false);
+  }, []);
+
+  const removePendingAttachment = useCallback((index: number) => {
+    setPendingAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }, []);
+
+  const startAudioRecording = useCallback(async () => {
+    if (recordingAudio) return;
+
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setThreadError("Gravação de áudio não está disponível neste navegador.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        const file = new File([blob], `audio-${Date.now()}.webm`, { type: blob.type || "audio/webm" });
+        stream.getTracks().forEach((track) => track.stop());
+        setRecordingAudio(false);
+        void uploadChatFiles([file]);
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecordingAudio(true);
+    } catch {
+      setThreadError("Não foi possível acessar o microfone.");
+      setRecordingAudio(false);
+    }
+  }, [recordingAudio, uploadChatFiles]);
+
+  const stopAudioRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") {
+      setRecordingAudio(false);
+      return;
+    }
+
+    recorder.stop();
+  }, []);
+
   const sendMessage = useCallback(
     async (event?: FormEvent<HTMLFormElement>) => {
       event?.preventDefault();
-      if (!selectedPeerId || !message.trim() || sending) return;
-      const ok = await sendToPeer(selectedPeerId, message.trim());
-      if (ok) setMessage("");
+      if (!selectedPeerId || sending) return;
+
+      const text = message.trim();
+      if (!text && pendingAttachments.length === 0) return;
+
+      const ok = await sendToPeer(selectedPeerId, text, pendingAttachments);
+      if (ok) {
+        setMessage("");
+        setPendingAttachments([]);
+        setComposerPanelOpen(false);
+      }
     },
-    [message, selectedPeerId, sendToPeer, sending],
+    [message, pendingAttachments, selectedPeerId, sendToPeer, sending],
   );
 
   const sendAsset = useCallback(
     async (asset: ChatAsset) => {
       if (!selectedPeerId) return;
-      const attachment = buildAttachmentFromAsset(asset);
-      const ok = await sendToPeer(selectedPeerId, asset.kind === "emoji" ? asset.preview : "", [attachment]);
-      if (ok) setAssetSearch("");
+      addAssetToComposer(asset);
+      setAssetSearch("");
     },
-    [selectedPeerId, sendToPeer],
+    [addAssetToComposer, selectedPeerId],
   );
 
   const runAssistantCommand = useCallback(async () => {
@@ -912,64 +1039,124 @@ export default function ChatWorkspace() {
             </div>
 
             <form onSubmit={sendMessage} className="border-t border-[var(--tc-border)] bg-[var(--tc-surface)] px-4 py-4 sm:px-5">
-              <div className="mb-3 flex flex-col gap-3 rounded-[24px] border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-3">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">
-                    <FiSmile size={14} /> Figurinhas e GIFs
-                  </div>
-                  <label className="relative min-w-0 sm:w-72">
-                    <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted)]" size={13} />
-                    <input
-                      value={assetSearch}
-                      onChange={(event) => setAssetSearch(event.target.value)}
-                      placeholder="Buscar figurinha"
-                      className="w-full rounded-full border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] py-2 pl-9 pr-3 text-xs text-[var(--tc-text-primary)] outline-none placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)]"
-                    />
-                  </label>
-                </div>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {filteredAssets.map((asset) => (
-                    <button
-                      key={asset.id}
-                      type="button"
-                      onClick={() => void sendAsset(asset)}
-                      disabled={!selectedPeerId || sending}
-                      className="inline-flex min-w-24 shrink-0 items-center justify-center gap-2 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-3 py-2 text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-[rgba(239,0,1,0.24)] hover:bg-[var(--tc-surface-2)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <span className="text-lg">{asset.preview}</span>
-                      <span className="truncate text-xs">{asset.label}</span>
-                      {asset.kind === "gif" ? <FiImage size={12} className="text-[var(--tc-text-muted)]" /> : null}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,audio/webm,audio/ogg,audio/mpeg,audio/mp4,audio/wav"
+                onChange={(event) => {
+                  if (event.target.files) void uploadChatFiles(event.target.files);
+                }}
+              />
+
+              {composerPanelOpen ? (
+                <div className="mb-3 rounded-[28px] border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-3 shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] font-black uppercase tracking-[0.22em] text-[var(--tc-text-muted)]">Biblioteca rápida</div>
+                      <div className="text-sm font-semibold text-[var(--tc-text-primary)]">GIFs, figurinhas e reações</div>
+                    </div>
+                    <button type="button" onClick={() => setComposerPanelOpen(false)} className="rounded-full border border-[var(--tc-border)] p-2 text-[var(--tc-text-muted)] hover:text-[var(--tc-text-primary)]">
+                      <FiX size={16} />
                     </button>
+                  </div>
+
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <button type="button" onClick={() => setComposerTab("stickers")} className={`rounded-full border px-4 py-2 text-xs font-black transition ${composerTab === "stickers" ? "border-[rgba(239,0,1,0.32)] bg-[rgba(239,0,1,0.10)] text-[var(--tc-accent)]" : "border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-muted)]"}`}>
+                      Figurinhas
+                    </button>
+                    <button type="button" onClick={() => setComposerTab("gifs")} className={`rounded-full border px-4 py-2 text-xs font-black transition ${composerTab === "gifs" ? "border-[rgba(239,0,1,0.32)] bg-[rgba(239,0,1,0.10)] text-[var(--tc-accent)]" : "border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-muted)]"}`}>
+                      GIFs
+                    </button>
+
+                    <label className="relative ml-auto min-w-52 flex-1 sm:max-w-80">
+                      <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--tc-text-muted)]" size={13} />
+                      <input
+                        value={assetSearch}
+                        onChange={(event) => setAssetSearch(event.target.value)}
+                        placeholder="Buscar reação"
+                        className="w-full rounded-full border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] py-2 pl-9 pr-3 text-xs text-[var(--tc-text-primary)] outline-none placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)]"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid max-h-72 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3 lg:grid-cols-4">
+                    {filteredAssets
+                      .filter((asset) => composerTab === "gifs" ? asset.kind === "gif" : asset.kind === "emoji")
+                      .map((asset) => (
+                        <button
+                          key={asset.id}
+                          type="button"
+                          onClick={() => void sendAsset(asset)}
+                          disabled={!selectedPeerId || sending}
+                          className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-3xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-3 py-3 text-center text-sm font-semibold text-[var(--tc-text-primary)] transition hover:border-[rgba(239,0,1,0.24)] hover:bg-[var(--tc-surface-2)] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <span className="text-3xl transition group-hover:scale-110">{asset.preview}</span>
+                          <span className="max-w-full truncate text-xs">{asset.label}</span>
+                          {asset.kind === "gif" ? <FiImage size={12} className="text-[var(--tc-text-muted)]" /> : null}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {pendingAttachments.length ? (
+                <div className="mb-3 flex flex-wrap gap-2 rounded-[22px] border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-3">
+                  {pendingAttachments.map((attachment, index) => (
+                    <div key={attachment.id ?? `${attachment.label}-${index}`} className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-[var(--tc-border)] bg-[var(--tc-surface)] px-3 py-2 text-xs font-semibold text-[var(--tc-text-primary)]">
+                      <span className="truncate">{attachment.sourceLabel ?? "Anexo"}: {attachment.label}</span>
+                      <button type="button" onClick={() => removePendingAttachment(index)} className="text-[var(--tc-text-muted)] hover:text-[var(--tc-accent)]">
+                        <FiX size={13} />
+                      </button>
+                    </div>
                   ))}
                 </div>
-              </div>
+              ) : null}
 
               <div className="flex items-end gap-3">
                 <UserAvatar src={activeIdentity.avatarUrl} name={activeIdentity.displayName} size="md" className="hidden shrink-0 sm:block" frameClassName="border border-[var(--tc-border)]" />
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex items-center justify-between gap-3">
+
+                <div className="min-w-0 flex-1 rounded-[30px] border border-[var(--tc-border)] bg-[var(--tc-surface-2)] p-2 shadow-[0_12px_32px_rgba(15,23,42,0.08)]">
+                  <div className="mb-2 flex items-center justify-between gap-3 px-2">
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-[var(--tc-text-primary)]">{activeIdentity.displayName}</div>
                       <div className="truncate text-xs text-[var(--tc-text-muted)]">{selectedPeerId ? `Escrevendo para ${selectedPeerName}` : "Selecione uma pessoa para enviar mensagem"}</div>
                     </div>
-                    {sending ? <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)]">Enviando...</span> : null}
+                    {sending || uploadingAttachment ? <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tc-text-muted)]">{uploadingAttachment ? "Anexando..." : "Enviando..."}</span> : null}
                   </div>
-                  <textarea
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
-                      if (event.key === "Enter" && !event.shiftKey) {
-                        event.preventDefault();
-                        void sendMessage();
-                      }
-                    }}
-                    placeholder={selectedPeerId ? `Escreva para ${selectedPeerName}...` : "Escolha uma pessoa para comecar"}
-                    rows={2}
-                    disabled={!selectedPeerId || sending}
-                    className="w-full resize-none rounded-3xl border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-4 text-sm leading-6 text-[var(--tc-text-primary)] outline-none transition placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-[rgba(239,0,1,0.12)] disabled:cursor-not-allowed disabled:opacity-70"
-                  />
+
+                  <div className="flex items-end gap-2">
+                    <div className="flex shrink-0 items-center gap-1 pb-1">
+                      <button type="button" disabled={!selectedPeerId || sending} onClick={() => setComposerPanelOpen((value) => !value)} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-muted)] transition hover:text-[var(--tc-accent)] disabled:opacity-50" title="GIFs e figurinhas">
+                        <FiSmile size={17} />
+                      </button>
+                      <button type="button" disabled={!selectedPeerId || sending || uploadingAttachment} onClick={() => fileInputRef.current?.click()} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-muted)] transition hover:text-[var(--tc-accent)] disabled:opacity-50" title="Anexar arquivo">
+                        <FiPaperclip size={17} />
+                      </button>
+                      <button type="button" disabled={!selectedPeerId || sending || uploadingAttachment} onClick={() => recordingAudio ? stopAudioRecording() : void startAudioRecording()} className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition disabled:opacity-50 ${recordingAudio ? "border-[rgba(239,0,1,0.35)] bg-[rgba(239,0,1,0.12)] text-[var(--tc-accent)]" : "border-[var(--tc-border)] bg-[var(--tc-surface)] text-[var(--tc-text-muted)] hover:text-[var(--tc-accent)]"}`} title={recordingAudio ? "Parar áudio" : "Gravar áudio"}>
+                        {recordingAudio ? <FiStopCircle size={17} /> : <FiMic size={17} />}
+                      </button>
+                    </div>
+
+                    <textarea
+                      value={message}
+                      onChange={(event) => setMessage(event.target.value)}
+                      onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
+                        if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          void sendMessage();
+                        }
+                      }}
+                      placeholder={selectedPeerId ? `Mensagem para ${selectedPeerName}...` : "Escolha uma pessoa para começar"}
+                      rows={2}
+                      disabled={!selectedPeerId || sending}
+                      className="min-h-12 flex-1 resize-none rounded-[24px] border border-[var(--tc-border)] bg-[var(--tc-input-bg,#eef4ff)] px-4 py-3 text-sm leading-6 text-[var(--tc-text-primary)] outline-none transition placeholder:text-[var(--tc-text-muted)] focus:border-[var(--tc-accent)] focus:ring-2 focus:ring-[rgba(239,0,1,0.12)] disabled:cursor-not-allowed disabled:opacity-70"
+                    />
+                  </div>
                 </div>
-                <button type="submit" disabled={!selectedPeerId || !message.trim() || sending} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[var(--tc-accent)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50">
+
+                <button type="submit" disabled={!selectedPeerId || (!message.trim() && pendingAttachments.length === 0) || sending || uploadingAttachment} className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[var(--tc-accent)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50">
                   <FiSend size={14} /> Enviar
                 </button>
               </div>
@@ -980,4 +1167,3 @@ export default function ChatWorkspace() {
     </div>
   );
 }
-

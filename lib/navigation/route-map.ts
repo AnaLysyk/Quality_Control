@@ -1,4 +1,4 @@
-﻿import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
+import { SYSTEM_ROLES, type SystemRole } from "@/lib/auth/roles";
 import type { SystemRouteDefinition } from "./navigation.types";
 
 const ALL_PROFILES: SystemRole[] = [
@@ -56,10 +56,10 @@ export const SYSTEM_ROUTES = [
     moduleId: "empresas",
     path: "/admin/clients?focus=search",
     label: "Buscar empresa",
-    description: "Abre a listagem administrativa com foco na busca.",
+    description: "Rota legada removida do menu. A busca fica dentro da listagem de empresas.",
     requiredPermission: { moduleId: "applications", action: "view" },
     expectedProfiles: ADMIN_PROFILES,
-    status: "ativo",
+    status: "inativo",
     mainFile: "app/admin/clients/page.tsx",
   },
   {
@@ -436,10 +436,10 @@ export const SYSTEM_ROUTES = [
     moduleId: "chat",
     path: "/chat?focus=search",
     label: "Buscar conversa",
-    description: "Abre o chat com foco na busca.",
+    description: "Rota legada removida do menu. A busca fica dentro do Chat.",
     requiredPermission: null,
     expectedProfiles: ALL_PROFILES,
-    status: "parcial",
+    status: "legado",
     mainFile: "app/chat/page.tsx",
     notes: "A visibilidade ainda depende de perfil; não há permissão específica de chat na matriz.",
   },
@@ -741,10 +741,3 @@ export const SYSTEM_ROUTES = [
 export const SYSTEM_ROUTE_BY_ID: ReadonlyMap<string, SystemRouteDefinition> = new Map(
   SYSTEM_ROUTES.map((routeDefinition) => [routeDefinition.id, routeDefinition]),
 );
-
-
-
-
-
-
-
